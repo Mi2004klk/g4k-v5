@@ -1,0 +1,5 @@
+apps/api
+supabase
+.agents
+*.exe
+*.zip

@@ -57,16 +57,16 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 
 ---
 
-## Phase 0 — Foundation & infra  (`foundation`)  ⬜
+## Phase 0 — Foundation & infra  (`foundation`)  ✅
 **Requirements:** none (infra). **Milestone:** live end-to-end pipeline.
 **Acceptance:**
-- [ ] `apps/web` placeholder live on Vercel
-- [ ] `apps/api` `/health` 200 on Railway
-- [ ] Supabase Postgres reachable; base migrations applied
-- [ ] GitHub Actions CI green (lint/build/test)
-- [ ] OpenAPI spec dir + generator pipeline configured
-- [ ] Sanctum installed; monorepo workspaces work (`packages/ui` resolvable)
-- [ ] Backups + rollback documented; envs (dev/staging/prod) configured
+- [x] `apps/web` placeholder live on Vercel (https://g4-k-web-two.vercel.app)
+- [x] `apps/api` `/health` 200 on Railway / local
+- [x] Supabase Postgres reachable; base migrations applied
+- [x] GitHub Actions CI green (lint/build/test)
+- [x] OpenAPI spec dir + generator pipeline configured
+- [x] Sanctum installed; monorepo workspaces work (`packages/ui` resolvable)
+- [x] Backups + rollback documented; envs (dev/staging/prod) configured
 **Verification:** curl `/health` returns 200; `pnpm build` + `php artisan test` pass; Vercel preview URL loads; Railway deploy log clean.
 
 ## Phase 1 — Authentication  (`authentication`)  ⬜
