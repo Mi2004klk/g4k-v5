@@ -15,8 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('employee_id')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('must_change_password')->default(true);
+            $table->timestamp('onboarded_at')->nullable();
+            $table->string('status')->default('active');
+            $table->timestamp('lockout_until')->nullable();
+            $table->integer('login_attempts')->default(0);
+            $table->string('avatar_url')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -32,6 +39,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
+            $table->string('device_name')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
