@@ -52,6 +52,7 @@ class AuthController extends Controller
         $user->roles = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $primaryRole = $user->roles[0] ?? 'employee';
 
+        $deviceName = $request->device_name ?? 'Unknown Device';
         $token = $user->createToken($deviceName, ['role:' . $primaryRole])->plainTextToken;
 
         // Set IP Address on token
