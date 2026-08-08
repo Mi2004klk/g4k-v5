@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import GridLayout from "react-grid-layout";
+import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-const ResponsiveGridLayout = (GridLayout as any).WidthProvider((GridLayout as any).Responsive);
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface WidgetEngineProps {
   availableWidgets: Array<{
