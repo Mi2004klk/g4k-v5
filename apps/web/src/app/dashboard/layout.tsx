@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Link from "next/Link";
+import Link from "next/link";
 import { 
   LayoutDashboard, Users, User, Bell, Settings, 
   Menu, Search, X, LogOut, Sun, Moon, Map
