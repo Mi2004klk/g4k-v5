@@ -49,8 +49,10 @@ class AuthController extends Controller
             // SMTP implementation will be wired to a Mailable later if needed.
         }
 
-        $deviceName = $request->device_name ?? 'Unknown Device';
-        $token = $user->createToken($deviceName)->plainTextToken;
+        $user->roles = RoleAssignment::where('user_id', $user->id)->pluck('role');
+        $primaryRole = $user->roles[0] ?? 'employee';
+
+        $token = $user->createToken($deviceName, ['role:' . $primaryRole])->plainTextToken;
 
         // Set IP Address on token
         $dbToken = $user->tokens()->latest()->first();
@@ -59,12 +61,10 @@ class AuthController extends Controller
             $dbToken->save();
         }
 
-        $user->roles = RoleAssignment::where('user_id', $user->id)->pluck('role');
-
         return response()->json([
             'token' => $token,
             'user' => $user,
-            'active_role' => null
+            'active_role' => $primaryRole
         ]);
     }
 
