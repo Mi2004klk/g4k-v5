@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Responsive, WidthProvider } from "react-grid-layout";
+import { useEffect, useState, useRef } from "react";
+import { ResponsiveGridLayout, useContainerWidth } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface WidgetEngineProps {
   availableWidgets: Array<{
@@ -19,6 +17,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const [layouts, setLayouts] = useState<any>({});
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { containerRef, width } = useContainerWidth();
 
   // Load layout preferences from backend
   useEffect(() => {
@@ -51,7 +50,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const handleLayoutChange = async (_currentLayout: any, allLayouts: any) => {
     setLayouts(allLayouts);
     
-    // Persist to backend (debouncing omitted for brevity in M1)
+    // Persist to backend
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -74,23 +73,26 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   if (loading || !mounted) return <div className="p-4 text-zinc-400">Loading widgets...</div>;
 
   return (
-    <div className="w-full min-h-[500px]">
-      <ResponsiveGridLayout
-        className="layout"
-        layouts={layouts}
-        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-        rowHeight={100}
-        onLayoutChange={handleLayoutChange}
-        draggableHandle=".cursor-move"
-        margin={[16, 16]}
-      >
-        {availableWidgets.map((widget) => (
-          <div key={widget.id}>
-            {widget.component}
-          </div>
-        ))}
-      </ResponsiveGridLayout>
+    <div ref={containerRef} className="w-full min-h-[500px]">
+      {(width ?? 0) > 0 && (
+        <ResponsiveGridLayout
+          className="layout"
+          width={width ?? 1200}
+          layouts={layouts}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+          rowHeight={100}
+          onLayoutChange={handleLayoutChange}
+          margin={[16, 16] as [number, number]}
+        >
+          {availableWidgets.map((widget) => (
+            <div key={widget.id}>
+              {widget.component}
+            </div>
+          ))}
+        </ResponsiveGridLayout>
+      )}
     </div>
   );
 }
+
