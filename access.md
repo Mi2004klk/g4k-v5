@@ -8,3 +8,4 @@
   - `SUPABASE_ANON_KEY_<ENV>` = anon public key
   - `SUPABASE_SERVICE_KEY_<ENV>` = service_role key (server-only)
   - Database password (the one you set at project creation)
+`SUPABASE_TOKEN` = sbp_46ab5a144feba10b8cd3138d956dec19b48d3c87

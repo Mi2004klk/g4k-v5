@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Games4Kings API
+  version: 1.0.0
+  description: OpenAPI 3.0 specification for Games4Kings Workplace OS.
+servers:
+  - url: http://localhost:8000/api
+    description: Local Dev Server
+  - url: https://api.games4kings.com/api
+    description: Production API
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API server.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

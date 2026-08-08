@@ -131,3 +131,49 @@ per GUIDE-CREDENTIALS.md.
 performance-complete. The application can be developed from scratch without redesigning the
 architecture later for performance reasons.
 
+---
+
+## Component System (Radix + shadcn) Audit
+
+### What was added
+- **`COMPONENT-SYSTEM.md`** (FROZEN) — the production-ready Radix UI + shadcn/ui strategy: §0
+  foundations (states/focus/keyboard/touch/reduced-motion/density), §1 form primitives, §2 overlays
+  & disclosure, §3 data display & entry, §4 navigation & layout, §5 filters/search/pagination,
+  §6 feedback & communication, §7 module-specific composites (built FROM primitives), §8 rich
+  content, §9 component→workflow mapping (consistency guarantee), §10 ownership & reusability.
+  Each component lists variants, states, when-to-use, accessibility, keyboard, responsive rules,
+  and verification criteria.
+- **`project.md` §10** — references COMPONENT-SYSTEM.md as the FROZEN catalog every screen composes from.
+- **`config.yaml`** — design rule: every phase design MUST include a `## Component mapping` citing
+  exact components from COMPONENT-SYSTEM.md; module composites compose packages/ui generics only.
+- **Phase 3 (app-shell)** — spec gained "Frozen component system implementation" + "Reusable master
+  DataTable and FilterBar" requirements (with scenarios); design.md component library table rewritten
+  to reference the full catalog; tasks gained 8a–8f (disclosure/form/data-composite/lazy-wrapper
+  primitives + FilterBar/EmptyState/Skeleton + axe-core/visual-regression verification).
+- **All data/UI phases (1,2,4,5,6,7,8,9,10)** — each design.md gained a `## Component mapping`
+  section mapping its screens/workflows to exact catalog components. Phase 5 (Attendance) is the
+  reference exemplar.
+
+### Consistency audit (component layer)
+1. ✅ **Complete component strategy** — 40+ primitives + composites, each with variants/states/a11y/
+   keyboard/responsive/verification.
+2. ✅ **Every workflow mapped to components** — §9 mapping + per-phase `## Component mapping`.
+3. ✅ **No existing requirement weakened** — all additions only; `openspec validate --all` 11/11 pass.
+4. ✅ **No contradictions** — components align with DESIGN-SYSTEM tokens/motion and PERFORMANCE-STANDARDS
+   (virtualization, lazy import, memoization, optimistic UI, skeletons).
+5. ✅ **Consistency across modules** — generic DataTable/FilterBar/StatusBadge/EmptyState/Toast reused
+   everywhere; module composites compose, never duplicate (ADR-reusable-first enforced in §10).
+6. ✅ **No ad-hoc UI possible mid-development** — config rule + Phase 3 owns the catalog; later phases
+   compose only from it; a new primitive requires updating the frozen spec.
+7. ✅ **Responsive + accessible + performant by construction** — breakpoint rules (360/768/1024/1440),
+   WCAG AA + axe-core in CI, lazy heavy components (Tiptap/ECharts/dnd-kit), virtualized lists.
+
+### Component ownership map
+- **Phase 3** builds the full catalog in `packages/ui` (the component-owning phase).
+- **Phases 1,2,4,5,6,7,8,9,10** compose from it (each has a `## Component mapping` section).
+- **Phase 0** has no UI (infrastructure only) — correctly has no component mapping.
+
+### Final validation (combined: functional + architecture + performance + components)
+`openspec validate --all` → **11 passed, 0 failed.** OpenSpec is internally consistent and complete
+across all four layers. The application can be developed from scratch with no ad-hoc UI/UX decisions,
+no later architecture/performance redesign, and consistent components across every module.
