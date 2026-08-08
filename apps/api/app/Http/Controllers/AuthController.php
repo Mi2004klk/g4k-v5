@@ -49,8 +49,9 @@ class AuthController extends Controller
             // SMTP implementation will be wired to a Mailable later if needed.
         }
 
-        $user->roles = RoleAssignment::where('user_id', $user->id)->pluck('role');
-        $primaryRole = $user->roles[0] ?? 'employee';
+        $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
+        $user->roles = $rolesCollection->toArray();
+        $primaryRole = $rolesCollection->first() ?? 'employee';
 
         $deviceName = $request->device_name ?? 'Unknown Device';
         $token = $user->createToken($deviceName, ['role:' . $primaryRole])->plainTextToken;
