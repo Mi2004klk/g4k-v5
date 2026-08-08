@@ -100,8 +100,7 @@ class DatabaseSeeder extends Seeder
                 \DB::table('attendance_records')->updateOrInsert(
                     ['user_id' => $praveen->id, 'date' => now()->subDays($i)->toDateString()],
                     [
-                        'check_in' => now()->subDays($i)->setTime(9, rand(0, 15)),
-                        'check_out' => now()->subDays($i)->setTime(18, rand(0, 30)),
+                        'total_worked_minutes' => 480, // 8 hours
                         'status' => 'present',
                     ]
                 );
