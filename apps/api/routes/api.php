@@ -27,9 +27,6 @@ use App\Http\Controllers\SavedViewController;
 
 // Public (unauthenticated) endpoints
 Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'g4k-api']));
-Route::get('/debug/logs', function () {
-    return response(file_get_contents(storage_path('logs/laravel.log')))->header('Content-Type', 'text/plain');
-});
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/auth/refresh', [AuthController::class, 'refresh']);
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);

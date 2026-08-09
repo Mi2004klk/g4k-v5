@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(\App\Events\ApprovalSubmitted::class, \App\Listeners\NotifyApprovalSubmitted::class);
         Event::listen(ApprovalDecided::class, LeaveAttendanceIntegration::class);
         Notification::observe(NotificationObserver::class);
     }
