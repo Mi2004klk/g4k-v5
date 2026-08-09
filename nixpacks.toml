@@ -1,0 +1,39 @@
+# ============================================================================
+# Railway/Nixpacks build config — THE SINGLE SOURCE OF TRUTH
+# ============================================================================
+# Railway's service "Root Directory" is the REPO ROOT (where this file lives).
+# The Laravel app lives in apps/api. This config builds & runs it from there,
+# so NO Laravel entry files (artisan/index.php/server.php) are needed at root.
+#
+# composer.json requires "php": "^8.4" — the PHP package below MUST match.
+# ============================================================================
+
+[build]
+builder = "nixpacks"
+
+[phases.setup]
+nixPkgs = [
+  "php84",
+  "php84Packages.composer",
+  "php84Extensions.pdo",
+  "php84Extensions.pdo_pgsql",
+  "php84Extensions.mbstring",
+  "php84Extensions.bcmath",
+  "php84Extensions.gd",
+  "php84Extensions.redis",
+]
+
+# Install composer deps inside apps/api (where composer.json lives).
+[phases.install]
+cmds = ["cd apps/api && composer install --no-dev --optimize-autoloader --no-interaction"]
+
+# Build phase: only storage:link. Do NOT cache config/routes here — production env
+# (DB creds, APP_KEY) is injected at RUNTIME on Railway, and caching with missing
+# env produces a stale cache that serves 404s ("route ... could not be found").
+[phases.build]
+cmds = ["cd apps/api && php artisan storage:link"]
+
+# Runtime: build a FRESH cache with the real env, migrate, then serve Laravel.
+# `php artisan serve` on 0.0.0.0:$PORT is the simplest reliable runtime.
+[start]
+cmd = "cd apps/api && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"
