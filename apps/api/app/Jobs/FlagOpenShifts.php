@@ -31,7 +31,7 @@ class FlagOpenShifts implements ShouldQueue
             Notification::create([
                 'user_id' => $user->id,
                 'title' => 'Missing Clock-Out',
-                'message' => "You forgot to clock out on {$day->date}. Please contact HR to correct your timesheet.",
+                'body' => "You forgot to clock out on {$day->date}. Please contact HR to correct your timesheet.",
                 'type' => 'alert',
             ]);
 
@@ -49,7 +49,7 @@ class FlagOpenShifts implements ShouldQueue
                 Notification::create([
                     'user_id' => $hr->id,
                     'title' => 'Open Shift Flagged',
-                    'message' => "{$user->name} missed a clock-out on {$day->date}. Correction required.",
+                    'body' => "{$user->name} missed a clock-out on {$day->date}. Correction required.",
                     'type' => 'info',
                 ]);
             }

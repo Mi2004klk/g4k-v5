@@ -60,4 +60,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Team::class);
     }
+
+    public function roles()
+    {
+        return $this->hasMany(RoleAssignment::class);
+    }
+
+    public function roleAssignments()
+    {
+        return $this->hasMany(RoleAssignment::class);
+    }
 }
