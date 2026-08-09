@@ -15,6 +15,7 @@ import {
   Phone,
   Shield,
   Loader2,
+  Edit2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
@@ -56,6 +57,8 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -64,6 +67,13 @@ export default function UsersPage() {
     username: "",
     phone: "",
     role: "employee",
+  });
+
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    username: "",
+    phone: "",
   });
 
   const { data, isLoading, error } = useQuery({
@@ -94,6 +104,24 @@ export default function UsersPage() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create user.");
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return apiFetch(`/users/${editingUser.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+    },
+    onSuccess: () => {
+      toast.success("User updated successfully!");
+      setIsEditOpen(false);
+      setEditingUser(null);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update user.");
     },
   });
 
@@ -239,6 +267,22 @@ export default function UsersPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingUser(user);
+                    setEditFormData({
+                      name: user.name || "",
+                      email: user.email || "",
+                      username: user.username || "",
+                      phone: user.phone || "",
+                    });
+                    setIsEditOpen(true);
+                  }}
+                  className="gap-2 text-violet-600 focus:text-violet-700"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit User
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => resetPasswordMutation.mutate(user.id)}
                   className="gap-2 text-amber-600 focus:text-amber-700"
@@ -413,6 +457,75 @@ export default function UsersPage() {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 "Create User"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+            <DialogDescription>
+              Update demographic and contact details for {editingUser?.name}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
+                Full Name *
+              </label>
+              <Input
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
+                Email Address *
+              </label>
+              <Input
+                type="email"
+                value={editFormData.email}
+                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
+                Username
+              </label>
+              <Input
+                value={editFormData.username}
+                onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
+                Phone Number
+              </label>
+              <Input
+                value={editFormData.phone}
+                onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => updateUserMutation.mutate(editFormData)}
+              disabled={updateUserMutation.isPending || !editFormData.name || !editFormData.email}
+              className="bg-violet-600 hover:bg-violet-700 text-white"
+            >
+              {updateUserMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Save Changes"
               )}
             </Button>
           </DialogFooter>

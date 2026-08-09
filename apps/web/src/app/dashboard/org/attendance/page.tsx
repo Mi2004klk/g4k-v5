@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { Download, Filter, Edit2, Clock, Loader2, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { useAuthStore } from "@/lib/auth-store";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +73,7 @@ export default function OrgAttendancePage() {
 
   const handleExport = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = useAuthStore.getState().token;
       const res = await fetch(`/api/attendance/export?date=${selectedDate}`, {
         headers: {
           Authorization: `Bearer ${token}`

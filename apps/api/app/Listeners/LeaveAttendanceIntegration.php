@@ -24,23 +24,40 @@ class LeaveAttendanceIntegration
             $startDate = Carbon::parse($leaveRequest->start_date);
             $endDate = Carbon::parse($leaveRequest->end_date);
 
-            // Fetch holidays to exclude
-            $holidays = DB::table('holidays')->pluck('date')->map(function ($date) {
-                return Carbon::parse($date)->toDateString();
-            })->toArray();
+            // Fetch work schedule working_days
+            $schedule = DB::table('work_schedules')->where('is_default', true)->first();
+            $workingDays = [1, 2, 3, 4, 5, 6]; // Default Mon-Sat
+            if ($schedule && !empty($schedule->working_days)) {
+                $decoded = is_string($schedule->working_days) ? json_decode($schedule->working_days, true) : $schedule->working_days;
+                if (is_array($decoded)) {
+                    $workingDays = $decoded;
+                }
+            }
 
-            // Fetch recurring holidays (if day/month matches, though standard date format is usually YYYY-MM-DD. For recurring, let's just assume we check the M-D part).
-            // Simplification: We'll just check exact date matches from DB for now as per spec "excluded from absence".
-            // Phase 5 already does its own reconciliation if an event occurs. Here we are forcing status to 'leave'.
+            // Fetch holidays
+            $holidays = DB::table('holidays')->get();
 
             $currentDate = $startDate->copy();
             while ($currentDate->lte($endDate)) {
                 $dateStr = $currentDate->toDateString();
+                $dayIso = $currentDate->dayOfWeekIso; // 1 (Mon) to 7 (Sun)
+                $monthDay = $currentDate->format('m-d');
 
-                // Skip weekends (assuming Sat/Sun are weekends for simplicity, or check work schedule if available)
-                // Actually the spec says "Holiday calendar excluded from absence computation".
-                // If it's a holiday, we might still mark it as 'leave' or just skip. Let's mark as leave if it's not a holiday.
-                if (!in_array($dateStr, $holidays)) {
+                // Check if working day
+                $isWorkingDay = in_array($dayIso, $workingDays) || in_array($currentDate->dayOfWeek, $workingDays);
+
+                // Check if holiday (exact date or recurring m-d)
+                $isHoliday = false;
+                foreach ($holidays as $h) {
+                    $hDateStr = Carbon::parse($h->date)->toDateString();
+                    $hMonthDay = Carbon::parse($h->date)->format('m-d');
+                    if ($dateStr === $hDateStr || (!empty($h->recurring) && $monthDay === $hMonthDay)) {
+                        $isHoliday = true;
+                        break;
+                    }
+                }
+
+                if ($isWorkingDay && !$isHoliday) {
                     DB::table('attendance_days')->updateOrInsert(
                         ['user_id' => $userId, 'date' => $dateStr],
                         [

@@ -2,7 +2,9 @@ const fs = require('fs');
 const yaml = require('js-yaml');
 
 const openapiPath = 'C:/Users/Founder Desk/3D Objects/Games4Kings-New/apps/api/openapi/openapi.yaml';
-const doc = yaml.load(fs.readFileSync(openapiPath, 'utf8'));
+const doc = yaml.load(fs.readFileSync(openapiPath, 'utf8')) || {};
+if (!doc.components) doc.components = {};
+if (!doc.components.schemas) doc.components.schemas = {};
 
 // Define new schemas
 doc.components.schemas.Department = {

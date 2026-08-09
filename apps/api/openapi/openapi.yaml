@@ -3,26 +3,59 @@ info:
   title: Games4King Workplace OS API
   version: 1.0.0
   description: Internal employee portal API for Games4King
-
 servers:
   - url: /api
     description: API proxy (via Next.js rewrites)
-
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: Sanctum
-
+  schemas:
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+    Team:
+      type: object
+      properties:
+        id:
+          type: integer
+        department_id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+    Designation:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
 security:
   - bearerAuth: []
-
 paths:
-  # ── Auth (Public) ──────────────────────────────────────────────────
   /auth/login:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Login with identifier + password
       security: []
       requestBody:
@@ -31,28 +64,38 @@ paths:
           application/json:
             schema:
               type: object
-              required: [identifier, password]
+              required:
+                - identifier
+                - password
               properties:
-                identifier: { type: string }
-                password: { type: string }
-                device_name: { type: string }
+                identifier:
+                  type: string
+                password:
+                  type: string
+                device_name:
+                  type: string
       responses:
-        '200': { description: Success — returns access token + user }
-        '422': { description: Invalid credentials }
-        '423': { description: Account locked }
-
+        '200':
+          description: Success — returns access token + user
+        '422':
+          description: Invalid credentials
+        '423':
+          description: Account locked
   /auth/refresh:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Refresh access token via HttpOnly refresh cookie
       security: []
       responses:
-        '200': { description: New access token }
-        '401': { description: Invalid or expired refresh token }
-
+        '200':
+          description: New access token
+        '401':
+          description: Invalid or expired refresh token
   /auth/forgot-password:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Request password reset email
       security: []
       requestBody:
@@ -61,15 +104,19 @@ paths:
           application/json:
             schema:
               type: object
-              required: [email]
+              required:
+                - email
               properties:
-                email: { type: string, format: email }
+                email:
+                  type: string
+                  format: email
       responses:
-        '200': { description: Reset link sent }
-
+        '200':
+          description: Reset link sent
   /auth/reset-password:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Reset password with token
       security: []
       requestBody:
@@ -78,40 +125,51 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token, email, password, password_confirmation]
+              required:
+                - token
+                - email
+                - password
+                - password_confirmation
               properties:
-                token: { type: string }
-                email: { type: string }
-                password: { type: string }
-                password_confirmation: { type: string }
+                token:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                password_confirmation:
+                  type: string
       responses:
-        '200': { description: Password reset successfully }
-
-  # ── Auth (Authenticated) ──────────────────────────────────────────
+        '200':
+          description: Password reset successfully
   /auth/logout:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Logout and revoke current token
       responses:
-        '200': { description: Logged out }
-
+        '200':
+          description: Logged out
   /auth/change-password:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Change password (requires current password)
       responses:
-        '200': { description: Password changed }
-
+        '200':
+          description: Password changed
   /auth/onboarding/complete:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Mark onboarding as complete
       responses:
-        '200': { description: Onboarding completed }
-
+        '200':
+          description: Onboarding completed
   /auth/role-select:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Switch active role
       requestBody:
         required: true
@@ -119,89 +177,131 @@ paths:
           application/json:
             schema:
               type: object
-              required: [role]
+              required:
+                - role
               properties:
-                role: { type: string }
+                role:
+                  type: string
       responses:
-        '200': { description: Role switched — new access token }
-
+        '200':
+          description: Role switched — new access token
   /auth/sessions:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: List active sessions/devices
       responses:
-        '200': { description: Array of sessions }
-
+        '200':
+          description: Array of sessions
   /auth/sessions/{id}:
     delete:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Revoke a specific session
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Session revoked }
-
+        '200':
+          description: Session revoked
   /auth/preferences:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Get user preferences
       responses:
-        '200': { description: Preferences object }
+        '200':
+          description: Preferences object
     put:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Update user preferences
       responses:
-        '200': { description: Preferences updated }
-
+        '200':
+          description: Preferences updated
   /auth/profile:
     get:
-      tags: [Auth]
-      summary: Get authenticated user profile
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
       responses:
-        '200': { description: User object with roles }
-
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      summary: Update current user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+                avatar_url:
+                  type: string
+      responses:
+        '200':
+          description: Updated Profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
   /me/capabilities:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Get capabilities for active role
       responses:
-        '200': { description: Array of capability keys }
-
+        '200':
+          description: Array of capability keys
   /ping:
     get:
-      tags: [Health]
+      tags:
+        - Health
       summary: Health check ping
       security: []
       responses:
-        '200': { description: pong }
-
-  # ── Dashboard ──────────────────────────────────────────────────────
+        '200':
+          description: pong
   /dashboard/metrics:
     get:
-      tags: [Dashboard]
+      tags:
+        - Dashboard
       summary: Get dashboard KPI metrics
       responses:
-        '200': { description: Metrics object }
-
-  # ── Profile ────────────────────────────────────────────────────────
+        '200':
+          description: Metrics object
   /profile:
     get:
-      tags: [Profile]
+      tags:
+        - Profile
       summary: Show current user profile
       responses:
-        '200': { description: Profile object }
+        '200':
+          description: Profile object
     put:
-      tags: [Profile]
+      tags:
+        - Profile
       summary: Update current user profile
       responses:
-        '200': { description: Updated profile }
-
+        '200':
+          description: Updated profile
   /profile/avatar:
     post:
-      tags: [Profile]
+      tags:
+        - Profile
       summary: Upload avatar image
       requestBody:
         content:
@@ -213,156 +313,203 @@ paths:
                   type: string
                   format: binary
       responses:
-        '200': { description: Avatar URL }
-
-  # ── Directory ──────────────────────────────────────────────────────
+        '200':
+          description: Avatar URL
   /directory:
     get:
-      tags: [Directory]
-      summary: List employees in directory
+      summary: Get employee directory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: department_id
+          in: query
+          schema:
+            type: integer
       responses:
-        '200': { description: Paginated employees }
-
+        '200':
+          description: Directory list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
   /directory/{id}:
     get:
-      tags: [Directory]
+      tags:
+        - Directory
       summary: View employee details
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Employee details }
-
+        '200':
+          description: Employee details
   /directory/{id}/send-message:
     post:
-      tags: [Directory]
+      tags:
+        - Directory
       summary: Send a direct message to an employee
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Message sent }
-
-  # ── Attendance ─────────────────────────────────────────────────────
+        '200':
+          description: Message sent
   /attendance/clock-in:
     post:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Clock in
       responses:
-        '200': { description: Clock-in recorded }
-
+        '200':
+          description: Clock-in recorded
   /attendance/start-break:
     post:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Start break
       responses:
-        '200': { description: Break started }
-
+        '200':
+          description: Break started
   /attendance/end-break:
     post:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: End break
       responses:
-        '200': { description: Break ended }
-
+        '200':
+          description: Break ended
   /attendance/clock-out:
     post:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Clock out
       responses:
-        '200': { description: Clock-out recorded }
-
+        '200':
+          description: Clock-out recorded
   /attendance/me/today:
     get:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Get today's attendance for current user
       responses:
-        '200': { description: Today attendance with events }
-
+        '200':
+          description: Today attendance with events
   /attendance/me/history:
     get:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Get attendance history for current user
       responses:
-        '200': { description: Cursor-paginated attendance days }
-
+        '200':
+          description: Cursor-paginated attendance days
   /attendance/me/day/{date}:
     get:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Get specific day attendance
       parameters:
         - name: date
           in: path
           required: true
-          schema: { type: string, format: date }
+          schema:
+            type: string
+            format: date
       responses:
-        '200': { description: Day attendance with events }
-
+        '200':
+          description: Day attendance with events
   /attendance/admin/overview:
     get:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Admin overview of all attendance
       parameters:
         - name: date
           in: query
-          schema: { type: string, format: date }
+          schema:
+            type: string
+            format: date
         - name: department_id
           in: query
-          schema: { type: integer }
+          schema:
+            type: integer
         - name: status
           in: query
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        '200': { description: Paginated attendance overview }
-
+        '200':
+          description: Paginated attendance overview
   /attendance/hr/today:
     get:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: HR team attendance for today
       responses:
-        '200': { description: Team attendance }
-
+        '200':
+          description: Team attendance
   /attendance/hr/graph:
     get:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: HR attendance graph data
       parameters:
         - name: mode
           in: query
-          schema: { type: string, enum: [weekly, monthly] }
+          schema:
+            type: string
+            enum:
+              - weekly
+              - monthly
         - name: date
           in: query
-          schema: { type: string, format: date }
+          schema:
+            type: string
+            format: date
       responses:
-        '200': { description: Graph data }
-
+        '200':
+          description: Graph data
   /attendance/correct:
     post:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Admin attendance correction
       responses:
-        '200': { description: Correction applied }
-
+        '200':
+          description: Correction applied
   /attendance/export:
     get:
-      tags: [Attendance]
+      tags:
+        - Attendance
       summary: Export attendance data as CSV
       responses:
-        '200': { description: CSV stream }
-
-  # ── Leave ──────────────────────────────────────────────────────────
+        '200':
+          description: CSV stream
   /leave-requests:
     get:
-      tags: [Leave]
+      tags:
+        - Leave
       summary: List own leave requests
       responses:
-        '200': { description: Paginated leave requests }
+        '200':
+          description: Paginated leave requests
     post:
-      tags: [Leave]
+      tags:
+        - Leave
       summary: Submit a new leave request
       requestBody:
         required: true
@@ -370,619 +517,1102 @@ paths:
           application/json:
             schema:
               type: object
-              required: [start_date, end_date, type, reason]
+              required:
+                - start_date
+                - end_date
+                - type
+                - reason
               properties:
-                start_date: { type: string, format: date }
-                end_date: { type: string, format: date }
-                type: { type: string, enum: [casual, sick, earned, unpaid] }
-                reason: { type: string }
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                type:
+                  type: string
+                  enum:
+                    - casual
+                    - sick
+                    - earned
+                    - unpaid
+                reason:
+                  type: string
       responses:
-        '201': { description: Leave request created }
-
+        '201':
+          description: Leave request created
   /leave-requests/history:
     get:
-      tags: [Leave]
+      tags:
+        - Leave
       summary: Leave history with filters
       parameters:
         - name: type
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: status
           in: query
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        '200': { description: Paginated leave history }
-
+        '200':
+          description: Paginated leave history
   /leave-requests/{id}:
     get:
-      tags: [Leave]
+      tags:
+        - Leave
       summary: View a specific leave request
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Leave request details }
-
+        '200':
+          description: Leave request details
   /approvals/pending:
     get:
-      tags: [Leave]
+      tags:
+        - Leave
       summary: List pending approvals for HR/Admin
       responses:
-        '200': { description: Pending approval list }
-
+        '200':
+          description: Pending approval list
   /approvals/{id}/decision:
     post:
-      tags: [Leave]
+      tags:
+        - Leave
       summary: Approve or reject a leave request
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [decision]
+              required:
+                - decision
               properties:
-                decision: { type: string, enum: [approved, rejected] }
-                reason: { type: string }
+                decision:
+                  type: string
+                  enum:
+                    - approved
+                    - rejected
+                reason:
+                  type: string
       responses:
-        '200': { description: Decision recorded }
-
+        '200':
+          description: Decision recorded
   /holidays:
     get:
-      tags: [Leave]
+      tags:
+        - Leave
       summary: List holidays for a year
       parameters:
         - name: year
           in: query
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Array of holidays }
-
-  # ── Notifications ──────────────────────────────────────────────────
+        '200':
+          description: Array of holidays
   /notifications:
     get:
-      tags: [Notifications]
+      tags:
+        - Notifications
       summary: List notifications
       responses:
-        '200': { description: Array of notifications }
-
+        '200':
+          description: Array of notifications
   /notifications/{id}/mark-read:
     post:
-      tags: [Notifications]
+      tags:
+        - Notifications
       summary: Mark a notification as read
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Marked as read }
-
-  # ── Admin — Users ──────────────────────────────────────────────────
+        '200':
+          description: Marked as read
   /users:
     get:
-      tags: [Admin - Users]
+      tags:
+        - Admin - Users
       summary: List all users
       responses:
-        '200': { description: Paginated users }
+        '200':
+          description: Paginated users
     post:
-      tags: [Admin - Users]
+      tags:
+        - Admin - Users
       summary: Create a new user
       responses:
-        '201': { description: User created }
-
+        '201':
+          description: User created
   /users/{user}:
     get:
-      tags: [Admin - Users]
+      tags:
+        - Admin - Users
       summary: Show user details
       parameters:
         - name: user
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: User object }
+        '200':
+          description: User object
     put:
-      tags: [Admin - Users]
+      tags:
+        - Admin - Users
       summary: Update user
       parameters:
         - name: user
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Updated user }
+        '200':
+          description: Updated user
     delete:
-      tags: [Admin - Users]
+      tags:
+        - Admin - Users
       summary: Delete user
       parameters:
         - name: user
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: User deleted }
-
+        '200':
+          description: User deleted
   /users/{id}/reset-password:
     post:
-      tags: [Admin - Users]
+      tags:
+        - Admin - Users
       summary: Reset a user's password
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Password reset }
-
-  # ── Admin — Companies ──────────────────────────────────────────────
+        '200':
+          description: Password reset
   /companies:
     get:
-      tags: [Admin - Companies]
+      tags:
+        - Admin - Companies
       summary: List companies
       responses:
-        '200': { description: Paginated companies }
+        '200':
+          description: Paginated companies
     post:
-      tags: [Admin - Companies]
+      tags:
+        - Admin - Companies
       summary: Create company
       responses:
-        '201': { description: Company created }
-
+        '201':
+          description: Company created
   /companies/{company}:
     get:
-      tags: [Admin - Companies]
+      tags:
+        - Admin - Companies
       summary: Show company
       parameters:
         - name: company
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Company object }
+        '200':
+          description: Company object
     put:
-      tags: [Admin - Companies]
+      tags:
+        - Admin - Companies
       summary: Update company
       parameters:
         - name: company
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Updated company }
+        '200':
+          description: Updated company
     delete:
-      tags: [Admin - Companies]
+      tags:
+        - Admin - Companies
       summary: Delete company
       parameters:
         - name: company
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Company deleted }
-
-  # ── Admin — Departments ────────────────────────────────────────────
+        '200':
+          description: Company deleted
   /departments:
     get:
-      tags: [Admin - Departments]
+      tags:
+        - Admin - Departments
       summary: List departments
       responses:
-        '200': { description: Paginated departments }
+        '200':
+          description: Paginated departments
     post:
-      tags: [Admin - Departments]
+      tags:
+        - Admin - Departments
       summary: Create department
       responses:
-        '201': { description: Department created }
-
+        '201':
+          description: Department created
   /departments/{department}:
     get:
-      tags: [Admin - Departments]
+      tags:
+        - Admin - Departments
       summary: Show department
       parameters:
         - name: department
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Department object }
+        '200':
+          description: Department object
     put:
-      tags: [Admin - Departments]
+      tags:
+        - Admin - Departments
       summary: Update department
       parameters:
         - name: department
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Updated department }
+        '200':
+          description: Updated department
     delete:
-      tags: [Admin - Departments]
+      tags:
+        - Admin - Departments
       summary: Delete department
       parameters:
         - name: department
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Department deleted }
-
-  # ── Admin — Designations ───────────────────────────────────────────
+        '200':
+          description: Department deleted
   /designations:
     get:
-      tags: [Admin - Designations]
+      tags:
+        - Admin - Designations
       summary: List designations
       responses:
-        '200': { description: Paginated designations }
+        '200':
+          description: Paginated designations
     post:
-      tags: [Admin - Designations]
+      tags:
+        - Admin - Designations
       summary: Create designation
       responses:
-        '201': { description: Designation created }
-
+        '201':
+          description: Designation created
   /designations/{designation}:
     get:
-      tags: [Admin - Designations]
+      tags:
+        - Admin - Designations
       summary: Show designation
       parameters:
         - name: designation
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Designation object }
+        '200':
+          description: Designation object
     put:
-      tags: [Admin - Designations]
+      tags:
+        - Admin - Designations
       summary: Update designation
       parameters:
         - name: designation
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Updated designation }
+        '200':
+          description: Updated designation
     delete:
-      tags: [Admin - Designations]
+      tags:
+        - Admin - Designations
       summary: Delete designation
       parameters:
         - name: designation
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Designation deleted }
-
-  # ── Settings & Audit ───────────────────────────────────────────────
+        '200':
+          description: Designation deleted
   /settings/grouped:
     get:
-      tags: [Settings]
+      tags:
+        - Settings
       summary: Get grouped settings
       responses:
-        '200': { description: Grouped settings object }
-
+        '200':
+          description: Grouped settings object
   /settings/bulk:
     post:
-      tags: [Settings]
+      tags:
+        - Settings
       summary: Bulk update settings
       responses:
-        '200': { description: Settings updated }
-
+        '200':
+          description: Settings updated
   /company-profile:
     get:
-      tags: [Settings]
+      tags:
+        - Settings
       summary: Get company profile
       responses:
-        '200': { description: Company profile }
+        '200':
+          description: Company profile
     post:
-      tags: [Settings]
+      tags:
+        - Settings
       summary: Update company profile
       responses:
-        '200': { description: Updated }
-
+        '200':
+          description: Updated
   /work-schedules:
     get:
-      tags: [Settings]
+      tags:
+        - Settings
       summary: List work schedules
       responses:
-        '200': { description: Work schedules }
-
+        '200':
+          description: Work schedules
   /work-schedules/{id}:
     put:
-      tags: [Settings]
+      tags:
+        - Settings
       summary: Update work schedule
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Updated }
-
+        '200':
+          description: Updated
   /audit-logs:
     get:
-      tags: [Audit]
+      tags:
+        - Audit
       summary: List audit logs (filterable/paginated)
       responses:
-        '200': { description: Paginated audit logs }
-
-  # ── Projects & Tasks ───────────────────────────────────────────────
+        '200':
+          description: Paginated audit logs
   /projects:
     get:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: List projects
       responses:
-        '200': { description: Paginated projects }
+        '200':
+          description: Paginated projects
     post:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Create project
       responses:
-        '201': { description: Project created }
-
+        '201':
+          description: Project created
   /projects/{project}:
     get:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Show project
       parameters:
         - name: project
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Project object }
+        '200':
+          description: Project object
     put:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Update project
       parameters:
         - name: project
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Updated project }
+        '200':
+          description: Updated project
     delete:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Delete project
       parameters:
         - name: project
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Project deleted }
-
+        '200':
+          description: Project deleted
   /tasks:
     get:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: List tasks
       responses:
-        '200': { description: Paginated tasks }
+        '200':
+          description: Paginated tasks
     post:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Create task
       responses:
-        '201': { description: Task created }
-
+        '201':
+          description: Task created
   /tasks/{task}:
     get:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Show task
       parameters:
         - name: task
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Task object }
+        '200':
+          description: Task object
     put:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Update task
       parameters:
         - name: task
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Updated task }
+        '200':
+          description: Updated task
     delete:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Delete task
       parameters:
         - name: task
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Task deleted }
-
+        '200':
+          description: Task deleted
   /tasks/{id}/submit-review:
     post:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Submit task for review
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Submitted }
-
+        '200':
+          description: Submitted
   /tasks/{id}/comments:
     post:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Add comment to task
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Comment added }
-
+        '200':
+          description: Comment added
   /qa-forms:
     get:
-      tags: [QA]
+      tags:
+        - QA
       summary: List QA forms
       responses:
-        '200': { description: QA forms }
+        '200':
+          description: QA forms
     post:
-      tags: [QA]
+      tags:
+        - QA
       summary: Create QA form
       responses:
-        '201': { description: QA form created }
-
+        '201':
+          description: QA form created
   /qa-forms/{id}:
     get:
-      tags: [QA]
+      tags:
+        - QA
       summary: Show QA form
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: QA form object }
-
+        '200':
+          description: QA form object
   /timer/log:
     post:
-      tags: [Timer]
+      tags:
+        - Timer
       summary: Log time entry
       responses:
-        '200': { description: Time logged }
-
+        '200':
+          description: Time logged
   /timer/logs:
     get:
-      tags: [Timer]
+      tags:
+        - Timer
       summary: List time logs
       responses:
-        '200': { description: Time logs }
-
+        '200':
+          description: Time logs
   /saved-views:
     get:
-      tags: [Views]
+      tags:
+        - Views
       summary: List saved views
       responses:
-        '200': { description: Saved views }
+        '200':
+          description: Saved views
     post:
-      tags: [Views]
+      tags:
+        - Views
       summary: Save a view
       responses:
-        '201': { description: View saved }
-
+        '201':
+          description: View saved
   /saved-views/{id}:
     delete:
-      tags: [Views]
+      tags:
+        - Views
       summary: Delete a saved view
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: View deleted }
-
-  # ── Chat & Communication ───────────────────────────────────────────
+        '200':
+          description: View deleted
   /conversations:
     get:
-      tags: [Chat]
+      tags:
+        - Chat
       summary: List conversations
       responses:
-        '200': { description: Conversations }
-
+        '200':
+          description: Conversations
   /conversations/dm:
     post:
-      tags: [Chat]
+      tags:
+        - Chat
       summary: Start or get a direct message conversation
       responses:
-        '200': { description: Conversation object }
-
+        '200':
+          description: Conversation object
   /conversations/{id}/messages:
     get:
-      tags: [Chat]
+      tags:
+        - Chat
       summary: List messages in conversation
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Messages }
+        '200':
+          description: Messages
     post:
-      tags: [Chat]
+      tags:
+        - Chat
       summary: Send message in conversation
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Message sent }
-
+        '200':
+          description: Message sent
   /announcements:
     get:
-      tags: [Communication]
+      tags:
+        - Communication
       summary: List announcements
       responses:
-        '200': { description: Announcements }
+        '200':
+          description: Announcements
     post:
-      tags: [Communication]
+      tags:
+        - Communication
       summary: Create announcement
       responses:
-        '201': { description: Announcement created }
-
+        '201':
+          description: Announcement created
   /quick-notes:
     get:
-      tags: [Communication]
+      tags:
+        - Communication
       summary: List quick notes
       responses:
-        '200': { description: Quick notes }
+        '200':
+          description: Quick notes
     post:
-      tags: [Communication]
+      tags:
+        - Communication
       summary: Create quick note
       responses:
-        '201': { description: Note created }
-
+        '201':
+          description: Note created
   /quick-notes/{id}:
     delete:
-      tags: [Communication]
+      tags:
+        - Communication
       summary: Delete quick note
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: integer }
+          schema:
+            type: integer
       responses:
-        '200': { description: Note deleted }
-
+        '200':
+          description: Note deleted
   /feedback:
     post:
-      tags: [Communication]
+      tags:
+        - Communication
       summary: Submit feedback
       responses:
-        '200': { description: Feedback submitted }
-
-  # ── Reports & Exports ──────────────────────────────────────────────
+        '200':
+          description: Feedback submitted
   /reports/data:
     get:
-      tags: [Reports]
+      tags:
+        - Reports
       summary: Get report data
       responses:
-        '200': { description: Report data }
-
+        '200':
+          description: Report data
   /reports/export:
     post:
-      tags: [Reports]
+      tags:
+        - Reports
       summary: Queue a report export
       responses:
-        '200': { description: Export queued }
-
+        '200':
+          description: Export queued
   /reports/exports:
     get:
-      tags: [Reports]
+      tags:
+        - Reports
       summary: List past exports
       responses:
-        '200': { description: Exports list }
+        '200':
+          description: Exports list
+  /org/departments:
+    get:
+      summary: List departments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Department'
+    post:
+      summary: Create department
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+  /org/departments/{id}:
+    get:
+      summary: Get department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Department
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+    put:
+      summary: Update department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+    delete:
+      summary: Delete department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+  /org/departments/{departmentId}/teams:
+    post:
+      summary: Create team
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+  /org/departments/{departmentId}/teams/{teamId}:
+    delete:
+      summary: Delete team
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: departmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: teamId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+  /org/designations:
+    get:
+      summary: List designations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Designations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Designation'
+    post:
+      summary: Create designation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Designation'
+  /org/designations/{id}:
+    put:
+      summary: Update designation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Designation'
+    delete:
+      summary: Delete designation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+  /org/users:
+    get:
+      summary: List users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                department_id:
+                  type: integer
+                team_id:
+                  type: integer
+                designation_id:
+                  type: integer
+                roles:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /org/users/{id}:
+    get:
+      summary: Get user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      summary: Update user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                department_id:
+                  type: integer
+                team_id:
+                  type: integer
+                designation_id:
+                  type: integer
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                roles:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      summary: Delete user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted

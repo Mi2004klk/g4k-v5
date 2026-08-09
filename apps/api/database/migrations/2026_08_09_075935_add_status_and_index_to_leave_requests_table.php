@@ -13,20 +13,24 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
         });
 
-        // Sync existing statuses
-        DB::statement("
-            UPDATE leave_requests lr
-            SET status = a.status
-            FROM approvals a
-            WHERE lr.approval_id = a.id
-        ");
+        // Sync existing statuses using a subquery (portable across SQLite & Postgres;
+        // the previous `UPDATE ... FROM ... alias` syntax is Postgres-only and broke tests).
+        DB::table('leave_requests')
+            ->whereNotNull('approval_id')
+            ->update([
+                'status' => DB::raw('(SELECT status FROM approvals WHERE approvals.id = leave_requests.approval_id)'),
+            ]);
 
-        // Partial unique index to prevent overlapping pending requests
-        DB::statement("
-            CREATE UNIQUE INDEX leave_requests_no_overlap 
-            ON leave_requests (user_id, start_date, end_date) 
-            WHERE status = 'pending'
-        ");
+        // Partial unique index to prevent overlapping pending requests.
+        // Postgres supports WHERE on indexes; SQLite (tests) does too (>=3.8). Guard just in case.
+        $driver = DB::getDriverName();
+        if ($driver === 'pgsql' || $driver === 'sqlite') {
+            DB::statement("
+                CREATE UNIQUE INDEX IF NOT EXISTS leave_requests_no_overlap
+                ON leave_requests (user_id, start_date, end_date)
+                WHERE status = 'pending'
+            ");
+        }
     }
 
     public function down(): void

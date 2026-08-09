@@ -45,6 +45,19 @@ class ApprovalService
         if (!in_array($approval->current_approver_role, $deciderRoles) && !in_array('super_admin', $deciderRoles)) {
             throw new Exception("You do not have the correct active role ({$approval->current_approver_role}) to decide this approval.");
         }
+
+        // Capability Matrix defense-in-depth check
+        $requiredCap = ($approval->current_approver_role === 'super_admin') ? 'leave.approve-hr' : 'leave.approve-employee';
+        $hasCap = false;
+        foreach ($deciderRoles as $role) {
+            if (CapabilityMatrix::hasCapability($role, $requiredCap) || $role === 'super_admin') {
+                $hasCap = true;
+                break;
+            }
+        }
+        if (!$hasCap) {
+            throw new Exception("Lacking required capability ({$requiredCap}) to approve request.");
+        }
     }
 
     /**
@@ -58,13 +71,22 @@ class ApprovalService
 
         self::checkRoleGating($approval, $decidedBy);
 
-        $approval->update([
-            'status' => 'approved',
-            'decision' => 'approved',
-            'decided_by' => $decidedBy,
-            'decided_at' => now(),
-            'decision_reason' => $reason,
-        ]);
+        DB::transaction(function () use ($approval, $decidedBy, $reason) {
+            $approval->update([
+                'status' => 'approved',
+                'decision' => 'approved',
+                'decided_by' => $decidedBy,
+                'decided_at' => now(),
+                'decision_reason' => $reason,
+            ]);
+
+            if ($approval->approvable_type === \App\Models\LeaveRequest::class) {
+                $leave = \App\Models\LeaveRequest::find($approval->approvable_id);
+                if ($leave) {
+                    $leave->update(['status' => 'approved']);
+                }
+            }
+        });
 
         event(new ApprovalDecided($approval));
 
@@ -82,13 +104,22 @@ class ApprovalService
 
         self::checkRoleGating($approval, $decidedBy);
 
-        $approval->update([
-            'status' => 'rejected',
-            'decision' => 'rejected',
-            'decided_by' => $decidedBy,
-            'decided_at' => now(),
-            'decision_reason' => $reason,
-        ]);
+        DB::transaction(function () use ($approval, $decidedBy, $reason) {
+            $approval->update([
+                'status' => 'rejected',
+                'decision' => 'rejected',
+                'decided_by' => $decidedBy,
+                'decided_at' => now(),
+                'decision_reason' => $reason,
+            ]);
+
+            if ($approval->approvable_type === \App\Models\LeaveRequest::class) {
+                $leave = \App\Models\LeaveRequest::find($approval->approvable_id);
+                if ($leave) {
+                    $leave->update(['status' => 'rejected']);
+                }
+            }
+        });
 
         event(new ApprovalDecided($approval));
 
