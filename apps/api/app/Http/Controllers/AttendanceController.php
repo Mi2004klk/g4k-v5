@@ -88,7 +88,7 @@ class AttendanceController extends Controller
 
         // Pass work_schedules standard_seconds to frontend
         $schedule = DB::table('work_schedules')->where('is_default', true)->first();
-        $standardSeconds = $schedule->standard_seconds ?? 31500;
+        $standardSeconds = $schedule ? $schedule->standard_seconds : 31500;
 
         return response()->json([
             'day' => $day,
