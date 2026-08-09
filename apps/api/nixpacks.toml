@@ -4,7 +4,7 @@
 builder = "nixpacks"
 
 [phases.setup]
-nixPkgs = ["php84", "php84Packages.composer", "php84Extensions pdo", "php84Extensions pdo_pgsql", "php84Extensions mbstring", "php84Extensions bcmath", "php84Extensions gd", "php84Extensions redis"]
+nixPkgs = ["php84", "php84Packages.composer", "php84Extensions.pdo", "php84Extensions.pdo_pgsql", "php84Extensions.mbstring", "php84Extensions.bcmath", "php84Extensions.gd", "php84Extensions.redis"]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader --no-interaction"]
