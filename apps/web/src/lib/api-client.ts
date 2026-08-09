@@ -29,13 +29,13 @@ export async function apiFetch<T = any>(
   });
 
   if (!response.ok) {
-    if (response.status === 401 || response.status === 404 || response.status >= 500) {
-      // Global Interceptor: Clear auth state and force redirect to login on fatal server errors or unauthorized
+    if (response.status === 401) {
+      // Global Interceptor: Clear auth state and force redirect to login on unauthorized
       useAuthStore.getState().clearAuth();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
-      throw new Error("Session expired or server unreachable. Please log in again.");
+      throw new Error("Session expired or unauthorized. Please log in again.");
     }
     
     const errorData = await response.json().catch(() => ({}));

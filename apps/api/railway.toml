@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "php artisan config:clear && php artisan route:clear && php artisan view:clear && composer install --no-dev --optimize-autoloader"
+buildCommand = "composer install --no-dev --optimize-autoloader && php artisan optimize:clear"
 
 [deploy]
 healthcheckPath = "/health"
