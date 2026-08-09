@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
+import { useReverb } from "@/hooks/use-reverb";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -77,6 +78,26 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       isMounted = false;
     };
   }, [pathname, token, user, router, setAuth, clearAuth]);
+
+  // Listen for SessionRevoked real-time event
+  const { subscribe, isConnected } = useReverb();
+  useEffect(() => {
+    if (!user?.id || !token) return;
+
+    const channel = subscribe(`user.${user.id}`, true);
+    if (channel) {
+      channel.listen('.session.revoked', (e: any) => {
+        clearAuth();
+        router.push("/login");
+      });
+    }
+
+    return () => {
+      if (channel) {
+        channel.stopListening('.session.revoked');
+      }
+    };
+  }, [user?.id, token, subscribe, clearAuth, router]);
 
   if (isInitializing) {
     return (
