@@ -35,6 +35,28 @@ class AuthController extends Controller
         );
     }
 
+    private function getPasswordPolicyRule()
+    {
+        $settings = \Illuminate\Support\Facades\DB::table('settings')
+            ->where('category', 'security')
+            ->pluck('value', 'key');
+            
+        $min = (int) ($settings['password.min_length'] ?? 8);
+        $rule = Password::min($min);
+        
+        if (filter_var($settings['password.require_mixed'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) {
+            $rule = $rule->mixedCase();
+        }
+        if (filter_var($settings['password.require_number'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) {
+            $rule = $rule->numbers();
+        }
+        if (filter_var($settings['password.require_symbol'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) {
+            $rule = $rule->symbols();
+        }
+        
+        return $rule;
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -279,7 +301,7 @@ class AuthController extends Controller
         $request->validate([
             'token' => 'required|string',
             'identifier' => 'required|string',
-            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'string', 'confirmed', $this->getPasswordPolicyRule()],
         ]);
 
         $user = User::where('email', $request->identifier)
@@ -321,7 +343,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'string', 'confirmed', $this->getPasswordPolicyRule()],
         ]);
 
         $user = $request->user();

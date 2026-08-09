@@ -10,9 +10,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { AutoNumberingConfig } from "./auto-numbering-config";
+import { PoliciesConfig } from "./policies-config";
+import { useAuthStore } from "@/lib/auth-store";
 
 export function SettingsTabs() {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.active_role === 'super_admin';
+  
   const [formData, setFormData] = useState<any>({ company: {} });
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
@@ -67,9 +72,14 @@ export function SettingsTabs() {
     <Tabs defaultValue="company" className="w-full">
       <TabsList className="mb-4">
         <TabsTrigger value="company">Company Profile</TabsTrigger>
-        <TabsTrigger value="schedule">Work Schedules</TabsTrigger>
-        <TabsTrigger value="numbering">Auto-Numbering</TabsTrigger>
-        <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        {isAdmin && (
+          <>
+            <TabsTrigger value="schedule">Work Schedules</TabsTrigger>
+            <TabsTrigger value="numbering">Auto-Numbering</TabsTrigger>
+            <TabsTrigger value="policies">Policies</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          </>
+        )}
       </TabsList>
 
       <TabsContent value="company">
@@ -101,16 +111,19 @@ export function SettingsTabs() {
                   <option value="Europe/London">London</option>
                 </select>
               </div>
-              <Button type="submit" disabled={updateProfileMutation.isPending} size="sm" className="gap-2">
-                <Save className="w-4 h-4" /> Save Profile
-              </Button>
+                  <Button type="submit" disabled={updateProfileMutation.isPending}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
+                  </Button>
             </form>
           </CardContent>
         </Card>
       </TabsContent>
 
-      <TabsContent value="schedule">
-        <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+      {isAdmin && (
+        <>
+          <TabsContent value="schedule">
+            <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
           <CardHeader>
             <CardTitle className="text-base">Standard Work Schedule (ATT-Q1)</CardTitle>
           </CardHeader>
@@ -195,18 +208,23 @@ export function SettingsTabs() {
       <TabsContent value="notifications">
         <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
           <CardHeader>
-            <CardTitle className="text-base">System Notifications</CardTitle>
+            <CardTitle className="text-base">Global Notifications</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-neutral-500 mb-4">Notification channels and webhook alerts are active.</p>
-            <Button variant="outline" size="sm">Save Preferences</Button>
+            <p className="text-sm text-neutral-500">Email and push notification global settings.</p>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="policies">
+        <PoliciesConfig />
       </TabsContent>
 
       <TabsContent value="numbering">
         <AutoNumberingConfig />
       </TabsContent>
+        </>
+      )}
     </Tabs>
   );
 }

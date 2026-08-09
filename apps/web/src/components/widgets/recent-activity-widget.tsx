@@ -1,0 +1,74 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api-client";
+import { formatDistanceToNow } from "date-fns";
+import { Activity } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+
+export function RecentActivityWidget() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["dashboard-metrics"],
+    queryFn: () => apiFetch("/dashboard/metrics"),
+    staleTime: 30000,
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="border-none shadow-sm h-full flex flex-col bg-white dark:bg-neutral-900">
+        <CardHeader className="pb-2">
+          <Skeleton className="h-5 w-32" />
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-2 w-24" />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const activities = data?.metrics?.recent_activity || [];
+
+  return (
+    <Card className="border-none shadow-sm h-full bg-white dark:bg-neutral-900 flex flex-col">
+      <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <Activity className="w-4 h-4 text-violet-500" />
+          Recent Activity Feed
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0 overflow-y-auto flex-1">
+        {activities.length === 0 ? (
+          <div className="p-6 text-center text-xs text-neutral-500">
+            No recent activity found.
+          </div>
+        ) : (
+          <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+            {activities.map((activity: any) => (
+              <div key={activity.id} className="p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                <p className="text-xs text-neutral-700 dark:text-neutral-300">
+                  <span className="font-medium text-neutral-900 dark:text-white">
+                    {activity.user_name || 'System'}
+                  </span>{" "}
+                  {activity.action} {activity.model_type} 
+                  {activity.details ? ` (${activity.details})` : ''}
+                </p>
+                <p className="text-[10px] text-neutral-500 mt-1">
+                  {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

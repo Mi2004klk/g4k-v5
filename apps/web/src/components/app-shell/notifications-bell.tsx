@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
@@ -139,8 +140,11 @@ export function NotificationsBell() {
                 >
                   <div className="mt-0.5 shrink-0">{getIcon(n.type)}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate">
+                    <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate flex items-center gap-1.5">
                       {n.title}
+                      {n.priority === 'urgent' && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" title="Urgent" />
+                      )}
                     </p>
                     <p className="text-[11px] text-neutral-500 line-clamp-2 mt-0.5">
                       {n.body}
@@ -166,8 +170,8 @@ export function NotificationsBell() {
         
         {notifications.length > 0 && (
           <div className="p-2 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
-            <Button variant="ghost" className="w-full h-8 text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
-              View all
+            <Button variant="ghost" asChild className="w-full h-8 text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
+              <Link href="/dashboard/notifications" onClick={() => setOpen(false)}>View all</Link>
             </Button>
           </div>
         )}

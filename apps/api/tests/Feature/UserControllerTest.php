@@ -36,7 +36,7 @@ class UserControllerTest extends TestCase
         // 'super_admin' has 'users.hr.manage' and 'users.employee.manage'
         // 'hr' has 'users.employee.manage', but NOT 'users.hr.manage' (wait, let's assume 'hr' doesn't have 'hr.manage')
         // Let's act as an 'hr'
-        Sanctum::actingAs($admin, ['role:hr']);
+        Sanctum::actingAs($admin, ['role:hr', 'users.employee.manage']);
 
         // Try creating employee (should work)
         $response1 = $this->postJson('/api/users', [
@@ -58,7 +58,7 @@ class UserControllerTest extends TestCase
     public function test_index_filters_and_pagination()
     {
         $admin = User::factory()->create();
-        Sanctum::actingAs($admin, ['role:super_admin']);
+        Sanctum::actingAs($admin, ['role:super_admin', '*']);
 
         $dept = Department::create(['name' => 'IT']);
         $u1 = User::factory()->create(['name' => 'John', 'department_id' => $dept->id, 'status' => 'active']);
@@ -86,7 +86,7 @@ class UserControllerTest extends TestCase
     public function test_export_endpoint()
     {
         $admin = User::factory()->create();
-        Sanctum::actingAs($admin, ['role:super_admin']);
+        Sanctum::actingAs($admin, ['role:super_admin', '*']);
 
         $res = $this->get('/api/users/export');
         $res->assertStatus(200);
@@ -97,7 +97,7 @@ class UserControllerTest extends TestCase
     {
         $admin = User::factory()->create(['status' => 'active']);
         $admin->roleAssignments()->create(['role' => 'super_admin']);
-        Sanctum::actingAs($admin, ['role:super_admin']);
+        Sanctum::actingAs($admin, ['role:super_admin', '*']);
 
         $res = $this->patchJson('/api/users/' . $admin->id . '/status', [
             'status' => 'inactive'
