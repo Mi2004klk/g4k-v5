@@ -18,15 +18,23 @@ class DatabaseSeeder extends Seeder
         // 0. Capabilities
         $capabilities = [
             '*',
-            'users.view', 'users.create_employee', 'users.edit_employee', 'users.deactivate_employee', 'users.hr.manage', 'users.employee.manage',
-            'departments.manage', 'departments.view',
-            'designations.manage', 'designations.view',
-            'profile.edit', 'directory.view', 'communication', 'app-shell',
-            'admin.settings.manage', 'admin.audit.view',
-            'reports.view-admin', 'reports.view-hr-limited',
-            'employee.leave.request-self', 'hr.leave.approve-employee', 'admin.leave.approve-hr',
-            'employee.clock-self', 'hr.view-team-attendance', 'admin.view-all-attendance', 'admin.correct-attendance', 'attendance.correct-team',
-            'projects.manage', 'tasks.assign', 'tasks.submit', 'tasks.approve'
+            'attendance.clock-self',
+            'hr.view-team-attendance',
+            'admin.view-all-attendance',
+            'admin.correct-attendance',
+            'attendance.correct-team',
+            'leave.request-self',
+            'leave.approve-employee',
+            'leave.approve-hr',
+            'settings.manage',
+            'audit.view',
+            'users.hr.manage',
+            'users.employee.manage',
+            'departments.manage',
+            'designations.manage',
+            'directory.view',
+            'directory.send-message',
+            'profile.edit'
         ];
 
         foreach ($capabilities as $cap) {
@@ -36,17 +44,19 @@ class DatabaseSeeder extends Seeder
         $roleCaps = [
             'super_admin' => ['*'],
             'hr' => [
-                'users.view', 'users.create_employee', 'users.edit_employee', 'users.deactivate_employee', 'users.hr.manage',
-                'departments.view', 'designations.view', 'profile.edit', 'directory.view', 'communication', 'app-shell',
-                'reports.view-hr-limited', 'hr.leave.approve-employee', 'employee.leave.request-self',
-                'employee.clock-self', 'hr.view-team-attendance', 'attendance.correct-team',
-                'projects.manage', 'tasks.assign', 'tasks.submit', 'tasks.approve'
+                'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
+                'users.employee.manage', 'directory.view', 'directory.send-message',
+                'profile.edit', 'attendance.clock-self', 'leave.request-self'
             ],
             'employee' => [
-                'profile.edit', 'directory.view', 'communication', 'app-shell', 'employee.leave.request-self',
-                'employee.clock-self', 'tasks.submit'
+                'attendance.clock-self', 'leave.request-self', 'profile.edit',
+                'directory.view', 'directory.send-message'
             ]
         ];
+
+        // Clear existing capability assignments first so we don't have orphan old capabilities assigned to roles
+        DB::table('role_capabilities')->truncate();
+        DB::table('capabilities')->whereNotIn('key', $capabilities)->delete();
 
         foreach ($roleCaps as $role => $caps) {
             foreach ($caps as $cap) {

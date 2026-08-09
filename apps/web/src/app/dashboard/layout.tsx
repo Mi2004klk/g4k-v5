@@ -47,24 +47,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const primaryNav = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, capability: "app-shell" },
-  { name: "Chat & Hub", href: "/dashboard/chat", icon: MessageSquare, capability: "communication" },
-  { name: "Reports & Exports", href: "/dashboard/reports", icon: FileText, capability: "reporting" },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Chat & Hub", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
   { name: "Projects", href: "/dashboard/projects", icon: Folder, capability: "projects.manage" },
   { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, capability: "tasks.submit" },
   { name: "Directory", href: "/dashboard/directory", icon: Users, capability: "directory.view" },
-  { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "employee.leave.request-self" },
-  { name: "Employees", href: "/dashboard/org/users", icon: Users, capability: "users.view" },
-  { name: "Org Leave Approvals", href: "/dashboard/org/leave", icon: CalendarDays, capability: "hr.leave.approve-employee" },
-  { name: "Departments", href: "/dashboard/org/departments", icon: Building2, capability: "departments.view" },
-  { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.view" },
+  { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "leave.request-self" },
+  { name: "Employees", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
+  { name: "Org Leave Approvals", href: "/dashboard/org/leave", icon: CalendarDays, capability: "leave.approve-employee" },
+  { name: "Departments", href: "/dashboard/org/departments", icon: Building2, capability: "departments.manage" },
+  { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.manage" },
   { name: "Profile", href: "/dashboard/profile", icon: UserCircle, capability: "profile.edit" },
   { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
   { name: "Audit Log", href: "/dashboard/audit", icon: ShieldAlert, capability: "audit.view" },
 ];
 
 const secondaryNav = [
-  { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "admin.settings.manage" },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
 ];
 
 export default function DashboardLayout({
