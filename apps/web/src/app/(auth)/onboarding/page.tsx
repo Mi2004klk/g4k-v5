@@ -6,11 +6,13 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { useAuthStore } from "@/lib/auth-store";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { user, token, setAuth } = useAuthStore();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,6 +22,11 @@ export default function OnboardingPage() {
       await apiFetch("/auth/onboarding/complete", {
         method: "POST",
       });
+
+      if (user && token) {
+        const updatedUser = { ...user, onboarded_at: new Date().toISOString() };
+        setAuth(token, updatedUser, user.roles?.[0] || 'employee');
+      }
 
       toast.success("Welcome aboard!");
       router.push("/dashboard");
