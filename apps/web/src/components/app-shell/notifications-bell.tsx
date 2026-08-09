@@ -62,6 +62,11 @@ export function NotificationsBell() {
     
     const handleNotification = (e: any) => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      if (e.title) {
+        toast.info(e.title, { description: e.body || "You have a new notification." });
+      } else {
+        toast.info("New Notification", { description: "You have a new notification." });
+      }
     };
 
     const handleApproval = (e: any) => {

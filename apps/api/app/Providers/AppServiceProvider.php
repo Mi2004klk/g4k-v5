@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use App\Events\ApprovalDecided;
 use App\Listeners\LeaveAttendanceIntegration;
+use App\Models\Notification;
+use App\Observers\NotificationObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(ApprovalDecided::class, LeaveAttendanceIntegration::class);
+        Notification::observe(NotificationObserver::class);
     }
 }
