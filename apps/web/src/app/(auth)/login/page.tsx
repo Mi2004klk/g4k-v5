@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -73,20 +74,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-900 via-violet-800 to-pink-700">
-      <Card className="w-full max-w-md shadow-2xl border-none relative overflow-hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
 
         <CardHeader className="space-y-4 pb-6 pt-8 text-center">
-          <div className="mx-auto w-16 h-16 relative flex items-center justify-center bg-violet-100 dark:bg-violet-950/50 rounded-2xl p-2 shadow-inner">
-            <img
+          <div className="mx-auto w-48 h-16 relative flex items-center justify-center">
+            <Image
               src="/landscape-logo.png"
               alt="Games4King Logo"
-              className="w-full h-full object-contain drop-shadow"
-              onError={(e) => {
-                // Fallback to icon if logo missing
-                e.currentTarget.src = "/icon.png";
-              }}
+              fill
+              priority
+              className="object-contain"
             />
           </div>
           <div className="space-y-1">
@@ -129,7 +128,7 @@ export default function LoginPage() {
                       </FormLabel>
                       <Link
                         href="/forgot-password"
-                        className="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 hover:underline"
+                        className="text-xs font-medium text-brand-violet hover:text-brand-violet-deep hover:underline"
                       >
                         Forgot password?
                       </Link>
@@ -144,7 +143,7 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full h-11 mt-2 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white font-medium shadow-lg hover:shadow-violet-500/25 transition-all duration-150 active:scale-[0.96]"
+                className="w-full h-11 mt-2 bg-gradient-brand text-white font-medium shadow-e2 transition-all duration-150 active:scale-[0.96]"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -164,7 +163,7 @@ export default function LoginPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className="flex items-center gap-1 hover:text-neutral-600 dark:hover:text-neutral-200">
+                  <button className="flex items-center gap-1 hover:text-neutral-500">
                     <Info className="w-3.5 h-3.5" />
                     <span>System info</span>
                   </button>
