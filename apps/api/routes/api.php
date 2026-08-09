@@ -23,6 +23,7 @@ use App\Http\Controllers\TimerController;
 use App\Http\Controllers\SavedViewController;
 
 // Auth routes
+Route::get('/ping', function() { return 'pong api'; });
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/auth/refresh', [AuthController::class, 'refresh']);
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
