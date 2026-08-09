@@ -63,8 +63,7 @@ export default function OrgAttendancePage() {
 
   const handleExport = () => {
     const token = localStorage.getItem("token");
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-    window.open(`${baseUrl}/attendance/export?date=${selectedDate}&token=${token}`, "_blank");
+    window.open(`/api/attendance/export?date=${selectedDate}&token=${token}`, "_blank");
   };
 
   const records = data?.data || [];

@@ -37,6 +37,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             clearAuth();
             if (!isAuthRoute) {
               router.push("/login");
+              return;
             }
           }
         }
@@ -46,17 +47,21 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         // Enforce forced password change
         if (currentUser.must_change_password && pathname !== "/change-password") {
           router.push("/change-password");
+          return;
         }
         // Enforce onboarding sequence
         else if (!currentUser.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
           router.push("/onboarding");
+          return;
         }
         // Enforce role selection if multiple roles exist and on auth routes
         else if (isAuthRoute) {
           if (currentUser.roles && currentUser.roles.length > 1) {
             router.push("/role-select");
+            return;
           } else {
             router.push("/dashboard");
+            return;
           }
         }
       }
