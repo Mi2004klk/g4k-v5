@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FilterBar } from "@/components/data-table/filter-bar";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +29,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/data-table/data-table";
 
 export default function DirectoryPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -56,6 +59,72 @@ export default function DirectoryPage() {
   });
 
   const users = data?.data || [];
+
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: "name",
+      header: "Employee",
+      cell: ({ row }) => (
+        <div
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => setSelectedUser(row.original)}
+        >
+          <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-950 font-bold text-violet-700 dark:text-violet-300 flex items-center justify-center">
+            {row.original.name.charAt(0)}
+          </div>
+          <span className="font-semibold text-neutral-900 dark:text-white group-hover:text-violet-600 transition-colors">
+            {row.original.name}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "designation.name",
+      header: "Designation",
+      cell: ({ row }) => (
+        <span className="text-neutral-600 dark:text-neutral-300 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
+          {row.original.designation?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "department.name",
+      header: "Department",
+      cell: ({ row }) => (
+        <span className="text-neutral-600 dark:text-neutral-300 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
+          {row.original.department?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "email",
+      header: "Contact",
+      cell: ({ row }) => (
+        <span className="text-neutral-500 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
+          {row.original.email}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Action</div>,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              sendMessageMutation.mutate(row.original.id);
+            }}
+            variant="ghost"
+            size="sm"
+            className="text-violet-600 hover:text-violet-700"
+          >
+            <MessageSquare className="w-4 h-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6 p-6">
@@ -90,16 +159,12 @@ export default function DirectoryPage() {
 
       {/* Search Bar */}
       <Card className="border-none shadow-sm">
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
-            <Input
-              placeholder="Search by name, email, designation, or department..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 text-xs"
-            />
-          </div>
+        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
+          <FilterBar
+            searchQuery={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search by name, email, designation, or department..."
+          />
         </CardContent>
       </Card>
 
@@ -170,54 +235,8 @@ export default function DirectoryPage() {
         </div>
       ) : (
         <Card className="border-none shadow-sm">
-          <CardContent className="p-0 overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 uppercase font-semibold border-b border-neutral-100 dark:border-neutral-800">
-                <tr>
-                  <th className="px-6 py-3">Employee</th>
-                  <th className="px-6 py-3">Designation</th>
-                  <th className="px-6 py-3">Department</th>
-                  <th className="px-6 py-3">Contact</th>
-                  <th className="px-6 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                {users.map((user: any) => (
-                  <tr
-                    key={user.id}
-                    onClick={() => setSelectedUser(user)}
-                    className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors cursor-pointer"
-                  >
-                    <td className="px-6 py-4 font-semibold text-neutral-900 dark:text-white flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-950 font-bold text-violet-700 dark:text-violet-300 flex items-center justify-center">
-                        {user.name.charAt(0)}
-                      </div>
-                      <span>{user.name}</span>
-                    </td>
-                    <td className="px-6 py-4 text-neutral-600 dark:text-neutral-300">
-                      {user.designation?.name || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-neutral-600 dark:text-neutral-300">
-                      {user.department?.name || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-neutral-500">{user.email}</td>
-                    <td className="px-6 py-4 text-right">
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          sendMessageMutation.mutate(user.id);
-                        }}
-                        variant="ghost"
-                        size="sm"
-                        className="text-violet-600 hover:text-violet-700"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <CardContent className="p-0">
+            <DataTable columns={columns} data={users} />
           </CardContent>
         </Card>
       )}

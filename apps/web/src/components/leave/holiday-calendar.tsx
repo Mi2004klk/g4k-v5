@@ -1,15 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format, isPast, isToday } from "date-fns";
-import { Calendar as CalendarIcon, MapPin, Loader2 } from "lucide-react";
+import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 
 export function HolidayCalendar() {
-  const currentYear = new Date().getFullYear();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const currentYear = currentDate.getFullYear();
 
   const { data: holidays, isLoading } = useQuery({
     queryKey: ["holidays", currentYear],
@@ -17,84 +19,73 @@ export function HolidayCalendar() {
     staleTime: 3600000, // 1 hour
   });
 
-  if (isLoading) {
-    return (
-      <Card className="border-none shadow-sm h-full flex flex-col">
-        <CardHeader>
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <CalendarIcon className="w-4 h-4 text-violet-600" />
-            Company Holidays ({currentYear})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 flex-1">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   const holidayList = Array.isArray(holidays) ? holidays : (holidays?.data || []);
 
-  return (
-    <Card className="border-none shadow-sm h-full flex flex-col">
-      <CardHeader>
-        <CardTitle className="text-base font-bold flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4 text-violet-600" />
-          Company Holidays ({currentYear})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto">
-        {holidayList.length === 0 ? (
-          <EmptyState
-            title="No holidays defined"
-            description="There are no company holidays configured for this year."
-          />
-        ) : (
-          <div className="space-y-3">
-            {holidayList.map((holiday: any) => {
-              const hDate = new Date(holiday.date);
-              const past = isPast(hDate) && !isToday(hDate);
-              const today = isToday(hDate);
+  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
 
-              return (
-                <div
-                  key={holiday.id}
-                  className={`flex items-start gap-4 p-3 rounded-lg border ${
-                    today
-                      ? "bg-violet-50/50 border-violet-200 dark:bg-violet-900/20 dark:border-violet-800"
-                      : past
-                      ? "bg-neutral-50 border-neutral-100 opacity-60 dark:bg-neutral-800/30 dark:border-neutral-800"
-                      : "bg-white border-neutral-100 shadow-sm dark:bg-neutral-900 dark:border-neutral-800"
-                  }`}
-                >
-                  <div className="flex flex-col items-center justify-center min-w-[50px]">
-                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                      {format(hDate, "MMM")}
-                    </span>
-                    <span className="text-xl font-black text-neutral-900 dark:text-white leading-none">
-                      {format(hDate, "dd")}
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
-                      {holiday.name}
-                      {today && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300">
-                          Today
-                        </span>
-                      )}
-                    </h4>
-                    {holiday.description && (
-                      <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">
-                        {holiday.description}
-                      </p>
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const startDate = startOfWeek(monthStart);
+  const endDate = endOfWeek(monthEnd);
+
+  const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+  return (
+    <Card className="border-none shadow-sm h-full flex flex-col bg-white dark:bg-neutral-900">
+      <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-3 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm font-bold flex items-center gap-2">
+          <CalendarIcon className="w-4 h-4 text-violet-600" />
+          {format(currentDate, "MMMM yyyy")}
+        </CardTitle>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-7 w-7">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-7 w-7">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 p-4">
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        ) : (
+          <div className="h-full flex flex-col">
+            <div className="grid grid-cols-7 mb-2">
+              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                <div key={day} className="text-center text-[10px] font-semibold text-neutral-500">
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1 flex-1">
+              {days.map((day, idx) => {
+                const isCurrentMonth = isSameMonth(day, monthStart);
+                const holiday = holidayList.find((h: any) => isSameDay(new Date(h.date), day));
+                
+                return (
+                  <div
+                    key={idx}
+                    title={holiday?.name}
+                    className={`
+                      relative flex flex-col items-center justify-center p-1 rounded-md text-xs transition-all min-h-[40px]
+                      ${!isCurrentMonth ? 'text-neutral-300 dark:text-neutral-700' : 'text-neutral-700 dark:text-neutral-300'}
+                      ${holiday ? 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300 font-bold' : ''}
+                      ${isSameDay(day, new Date()) && !holiday ? 'bg-neutral-100 dark:bg-neutral-800 font-bold' : ''}
+                    `}
+                  >
+                    <span>{format(day, "d")}</span>
+                    {holiday && (
+                      <span className="w-1 h-1 rounded-full bg-violet-500 mt-0.5" />
                     )}
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
       </CardContent>

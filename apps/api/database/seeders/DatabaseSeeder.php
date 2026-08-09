@@ -245,5 +245,31 @@ class DatabaseSeeder extends Seeder
                 ["created_at" => now(), "updated_at" => now()]
             );
         }
+
+        // 8. Holidays (Indian Public & Company Holidays for 2026/2027)
+        $currentYear = date('Y');
+        $holidays = [
+            ['name' => 'Republic Day', 'date' => "$currentYear-01-26", 'recurring' => true, 'description' => 'National Holiday'],
+            ['name' => 'Independence Day', 'date' => "$currentYear-08-15", 'recurring' => true, 'description' => 'National Holiday'],
+            ['name' => 'Gandhi Jayanti', 'date' => "$currentYear-10-02", 'recurring' => true, 'description' => 'National Holiday'],
+            ['name' => 'Christmas Day', 'date' => "$currentYear-12-25", 'recurring' => true, 'description' => 'Public Holiday'],
+            // Approximate dates for dynamic holidays
+            ['name' => 'Holi', 'date' => "$currentYear-03-24", 'recurring' => false, 'description' => 'Festival of Colors'],
+            ['name' => 'Diwali', 'date' => "$currentYear-11-01", 'recurring' => false, 'description' => 'Festival of Lights'],
+            ['name' => 'Company Anniversary', 'date' => "$currentYear-05-15", 'recurring' => true, 'description' => 'Games4Kings Foundation Day'],
+        ];
+
+        foreach ($holidays as $holiday) {
+            DB::table('holidays')->updateOrInsert(
+                ['name' => $holiday['name']],
+                [
+                    'date' => clone \Carbon\Carbon::parse($holiday['date']),
+                    'recurring' => $holiday['recurring'],
+                    'description' => $holiday['description'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
     }
 }

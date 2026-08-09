@@ -8,6 +8,7 @@ import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
 
 export default function PersonalAttendancePage() {
   const { data: historyData, isLoading } = useQuery({
@@ -40,11 +41,10 @@ export default function PersonalAttendancePage() {
               Recent Shift Log
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0 overflow-x-auto">
+          <CardContent className="p-0 overflow-hidden rounded-b-xl border-t border-neutral-100 dark:border-neutral-800">
             {isLoading ? (
               <div className="p-6 space-y-3">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-40 w-full" />
               </div>
             ) : historyList.length === 0 ? (
               <div className="p-8">
@@ -54,51 +54,9 @@ export default function PersonalAttendancePage() {
                 />
               </div>
             ) : (
-              <table className="w-full text-left text-xs">
-                <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 uppercase font-semibold border-b border-neutral-100 dark:border-neutral-800">
-                  <tr>
-                    <th className="px-6 py-3">Date</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Clock In</th>
-                    <th className="px-6 py-3">Clock Out</th>
-                    <th className="px-6 py-3">Worked Hours</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                  {historyList.map((row: any) => {
-                    const hours = Math.floor((row.total_seconds || 0) / 3600);
-                    const mins = Math.floor(((row.total_seconds || 0) % 3600) / 60);
-
-                    return (
-                      <tr key={row.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
-                        <td className="px-6 py-4 font-semibold">{row.date}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              row.status === "present"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : row.status === "late"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-rose-100 text-rose-700"
-                            }`}
-                          >
-                            {row.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 font-mono text-neutral-500">
-                          {row.clock_in ? format(new Date(row.clock_in), "hh:mm a") : "—"}
-                        </td>
-                        <td className="px-6 py-4 font-mono text-neutral-500">
-                          {row.clock_out ? format(new Date(row.clock_out), "hh:mm a") : "—"}
-                        </td>
-                        <td className="px-6 py-4 font-mono font-bold text-neutral-900 dark:text-white">
-                          {hours}h {mins}m
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="p-4 bg-white dark:bg-neutral-900">
+                <AttendanceHistoryCalendar days={historyList} />
+              </div>
             )}
           </CardContent>
         </Card>

@@ -34,14 +34,39 @@ export function LeaveApprovalRow({ record }: { record: any }) {
         body: JSON.stringify({ decision, reason }),
       });
     },
+    onMutate: async ({ decision }) => {
+      // Optimistic Update
+      await queryClient.cancelQueries({ queryKey: ["org-leave-requests"] });
+      const previousLeaves = queryClient.getQueryData(["org-leave-requests"]);
+      
+      queryClient.setQueryData(["org-leave-requests"], (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((item: any) => {
+            if (item.approval?.id === approvalId) {
+              return {
+                ...item,
+                approval: { ...item.approval, status: decision },
+              };
+            }
+            return item;
+          }),
+        };
+      });
+      return { previousLeaves };
+    },
     onSuccess: (data, variables) => {
       toast.success(`Leave request ${variables.decision}.`);
       setIsRejectOpen(false);
       setRejectReason("");
-      queryClient.invalidateQueries({ queryKey: ["org-leave-requests"] });
     },
-    onError: (err: any) => {
+    onError: (err: any, newTodo, context) => {
+      queryClient.setQueryData(["org-leave-requests"], context?.previousLeaves);
       toast.error(err.message || "Failed to process decision.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-leave-requests"] });
     },
   });
 

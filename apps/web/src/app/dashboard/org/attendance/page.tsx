@@ -20,6 +20,10 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { HrAttendanceGraph } from "@/components/attendance/hr-attendance-graph";
+
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/data-table/data-table";
 
 export default function OrgAttendancePage() {
   const queryClient = useQueryClient();
@@ -31,6 +35,11 @@ export default function OrgAttendancePage() {
   const [correctField, setCorrectField] = useState("total_seconds");
   const [correctValue, setCorrectValue] = useState("");
   const [correctReason, setCorrectReason] = useState("");
+
+  const { data: graphDataResponse } = useQuery({
+    queryKey: ["hr-attendance-graph"],
+    queryFn: async () => apiFetch("/attendance/hr/graph"),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["org-attendance", selectedDate, statusFilter],
@@ -61,12 +70,115 @@ export default function OrgAttendancePage() {
     },
   });
 
-  const handleExport = () => {
-    const token = localStorage.getItem("token");
-    window.open(`/api/attendance/export?date=${selectedDate}&token=${token}`, "_blank");
+  const handleExport = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/attendance/export?date=${selectedDate}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `attendance-export-${selectedDate}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to download export.");
+    }
   };
 
   const records = data?.data || [];
+
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: "user_name",
+      header: "Employee",
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span className="font-semibold text-neutral-900 dark:text-white">{row.original.user_name || "Employee"}</span>
+          <span className="text-[11px] text-neutral-400 font-normal">{row.original.user_email}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        return (
+          <span
+            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+              status === "present"
+                ? "bg-emerald-100 text-emerald-700"
+                : status === "late"
+                ? "bg-amber-100 text-amber-700"
+                : "bg-rose-100 text-rose-700"
+            }`}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "clock_in",
+      header: "Clock In",
+      cell: ({ row }) => {
+        const val = row.getValue("clock_in") as string;
+        return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+      },
+    },
+    {
+      accessorKey: "clock_out",
+      header: "Clock Out",
+      cell: ({ row }) => {
+        const val = row.getValue("clock_out") as string;
+        return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+      },
+    },
+    {
+      id: "worked_hours",
+      header: "Worked Hours",
+      cell: ({ row }) => {
+        const secs = row.original.total_seconds || 0;
+        const hours = Math.floor(secs / 3600);
+        const mins = Math.floor((secs % 3600) / 60);
+        return <span className="font-mono font-bold">{hours}h {mins}m</span>;
+      },
+    },
+    {
+      id: "overtime",
+      header: "Overtime",
+      cell: ({ row }) => {
+        const secs = row.original.overtime_seconds || 0;
+        const hours = Math.floor(secs / 3600);
+        const mins = Math.floor((secs % 3600) / 60);
+        return <span className="font-mono text-amber-600">{hours}h {mins}m</span>;
+      },
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCorrectItem(row.original)}
+            className="h-8 gap-1 text-violet-600 hover:text-violet-700"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+            <span>Correct</span>
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6 p-6">
@@ -89,39 +201,41 @@ export default function OrgAttendancePage() {
         </Button>
       </div>
 
-      {/* FilterBar */}
-      <Card className="border-none shadow-sm">
-        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <span className="text-xs font-semibold text-neutral-500">Date:</span>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-xs h-9"
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm border border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-neutral-500">Date:</span>
+          <Input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="text-xs h-9 w-[150px]"
+          />
+        </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <span className="text-xs font-semibold text-neutral-500">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 px-3 text-xs rounded-md border border-input bg-background"
+        <div className="flex flex-wrap items-center gap-2">
+          {["all", "present", "late", "absent", "leave"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors border ${
+                statusFilter === status
+                  ? "bg-violet-600 text-white border-violet-600"
+                  : "bg-white dark:bg-neutral-900 text-neutral-600 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50"
+              }`}
             >
-              <option value="all">All Statuses</option>
-              <option value="present">Present</option>
-              <option value="late">Late</option>
-              <option value="absent">Absent</option>
-              <option value="leave">Leave</option>
-            </select>
-          </div>
-        </CardContent>
-      </Card>
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* Table */}
+      <div className="w-full">
+        <h2 className="text-lg font-bold mb-4 text-neutral-900 dark:text-white">Recent Attendance Trends</h2>
+        <HrAttendanceGraph data={graphDataResponse?.data || []} />
+      </div>
+
       <Card className="border-none shadow-sm">
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
@@ -135,77 +249,7 @@ export default function OrgAttendancePage() {
               />
             </div>
           ) : (
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 uppercase font-semibold border-b border-neutral-100 dark:border-neutral-800">
-                <tr>
-                  <th className="px-6 py-3">Employee</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Clock In</th>
-                  <th className="px-6 py-3">Clock Out</th>
-                  <th className="px-6 py-3">Worked Hours</th>
-                  <th className="px-6 py-3">Overtime</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                {records.map((row: any) => {
-                  const hours = Math.floor((row.total_seconds || 0) / 3600);
-                  const mins = Math.floor(((row.total_seconds || 0) % 3600) / 60);
-                  const otHours = Math.floor((row.overtime_seconds || 0) / 3600);
-                  const otMins = Math.floor(((row.overtime_seconds || 0) % 3600) / 60);
-
-                  return (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors"
-                    >
-                      <td className="px-6 py-4 font-semibold text-neutral-900 dark:text-white">
-                        <div>{row.user_name || "Employee"}</div>
-                        <div className="text-[11px] text-neutral-400 font-normal">
-                          {row.user_email}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                            row.status === "present"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : row.status === "late"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-rose-100 text-rose-700"
-                          }`}
-                        >
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-mono text-neutral-500">
-                        {row.clock_in ? format(new Date(row.clock_in), "hh:mm a") : "—"}
-                      </td>
-                      <td className="px-6 py-4 font-mono text-neutral-500">
-                        {row.clock_out ? format(new Date(row.clock_out), "hh:mm a") : "—"}
-                      </td>
-                      <td className="px-6 py-4 font-mono font-bold">
-                        {hours}h {mins}m
-                      </td>
-                      <td className="px-6 py-4 font-mono text-amber-600">
-                        {otHours}h {otMins}m
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setCorrectItem(row)}
-                          className="h-8 gap-1 text-violet-600 hover:text-violet-700"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                          <span>Correct</span>
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <DataTable columns={columns} data={records} />
           )}
         </CardContent>
       </Card>

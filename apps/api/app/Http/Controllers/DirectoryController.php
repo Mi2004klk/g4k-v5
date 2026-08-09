@@ -14,6 +14,30 @@ class DirectoryController extends Controller
         $this->middleware('capability:directory.send-message')->only(['sendMessage']);
     }
 
+    private function applyVisibilityRules(User $user)
+    {
+        $prefs = $user->preferences ?? [];
+        $visibility = $prefs['profile_visibility'] ?? 'internal';
+
+        $data = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'avatar_url' => $user->avatar_url,
+            'department' => $user->department,
+            'designation' => $user->designation,
+        ];
+
+        if ($visibility === 'public' || $visibility === 'internal') {
+            $data['email'] = $user->email;
+            $data['phone'] = $user->phone;
+            $data['alternate_mobile'] = null; // Always hidden
+            $data['emergency_contact'] = null; // Always hidden
+            $data['blood_group'] = null; // Always hidden
+        }
+
+        return $data;
+    }
+
     public function index(Request $request)
     {
         // Active users only, with eager loading for minimal queries
@@ -39,6 +63,11 @@ class DirectoryController extends Controller
         }
 
         $users = $query->orderBy('name', 'asc')->cursorPaginate(20);
+        
+        $users->getCollection()->transform(function ($user) {
+            return $this->applyVisibilityRules($user);
+        });
+
         return response()->json($users);
     }
     
@@ -48,7 +77,7 @@ class DirectoryController extends Controller
             ->where('status', 'active')
             ->findOrFail($id);
             
-        return response()->json($user);
+        return response()->json($this->applyVisibilityRules($user));
     }
 
     public function sendMessage(Request $request, $id)
@@ -56,12 +85,57 @@ class DirectoryController extends Controller
         $targetUser = User::findOrFail($id);
         $currentUser = $request->user();
 
-        // Stub conversation session creation for direct messaging (Phase 8 full chat integration)
-        $conversationId = "conv_" . min($currentUser->id, $targetUser->id) . "_" . max($currentUser->id, $targetUser->id);
+        if ($currentUser->id === $targetUser->id) {
+            return response()->json(['message' => 'Cannot message yourself'], 422);
+        }
+
+        $conversation = DB::transaction(function () use ($currentUser, $targetUser) {
+            // Find existing direct conversation
+            $existingConvId = DB::table('conversation_user')
+                ->select('conversation_id')
+                ->whereIn('user_id', [$currentUser->id, $targetUser->id])
+                ->groupBy('conversation_id')
+                ->havingRaw('COUNT(DISTINCT user_id) = 2')
+                ->whereIn('conversation_id', function ($query) {
+                    $query->select('id')->from('conversations')->where('scope', 'direct');
+                })
+                ->first();
+
+            if ($existingConvId) {
+                return $existingConvId->conversation_id;
+            }
+
+            // Create new conversation
+            $convId = DB::table('conversations')->insertGetId([
+                'scope' => 'direct',
+                'name' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('conversation_user')->insert([
+                [
+                    'conversation_id' => $convId,
+                    'user_id' => $currentUser->id,
+                    'last_read_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'conversation_id' => $convId,
+                    'user_id' => $targetUser->id,
+                    'last_read_at' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            ]);
+
+            return $convId;
+        });
 
         return response()->json([
             'message' => 'Direct conversation initialized',
-            'conversation_id' => $conversationId,
+            'conversation_id' => $conversation,
             'target_user' => $targetUser->only(['id', 'name', 'email', 'avatar_url']),
         ]);
     }

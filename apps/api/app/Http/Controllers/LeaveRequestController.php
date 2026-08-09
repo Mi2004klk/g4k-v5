@@ -111,16 +111,6 @@ class LeaveRequestController extends Controller
             ->firstOrFail();
 
         $user = $request->user();
-        $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
-
-        // Check if user is the correct approver role
-        if (!in_array($approval->current_approver_role, $roles)) {
-            // Wait, super_admin can approve HR leaves (current_approver_role = super_admin). 
-            // Admin can approve anything if they are super_admin.
-            if (!in_array('super_admin', $roles)) {
-                return response()->json(['message' => 'You are not authorized to decide on this request.'], 403);
-            }
-        }
 
         if ($validated['decision'] === 'approved') {
             $approval = ApprovalService::approve($approval, $user->id, $validated['reason'] ?? null);
@@ -128,16 +118,66 @@ class LeaveRequestController extends Controller
             $approval = ApprovalService::reject($approval, $user->id, $validated['reason']);
         }
 
-        // Notify submitter
-        \App\Services\NotificationService::send(
-            $approval->submitted_by,
-            'leave_decision',
-            'Leave Request ' . ucfirst($validated['decision']),
-            'Your leave request has been ' . $validated['decision'] . '.',
-            ['approval_id' => $approval->id, 'decision' => $validated['decision']],
-            '/dashboard/leave'
-        );
-
         return response()->json($approval);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $leave = LeaveRequest::with(['approval', 'user'])->findOrFail($id);
+        
+        $user = $request->user();
+        $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
+        $isHrOrAdmin = count(array_intersect(['hr', 'admin', 'super_admin'], $roles)) > 0;
+
+        if ($leave->user_id !== $user->id && !$isHrOrAdmin) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return response()->json($leave);
+    }
+
+    public function history(Request $request)
+    {
+        $query = LeaveRequest::with(['approval'])
+            ->where('user_id', $request->user()->id)
+            ->where('status', '!=', 'pending');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+        
+        if ($request->filled('type')) {
+            $query->where('type', $request->query('type'));
+        }
+
+        if ($request->filled('start_date')) {
+            $query->where('start_date', '>=', $request->query('start_date'));
+        }
+
+        $query->orderBy('start_date', 'desc');
+
+        return response()->json($query->cursorPaginate(20));
+    }
+
+    public function pending(Request $request)
+    {
+        $user = $request->user();
+        $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
+
+        $query = LeaveRequest::with(['approval', 'user'])->where('status', 'pending');
+
+        if (in_array('super_admin', $roles) || in_array('admin', $roles)) {
+            // Can see all pending
+        } elseif (in_array('hr', $roles)) {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            });
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $query->orderBy('created_at', 'asc');
+
+        return response()->json($query->cursorPaginate(20));
     }
 }

@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\AttendanceDay;
+use App\Models\AttendanceEvent;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
+use App\Models\WorkSchedule;
 
 class AttendanceService
 {
@@ -16,18 +20,38 @@ class AttendanceService
             $parsedTs = Carbon::parse($timestamp);
             $date = $parsedTs->toDateString();
 
+            // Validate punch state machine
+            $lastEvent = AttendanceEvent::where('user_id', $userId)
+                ->whereDate('timestamp', $date)
+                ->orderBy('timestamp', 'desc')
+                ->first();
+
+            $lastType = $lastEvent->type ?? null;
+
+            $valid = match ($type) {
+                'clock_in' => $lastType === null || $lastType === 'clock_out',
+                'break_start' => $lastType === 'clock_in' || $lastType === 'break_end',
+                'break_end' => $lastType === 'break_start',
+                'clock_out' => $lastType === 'clock_in' || $lastType === 'break_end',
+                default => false,
+            };
+
+            if (!$valid) {
+                throw ValidationException::withMessages([
+                    'type' => ["Cannot record '{$type}' when current state is " . ($lastType ?? 'not clocked in') . "."]
+                ]);
+            }
+
             // Idempotency check via client_id
-            $existing = DB::table('attendance_events')->where('client_id', $clientId)->first();
+            $existing = AttendanceEvent::where('client_id', $clientId)->first();
             if (!$existing) {
-                DB::table('attendance_events')->insert([
+                AttendanceEvent::create([
                     'client_id' => $clientId,
                     'user_id' => $userId,
                     'type' => $type,
                     'timestamp' => $parsedTs,
-                    'device_meta' => $deviceMeta ? json_encode($deviceMeta) : null,
+                    'device_meta' => $deviceMeta,
                     'source' => 'server',
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ]);
             }
 
@@ -40,30 +64,26 @@ class AttendanceService
      */
     public static function reconcileDay(int $userId, string $date): array
     {
-        // ATT-Q2: Cross-midnight shifts are attributed entirely to the clock-in date.
-        // Fetch events starting from $date 00:00:00 up to 36 hours later, belonging to this shift.
         $startWindow = Carbon::parse($date)->startOfDay();
         $endWindow = Carbon::parse($date)->addHours(36);
 
-        $allEvents = DB::table('attendance_events')
-            ->where('user_id', $userId)
+        $allEvents = AttendanceEvent::where('user_id', $userId)
             ->whereBetween('timestamp', [$startWindow, $endWindow])
             ->orderBy('timestamp', 'asc')
             ->get();
 
-        // Filter events that belong to the shift starting on $date
         $events = [];
         $hasStartedOnDate = false;
 
         foreach ($allEvents as $ev) {
-            $evDate = Carbon::parse($ev->timestamp)->toDateString();
+            $evDate = $ev->timestamp->toDateString();
             if ($ev->type === 'clock_in' && $evDate === $date) {
                 $hasStartedOnDate = true;
             }
             if ($hasStartedOnDate) {
                 $events[] = $ev;
                 if ($ev->type === 'clock_out') {
-                    break; // Shift completed
+                    break;
                 }
             }
         }
@@ -84,7 +104,7 @@ class AttendanceService
         $currentBreakStart = null;
 
         foreach ($events as $event) {
-            $ts = Carbon::parse($event->timestamp);
+            $ts = $event->timestamp;
             if (!$firstEvent) $firstEvent = $ts;
             $lastEvent = $ts;
 
@@ -124,9 +144,30 @@ class AttendanceService
             }
         }
 
-        // If still active (on clock), compute up to now
-        if ($currentWorkStart) {
-            $totalSeconds += Carbon::now()->diffInSeconds($currentWorkStart);
+        // Removed the active now()->diffInSeconds calculation to prevent drift.
+        // total_seconds now accurately reflects closed time segments only.
+
+        $hasOpenShift = false;
+        $lastEventType = $lastEvent ? $events[count($events) - 1]->type : null;
+        if ($lastEventType === 'clock_in' || $lastEventType === 'break_end') {
+            $hasOpenShift = true;
+        }
+
+        // Get existing to check for manual overrides
+        $existingDay = AttendanceDay::where('user_id', $userId)->where('date', $date)->first();
+        
+        if ($existingDay && $existingDay->source === 'manual') {
+            // Do not override manually corrected total_seconds or break_seconds.
+            // Just update structural things if needed, or skip.
+            // For safety, we will just update has_open_shift and last_event.
+            $existingDay->update([
+                'first_event' => $firstEvent ?? $existingDay->first_event,
+                'last_event' => $lastEvent ?? $existingDay->last_event,
+                'clock_out' => $lastClockOut ?? $existingDay->clock_out,
+                'has_open_shift' => $hasOpenShift,
+                'updated_at' => now(),
+            ]);
+            return $existingDay->toArray();
         }
 
         $overtimeSeconds = max(0, $totalSeconds - $standardSeconds);
@@ -143,7 +184,7 @@ class AttendanceService
             $status = ($lateMinutes > 0) ? 'late' : 'present';
         }
 
-        DB::table('attendance_days')->updateOrInsert(
+        $dayRecord = AttendanceDay::updateOrCreate(
             ['user_id' => $userId, 'date' => $date],
             [
                 'clock_in' => $firstClockIn,
@@ -154,6 +195,7 @@ class AttendanceService
                 'break_seconds' => $breakSeconds,
                 'overtime_seconds' => $overtimeSeconds,
                 'late_minutes' => $lateMinutes,
+                'has_open_shift' => $hasOpenShift,
                 'status' => $status,
                 'source' => 'server',
                 'version' => DB::raw('version + 1'),
@@ -161,7 +203,8 @@ class AttendanceService
             ]
         );
 
-        $dayRecord = DB::table('attendance_days')->where('user_id', $userId)->where('date', $date)->first();
-        return (array) $dayRecord;
+        // Fetch fresh to get evaluated raw expressions
+        return $dayRecord->fresh()->toArray();
     }
 }
+

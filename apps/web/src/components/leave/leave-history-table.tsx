@@ -1,95 +1,147 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ColumnDef } from "@tanstack/react-table";
 import { Check, X } from "lucide-react";
+import { DataTable } from "@/components/data-table/data-table";
+import { FilterBar } from "@/components/data-table/filter-bar";
 
 interface LeaveHistoryTableProps {
   records: any[];
   isLoading: boolean;
+  typeFilter?: string;
+  setTypeFilter?: (val: string) => void;
+  statusFilter?: string;
+  setStatusFilter?: (val: string) => void;
 }
 
-export function LeaveHistoryTable({ records, isLoading }: LeaveHistoryTableProps) {
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-3">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
-  }
-
-  if (records.length === 0) {
-    return (
-      <div className="p-8">
-        <EmptyState
-          title="No leave history"
-          description="You haven't submitted any leave requests yet."
-        />
-      </div>
-    );
-  }
+export function LeaveHistoryTable({ 
+  records, 
+  isLoading,
+  typeFilter = "all",
+  setTypeFilter = () => {},
+  statusFilter = "all",
+  setStatusFilter = () => {}
+}: LeaveHistoryTableProps) {
+  const columns = useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        accessorKey: "start_date",
+        header: "Dates",
+        cell: ({ row }) => {
+          const startDate = new Date(row.original.start_date);
+          const endDate = new Date(row.original.end_date);
+          return (
+            <div className="font-medium text-neutral-900 dark:text-neutral-100">
+              {format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "type",
+        header: "Type",
+        cell: ({ row }) => <span className="capitalize">{row.original.type}</span>,
+      },
+      {
+        accessorKey: "reason",
+        header: "Reason",
+        cell: ({ row }) => (
+          <span className="text-neutral-500 truncate max-w-[200px] block">
+            {row.original.reason}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+          const status = row.original.approval?.status || "pending";
+          return (
+            <span
+              className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium uppercase ${
+                status === "approved"
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                  : status === "rejected"
+                  ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+              }`}
+            >
+              {status}
+            </span>
+          );
+        },
+      },
+      {
+        id: "approver",
+        header: "Approver / Decision",
+        cell: ({ row }) => {
+          const approval = row.original.approval;
+          if (!approval || approval.status === "pending") {
+            return <span className="text-neutral-400 italic">Pending...</span>;
+          }
+          return (
+            <div className="flex items-center gap-2">
+              {approval.status === "approved" ? (
+                <Check className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <X className="w-4 h-4 text-rose-500" />
+              )}
+              {approval.decision_reason && (
+                <span className="text-neutral-500 text-xs truncate max-w-[150px] block" title={approval.decision_reason}>
+                  {approval.decision_reason}
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left text-xs">
-        <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 uppercase font-semibold border-b border-neutral-100 dark:border-neutral-800">
-          <tr>
-            <th className="px-6 py-3">Dates</th>
-            <th className="px-6 py-3">Type</th>
-            <th className="px-6 py-3">Reason</th>
-            <th className="px-6 py-3">Status</th>
-            <th className="px-6 py-3">Approver / Decision</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-          {records.map((row) => {
-            const approval = row.approval;
-            const status = approval?.status || "pending";
-            
-            return (
-              <tr key={row.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
-                <td className="px-6 py-4 font-semibold text-neutral-900 dark:text-white">
-                  {format(new Date(row.start_date), "MMM d, yyyy")} - {format(new Date(row.end_date), "MMM d, yyyy")}
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-medium capitalize text-[10px]">
-                    {row.type}
-                  </span>
-                </td>
-                <td className="px-6 py-4 max-w-xs truncate text-neutral-500" title={row.reason}>
-                  {row.reason}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      status === "approved"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : status === "rejected"
-                        ? "bg-rose-100 text-rose-700"
-                        : "bg-amber-100 text-amber-700"
-                    }`}
-                  >
-                    {status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-neutral-500">
-                  {status === "pending" ? (
-                    <span className="italic text-xs">Waiting on {approval?.current_approver_role?.replace("_", " ")}</span>
-                  ) : (
-                    <div>
-                      {status === "approved" ? <Check className="w-4 h-4 text-emerald-600 inline mr-1" /> : <X className="w-4 h-4 text-rose-600 inline mr-1" />}
-                      {approval?.decision_reason || "No reason provided"}
-                    </div>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="flex flex-col h-full">
+      <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+        <FilterBar
+          searchQuery=""
+          onSearchChange={() => {}}
+          filters={[
+            {
+              key: "type",
+              label: "Type",
+              value: typeFilter,
+              onChange: setTypeFilter,
+              options: [
+                { label: "All Types", value: "all" },
+                { label: "Casual", value: "casual" },
+                { label: "Sick", value: "sick" },
+                { label: "Earned", value: "earned" },
+                { label: "Unpaid", value: "unpaid" },
+              ],
+            },
+            {
+              key: "status",
+              label: "Status",
+              value: statusFilter,
+              onChange: setStatusFilter,
+              options: [
+                { label: "All Statuses", value: "all" },
+                { label: "Approved", value: "approved" },
+                { label: "Rejected", value: "rejected" },
+              ],
+            },
+          ]}
+        />
+      </div>
+      <div className="flex-1 min-h-[300px]">
+        <DataTable
+          columns={columns}
+          data={records || []}
+          isFetchingNextPage={isLoading}
+        />
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 use App\Services\AuditLogger;
 
 class ProfileController extends Controller
@@ -44,8 +45,10 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-        $path = $request->file('avatar')->store('avatars', 'public');
-        $avatarUrl = Storage::url($path);
+        
+        // Use Supabase Storage for avatars
+        $path = $request->file('avatar')->store('avatars', 'supabase');
+        $avatarUrl = Storage::disk('supabase')->url($path);
 
         $before = $user->toArray();
         $user->avatar_url = $avatarUrl;
@@ -62,7 +65,7 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
+            'new_password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
         ]);
 
         if (!Hash::check($validated['current_password'], $user->password)) {

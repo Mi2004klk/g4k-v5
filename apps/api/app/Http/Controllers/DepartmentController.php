@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Department;
 use App\Models\Team;
 use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Cache;
 
 class DepartmentController extends Controller
 {
@@ -17,9 +18,14 @@ class DepartmentController extends Controller
 
     public function index(Request $request)
     {
-        $departments = Department::with('teams')
-            ->orderBy('id', 'desc')
-            ->cursorPaginate(20);
+        $cursor = $request->query('cursor', '');
+        $cacheKey = "departments_cursor_{$cursor}";
+
+        $departments = Cache::remember($cacheKey, 3600, function () {
+            return Department::with('teams')
+                ->orderBy('id', 'desc')
+                ->cursorPaginate(20);
+        });
             
         return response()->json($departments);
     }

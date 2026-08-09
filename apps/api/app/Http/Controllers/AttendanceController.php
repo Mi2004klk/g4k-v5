@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\AttendanceDay;
+use App\Models\AttendanceEvent;
+use App\Models\RoleAssignment;
 use Carbon\Carbon;
 use App\Services\AttendanceService;
 use App\Services\AuditLogger;
@@ -58,8 +61,7 @@ class AttendanceController extends Controller
             $validated['meta'] ?? null
         );
 
-        $events = DB::table('attendance_events')
-            ->where('user_id', $user->id)
+        $events = AttendanceEvent::where('user_id', $user->id)
             ->whereDate('timestamp', Carbon::parse($timestamp)->toDateString())
             ->orderBy('timestamp', 'asc')
             ->get();
@@ -75,28 +77,30 @@ class AttendanceController extends Controller
         $user = $request->user();
         $date = now()->toDateString();
 
-        $day = DB::table('attendance_days')
-            ->where('user_id', $user->id)
+        $day = AttendanceDay::where('user_id', $user->id)
             ->where('date', $date)
             ->first();
 
-        $events = DB::table('attendance_events')
-            ->where('user_id', $user->id)
+        $events = AttendanceEvent::where('user_id', $user->id)
             ->whereDate('timestamp', $date)
             ->orderBy('timestamp', 'asc')
             ->get();
 
+        // Pass work_schedules standard_seconds to frontend
+        $schedule = DB::table('work_schedules')->where('is_default', true)->first();
+        $standardSeconds = $schedule->standard_seconds ?? 31500;
+
         return response()->json([
             'day' => $day,
             'events' => $events,
+            'standard_seconds' => $standardSeconds,
         ]);
     }
 
     public function meHistory(Request $request)
     {
         $user = $request->user();
-        $days = DB::table('attendance_days')
-            ->where('user_id', $user->id)
+        $days = AttendanceDay::where('user_id', $user->id)
             ->orderBy('date', 'desc')
             ->cursorPaginate(30);
 
@@ -106,13 +110,11 @@ class AttendanceController extends Controller
     public function meDay(Request $request, string $date)
     {
         $user = $request->user();
-        $day = DB::table('attendance_days')
-            ->where('user_id', $user->id)
+        $day = AttendanceDay::where('user_id', $user->id)
             ->where('date', $date)
             ->first();
 
-        $events = DB::table('attendance_events')
-            ->where('user_id', $user->id)
+        $events = AttendanceEvent::where('user_id', $user->id)
             ->whereDate('timestamp', $date)
             ->orderBy('timestamp', 'asc')
             ->get();
@@ -123,12 +125,26 @@ class AttendanceController extends Controller
         ]);
     }
 
+    private function applyHrScoping($query, $user)
+    {
+        $isAdmin = RoleAssignment::where('user_id', $user->id)
+            ->whereIn('role', ['super_admin', 'admin'])
+            ->exists();
+        
+        if (!$isAdmin) {
+            $query->where('users.department_id', $user->department_id);
+        }
+        return $query;
+    }
+
     public function overview(Request $request)
     {
         $query = DB::table('attendance_days')
             ->join('users', 'users.id', '=', 'attendance_days.user_id')
             ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id')
             ->orderBy('date', 'desc');
+
+        $this->applyHrScoping($query, $request->user());
 
         if ($request->filled('date')) {
             $query->where('date', $request->query('date'));
@@ -155,7 +171,10 @@ class AttendanceController extends Controller
         $date = $request->query('date', now()->toDateString());
         $carbonDate = Carbon::parse($date);
 
-        $query = DB::table('attendance_days');
+        $query = DB::table('attendance_days')
+            ->join('users', 'users.id', '=', 'attendance_days.user_id');
+            
+        $this->applyHrScoping($query, $request->user());
 
         if ($mode === 'weekly') {
             $start = $carbonDate->copy()->startOfWeek();
@@ -167,7 +186,7 @@ class AttendanceController extends Controller
             $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
         }
 
-        $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when status="present" then 1 else 0 end) as present'), DB::raw('sum(case when status="late" then 1 else 0 end) as late'), DB::raw('sum(case when status="absent" then 1 else 0 end) as absent'))
+        $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status="present" then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status="late" then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status="absent" then 1 else 0 end) as absent'))
             ->groupBy('date')
             ->orderBy('date', 'asc')
             ->get();
@@ -184,33 +203,37 @@ class AttendanceController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
-        $day = DB::table('attendance_days')->where('id', $validated['attendance_day_id'])->first();
+        $day = AttendanceDay::where('id', $validated['attendance_day_id'])->first();
         $actor = $request->user();
 
         // HR-CORRECT: HR may only correct attendance within their own team/department.
-        $isAdmin = DB::table('role_assignments')->where('user_id', $actor->id)->whereIn('role', ['super_admin', 'admin'])->exists();
+        $isAdmin = RoleAssignment::where('user_id', $actor->id)
+            ->whereIn('role', ['super_admin', 'admin'])
+            ->exists();
+            
         if (!$isAdmin) {
-            $targetUser = DB::table('users')->where('id', $day->user_id)->first();
+            $targetUser = User::where('id', $day->user_id)->first();
             if ($targetUser->department_id !== $actor->department_id) {
                 return response()->json(['message' => 'Forbidden. HR users can only correct attendance within their assigned department/team.'], 403);
             }
         }
 
-        $before = (array) $day;
+        $before = $day->toArray();
 
         $field = $validated['field'];
         $oldValue = $day->$field ?? null;
 
         // Apply correction
-        DB::table('attendance_days')
-            ->where('id', $day->id)
-            ->update([
-                $field => $validated['new_value'],
-                'corrected_by' => $request->user()->id,
-                'source' => 'manual',
-                'version' => DB::raw('version + 1'),
-                'updated_at' => now(),
-            ]);
+        $day->update([
+            $field => $validated['new_value'],
+            'corrected_by' => $request->user()->id,
+            'source' => 'manual', // Triggers protection in reconcileDay
+            'version' => DB::raw('version + 1'),
+            'updated_at' => now(),
+        ]);
+        
+        // Ensure reconcileDay is called if it was open shift fix or structural
+        AttendanceService::reconcileDay($day->user_id, $day->date);
 
         // Insert audit correction record
         DB::table('attendance_corrections')->insert([
@@ -224,8 +247,8 @@ class AttendanceController extends Controller
             'updated_at' => now(),
         ]);
 
-        $updatedDay = DB::table('attendance_days')->where('id', $day->id)->first();
-        AuditLogger::log($request, 'correct', 'attendance_day', $day->id, $before, (array) $updatedDay);
+        $updatedDay = AttendanceDay::where('id', $day->id)->first();
+        AuditLogger::log($request, 'correct', 'attendance_day', $day->id, $before, $updatedDay->toArray());
 
         return response()->json([
             'message' => 'Attendance record corrected successfully.',
@@ -242,15 +265,18 @@ class AttendanceController extends Controller
             'Content-Disposition' => "attachment; filename=\"attendance_export_{$date}.csv\"",
         ];
 
-        $callback = function () use ($date) {
+        $callback = function () use ($date, $request) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Date', 'Employee Name', 'Email', 'Status', 'Total Worked (hh:mm)', 'Overtime (hh:mm)', 'Late (mins)']);
 
-            $records = DB::table('attendance_days')
+            $query = DB::table('attendance_days')
                 ->join('users', 'users.id', '=', 'attendance_days.user_id')
                 ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email')
-                ->where('date', $date)
-                ->get();
+                ->where('date', $date);
+                
+            $this->applyHrScoping($query, $request->user());
+            
+            $records = $query->get();
 
             foreach ($records as $row) {
                 $hours = floor($row->total_seconds / 3600);
@@ -275,3 +301,4 @@ class AttendanceController extends Controller
         return new StreamedResponse($callback, 200, $headers);
     }
 }
+

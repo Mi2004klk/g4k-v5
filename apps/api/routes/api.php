@@ -6,7 +6,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
-use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DirectoryController;
 use App\Http\Controllers\ProfileController;
@@ -96,10 +95,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Phase 6 API
     Route::middleware('capability:leave.request-self')->group(function () {
         Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
+        Route::get('/leave-requests/history', [LeaveRequestController::class, 'history']);
         Route::post('/leave-requests', [LeaveRequestController::class, 'store']);
+        Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
     });
     // HR or Admin approve
     Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware('capability:leave.approve-employee');
+    Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     
     Route::get('/holidays', [HolidayController::class, 'index']);
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -158,7 +160,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('capability:users.hr.manage')->group(function () {
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::apiResource('users', UserController::class);
-        Route::apiResource('employees', EmployeeController::class);
     });
     Route::apiResource('companies', CompanyController::class)->middleware('capability:settings.manage');
     Route::apiResource('departments', DepartmentController::class)->middleware('capability:departments.manage');

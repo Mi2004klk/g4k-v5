@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Approval;
 use App\Models\User;
 use App\Events\ApprovalDecided;
+use App\Events\ApprovalSubmitted;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -19,11 +20,8 @@ class ApprovalService
         $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
 
         // Determine next approver role based on submitter's highest role
-        // super_admin -> auto-approved? Or maybe not allowed? Assuming super_admin can auto-approve their own or doesn't need to.
-        // For now, if hr -> super_admin. Otherwise -> hr.
         $currentApproverRole = in_array('hr', $roles) ? 'super_admin' : 'hr';
         if (in_array('super_admin', $roles)) {
-            // Super admins can just approve their own stuff directly if needed, but we'll set it to super_admin anyway
             $currentApproverRole = 'super_admin';
         }
 
@@ -36,7 +34,17 @@ class ApprovalService
             'payload' => $payload,
         ]);
 
+        event(new ApprovalSubmitted($approval));
+
         return $approval;
+    }
+
+    private static function checkRoleGating(Approval $approval, int $decidedBy)
+    {
+        $deciderRoles = DB::table('role_assignments')->where('user_id', $decidedBy)->pluck('role')->toArray();
+        if (!in_array($approval->current_approver_role, $deciderRoles) && !in_array('super_admin', $deciderRoles)) {
+            throw new Exception("You do not have the correct active role ({$approval->current_approver_role}) to decide this approval.");
+        }
     }
 
     /**
@@ -48,8 +56,7 @@ class ApprovalService
             throw new Exception("Approval is not in a pending state.");
         }
 
-        // Capability checking is done in the controller or middleware.
-        // Assuming controller already checked capability based on $approval->current_approver_role.
+        self::checkRoleGating($approval, $decidedBy);
 
         $approval->update([
             'status' => 'approved',
@@ -72,6 +79,8 @@ class ApprovalService
         if ($approval->status !== 'pending') {
             throw new Exception("Approval is not in a pending state.");
         }
+
+        self::checkRoleGating($approval, $decidedBy);
 
         $approval->update([
             'status' => 'rejected',

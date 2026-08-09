@@ -95,11 +95,7 @@ export default function ProfilePage() {
         body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Avatar upload failed");
-      }
-      return res.json();
+      return res;
     },
     onSuccess: (res: any) => {
       toast.success("Avatar updated!");

@@ -1,106 +1,87 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { apiFetch } from './api-client';
 
-export type EntityType = 
-  | 'settings' 
-  | 'tasks' 
-  | 'documents' 
-  | 'attendance' 
-  | 'finance' 
-  | 'hr' 
-  | 'chat' 
-  | 'comments';
-
-export type QueueItemState = 'Pending' | 'Syncing' | 'Completed' | 'Failed' | 'Conflict' | 'Cancelled';
-
-export type ConflictStrategy = 
-  | 'LAST_WRITE_WINS' 
-  | 'VERSION_MERGE' 
-  | 'VERSION_MANUAL' 
-  | 'SERVER_VALIDATION' 
-  | 'SERVER_WINS' 
-  | 'TIMESTAMP';
-
-export type MutationRequest = {
-  id: string;
-  operation: string;
-  entity: EntityType;
-  version?: number;
-  url: string;
-  method: string;
-  body: any;
-  timestamp: number;
-  retryCount: number;
-  state: QueueItemState;
-};
-
-export const ENTITY_CONFLICT_STRATEGY: Record<EntityType, ConflictStrategy> = {
-  settings: 'LAST_WRITE_WINS',
-  tasks: 'VERSION_MERGE',
-  documents: 'VERSION_MANUAL',
-  attendance: 'SERVER_VALIDATION',
-  finance: 'SERVER_WINS',
-  hr: 'SERVER_WINS',
-  chat: 'TIMESTAMP',
-  comments: 'TIMESTAMP',
-};
-
-interface OfflineState {
-  isOffline: boolean;
-  mutationQueue: MutationRequest[];
-  setOffline: (status: boolean) => void;
-  queueMutation: (
-    request: Omit<MutationRequest, 'id' | 'timestamp' | 'retryCount' | 'state'>
-  ) => void;
-  updateItemState: (id: string, state: QueueItemState) => void;
-  removeMutation: (id: string) => void;
-  clearQueue: () => void;
-  resolveConflict: (id: string, resolution: 'client' | 'server' | any) => void;
+interface AttendanceDB extends DBSchema {
+  punches: {
+    value: {
+      client_id: string;
+      type: string;
+      timestamp: string;
+      syncStatus: 'pending' | 'synced' | 'failed';
+    };
+    key: string;
+    indexes: { 'by-status': string };
+  };
 }
 
-export const useOfflineEngine = create<OfflineState>()(
-  persist(
-    (set) => ({
-      isOffline: false,
-      mutationQueue: [],
-      setOffline: (status) => set({ isOffline: status }),
-      queueMutation: (req) =>
-        set((state) => ({
-          mutationQueue: [
-            ...state.mutationQueue,
-            {
-              ...req,
-              id: crypto.randomUUID(),
-              timestamp: Date.now(),
-              retryCount: 0,
-              state: 'Pending',
-            },
-          ],
-        })),
-      updateItemState: (id, newState) =>
-        set((state) => ({
-          mutationQueue: state.mutationQueue.map((item) =>
-            item.id === id ? { ...item, state: newState } : item
-          ),
-        })),
-      removeMutation: (id) =>
-        set((state) => ({
-          mutationQueue: state.mutationQueue.filter((m) => m.id !== id),
-        })),
-      clearQueue: () => set({ mutationQueue: [] }),
-      resolveConflict: (id, resolution) =>
-        set((state) => ({
-          mutationQueue: state.mutationQueue.map((item) => {
-            if (item.id !== id) return item;
-            if (resolution === 'server') {
-              return { ...item, state: 'Cancelled' };
-            }
-            return { ...item, body: resolution, state: 'Pending' };
-          }),
-        })),
-    }),
-    {
-      name: 'g4k-offline-mutations-v2',
+class OfflineEngine {
+  private dbPromise: Promise<IDBPDatabase<AttendanceDB>> | null = null;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.dbPromise = openDB<AttendanceDB>('g4k-offline-attendance', 1, {
+        upgrade(db) {
+          const store = db.createObjectStore('punches', {
+            keyPath: 'client_id',
+          });
+          store.createIndex('by-status', 'syncStatus');
+        },
+      });
+
+      window.addEventListener('online', () => this.syncPendingPunches());
     }
-  )
-);
+  }
+
+  async recordPunch(type: string, timestamp: string): Promise<string> {
+    if (!this.dbPromise) return "no-db";
+
+    const client_id = `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const db = await this.dbPromise;
+
+    await db.put('punches', {
+      client_id,
+      type,
+      timestamp,
+      syncStatus: 'pending',
+    });
+
+    // Try to sync immediately
+    if (navigator.onLine) {
+      this.syncPendingPunches();
+    }
+
+    return client_id;
+  }
+
+  async syncPendingPunches() {
+    if (!this.dbPromise) return;
+
+    const db = await this.dbPromise;
+    const pending = await db.getAllFromIndex('punches', 'by-status', 'pending');
+
+    for (const punch of pending) {
+      try {
+        const endpoint = `/attendance/${punch.type.replace('_', '-')}`;
+        await apiFetch(endpoint, {
+          method: 'POST',
+          body: JSON.stringify({
+            client_id: punch.client_id,
+            timestamp: punch.timestamp,
+          }),
+        });
+
+        punch.syncStatus = 'synced';
+        await db.put('punches', punch);
+      } catch (err: any) {
+        if (err.status && err.status >= 400 && err.status < 500) {
+          // If it's a client error (e.g. 422 state machine violation), mark as failed so it doesn't keep retrying
+          punch.syncStatus = 'failed';
+          await db.put('punches', punch);
+        }
+        // If it's a network error or 500, we leave it pending for the next retry
+      }
+    }
+  }
+}
+
+export const offlineEngine = new OfflineEngine();

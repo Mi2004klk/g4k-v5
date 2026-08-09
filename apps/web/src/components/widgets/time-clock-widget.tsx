@@ -6,6 +6,8 @@ import { Loader2, Play, Square, Coffee, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api-client";
+import { useQuery } from "@tanstack/react-query";
+import { offlineEngine } from "@/lib/offline-engine";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +28,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const [activeState, setActiveState] = useState<"not_started" | "active" | "on_break" | "completed">("not_started");
   const [showConfirmOut, setShowConfirmOut] = useState(false);
 
+  const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
   const startTimeRef = useRef<number | null>(null);
   const baseSecondsRef = useRef<number>(0);
 
@@ -34,6 +37,9 @@ export function TimeClockWidget({ className }: { className?: string }) {
       const data = await apiFetch("/attendance/me/today");
       setDay(data.day);
       setEvents(data.events || []);
+      if (data.standard_seconds) {
+        setStandardSeconds(data.standard_seconds);
+      }
 
       const evts = data.events || [];
       const lastEvent = evts[evts.length - 1];
@@ -83,40 +89,31 @@ export function TimeClockWidget({ className }: { className?: string }) {
   }, [activeState]);
 
   const handlePunch = async (type: string) => {
-    const clientId = `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const endpoint = `/attendance/${type.replace("_", "-")}`;
-
     // Optimistic UI state
     const prevSeconds = totalSeconds;
     const prevActiveState = activeState;
 
-    if (type === "clock_in" || type === "break_end") {
+    if (type === "clock_in" || type === "end_break") {
       setActiveState("active");
-    } else if (type === "break_start") {
+    } else if (type === "start_break") {
       setActiveState("on_break");
     } else if (type === "clock_out") {
       setActiveState("completed");
     }
 
     try {
-      const data = await apiFetch(endpoint, {
-        method: "POST",
-        body: JSON.stringify({
-          client_id: clientId,
-          timestamp: new Date().toISOString(),
-        }),
-      });
+      // Use OfflineEngine for resilience
+      const timestamp = new Date().toISOString();
+      await offlineEngine.recordPunch(type, timestamp);
 
-      setDay(data.day);
-      setEvents(data.events || []);
-      const newSecs = data.day?.total_seconds || 0;
-      setTotalSeconds(newSecs);
-      baseSecondsRef.current = newSecs;
-      startTimeRef.current = Date.now();
-
+      // Re-fetch to ensure exact server state once online
+      if (navigator.onLine) {
+        fetchTodayStatus();
+      }
       toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
     } catch (err: any) {
-      // Rollback on failure
+      // Revert optimistic state on fatal error
+      toast.error(err.message || "Failed to record punch.");
       setActiveState(prevActiveState);
       setTotalSeconds(prevSeconds);
       toast.error(err.message || "Failed to record punch. Try again.");
@@ -130,7 +127,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const isOvertime = totalSeconds > 31500; // > 8h 45m
+  const isOvertime = totalSeconds > standardSeconds;
 
   if (loading) {
     return (
@@ -170,7 +167,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
         </div>
         {isOvertime && (
           <p className="text-[11px] text-amber-500 font-medium mt-1">
-            Overtime Threshold Exceeded (+{formatTime(totalSeconds - 31500)})
+            Overtime Threshold Exceeded (+{formatTime(totalSeconds - standardSeconds)})
           </p>
         )}
       </div>
@@ -179,7 +176,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
         {activeState === "not_started" && (
           <Button
             onClick={() => handlePunch("clock_in")}
-            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
+            className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
           >
             <Play className="w-4 h-4" />
             <span>Clock In</span>
@@ -191,19 +188,19 @@ export function TimeClockWidget({ className }: { className?: string }) {
             <Button
               onClick={() => handlePunch("start_break")}
               variant="outline"
-              className="flex-1 h-11 border-amber-300 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 gap-2"
+              className="flex-1 h-12 border-amber-300 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 gap-2"
             >
               <Coffee className="w-4 h-4" />
-              <span>Take Break</span>
+              <span>Break</span>
             </Button>
 
             <Button
               onClick={() => setShowConfirmOut(true)}
               variant="destructive"
-              className="flex-1 h-11 gap-2"
+              className="flex-1 h-12 gap-2"
             >
               <Square className="w-4 h-4" />
-              <span>End Shift</span>
+              <span>Clock Out</span>
             </Button>
           </>
         )}
@@ -211,7 +208,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
         {activeState === "on_break" && (
           <Button
             onClick={() => handlePunch("end_break")}
-            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2"
+            className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
           >
             <Play className="w-4 h-4" />
             <span>Resume Work</span>

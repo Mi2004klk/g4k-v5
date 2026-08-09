@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
@@ -8,9 +9,17 @@ import { HolidayCalendar } from "@/components/leave/holiday-calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LeavePage() {
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const { data, isLoading } = useQuery({
-    queryKey: ["my-leave-history"],
-    queryFn: () => apiFetch("/leave-requests"),
+    queryKey: ["my-leave-history", typeFilter, statusFilter],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (typeFilter !== "all") params.append("type", typeFilter);
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      return apiFetch(`/leave-requests/history?${params.toString()}`);
+    },
   });
 
   const records = data?.data || [];
@@ -27,7 +36,14 @@ export default function LeavePage() {
               <CardTitle className="text-base font-bold">My Leave History</CardTitle>
             </CardHeader>
             <CardContent className="p-0 flex-1">
-              <LeaveHistoryTable records={records} isLoading={isLoading} />
+              <LeaveHistoryTable 
+                records={records} 
+                isLoading={isLoading} 
+                typeFilter={typeFilter}
+                setTypeFilter={setTypeFilter}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+              />
             </CardContent>
           </Card>
         </div>
