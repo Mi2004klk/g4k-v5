@@ -21,6 +21,7 @@ use App\Http\Controllers\QaController;
 use App\Http\Controllers\TimerController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\PinController;
+use App\Http\Controllers\AutoNumberingController;
 
 // NOTE: Laravel auto-prefixes every route in this file with "/api" (via bootstrap/app.php
 // `withRouting(api: ...)`). So `Route::post('/auth/login')` is served at `/api/auth/login`.
@@ -174,11 +175,30 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->middleware('capability:audit.view');
 
     // Admin & Master Data APIs
-    Route::middleware('capability:users.hr.manage')->group(function () {
+    Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage');
+    Route::middleware('capability:users.hr.manage|users.employee.manage')->group(function () {
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
+        Route::patch('/users/{id}/status', [UserController::class, 'updateStatus']);
+        Route::get('/users/{id}/activity', [UserController::class, 'activity']);
         Route::apiResource('users', UserController::class);
     });
     Route::apiResource('companies', CompanyController::class)->middleware('capability:settings.manage');
-    Route::apiResource('departments', DepartmentController::class)->middleware('capability:departments.manage');
-    Route::apiResource('designations', DesignationController::class)->middleware('capability:designations.manage');
+    Route::apiResource('auto-numberings', AutoNumberingController::class)->middleware('capability:settings.manage');
+    
+    // Departments
+    Route::middleware('capability:departments.manage')->group(function () {
+        Route::get('/departments/export', [DepartmentController::class, 'export']);
+        Route::patch('/departments/{id}/archive', [DepartmentController::class, 'archive']);
+        Route::patch('/departments/{id}/restore', [DepartmentController::class, 'restore']);
+        Route::post('/departments/{department}/teams', [DepartmentController::class, 'storeTeam']);
+        Route::delete('/departments/{department}/teams/{team}', [DepartmentController::class, 'destroyTeam']);
+        Route::apiResource('departments', DepartmentController::class);
+    });
+
+    // Designations
+    Route::middleware('capability:designations.manage')->group(function () {
+        Route::get('/designations/export', [DesignationController::class, 'export']);
+        Route::patch('/designations/{id}/status', [DesignationController::class, 'updateStatus']);
+        Route::apiResource('designations', DesignationController::class);
+    });
 });

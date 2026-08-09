@@ -28,7 +28,11 @@ class RequireCapability
         }
 
         $activeRole = null;
-        foreach ($token->abilities as $ability) {
+        $abilities = $token->abilities ?? [];
+        if (!is_array($abilities) && !is_object($abilities)) {
+            $abilities = [];
+        }
+        foreach ($abilities as $ability) {
             if (str_starts_with($ability, 'role:')) {
                 $activeRole = substr($ability, 5);
                 break;
@@ -39,7 +43,16 @@ class RequireCapability
             return response()->json(['message' => 'Role not selected.'], 403);
         }
 
-        if (!CapabilityMatrix::hasCapability($activeRole, $capability)) {
+        $capabilities = explode('|', $capability);
+        $hasAny = false;
+        foreach ($capabilities as $cap) {
+            if (CapabilityMatrix::hasCapability($activeRole, $cap)) {
+                $hasAny = true;
+                break;
+            }
+        }
+
+        if (!$hasAny) {
             abort(403, 'Unauthorized action. Missing capability: ' . $capability);
         }
 

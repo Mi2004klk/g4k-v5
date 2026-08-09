@@ -6,24 +6,60 @@ use Illuminate\Http\Request;
 use App\Models\Department;
 use App\Models\Team;
 use App\Services\AuditLogger;
-use Illuminate\Support\Facades\Cache;
-
+use Spatie\SimpleExcel\SimpleExcelWriter;
 
 class DepartmentController extends Controller
 {
+    private function buildIndexQuery(Request $request)
+    {
+        $query = Department::withCount('users')->with('teams');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            if ($status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($status === 'archived') {
+                $query->whereNotNull('archived_at');
+            } elseif ($status === 'inactive') {
+                $query->where('is_active', false)->whereNull('archived_at');
+            }
+        }
+
+        return $query;
+    }
 
     public function index(Request $request)
     {
-        $cursor = $request->query('cursor', '');
-        $cacheKey = "departments_cursor_{$cursor}";
-
-        $departments = Cache::remember($cacheKey, 3600, function () {
-            return Department::with('teams')
-                ->orderBy('id', 'desc')
-                ->cursorPaginate(20);
-        });
-            
+        $query = $this->buildIndexQuery($request);
+        $departments = $query->orderBy('id', 'desc')->cursorPaginate(20);
         return response()->json($departments);
+    }
+
+    public function export(Request $request)
+    {
+        $query = $this->buildIndexQuery($request);
+        $departments = $query->orderBy('id', 'desc')->get();
+
+        return response()->streamDownload(function () use ($departments) {
+            $writer = SimpleExcelWriter::streamDownload('departments.csv');
+            foreach ($departments as $department) {
+                $writer->addRow([
+                    'ID' => $department->id,
+                    'Name' => $department->name,
+                    'Description' => $department->description,
+                    'Members Count' => $department->users_count ?? 0,
+                    'Is Active' => $department->is_active ? 'Yes' : 'No',
+                    'Archived At' => $department->archived_at ? $department->archived_at->format('Y-m-d H:i:s') : 'N/A',
+                    'Created At' => $department->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+            $writer->close();
+        }, 'departments.csv', ['Content-Type' => 'text/csv']);
     }
 
     public function store(Request $request)
@@ -63,9 +99,45 @@ class DepartmentController extends Controller
         return response()->json($department);
     }
 
+    public function archive(Request $request, string $id)
+    {
+        $department = Department::findOrFail($id);
+        $before = $department->toArray();
+
+        $department->update([
+            'is_active' => false,
+            'archived_at' => now(),
+        ]);
+
+        AuditLogger::log($request, 'archive', 'department', $department->id, $before, $department->toArray());
+
+        return response()->json($department);
+    }
+
+    public function restore(Request $request, string $id)
+    {
+        $department = Department::findOrFail($id);
+        $before = $department->toArray();
+
+        $department->update([
+            'is_active' => true,
+            'archived_at' => null,
+        ]);
+
+        AuditLogger::log($request, 'restore', 'department', $department->id, $before, $department->toArray());
+
+        return response()->json($department);
+    }
+
     public function destroy(Request $request, string $id)
     {
         $department = Department::findOrFail($id);
+        
+        // In-use guard for hard delete
+        if ($department->users()->exists()) {
+            return response()->json(['message' => 'Cannot delete a department with assigned employees.'], 422);
+        }
+
         $before = $department->toArray();
         $department->delete();
         

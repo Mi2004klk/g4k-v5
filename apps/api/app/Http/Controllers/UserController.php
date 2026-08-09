@@ -8,12 +8,20 @@ use App\Models\RoleAssignment;
 use Illuminate\Support\Facades\Hash;
 use App\Services\AuditLogger;
 use App\Services\AutoNumberingService;
-
+use Spatie\SimpleExcel\SimpleExcelWriter;
+use App\Services\CapabilityMatrix;
 
 class UserController extends Controller
 {
+    private function hasCapability(Request $request, string $capability): bool
+    {
+        $token = $request->user()->currentAccessToken();
+        $activeRole = $token ? ($token->abilities[0] ?? 'employee') : 'employee';
+        $activeRole = str_replace('role:', '', $activeRole);
+        return CapabilityMatrix::hasCapability($activeRole, $capability);
+    }
 
-    public function index(Request $request)
+    private function buildIndexQuery(Request $request)
     {
         $query = User::with(['department', 'team', 'designation', 'roleAssignments']);
 
@@ -43,8 +51,40 @@ class UserController extends Controller
             });
         }
 
+        return $query;
+    }
+
+    public function index(Request $request)
+    {
+        $query = $this->buildIndexQuery($request);
         $users = $query->orderBy('id', 'desc')->cursorPaginate(20);
         return response()->json($users);
+    }
+
+    public function export(Request $request)
+    {
+        $query = $this->buildIndexQuery($request);
+        $users = $query->orderBy('id', 'desc')->get();
+
+        return response()->streamDownload(function () use ($users) {
+            $writer = SimpleExcelWriter::streamDownload('users.csv');
+            foreach ($users as $user) {
+                $roles = $user->roleAssignments->pluck('role')->implode(', ');
+                $writer->addRow([
+                    'ID' => $user->id,
+                    'Name' => $user->name,
+                    'Email' => $user->email,
+                    'Employee ID' => $user->employee_id,
+                    'Phone' => $user->phone,
+                    'Department' => $user->department->name ?? 'N/A',
+                    'Designation' => $user->designation->name ?? 'N/A',
+                    'Roles' => $roles,
+                    'Status' => $user->status,
+                    'Created At' => $user->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+            $writer->close();
+        }, 'users.csv', ['Content-Type' => 'text/csv']);
     }
 
     public function store(Request $request)
@@ -61,6 +101,22 @@ class UserController extends Controller
             'roles' => 'required|array|min:1',
             'roles.*' => 'string',
         ]);
+
+        $roles = $validated['roles'];
+        $isCreatingHR = in_array('hr', $roles) || in_array('super_admin', $roles);
+        $isCreatingEmployee = in_array('employee', $roles);
+
+        if ($isCreatingHR && !$this->hasCapability($request, 'users.hr.manage')) {
+            return response()->json(['message' => 'Unauthorized to create HR/Admin users.'], 403);
+        }
+
+        if ($isCreatingEmployee && !$this->hasCapability($request, 'users.employee.manage')) {
+            return response()->json(['message' => 'Unauthorized to create Employee users.'], 403);
+        }
+
+        if (!$isCreatingHR && !$isCreatingEmployee) {
+            return response()->json(['message' => 'Invalid roles specified.'], 422);
+        }
 
         $employeeCode = AutoNumberingService::generateNext('employee');
 
@@ -79,7 +135,7 @@ class UserController extends Controller
             'status' => 'active',
         ]);
 
-        foreach ($validated['roles'] as $roleName) {
+        foreach ($roles as $roleName) {
             $user->roleAssignments()->create(['role' => $roleName]);
         }
 
@@ -109,19 +165,20 @@ class UserController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'team_id' => 'nullable|exists:teams,id',
             'designation_id' => 'nullable|exists:designations,id',
-            'status' => 'required|in:active,inactive',
             'roles' => 'sometimes|array|min:1',
             'roles.*' => 'string',
         ]);
 
-        // Guard: Cannot deactivate the last Super Admin
-        if ($validated['status'] === 'inactive') {
-            $isSuperAdmin = RoleAssignment::where('user_id', $user->id)->where('role', 'super_admin')->exists();
-            if ($isSuperAdmin) {
-                $superAdminCount = RoleAssignment::where('role', 'super_admin')->count();
-                if ($superAdminCount <= 1) {
-                    return response()->json(['message' => 'Cannot deactivate the last Super Admin.'], 422);
-                }
+        // Access check for updating roles
+        if (isset($validated['roles'])) {
+            $roles = $validated['roles'];
+            $isHR = in_array('hr', $roles) || in_array('super_admin', $roles);
+            $isEmployee = in_array('employee', $roles);
+            if ($isHR && !$this->hasCapability($request, 'users.hr.manage')) {
+                return response()->json(['message' => 'Unauthorized to assign HR/Admin roles.'], 403);
+            }
+            if ($isEmployee && !$this->hasCapability($request, 'users.employee.manage')) {
+                return response()->json(['message' => 'Unauthorized to assign Employee roles.'], 403);
             }
         }
 
@@ -134,7 +191,6 @@ class UserController extends Controller
             'department_id' => $validated['department_id'] ?? null,
             'team_id' => $validated['team_id'] ?? null,
             'designation_id' => $validated['designation_id'] ?? null,
-            'status' => $validated['status'],
         ]);
 
         if (isset($validated['roles']) && count($validated['roles']) > 0) {
@@ -150,11 +206,39 @@ class UserController extends Controller
         return response()->json($user);
     }
 
+    public function updateStatus(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $user = User::findOrFail($id);
+        $before = $user->toArray();
+
+        if ($validated['status'] === 'inactive') {
+            $isSuperAdmin = RoleAssignment::where('user_id', $user->id)->where('role', 'super_admin')->exists();
+            if ($isSuperAdmin) {
+                $activeSuperAdminCount = User::where('status', 'active')
+                    ->whereHas('roleAssignments', function ($q) {
+                        $q->where('role', 'super_admin');
+                    })->count();
+
+                if ($activeSuperAdminCount <= 1 && $user->status === 'active') {
+                    return response()->json(['message' => 'Cannot deactivate the last active Super Admin.'], 422);
+                }
+            }
+        }
+
+        $user->update(['status' => $validated['status']]);
+        AuditLogger::log($request, 'update_status', 'user', $user->id, $before, $user->toArray());
+
+        return response()->json($user);
+    }
+
     public function destroy(Request $request, string $id)
     {
         $user = User::findOrFail($id);
 
-        // Guard: Cannot delete the last Super Admin
         $isSuperAdmin = RoleAssignment::where('user_id', $user->id)->where('role', 'super_admin')->exists();
         if ($isSuperAdmin) {
             $superAdminCount = RoleAssignment::where('role', 'super_admin')->count();
@@ -169,6 +253,29 @@ class UserController extends Controller
         AuditLogger::log($request, 'delete', 'user', $user->id, $before, null);
         
         return response()->json(null, 204);
+    }
+
+    public function activity(Request $request, string $id)
+    {
+        $user = User::findOrFail($id);
+        
+        // Ensure user can view this activity
+        $isSelf = $request->user()->id === $user->id;
+        $canViewAny = $this->hasCapability($request, 'users.hr.manage');
+        $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
+        
+        if (!$isSelf && !$canViewAny && !$canViewEmployee) {
+            return response()->json(['message' => 'Unauthorized to view this user\'s activity.'], 403);
+        }
+
+        // We fetch logs WHERE user_id = $id (actions performed by this user) OR where target = user and target_id = $id (actions affecting this user)
+        // Usually, activity logs for a user means what they did.
+        $logs = \Illuminate\Support\Facades\DB::table('audit_logs')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->cursorPaginate(20);
+
+        return response()->json($logs);
     }
 
     public function resetPassword(Request $request, string $id)

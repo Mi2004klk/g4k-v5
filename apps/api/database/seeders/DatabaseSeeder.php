@@ -67,15 +67,15 @@ class DatabaseSeeder extends Seeder
         // 1. AutoNumbering Configuration
         AutoNumbering::firstOrCreate(
             ["entity_type" => "company"],
-            ["prefix" => "G4K-", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{NUMBER}"]
+            ["prefix" => "G4K-", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{000}"]
         );
         AutoNumbering::firstOrCreate(
             ["entity_type" => "department"],
-            ["prefix" => "DEP", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{NUMBER}"]
+            ["prefix" => "DEP", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{000}"]
         );
         AutoNumbering::firstOrCreate(
             ["entity_type" => "employee"],
-            ["prefix" => "G4K", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{NUMBER}"]
+            ["prefix" => "G4K", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{000}"]
         );
 
         // 1.5 Work Schedules (Default G4K Schedule)
@@ -228,7 +228,7 @@ class DatabaseSeeder extends Seeder
                     "name" => $emp["name"],
                     "username" => $emp["username"],
                     "password" => Hash::make($emp["password"]),
-                    "must_change_password" => false,
+                    "must_change_password" => true,
                     "department_id" => $emp["dept"],
                     "designation_id" => $desigMap[$emp["designation"]]->id,
                     "phone" => $emp["mobile"],

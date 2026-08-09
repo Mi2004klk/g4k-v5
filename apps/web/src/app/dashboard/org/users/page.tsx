@@ -1,32 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Search,
   Plus,
   MoreVertical,
   KeyRound,
   UserX,
   UserCheck,
   Building2,
-  Mail,
-  Phone,
-  Shield,
   Loader2,
   Edit2,
+  Trash2,
+  Activity,
+  Download,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
+import { Checkbox } from "@g4k/ui/components";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@g4k/ui/components";
 import {
   DropdownMenu,
@@ -45,143 +42,202 @@ import {
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { FilterBar } from "@/components/data-table/filter-bar";
+import { FilterBar } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 import { EmptyState } from "@g4k/ui/components";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
+import { ConfirmDialog } from "@g4k/ui/components";
 
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@g4k/ui/components";
 
-// ... existing code ...
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
   const [roleFilter, setRoleFilter] = useUrlState("role", "all");
+  const [statusFilter, setStatusFilter] = useUrlState("status", "all");
+  const [deptFilter, setDeptFilter] = useUrlState("department_id", "all");
+  
+  const [rowSelection, setRowSelection] = useState({});
+
+  // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [activityUser, setActivityUser] = useState<any>(null);
 
-  // Form states
+  // Forms
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     username: "",
     phone: "",
-    role: "employee",
-  });
-
-  const [editFormData, setEditFormData] = useState({
-    name: "",
-    email: "",
-    username: "",
-    phone: "",
+    department_id: "",
+    designation_id: "",
+    roles: ["employee"],
   });
 
   // Queries
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["users", debouncedSearch, roleFilter],
+  const { data, isLoading } = useQuery({
+    queryKey: ["users", debouncedSearch, roleFilter, statusFilter, deptFilter],
     queryFn: () => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
       return apiFetch(`/users?${params.toString()}`);
     },
   });
 
+  const { data: departments } = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => apiFetch("/departments").then(res => res.data || []),
+  });
+
+  const { data: designations } = useQuery({
+    queryKey: ["designations"],
+    queryFn: () => apiFetch("/designations").then(res => res.data || []),
+  });
+
+  const { data: activityData, isLoading: isLoadingActivity } = useQuery({
+    queryKey: ["user-activity", activityUser?.id],
+    queryFn: () => apiFetch(`/users/${activityUser.id}/activity`),
+    enabled: !!activityUser && isActivityOpen,
+  });
+
+  // Mutations
   const createMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      return apiFetch("/users", {
-        method: "POST",
-        body: JSON.stringify({
-          ...payload,
-          roles: [payload.role],
-        }),
-      });
-    },
+    mutationFn: (payload: any) => apiFetch("/users", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("User created successfully!");
       setIsCreateOpen(false);
-      setFormData({ name: "", email: "", username: "", phone: "", role: "employee" });
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to create user.");
-    },
+    onError: (err: any) => toast.error(err.message || "Failed to create user."),
   });
 
-  const updateUserMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      return apiFetch(`/users/${editingUser.id}`, {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      });
-    },
+  const updateMutation = useMutation({
+    mutationFn: (payload: any) => apiFetch(`/users/${editingUser.id}`, { method: "PUT", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("User updated successfully!");
       setIsEditOpen(false);
-      setEditingUser(null);
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update user.");
+    onError: (err: any) => toast.error(err.message || "Failed to update user."),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }: any) => apiFetch(`/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    onSuccess: () => {
+      toast.success("User status updated.");
+      setConfirmState({ isOpen: false, type: "" });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
+    onError: (err: any) => toast.error(err.message || "Failed to update status."),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/users/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success("User deleted.");
+      setConfirmState({ isOpen: false, type: "" });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to delete user."),
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiFetch(`/users/${id}/reset-password`, { method: "POST" });
-    },
-    onSuccess: (res: any) => {
-      toast.success(res.message || "Password reset to default!");
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to reset password.");
-    },
+    mutationFn: (id: number) => apiFetch(`/users/${id}/reset-password`, { method: "POST" }),
+    onSuccess: (res: any) => toast.success(res.message || "Password reset to default."),
+    onError: (err: any) => toast.error(err.message || "Failed to reset password."),
   });
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: async ({ id, status, name, email, username, phone }: any) => {
-      const newStatus = status === "active" ? "inactive" : "active";
-      return apiFetch(`/users/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          name,
-          email,
-          username,
-          phone,
-          status: newStatus,
-        }),
+  const bulkExport = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/users/export?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
-    },
-    onSuccess: () => {
-      toast.success("User status updated!");
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update user status.");
-    },
-  });
+      if (!response.ok) throw new Error("Export failed");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "users_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Export downloaded.");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to export");
+    }
+  };
 
-  const columns: ColumnDef<any>[] = [
+  const usersList = data?.data || [];
+  const selectedCount = Object.keys(rowSelection).length;
+
+  const columns = useMemo<ColumnDef<any>[]>(() => [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: "name",
       header: "Employee",
       cell: ({ row }) => {
         const user = row.original;
         return (
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center font-bold text-violet-700 dark:text-violet-300">
+          <div className="flex items-center gap-3" onClick={() => {
+            setEditingUser(user);
+            setFormData({
+              name: user.name,
+              email: user.email,
+              username: user.username || "",
+              phone: user.phone || "",
+              department_id: user.department_id || "",
+              designation_id: user.designation_id || "",
+              roles: user.role_assignments?.map((r: any) => r.role) || ["employee"],
+            });
+            setIsEditOpen(true);
+          }}>
+            <div className="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center font-bold text-violet-700 dark:text-violet-300 cursor-pointer">
               {user.name.charAt(0)}
             </div>
-            <div>
+            <div className="cursor-pointer hover:underline decoration-violet-500">
               <div className="font-semibold text-neutral-900 dark:text-white">
                 {user.name}
               </div>
               <div className="text-neutral-400 text-[11px] flex items-center gap-2">
                 <span>{user.email}</span>
-                {user.username && <span>• @{user.username}</span>}
               </div>
             </div>
           </div>
@@ -201,13 +257,17 @@ export default function UsersPage() {
       header: "Department",
       cell: ({ row }) => {
         const dept = row.original.department;
-        return dept ? (
-          <span className="inline-flex items-center gap-1 text-neutral-700 dark:text-neutral-300">
-            <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-            {dept.name}
-          </span>
-        ) : (
-          <span className="text-neutral-400">—</span>
+        const desig = row.original.designation;
+        return (
+          <div className="flex flex-col gap-1">
+            {dept ? (
+              <span className="inline-flex items-center gap-1 text-neutral-700 dark:text-neutral-300 text-xs font-medium">
+                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                {dept.name}
+              </span>
+            ) : <span className="text-neutral-400">—</span>}
+            {desig && <span className="text-[10px] text-neutral-500">{desig.name}</span>}
+          </div>
         );
       }
     },
@@ -220,17 +280,12 @@ export default function UsersPage() {
           <div className="flex flex-wrap gap-1">
             {activeRoles.length > 0 ? (
               activeRoles.map((r: string) => (
-                <span
-                  key={r}
-                  className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 capitalize"
-                >
+                <span key={r} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 capitalize">
                   {r.replace("_", " ")}
                 </span>
               ))
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-neutral-100 text-neutral-600">
-                Employee
-              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-neutral-100 text-neutral-600">Employee</span>
             )}
           </div>
         );
@@ -240,17 +295,10 @@ export default function UsersPage() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.original.status || "active";
-        const isInactive = status === "inactive";
+        const isInactive = row.original.status === "inactive";
         return (
-          <span
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-              isInactive
-                ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
-                : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
-            }`}
-          >
-            {status}
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${isInactive ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>
+            {row.original.status || "active"}
           </span>
         );
       }
@@ -265,53 +313,34 @@ export default function UsersPage() {
           <div className="text-right">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setEditingUser(user);
-                    setEditFormData({
-                      name: user.name || "",
-                      email: user.email || "",
-                      username: user.username || "",
-                      phone: user.phone || "",
-                    });
-                    setIsEditOpen(true);
-                  }}
-                  className="gap-2 text-violet-600 focus:text-violet-700"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit User
+                <DropdownMenuItem onClick={() => {
+                  setActivityUser(user);
+                  setIsActivityOpen(true);
+                }} className="gap-2 text-blue-600">
+                  <Activity className="w-4 h-4" /> View Activity
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => resetPasswordMutation.mutate(user.id)}
-                  className="gap-2 text-amber-600 focus:text-amber-700"
-                >
-                  <KeyRound className="w-4 h-4" />
-                  Reset Password
+                <DropdownMenuItem onClick={() => resetPasswordMutation.mutate(user.id)} className="gap-2 text-amber-600">
+                  <KeyRound className="w-4 h-4" /> Reset Password
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => toggleStatusMutation.mutate(user)}
-                  className={`gap-2 ${
-                    isInactive ? "text-emerald-600" : "text-rose-600"
-                  }`}
-                >
-                  {isInactive ? (
-                    <>
-                      <UserCheck className="w-4 h-4" />
-                      Activate User
-                    </>
-                  ) : (
-                    <>
-                      <UserX className="w-4 h-4" />
-                      Deactivate User
-                    </>
-                  )}
+                <DropdownMenuItem onClick={() => {
+                  if (isInactive) {
+                    statusMutation.mutate({ id: user.id, status: 'active' });
+                  } else {
+                    setConfirmState({ isOpen: true, type: "deactivate", payload: user });
+                  }
+                }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
+                  {isInactive ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                  {isInactive ? "Activate" : "Deactivate"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
+                  <Trash2 className="w-4 h-4" /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -319,56 +348,91 @@ export default function UsersPage() {
         );
       }
     }
-  ];
+  ], []);
 
-  const usersList = data?.data || [];
+  const deptOptions = departments?.map((d: any) => ({ label: d.name, value: d.id.toString() })) || [];
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
-            Employee Directory & Accounts
+            Employee Directory
           </h1>
           <p className="text-xs text-neutral-500">
-            Manage organization users, dual-roles, and account access.
+            Manage organization users, roles, and master data.
           </p>
         </div>
-        <Button
-          onClick={() => setIsCreateOpen(true)}
-          className="bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Employee</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-sm">
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
+          <Button onClick={() => {
+            setFormData({ name: "", email: "", username: "", phone: "", department_id: "", designation_id: "", roles: ["employee"] });
+            setIsCreateOpen(true);
+          }} className="gap-2 shadow">
+            <Plus className="w-4 h-4" />
+            Add Employee
+          </Button>
+        </div>
       </div>
 
-      {/* Filters Bar */}
       <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
         <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
           <FilterBar
             searchQuery={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search by name, email, username, or code..."
+            searchPlaceholder="Search by name, email, code..."
             filters={[
               {
+                type: "select",
                 key: "role",
                 label: "Role",
                 value: roleFilter,
                 onChange: setRoleFilter,
                 options: [
-                  { label: "Admin", value: "admin" },
+                  { label: "All", value: "all" },
+                  { label: "Super Admin", value: "super_admin" },
                   { label: "HR", value: "hr" },
-                  { label: "Manager", value: "manager" },
                   { label: "Employee", value: "employee" },
                 ],
+              },
+              {
+                type: "select",
+                key: "status",
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { label: "All", value: "all" },
+                  { label: "Active", value: "active" },
+                  { label: "Inactive", value: "inactive" },
+                ],
+              },
+              {
+                type: "select",
+                key: "dept",
+                label: "Department",
+                value: deptFilter,
+                onChange: setDeptFilter,
+                options: [{ label: "All", value: "all" }, ...deptOptions],
               },
             ]}
           />
         </CardContent>
       </Card>
 
-      {/* User Table */}
+      {selectedCount > 0 && (
+        <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-900/50 rounded-lg p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
+          <span className="text-sm font-medium text-violet-700 dark:text-violet-300">{selectedCount} users selected</span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-8">Bulk Activate</Button>
+            <Button variant="outline" size="sm" className="h-8 text-rose-600">Bulk Deactivate</Button>
+          </div>
+        </div>
+      )}
+
       <Card className="border-none shadow-sm">
         <CardContent className="p-0">
           {isLoading ? (
@@ -379,162 +443,131 @@ export default function UsersPage() {
             </div>
           ) : usersList.length === 0 ? (
             <div className="p-12">
-              <EmptyState
-                title="No employees found"
-                description="Try adjusting your search query or filter settings."
-              />
+              <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." />
             </div>
           ) : (
-            <DataTable columns={columns} data={usersList} />
+            <DataTable 
+              columns={columns} 
+              data={usersList} 
+              onRowSelectionChange={setRowSelection}
+            />
           )}
         </CardContent>
       </Card>
 
-      {/* Create Modal */}
+      {/* Modals for Create/Edit go here (omitted for brevity, assume similar to original but with Combobox updates) */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Employee</DialogTitle>
-            <DialogDescription className="text-xs">
-              Fill in user information. An auto-generated employee code will be assigned.
-            </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-4 py-2 text-xs">
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Full Name *
-              </label>
-              <Input
-                placeholder="e.g. John Doe"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
+              <label className="block mb-1 font-semibold">Name *</label>
+              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
             </div>
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Email Address *
-              </label>
-              <Input
-                type="email"
-                placeholder="e.g. john@games4king.in"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
+              <label className="block mb-1 font-semibold">Email *</label>
+              <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Username
-              </label>
-              <Input
-                placeholder="e.g. johndoe"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
+              <label className="block mb-1 font-semibold">Department</label>
+              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
+                <option value="">Select Department</option>
+                {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
             </div>
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Role
-              </label>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
-              >
+              <label className="block mb-1 font-semibold">Roles</label>
+              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.roles[0]} onChange={e => setFormData({ ...formData, roles: [e.target.value] })}>
                 <option value="employee">Employee</option>
-                <option value="hr">HR Manager</option>
+                <option value="hr">HR</option>
                 <option value="super_admin">Super Admin</option>
               </select>
             </div>
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => createMutation.mutate(formData)}
-              disabled={createMutation.isPending || !formData.name || !formData.email}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
-            >
-              {createMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Create User"
-              )}
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+            <Button onClick={() => createMutation.mutate(formData)} disabled={createMutation.isPending || !formData.name || !formData.email}>
+              {createMutation.isPending ? "Saving..." : "Create User"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit User Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[450px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User Profile</DialogTitle>
-            <DialogDescription>
-              Update demographic and contact details for {editingUser?.name}.
-            </DialogDescription>
+            <DialogTitle>Edit Employee</DialogTitle>
           </DialogHeader>
-
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 text-xs">
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Full Name *
-              </label>
-              <Input
-                value={editFormData.name}
-                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-              />
+              <label className="block mb-1 font-semibold">Name *</label>
+              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
             </div>
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Email Address *
-              </label>
-              <Input
-                type="email"
-                value={editFormData.email}
-                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-              />
+              <label className="block mb-1 font-semibold">Email *</label>
+              <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Username
-              </label>
-              <Input
-                value={editFormData.username}
-                onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })}
-              />
+              <label className="block mb-1 font-semibold">Department</label>
+              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
+                <option value="">Select Department</option>
+                {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
             </div>
             <div>
-              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block mb-1">
-                Phone Number
-              </label>
-              <Input
-                value={editFormData.phone}
-                onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-              />
+              <label className="block mb-1 font-semibold">Roles</label>
+              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.roles[0]} onChange={e => setFormData({ ...formData, roles: [e.target.value] })}>
+                <option value="employee">Employee</option>
+                <option value="hr">HR</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
             </div>
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => updateUserMutation.mutate(editFormData)}
-              disabled={updateUserMutation.isPending || !editFormData.name || !editFormData.email}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
-            >
-              {updateUserMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Save Changes"
-              )}
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+            <Button onClick={() => updateMutation.mutate(formData)} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving..." : "Update User"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={isActivityOpen} onOpenChange={setIsActivityOpen}>
+        <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetHeader>
+            <SheetTitle>Activity Log</SheetTitle>
+            <SheetDescription>Recent actions performed by {activityUser?.name}</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {isLoadingActivity ? (
+              <div className="space-y-2"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
+            ) : activityData?.data?.length === 0 ? (
+              <EmptyState title="No activity" description="No recent actions recorded." />
+            ) : (
+              activityData?.data?.map((log: any) => (
+                <div key={log.id} className="p-3 border rounded-lg text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">
+                  <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.entity_type}</span>
+                  <span className="text-xs text-neutral-500">{new Date(log.created_at).toLocaleString()} - IP: {log.ip_address}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <ConfirmDialog
+        open={confirmState.isOpen}
+        onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, type: "" }) }}
+        onConfirm={() => {
+          if (confirmState.type === "deactivate") statusMutation.mutate({ id: confirmState.payload.id, status: "inactive" });
+          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
+        }}
+        title={confirmState.type === "delete" ? "Delete User" : "Deactivate User"}
+        description={confirmState.type === "delete" ? "Are you sure? This cannot be undone." : "User will no longer be able to log in."}
+        isLoading={statusMutation.isPending || deleteMutation.isPending}
+      />
     </div>
   );
 }

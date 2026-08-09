@@ -14,7 +14,10 @@ import {
   Upload,
   Loader2,
   Eye,
+  Building2,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { ColumnDef } from "@tanstack/react-table";
@@ -76,6 +79,11 @@ export default function ProfilePage() {
   const { data: sessions } = useQuery({
     queryKey: ["sessions"],
     queryFn: async () => apiFetch("/auth/sessions"),
+  });
+
+  const { data: companyProfile, isLoading: isCompanyLoading } = useQuery({
+    queryKey: ["company-profile"],
+    queryFn: () => apiFetch("/company-profile"),
   });
 
   const updateProfileMutation = useMutation({
@@ -467,6 +475,74 @@ export default function ProfilePage() {
            </Card>
         </div>
       </div>
+
+      {/* Company Profile (Read-Only) */}
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-neutral-200 dark:bg-neutral-800" />
+        <CardHeader className="flex flex-row justify-between items-start pt-6">
+          <div>
+            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+              <Building2 className="w-4 h-4 text-brand-violet" />
+              Company Information
+            </CardTitle>
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-1">
+              General details about the organization.
+            </CardDescription>
+          </div>
+          {authUser?.active_role === 'super_admin' && (
+            <Link href="/dashboard/settings" className="text-xs font-semibold text-brand-violet flex items-center gap-1 hover:underline">
+              Edit in Settings <ExternalLink className="w-3 h-3" />
+            </Link>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4 font-sans text-sm">
+          {isCompanyLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-1/4" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="text-xs font-medium text-neutral-500 mb-1">Company Name</div>
+                <div className="font-semibold text-neutral-900 dark:text-white">
+                  {companyProfile?.name || "Games4King"}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium text-neutral-500 mb-1">Short Name</div>
+                <div className="font-semibold text-neutral-900 dark:text-white">
+                  {companyProfile?.short_name || "-"}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <div className="text-xs font-medium text-neutral-500 mb-1">Description</div>
+                <div className="text-neutral-700 dark:text-neutral-300 text-sm">
+                  {companyProfile?.description || "-"}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <div className="text-xs font-medium text-neutral-500 mb-1">Address</div>
+                <div className="text-neutral-700 dark:text-neutral-300 text-sm">
+                  {companyProfile?.address || "-"}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium text-neutral-500 mb-1">Primary Phone</div>
+                <div className="text-neutral-700 dark:text-neutral-300">
+                  {companyProfile?.primary_phone || "-"}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium text-neutral-500 mb-1">Email</div>
+                <div className="text-neutral-700 dark:text-neutral-300">
+                  {companyProfile?.email || "-"}
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Active Device Sessions */}
       <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">

@@ -10,6 +10,8 @@ export default defineConfig({
     setupFiles: ['./src/__tests__/setup.ts'],
     alias: {
       '@': resolve(__dirname, './src'),
+      'react': resolve(__dirname, 'node_modules/react'),
+      'react-dom': resolve(__dirname, 'node_modules/react-dom'),
     },
   },
 });

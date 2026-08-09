@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Building2, Users, Trash2, Edit2, Loader2, Search, MoreVertical } from "lucide-react";
+import { Plus, Building2, Users, Archive, Edit2, Loader2, Search, MoreVertical, ArchiveRestore, Download, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Card, CardContent } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -28,91 +28,116 @@ import {
   DropdownMenuTrigger,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { FilterBar } from "@/components/data-table/filter-bar";
+import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@g4k/ui/components";
+import { ConfirmDialog } from "@g4k/ui/components";
+import { Avatar, AvatarFallback } from "@g4k/ui/components";
 
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
-  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
-  const [deptName, setDeptName] = useState("");
-  const [editingDept, setEditingDept] = useState<any>(null);
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
+  const [statusFilter, setStatusFilter] = useUrlState("status", "active");
+
+  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
+  
+  const [formData, setFormData] = useState({ name: "", description: "" });
+  const [editingDept, setEditingDept] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["departments"],
-    queryFn: async () => apiFetch("/departments"),
+    queryKey: ["departments", debouncedSearch, statusFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      return apiFetch(`/departments?${params.toString()}`);
+    },
   });
 
   const createDeptMutation = useMutation({
-    mutationFn: async (name: string) => {
-      return apiFetch("/departments", {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
-    },
+    mutationFn: (payload: any) => apiFetch("/departments", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("Department created!");
       setIsDeptModalOpen(false);
-      setDeptName("");
       queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to create department.");
-    },
+    onError: (err: any) => toast.error(err.message || "Failed to create department."),
   });
 
   const updateDeptMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: number; name: string }) => {
-      return apiFetch(`/departments/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ name }),
-      });
-    },
+    mutationFn: (payload: any) => apiFetch(`/departments/${editingDept.id}`, { method: "PUT", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("Department updated!");
       setIsDeptModalOpen(false);
-      setEditingDept(null);
-      setDeptName("");
       queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update department.");
-    },
+    onError: (err: any) => toast.error(err.message || "Failed to update department."),
   });
 
-  const deleteDeptMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiFetch(`/departments/${id}`, { method: "DELETE" });
+  const archiveMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/departments/${id}/archive`, { method: "PATCH" }),
+    onSuccess: () => {
+      toast.success("Department archived.");
+      setConfirmState({ isOpen: false, type: "" });
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
+    onError: (err: any) => toast.error(err.message || "Failed to archive department."),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/departments/${id}/restore`, { method: "PATCH" }),
+    onSuccess: () => {
+      toast.success("Department restored.");
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to restore department."),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/departments/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("Department deleted.");
+      setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: ["departments"] });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to delete department.");
-    },
+      setConfirmState({ isOpen: false, type: "" });
+    }
   });
 
-  const deptList = (data?.data || []).filter((dept: any) =>
-    dept.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-  );
-
-  const handleEdit = (dept: any) => {
-    setEditingDept(dept);
-    setDeptName(dept.name);
-    setIsDeptModalOpen(true);
+  const bulkExport = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/departments/export?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (!response.ok) throw new Error("Export failed");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "departments_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Export downloaded.");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to export");
+    }
   };
 
-  const openCreateModal = () => {
-    setEditingDept(null);
-    setDeptName("");
-    setIsDeptModalOpen(true);
-  };
+  const deptList = data?.data || [];
 
-  const columns: ColumnDef<any>[] = [
+  const columns = useMemo<ColumnDef<any>[]>(() => [
     {
       accessorKey: "name",
       header: "Department",
@@ -121,11 +146,35 @@ export default function DepartmentsPage() {
           <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
             <Building2 className="w-4 h-4" />
           </div>
-          <span className="font-semibold text-neutral-900 dark:text-white">
-            {row.original.name}
-          </span>
+          <div>
+            <span className="font-semibold text-neutral-900 dark:text-white block">
+              {row.original.name}
+            </span>
+            {row.original.description && (
+              <span className="text-xs text-neutral-500">{row.original.description}</span>
+            )}
+          </div>
         </div>
       ),
+    },
+    {
+      accessorKey: "users_count",
+      header: "Members",
+      cell: ({ row }) => {
+        const count = row.original.users_count || 0;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="flex -space-x-2">
+              {[...Array(Math.min(count, 3))].map((_, i) => (
+                <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                  <AvatarFallback className="text-[9px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
+            <span className="text-xs font-medium text-neutral-600">{count} members</span>
+          </div>
+        );
+      }
     },
     {
       accessorKey: "teams",
@@ -136,26 +185,35 @@ export default function DepartmentsPage() {
           <div className="flex flex-wrap gap-1">
             {teams.length > 0 ? (
               teams.map((team: any) => (
-                <span
-                  key={team.id}
-                  className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1"
-                >
+                <span key={team.id} className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
                   <Users className="w-3 h-3 text-neutral-400" />
                   {team.name}
                 </span>
               ))
-            ) : (
-              <span className="text-neutral-400 text-xs italic">No teams</span>
-            )}
+            ) : <span className="text-neutral-400 text-xs italic">No teams</span>}
           </div>
         );
       },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const isActive = row.original.is_active;
+        const isArchived = !!row.original.archived_at;
+        return (
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${isArchived ? "bg-neutral-100 text-neutral-600" : (isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}`}>
+            {isArchived ? "Archived" : (isActive ? "Active" : "Inactive")}
+          </span>
+        );
+      }
     },
     {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => {
         const dept = row.original;
+        const isArchived = !!dept.archived_at;
         return (
           <div className="text-right">
             <DropdownMenu>
@@ -166,17 +224,21 @@ export default function DepartmentsPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleEdit(dept)}>
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit Name
+                <DropdownMenuItem onClick={() => { setEditingDept(dept); setFormData({ name: dept.name, description: dept.description || "" }); setIsDeptModalOpen(true); }}>
+                  <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => deleteDeptMutation.mutate(dept.id)}
-                  className="text-rose-600 focus:text-rose-700 focus:bg-rose-50"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Department
+                {isArchived ? (
+                  <DropdownMenuItem onClick={() => restoreMutation.mutate(dept.id)}>
+                    <ArchiveRestore className="w-4 h-4 mr-2 text-emerald-600" /> Restore
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "archive", payload: dept })}>
+                    <Archive className="w-4 h-4 mr-2 text-amber-600" /> Archive
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: dept })}>
+                  <Trash2 className="w-4 h-4 mr-2 text-rose-600" /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -184,7 +246,7 @@ export default function DepartmentsPage() {
         );
       },
     },
-  ];
+  ], []);
 
   return (
     <div className="space-y-6 p-6">
@@ -197,13 +259,14 @@ export default function DepartmentsPage() {
             Structure your organization into departments and specialized sub-teams.
           </p>
         </div>
-        <Button
-          onClick={openCreateModal}
-          className="bg-violet-600 hover:bg-violet-700 text-white gap-2 shadow"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Department</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-sm">
+            <Download className="w-4 h-4" /> Export
+          </Button>
+          <Button onClick={() => { setEditingDept(null); setFormData({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow">
+            <Plus className="w-4 h-4" /> Add Department
+          </Button>
+        </div>
       </div>
 
       <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
@@ -212,6 +275,20 @@ export default function DepartmentsPage() {
             searchQuery={search}
             onSearchChange={setSearch}
             searchPlaceholder="Search departments..."
+            filters={[
+              {
+                type: "select",
+                key: "status",
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { label: "All", value: "all" },
+                  { label: "Active", value: "active" },
+                  { label: "Archived", value: "archived" },
+                ],
+              },
+            ]}
           />
         </CardContent>
       </Card>
@@ -226,10 +303,7 @@ export default function DepartmentsPage() {
             </div>
           ) : deptList.length === 0 ? (
             <div className="p-12">
-              <EmptyState
-                title="No departments found"
-                description="Try adjusting your search query or create a new department."
-              />
+              <EmptyState title="No departments found" description="Try adjusting your search query or create a new department." />
             </div>
           ) : (
             <DataTable columns={columns} data={deptList} />
@@ -237,53 +311,41 @@ export default function DepartmentsPage() {
         </CardContent>
       </Card>
 
-      {/* Modal */}
       <Dialog open={isDeptModalOpen} onOpenChange={setIsDeptModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingDept ? "Edit Department" : "Add Department"}</DialogTitle>
-            <DialogDescription className="text-xs">
-              {editingDept
-                ? "Update the name of the department."
-                : "Create a new operational department in Games4King."}
-            </DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-4 py-2 text-xs">
+          <div className="space-y-4 py-2">
             <div>
-              <label className="font-semibold block mb-1">Department Name *</label>
-              <Input
-                placeholder="e.g. Quality Assurance"
-                value={deptName}
-                onChange={(e) => setDeptName(e.target.value)}
-              />
+              <label className="block mb-1 text-sm font-semibold">Department Name *</label>
+              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Engineering" />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-semibold">Description</label>
+              <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional description..." />
             </div>
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeptModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (editingDept) {
-                  updateDeptMutation.mutate({ id: editingDept.id, name: deptName });
-                } else {
-                  createDeptMutation.mutate(deptName);
-                }
-              }}
-              disabled={createDeptMutation.isPending || updateDeptMutation.isPending || !deptName}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
-            >
-              {createDeptMutation.isPending || updateDeptMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Save Department"
-              )}
+            <Button variant="outline" onClick={() => setIsDeptModalOpen(false)}>Cancel</Button>
+            <Button onClick={() => editingDept ? updateDeptMutation.mutate(formData) : createDeptMutation.mutate(formData)} disabled={!formData.name}>
+              {editingDept ? "Update" : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmState.isOpen}
+        onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, type: "" }) }}
+        onConfirm={() => {
+          if (confirmState.type === "archive") archiveMutation.mutate(confirmState.payload.id);
+          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
+        }}
+        title={confirmState.type === "delete" ? "Delete Department" : "Archive Department"}
+        description={confirmState.type === "delete" ? "Are you sure? This cannot be undone and will fail if employees are assigned." : "Archived departments will no longer be available for new assignments."}
+        isLoading={archiveMutation.isPending || deleteMutation.isPending}
+      />
     </div>
   );
 }

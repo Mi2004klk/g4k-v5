@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
+import { AutoNumberingConfig } from "./auto-numbering-config";
 
 export function SettingsTabs() {
   const queryClient = useQueryClient();
@@ -67,6 +68,7 @@ export function SettingsTabs() {
       <TabsList className="mb-4">
         <TabsTrigger value="company">Company Profile</TabsTrigger>
         <TabsTrigger value="schedule">Work Schedules</TabsTrigger>
+        <TabsTrigger value="numbering">Auto-Numbering</TabsTrigger>
         <TabsTrigger value="notifications">Notifications</TabsTrigger>
       </TabsList>
 
@@ -200,6 +202,10 @@ export function SettingsTabs() {
             <Button variant="outline" size="sm">Save Preferences</Button>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="numbering">
+        <AutoNumberingConfig />
       </TabsContent>
     </Tabs>
   );

@@ -20,34 +20,47 @@ class AutoNumberingService
             if (!$record) {
                 // Fallback default if not seeded
                 $prefix = strtoupper(substr($entityType, 0, 3));
+                $format = '{PREFIX}{000}';
                 DB::table('auto_numberings')->insert([
                     'entity_type' => $entityType,
                     'prefix' => $prefix,
                     'start_number' => 1,
                     'current_number' => 1,
-                    'format' => $prefix . '{000}',
+                    'format' => $format,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-
-                return sprintf("%s%03d", $prefix, 1);
+                $record = DB::table('auto_numberings')->where('entity_type', $entityType)->first();
+            } else {
+                $record->current_number += 1;
+                DB::table('auto_numberings')
+                    ->where('id', $record->id)
+                    ->update([
+                        'current_number' => $record->current_number,
+                        'updated_at' => now(),
+                    ]);
             }
 
-            $nextNumber = $record->current_number + 1;
-
-            DB::table('auto_numberings')
-                ->where('id', $record->id)
-                ->update([
-                    'current_number' => $nextNumber,
-                    'updated_at' => now(),
-                ]);
-
-            if ($record->format && str_contains($record->format, '{000}')) {
-                return str_replace('{000}', sprintf("%03d", $nextNumber), $record->format);
-            }
-
-            $prefix = $record->prefix ?? 'G4K';
-            return sprintf("%s%03d", $prefix, $nextNumber);
+            return self::formatNumber($record->current_number, $record->prefix, $record->format);
         });
+    }
+
+    /**
+     * Format a number using the prefix and format string.
+     */
+    public static function formatNumber(int $number, ?string $prefix, string $format): string
+    {
+        $result = $format;
+        $result = str_replace('{PREFIX}', $prefix ?? '', $result);
+        
+        if (preg_match('/\{(0+)\}/', $result, $matches)) {
+            $paddingLength = strlen($matches[1]);
+            $paddedNumber = str_pad((string)$number, $paddingLength, '0', STR_PAD_LEFT);
+            $result = str_replace($matches[0], $paddedNumber, $result);
+        } else {
+            $result = str_replace('{NUMBER}', (string)$number, $result);
+        }
+
+        return $result;
     }
 }

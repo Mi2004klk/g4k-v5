@@ -35,7 +35,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@g4k/ui/components";
 
 export default function DirectoryPage() {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);

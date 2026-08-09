@@ -9,6 +9,13 @@ export interface UserProfile {
   employee_id?: string;
   must_change_password?: boolean;
   onboarded_at?: string | null;
+  active_status: string;
+  preferences?: {
+    theme_mode?: string;
+    density?: string;
+    directory_visibility?: string;
+    [key: string]: any;
+  };
   active_role?: string;
   roles?: string[];
   department?: any;
