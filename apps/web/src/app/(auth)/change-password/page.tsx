@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
 import { Button } from "@/components/ui/button";
@@ -65,17 +66,30 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-900 to-slate-900">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="text-center space-y-2 pt-8">
-          <div className="mx-auto w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 dark:text-violet-300 mb-2">
-            <ShieldCheck className="w-6 h-6" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+
+        <CardHeader className="space-y-4 pb-6 pt-8 text-center">
+          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
+            <Image
+              src="/landscape-logo.png"
+              alt="Games4King Logo"
+              fill
+              priority
+              className="object-contain"
+            />
           </div>
-          <CardTitle className="text-xl font-bold font-display">Update Password Required</CardTitle>
-          <CardDescription className="text-xs">
-            For security purposes, you must change your password before continuing.
-          </CardDescription>
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">
+              Update Password Required
+            </CardTitle>
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
+              For security purposes, you must change your password before continuing.
+            </CardDescription>
+          </div>
         </CardHeader>
+        
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -84,7 +98,9 @@ export default function ChangePasswordPage() {
                 name="current_password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Current Password</FormLabel>
+                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      Current Password
+                    </FormLabel>
                     <FormControl>
                       <PasswordInput placeholder="Current password" {...field} />
                     </FormControl>
@@ -98,7 +114,9 @@ export default function ChangePasswordPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">New Password</FormLabel>
+                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      New Password
+                    </FormLabel>
                     <FormControl>
                       <PasswordInput placeholder="New password (min 8 chars)" {...field} />
                     </FormControl>
@@ -112,7 +130,9 @@ export default function ChangePasswordPage() {
                 name="password_confirmation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Confirm New Password</FormLabel>
+                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      Confirm New Password
+                    </FormLabel>
                     <FormControl>
                       <PasswordInput placeholder="Confirm new password" {...field} />
                     </FormControl>
@@ -123,7 +143,7 @@ export default function ChangePasswordPage() {
 
               <Button
                 type="submit"
-                className="w-full h-10 mt-4 bg-violet-600 hover:bg-violet-700 text-white font-medium"
+                className="w-full h-10 mt-4 bg-gradient-brand text-white font-medium shadow-e2 transition-all duration-150 active:scale-[0.96]"
                 disabled={isLoading}
               >
                 {isLoading ? (

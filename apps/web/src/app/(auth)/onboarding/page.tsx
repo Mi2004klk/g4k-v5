@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
-import { Loader2, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,25 +31,35 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-900 via-indigo-900 to-slate-900">
-      <Card className="w-full max-w-lg shadow-2xl border-none">
-        <CardHeader className="text-center space-y-2 pt-8">
-          <div className="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-500 flex items-center justify-center text-slate-950 mb-2 shadow-lg">
-            <Sparkles className="w-6 h-6" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-lg shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+
+        <CardHeader className="text-center space-y-4 pb-6 pt-8">
+          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
+            <Image
+              src="/landscape-logo.png"
+              alt="Games4King Logo"
+              fill
+              priority
+              className="object-contain"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold font-display">
-            Welcome to Games4King
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Your Workplace OS environment is ready. Let’s get you oriented.
-          </CardDescription>
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
+              Welcome to Games4King
+            </CardTitle>
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
+              Your Workplace OS environment is ready. Let’s get you oriented.
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
           {step === 1 && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-100 dark:border-violet-900/50 space-y-2">
-                <h4 className="font-semibold text-sm text-violet-900 dark:text-violet-200">
+              <div className="p-4 rounded-xl bg-brand-violet/5 dark:bg-brand-violet/10 border border-brand-violet/10 dark:border-brand-violet/20 space-y-2">
+                <h4 className="font-semibold text-sm text-brand-violet-deep dark:text-brand-violet">
                   Step 1: Attendance & Time Tracking
                 </h4>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -58,7 +69,7 @@ export default function OnboardingPage() {
 
               <Button
                 onClick={() => setStep(2)}
-                className="w-full h-10 bg-violet-600 hover:bg-violet-700 text-white gap-2"
+                className="w-full h-10 bg-gradient-brand text-white gap-2 shadow-e2 transition-all duration-150 active:scale-[0.96]"
               >
                 <span>Next Step</span>
                 <ArrowRight className="w-4 h-4" />
@@ -68,8 +79,8 @@ export default function OnboardingPage() {
 
           {step === 2 && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-violet-50 dark:bg-violet-950/40 border border-violet-100 dark:border-violet-900/50 space-y-2">
-                <h4 className="font-semibold text-sm text-violet-900 dark:text-violet-200">
+              <div className="p-4 rounded-xl bg-brand-violet/5 dark:bg-brand-violet/10 border border-brand-violet/10 dark:border-brand-violet/20 space-y-2">
+                <h4 className="font-semibold text-sm text-brand-violet-deep dark:text-brand-violet">
                   Step 2: Leave & Requests
                 </h4>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -88,7 +99,7 @@ export default function OnboardingPage() {
                 <Button
                   onClick={handleFinish}
                   disabled={isLoading}
-                  className="w-1/2 h-10 bg-violet-600 hover:bg-violet-700 text-white gap-2"
+                  className="w-1/2 h-10 bg-gradient-brand text-white gap-2 shadow-e2 transition-all duration-150 active:scale-[0.96]"
                 >
                   {isLoading ? (
                     <>

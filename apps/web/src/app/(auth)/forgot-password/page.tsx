@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -58,22 +59,34 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-950 via-purple-900 to-slate-900">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="text-center space-y-2 pt-8">
-          <div className="mx-auto w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 dark:text-violet-300 mb-2">
-            <KeyRound className="w-6 h-6" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+
+        <CardHeader className="space-y-4 pb-6 pt-8 text-center">
+          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
+            <Image
+              src="/landscape-logo.png"
+              alt="Games4King Logo"
+              fill
+              priority
+              className="object-contain"
+            />
           </div>
-          <CardTitle className="text-xl font-bold font-display">Account Password Recovery</CardTitle>
-          <CardDescription className="text-xs">
-            Enter your email, username, or employee ID to recover your password.
-          </CardDescription>
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">
+              Account Password Recovery
+            </CardTitle>
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
+              Enter your email, username, or employee ID to recover your password.
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {isSubmitted ? (
             <div className="text-center space-y-4 py-4">
-              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-xs text-emerald-800 dark:text-emerald-300">
+              <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-xs text-success">
                 If an account matching your identifier exists, instructions have been sent via your chosen recovery method.
               </div>
               <Link href="/login">
@@ -91,7 +104,7 @@ export default function ForgotPasswordPage() {
                   name="identifier"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">
+                      <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                         Email, Username, or Employee ID
                       </FormLabel>
                       <FormControl>
@@ -107,15 +120,17 @@ export default function ForgotPasswordPage() {
                   name="channel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Recovery Channel</FormLabel>
+                      <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                        Recovery Channel
+                      </FormLabel>
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <button
                           type="button"
                           onClick={() => field.onChange("smtp")}
                           className={`p-3 text-xs font-medium rounded-lg border text-center transition-all ${
                             field.value === "smtp"
-                              ? "border-violet-600 bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
-                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600"
+                              ? "border-brand-violet bg-brand-violet/10 text-brand-violet"
+                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400"
                           }`}
                         >
                           Email (SMTP)
@@ -125,8 +140,8 @@ export default function ForgotPasswordPage() {
                           onClick={() => field.onChange("admin")}
                           className={`p-3 text-xs font-medium rounded-lg border text-center transition-all ${
                             field.value === "admin"
-                              ? "border-violet-600 bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
-                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600"
+                              ? "border-brand-violet bg-brand-violet/10 text-brand-violet"
+                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400"
                           }`}
                         >
                           Admin Approval
@@ -139,7 +154,7 @@ export default function ForgotPasswordPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-10 mt-2 bg-violet-600 hover:bg-violet-700 text-white font-medium"
+                  className="w-full h-10 mt-2 bg-gradient-brand text-white font-medium shadow-e2 transition-all duration-150 active:scale-[0.96]"
                   disabled={isLoading}
                 >
                   {isLoading ? (

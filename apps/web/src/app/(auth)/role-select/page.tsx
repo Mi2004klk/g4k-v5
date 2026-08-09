@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert, UserCheck, Users } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
@@ -55,15 +56,28 @@ export default function RoleSelectPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-950 via-purple-900 to-slate-900">
-      <Card className="w-full max-w-lg shadow-2xl border-none">
-        <CardHeader className="text-center space-y-2 pt-8">
-          <CardTitle className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
-            Select Active Role
-          </CardTitle>
-          <CardDescription className="text-sm">
-            Your account holds multiple permission roles. Choose how you wish to operate in this session.
-          </CardDescription>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-lg shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+
+        <CardHeader className="text-center space-y-4 pb-6 pt-8">
+          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
+            <Image
+              src="/landscape-logo.png"
+              alt="Games4King Logo"
+              fill
+              priority
+              className="object-contain"
+            />
+          </div>
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">
+              Select Active Role
+            </CardTitle>
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
+              Your account holds multiple permission roles. Choose how you wish to operate in this session.
+            </CardDescription>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -82,17 +96,17 @@ export default function RoleSelectPage() {
                   key={roleKey}
                   onClick={() => handleRoleSelect(roleKey)}
                   disabled={isLoading}
-                  className="flex items-start gap-4 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-violet-500 hover:bg-violet-50/50 dark:hover:bg-violet-950/20 text-left transition-all group active:scale-[0.98]"
+                  className="flex items-start gap-4 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-violet hover:bg-brand-violet/5 text-left transition-all group active:scale-[0.98]"
                 >
-                  <div className="p-3 rounded-lg bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-300 group-hover:scale-105 transition-transform">
+                  <div className="p-3 rounded-lg bg-brand-violet/10 text-brand-violet group-hover:scale-105 transition-transform">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-sm text-neutral-900 dark:text-white">
+                      <h4 className="font-semibold text-sm text-neutral-900 dark:text-white group-hover:text-brand-violet-deep transition-colors">
                         {meta.label}
                       </h4>
-                      {isPending && <Loader2 className="w-4 h-4 animate-spin text-violet-600" />}
+                      {isPending && <Loader2 className="w-4 h-4 animate-spin text-brand-violet" />}
                     </div>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
                       {meta.desc}
