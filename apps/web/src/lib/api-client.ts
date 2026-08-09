@@ -29,45 +29,51 @@ export async function apiFetch<T = any>(
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      // Prevent infinite loops by not intercepting refresh failures
-      if (!endpoint.includes("/auth/refresh")) {
-        try {
-          const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
-          const refreshRes = await fetch(refreshUrl, {
-            method: "GET",
+    // Auth endpoints (login/forgot/reset) own their 401 handling — never intercept.
+    // A 401 on these means "invalid credentials", not "expired session".
+    const isAuthEndpoint =
+      endpoint.includes("/auth/login") ||
+      endpoint.includes("/auth/forgot-password") ||
+      endpoint.includes("/auth/reset-password") ||
+      endpoint.includes("/auth/refresh");
+
+    if (response.status === 401 && !isAuthEndpoint) {
+      // Session may have expired — attempt ONE silent refresh via the HttpOnly cookie.
+      try {
+        const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
+        const refreshRes = await fetch(refreshUrl, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          useAuthStore.getState().setAuth(data.token, data.user, data.active_role);
+
+          // Retry the original request with the fresh token.
+          headers.set("Authorization", `Bearer ${data.token}`);
+          const retryRes = await fetch(url, {
+            ...options,
+            headers,
             credentials: "include",
           });
-          
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            useAuthStore.getState().setAuth(data.token, data.user, data.active_role);
-            
-            // Retry original request
-            headers.set("Authorization", `Bearer ${data.token}`);
-            const retryRes = await fetch(url, {
-              ...options,
-              headers,
-              credentials: "include",
-            });
-            
-            if (retryRes.ok) {
-              return retryRes.json();
-            }
+
+          if (retryRes.ok) {
+            return retryRes.json();
           }
-        } catch (e) {
-          // Fall through to clear auth
         }
+      } catch {
+        // refresh failed — fall through to clearing auth
       }
-      
-      // Global Interceptor: Clear auth state and force redirect to login on unauthorized
+
+      // Refresh failed or retry still 401 → clear and redirect (once, non-blocking).
       useAuthStore.getState().clearAuth();
       if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
         window.location.href = "/login";
       }
-      throw new Error("Session expired or unauthorized. Please log in again.");
+      throw new Error("Session expired. Please log in again.");
     }
-    
+
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `Request failed with status ${response.status}`);
   }

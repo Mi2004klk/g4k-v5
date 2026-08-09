@@ -1,12 +1,28 @@
+# Nixpacks build configuration for Laravel 13 (PHP 8.4) on Railway.
+# IMPORTANT: composer.json requires "php": "^8.4". The PHP package MUST match.
 [build]
 builder = "nixpacks"
 
 [phases.setup]
-nixPkgs = ["php83", "php83Packages.composer"]
+nixPkgs = ["php84", "php84Packages.composer", "php84Extensions pdo", "php84Extensions pdo_pgsql", "php84Extensions mbstring", "php84Extensions bcmath", "php84Extensions gd", "php84Extensions redis"]
 
 [phases.install]
 cmds = ["composer install --no-dev --optimize-autoloader --no-interaction"]
 
 [phases.build]
-cmds = ["php artisan config:cache", "php artisan route:cache", "php artisan view:cache"]
+# Cache config/routes/views, then run migrations as part of the build/release.
+# `--force` avoids the prompt in non-interactive environments.
+cmds = [
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache",
+  "php artisan event:cache",
+  "php artisan storage:link",
+  "php artisan migrate --force"
+]
 
+# Runtime: serve Laravel via PHP's built-in server behind Nginx (Nixpacks default
+# provides Nginx for PHP apps). This explicit start command guarantees the app
+# listens on the PORT Railway injects.
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
