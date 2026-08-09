@@ -30,9 +30,39 @@ export async function apiFetch<T = any>(
 
   if (!response.ok) {
     if (response.status === 401) {
+      // Prevent infinite loops by not intercepting refresh failures
+      if (!endpoint.includes("/auth/refresh")) {
+        try {
+          const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
+          const refreshRes = await fetch(refreshUrl, {
+            method: "GET",
+            credentials: "include",
+          });
+          
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            useAuthStore.getState().setAuth(data.token, data.user, data.active_role);
+            
+            // Retry original request
+            headers.set("Authorization", `Bearer ${data.token}`);
+            const retryRes = await fetch(url, {
+              ...options,
+              headers,
+              credentials: "include",
+            });
+            
+            if (retryRes.ok) {
+              return retryRes.json();
+            }
+          }
+        } catch (e) {
+          // Fall through to clear auth
+        }
+      }
+      
       // Global Interceptor: Clear auth state and force redirect to login on unauthorized
       useAuthStore.getState().clearAuth();
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
         window.location.href = "/login";
       }
       throw new Error("Session expired or unauthorized. Please log in again.");

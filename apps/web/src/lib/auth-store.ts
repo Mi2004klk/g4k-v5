@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface UserProfile {
   id: number;
@@ -23,15 +24,22 @@ interface AuthState {
   clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>()((set) => ({
-  token: null,
-  user: null,
-  activeRole: null,
-  setAuth: (token, user, activeRole) =>
-    set({
-      token,
-      user,
-      activeRole: activeRole || user.active_role || user.roles?.[0] || "employee",
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      user: null,
+      activeRole: null,
+      setAuth: (token, user, activeRole) =>
+        set({
+          token,
+          user,
+          activeRole: activeRole || user.active_role || user.roles?.[0] || "employee",
+        }),
+      clearAuth: () => set({ token: null, user: null, activeRole: null }),
     }),
-  clearAuth: () => set({ token: null, user: null, activeRole: null }),
-}));
+    {
+      name: "g4k-auth",
+    }
+  )
+);

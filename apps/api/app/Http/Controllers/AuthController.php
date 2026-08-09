@@ -26,11 +26,11 @@ class AuthController extends Controller
             $refreshToken,
             now()->addDays(7),
             '/',
-            null,
+            null, // domain defaults to request domain
             $isProduction, // secure
             true, // httpOnly
             false, // raw
-            $isProduction ? 'None' : 'Lax' // SameSite
+            'Lax' // SameSite: Vercel Proxy makes it same-site
         );
     }
 
