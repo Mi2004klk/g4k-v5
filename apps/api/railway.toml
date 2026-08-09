@@ -1,7 +1,0 @@
-[build]
-builder = "nixpacks"
-buildCommand = "composer install --no-dev --optimize-autoloader && php artisan optimize:clear"
-
-[deploy]
-healthcheckPath = "/health"
-healthcheckTimeout = 100
