@@ -13,8 +13,12 @@ class NotificationController extends Controller
         
         $query = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc');
+            
+        if ($request->query('unreadOnly') === 'true') {
+            $query->whereNull('read_at');
+        }
 
-        return response()->json($query->cursorPaginate(50));
+        return response()->json($query->paginate(50));
     }
 
     public function markRead(Request $request, $id)
@@ -28,5 +32,23 @@ class NotificationController extends Controller
         $notification->update(['read_at' => now()]);
 
         return response()->json($notification);
+    }
+
+    public function unreadCount(Request $request)
+    {
+        $count = Notification::where('user_id', $request->user()->id)
+            ->whereNull('read_at')
+            ->count();
+            
+        return response()->json(['count' => $count]);
+    }
+
+    public function markAllRead(Request $request)
+    {
+        Notification::where('user_id', $request->user()->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+            
+        return response()->json(['status' => 'success']);
     }
 }

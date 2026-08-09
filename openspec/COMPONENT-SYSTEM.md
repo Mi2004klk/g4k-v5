@@ -28,15 +28,19 @@
 ---
 
 ## 1. Form primitives
-### Button — `Button` (shadcn, Radix Slot)
-- **Variants**: `primary` (brand gradient), `secondary` (surface-2), `outline` (border),
-  `ghost` (transparent), `destructive` (danger, used in destructive confirmations), `success`
-  (green, used for Start Shift / approve). **Sizes**: `sm` (32px), `md` (40px default), `lg`
-  (48px), `icon` (square).
-- **States**: rest, hover (e2 lift), focus-visible, active (compress 0.96, 120ms), disabled
-  (40% opacity), loading (dot-loader replaces text, disabled, prevents double-submit — R13.16).
-- **Use for**: every action — primary CTA, submit, approve/reject, clock-in/out, nav links (variant ghost).
-- **Verify**: loading disables click; destructive renders red; icon size = sm+icon.
+### Button - `Button` (shadcn, Radix Slot)
+Primary button interaction must strictly follow the rainbow-hover spec:
+- **Default:** Solid charcoal (`bg-primary`, `#1A1A2E`).
+- **Hover:** Animated conic-gradient border rotating through the accent palette (3s linear infinite) with a subtle box-shadow glow.
+- **Active:** 0.96 scale compression (120ms).
+- **Loading:** Text replaced/appended with dot-loader.
+- **Disabled:** 40% opacity, no animations.
+- **Reduced-motion Fallback:** Static subtle border instead of rotating gradient.
+
+Other variants: `secondary`, `outline`, `ghost`, `link`, `destructive` (solid red, red background).
+- Standard sizes: `default` (h-10), `sm` (h-9), `lg` (h-11), `icon` (h-10 w-10).
+- State: `isLoading` (spinner + disabled), `disabled`, `asChild` (Radix Slot).
+- Micro-interaction: scale down to 0.96 on click (`active:scale-[0.96] transition-transform`).
 
 ### Input / Textarea / PasswordInput — `Input`, `Textarea` (shadcn)
 - **Variants**: `default`, `error` (danger border + helper text). Password adds a show/hide

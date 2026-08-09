@@ -5,21 +5,46 @@
 > Tone (per ADR/user decision): **vibrant but professional** — brand colors as accents, disciplined
 > semantic colors for data. Both light and dark modes are colorful.
 
-## 1. Brand palette (extracted from logo)
+## 1. Brand & Accent Palette
 | Token | Hex | Use |
 |---|---|---|
-| `brand-violet` | `#8A2BE2` | primary brand / robe |
-| `brand-violet-deep` | `#9400D3` | gradient stop, primary buttons (deep) |
-| `brand-gold` | `#FFD700` | crown / stars / premium accent |
-| `brand-gold-warm` | `#FFA500` | gradient stop, "4" accent |
-| `brand-pink` | `#FF1493` | playful accent ("GAMES"), sparingly |
-| `brand-green` | `#00CED1` → `#00FF00` | gradient accent ("KING"), success-adjacent |
-| `brand-teal` | `#00CED1` | gradient stop |
+| `primary` | `#1A1A2E` | Charcoal primary (main UI anchor) |
+| `accent-violet` | `#8A2BE2` | Original brand violet / robe |
+| `accent-violet-deep` | `#9400D3` | Deep violet |
+| `accent-gold` | `#FFD700` | Original brand gold / premium accent |
+| `accent-pink` | `#FF1493` | Original brand pink ("GAMES") |
+| `accent-orange` | `#F97316` | Accent rotation |
+| `accent-coral` | `#FF7F50` | Accent rotation |
+| `accent-red` | `#EF4444` | Accent rotation |
+| `accent-magenta` | `#D946EF` | Accent rotation |
+| `accent-blue` | `#3B82F6` | Accent rotation |
+| `accent-indigo` | `#6366F1` | Accent rotation |
+| `accent-cyan` | `#06B6D4` | Accent rotation |
+| `accent-teal` | `#14B8A6` | Accent rotation |
+| `accent-green` | `#22C55E` | Accent rotation |
+| `accent-lime` | `#84CC16` | Accent rotation |
+| `accent-gray` | `#6B7280` | Accent rotation |
 
 **Primary gradient (brand):** `linear-gradient(135deg, #9400D3 0%, #8A2BE2 50%, #FF1493 100%)`
 — used ONLY on: sign-in hero, dashboard headers, primary logo lockups, focus-ring brand moments.
 **Gold gradient:** `linear-gradient(135deg, #FFD700 0%, #FFA500 100%)` — used for premium badges,
 crown motif, "king" moments. Never on body text or every control.
+
+### 1.2 Accent Mapping & Palettes
+
+To create distinct wayfinding without visual fatigue, modules use specific accent colors from the rotation:
+- **Dashboard:** Blue
+- **Attendance:** Green
+- **Leave:** Amber
+- **Directory:** Pink
+- **Org:** Indigo
+- **Settings:** Teal
+- **Audit:** Rose
+- **Profile:** Cyan
+- **Notifications:** Orange
+
+**Chart Palette (12-color):** Violet, Blue, Cyan, Teal, Green, Lime, Yellow, Amber, Orange, Red, Pink, Magenta.
+**Category-tag Palette:** Utilizes the full accent rotation with light-mode background opacities (e.g. 10%) and dark-mode border hints.
 
 ## 2. Semantic colors (data + states) — disciplined, consistent
 | Token | Light | Dark | Meaning |
@@ -86,8 +111,19 @@ Cards lift to `e2` on hover (100ms). Dropdowns use `e3`. Dialogs/drawers use `e4
 | Tooltip / popover | 150ms | `ease-out` |
 | Sidebar glide | 220ms | `cubic-bezier(.4,0,.2,1)` |
 | Drawer / panel | 200ms | `ease-in-out` |
-| Dialog | 280ms | `cubic-bezier(.16,1,.3,1)` (fade + scale 0.96→1) |
-| Toast slide | 200ms | `ease-out` (top-right, auto-dismiss 4s) |
+| Dialog | `ease-modal` | `cubic-bezier(0.16, 1, 0.3, 1)` | popovers, dialogs (snap open) |
+| `ease-spring` | `spring(1, 100, 10, 0)` | Framer Motion defaults for scale |
+
+### 8.2 Primary Button Interaction
+
+The primary button must feel premium and interactive while remaining grounded.
+
+- **Default:** Solid charcoal (`#1A1A2E` or context-aware dark text color).
+- **Hover:** Animated conic-gradient border rotating through the accent palette (3s linear infinite) with a subtle box-shadow glow matching the brand colors.
+- **Active:** 0.96 scale compression (120ms duration).
+- **Loading:** Text is replaced or appended with a dot-loader; button retains hover visual state if hovered.
+- **Disabled:** 40% opacity, no hover border animation, no scale compression, pointer-events-none.
+- **Reduced-motion Fallback:** If `prefers-reduced-motion` is detected, the gradient border becomes a static subtle border (no conic-rotation animation).auto-dismiss 4s) |
 | Progress bar fill | 600ms | `cubic-bezier(.4,0,.2,1)` (animate 0→value) |
 | List reorder | 180ms | `ease-out` |
 | Page transition | 180ms | `ease-in-out` |
