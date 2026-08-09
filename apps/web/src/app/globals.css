@@ -8,13 +8,24 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Sora', var(--font-sans);
 
-  --color-brand-violet: #8A2BE2;
-  --color-brand-violet-deep: #9400D3;
-  --color-brand-gold: #FFD700;
-  --color-brand-gold-warm: #FFA500;
-  --color-brand-pink: #FF1493;
-  --color-brand-green: #00FF00;
-  --color-brand-teal: #00CED1;
+  --color-primary: #1A1A2E;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-accent-violet: var(--accent-violet);
+  --color-accent-violet-deep: var(--accent-violet-deep);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-coral: var(--accent-coral);
+  --color-accent-red: var(--accent-red);
+  --color-accent-magenta: var(--accent-magenta);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-indigo: var(--accent-indigo);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-green: var(--accent-green);
+  --color-accent-lime: var(--accent-lime);
+  --color-accent-gray: var(--accent-gray);
 
   --color-success: var(--success);
   --color-info: var(--info);
@@ -32,17 +43,11 @@
   --color-popover: var(--bg-elevated);
   --color-popover-foreground: var(--text-primary);
   
-  --color-primary: var(--brand-violet);
-  --color-primary-foreground: #FFFFFF;
-  
   --color-secondary: var(--bg-surface-2);
   --color-secondary-foreground: var(--text-secondary);
   
   --color-muted: var(--bg-surface-2);
   --color-muted-foreground: var(--text-muted);
-  
-  --color-accent: var(--bg-surface-2);
-  --color-accent-foreground: var(--text-primary);
   
   --color-destructive: var(--danger);
   --color-destructive-foreground: #FFFFFF;
@@ -50,7 +55,7 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--border);
-  --color-ring: var(--brand-violet);
+  --color-ring: var(--primary);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -75,14 +80,6 @@
   font-family: var(--font-display);
 }
 
-@utility bg-gradient-brand {
-  background-image: linear-gradient(135deg, #9400D3 0%, #8A2BE2 50%, #FF1493 100%);
-}
-
-@utility bg-gradient-gold {
-  background-image: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-}
-
 @layer base {
   :root {
     --bg-app: #F7F7FB;
@@ -104,10 +101,24 @@
     --neutral-status: #6B7280;
     --overtime: #D97706;
 
-    --brand-violet: #8A2BE2;
+    --accent-violet: #8A2BE2;
+    --accent-violet-deep: #9400D3;
+    --accent-gold: #FFD700;
+    --accent-pink: #FF1493;
+    --accent-orange: #F97316;
+    --accent-coral: #FF7F50;
+    --accent-red: #EF4444;
+    --accent-magenta: #D946EF;
+    --accent-blue: #3B82F6;
+    --accent-indigo: #6366F1;
+    --accent-cyan: #06B6D4;
+    --accent-teal: #14B8A6;
+    --accent-green: #22C55E;
+    --accent-lime: #84CC16;
+    --accent-gray: #6B7280;
 
     --shadow-e1: 0 1px 2px rgba(20,20,28,0.06);
-    --shadow-e2: 0 4px 12px rgba(132,44,226,0.10);
+    --shadow-e2: 0 4px 12px rgba(20,20,28,0.08);
     --shadow-e3: 0 8px 24px rgba(20,20,28,0.12);
     --shadow-e4: 0 16px 48px rgba(20,20,28,0.18);
   }
