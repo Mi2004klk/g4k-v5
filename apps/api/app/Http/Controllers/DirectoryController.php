@@ -6,12 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-class DirectoryController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class DirectoryController extends Controller implements HasMiddleware
 {
-    public function __construct()
+        public static function middleware(): array
     {
-        $this->middleware('capability:directory.view')->only(['index', 'show']);
-        $this->middleware('capability:directory.send-message')->only(['sendMessage']);
+        return [
+            new Middleware('capability:directory.view', only: ['index', 'show']),
+            new Middleware('capability:directory.send-message', only: ['sendMessage']),
+        ];
     }
 
     private function applyVisibilityRules(User $user)

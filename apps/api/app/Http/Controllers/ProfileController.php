@@ -8,11 +8,16 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 use App\Services\AuditLogger;
 
-class ProfileController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class ProfileController extends Controller implements HasMiddleware
 {
-    public function __construct()
+        public static function middleware(): array
     {
-        $this->middleware('capability:profile.edit');
+        return [
+            new Middleware('capability:profile.edit'),
+        ];
     }
 
     public function show(Request $request)

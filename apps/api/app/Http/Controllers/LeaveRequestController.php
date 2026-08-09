@@ -9,12 +9,17 @@ use App\Services\ApprovalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class LeaveRequestController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class LeaveRequestController extends Controller implements HasMiddleware
 {
-    public function __construct()
+        public static function middleware(): array
     {
-        $this->middleware('capability:employee.leave.request-self')->only(['store', 'index']);
-        $this->middleware('capability:hr.leave.approve-employee|admin.leave.approve-hr')->only(['decision']);
+        return [
+            new Middleware('capability:employee.leave.request-self', only: ['store', 'index']),
+            new Middleware('capability:hr.leave.approve-employee|admin.leave.approve-hr', only: ['decision']),
+        ];
     }
 
     public function index(Request $request)

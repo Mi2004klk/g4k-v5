@@ -8,12 +8,17 @@ use App\Models\Team;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Cache;
 
-class DepartmentController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class DepartmentController extends Controller implements HasMiddleware
 {
-    public function __construct()
+        public static function middleware(): array
     {
-        $this->middleware('capability:departments.view')->only(['index', 'show']);
-        $this->middleware('capability:departments.manage')->only(['store', 'update', 'destroy', 'storeTeam', 'destroyTeam']);
+        return [
+            new Middleware('capability:departments.view', only: ['index', 'show']),
+            new Middleware('capability:departments.manage', only: ['store', 'update', 'destroy', 'storeTeam', 'destroyTeam']),
+        ];
     }
 
     public function index(Request $request)

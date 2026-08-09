@@ -6,12 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\Designation;
 use App\Services\AuditLogger;
 
-class DesignationController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class DesignationController extends Controller implements HasMiddleware
 {
-    public function __construct()
+        public static function middleware(): array
     {
-        $this->middleware('capability:designations.view')->only(['index', 'show']);
-        $this->middleware('capability:designations.manage')->only(['store', 'update', 'destroy']);
+        return [
+            new Middleware('capability:designations.view', only: ['index', 'show']),
+            new Middleware('capability:designations.manage', only: ['store', 'update', 'destroy']),
+        ];
     }
 
     public function index(Request $request)
