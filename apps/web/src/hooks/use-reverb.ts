@@ -11,14 +11,39 @@ declare global {
   }
 }
 
+/**
+ * Determines whether the Reverb WebSocket server is reachable.
+ * Returns false on Vercel preview/production domains when no explicit
+ * NEXT_PUBLIC_REVERB_HOST has been set – this prevents hundreds of
+ * failed WebSocket connection attempts that flood the console.
+ */
+function isReverbAvailable(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const explicitHost = process.env.NEXT_PUBLIC_REVERB_HOST;
+  if (explicitHost) return true; // Explicitly configured → always try
+
+  // On Vercel domains the Reverb server is never co-located
+  const hostname = window.location.hostname;
+  if (
+    hostname.endsWith('.vercel.app') ||
+    hostname.endsWith('.vercel.sh')
+  ) {
+    return false;
+  }
+
+  // localhost / custom domain → assume Reverb is running locally
+  return true;
+}
+
 export function useReverb() {
   const { user, token } = useAuthStore();
   const [echoInstance, setEchoInstance] = useState<any>(null);
 
   useEffect(() => {
-    // Only connect if we have a logged in user and token
-    if (!user || !token) {
-      if (window.Echo) {
+    // Only connect if we have a logged in user, token, AND Reverb is reachable
+    if (!user || !token || !isReverbAvailable()) {
+      if (typeof window !== 'undefined' && window.Echo) {
         window.Echo.disconnect();
       }
       setEchoInstance(null);
