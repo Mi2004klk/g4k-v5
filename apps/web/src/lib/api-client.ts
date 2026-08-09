@@ -29,6 +29,15 @@ export async function apiFetch<T = any>(
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      // Global 401 Interceptor: Clear auth state and force redirect to login
+      useAuthStore.getState().clearAuth();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      throw new Error("Session expired. Please log in again.");
+    }
+    
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `Request failed with status ${response.status}`);
   }
