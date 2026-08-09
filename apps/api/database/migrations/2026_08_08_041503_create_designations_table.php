@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('designations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name')->unique();
             $table->text('description')->nullable();
             $table->timestamps();

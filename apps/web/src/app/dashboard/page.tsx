@@ -1,96 +1,147 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAuthStore } from "@/lib/auth-store";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
-import { MetricWidget } from "@/components/widgets/metric-widget";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
-import { Users, Briefcase, Clock, CalendarDays, CheckSquare } from "lucide-react";
+import { MetricWidget } from "@/components/widgets/metric-widget";
+import {
+  Users,
+  Building2,
+  FolderKanban,
+  CheckCircle2,
+  Clock,
+  UserCheck,
+  UserX,
+  AlertCircle,
+} from "lucide-react";
 
-export default function DashboardHub() {
-  const [role, setRole] = useState<string | null>(null);
+export default function DashboardPage() {
+  const { user } = useAuthStore();
+  const activeRole = user?.active_role || "employee";
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    
-    fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/me", {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
-        const active = data.active_role || data.user.roles?.[0] || 'employee';
-        setRole(active);
-      })
-      .catch(console.error);
-  }, []);
-
-  if (!role) return <div className="p-8 text-zinc-400">Loading dashboard layout...</div>;
-
-  // Define widgets per role
-  const getWidgetsForRole = (activeRole: string) => {
-    const widgets = [];
-
+  // Widget catalog based on active role
+  const getWidgetsForRole = () => {
     if (activeRole === "super_admin" || activeRole === "hr") {
-      widgets.push(
+      return [
         {
-          id: "total_employees",
-          defaultLayout: { i: "total_employees", x: 0, y: 0, w: 3, h: 1.5, minW: 2, minH: 1 },
-          component: <MetricWidget title="Total Employees" metricKey="total_employees" endpoint="/dashboard/metrics" icon={Users} />
+          id: "total-employees",
+          component: (
+            <MetricWidget
+              title="Total Employees"
+              metricKey="total_employees"
+              icon={Users}
+              color="violet"
+              subtitle="Registered workplace accounts"
+            />
+          ),
+          defaultLayout: { x: 0, y: 0, w: 3, h: 2 },
         },
         {
-          id: "active_employees",
-          defaultLayout: { i: "active_employees", x: 3, y: 0, w: 3, h: 1.5, minW: 2, minH: 1 },
-          component: <MetricWidget title="Active Employees" metricKey="active_employees" endpoint="/dashboard/metrics" icon={Users} />
+          id: "present-today",
+          component: (
+            <MetricWidget
+              title="Present Today"
+              metricKey="present_today"
+              icon={UserCheck}
+              color="emerald"
+              subtitle="Employees clocked in"
+            />
+          ),
+          defaultLayout: { x: 3, y: 0, w: 3, h: 2 },
         },
         {
-          id: "present_today",
-          defaultLayout: { i: "present_today", x: 6, y: 0, w: 3, h: 1.5, minW: 2, minH: 1 },
-          component: <MetricWidget title="Present Today" metricKey="present_today" endpoint="/dashboard/metrics" icon={Clock} />
+          id: "late-today",
+          component: (
+            <MetricWidget
+              title="Late Clock-Ins"
+              metricKey="late_today"
+              icon={AlertCircle}
+              color="amber"
+              subtitle="Clock-in after 09:00 AM"
+            />
+          ),
+          defaultLayout: { x: 6, y: 0, w: 3, h: 2 },
         },
         {
-          id: "pending_approvals",
-          defaultLayout: { i: "pending_approvals", x: 9, y: 0, w: 3, h: 1.5, minW: 2, minH: 1 },
-          component: <MetricWidget title="Pending Approvals" metricKey="pending_tasks" endpoint="/dashboard/metrics" icon={CheckSquare} />
-        }
-      );
-    } else {
-      // Employee specific widgets
-      widgets.push(
-        {
-          id: "time_clock",
-          defaultLayout: { i: "time_clock", x: 0, y: 0, w: 4, h: 2, minW: 3, minH: 2 },
-          component: <TimeClockWidget />
+          id: "departments",
+          component: (
+            <MetricWidget
+              title="Departments"
+              metricKey="departments"
+              icon={Building2}
+              color="blue"
+              subtitle="Active teams & divisions"
+            />
+          ),
+          defaultLayout: { x: 9, y: 0, w: 3, h: 2 },
         },
         {
-          id: "active_projects",
-          defaultLayout: { i: "active_projects", x: 4, y: 0, w: 4, h: 1.5, minW: 2, minH: 1 },
-          component: <MetricWidget title="Active Projects" metricKey="active_projects" endpoint="/dashboard/metrics" icon={Briefcase} />
+          id: "time-clock",
+          component: <TimeClockWidget />,
+          defaultLayout: { x: 0, y: 2, w: 6, h: 3 },
         },
         {
-          id: "pending_tasks",
-          defaultLayout: { i: "pending_tasks", x: 8, y: 0, w: 4, h: 1.5, minW: 2, minH: 1 },
-          component: <MetricWidget title="Pending Tasks" metricKey="pending_tasks" endpoint="/dashboard/metrics" icon={CheckSquare} />
-        }
-      );
+          id: "active-projects",
+          component: (
+            <MetricWidget
+              title="Active Projects"
+              metricKey="active_projects"
+              icon={FolderKanban}
+              color="violet"
+              subtitle="Phase 7 module"
+              hasModule={false}
+            />
+          ),
+          defaultLayout: { x: 6, y: 2, w: 6, h: 3 },
+        },
+      ];
     }
 
-    return widgets;
+    // Default Employee view
+    return [
+      {
+        id: "time-clock",
+        component: <TimeClockWidget />,
+        defaultLayout: { x: 0, y: 0, w: 6, h: 3 },
+      },
+      {
+        id: "my-tasks",
+        component: (
+          <MetricWidget
+            title="My Pending Tasks"
+            metricKey="pending_tasks"
+            icon={CheckCircle2}
+            color="emerald"
+            subtitle="Assigned work items"
+            hasModule={false}
+          />
+        ),
+        defaultLayout: { x: 6, y: 0, w: 6, h: 3 },
+      },
+    ];
   };
-
-  const roleWidgets = getWidgetsForRole(role);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard Overview</h1>
-        <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-xs font-semibold uppercase tracking-wider border border-indigo-500/20">
-          Role: {role}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-violet-900 via-purple-900 to-indigo-900 p-6 rounded-2xl text-white shadow-lg">
+        <div>
+          <h1 className="text-2xl font-bold font-display">
+            Welcome back, {user?.name || "Team Member"}!
+          </h1>
+          <p className="text-xs text-purple-200 mt-1">
+            {activeRole === "super_admin"
+              ? "Super Admin Command Dashboard"
+              : activeRole === "hr"
+              ? "HR Operations & Team Performance Dashboard"
+              : "Employee Self-Service & Shift Dashboard"}
+          </p>
+        </div>
+        <div className="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold capitalize">
+          Role: {activeRole.replace("_", " ")}
         </div>
       </div>
-      
-      <p className="text-zinc-400">Drag items to rearrange your dashboard. Layouts are saved automatically.</p>
 
-      <WidgetEngine availableWidgets={roleWidgets} />
+      <WidgetEngine availableWidgets={getWidgetsForRole()} />
     </div>
   );
 }

@@ -2,45 +2,28 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-use Laravel\Sanctum\HasApiTokens;
-use App\Models\AutoNumbering;
-
+#[Fillable([
+    'company_id', 'employee_id', 'name', 'username', 'email', 'password',
+    'department_id', 'team_id', 'designation_id', 'phone', 'alternate_mobile',
+    'emergency_contact', 'joining_date', 'blood_group', 'working_hours',
+    'must_change_password', 'status', 'avatar_url'
+])]
+#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory, Notifiable, \Laravel\Sanctum\HasApiTokens, \App\Traits\GeneratesAutoNumber;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'employee_id',
-        'password',
-        'must_change_password',
-        'onboarded_at',
-        'status',
-        'lockout_until',
-        'login_attempts',
-        'avatar_url',
-        'department_id',
-        'team_id',
-        'designation_id',
-        'phone',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    public $autoNumberField = 'employee_id';
+    public $autoNumberType = 'employee';
 
     /**
      * Get the attributes that should be cast.
@@ -53,25 +36,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'must_change_password' => 'boolean',
-            'onboarded_at' => 'datetime',
-            'lockout_until' => 'datetime',
+            'joining_date' => 'date',
         ];
     }
 
-    protected static function boot()
+    public function company()
     {
-        parent::boot();
-
-        static::creating(function ($user) {
-            if (empty($user->employee_id)) {
-                $user->employee_id = AutoNumbering::generateNext('user');
-            }
-        });
-    }
-
-    public function roleAssignments()
-    {
-        return $this->hasMany(RoleAssignment::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function department()
@@ -79,13 +50,13 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
-    public function team()
-    {
-        return $this->belongsTo(Team::class);
-    }
-
     public function designation()
     {
         return $this->belongsTo(Designation::class);
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }

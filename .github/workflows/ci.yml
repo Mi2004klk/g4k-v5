@@ -7,6 +7,16 @@ on:
     branches: [ main ]
 
 jobs:
+  openapi-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Lint OpenAPI Spec
+        run: npx @redocly/cli lint apps/api/openapi/openapi.yaml
+
   web-ci:
     runs-on: ubuntu-latest
     steps:
@@ -19,7 +29,10 @@ jobs:
           node-version: 22
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm --filter web build
+      - name: Lint & Typecheck
+        run: pnpm --filter web typecheck
+      - name: Build Next.js App
+        run: pnpm --filter web build
 
   api-ci:
     runs-on: ubuntu-latest
@@ -28,10 +41,11 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
-          extensions: mbstring, pdo_pgsql, bcmath
+          extensions: mbstring, pdo_pgsql, bcmath, sqlite3
       - name: Install dependencies
         working-directory: ./apps/api
         run: composer install --prefer-dist --no-progress
       - name: Run Tests
         working-directory: ./apps/api
         run: php artisan test
+

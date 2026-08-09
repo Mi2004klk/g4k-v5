@@ -1,113 +1,120 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Loader2, ShieldAlert, UserCheck, Users } from "lucide-react";
+import { useAuthStore } from "@/lib/auth-store";
+import { apiFetch } from "@/lib/api-client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function RoleSelectPage() {
   const router = useRouter();
-  const [roles, setRoles] = useState<string[]>([]);
+  const { user, setAuth } = useAuthStore();
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    // In a real implementation, we would get the user from a Context/Zustand store.
-    // For now we'll fetch `/api/auth/me` to get roles.
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+  const availableRoles = user?.roles || ["employee"];
 
-    fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/me", {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.user?.roles) {
-          setRoles(data.user.roles);
-        } else {
-          router.push("/login");
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        router.push("/login");
-      });
-  }, [router]);
-
-  const selectRole = async (role: string) => {
+  async function handleRoleSelect(role: string) {
+    setSelectedRole(role);
     setIsLoading(true);
-    setError("");
-    const token = localStorage.getItem("token");
-
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/role/select", {
+      const result = await apiFetch("/auth/role-select", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
         body: JSON.stringify({ role }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to select role.");
-      }
-
-      localStorage.setItem("token", data.token); // Store the new role-bound token
+      setAuth(result.token, result.user, result.active_role);
+      toast.success(`Switched active role to ${role.replace("_", " ").toUpperCase()}`);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to switch role.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  if (roles.length === 0) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4 text-white">
-        Loading roles...
-      </div>
-    );
   }
 
+  const roleMeta: Record<string, { label: string; desc: string; icon: any }> = {
+    super_admin: {
+      label: "Super Admin",
+      desc: "Full organization access, system configurations & administrative controls.",
+      icon: ShieldAlert,
+    },
+    hr: {
+      label: "HR Manager",
+      desc: "Team management, leave approvals, attendance monitoring & employee logs.",
+      icon: Users,
+    },
+    employee: {
+      label: "Employee",
+      desc: "Personal attendance, tasks, schedule, leave requests & profile management.",
+      icon: UserCheck,
+    },
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-      <div className="w-full max-w-md space-y-8">
-        <Card className="bg-zinc-900 border-zinc-800 text-zinc-100 shadow-xl">
-          <CardHeader>
-            <CardTitle>Select Role</CardTitle>
-            <CardDescription className="text-zinc-400">
-              You have multiple roles. Select the one you want to use for this session.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm rounded bg-red-900/50 border border-red-900 text-red-200">
-                {error}
-              </div>
-            )}
-            
-            <div className="grid gap-4">
-              {roles.map((role) => (
-                <Button 
-                  key={role} 
-                  variant="outline" 
-                  className="w-full justify-start text-left uppercase border-zinc-700 hover:bg-zinc-800"
-                  onClick={() => selectRole(role)}
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-950 via-purple-900 to-slate-900">
+      <Card className="w-full max-w-lg shadow-2xl border-none">
+        <CardHeader className="text-center space-y-2 pt-8">
+          <CardTitle className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
+            Select Active Role
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Your account holds multiple permission roles. Choose how you wish to operate in this session.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="grid gap-3">
+            {availableRoles.map((roleKey) => {
+              const meta = roleMeta[roleKey] || {
+                label: roleKey,
+                desc: "Standard access role",
+                icon: UserCheck,
+              };
+              const Icon = meta.icon;
+              const isPending = isLoading && selectedRole === roleKey;
+
+              return (
+                <button
+                  key={roleKey}
+                  onClick={() => handleRoleSelect(roleKey)}
                   disabled={isLoading}
+                  className="flex items-start gap-4 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-violet-500 hover:bg-violet-50/50 dark:hover:bg-violet-950/20 text-left transition-all group active:scale-[0.98]"
                 >
-                  Log in as {role.replace('_', ' ')}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="p-3 rounded-lg bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-300 group-hover:scale-105 transition-transform">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-sm text-neutral-900 dark:text-white">
+                        {meta.label}
+                      </h4>
+                      {isPending && <Loader2 className="w-4 h-4 animate-spin text-violet-600" />}
+                    </div>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
+                      {meta.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="text-center pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-neutral-500 hover:text-neutral-700"
+              onClick={() => router.push("/login")}
+            >
+              Sign out & return to login
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

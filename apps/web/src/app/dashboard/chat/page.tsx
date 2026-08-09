@@ -1,156 +1,124 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Send, Users, User, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { MessageSquare, Globe, Plus } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
+import { useAuthStore } from "@/lib/auth-store";
+import { useReverb } from "@/hooks/use-reverb";
+import { ConversationList } from "@/components/chat/conversation-list";
+import { MessageList } from "@/components/chat/message-list";
+import { MessageComposer } from "@/components/chat/message-composer";
+import { AnnouncementBoard } from "@/components/widgets/announcement-board";
+import { QuickNotes } from "@/components/widgets/quick-notes";
+import { FeedbackForm } from "@/components/widgets/feedback-form";
 
 export default function ChatPage() {
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [activeConv, setActiveConv] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const { subscribe } = useReverb();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const { data: conversations = [] } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => apiFetch("/conversations"),
+  });
+
+  const { data: messageData } = useQuery({
+    queryKey: ["messages", selectedId],
+    queryFn: () => apiFetch(`/conversations/${selectedId}/messages`),
+    enabled: !!selectedId,
+  });
 
   useEffect(() => {
-    const fetchConversations = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/chat/conversations", {
-          headers: { Authorization: `Bearer ${token}` }
+    if (!selectedId) return;
+
+    const channel = subscribe(`conversation.${selectedId}`);
+    if (channel) {
+      channel.bind("message-sent", (e: any) => {
+        queryClient.setQueryData(["messages", selectedId], (old: any) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: [...old.data, e.message],
+          };
         });
-        if (res.ok) {
-          const data = await res.json();
-          setConversations(data.data);
-          if (data.data.length > 0) setActiveConv(data.data[0]);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchConversations();
-  }, []);
-
-  useEffect(() => {
-    if (!activeConv) return;
-    const fetchMessages = async () => {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/${activeConv.id}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data.data);
-      }
-    };
-    fetchMessages();
-    // Simulate real-time polling
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
-  }, [activeConv]);
-
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || !activeConv) return;
-
-    const token = localStorage.getItem("token");
-    // Optimistic UI update
-    const tempMsg = { id: Date.now(), body: input, sender_name: "You", created_at: new Date().toISOString() };
-    setMessages(prev => [...prev, tempMsg]);
-    setInput("");
-
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/${activeConv.id}/messages`, {
-        method: "POST",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ body: tempMsg.body })
-      });
-    } catch (e) {
-      toast.error("Message queued for offline sync");
     }
-  };
+  }, [selectedId]);
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (body: string) => {
+      return apiFetch(`/conversations/${selectedId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ body }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", selectedId] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+
+  const messages = messageData?.data || [];
+  const selectedConv = conversations.find((c: any) => c.id === selectedId);
 
   return (
-    <div className="h-full flex flex-col md:flex-row gap-6 pb-6">
-      <div className="w-full md:w-80 shrink-0 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col h-[400px] md:h-auto">
-        <div className="p-4 border-b border-zinc-800 bg-zinc-900/80">
-          <h2 className="font-semibold text-white">Channels & DMs</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {loading ? (
-            <div className="p-4 text-center text-zinc-500 text-sm">Loading...</div>
-          ) : conversations.length === 0 ? (
-            <div className="p-4 text-center text-zinc-500 text-sm">No conversations found.</div>
-          ) : conversations.map(c => (
-            <button
-              key={c.id}
-              onClick={() => setActiveConv(c)}
-              className={`w-full text-left px-3 py-3 rounded-lg flex items-center gap-3 transition-colors ${
-                activeConv?.id === c.id ? "bg-indigo-500/10 text-indigo-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-              }`}
-            >
-              {c.type === 'direct' ? <User className="w-5 h-5" /> : <Users className="w-5 h-5" />}
-              <div>
-                <div className="font-medium">{c.name || "Global Chat"}</div>
-                <div className="text-[10px] uppercase tracking-wide opacity-50">{c.type}</div>
-              </div>
-            </button>
-          ))}
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Communication Hub</h1>
+        <p className="text-sm text-neutral-500 mt-1">Real-time chats, company announcements & feedback.</p>
       </div>
 
-      <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col h-[500px] md:h-auto">
-        {activeConv ? (
-          <>
-            <div className="p-4 border-b border-zinc-800 bg-zinc-900/80 flex items-center justify-between">
-              <h2 className="font-semibold text-white flex items-center gap-2">
-                {activeConv.type === 'direct' ? <User className="w-4 h-4 text-zinc-500" /> : <Users className="w-4 h-4 text-zinc-500" />}
-                {activeConv.name || "Global Chat"}
-              </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Chat Interface */}
+        <div className="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-neutral-100 dark:border-neutral-800 flex h-[600px] overflow-hidden">
+          {/* Conversation sidebar */}
+          <div className="w-1/3 border-r border-neutral-100 dark:border-neutral-800 flex flex-col">
+            <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs">
+              Chats
             </div>
-            <div className="flex-1 p-4 overflow-y-auto space-y-4">
-              {messages.map(m => (
-                <div key={m.id} className={`flex flex-col ${m.sender_name === "You" ? "items-end" : "items-start"}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-semibold text-zinc-300">{m.sender_name}</span>
-                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {format(new Date(m.created_at), 'HH:mm')}
-                    </span>
-                  </div>
-                  <div className={`px-4 py-2 rounded-2xl max-w-[80%] text-sm ${
-                    m.sender_name === "You" ? "bg-indigo-600 text-white rounded-tr-sm" : "bg-zinc-800 text-zinc-200 rounded-tl-sm"
-                  }`}>
-                    {m.body}
-                  </div>
-                </div>
-              ))}
+            <div className="flex-1 overflow-y-auto">
+              <ConversationList
+                conversations={conversations}
+                selectedId={selectedId}
+                onSelect={(id) => setSelectedId(id)}
+              />
             </div>
-            <div className="p-4 border-t border-zinc-800 bg-zinc-900/80">
-              <form onSubmit={handleSend} className="flex gap-2">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-full px-4 py-2 text-white outline-none focus:border-indigo-500"
-                />
-                <Button type="submit" size="icon" className="rounded-full bg-indigo-600 hover:bg-indigo-500 shrink-0">
-                  <Send className="w-4 h-4" />
-                </Button>
-              </form>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-zinc-500 flex-col gap-2">
-            <Users className="w-12 h-12 opacity-20" />
-            <p>Select a conversation to start chatting</p>
           </div>
-        )}
+
+          {/* Active conversation panel */}
+          <div className="flex-1 flex flex-col bg-neutral-50/30 dark:bg-neutral-950/20">
+            {selectedId ? (
+              <>
+                <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
+                    {selectedConv?.name || "Conversation"}
+                  </h3>
+                </div>
+
+                <MessageList messages={messages} currentUserId={user?.id || 0} />
+
+                <MessageComposer
+                  onSend={(body) => sendMessageMutation.mutate(body)}
+                  disabled={sendMessageMutation.isPending}
+                />
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-neutral-400">
+                <MessageSquare className="w-10 h-10 text-neutral-300 mb-2" />
+                <p className="text-xs font-medium">Select a conversation to start chatting.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar Widgets */}
+        <div className="space-y-6">
+          <AnnouncementBoard />
+          <QuickNotes />
+          <FeedbackForm />
+        </div>
       </div>
     </div>
   );

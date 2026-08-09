@@ -2,44 +2,30 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+
 class CapabilityMatrix
 {
     /**
-     * Map of roles to the capabilities they possess.
+     * Get array of capabilities for a given role.
      */
-    const MATRIX = [
-        'super_admin' => [
-            '*', // Super admin has all capabilities
-        ],
-        'hr' => [
-            'users.view',
-            'users.create_employee',
-            'users.edit_employee',
-            'users.deactivate_employee',
-            
-            'departments.view',
-            
-            'designations.view',
-            
-            'profile.edit',
-            'directory.view',
-        ],
-        'employee' => [
-            'profile.edit',
-            'directory.view',
-        ],
-    ];
+    public static function getCapabilitiesForRole(string $role): array
+    {
+        return Cache::remember("role_capabilities_{$role}", 3600, function () use ($role) {
+            return DB::table('role_capabilities')
+                ->where('role', $role)
+                ->pluck('capability_key')
+                ->toArray();
+        });
+    }
 
     /**
      * Check if a role has a specific capability.
      */
     public static function hasCapability(string $role, string $capability): bool
     {
-        if (!isset(self::MATRIX[$role])) {
-            return false;
-        }
-
-        $roleCapabilities = self::MATRIX[$role];
+        $roleCapabilities = static::getCapabilitiesForRole($role);
 
         if (in_array('*', $roleCapabilities)) {
             return true;

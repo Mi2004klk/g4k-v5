@@ -600,6 +600,95 @@ paths:
       responses:
         '204':
           description: Deleted
+  /attendance/events:
+    post:
+      summary: Clock in/out or break events
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /attendance/days:
+    get:
+      summary: Get attendance heatmap
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /leave-requests:
+    get:
+      summary: Get leave requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Submit leave request
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Created
+  /chat/conversations:
+    get:
+      summary: Get conversations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /chat/conversations/{id}/messages:
+    get:
+      summary: Get messages
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Send message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: Created
+  /admin/settings:
+    get:
+      summary: Get system settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+    put:
+      summary: Update settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /admin/audit-logs:
+    get:
+      summary: Get audit logs
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
 components:
   securitySchemes:
     bearerAuth:

@@ -3,163 +3,236 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Company;
 use App\Models\Department;
-use App\Models\Team;
 use App\Models\Designation;
 use App\Models\AutoNumbering;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Designations (15 seed)
-        $designationNames = [
-            'Chief Executive Officer (CEO)',
-            'Chief Technology Officer (CTO)',
-            'Human Resources Manager',
-            'Engineering Manager',
-            'Product Manager',
-            'Senior Software Engineer',
-            'Software Engineer',
-            'QA Engineer',
-            'DevOps Engineer',
-            'UI/UX Designer',
-            'Marketing Manager',
-            'Sales Representative',
-            'Customer Support Agent',
-            'Accountant',
-            'System Administrator'
+        // 0. Capabilities
+        $capabilities = [
+            '*',
+            'users.view', 'users.create_employee', 'users.edit_employee', 'users.deactivate_employee', 'users.hr.manage', 'users.employee.manage',
+            'departments.manage', 'departments.view',
+            'designations.manage', 'designations.view',
+            'profile.edit', 'directory.view', 'communication', 'app-shell',
+            'admin.settings.manage', 'admin.audit.view',
+            'reports.view-admin', 'reports.view-hr-limited',
+            'employee.leave.request-self', 'hr.leave.approve-employee', 'admin.leave.approve-hr',
+            'employee.clock-self', 'hr.view-team-attendance', 'admin.view-all-attendance', 'admin.correct-attendance', 'attendance.correct-team',
+            'projects.manage', 'tasks.assign', 'tasks.submit', 'tasks.approve'
         ];
 
-        $designations = [];
-        foreach ($designationNames as $name) {
-            $designations[$name] = Designation::firstOrCreate(['name' => $name]);
+        foreach ($capabilities as $cap) {
+            DB::table('capabilities')->updateOrInsert(['key' => $cap], ['description' => $cap, 'group' => 'general', 'created_at' => now(), 'updated_at' => now()]);
         }
 
-        // 2. Departments & Teams
-        $engDept = Department::firstOrCreate(['name' => 'Engineering'], ['description' => 'Product development and engineering']);
-        $hrDept = Department::firstOrCreate(['name' => 'Human Resources'], ['description' => 'HR and Operations']);
-
-        $frontendTeam = Team::firstOrCreate(['department_id' => $engDept->id, 'name' => 'Frontend'], ['description' => 'UI and Web development']);
-        $backendTeam = Team::firstOrCreate(['department_id' => $engDept->id, 'name' => 'Backend'], ['description' => 'API and Database']);
-
-        // Initialize AutoNumbering for users
-        AutoNumbering::generateNext('user'); // Just to initialize it if not
-
-        // 3. Users
-        $users = [
-            ['name' => 'Karthik', 'email' => 'karthik@games4king.com', 'role' => 'super_admin', 'designation' => 'Chief Executive Officer (CEO)', 'dept' => null, 'team' => null],
-            ['name' => 'Aravind', 'email' => 'aravind@games4king.com', 'role' => 'hr', 'designation' => 'Human Resources Manager', 'dept' => $hrDept->id, 'team' => null],
-            ['name' => 'Praveen', 'email' => 'praveen@games4king.com', 'role' => 'employee', 'designation' => 'Senior Software Engineer', 'dept' => $engDept->id, 'team' => $backendTeam->id],
-            ['name' => 'Admin1', 'email' => 'admin1@games4king.com', 'role' => 'super_admin', 'designation' => 'System Administrator', 'dept' => null, 'team' => null],
-            ['name' => 'HR1', 'email' => 'hr1@games4king.com', 'role' => 'hr', 'designation' => 'Human Resources Manager', 'dept' => $hrDept->id, 'team' => null],
-            ['name' => 'Emp1', 'email' => 'emp1@games4king.com', 'role' => 'employee', 'designation' => 'Software Engineer', 'dept' => $engDept->id, 'team' => $frontendTeam->id],
-            ['name' => 'Emp2', 'email' => 'emp2@games4king.com', 'role' => 'employee', 'designation' => 'QA Engineer', 'dept' => $engDept->id, 'team' => null],
-            ['name' => 'Manager1', 'email' => 'manager1@games4king.com', 'role' => 'employee', 'designation' => 'Engineering Manager', 'dept' => $engDept->id, 'team' => null],
-            ['name' => 'Security1', 'email' => 'security1@games4king.com', 'role' => 'employee', 'designation' => 'System Administrator', 'dept' => $engDept->id, 'team' => $backendTeam->id],
-            ['name' => 'Accounts1', 'email' => 'accounts1@games4king.com', 'role' => 'employee', 'designation' => 'Accountant', 'dept' => null, 'team' => null],
-            ['name' => 'Emp3', 'email' => 'emp3@games4king.com', 'role' => 'employee', 'designation' => 'Software Engineer', 'dept' => $engDept->id, 'team' => $backendTeam->id],
-            ['name' => 'Emp4', 'email' => 'emp4@games4king.com', 'role' => 'employee', 'designation' => 'UI/UX Designer', 'dept' => $engDept->id, 'team' => $frontendTeam->id],
-            ['name' => 'Emp5', 'email' => 'emp5@games4king.com', 'role' => 'employee', 'designation' => 'Software Engineer', 'dept' => $engDept->id, 'team' => $frontendTeam->id],
+        $roleCaps = [
+            'super_admin' => ['*'],
+            'hr' => [
+                'users.view', 'users.create_employee', 'users.edit_employee', 'users.deactivate_employee', 'users.hr.manage',
+                'departments.view', 'designations.view', 'profile.edit', 'directory.view', 'communication', 'app-shell',
+                'reports.view-hr-limited', 'hr.leave.approve-employee', 'employee.leave.request-self',
+                'employee.clock-self', 'hr.view-team-attendance', 'attendance.correct-team',
+                'projects.manage', 'tasks.assign', 'tasks.submit', 'tasks.approve'
+            ],
+            'employee' => [
+                'profile.edit', 'directory.view', 'communication', 'app-shell', 'employee.leave.request-self',
+                'employee.clock-self', 'tasks.submit'
+            ]
         ];
 
-        foreach ($users as $u) {
-            $user = User::firstOrCreate(
-                ['email' => $u['email']],
-                [
-                    'name' => $u['name'],
-                    'password' => Hash::make('password'),
-                    'must_change_password' => true,
-                    'designation_id' => $designations[$u['designation']]->id,
-                    'department_id' => $u['dept'],
-                    'team_id' => $u['team'],
-                ]
-            );
-
-            \DB::table('role_assignments')->updateOrInsert(
-                ['user_id' => $user->id, 'role' => $u['role']],
-                ['created_at' => now(), 'updated_at' => now()]
-            );
-        }
-
-        // 4. Settings
-        foreach ([
-            ['key' => 'company_name', 'value' => 'Games4Kings', 'type' => 'string'],
-            ['key' => 'work_start_time', 'value' => '09:00', 'type' => 'string'],
-            ['key' => 'work_end_time', 'value' => '18:00', 'type' => 'string'],
-        ] as $setting) {
-            \DB::table('settings')->updateOrInsert(['key' => $setting['key']], $setting);
-        }
-
-        // 5. Attendance (Last 7 days for Praveen)
-        $praveen = User::where('email', 'praveen@games4king.com')->first();
-        if ($praveen) {
-            for ($i = 1; $i <= 7; $i++) {
-                \DB::table('attendance_records')->updateOrInsert(
-                    ['user_id' => $praveen->id, 'date' => now()->subDays($i)->toDateString()],
-                    [
-                        'total_worked_minutes' => 480, // 8 hours
-                        'status' => 'present',
-                    ]
-                );
+        foreach ($roleCaps as $role => $caps) {
+            foreach ($caps as $cap) {
+                DB::table('role_capabilities')->updateOrInsert(['role' => $role, 'capability_key' => $cap], ['created_at' => now(), 'updated_at' => now()]);
             }
         }
 
-        // 6. Projects & Tasks
-        $projectId = \DB::table('projects')->where('name', 'G4K Workplace OS')->value('id');
-        if (!$projectId) {
-            $projectId = \DB::table('projects')->insertGetId([
-                'name' => 'G4K Workplace OS',
-                'description' => 'The ultimate HR & Ops platform.',
-                'status' => 'active',
+        // 1. AutoNumbering Configuration
+        AutoNumbering::firstOrCreate(
+            ["entity_type" => "company"],
+            ["prefix" => "G4K-", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{NUMBER}"]
+        );
+        AutoNumbering::firstOrCreate(
+            ["entity_type" => "department"],
+            ["prefix" => "DEP", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{NUMBER}"]
+        );
+        AutoNumbering::firstOrCreate(
+            ["entity_type" => "employee"],
+            ["prefix" => "G4K", "start_number" => 1, "current_number" => 0, "format" => "{PREFIX}{NUMBER}"]
+        );
+
+        // 1.5 Work Schedules (Default G4K Schedule)
+        DB::table('work_schedules')->updateOrInsert(
+            ['name' => 'Standard G4K Schedule'],
+            [
+                'start_time' => '09:00:00',
+                'end_time' => '18:30:00',
+                'break_minutes' => 45,
+                'standard_seconds' => 31500, // 8h 45m
+                'working_days' => json_encode([1, 2, 3, 4, 5, 6]), // Mon-Sat
+                'effective_from' => '2026-01-01',
+                'is_default' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
-        }
-
-        \DB::table('tasks')->updateOrInsert(
-            ['project_id' => $projectId, 'title' => 'Finalize M1 Polish'],
-            [
-                'assignee_id' => $praveen ? $praveen->id : null,
-                'description' => 'Ensure seed data and PWA are working.',
-                'status' => 'in_progress',
-                'estimated_hours' => 5,
-                'logged_hours' => 2,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]
-        );
-        \DB::table('tasks')->updateOrInsert(
-            ['project_id' => $projectId, 'title' => 'Implement Auth'],
-            [
-                'assignee_id' => $praveen ? $praveen->id : null,
-                'description' => 'Sanctum auth.',
-                'status' => 'done',
-                'estimated_hours' => 8,
-                'logged_hours' => 8,
-                'created_at' => now(),
-                'updated_at' => now()
             ]
         );
 
-        // 7. Global Chat
-        $convId = \DB::table('conversations')->where('name', 'General')->value('id');
-        if (!$convId) {
-            $convId = \DB::table('conversations')->insertGetId([
-                'name' => 'General',
-                'type' => 'global',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+        // 2. Company
+        $company = Company::firstOrCreate(
+            ["name" => "Games4King"],
+            [
+                "short_name" => "G4K",
+                "type" => "Game Development Studio",
+                "description" => "Games4King is a creative game development studio specializing in designing, developing, and publishing high-quality Web and Android Games, including Puzzle, Escape, Adventure, Casual, and Interactive Gaming Experiences.",
+                "primary_phone" => "+91 79045 93823",
+                "secondary_phone" => "+91 96264 79882",
+                "email" => "g4kasset@gmail.com",
+                "address" => "Mullai Nagar, Vadamalampatti, Pochampalli Tk, Krishnagiri Dt, Tamil Nadu - 635206",
+            ]
+        );
+
+        // 3. Departments
+        $deptGame = Department::firstOrCreate(["name" => "Game Dev Team"], ["company_id" => $company->id]);
+        $deptYouTube = Department::firstOrCreate(["name" => "YouTube Team"], ["company_id" => $company->id]);
+
+        // 4. Designations
+        $designations = [
+            "Senior Head", "HR Manager", "Senior Developer", "Unity Developer", "Lead UI Designer",
+            "Graphic Designer", "Game Tester", "Creative Director", "Video Production Lead", "Video Editor",
+            "Camera Operator", "Content Artist", "Game Developer", "Senior Designer", "Designer",
+            "QA Tester", "Director", "Chief Editor", "Editor", "Cameraman", "Actor", "Actress"
+        ];
+
+        $desigMap = [];
+        foreach ($designations as $d) {
+            $desigMap[$d] = Designation::firstOrCreate(["name" => $d], ["company_id" => $company->id]);
         }
 
-        if ($praveen) {
-            \DB::table('conversation_user')->updateOrInsert(['conversation_id' => $convId, 'user_id' => $praveen->id]);
-            \DB::table('messages')->updateOrInsert(
-                ['conversation_id' => $convId, 'sender_id' => $praveen->id, 'body' => 'Welcome to the new G4K Workplace OS!'],
-                ['created_at' => now(), 'updated_at' => now()]
+        // 5. Employees
+        $employees = [
+            [
+                "name" => "Karthik R", "username" => "karthik", "email" => "g4kkarthik@gmail.com",
+                "password" => "Admin@123", "dept" => $deptYouTube->id, "role" => "super_admin",
+                "designation" => "Senior Head", "mobile" => "7708219011", "alt_mobile" => "6380847411",
+                "emergency" => "7092966257", "joining_date" => "2020-09-01", "blood_group" => "B+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Aravind Kumar", "username" => "aravind", "email" => "hr@games4king.in",
+                "password" => "Hr@123", "dept" => $deptYouTube->id, "role" => "hr",
+                "designation" => "HR Manager", "mobile" => "9786543210", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2022-01-15", "blood_group" => "O+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Praveen Kumar", "username" => "praveen", "email" => "praveen@games4king.in",
+                "password" => "Dev@123", "dept" => $deptGame->id, "role" => "employee",
+                "designation" => "Senior Developer", "mobile" => "9876543201", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2021-04-04", "blood_group" => "A+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Rahul S", "username" => "rahul", "email" => "rahul@games4king.in",
+                "password" => "Dev@123", "dept" => $deptGame->id, "role" => "employee",
+                "designation" => "Unity Developer", "mobile" => "9876543202", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2023-08-21", "blood_group" => "O+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Vignesh R", "username" => "vignesh", "email" => "vignesh@games4king.in",
+                "password" => "Design@123", "dept" => $deptGame->id, "role" => "employee",
+                "designation" => "Lead UI Designer", "mobile" => "9876543203", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2021-02-12", "blood_group" => "AB+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Santhosh M", "username" => "santhosh", "email" => "santhosh@games4king.in",
+                "password" => "Design@123", "dept" => $deptGame->id, "role" => "employee",
+                "designation" => "Graphic Designer", "mobile" => "9876543204", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2024-07-10", "blood_group" => "B+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Naveen Raj", "username" => "naveen", "email" => "naveen@games4king.in",
+                "password" => "Qa@123", "dept" => $deptGame->id, "role" => "employee",
+                "designation" => "Game Tester", "mobile" => "9876543205", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2023-11-18", "blood_group" => "O-",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Harish Kumar", "username" => "harish", "email" => "harish@games4king.in",
+                "password" => "Director@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "designation" => "Creative Director", "mobile" => "9876543206", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2022-01-07", "blood_group" => "A+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Dinesh Kumar", "username" => "dinesh", "email" => "dinesh@games4king.in",
+                "password" => "Edit@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "designation" => "Video Production Lead", "mobile" => "9876543207", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2022-05-20", "blood_group" => "B-",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Ajith Kumar", "username" => "ajith", "email" => "ajith@games4king.in",
+                "password" => "Edit@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "designation" => "Video Editor", "mobile" => "9876543208", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2023-12-05", "blood_group" => "O+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Lokesh R", "username" => "lokesh", "email" => "lokesh@games4king.in",
+                "password" => "Camera@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "designation" => "Camera Operator", "mobile" => "9876543209", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2024-06-11", "blood_group" => "A-",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Akash Kumar", "username" => "akash", "email" => "akash@games4king.in",
+                "password" => "Actor@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "designation" => "Content Artist", "mobile" => "9876543210", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2024-03-01", "blood_group" => "B+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Nivetha S", "username" => "nivetha", "email" => "nivetha@games4king.in",
+                "password" => "Actress@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "designation" => "Content Artist", "mobile" => "9876543211", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2024-04-14", "blood_group" => "O+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+        ];
+
+        foreach ($employees as $emp) {
+            $user = User::firstOrCreate(
+                ["email" => $emp["email"]],
+                [
+                    "company_id" => $company->id,
+                    "name" => $emp["name"],
+                    "username" => $emp["username"],
+                    "password" => Hash::make($emp["password"]),
+                    "must_change_password" => false,
+                    "department_id" => $emp["dept"],
+                    "designation_id" => $desigMap[$emp["designation"]]->id,
+                    "phone" => $emp["mobile"],
+                    "alternate_mobile" => $emp["alt_mobile"],
+                    "emergency_contact" => $emp["emergency"],
+                    "joining_date" => $emp["joining_date"],
+                    "blood_group" => $emp["blood_group"],
+                    "working_hours" => $emp["working_hours"],
+                ]
+            );
+
+            DB::table("role_assignments")->updateOrInsert(
+                ["user_id" => $user->id, "role" => $emp["role"]],
+                ["created_at" => now(), "updated_at" => now()]
             );
         }
     }

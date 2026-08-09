@@ -3,28 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\Notification;
 
 class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $notifications = DB::table('notifications')
-            ->where('user_id', $request->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
-            
-        return response()->json(['data' => $notifications]);
+        $user = $request->user();
+        
+        $query = Notification::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc');
+
+        return response()->json($query->cursorPaginate(50));
     }
 
-    public function markAsRead(Request $request, $id)
+    public function markRead(Request $request, $id)
     {
-        DB::table('notifications')
-            ->where('id', $id)
-            ->where('user_id', $request->user()->id)
-            ->update(['read_at' => now()]);
-            
-        return response()->json(['message' => 'Marked as read']);
+        $user = $request->user();
+        
+        $notification = Notification::where('id', $id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $notification->update(['read_at' => now()]);
+
+        return response()->json($notification);
     }
 }

@@ -2,3 +2,6 @@
 *.zip
 *.tar.gz
 node_modules/
+
+.jetro/
+.mcp.json

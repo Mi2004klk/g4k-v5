@@ -2,76 +2,64 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExportJob;
+use App\Models\Task;
+use App\Models\Project;
+use App\Models\User;
+use App\Jobs\GenerateReportJob;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    public function data(Request $request, $type)
+    public function data(Request $request)
     {
-        $startDate = $request->query('start_date', now()->subDays(30)->toDateString());
-        $endDate = $request->query('end_date', now()->toDateString());
+        $key = $request->query('key', 'tasks');
 
-        if ($type === 'attendance') {
-            $data = DB::table('attendance_records')
-                ->join('users', 'users.id', '=', 'attendance_records.user_id')
-                ->whereBetween('date', [$startDate, $endDate])
-                ->select('users.name', 'attendance_records.date', 'attendance_records.status', 'attendance_records.check_in', 'attendance_records.check_out')
-                ->orderBy('date', 'desc')
-                ->get();
-            return response()->json(['data' => $data]);
+        switch ($key) {
+            case 'tasks':
+                $data = Task::with(['project', 'assignee'])->latest()->paginate(25);
+                break;
+            case 'projects':
+                $data = Project::with('owner')->latest()->paginate(25);
+                break;
+            case 'users':
+            case 'productivity':
+            default:
+                $data = User::latest()->paginate(25);
+                break;
         }
 
-        if ($type === 'productivity') {
-            $data = DB::table('tasks')
-                ->join('users', 'users.id', '=', 'tasks.assignee_id')
-                ->whereBetween('tasks.updated_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                ->select('users.name', 'tasks.title', 'tasks.status', 'tasks.logged_hours')
-                ->orderBy('tasks.updated_at', 'desc')
-                ->get();
-            return response()->json(['data' => $data]);
-        }
-
-        return response()->json(['error' => 'Invalid report type'], 400);
+        return response()->json($data);
     }
 
-    public function exportCsv(Request $request, $type)
+    public function export(Request $request)
     {
-        $startDate = $request->query('start_date', now()->subDays(30)->toDateString());
-        $endDate = $request->query('end_date', now()->toDateString());
+        $validated = $request->validate([
+            'key' => 'required|string',
+            'format' => 'required|in:xlsx,csv,pdf',
+            'filters' => 'nullable|array',
+        ]);
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"{$type}_report_{$startDate}_{$endDate}.csv\"",
-        ];
+        $exportJob = ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => $validated['key'],
+            'format' => $validated['format'],
+            'filters' => $validated['filters'] ?? [],
+            'status' => 'pending',
+        ]);
 
-        return new StreamedResponse(function () use ($type, $startDate, $endDate) {
-            $handle = fopen('php://output', 'w');
+        // Process job synchronously or queue depending on config
+        GenerateReportJob::dispatch($exportJob);
 
-            if ($type === 'attendance') {
-                fputcsv($handle, ['Employee', 'Date', 'Status', 'Check In', 'Check Out']);
-                $records = DB::table('attendance_records')
-                    ->join('users', 'users.id', '=', 'attendance_records.user_id')
-                    ->whereBetween('date', [$startDate, $endDate])
-                    ->orderBy('date', 'desc')
-                    ->get();
-                foreach ($records as $row) {
-                    fputcsv($handle, [$row->name, $row->date, $row->status, $row->check_in, $row->check_out]);
-                }
-            } elseif ($type === 'productivity') {
-                fputcsv($handle, ['Employee', 'Task', 'Status', 'Logged Hours']);
-                $records = DB::table('tasks')
-                    ->join('users', 'users.id', '=', 'tasks.assignee_id')
-                    ->whereBetween('tasks.updated_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                    ->orderBy('tasks.updated_at', 'desc')
-                    ->get();
-                foreach ($records as $row) {
-                    fputcsv($handle, [$row->name, $row->title, $row->status, $row->logged_hours]);
-                }
-            }
+        return response()->json($exportJob, 202);
+    }
 
-            fclose($handle);
-        }, 200, $headers);
+    public function exports(Request $request)
+    {
+        $exports = ExportJob::where('user_id', $request->user()->id)
+            ->latest()
+            ->get();
+
+        return response()->json($exports);
     }
 }

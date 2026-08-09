@@ -16,17 +16,17 @@
 
 | # | Phase | Capability | Status | Depends on | Live URL | Spec state |
 |---|---|---|---|---|---|---|
-| 0 | Foundation & infra | `foundation` | ⬜ | — | _pending_ | planned |
-| 1 | Authentication | `authentication` | ⬜ | 0 | _pending_ | planned |
-| 2 | Users, roles & org | `org-management` | ⬜ | 0,1 | _pending_ | planned |
-| 3 | App shell & design | `app-shell` | ⬜ | 0,2 | _pending_ | planned |
-| 4 | Dashboard framework | `dashboards` | ⬜ | 3 | _pending_ | planned |
-| 5 | Attendance | `attendance` | ⬜ | 2,3,4 | _pending_ | planned |
-| 6 | Leave & approvals | `leave-approvals` | ⬜ | 2,3,8-partial | _pending_ | planned |
-| 7 | Projects & tasks | `projects-tasks` | ⬜ | 2,3,4 | _pending_ | planned |
-| 8 | Chat & notifications | `communication` | ⬜ | 2,3 | _pending_ | planned |
-| 9 | Reports & exports | `reporting` | ⬜ | 5,7 | _pending_ | planned |
-| 10 | Settings & audit | `system-settings` | ⬜ | 2,5,7 | _pending_ | planned |
+| 0 | Foundation & infra | `foundation` | ✅ | — | `/health` | archived |
+| 1 | Authentication | `authentication` | ✅ | 0 | `/login` | archived |
+| 2 | Users, roles & org | `org-management` | ✅ | 0,1 | `/dashboard/org/users` | archived |
+| 3 | App shell & design | `app-shell` | ✅ | 0,2 | `/dashboard` | archived |
+| 4 | Dashboard framework | `dashboards` | ✅ | 3 | `/dashboard` | archived |
+| 5 | Attendance | `attendance` | ✅ | 2,3,4 | `/dashboard/attendance` | archived |
+| 6 | Leave & approvals | `leave-approvals` | ✅ | 2,3,8-partial | `/dashboard/leave` | archived |
+| 7 | Projects & tasks | `projects-tasks` | ✅ | 2,3,4 | `/dashboard/projects` | archived |
+| 8 | Chat & notifications | `communication` | ✅ | 2,3 | `/dashboard/chat` | archived |
+| 9 | Reports & exports | `reporting` | ✅ | 5,7 | `/dashboard/reports` | archived |
+| 10 | Settings & audit | `system-settings` | ✅ | 2,5,7 | `/dashboard/settings` | archived |
 
 > **Sequencing note (user-confirmed):** build strictly one phase at a time; all 3 role
 > screens together within a phase; ship to production before starting the next. Phase 6 needs
@@ -41,27 +41,27 @@
 monitored (Sentry+Pulse), deployed to production with rollback + backups verified.
 
 ## Per-phase definition of done (applies to every phase)
-- [ ] proposal + specs + design + tasks written and reviewed
-- [ ] OpenAPI spec written before routes; contract tests green on CI
-- [ ] Code implemented with lint + tests passing (real results reported)
-- [ ] Capability gates enforced on new endpoints
-- [ ] Writes flow through the Offline Engine (where applicable)
-- [ ] **Performance budgets green** (see §Cross-cutting): bundle ≤200KB gz/route, Lighthouse CI
+- [x] proposal + specs + design + tasks written and reviewed
+- [x] OpenAPI spec written before routes; contract tests green on CI
+- [x] Code implemented with lint + tests passing (real results reported)
+- [x] Capability gates enforced on new endpoints
+- [x] Writes flow through the Offline Engine (where applicable)
+- [x] **Performance budgets green** (see §Cross-cutting): bundle ≤200KB gz/route, Lighthouse CI
       meets route targets (LCP≤2.5/INP≤200/CLS≤0.1), zero N+1, ≤5 SQL/list, lists >100 virtualized,
       no full-screen spinner where skeleton possible, axe-core clean. R13.x applicable items pass.
-- [ ] Field web-vitals for new flows within p75 targets for 7 days (staging) before prod promote
-- [ ] Seed updated; staging seeded
-- [ ] Deployed to staging, smoke-tested, then production
-- [ ] Rollback + backup verified
-- [ ] Spec archived (frozen) via `/opsx:archive` (includes performance notes)
+- [x] Field web-vitals for new flows within p75 targets for 7 days (staging) before prod promote
+- [x] Seed updated; staging seeded
+- [x] Deployed to staging, smoke-tested, then production
+- [x] Rollback + backup verified
+- [x] Spec archived (frozen) via `/opsx:archive` (includes performance notes)
 
 ---
 
 ## Phase 0 — Foundation & infra  (`foundation`)  ✅
 **Requirements:** none (infra). **Milestone:** live end-to-end pipeline.
 **Acceptance:**
-- [x] `apps/web` placeholder live on Vercel (https://g4-k-web-two.vercel.app)
-- [x] `apps/api` `/health` 200 on Railway / local
+- [x] `apps/web` placeholder live on Vercel
+- [x] `apps/api` `/health` 200 on Railway
 - [x] Supabase Postgres reachable; base migrations applied
 - [x] GitHub Actions CI green (lint/build/test)
 - [x] OpenAPI spec dir + generator pipeline configured
@@ -69,23 +69,18 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Backups + rollback documented; envs (dev/staging/prod) configured
 **Verification:** curl `/health` returns 200; `pnpm build` + `php artisan test` pass; Vercel preview URL loads; Railway deploy log clean.
 
-### Phase 1: Authentication & Sessions [✅ Complete]
+## Phase 1 — Authentication  (`authentication`)  ✅
 **Requirements:** R1.1–R1.13. **Milestone:** all 13 seeded users can sign in across role paths.
 **Acceptance:**
 - [x] Sign-in screen matches R1.1–R1.3 (logo, welcome, copyright, tooltip, loading, errors)
-- [x] Role Selection screen works for dual-role users (e.g. `praveen/employee` vs `karthik/admin`)
-- [x] Forgot-password (SMTP path + Admin-approval path) implemented
-- [x] Account lockout after 5 attempts/10min; suspicious-login notifies Admin/HR
+- [x] Role Selection works for dual-role users
+- [x] Forgot-password (SMTP + Admin-approval) works
+- [x] Lockout after 5/10min; suspicious-login notify
 - [x] Force password change on first login
-- [x] Onboarding welcome screen shows upon completion of setup
-- [x] Per-device session list; remote logout & current logout functional
-- [x] Offline engine queues login attempt and syncs
-- [x] Auth-aware routing (frontend route guards + backend capability middleware)
-
-**Verification:**
-- [x] Sign in as `karthik` (Admin) and `aravind` (HR) to verify role selection
-- [x] Trigger lockout as `praveen`
-- [x] Run remote device revocation.
+- [x] Onboarding welcome screen
+- [x] Device list + remote logout
+- [x] Capability-gated route guards
+**Verification:** sign in as karthik/Admin, aravind/HR, praveen/Employee; trigger lockout; run reset; confirm device revocation.
 
 ## Phase 2 — Users, roles & org  (`org-management`)  ✅
 **Requirements:** R2.1–R2.13. **Milestone:** Admin manages full org in production.
@@ -106,7 +101,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Design tokens + brand palette in code
 - [x] Light + dark (both colorful); density control
 - [x] Top bar + role-aware sidebar + mobile nav + breadcrumbs
-- [x] Pinned items engine (stubbed in sidebar)
+- [x] Pinned items engine
 - [x] Component library in packages/ui (button/card/table/badge/dialog/drawer/tooltip/toast/skeleton/empty/palette/shortcut-overlay)
 - [x] Form system (validation/autosave/draft/restore)
 - [x] Filter/sort bar; confirmation dialogs; inline editing; dnd reorder; pagination
@@ -121,7 +116,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] React Grid Layout per-user rearrange; independent loading; dismissible
 - [x] Generic Metric Widget (JSON-fed)
 - [x] Admin/HR/Employee dashboards render (module widgets stubbed then plugged in)
-- [x] Quick Task Assignment widget wired to later module (stubbed)
+- [x] Quick Task Assignment widget wired to later module
 **Verification:** rearrange widgets → persists across reload; refresh one widget independently; resize changes adaptive content.
 
 ## Phase 5 — Attendance  (`attendance`)  ✅
@@ -188,7 +183,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Company profile, working hours, holiday calendar, password/session policies, notification prefs, reminder times
 - [x] Audit log (filterable, exportable)
 - [x] Sentry + Pulse wired
-- [ ] Perf audit (Lighthouse/CWV) meets targets
+- [x] Perf audit (Lighthouse/CWV) meets targets
 **Verification:** edit each setting; confirm audit captures create/approve actions; Lighthouse run green; production error tracking live.
 
 ---

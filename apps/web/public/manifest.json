@@ -1,17 +1,21 @@
 {
-  "name": "Games4Kings Workplace OS",
-  "short_name": "G4K Workplace",
-  "description": "Gen2k Conglomerate Workplace Management System",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
-  "orientation": "portrait-primary",
+  "short_name": "Workplace OS",
+  "name": "Games4King Workplace OS",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
-  ]
+  ],
+  "start_url": "/dashboard",
+  "background_color": "#0F0F14",
+  "theme_color": "#8A2BE2",
+  "display": "standalone",
+  "orientation": "portrait"
 }

@@ -36,10 +36,34 @@ consistency, long-term maintainability, scalability.
 > roles. A user's **designation** is a profile label; their **system role(s)** drive
 > permissions. A user may hold **multiple system roles** → triggers the Role Selection screen.
 
+### 2.1 M1 Capability Matrix (Base + Attendance + Leave)
+| Area | Super Admin | HR | Employee |
+|---|---|---|---|
+| Dashboard | full company | team | personal |
+| Org: users (HR+Employee accounts) | full CRUD, roles, reset pw, deactivate, activity | view team, limited | — |
+| Org: departments/teams | full CRUD + members | view | view |
+| Org: designations | full CRUD | view | view |
+| Directory | full + Send Message* | full + Send Message* | view + Send Message* |
+| Profile (self) | edit photo/name/phone/designation, change pw, devices | same | same |
+| Attendance: clock self | yes | yes | **yes** (`attendance.clock-self`) |
+| Attendance: team today (HR) | yes | **yes** (`hr.view-team-attendance`) | — |
+| Attendance: company overview (Admin) | **yes** (`admin.view-all-attendance`) | — | — |
+| Attendance: manual correction | **any user** (`admin.correct-attendance`) | **own team** (`attendance.correct-team`) | — |
+| Attendance: history (self) | yes | yes | yes |
+| Attendance: reports/export | yes | team | — |
+| Leave: request self | yes | **yes** (`leave.request-self`) | **yes** (`leave.request-self`) |
+| Leave: approve employee leave | yes | **yes** (`leave.approve-employee`) | — |
+| Leave: approve HR leave | **yes** (`leave.approve-hr`) | — | — |
+| Leave: view all history | yes | team | own |
+| Settings (company/hours/holidays/policies) | **yes** (`settings.manage`) | view | — |
+| Audit log | **yes** (`audit.view`) | — | — |
+
+*\* "Send Message" creates a Direct chat row in M1 (chat UI itself is a future module).*
+
 ## 3. Tech Stack (authoritative)
 
-### Backend — Laravel 12 (apps/api)
-- PHP 8.4+, Laravel 12, **PostgreSQL via Supabase** (source of truth).
+### Backend — Laravel 13 (apps/api)
+- PHP 8.4+, Laravel 13 (frozen version per STK-D1/D2; composer.json is source of truth), **PostgreSQL via Supabase** (source of truth).
 - **Spec-first OpenAPI** — write spec before any route. All clients consume the same API.
 - **Sanctum Bearer tokens** — stateless auth (frontend and API are on different domains).
 - Queue, Scheduler, Events, Cache (managed processes on Railway).
@@ -48,7 +72,7 @@ consistency, long-term maintainability, scalability.
   notifications, offline synchronization, reporting. Frontend never touches DB logic.
 
 ### Frontend — Next.js (apps/web)
-- Next.js 16.2.12 + React + TypeScript. Tailwind v4. Radix UI + shadcn/ui (owned, copied-in).
+- Next.js 16.3.0 + React + TypeScript (frozen version per STK-D1/D2; package.json is source of truth). Tailwind v4. Radix UI + shadcn/ui (owned, copied-in).
 - TanStack Query (server state), Zustand (UI state only — never API data).
 - TanStack Table, dnd-kit (kanban/lists/trees/menus), React Grid Layout (dashboard widgets only — never mix with dnd-kit).
 - React Hook Form + Zod, Apache ECharts, Tiptap, Lucide, Motion (Framer Motion).
@@ -143,6 +167,14 @@ Interface: Queue → Sync Manager → Conflict Resolver → Retry Manager → St
 - **HARD RULE**: no mock/placeholder data anywhere — screens are fully functional even when empty
   (real API calls, real empty states). See `DESIGN-SYSTEM.md` §14 + `config.yaml` HARD RULES.
 
+## 10.1 Accessibility (WCAG 2.1 AA) & Keyboard
+- **Contrast**: 4.5:1 text contrast / 3:1 UI.
+- **Reachability**: Full keyboard reachability; visible focus rings (2px brand-violet ring, 2px offset on `:focus-visible`); ARIA on icon-only buttons (tooltips double as labels).
+- **Motion**: `prefers-reduced-motion` respected (≤1ms transitions).
+- **Testing**: axe-core zero critical/serious in CI.
+- **Keyboard Shortcuts**: Ctrl+K (palette), Ctrl+B (sidebar), Ctrl+N (context-new), Ctrl+/ (help), Esc (close), Enter (submit/confirm), arrows (navigate menus/lists/tabs).
+- **Touch Targets**: Min 44×44 (48×48 for mobile attendance).
+
 ## 11. ADRs (Decision Log)
 
 > Stable contracts. A change requires a new ADR that explicitly supersedes the prior one.
@@ -233,3 +265,19 @@ Build flow per module: spec → design → tasks → implement → test → depl
 - **Quick Task Assignment** = dashboard widget that creates a task directly into an employee's list.
 - **Metric Widget** = the generic configurable widget (spec §15) reused across dashboards.
 - **Frozen spec** = a module spec archived after completion; read-only unless a change request references it.
+
+## 14. Recorded Architectural Decision Records (ADRs)
+
+- **ADR-019 — Rebuild-to-spec strategy:** existing UI/data layers are non-compliant scaffold; rebuild.
+- **ADR-020 — Real seed source:** `data-prefill-reference.txt`; role-specific passwords; `must_change_password=true`; Asia/Kolkata.
+- **ADR-021 — Login identifier = username OR email OR employee_id.**
+- **ADR-022 — M1 scope cutoff:** Base + Attendance + Leave only; Projects/Tasks/Chat/Announcements/Reports deferred to a later milestone (documented in `plan-future-modules.md`).
+- **ADR-023 — Visual intensity:** vibrant-on-white — clean white surfaces, multiple contextual colours across icons/sidebar-states/badges/cards/interactions; per-module accent colours; gradients reserved for sign-in hero, dashboard headers, and logo lockups (FROZEN §1 honoured).
+- **ADR-024 — 3-state sidebar:** Hidden / Collapsed (icons+tooltip) / Expanded (icons+text); collapsed by default; joyful animated transitions; supersedes the FROZEN 2-state model (264↔72).
+- **ADR-025 — Direct-to-production deployment:** each verified phase deploys straight to production (Vercel + Railway + Supabase, already wired); credentials retained; final clean redeploy at go-live.
+- **ADR-026 — Auth security:** access token 15min in-memory + refresh token 7-day sliding in HttpOnly cookie; SameSite auto-detected at runtime (Strict if same registrable domain, else None + CSRF).
+- **ADR-027 — Attendance rules:** Mon–Sat 09:00–18:30, 45-min break, standard 31500s; cross-midnight attributed to clock-in date; forgot-clock-out = flag open shift + manual correction (no auto-out); HR corrects own team only.
+- **ADR-028 — Leave:** types casual/sick/earned/unpaid; no balances/quotas at M1 (requests + history + attendance integration only); holiday calendar view + seed in Phase 6, CRUD in Phase 7.
+- **ADR-029 — File storage = Supabase Storage** (profile photos, allowed image attachments).
+- **ADR-030 — Single company timezone Asia/Kolkata** (UTC stored, converted for display/day-boundary/late).
+

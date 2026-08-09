@@ -1,118 +1,148 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+import { Loader2, KeyRound } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
+
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-function ResetPasswordForm() {
-  const searchParams = useSearchParams();
+const resetSchema = z
+  .object({
+    identifier: z.string().min(1, "Identifier is required"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    password_confirmation: z.string().min(1, "Confirm password is required"),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: "Passwords do not match",
+    path: ["password_confirmation"],
+  });
+
+type FormValues = z.infer<typeof resetSchema>;
+
+export default function ResetPasswordPage() {
   const router = useRouter();
-  
-  const token = searchParams.get("token") || "";
-  const email = searchParams.get("email") || "";
-
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: {
+      identifier: "",
+      password: "",
+      password_confirmation: "",
+    },
+  });
+
+  async function onSubmit(data: FormValues) {
     setIsLoading(true);
-    setError("");
-
-    if (password !== passwordConfirmation) {
-      setError("Passwords do not match.");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/reset-password", {
+      await apiFetch("/auth/reset-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, email, password, password_confirmation: passwordConfirmation }),
+        body: JSON.stringify(data),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to reset password.");
-      }
-
-      router.push("/login?reset=success");
-    } catch (err: any) {
-      setError(err.message);
+      toast.success("Password reset successfully! You may now sign in.");
+      router.push("/login");
+    } catch (error: any) {
+      toast.error(error.message || "Password reset failed.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleReset}>
-      <CardHeader>
-        <CardTitle>Set New Password</CardTitle>
-        <CardDescription className="text-zinc-400">
-          Enter your new password below.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {error && (
-          <div className="p-3 text-sm rounded bg-red-900/50 border border-red-900 text-red-200">
-            {error}
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-950 via-purple-900 to-slate-900">
+      <Card className="w-full max-w-md shadow-2xl border-none">
+        <CardHeader className="text-center space-y-2 pt-8">
+          <div className="mx-auto w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 dark:text-violet-300 mb-2">
+            <KeyRound className="w-6 h-6" />
           </div>
-        )}
-        
-        <div className="space-y-2">
-          <Label htmlFor="password">New Password</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-zinc-950 border-zinc-800"
-            required
-          />
-        </div>
+          <CardTitle className="text-xl font-bold font-display">Reset Your Password</CardTitle>
+          <CardDescription className="text-xs">
+            Enter your identifier and set a new password.
+          </CardDescription>
+        </CardHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="passwordConfirmation">Confirm New Password</Label>
-          <Input
-            id="passwordConfirmation"
-            type="password"
-            value={passwordConfirmation}
-            onChange={(e) => setPasswordConfirmation(e.target.value)}
-            className="bg-zinc-950 border-zinc-800"
-            required
-          />
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button 
-          type="submit" 
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
-          disabled={isLoading}
-        >
-          {isLoading ? "Resetting..." : "Reset Password"}
-        </Button>
-      </CardFooter>
-    </form>
-  );
-}
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="identifier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold">
+                      Email, Username, or Employee ID
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your identifier..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-export default function ResetPasswordPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-      <div className="w-full max-w-md space-y-8">
-        <Card className="bg-zinc-900 border-zinc-800 text-zinc-100 shadow-xl">
-          <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
-            <ResetPasswordForm />
-          </Suspense>
-        </Card>
-      </div>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold">New Password</FormLabel>
+                    <FormControl>
+                      <PasswordInput placeholder="New password (min 8 chars)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password_confirmation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold">Confirm New Password</FormLabel>
+                    <FormControl>
+                      <PasswordInput placeholder="Confirm new password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full h-10 mt-2 bg-violet-600 hover:bg-violet-700 text-white font-medium"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Resetting Password...
+                  </>
+                ) : (
+                  "Set New Password"
+                )}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

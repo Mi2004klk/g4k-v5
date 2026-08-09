@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { ResponsiveGridLayout, useContainerWidth } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import { apiFetch } from "@/lib/api-client";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WidgetEngineProps {
   availableWidgets: Array<{
@@ -19,26 +22,17 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const [loading, setLoading] = useState(true);
   const { containerRef, width } = useContainerWidth();
 
-  // Load layout preferences from backend
   useEffect(() => {
     const fetchPreferences = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
       try {
-        const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/preferences", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.preferences?.dashboard_layout) {
-            setLayouts(data.preferences.dashboard_layout);
-          } else {
-            // Generate default layout
-            setLayouts({ lg: availableWidgets.map(w => w.defaultLayout) });
-          }
+        const data = await apiFetch("/auth/preferences");
+        if (data.preferences?.dashboard_layout) {
+          setLayouts(data.preferences.dashboard_layout);
+        } else {
+          setLayouts({ lg: availableWidgets.map((w) => w.defaultLayout) });
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
+        setLayouts({ lg: availableWidgets.map((w) => w.defaultLayout) });
       } finally {
         setLoading(false);
         setMounted(true);
@@ -49,28 +43,27 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
 
   const handleLayoutChange = async (_currentLayout: any, allLayouts: any) => {
     setLayouts(allLayouts);
-    
-    // Persist to backend
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     try {
-      await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/preferences", {
+      await apiFetch("/auth/preferences", {
         method: "PUT",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify({
-          preferences: { dashboard_layout: allLayouts }
-        })
+          preferences: { dashboard_layout: allLayouts },
+        }),
       });
-    } catch (e) {
-      console.error("Failed to save layout", e);
+    } catch {
+      // Ignore layout save errors silently
     }
   };
 
-  if (loading || !mounted) return <div className="p-4 text-zinc-400">Loading widgets...</div>;
+  if (loading || !mounted) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="w-full min-h-[500px]">
@@ -81,13 +74,15 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
           layouts={layouts}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-          rowHeight={100}
+          rowHeight={120}
           onLayoutChange={handleLayoutChange}
           margin={[16, 16] as [number, number]}
         >
           {availableWidgets.map((widget) => (
-            <div key={widget.id}>
-              {widget.component}
+            <div key={widget.id} className="h-full">
+              <ErrorBoundary name={`Widget-${widget.id}`}>
+                {widget.component}
+              </ErrorBoundary>
             </div>
           ))}
         </ResponsiveGridLayout>
@@ -95,4 +90,3 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     </div>
   );
 }
-

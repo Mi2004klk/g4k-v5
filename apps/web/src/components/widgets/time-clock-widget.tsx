@@ -1,138 +1,256 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, Play, Square, Coffee } from "lucide-react";
+import { Loader2, Play, Square, Coffee, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { apiFetch } from "@/lib/api-client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-interface TimeClockWidgetProps {
-  className?: string;
-}
-
-export function TimeClockWidget({ className }: TimeClockWidgetProps) {
+export function TimeClockWidget({ className }: { className?: string }) {
   const [loading, setLoading] = useState(true);
-  const [state, setState] = useState<'not_started' | 'active' | 'on_break' | 'completed'>('not_started');
+  const [day, setDay] = useState<any>(null);
+  const [events, setEvents] = useState<any[]>([]);
   const [totalSeconds, setTotalSeconds] = useState(0);
+  const [activeState, setActiveState] = useState<"not_started" | "active" | "on_break" | "completed">("not_started");
+  const [showConfirmOut, setShowConfirmOut] = useState(false);
 
-  const fetchState = async () => {
-    setLoading(true);
+  const startTimeRef = useRef<number | null>(null);
+  const baseSecondsRef = useRef<number>(0);
+
+  const fetchTodayStatus = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/attendance/today", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setState(data.state);
-        setTotalSeconds(data.total_worked_seconds || 0);
+      const data = await apiFetch("/attendance/me/today");
+      setDay(data.day);
+      setEvents(data.events || []);
+
+      const evts = data.events || [];
+      const lastEvent = evts[evts.length - 1];
+
+      let state: "not_started" | "active" | "on_break" | "completed" = "not_started";
+      if (!lastEvent) {
+        state = "not_started";
+      } else if (lastEvent.type === "clock_in" || lastEvent.type === "break_end") {
+        state = "active";
+      } else if (lastEvent.type === "break_start") {
+        state = "on_break";
+      } else if (lastEvent.type === "clock_out") {
+        state = "completed";
       }
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to load attendance state");
+
+      setActiveState(state);
+      const seconds = data.day?.total_seconds || 0;
+      setTotalSeconds(seconds);
+      baseSecondsRef.current = seconds;
+      startTimeRef.current = Date.now();
+    } catch {
+      // Fallback
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchState();
+    fetchTodayStatus();
   }, []);
 
-  // Live timer tick
+  // Isolated requestAnimationFrame live timer tick
   useEffect(() => {
-    if (state !== 'active') return;
-    const interval = setInterval(() => {
-      setTotalSeconds(s => s + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [state]);
+    if (activeState !== "active") return;
+
+    let animId: number;
+    const tick = () => {
+      if (startTimeRef.current !== null) {
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        setTotalSeconds(baseSecondsRef.current + elapsed);
+      }
+      animId = requestAnimationFrame(tick);
+    };
+
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [activeState]);
 
   const handlePunch = async (type: string) => {
+    const clientId = `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const endpoint = `/attendance/${type.replace("_", "-")}`;
+
+    // Optimistic UI state
+    const prevSeconds = totalSeconds;
+    const prevActiveState = activeState;
+
+    if (type === "clock_in" || type === "break_end") {
+      setActiveState("active");
+    } else if (type === "break_start") {
+      setActiveState("on_break");
+    } else if (type === "clock_out") {
+      setActiveState("completed");
+    }
+
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/attendance/clock", {
+      const data = await apiFetch(endpoint, {
         method: "POST",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ type })
+        body: JSON.stringify({
+          client_id: clientId,
+          timestamp: new Date().toISOString(),
+        }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setState(data.state);
-        setTotalSeconds(data.total_worked_seconds);
-        toast.success(`Action: ${type.replace('_', ' ')} recorded`);
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Failed to record punch. Will sync when online.");
+
+      setDay(data.day);
+      setEvents(data.events || []);
+      const newSecs = data.day?.total_seconds || 0;
+      setTotalSeconds(newSecs);
+      baseSecondsRef.current = newSecs;
+      startTimeRef.current = Date.now();
+
+      toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
+    } catch (err: any) {
+      // Rollback on failure
+      setActiveState(prevActiveState);
+      setTotalSeconds(prevSeconds);
+      toast.error(err.message || "Failed to record punch. Try again.");
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const formatTime = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
+
+  const isOvertime = totalSeconds > 31500; // > 8h 45m
 
   if (loading) {
     return (
-      <div className={cn("w-full h-full flex flex-col p-4 bg-zinc-900 border border-zinc-800 rounded-xl cursor-move", className)}>
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
-        </div>
+      <div className="w-full h-full flex items-center justify-center p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm">
+        <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
       </div>
     );
   }
 
   return (
-    <div className={cn("w-full h-full flex flex-col p-4 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden cursor-move hover:border-zinc-700 transition-colors", className)}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-zinc-400">Time Clock</h3>
-        <div className={cn(
-          "px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full",
-          state === 'active' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
-          state === 'on_break' ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
-          state === 'completed' ? "bg-blue-500/10 text-blue-500 border border-blue-500/20" :
-          "bg-zinc-800 text-zinc-500"
-        )}>
-          {state.replace('_', ' ')}
-        </div>
+    <div className="w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          Time Clock
+        </span>
+        <span
+          className={cn(
+            "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+            activeState === "active" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400",
+            activeState === "on_break" && "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400",
+            activeState === "completed" && "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400",
+            activeState === "not_started" && "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+          )}
+        >
+          {activeState.replace("_", " ")}
+        </span>
       </div>
-      
-      <div className="flex-1 flex flex-col justify-center items-center">
-        <div className="text-4xl font-mono font-bold tracking-tight text-white mb-4 tabular-nums">
+
+      <div className="my-4 text-center">
+        <div
+          className={cn(
+            "text-4xl sm:text-5xl font-mono font-bold tracking-tight tabular-nums transition-colors",
+            isOvertime ? "text-amber-500" : "text-neutral-900 dark:text-white"
+          )}
+        >
           {formatTime(totalSeconds)}
         </div>
-        
-        <div className="flex gap-2">
-          {state === 'not_started' && (
-            <button onClick={() => handlePunch('CLOCK_IN')} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors">
-              <Play className="w-4 h-4" /> Clock In
-            </button>
-          )}
-          {state === 'active' && (
-            <>
-              <button onClick={() => handlePunch('BREAK_START')} className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition-colors">
-                <Coffee className="w-4 h-4" /> Break
-              </button>
-              <button onClick={() => handlePunch('CLOCK_OUT')} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors">
-                <Square className="w-4 h-4" /> Clock Out
-              </button>
-            </>
-          )}
-          {state === 'on_break' && (
-            <button onClick={() => handlePunch('BREAK_END')} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors">
-              <Play className="w-4 h-4" /> Resume Work
-            </button>
-          )}
-          {state === 'completed' && (
-            <div className="text-sm text-zinc-500">Shift completed</div>
-          )}
-        </div>
+        {isOvertime && (
+          <p className="text-[11px] text-amber-500 font-medium mt-1">
+            Overtime Threshold Exceeded (+{formatTime(totalSeconds - 31500)})
+          </p>
+        )}
       </div>
+
+      <div className="flex items-center justify-center gap-3">
+        {activeState === "not_started" && (
+          <Button
+            onClick={() => handlePunch("clock_in")}
+            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
+          >
+            <Play className="w-4 h-4" />
+            <span>Clock In</span>
+          </Button>
+        )}
+
+        {activeState === "active" && (
+          <>
+            <Button
+              onClick={() => handlePunch("start_break")}
+              variant="outline"
+              className="flex-1 h-11 border-amber-300 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 gap-2"
+            >
+              <Coffee className="w-4 h-4" />
+              <span>Take Break</span>
+            </Button>
+
+            <Button
+              onClick={() => setShowConfirmOut(true)}
+              variant="destructive"
+              className="flex-1 h-11 gap-2"
+            >
+              <Square className="w-4 h-4" />
+              <span>End Shift</span>
+            </Button>
+          </>
+        )}
+
+        {activeState === "on_break" && (
+          <Button
+            onClick={() => handlePunch("end_break")}
+            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2"
+          >
+            <Play className="w-4 h-4" />
+            <span>Resume Work</span>
+          </Button>
+        )}
+
+        {activeState === "completed" && (
+          <div className="text-xs text-neutral-400 font-medium">
+            Shift completed for today.
+          </div>
+        )}
+      </div>
+
+      {/* Clock Out Confirmation Dialog */}
+      <AlertDialog open={showConfirmOut} onOpenChange={setShowConfirmOut}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-rose-600">
+              <AlertCircle className="w-5 h-5" />
+              Confirm End Shift
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              Are you sure you want to clock out for today? Total worked time will be submitted to HR.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowConfirmOut(false);
+                handlePunch("clock_out");
+              }}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              Confirm Clock Out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

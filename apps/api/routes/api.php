@@ -3,139 +3,145 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\DirectoryController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserPreferenceController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\HolidayController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\QaController;
+use App\Http\Controllers\TimerController;
+use App\Http\Controllers\SavedViewController;
 
-Route::get('/health', function () {
-    return response()->json(['status' => 'ok']);
-});
+// Auth routes
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::get('/auth/refresh', [AuthController::class, 'refresh']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
-Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/role/select', [AuthController::class, 'roleSelect']);
-        Route::post('/change-password', [AuthController::class, 'changePassword']);
-        Route::get('/sessions', [AuthController::class, 'sessions']);
-        Route::delete('/sessions/{id}', [AuthController::class, 'revokeSession']);
-        Route::post('/logout', [AuthController::class, 'logout']);
-        
-        Route::get('/me', function (Request $request) {
-            $user = $request->user();
-            // Active role is parsed from token ability
-            $activeRole = null;
-            if ($user->currentAccessToken()) {
-                foreach ($user->currentAccessToken()->abilities as $ability) {
-                    if (str_starts_with($ability, 'role:')) {
-                        $activeRole = substr($ability, 5);
-                        break;
-                    }
-                }
-            }
-            $user->roles = \App\Models\RoleAssignment::where('user_id', $user->id)->pluck('role');
-            return response()->json([
-                'user' => $user,
-                'active_role' => $activeRole
-            ]);
-        });
-    });
-});
 Route::middleware('auth:sanctum')->group(function () {
-
-    // Profile
-    Route::prefix('auth/profile')->group(function () {
-        Route::get('/', [\App\Http\Controllers\ProfileController::class, 'show'])->middleware('capability:profile.edit');
-        Route::put('/', [\App\Http\Controllers\ProfileController::class, 'update'])->middleware('capability:profile.edit');
-        Route::post('/change-password', [\App\Http\Controllers\ProfileController::class, 'changePassword']);
+    Route::get('/auth/profile', function (Request $request) {
+        $user = $request->user()->load(['department', 'designation', 'company', 'roleAssignments']);
+        $user->active_role = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
+        $user->active_role = str_replace('role:', '', $user->active_role);
+        return $user;
     });
 
-    // Preferences
-    Route::prefix('auth/preferences')->group(function () {
-        Route::get('/', [\App\Http\Controllers\UserPreferenceController::class, 'show']);
-        Route::put('/', [\App\Http\Controllers\UserPreferenceController::class, 'update']);
+    Route::get('/me/capabilities', function (Request $request) {
+        $activeRole = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
+        $activeRole = str_replace('role:', '', $activeRole);
+        $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($activeRole);
+        return response()->json(['capabilities' => $capabilities]);
     });
 
-    // Dashboard Hub
-    Route::get('/dashboard/metrics', [\App\Http\Controllers\DashboardController::class, 'metrics']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/auth/onboarding/complete', [AuthController::class, 'completeOnboarding']);
+    Route::post('/auth/role-select', [AuthController::class, 'roleSelect']);
+    Route::get('/auth/sessions', [AuthController::class, 'sessions']);
+    Route::delete('/auth/sessions/{id}', [AuthController::class, 'revokeSession']);
 
-    // Attendance
-    Route::prefix('attendance')->group(function () {
-        Route::get('/today', [\App\Http\Controllers\AttendanceController::class, 'today']);
-        Route::post('/clock', [\App\Http\Controllers\AttendanceController::class, 'clock']);
-        Route::get('/history', [\App\Http\Controllers\AttendanceController::class, 'history']);
-        Route::get('/company', [\App\Http\Controllers\AttendanceController::class, 'company'])->middleware('capability:users.view');
-    });
+    // Preferences API
+    Route::get('/auth/preferences', [UserPreferenceController::class, 'show']);
+    Route::put('/auth/preferences', [UserPreferenceController::class, 'update']);
 
-    // Leave & Approvals
-    Route::prefix('leave')->group(function () {
-        Route::get('/', [\App\Http\Controllers\LeaveRequestController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\LeaveRequestController::class, 'store']);
-        Route::post('/{id}/approve', [\App\Http\Controllers\LeaveRequestController::class, 'approve'])->middleware('capability:users.view');
-        Route::post('/{id}/reject', [\App\Http\Controllers\LeaveRequestController::class, 'reject'])->middleware('capability:users.view');
-    });
+    // Dashboard API
+    Route::get('/dashboard/metrics', [DashboardController::class, 'metrics']);
 
-    // Projects & Tasks
-    Route::prefix('projects')->group(function () {
-        Route::get('/', [\App\Http\Controllers\ProjectController::class, 'index']);
-        Route::get('/{id}', [\App\Http\Controllers\ProjectController::class, 'show']);
-        Route::post('/', [\App\Http\Controllers\ProjectController::class, 'store'])->middleware('capability:users.view');
-    });
+    // Profile API
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+
+    // Directory API
+    Route::get('/directory', [DirectoryController::class, 'index']);
+    Route::get('/directory/{id}', [DirectoryController::class, 'show']);
+    Route::post('/directory/{id}/send-message', [DirectoryController::class, 'sendMessage']);
+
+    // Attendance API
+    Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
+    Route::post('/attendance/start-break', [AttendanceController::class, 'startBreak']);
+    Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
+    Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+    Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);
+    Route::get('/attendance/me/history', [AttendanceController::class, 'meHistory']);
+    Route::get('/attendance/me/day/{date}', [AttendanceController::class, 'meDay']);
+    Route::get('/attendance/admin/overview', [AttendanceController::class, 'overview']);
+    Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
+    Route::get('/attendance/hr/graph', [AttendanceController::class, 'hrGraph']);
+    Route::post('/attendance/correct', [AttendanceController::class, 'correct']);
+    Route::get('/attendance/export', [AttendanceController::class, 'export']);
+
+    // Phase 6 API
+    Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
+    Route::post('/leave-requests', [LeaveRequestController::class, 'store']);
+    Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision']);
+    Route::get('/holidays', [HolidayController::class, 'index']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markRead']);
+
+    // Phase 7 API (Projects & Tasks)
+    Route::apiResource('projects', ProjectController::class);
+    Route::apiResource('tasks', TaskController::class);
+    Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);
+    Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
     
-    Route::prefix('tasks')->group(function () {
-        Route::get('/pending', [\App\Http\Controllers\TaskController::class, 'pending']);
-        Route::post('/', [\App\Http\Controllers\TaskController::class, 'store'])->middleware('capability:users.view');
-        Route::patch('/{id}/status', [\App\Http\Controllers\TaskController::class, 'updateStatus']);
-        Route::post('/{id}/log-time', [\App\Http\Controllers\TaskController::class, 'logTime']);
-    });
+    Route::get('/qa-forms', [QaController::class, 'index']);
+    Route::post('/qa-forms', [QaController::class, 'store']);
+    Route::get('/qa-forms/{id}', [QaController::class, 'show']);
+    
+    Route::post('/timer/log', [TimerController::class, 'logTime']);
+    Route::get('/timer/logs', [TimerController::class, 'index']);
 
-    // Chat & Notifications
-    Route::prefix('chat')->group(function () {
-        Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'conversations']);
-        Route::get('/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
-        Route::post('/{conversationId}/messages', [\App\Http\Controllers\ChatController::class, 'store']);
-    });
+    Route::get('/saved-views', [SavedViewController::class, 'index']);
+    Route::post('/saved-views', [SavedViewController::class, 'store']);
+    Route::delete('/saved-views/{id}', [SavedViewController::class, 'destroy']);
 
-    Route::prefix('notifications')->group(function () {
-        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index']);
-        Route::patch('/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
-    });
+    // Phase 8 API (Chat & Communication)
+    Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
+    Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
+    Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
+    Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
 
-    Route::prefix('announcements')->group(function () {
-        Route::get('/', [\App\Http\Controllers\AnnouncementController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\AnnouncementController::class, 'store'])->middleware('capability:users.view');
-    });
+    Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
+    Route::post('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'store']);
 
-    // Reports
-    Route::prefix('reports')->middleware('capability:users.view')->group(function () {
-        Route::get('/{type}', [\App\Http\Controllers\ReportController::class, 'data']);
-        Route::get('/{type}/export', [\App\Http\Controllers\ReportController::class, 'exportCsv']);
-    });
+    Route::get('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'index']);
+    Route::post('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'store']);
+    Route::delete('/quick-notes/{id}', [\App\Http\Controllers\QuickNoteController::class, 'destroy']);
 
-    // Settings & Audit
-    Route::prefix('settings')->middleware('capability:directory.view')->group(function () {
-        Route::get('/', [\App\Http\Controllers\SettingsController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\SettingsController::class, 'update']);
-    });
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store']);
 
-    Route::prefix('audit-logs')->middleware('capability:users.view')->group(function () {
-        Route::get('/', [\App\Http\Controllers\AuditLogController::class, 'index']);
-        Route::get('/export', [\App\Http\Controllers\AuditLogController::class, 'exportCsv']);
-    });
+    // Phase 9 API (Reports & Exports)
+    Route::get('/reports/data', [\App\Http\Controllers\ReportController::class, 'data']);
+    Route::post('/reports/export', [\App\Http\Controllers\ReportController::class, 'export']);
+    Route::get('/reports/exports', [\App\Http\Controllers\ReportController::class, 'exports']);
+    // Phase 10 API (Settings & Audit Logs)
+    Route::get('/settings/grouped', [\App\Http\Controllers\SettingsController::class, 'index']);
+    Route::post('/settings/bulk', [\App\Http\Controllers\SettingsController::class, 'bulkUpdate']);
+    
+    Route::get('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'show']);
+    Route::post('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'update']);
+    
+    Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index']);
 
-    // Directory
-    Route::get('/directory', [\App\Http\Controllers\DirectoryController::class, 'index'])->middleware('capability:directory.view');
+    Route::get('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'index']);
+    Route::put('/work-schedules/{id}', [\App\Http\Controllers\WorkScheduleController::class, 'update']);
 
-    // Org Management
-    Route::prefix('org')->group(function () {
-        // Departments
-        Route::apiResource('departments', \App\Http\Controllers\DepartmentController::class)->middleware('capability:departments.view');
-        Route::post('departments/{department}/teams', [\App\Http\Controllers\DepartmentController::class, 'storeTeam'])->middleware('capability:departments.view');
-        Route::delete('departments/{department}/teams/{team}', [\App\Http\Controllers\DepartmentController::class, 'destroyTeam'])->middleware('capability:departments.view');
-
-        // Designations
-        Route::apiResource('designations', \App\Http\Controllers\DesignationController::class)->middleware('capability:designations.view');
-
-        // Users (HR / Employee Accounts)
-        Route::apiResource('users', \App\Http\Controllers\UserController::class)->middleware('capability:users.view');
-    });
+    // Admin & Master Data APIs
+    Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
+    Route::apiResource('users', UserController::class);
+    Route::apiResource('companies', CompanyController::class);
+    Route::apiResource('departments', DepartmentController::class);
+    Route::apiResource('designations', DesignationController::class);
+    Route::apiResource('employees', EmployeeController::class);
 });

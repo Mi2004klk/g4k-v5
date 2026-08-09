@@ -7,9 +7,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
+        "laravel/pulse": "^1.8",
+        "laravel/reverb": "^1.11",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "sentry/sentry-laravel": "^4.27",
+        "spatie/simple-excel": "^3.10"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

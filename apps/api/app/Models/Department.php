@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Department extends Model
 {
-    protected $fillable = ['name', 'description'];
+    use \App\Traits\GeneratesAutoNumber;
+
+    protected $fillable = ['department_id', 'company_id', 'name', 'description'];
+
+    public $autoNumberField = 'department_id';
+    public $autoNumberType = 'department';
 
     public function teams()
     {

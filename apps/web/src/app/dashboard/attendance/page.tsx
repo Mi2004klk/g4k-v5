@@ -1,67 +1,107 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { format, subDays } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { Clock, Calendar as CalendarIcon, CheckCircle, AlertTriangle, Coffee } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
+import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
-export default function AttendanceHistoryPage() {
-  const [records, setRecords] = useState<any[]>([]);
+export default function PersonalAttendancePage() {
+  const { data: historyData, isLoading } = useQuery({
+    queryKey: ["my-attendance-history"],
+    queryFn: () => apiFetch("/attendance/me/history"),
+  });
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/attendance/history", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setRecords(data.records);
-      }
-    };
-    fetchHistory();
-  }, []);
-
-  // Simple visual representation of a heatmap
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'present': return 'bg-emerald-500';
-      case 'late': return 'bg-amber-500';
-      case 'absent': return 'bg-red-500';
-      case 'on_leave': return 'bg-blue-500';
-      default: return 'bg-zinc-800';
-    }
-  };
-
-  const today = new Date();
-  const pastDays = Array.from({ length: 90 }).map((_, i) => format(subDays(today, 89 - i), 'yyyy-MM-dd'));
+  const historyList = historyData?.data || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white tracking-tight">My Attendance</h1>
+    <div className="space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
+          My Attendance & Timesheet
+        </h1>
+        <p className="text-xs text-neutral-500">
+          Track daily shift punches, total worked hours, overtime, and monthly attendance log.
+        </p>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl">
-        <h2 className="text-lg font-medium text-white mb-6">Activity Heatmap (Last 90 Days)</h2>
-        <div className="flex flex-wrap gap-2">
-          {pastDays.map(dateStr => {
-            const record = records.find(r => r.date === dateStr);
-            return (
-              <div 
-                key={dateStr}
-                title={`${dateStr}: ${record?.status || 'No data'}`}
-                className={`w-4 h-4 rounded-sm ${getStatusColor(record?.status)} hover:ring-2 ring-white/20 transition-all cursor-help`}
-              />
-            );
-          })}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1 min-h-[300px]">
+          <TimeClockWidget />
         </div>
-        <div className="flex items-center gap-4 mt-6 text-xs text-zinc-400">
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-zinc-800"></div> No data</div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-emerald-500"></div> Present</div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-amber-500"></div> Late</div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-red-500"></div> Absent</div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-blue-500"></div> Leave</div>
-        </div>
+
+        <Card className="md:col-span-2 border-none shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-violet-600" />
+              Recent Shift Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 overflow-x-auto">
+            {isLoading ? (
+              <div className="p-6 space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : historyList.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  title="No attendance records found"
+                  description="Clock in using the Time Clock widget to create your first shift log."
+                />
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 uppercase font-semibold border-b border-neutral-100 dark:border-neutral-800">
+                  <tr>
+                    <th className="px-6 py-3">Date</th>
+                    <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3">Clock In</th>
+                    <th className="px-6 py-3">Clock Out</th>
+                    <th className="px-6 py-3">Worked Hours</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                  {historyList.map((row: any) => {
+                    const hours = Math.floor((row.total_seconds || 0) / 3600);
+                    const mins = Math.floor(((row.total_seconds || 0) % 3600) / 60);
+
+                    return (
+                      <tr key={row.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
+                        <td className="px-6 py-4 font-semibold">{row.date}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              row.status === "present"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : row.status === "late"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-rose-100 text-rose-700"
+                            }`}
+                          >
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-mono text-neutral-500">
+                          {row.clock_in ? format(new Date(row.clock_in), "hh:mm a") : "—"}
+                        </td>
+                        <td className="px-6 py-4 font-mono text-neutral-500">
+                          {row.clock_out ? format(new Date(row.clock_out), "hh:mm a") : "—"}
+                        </td>
+                        <td className="px-6 py-4 font-mono font-bold text-neutral-900 dark:text-white">
+                          {hours}h {mins}m
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

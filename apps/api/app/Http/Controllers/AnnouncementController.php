@@ -2,40 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
+use App\Events\AnnouncementCreated;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AnnouncementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $announcements = DB::table('announcements')
-            ->join('users', 'users.id', '=', 'announcements.author_id')
-            ->select('announcements.*', 'users.name as author_name')
-            ->orderBy('is_pinned', 'desc')
+        $announcements = Announcement::with(['creator', 'team'])
+            ->orderBy('pinned_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
-            
-        return response()->json(['data' => $announcements]);
+
+        return response()->json($announcements);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string',
+            'title' => 'required|string|max:255',
             'body' => 'required|string',
-            'is_pinned' => 'boolean'
+            'scope' => 'nullable|in:company,team',
+            'team_id' => 'nullable|exists:teams,id',
+            'pinned' => 'nullable|boolean',
         ]);
 
-        $id = DB::table('announcements')->insertGetId([
-            'author_id' => $request->user()->id,
+        $announcement = Announcement::create([
             'title' => $validated['title'],
             'body' => $validated['body'],
-            'is_pinned' => $validated['is_pinned'] ?? false,
-            'created_at' => now(),
-            'updated_at' => now()
+            'scope' => $validated['scope'] ?? 'company',
+            'team_id' => $validated['team_id'] ?? null,
+            'created_by' => $request->user()->id,
+            'pinned_at' => !empty($validated['pinned']) ? now() : null,
         ]);
 
-        return response()->json(['data' => DB::table('announcements')->where('id', $id)->first()], 201);
+        broadcast(new AnnouncementCreated($announcement))->toOthers();
+
+        return response()->json($announcement->load(['creator', 'team']));
     }
 }

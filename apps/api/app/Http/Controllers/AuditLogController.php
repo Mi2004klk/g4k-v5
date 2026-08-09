@@ -2,53 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
-        $logs = DB::table('audit_logs')
-            ->leftJoin('users', 'users.id', '=', 'audit_logs.user_id')
-            ->select('audit_logs.*', 'users.name as user_name', 'users.email as user_email')
-            ->orderBy('created_at', 'desc')
-            ->limit(100)
-            ->get();
-            
-        return response()->json(['data' => $logs]);
-    }
+        $query = AuditLog::with('user')->latest('at');
 
-    public function exportCsv(Request $request)
-    {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"audit_logs_export.csv\"",
-        ];
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
+        }
+        if ($request->filled('action')) {
+            $query->where('action', $request->query('action'));
+        }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('at', [$request->query('start_date'), $request->query('end_date')]);
+        }
 
-        return new StreamedResponse(function () {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID', 'User', 'Action', 'Resource', 'Metadata', 'IP Address', 'Date']);
-            
-            $logs = DB::table('audit_logs')
-                ->leftJoin('users', 'users.id', '=', 'audit_logs.user_id')
-                ->select('audit_logs.*', 'users.name as user_name')
-                ->orderBy('created_at', 'desc')
-                ->get();
-                
-            foreach ($logs as $row) {
-                fputcsv($handle, [
-                    $row->id,
-                    $row->user_name ?? 'System',
-                    $row->action_type,
-                    $row->resource_name,
-                    $row->metadata,
-                    $row->ip_address,
-                    $row->created_at
-                ]);
-            }
-            fclose($handle);
-        }, 200, $headers);
+        // Use cursor pagination for large datasets
+        $logs = $query->cursorPaginate(50);
+        
+        return response()->json($logs);
     }
 }

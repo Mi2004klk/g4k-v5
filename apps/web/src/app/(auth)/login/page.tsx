@@ -2,148 +2,181 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useOfflineEngine } from "@/lib/offline-engine";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+import { Loader2, Info } from "lucide-react";
+import { useAuthStore } from "@/lib/auth-store";
+import { apiFetch } from "@/lib/api-client";
+
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const loginSchema = z.object({
+  identifier: z.string().min(1, "Username, Email, or Employee ID is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  
-  const { isOffline, queueLogin } = useOfflineEngine();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      identifier: "",
+      password: "",
+    },
+  });
+
+  async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
-    setError("");
-
-    if (isOffline) {
-      queueLogin(identifier, password);
-      setError("You are offline. Login attempt queued.");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/login", {
+      const result = await apiFetch("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, password, device_name: "Web Browser" }),
+        body: JSON.stringify(data),
       });
 
-      const data = await res.json();
+      setAuth(result.token, result.user, result.active_role);
+      toast.success("Login successful!");
 
-      if (!res.ok) {
-        throw new Error(data.message || "Invalid credentials.");
-      }
-
-      // Store token
-      localStorage.setItem("token", data.token);
-
-      if (data.user.must_change_password) {
+      if (result.must_change_password) {
         router.push("/change-password");
-      } else if (!data.user.onboarded_at) {
+      } else if (!result.onboarded) {
         router.push("/onboarding");
-      } else if (data.user.roles.length > 1) {
+      } else if (result.user?.roles?.length > 1) {
         router.push("/role-select");
       } else {
         router.push("/dashboard");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: any) {
+      toast.error(error.message || "Invalid credentials. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center space-y-4">
-          <img src="/landscape-logo.png" alt="Games4King" className="h-12 object-contain" />
-          <h2 className="text-2xl font-bold tracking-tight text-white">Welcome back</h2>
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-900 via-violet-800 to-pink-700">
+      <Card className="w-full max-w-md shadow-2xl border-none relative overflow-hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600" />
 
-        <Card className="bg-zinc-900 border-zinc-800 text-zinc-100 shadow-xl">
-          <form onSubmit={handleLogin}>
-            <CardHeader>
-              <CardTitle>Sign in</CardTitle>
-              <CardDescription className="text-zinc-400">
-                Enter your email or employee ID to continue.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {error && (
-                <div className="p-3 text-sm rounded bg-red-900/50 border border-red-900 text-red-200">
-                  {error}
-                </div>
-              )}
-              
-              <div className="space-y-2">
-                <Label htmlFor="identifier">Email / Employee ID</Label>
-                <Input
-                  id="identifier"
-                  type="text"
-                  placeholder="EMP-001 or name@games4king.com"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  className="bg-zinc-950 border-zinc-800"
-                  required
-                />
-              </div>
+        <CardHeader className="space-y-4 pb-6 pt-8 text-center">
+          <div className="mx-auto w-16 h-16 relative flex items-center justify-center bg-violet-100 dark:bg-violet-950/50 rounded-2xl p-2 shadow-inner">
+            <img
+              src="/logo.png"
+              alt="Games4King Logo"
+              className="w-full h-full object-contain drop-shadow"
+              onError={(e) => {
+                // Fallback to icon if logo missing
+                e.currentTarget.src = "/icon.png";
+              }}
+            />
+          </div>
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
+              Games4King Workplace OS
+            </CardTitle>
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
+              Sign in to your corporate account
+            </CardDescription>
+          </div>
+        </CardHeader>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <a href="/forgot-password" className="text-xs text-zinc-400 hover:text-white">
-                    Forgot password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="bg-zinc-950 border-zinc-800 pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-300"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <Button 
-                type="submit" 
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
+        <CardContent className="space-y-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="identifier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      Email, Username, or Employee ID
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. karthik or dev@games4king.in" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                        Password
+                      </FormLabel>
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 hover:underline"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <FormControl>
+                      <PasswordInput placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full h-11 mt-2 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white font-medium shadow-lg hover:shadow-violet-500/25 transition-all duration-150 active:scale-[0.96]"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign in to Dashboard"
+                )}
               </Button>
-            </CardFooter>
-          </form>
-        </Card>
+            </form>
+          </Form>
 
-        <div className="flex flex-col items-center text-xs text-zinc-500">
-          <p>© Games4King Workplace OS</p>
-          <p className="mt-1" title="Gen2k Conglomerate (2018) • Milestone 1">
-            v1.0 Milestone 1
-          </p>
-        </div>
-      </div>
+          <div className="flex items-center justify-between pt-4 border-t border-neutral-100 dark:border-neutral-800 text-xs text-neutral-400">
+            <span>© Games4King Workplace OS</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="flex items-center gap-1 hover:text-neutral-600 dark:hover:text-neutral-200">
+                    <Info className="w-3.5 h-3.5" />
+                    <span>System info</span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Gen2k Conglomerate (2018) • Milestone 1 Baseline</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

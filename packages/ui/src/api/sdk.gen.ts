@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteAuthSessionsByIdData, DeleteAuthSessionsByIdResponses, DeleteOrgDepartmentsByDepartmentIdTeamsByTeamIdData, DeleteOrgDepartmentsByDepartmentIdTeamsByTeamIdResponses, DeleteOrgDepartmentsByIdData, DeleteOrgDepartmentsByIdResponses, DeleteOrgDesignationsByIdData, DeleteOrgDesignationsByIdResponses, DeleteOrgUsersByIdData, DeleteOrgUsersByIdResponses, GetAuthProfileData, GetAuthProfileResponses, GetAuthSessionsData, GetAuthSessionsResponses, GetDirectoryData, GetDirectoryResponses, GetHealthData, GetHealthResponses, GetOrgDepartmentsByIdData, GetOrgDepartmentsByIdResponses, GetOrgDepartmentsData, GetOrgDepartmentsResponses, GetOrgDesignationsData, GetOrgDesignationsResponses, GetOrgUsersByIdData, GetOrgUsersByIdResponses, GetOrgUsersData, GetOrgUsersResponses, PostAuthChangePasswordData, PostAuthChangePasswordResponses, PostAuthForgotPasswordData, PostAuthForgotPasswordResponses, PostAuthLoginData, PostAuthLoginErrors, PostAuthLoginResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthResetPasswordData, PostAuthResetPasswordResponses, PostAuthRoleSelectData, PostAuthRoleSelectErrors, PostAuthRoleSelectResponses, PostOrgDepartmentsByDepartmentIdTeamsData, PostOrgDepartmentsByDepartmentIdTeamsResponses, PostOrgDepartmentsData, PostOrgDepartmentsResponses, PostOrgDesignationsData, PostOrgDesignationsResponses, PostOrgUsersData, PostOrgUsersResponses, PutAuthProfileData, PutAuthProfileResponses, PutOrgDepartmentsByIdData, PutOrgDepartmentsByIdResponses, PutOrgDesignationsByIdData, PutOrgDesignationsByIdResponses, PutOrgUsersByIdData, PutOrgUsersByIdResponses } from './types.gen';
+import type { DeleteAuthSessionsByIdData, DeleteAuthSessionsByIdResponses, DeleteOrgDepartmentsByDepartmentIdTeamsByTeamIdData, DeleteOrgDepartmentsByDepartmentIdTeamsByTeamIdResponses, DeleteOrgDepartmentsByIdData, DeleteOrgDepartmentsByIdResponses, DeleteOrgDesignationsByIdData, DeleteOrgDesignationsByIdResponses, DeleteOrgUsersByIdData, DeleteOrgUsersByIdResponses, GetAdminAuditLogsData, GetAdminAuditLogsResponses, GetAdminSettingsData, GetAdminSettingsResponses, GetAttendanceDaysData, GetAttendanceDaysResponses, GetAuthProfileData, GetAuthProfileResponses, GetAuthSessionsData, GetAuthSessionsResponses, GetChatConversationsByIdMessagesData, GetChatConversationsByIdMessagesResponses, GetChatConversationsData, GetChatConversationsResponses, GetDirectoryData, GetDirectoryResponses, GetHealthData, GetHealthResponses, GetLeaveRequestsData, GetLeaveRequestsResponses, GetOrgDepartmentsByIdData, GetOrgDepartmentsByIdResponses, GetOrgDepartmentsData, GetOrgDepartmentsResponses, GetOrgDesignationsData, GetOrgDesignationsResponses, GetOrgUsersByIdData, GetOrgUsersByIdResponses, GetOrgUsersData, GetOrgUsersResponses, PostAttendanceEventsData, PostAttendanceEventsResponses, PostAuthChangePasswordData, PostAuthChangePasswordResponses, PostAuthForgotPasswordData, PostAuthForgotPasswordResponses, PostAuthLoginData, PostAuthLoginErrors, PostAuthLoginResponses, PostAuthLogoutData, PostAuthLogoutResponses, PostAuthResetPasswordData, PostAuthResetPasswordResponses, PostAuthRoleSelectData, PostAuthRoleSelectErrors, PostAuthRoleSelectResponses, PostChatConversationsByIdMessagesData, PostChatConversationsByIdMessagesResponses, PostLeaveRequestsData, PostLeaveRequestsResponses, PostOrgDepartmentsByDepartmentIdTeamsData, PostOrgDepartmentsByDepartmentIdTeamsResponses, PostOrgDepartmentsData, PostOrgDepartmentsResponses, PostOrgDesignationsData, PostOrgDesignationsResponses, PostOrgUsersData, PostOrgUsersResponses, PutAdminSettingsData, PutAdminSettingsResponses, PutAuthProfileData, PutAuthProfileResponses, PutOrgDepartmentsByIdData, PutOrgDepartmentsByIdResponses, PutOrgDesignationsByIdData, PutOrgDesignationsByIdResponses, PutOrgUsersByIdData, PutOrgUsersByIdResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -319,4 +319,94 @@ export const putOrgUsersById = <ThrowOnError extends boolean = false>(options: O
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Clock in/out or break events
+ */
+export const postAttendanceEvents = <ThrowOnError extends boolean = false>(options?: Options<PostAttendanceEventsData, ThrowOnError>): RequestResult<PostAttendanceEventsResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostAttendanceEventsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/attendance/events',
+    ...options
+});
+
+/**
+ * Get attendance heatmap
+ */
+export const getAttendanceDays = <ThrowOnError extends boolean = false>(options?: Options<GetAttendanceDaysData, ThrowOnError>): RequestResult<GetAttendanceDaysResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetAttendanceDaysResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/attendance/days',
+    ...options
+});
+
+/**
+ * Get leave requests
+ */
+export const getLeaveRequests = <ThrowOnError extends boolean = false>(options?: Options<GetLeaveRequestsData, ThrowOnError>): RequestResult<GetLeaveRequestsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetLeaveRequestsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/leave-requests',
+    ...options
+});
+
+/**
+ * Submit leave request
+ */
+export const postLeaveRequests = <ThrowOnError extends boolean = false>(options?: Options<PostLeaveRequestsData, ThrowOnError>): RequestResult<PostLeaveRequestsResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PostLeaveRequestsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/leave-requests',
+    ...options
+});
+
+/**
+ * Get conversations
+ */
+export const getChatConversations = <ThrowOnError extends boolean = false>(options?: Options<GetChatConversationsData, ThrowOnError>): RequestResult<GetChatConversationsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetChatConversationsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/chat/conversations',
+    ...options
+});
+
+/**
+ * Get messages
+ */
+export const getChatConversationsByIdMessages = <ThrowOnError extends boolean = false>(options: Options<GetChatConversationsByIdMessagesData, ThrowOnError>): RequestResult<GetChatConversationsByIdMessagesResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetChatConversationsByIdMessagesResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/chat/conversations/{id}/messages',
+    ...options
+});
+
+/**
+ * Send message
+ */
+export const postChatConversationsByIdMessages = <ThrowOnError extends boolean = false>(options: Options<PostChatConversationsByIdMessagesData, ThrowOnError>): RequestResult<PostChatConversationsByIdMessagesResponses, unknown, ThrowOnError> => (options.client ?? client).post<PostChatConversationsByIdMessagesResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/chat/conversations/{id}/messages',
+    ...options
+});
+
+/**
+ * Get system settings
+ */
+export const getAdminSettings = <ThrowOnError extends boolean = false>(options?: Options<GetAdminSettingsData, ThrowOnError>): RequestResult<GetAdminSettingsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetAdminSettingsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/admin/settings',
+    ...options
+});
+
+/**
+ * Update settings
+ */
+export const putAdminSettings = <ThrowOnError extends boolean = false>(options?: Options<PutAdminSettingsData, ThrowOnError>): RequestResult<PutAdminSettingsResponses, unknown, ThrowOnError> => (options?.client ?? client).put<PutAdminSettingsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/admin/settings',
+    ...options
+});
+
+/**
+ * Get audit logs
+ */
+export const getAdminAuditLogs = <ThrowOnError extends boolean = false>(options?: Options<GetAdminAuditLogsData, ThrowOnError>): RequestResult<GetAdminAuditLogsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetAdminAuditLogsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/admin/audit-logs',
+    ...options
 });

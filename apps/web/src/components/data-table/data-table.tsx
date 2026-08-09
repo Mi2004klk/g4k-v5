@@ -1,15 +1,15 @@
 "use client";
 
+import * as React from "react";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel,
   SortingState,
   getSortedRowModel,
 } from "@tanstack/react-table";
-
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Table,
   TableBody,
@@ -19,26 +19,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  searchKey?: string;
+  fetchNextPage?: () => void;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  searchKey,
+  fetchNextPage,
+  isFetchingNextPage,
+  hasNextPage,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     state: {
@@ -46,11 +49,39 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  const { rows } = table.getRowModel();
+
+  const rowVirtualizer = useVirtualizer({
+    count: hasNextPage ? rows.length + 1 : rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 48,
+    overscan: 5,
+  });
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+
+  React.useEffect(() => {
+    const [lastItem] = [...virtualRows].reverse();
+    if (!lastItem) return;
+
+    if (
+      lastItem.index >= rows.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      fetchNextPage
+    ) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, fetchNextPage, rows.length, isFetchingNextPage, virtualRows]);
+
   return (
-    <div>
-      <div className="rounded-md border">
+    <div className="rounded-md border bg-surface">
+      <div
+        ref={tableContainerRef}
+        className="h-[600px] overflow-auto thin-scrollbar relative"
+      >
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-surface z-10 shadow-e1">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -68,28 +99,48 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+          <TableBody
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              position: "relative",
+            }}
+          >
+            {virtualRows.length ? (
+              virtualRows.map((virtualRow) => {
+                const isLoaderRow = virtualRow.index > rows.length - 1;
+                const row = rows[virtualRow.index];
+
+                return (
+                  <TableRow
+                    key={virtualRow.index}
+                    data-state={row?.getIsSelected() && "selected"}
+                    className="absolute w-full flex border-b transition-none"
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    {isLoaderRow ? (
+                      <TableCell colSpan={columns.length} className="h-12 flex items-center justify-center w-full">
+                        Loading more...
+                      </TableCell>
+                    ) : (
+                      row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="flex-1 flex items-center">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))
+                    )}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center absolute w-full flex items-center justify-center"
                 >
                   No results.
                 </TableCell>
@@ -97,24 +148,6 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
       </div>
     </div>
   );

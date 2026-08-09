@@ -594,3 +594,147 @@ export type PutOrgUsersByIdResponses = {
 };
 
 export type PutOrgUsersByIdResponse = PutOrgUsersByIdResponses[keyof PutOrgUsersByIdResponses];
+
+export type PostAttendanceEventsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/attendance/events';
+};
+
+export type PostAttendanceEventsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetAttendanceDaysData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/attendance/days';
+};
+
+export type GetAttendanceDaysResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetLeaveRequestsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/leave-requests';
+};
+
+export type GetLeaveRequestsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type PostLeaveRequestsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/leave-requests';
+};
+
+export type PostLeaveRequestsResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
+};
+
+export type GetChatConversationsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/chat/conversations';
+};
+
+export type GetChatConversationsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetChatConversationsByIdMessagesData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/chat/conversations/{id}/messages';
+};
+
+export type GetChatConversationsByIdMessagesResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type PostChatConversationsByIdMessagesData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/chat/conversations/{id}/messages';
+};
+
+export type PostChatConversationsByIdMessagesResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
+};
+
+export type GetAdminSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/admin/settings';
+};
+
+export type GetAdminSettingsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type PutAdminSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/admin/settings';
+};
+
+export type PutAdminSettingsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetAdminAuditLogsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/admin/audit-logs';
+};
+
+export type GetAdminAuditLogsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};

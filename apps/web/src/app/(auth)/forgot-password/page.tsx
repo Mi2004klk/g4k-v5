@@ -1,134 +1,171 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+import { Loader2, KeyRound, ArrowLeft } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
+
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+const forgotSchema = z.object({
+  identifier: z.string().min(1, "Identifier is required"),
+  channel: z.enum(["smtp", "admin"]),
+});
+
+type FormValues = z.infer<typeof forgotSchema>;
 
 export default function ForgotPasswordPage() {
-  const [identifier, setIdentifier] = useState("");
-  const [channel, setChannel] = useState<"smtp" | "admin">("smtp");
   const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(forgotSchema),
+    defaultValues: {
+      identifier: "",
+      channel: "smtp",
+    },
+  });
+
+  async function onSubmit(data: FormValues) {
     setIsLoading(true);
-    setError("");
-
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/forgot-password", {
+      await apiFetch("/auth/forgot-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, channel }),
+        body: JSON.stringify(data),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to submit request.");
-      }
-
-      setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
+      setIsSubmitted(true);
+      toast.success("Recovery instructions submitted.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to submit request.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-      <div className="w-full max-w-md space-y-8">
-        <Card className="bg-zinc-900 border-zinc-800 text-zinc-100 shadow-xl">
-          {success ? (
-            <div className="p-8 text-center space-y-4">
-              <h2 className="text-xl font-semibold">Request Received</h2>
-              <p className="text-zinc-400">
-                If the account exists, you will receive further instructions via {channel === "smtp" ? "email" : "your administrator"}.
-              </p>
-              <Button onClick={() => window.location.href = "/login"} className="w-full mt-4">
-                Back to sign in
-              </Button>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-violet-950 via-purple-900 to-slate-900">
+      <Card className="w-full max-w-md shadow-2xl border-none">
+        <CardHeader className="text-center space-y-2 pt-8">
+          <div className="mx-auto w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center text-violet-600 dark:text-violet-300 mb-2">
+            <KeyRound className="w-6 h-6" />
+          </div>
+          <CardTitle className="text-xl font-bold font-display">Account Password Recovery</CardTitle>
+          <CardDescription className="text-xs">
+            Enter your email, username, or employee ID to recover your password.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {isSubmitted ? (
+            <div className="text-center space-y-4 py-4">
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-xs text-emerald-800 dark:text-emerald-300">
+                If an account matching your identifier exists, instructions have been sent via your chosen recovery method.
+              </div>
+              <Link href="/login">
+                <Button variant="outline" className="w-full gap-2 mt-2">
+                  <ArrowLeft className="w-4 h-4" />
+                  Return to Sign In
+                </Button>
+              </Link>
             </div>
           ) : (
-            <form onSubmit={handleRequest}>
-              <CardHeader>
-                <CardTitle>Reset Password</CardTitle>
-                <CardDescription className="text-zinc-400">
-                  Select how you want to reset your password.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {error && (
-                  <div className="p-3 text-sm rounded bg-red-900/50 border border-red-900 text-red-200">
-                    {error}
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="identifier">Email / Employee ID</Label>
-                  <Input
-                    id="identifier"
-                    type="text"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    className="bg-zinc-950 border-zinc-800"
-                    required
-                  />
-                </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="identifier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">
+                        Email, Username, or Employee ID
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your identifier..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label>Reset Channel</Label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center space-x-2 text-sm">
-                      <input 
-                        type="radio" 
-                        name="channel" 
-                        value="smtp" 
-                        checked={channel === "smtp"} 
-                        onChange={() => setChannel("smtp")}
-                        className="bg-zinc-950 border-zinc-800 text-indigo-600 focus:ring-indigo-600"
-                      />
-                      <span>Email me a link</span>
-                    </label>
-                    <label className="flex items-center space-x-2 text-sm">
-                      <input 
-                        type="radio" 
-                        name="channel" 
-                        value="admin" 
-                        checked={channel === "admin"} 
-                        onChange={() => setChannel("admin")}
-                        className="bg-zinc-950 border-zinc-800 text-indigo-600 focus:ring-indigo-600"
-                      />
-                      <span>Request Admin approval</span>
-                    </label>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col space-y-2">
-                <Button 
-                  type="submit" 
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" 
+                <FormField
+                  control={form.control}
+                  name="channel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Recovery Channel</FormLabel>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => field.onChange("smtp")}
+                          className={`p-3 text-xs font-medium rounded-lg border text-center transition-all ${
+                            field.value === "smtp"
+                              ? "border-violet-600 bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
+                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600"
+                          }`}
+                        >
+                          Email (SMTP)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => field.onChange("admin")}
+                          className={`p-3 text-xs font-medium rounded-lg border text-center transition-all ${
+                            field.value === "admin"
+                              ? "border-violet-600 bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
+                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600"
+                          }`}
+                        >
+                          Admin Approval
+                        </button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full h-10 mt-2 bg-violet-600 hover:bg-violet-700 text-white font-medium"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Submitting..." : "Reset Password"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting Request...
+                    </>
+                  ) : (
+                    "Send Recovery Request"
+                  )}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="w-full text-zinc-400 hover:text-white"
-                  onClick={() => window.location.href = "/login"}
-                >
-                  Cancel
-                </Button>
-              </CardFooter>
-            </form>
+
+                <div className="text-center pt-2">
+                  <Link
+                    href="/login"
+                    className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 inline-flex items-center gap-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Back to Login
+                  </Link>
+                </div>
+              </form>
+            </Form>
           )}
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

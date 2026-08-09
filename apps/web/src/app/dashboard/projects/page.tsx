@@ -1,122 +1,143 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { format } from "date-fns";
-import { toast } from "sonner";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, FolderPlus, Search, Loader2 } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
+import { ProjectCard } from "@/components/projects/project-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Folder, Plus, ArrowRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Simple state for creating project
-  const [showCreate, setShowCreate] = useState(false);
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [priority, setPriority] = useState("medium");
 
-  const fetchProjects = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/projects", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProjects(data.data);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ["projects", search],
+    queryFn: () => apiFetch(`/projects${search ? `?search=${search}` : ""}`),
+  });
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/projects", {
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      return apiFetch("/projects", {
         method: "POST",
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name, description })
+        body: JSON.stringify({ name, description, priority }),
       });
-      if (res.ok) {
-        toast.success("Project created");
-        setShowCreate(false);
-        setName("");
-        setDescription("");
-        fetchProjects();
-      } else {
-        toast.error("Failed to create. You might not have permission.");
-      }
-    } catch (e) {
-      toast.error("Network error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    },
+    onSuccess: () => {
+      setIsOpen(false);
+      setName("");
+      setDescription("");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+
+  const projects = data?.data || [];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Projects</h1>
-        <Button onClick={() => setShowCreate(!showCreate)} className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2">
-          <Plus className="w-4 h-4" /> New Project
-        </Button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Projects</h1>
+          <p className="text-sm text-neutral-500 mt-1">Manage team projects, track progress and deadlines.</p>
+        </div>
+
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-violet-600 hover:bg-violet-700 text-white font-semibold gap-2">
+              <Plus className="w-4 h-4" /> New Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Project</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-500">Project Name *</label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Website Redesign"
+                  className="text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-500">Description</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Project details..."
+                  className="w-full p-2 text-xs rounded-md border border-input bg-background resize-none"
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-neutral-500">Priority</label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="w-full h-9 text-xs border border-input bg-background rounded-md px-3"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <Button
+                onClick={() => createMutation.mutate()}
+                disabled={createMutation.isPending || !name}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold"
+              >
+                {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Project"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {showCreate && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-white mb-4">Create New Project</h2>
-          <form onSubmit={handleCreate} className="space-y-4 max-w-md">
-            <div>
-              <label className="block text-sm text-zinc-400 mb-1">Project Name</label>
-              <input type="text" required value={name} onChange={e=>setName(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500" />
-            </div>
-            <div>
-              <label className="block text-sm text-zinc-400 mb-1">Description</label>
-              <textarea value={description} onChange={e=>setDescription(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 h-24 resize-none" />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button type="submit" disabled={submitting}>{submitting ? "Creating..." : "Create"}</Button>
-            </div>
-          </form>
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-neutral-400" />
+          <Input
+            placeholder="Search projects..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 text-xs"
+          />
         </div>
-      )}
+      </div>
 
-      {loading ? (
-        <div className="text-zinc-500">Loading projects...</div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
       ) : projects.length === 0 ? (
-        <div className="text-zinc-500">No projects found.</div>
+        <EmptyState
+          icon={<FolderPlus className="w-12 h-12 text-neutral-300" />}
+          title="No projects found"
+          description="Get started by creating your first project."
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map(p => (
-            <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="group block bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-indigo-500/50 transition-colors">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-2 bg-indigo-500/10 rounded-lg">
-                  <Folder className="w-6 h-6 text-indigo-400" />
-                </div>
-                <Badge variant={p.status === 'active' ? 'default' : 'secondary'}>{p.status}</Badge>
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">{p.name}</h3>
-              <p className="text-sm text-zinc-400 line-clamp-2 mb-6">{p.description || "No description provided."}</p>
-              <div className="flex items-center justify-between text-sm text-zinc-500">
-                <span>{format(new Date(p.created_at), 'MMM d, yyyy')}</span>
-                <span className="flex items-center gap-1 group-hover:text-indigo-400 transition-colors">Board <ArrowRight className="w-4 h-4" /></span>
-              </div>
-            </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map((project: any) => (
+            <ProjectCard key={project.id} project={project} />
           ))}
         </div>
       )}
