@@ -80,7 +80,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-4 pb-6 pt-8 text-center">
           <div className="mx-auto w-16 h-16 relative flex items-center justify-center bg-violet-100 dark:bg-violet-950/50 rounded-2xl p-2 shadow-inner">
             <img
-              src="/logo.png"
+              src="/landscape-logo.png"
               alt="Games4King Logo"
               className="w-full h-full object-contain drop-shadow"
               onError={(e) => {
