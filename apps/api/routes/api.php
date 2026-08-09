@@ -23,10 +23,19 @@ use App\Http\Controllers\SavedViewController;
 
 // Auth routes
 Route::get('/ping', function() { return 'pong api'; });
+Route::get('/api/ping', function() { return 'pong api'; });
+
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/api/auth/login', [AuthController::class, 'login']);
+
 Route::get('/auth/refresh', [AuthController::class, 'refresh']);
+Route::get('/api/auth/refresh', [AuthController::class, 'refresh']);
+
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/api/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/api/auth/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/profile', function (Request $request) {
