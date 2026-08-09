@@ -35,7 +35,7 @@ export default function ChatPage() {
 
     const channel = subscribe(`conversation.${selectedId}`);
     if (channel) {
-      channel.bind("message-sent", (e: any) => {
+      const handler = (e: any) => {
         queryClient.setQueryData(["messages", selectedId], (old: any) => {
           if (!old?.data) return old;
           return {
@@ -43,9 +43,15 @@ export default function ChatPage() {
             data: [...old.data, e.message],
           };
         });
-      });
+      };
+
+      channel.listen(".message-sent", handler);
+
+      return () => {
+        channel.stopListening(".message-sent");
+      };
     }
-  }, [selectedId]);
+  }, [selectedId, queryClient, subscribe]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (body: string) => {

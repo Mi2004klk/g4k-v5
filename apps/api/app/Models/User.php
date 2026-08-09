@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
     'company_id', 'employee_id', 'name', 'username', 'email', 'password',
     'department_id', 'team_id', 'designation_id', 'phone', 'alternate_mobile',
     'emergency_contact', 'joining_date', 'blood_group', 'working_hours',
-    'must_change_password', 'status', 'avatar_url'
+    'must_change_password', 'status', 'avatar_url', 'preferences'
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -37,6 +37,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'must_change_password' => 'boolean',
             'joining_date' => 'date',
+            'preferences' => 'array',
         ];
     }
 

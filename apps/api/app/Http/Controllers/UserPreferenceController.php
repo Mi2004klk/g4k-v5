@@ -9,10 +9,11 @@ class UserPreferenceController extends Controller
     public function show(Request $request)
     {
         $user = $request->user();
+        $prefs = $user->preferences ?? [];
         return response()->json([
-            'theme_mode' => $user->theme_mode ?? 'system',
-            'density' => $user->density ?? 'comfortable',
-            'preferences' => $user->preferences ?? []
+            'theme_mode' => $prefs['theme_mode'] ?? 'system',
+            'density' => $prefs['density'] ?? 'comfortable',
+            'preferences' => $prefs
         ]);
     }
 
@@ -25,26 +26,27 @@ class UserPreferenceController extends Controller
         ]);
 
         $user = $request->user();
+        $prefs = $user->preferences ?? [];
         
         if (isset($validated['theme_mode'])) {
-            $user->theme_mode = $validated['theme_mode'];
+            $prefs['theme_mode'] = $validated['theme_mode'];
         }
         
         if (isset($validated['density'])) {
-            $user->density = $validated['density'];
+            $prefs['density'] = $validated['density'];
         }
 
         if (isset($validated['preferences'])) {
-            $current = $user->preferences ?? [];
-            $user->preferences = array_merge($current, $validated['preferences']);
+            $prefs = array_merge($prefs, $validated['preferences']);
         }
         
+        $user->preferences = $prefs;
         $user->save();
 
         return response()->json([
-            'theme_mode' => $user->theme_mode,
-            'density' => $user->density,
-            'preferences' => $user->preferences
+            'theme_mode' => $prefs['theme_mode'] ?? 'system',
+            'density' => $prefs['density'] ?? 'comfortable',
+            'preferences' => $prefs
         ]);
     }
 }
