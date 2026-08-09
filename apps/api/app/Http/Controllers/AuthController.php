@@ -115,10 +115,9 @@ class AuthController extends Controller
                 \App\Models\Notification::create([
                     'user_id' => $adminId,
                     'title' => 'Suspicious Login Detected',
-                    'message' => "User {$user->name} ({$user->email}) logged in from a new IP: {$request->ip()} (User-Agent: {$request->header('User-Agent')}).",
+                    'body' => "User {$user->name} ({$user->email}) logged in from a new IP: {$request->ip()} (User-Agent: {$request->header('User-Agent')}).",
                     'type' => 'security',
-                    'priority' => 'urgent',
-                    'is_read' => false
+                    'priority' => 'urgent'
                 ]);
             }
         }
