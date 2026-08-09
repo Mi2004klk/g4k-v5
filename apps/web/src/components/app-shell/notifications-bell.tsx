@@ -76,12 +76,16 @@ export function NotificationsBell() {
       queryClient.invalidateQueries({ queryKey: ["org-leave-requests"] });
     };
 
-    channel.listen(".notification-created", handleNotification);
-    channel.listen(".approval-status-change", handleApproval);
+    if (channel) {
+      channel.listen(".notification-created", handleNotification);
+      channel.listen(".approval-status-change", handleApproval);
+    }
 
     return () => {
-      channel.stopListening(".notification-created");
-      channel.stopListening(".approval-status-change");
+      if (channel) {
+        channel.stopListening(".notification-created");
+        channel.stopListening(".approval-status-change");
+      }
     };
   }, [user, subscribe, queryClient]);
 
