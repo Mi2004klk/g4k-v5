@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -16,11 +16,13 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { Card, CardContent } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { EmptyState } from "@g4k/ui/components";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useUrlState } from "@/hooks/use-url-state";
 import { FilterBar } from "@/components/data-table/filter-bar";
 import {
   Sheet,
@@ -28,20 +30,21 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/data-table/data-table";
+import { DataTable } from "@g4k/ui/components";
 
 export default function DirectoryPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useUrlState("search", "");
+  const debouncedSearch = useDebounce(search, 250);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["directory", search],
+    queryKey: ["directory", debouncedSearch],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (search) params.append("search", search);
+      if (debouncedSearch) params.append("search", debouncedSearch);
       return apiFetch(`/directory?${params.toString()}`);
     },
   });

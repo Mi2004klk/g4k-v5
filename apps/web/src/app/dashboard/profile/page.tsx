@@ -1,31 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   User,
   Phone,
   Mail,
-  Building2,
-  Briefcase,
-  Shield,
   KeyRound,
   Laptop,
   Trash2,
   Upload,
   Loader2,
-  Calendar,
-  Heart,
-  Clock,
+  Eye,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
+import { ColumnDef } from "@tanstack/react-table";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { PasswordInput } from "@g4k/ui/components";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -33,8 +30,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { DataTable } from "@g4k/ui/components";
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
@@ -50,6 +48,20 @@ export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Revoke Session state
+  const [isRevokeOpen, setIsRevokeOpen] = useState(false);
+  const [revokeId, setRevokeId] = useState<string | null>(null);
+
+  // Visibility state
+  const [visibility, setVisibility] = useState(authUser?.preferences?.directory_visibility || "internal");
+
+  // Sync state when authUser loads
+  useEffect(() => {
+    if (authUser?.preferences?.directory_visibility) {
+      setVisibility(authUser.preferences.directory_visibility);
+    }
+  }, [authUser?.preferences?.directory_visibility]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile"],
@@ -76,7 +88,7 @@ export default function ProfilePage() {
     onSuccess: (res: any) => {
       toast.success("Profile updated successfully!");
       if (authUser) {
-        setAuth(useAuthStore.getState().token!, res);
+        setAuth(useAuthStore.getState().token!, res, authUser.active_role);
       }
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
@@ -85,19 +97,40 @@ export default function ProfilePage() {
     },
   });
 
+  const updateVisibilityMutation = useMutation({
+    mutationFn: async (val: string) => {
+      return apiFetch("/auth/preferences", {
+        method: "PUT",
+        body: JSON.stringify({ directory_visibility: val }),
+      });
+    },
+    onSuccess: (res: any) => {
+      toast.success("Visibility preference updated!");
+      if (authUser) {
+        setAuth(useAuthStore.getState().token!, { ...authUser, preferences: res.preferences }, authUser.active_role);
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update preference.");
+    },
+  });
+
+  const handleVisibilityChange = (val: string) => {
+    setVisibility(val);
+    updateVisibilityMutation.mutate(val);
+  };
+
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const res = await apiFetch("/profile/avatar", {
+      return apiFetch("/profile/avatar", {
         method: "POST",
         body: formData,
       });
-
-      return res;
     },
-    onSuccess: (res: any) => {
+    onSuccess: () => {
       toast.success("Avatar updated!");
       setIsAvatarOpen(false);
       setAvatarFile(null);
@@ -112,6 +145,10 @@ export default function ProfilePage() {
     mutationFn: async () => {
       if (newPassword !== confirmPassword) {
         throw new Error("New passwords do not match.");
+      }
+      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!strongRegex.test(newPassword)) {
+        throw new Error("Password must be at least 8 chars with mixed case, numbers, and symbols.");
       }
       return apiFetch("/auth/change-password", {
         method: "POST",
@@ -140,29 +177,106 @@ export default function ProfilePage() {
     onSuccess: () => {
       toast.success("Session revoked!");
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      setIsRevokeOpen(false);
+      setRevokeId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to revoke session.");
     },
   });
+
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: "device_name",
+      header: "Device / Name",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 font-semibold text-neutral-900 dark:text-white min-w-[120px]">
+          <Laptop className="w-4 h-4 text-brand-violet shrink-0" />
+          <span className="truncate">{row.original.device_name || "Web Browser"}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "ip_address",
+      header: "IP Address",
+      cell: ({ row }) => (
+        <span className="text-neutral-500 dark:text-neutral-400 font-mono text-xs">{row.original.ip_address || "Unknown"}</span>
+      ),
+    },
+    {
+      accessorKey: "last_used_at",
+      header: "Last Used",
+      cell: ({ row }) => (
+        <span className="text-neutral-500 text-xs">
+          {row.original.last_used_at ? new Date(row.original.last_used_at).toLocaleString() : "Recently"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        if (row.original.is_current) {
+          return (
+            <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20 whitespace-nowrap">
+              Current Device
+            </span>
+          );
+        }
+        return <span className="text-neutral-400 text-[11px] font-medium">Active</span>;
+      },
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Action</div>,
+      cell: ({ row }) => {
+        if (row.original.is_current) return null;
+        return (
+          <div className="text-right">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setRevokeId(row.original.id);
+                setIsRevokeOpen(true);
+              }}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              <span>Revoke</span>
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-64 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-4xl mx-auto">
+    <div className="space-y-6 p-6 max-w-5xl mx-auto font-sans">
       {/* Header Profile Card */}
-      <Card className="border-none shadow-sm overflow-hidden bg-gradient-to-r from-violet-900 to-purple-800 text-white">
-        <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          <div className="relative group">
-            <div className="w-24 h-24 rounded-3xl bg-white/20 backdrop-blur border-2 border-white/40 flex items-center justify-center font-bold text-3xl shadow-xl overflow-hidden">
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+        <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-brand-violet/5 dark:bg-brand-violet/10">
+          <div className="relative group shrink-0">
+            <div className="w-24 h-24 rounded-full bg-white dark:bg-neutral-800 border-2 border-brand-violet flex items-center justify-center font-bold text-3xl shadow-sm overflow-hidden text-brand-violet">
               {profile?.avatar_url ? (
-                <img
+                <Image
                   src={profile.avatar_url}
                   alt={profile.name}
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -171,7 +285,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setIsAvatarOpen(true)}
-              className="absolute inset-0 bg-black/50 rounded-3xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-semibold gap-1"
+              className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-semibold gap-1 backdrop-blur-sm"
             >
               <Upload className="w-4 h-4" />
               <span>Upload</span>
@@ -181,25 +295,25 @@ export default function ProfilePage() {
           <div className="space-y-2 text-center sm:text-left flex-1">
             <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2">
               <div>
-                <h1 className="text-2xl font-bold font-display">{profile?.name}</h1>
-                <p className="text-xs text-purple-200">
+                <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">{profile?.name}</h1>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-semibold">
                   {profile?.designation?.name || "Corporate Team Member"} •{" "}
                   {profile?.department?.name || "Games4King"}
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-white/10 border border-white/20">
-                {profile?.employee_code || profile?.employee_id || "G4K001"}
+              <span className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 shadow-sm">
+                ID: {profile?.employee_code || profile?.employee_id || "N/A"}
               </span>
             </div>
 
-            <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-2 text-xs text-purple-100">
-              <span className="flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-purple-300" />
+            <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-3 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+              <span className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                <Mail className="w-3.5 h-3.5 text-brand-violet" />
                 {profile?.email}
               </span>
               {profile?.phone && (
-                <span className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-purple-300" />
+                <span className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                  <Phone className="w-3.5 h-3.5 text-brand-violet" />
                   {profile.phone}
                 </span>
               )}
@@ -208,40 +322,40 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Main Details & Tabs */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Details Form */}
-        <Card className="border-none shadow-sm">
+        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
           <CardHeader>
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <User className="w-4 h-4 text-violet-600" />
+            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+              <User className="w-4 h-4 text-brand-violet" />
               Personal & Contact Information
             </CardTitle>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
               Update your display name and phone number.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-xs">
+          <CardContent className="space-y-4 text-xs font-sans">
             <div>
-              <label className="font-semibold block mb-1">Full Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Full Name</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} className="font-sans" />
             </div>
             <div>
-              <label className="font-semibold block mb-1">Phone Number</label>
+              <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Phone Number</label>
               <Input
                 placeholder="+91 98765 43210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                className="font-sans"
               />
             </div>
             <div>
-              <label className="font-semibold text-neutral-400 block mb-1">Email Address</label>
-              <Input value={profile?.email || ""} disabled className="bg-neutral-50 dark:bg-neutral-800" />
+              <label className="font-semibold block mb-1 text-neutral-400">Email Address (Read-only)</label>
+              <Input value={profile?.email || ""} disabled className="bg-neutral-50 dark:bg-neutral-800/50 font-sans" />
             </div>
             <Button
               onClick={() => updateProfileMutation.mutate({ name, phone })}
               disabled={updateProfileMutation.isPending}
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+              className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm font-sans"
             >
               {updateProfileMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -252,130 +366,133 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Password Security Form */}
-        <Card className="border-none shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-violet-600" />
-              Security & Password
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Change your password to maintain account security.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div>
-              <label className="font-semibold block mb-1">Current Password</label>
-              <PasswordInput
-                placeholder="Current password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="font-semibold block mb-1">New Password</label>
-              <PasswordInput
-                placeholder="New password (min 8 chars)"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="font-semibold block mb-1">Confirm New Password</label>
-              <PasswordInput
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-            <Button
-              onClick={() => changePasswordMutation.mutate()}
-              disabled={
-                changePasswordMutation.isPending ||
-                !currentPassword ||
-                !newPassword ||
-                !confirmPassword
-              }
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-            >
-              {changePasswordMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Update Password"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+           {/* Privacy & Visibility Preferences */}
+           <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+             <CardHeader>
+               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+                 <Eye className="w-4 h-4 text-brand-violet" />
+                 Privacy & Visibility
+               </CardTitle>
+               <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                 Control who can see your contact information in the company directory.
+               </CardDescription>
+             </CardHeader>
+             <CardContent className="space-y-4 text-xs font-sans">
+                <div className="grid grid-cols-1 gap-2">
+                   <button
+                     onClick={() => handleVisibilityChange("public")}
+                     disabled={updateVisibilityMutation.isPending}
+                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "public" ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                   >
+                      <div className="font-semibold text-neutral-900 dark:text-white mb-0.5">Public</div>
+                      <div className="text-neutral-500 text-[11px]">Phone and email visible to all users.</div>
+                   </button>
+                   <button
+                     onClick={() => handleVisibilityChange("internal")}
+                     disabled={updateVisibilityMutation.isPending}
+                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "internal" ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                   >
+                      <div className="font-semibold text-neutral-900 dark:text-white mb-0.5">Internal Only</div>
+                      <div className="text-neutral-500 text-[11px]">Contact info visible only to your department & HR.</div>
+                   </button>
+                   <button
+                     onClick={() => handleVisibilityChange("private")}
+                     disabled={updateVisibilityMutation.isPending}
+                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "private" ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                   >
+                      <div className="font-semibold text-neutral-900 dark:text-white mb-0.5">Private</div>
+                      <div className="text-neutral-500 text-[11px]">Contact info completely hidden from directory.</div>
+                   </button>
+                </div>
+             </CardContent>
+           </Card>
+
+           {/* Password Security Form */}
+           <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+             <CardHeader>
+               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+                 <KeyRound className="w-4 h-4 text-brand-violet" />
+                 Security & Password
+               </CardTitle>
+               <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                 Change your password to maintain account security.
+               </CardDescription>
+             </CardHeader>
+             <CardContent className="space-y-4 text-xs font-sans">
+               <div>
+                 <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Current Password</label>
+                 <PasswordInput
+                   placeholder="Current password"
+                   value={currentPassword}
+                   onChange={(e) => setCurrentPassword(e.target.value)}
+                   className="font-sans"
+                 />
+               </div>
+               <div>
+                 <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">New Password</label>
+                 <PasswordInput
+                   placeholder="New password (min 8 chars, mixed case, numbers, symbols)"
+                   value={newPassword}
+                   onChange={(e) => setNewPassword(e.target.value)}
+                   className="font-sans"
+                 />
+               </div>
+               <div>
+                 <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Confirm New Password</label>
+                 <PasswordInput
+                   placeholder="Confirm new password"
+                   value={confirmPassword}
+                   onChange={(e) => setConfirmPassword(e.target.value)}
+                   className="font-sans"
+                 />
+               </div>
+               <Button
+                 onClick={() => changePasswordMutation.mutate()}
+                 disabled={
+                   changePasswordMutation.isPending ||
+                   !currentPassword ||
+                   !newPassword ||
+                   !confirmPassword
+                 }
+                 className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm font-sans"
+               >
+                 {changePasswordMutation.isPending ? (
+                   <Loader2 className="w-4 h-4 animate-spin" />
+                 ) : (
+                   "Update Password"
+                 )}
+               </Button>
+             </CardContent>
+           </Card>
+        </div>
       </div>
 
       {/* Active Device Sessions */}
-      <Card className="border-none shadow-sm">
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
         <CardHeader>
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Laptop className="w-4 h-4 text-violet-600" />
+          <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+            <Laptop className="w-4 h-4 text-brand-violet" />
             Active Device Sessions
           </CardTitle>
-          <CardDescription className="text-xs">
-            Devices currently logged into your Games4King Workplace OS account.
+          <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+            Devices currently logged into your Games4King Workplace OS account. Revoking a session will immediately log out that device.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          {sessions && Array.isArray(sessions) && sessions.length > 0 ? (
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 uppercase font-semibold border-b border-neutral-100 dark:border-neutral-800">
-                <tr>
-                  <th className="px-6 py-3">Device / Name</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                {sessions.map((s: any) => (
-                  <tr key={s.id}>
-                    <td className="px-6 py-4 font-semibold flex items-center gap-2">
-                      <Laptop className="w-4 h-4 text-neutral-400" />
-                      <span>{s.device_name || "Web Browser"}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {s.is_current ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
-                          Current Device
-                        </span>
-                      ) : (
-                        <span className="text-neutral-400 text-[11px]">Active</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      {!s.is_current && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => revokeSessionMutation.mutate(s.id)}
-                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span>Revoke</span>
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="p-6 text-center text-xs text-neutral-400">
-              No remote device sessions active.
-            </div>
-          )}
+        <CardContent className="p-0 overflow-x-auto border-t border-neutral-100 dark:border-neutral-800">
+          <DataTable 
+             columns={columns} 
+             data={sessions || []}
+          />
         </CardContent>
       </Card>
 
       {/* Avatar Upload Dialog */}
       <Dialog open={isAvatarOpen} onOpenChange={setIsAvatarOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md font-sans">
           <DialogHeader>
-            <DialogTitle>Upload Profile Photo</DialogTitle>
-            <DialogDescription className="text-xs">
+            <DialogTitle className="font-display">Upload Profile Photo</DialogTitle>
+            <DialogDescription className="text-xs font-sans">
               Select an image file (JPEG, PNG, WEBP, max 2MB).
             </DialogDescription>
           </DialogHeader>
@@ -394,22 +511,51 @@ export default function ProfilePage() {
                   setAvatarFile(file);
                 }
               }}
+              className="font-sans file:bg-neutral-100 file:text-neutral-700 file:border-0 file:mr-4 file:py-2 file:px-4 file:rounded-md hover:file:bg-neutral-200 cursor-pointer text-sm"
             />
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAvatarOpen(false)}>
+            <Button variant="outline" onClick={() => setIsAvatarOpen(false)} className="font-sans">
               Cancel
             </Button>
             <Button
               onClick={() => avatarFile && uploadAvatarMutation.mutate(avatarFile)}
               disabled={uploadAvatarMutation.isPending || !avatarFile}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
+              className="bg-neutral-900 hover:bg-neutral-800 text-white font-sans shadow-sm"
             >
               {uploadAvatarMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 "Upload Photo"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revoke Session Confirm Dialog */}
+      <Dialog open={isRevokeOpen} onOpenChange={setIsRevokeOpen}>
+        <DialogContent className="sm:max-w-sm font-sans">
+          <DialogHeader>
+            <DialogTitle className="font-display text-red-600">Revoke Session</DialogTitle>
+            <DialogDescription className="text-xs font-sans">
+              Are you sure you want to log out this device? Any unsaved work on that device may be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => { setIsRevokeOpen(false); setRevokeId(null); }} className="font-sans">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => revokeId && revokeSessionMutation.mutate(revokeId)}
+              disabled={revokeSessionMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white font-sans shadow-sm"
+            >
+              {revokeSessionMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Revoke Device"
               )}
             </Button>
           </DialogFooter>

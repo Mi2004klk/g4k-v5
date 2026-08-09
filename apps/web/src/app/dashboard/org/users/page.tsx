@@ -19,15 +19,15 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@g4k/ui/components";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -43,19 +43,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@/components/data-table/filter-bar";
-import { EmptyState } from "@/components/ui/empty-state";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useUrlState } from "@/hooks/use-url-state";
+import { EmptyState } from "@g4k/ui/components";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/data-table/data-table";
+import { DataTable } from "@g4k/ui/components";
 
 // ... existing code ...
 export default function UsersPage() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [search, setSearch] = useUrlState("search", "");
+  const debouncedSearch = useDebounce(search, 250);
+  const [roleFilter, setRoleFilter] = useUrlState("role", "all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -76,12 +79,13 @@ export default function UsersPage() {
     phone: "",
   });
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["users", search, roleFilter],
-    queryFn: async () => {
+  // Queries
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["users", debouncedSearch, roleFilter],
+    queryFn: () => {
       const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (roleFilter !== "all") params.append("role", roleFilter);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
       return apiFetch(`/users?${params.toString()}`);
     },
   });

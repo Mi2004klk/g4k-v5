@@ -5,9 +5,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Trash2, CheckCircle, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 
 export function QAFormBuilder() {
   const queryClient = useQueryClient();

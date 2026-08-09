@@ -6,18 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class DirectoryController extends Controller implements HasMiddleware
+class DirectoryController extends Controller
 {
-        public static function middleware(): array
-    {
-        return [
-            new Middleware('capability:directory.view', only: ['index', 'show']),
-            new Middleware('capability:directory.send-message', only: ['sendMessage']),
-        ];
-    }
 
     private function applyVisibilityRules(User $user)
     {

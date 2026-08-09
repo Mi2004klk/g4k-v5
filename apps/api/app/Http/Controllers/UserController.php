@@ -9,18 +9,9 @@ use Illuminate\Support\Facades\Hash;
 use App\Services\AuditLogger;
 use App\Services\AutoNumberingService;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class UserController extends Controller implements HasMiddleware
+class UserController extends Controller
 {
-        public static function middleware(): array
-    {
-        return [
-            new Middleware('capability:users.view', only: ['index', 'show']),
-            new Middleware('capability:users.hr.manage', only: ['store', 'update', 'destroy', 'resetPassword']),
-        ];
-    }
 
     public function index(Request $request)
     {

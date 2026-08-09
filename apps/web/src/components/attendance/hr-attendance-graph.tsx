@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@g4k/ui/components";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { 
   ssr: false,

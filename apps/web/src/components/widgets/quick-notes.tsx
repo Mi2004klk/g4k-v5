@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { StickyNote, Plus, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
 
 export function QuickNotes() {
   const queryClient = useQueryClient();

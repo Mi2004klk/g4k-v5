@@ -6,10 +6,10 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, Send, Loader2, AlertCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
 
 export function TaskDetailSheet({
   task,

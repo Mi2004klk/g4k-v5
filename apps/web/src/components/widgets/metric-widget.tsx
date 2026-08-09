@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { EmptyState } from "@g4k/ui/components";
 
 interface MetricWidgetProps {
   title: string;

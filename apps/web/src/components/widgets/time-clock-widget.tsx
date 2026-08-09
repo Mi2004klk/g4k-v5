@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Loader2, Play, Square, Coffee, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { offlineEngine } from "@/lib/offline-engine";
@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@g4k/ui/components";
 
 export function TimeClockWidget({ className }: { className?: string }) {
   const [loading, setLoading] = useState(true);

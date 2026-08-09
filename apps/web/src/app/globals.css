@@ -99,7 +99,7 @@
     --warning: #D97706;
     --danger: #DC2626;
     --neutral-status: #6B7280;
-    --overtime: #D97706;
+    --overtime: #EAB308;
 
     --accent-violet: #8A2BE2;
     --accent-violet-deep: #9400D3;
@@ -121,6 +121,14 @@
     --shadow-e2: 0 4px 12px rgba(20,20,28,0.08);
     --shadow-e3: 0 8px 24px rgba(20,20,28,0.12);
     --shadow-e4: 0 16px 48px rgba(20,20,28,0.18);
+    
+    --density-row-height: 48px;
+    --density-padding: 20px;
+  }
+
+  :root[data-density="compact"] {
+    --density-row-height: 36px;
+    --density-padding: 12px;
   }
 
   .dark {

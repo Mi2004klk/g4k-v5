@@ -25,7 +25,7 @@ import {
   CommandGroup,
   CommandItem,
   CommandShortcut,
-} from "@/components/ui/command";
+} from "@g4k/ui/components";
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);

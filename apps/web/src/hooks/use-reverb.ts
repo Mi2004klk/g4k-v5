@@ -1,39 +1,61 @@
 import { useEffect, useState } from 'react';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { useAuthStore } from '@/lib/auth-store';
+import { getToken } from '@/lib/api-client';
 
-// Global echo instance
-let echoInstance: Echo<any> | null = null;
-
-export function getEchoInstance() {
-  if (typeof window === 'undefined') return null;
-
-  if (!echoInstance) {
-    (window as any).Pusher = Pusher;
-
-    echoInstance = new Echo({
-      broadcaster: 'reverb',
-      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || 'app-key',
-      wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || 'localhost',
-      wsPort: process.env.NEXT_PUBLIC_REVERB_PORT ? parseInt(process.env.NEXT_PUBLIC_REVERB_PORT) : 8080,
-      wssPort: process.env.NEXT_PUBLIC_REVERB_PORT ? parseInt(process.env.NEXT_PUBLIC_REVERB_PORT) : 8080,
-      forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'http') === 'https',
-      enabledTransports: ['ws', 'wss'],
-    });
+declare global {
+  interface Window {
+    Pusher: typeof Pusher;
+    Echo: any;
   }
-
-  return echoInstance;
 }
 
 export function useReverb() {
-  const [isConnected, setIsConnected] = useState(true);
+  const { user, token } = useAuthStore();
+  const [echoInstance, setEchoInstance] = useState<any>(null);
 
-  const subscribe = (channelName: string, isPrivate: boolean = true) => {
-    const echo = getEchoInstance();
-    if (!echo) return null;
+  useEffect(() => {
+    // Only connect if we have a logged in user and token
+    if (!user || !token) {
+      if (window.Echo) {
+        window.Echo.disconnect();
+      }
+      setEchoInstance(null);
+      return;
+    }
 
-    return isPrivate ? echo.private(channelName) : echo.channel(channelName);
+    window.Pusher = Pusher;
+
+    const echo = new Echo({
+      broadcaster: 'reverb',
+      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || 'g4k_reverb_key',
+      wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || window.location.hostname,
+      wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 8080),
+      wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 8080),
+      forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME || 'http') === 'https',
+      enabledTransports: ['ws', 'wss'],
+      authEndpoint: '/api/broadcasting/auth',
+      auth: {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          Accept: 'application/json',
+        },
+      },
+    });
+
+    window.Echo = echo;
+    setEchoInstance(echo);
+
+    return () => {
+      echo.disconnect();
+    };
+  }, [user?.id, token]); // Reconnect if user changes
+
+  const subscribe = (channelName: string, isPrivate: boolean = false) => {
+    if (!echoInstance) return null;
+    return isPrivate ? echoInstance.private(channelName) : echoInstance.channel(channelName);
   };
 
-  return { subscribe, isConnected };
+  return { subscribe, isConnected: !!echoInstance, echo: echoInstance };
 }

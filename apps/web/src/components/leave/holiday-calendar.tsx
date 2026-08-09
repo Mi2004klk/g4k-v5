@@ -5,9 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
 
 export function HolidayCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());

@@ -20,6 +20,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\QaController;
 use App\Http\Controllers\TimerController;
 use App\Http\Controllers\SavedViewController;
+use App\Http\Controllers\PinController;
 
 // NOTE: Laravel auto-prefixes every route in this file with "/api" (via bootstrap/app.php
 // `withRouting(api: ...)`). So `Route::post('/auth/login')` is served at `/api/auth/login`.
@@ -29,10 +30,10 @@ use App\Http\Controllers\SavedViewController;
 Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'g4k-api']));
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/auth/refresh', [AuthController::class, 'refresh']);
-Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
     Route::get('/auth/profile', function (Request $request) {
         $user = $request->user()->load(['department', 'designation', 'company', 'roleAssignments']);
         $user->active_role = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
@@ -50,13 +51,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::post('/auth/onboarding/complete', [AuthController::class, 'completeOnboarding']);
-    Route::post('/auth/role-select', [AuthController::class, 'roleSelect']);
+    Route::post('/auth/role-select', [AuthController::class, 'roleSelect'])->middleware('throttle:10,1');
     Route::get('/auth/sessions', [AuthController::class, 'sessions']);
     Route::delete('/auth/sessions/{id}', [AuthController::class, 'revokeSession']);
 
     // Preferences API
     Route::get('/auth/preferences', [UserPreferenceController::class, 'show']);
     Route::put('/auth/preferences', [UserPreferenceController::class, 'update']);
+
+    // Admin Password Resets
+    Route::get('/admin/password-resets', [\App\Http\Controllers\AdminPasswordResetController::class, 'index'])->middleware('ability:role:super_admin');
+    Route::post('/admin/password-resets/{id}/approve', [\App\Http\Controllers\AdminPasswordResetController::class, 'approve'])->middleware('ability:role:super_admin');
+    Route::post('/admin/password-resets/{id}/reject', [\App\Http\Controllers\AdminPasswordResetController::class, 'reject'])->middleware('ability:role:super_admin');
+
+    // Pins API
+    Route::get('/pins', [PinController::class, 'index']);
+    Route::post('/pins', [PinController::class, 'store']);
+    Route::delete('/pins/{id}', [PinController::class, 'destroy']);
 
     // Dashboard API
     Route::get('/dashboard/metrics', [DashboardController::class, 'metrics']);

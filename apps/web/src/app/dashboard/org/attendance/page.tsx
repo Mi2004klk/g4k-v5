@@ -8,9 +8,9 @@ import { Download, Filter, Edit2, Clock, Loader2, CheckCircle2 } from "lucide-re
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { Card, CardContent } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -18,18 +18,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+} from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { EmptyState } from "@g4k/ui/components";
 import { HrAttendanceGraph } from "@/components/attendance/hr-attendance-graph";
+import { useUrlState } from "@/hooks/use-url-state";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/data-table/data-table";
+import { DataTable } from "@g4k/ui/components";
 
 export default function OrgAttendancePage() {
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
+  const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [correctItem, setCorrectItem] = useState<any | null>(null);
 
   // Correction form

@@ -30,6 +30,7 @@ class UserPreferenceController extends Controller
         $validated = $request->validate([
             'theme_mode' => 'nullable|in:light,dark,system',
             'density' => 'nullable|in:compact,comfortable',
+            'directory_visibility' => 'nullable|in:public,internal,private',
             'preferences' => 'nullable|array'
         ]);
 
@@ -42,6 +43,10 @@ class UserPreferenceController extends Controller
         
         if (isset($validated['density'])) {
             $prefs['density'] = $validated['density'];
+        }
+
+        if (isset($validated['directory_visibility'])) {
+            $prefs['directory_visibility'] = $validated['directory_visibility'];
         }
 
         if (isset($validated['preferences'])) {

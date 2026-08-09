@@ -7,10 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Loader2, KeyRound, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@g4k/ui/components";
 import {
   Form,
   FormControl,
@@ -18,9 +18,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+} from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 
 const forgotSchema = z.object({
   identifier: z.string().min(1, "Identifier is required"),
@@ -50,67 +50,76 @@ export default function ForgotPasswordPage() {
       });
 
       setIsSubmitted(true);
-      toast.success("Recovery instructions submitted.");
+      toast.success("Recovery request submitted.");
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit request.");
+      if (error.status === 429) {
+        form.setError("root", { type: "manual", message: "Too many requests. Please try again later." });
+      } else {
+        form.setError("root", { type: "manual", message: error.message || "Failed to submit request." });
+      }
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
-
-        <CardHeader className="space-y-4 pb-6 pt-8 text-center">
-          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
-            <Image
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
+      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+        <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center pt-2 pb-2">
+           <Image
               src="/landscape-logo.png"
               alt="Games4King Logo"
-              fill
+              width={200}
+              height={80}
               priority
-              className="object-contain"
+              className="object-contain max-h-[80px]"
             />
-          </div>
-          <div className="space-y-1">
-            <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">
-              Account Password Recovery
-            </CardTitle>
-            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
-              Enter your email, username, or employee ID to recover your password.
-            </CardDescription>
-          </div>
+        </div>
+
+        <CardHeader className="space-y-2 pb-6 pt-6 text-center">
+          <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
+            Password Recovery
+          </CardTitle>
+          <CardDescription className="text-sm font-sans text-neutral-500 dark:text-neutral-400">
+            Enter your email, username, or employee ID
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {isSubmitted ? (
-            <div className="text-center space-y-4 py-4">
-              <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-xs text-success">
+            <div className="text-center space-y-4 py-4 font-sans">
+              <div className="p-4 rounded-xl bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20 text-sm font-medium">
                 If an account matching your identifier exists, instructions have been sent via your chosen recovery method.
               </div>
-              <Link href="/login">
-                <Button variant="outline" className="w-full gap-2 mt-2">
+              <Link href="/login" className="block w-full">
+                <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                   <ArrowLeft className="w-4 h-4" />
                   Return to Sign In
                 </Button>
               </Link>
             </div>
           ) : (
+            <>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                {form.formState.errors.root && (
+                  <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-md text-sm font-medium text-center font-sans">
+                    {form.formState.errors.root.message}
+                  </div>
+                )}
+
                 <FormField
                   control={form.control}
                   name="identifier"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
                         Email, Username, or Employee ID
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your identifier..." {...field} />
+                        <Input placeholder="Enter your identifier..." {...field} className="font-sans" disabled={isLoading} />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="font-sans" />
                     </FormItem>
                   )}
                 />
@@ -120,64 +129,68 @@ export default function ForgotPasswordPage() {
                   name="channel"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
                         Recovery Channel
                       </FormLabel>
-                      <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="grid grid-cols-2 gap-3 pt-1">
                         <button
                           type="button"
+                          disabled={isLoading}
                           onClick={() => field.onChange("smtp")}
-                          className={`p-3 text-xs font-medium rounded-lg border text-center transition-all ${
+                          className={`p-3 text-sm font-medium rounded-lg border text-center transition-all font-sans ${
                             field.value === "smtp"
-                              ? "border-brand-violet bg-brand-violet/10 text-brand-violet"
-                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400"
-                          }`}
+                              ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900 shadow-sm"
+                              : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
                           Email (SMTP)
                         </button>
                         <button
                           type="button"
+                          disabled={isLoading}
                           onClick={() => field.onChange("admin")}
-                          className={`p-3 text-xs font-medium rounded-lg border text-center transition-all ${
+                          className={`p-3 text-sm font-medium rounded-lg border text-center transition-all font-sans ${
                             field.value === "admin"
-                              ? "border-brand-violet bg-brand-violet/10 text-brand-violet"
-                              : "border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400"
-                          }`}
+                              ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900 shadow-sm"
+                              : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
                           Admin Approval
                         </button>
                       </div>
-                      <FormMessage />
+                      <FormMessage className="font-sans" />
                     </FormItem>
                   )}
                 />
 
                 <Button
                   type="submit"
-                  className="w-full h-10 mt-2 bg-gradient-brand text-white font-medium shadow-e2 transition-all duration-150 active:scale-[0.96]"
+                  className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
                   disabled={isLoading}
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting Request...
-                    </>
-                  ) : (
-                    "Send Recovery Request"
-                  )}
+                  <div className="absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-[2px] bg-gradient-brand mask-border z-0" style={{ WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }} />
+                  
+                  <span className="relative z-10 flex items-center justify-center">
+                    {isLoading ? (
+                      <div className="flex space-x-1.5 items-center justify-center h-full">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    ) : (
+                      "Recover Password"
+                    )}
+                  </span>
                 </Button>
-
-                <div className="text-center pt-2">
-                  <Link
-                    href="/login"
-                    className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 inline-flex items-center gap-1"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Back to Login
-                  </Link>
-                </div>
               </form>
             </Form>
+
+            <div className="pt-2 text-center">
+               <Link href="/login" className="text-sm font-medium font-sans text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">
+                  Back to Sign In
+               </Link>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -8,15 +8,15 @@ import { TaskKanbanBoard } from "@/components/tasks/task-kanban-board";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { GanttView } from "@/components/projects/gantt-view";
 import { QAFormBuilder } from "@/components/tasks/qa-form-builder";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@g4k/ui/components";
 import { toast } from "sonner";
 
 export default function TasksPage() {

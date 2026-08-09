@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
 import { Check, X } from "lucide-react";
-import { DataTable } from "@/components/data-table/data-table";
+import { DataTable } from "@g4k/ui/components";
 import { FilterBar } from "@/components/data-table/filter-bar";
 
 interface LeaveHistoryTableProps {

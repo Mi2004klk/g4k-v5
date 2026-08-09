@@ -2,8 +2,8 @@
 
 import { format } from "date-fns";
 import { Folder, Calendar, CheckCircle2, Clock, MoreVertical, Flag } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Badge } from "@g4k/ui/components";
 
 export function ProjectCard({ project, onClick }: { project: any; onClick?: () => void }) {
   const getPriorityColor = (priority: string) => {

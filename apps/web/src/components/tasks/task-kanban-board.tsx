@@ -12,7 +12,7 @@ import {
 } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { Clock, AlertCircle, CheckCircle2, User, MessageSquare } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@g4k/ui/components";
 
 const COLUMNS = [
   { id: "todo", title: "To Do", color: "bg-neutral-500" },

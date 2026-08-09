@@ -6,18 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Designation;
 use App\Services\AuditLogger;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class DesignationController extends Controller implements HasMiddleware
+class DesignationController extends Controller
 {
-        public static function middleware(): array
-    {
-        return [
-            new Middleware('capability:designations.view', only: ['index', 'show']),
-            new Middleware('capability:designations.manage', only: ['store', 'update', 'destroy']),
-        ];
-    }
 
     public function index(Request $request)
     {

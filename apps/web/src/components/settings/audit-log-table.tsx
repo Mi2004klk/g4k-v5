@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Loader2, Search, Filter } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
 
 export function AuditLogTable() {
   const [filters, setFilters] = useState({ action: "", user_id: "" });

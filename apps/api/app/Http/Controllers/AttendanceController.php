@@ -13,19 +13,9 @@ use App\Services\AttendanceService;
 use App\Services\AuditLogger;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-class AttendanceController extends Controller implements HasMiddleware
+class AttendanceController extends Controller
 {
-        public static function middleware(): array
-    {
-        return [
-            new Middleware('capability:employee.clock-self', only: ['clockIn', 'startBreak', 'endBreak', 'clockOut', 'meToday', 'meHistory', 'meDay']),
-            new Middleware('capability:admin.view-all-attendance|hr.view-team-attendance', only: ['overview', 'hrToday', 'hrGraph', 'export']),
-            new Middleware('capability:admin.correct-attendance|attendance.correct-team', only: ['correct']),
-        ];
-    }
 
     public function clockIn(Request $request)
     {

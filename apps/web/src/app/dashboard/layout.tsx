@@ -3,6 +3,7 @@
 import { AuthGuard } from "@/components/auth-guard";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -25,19 +26,21 @@ import {
   MessageSquare,
   ShieldAlert,
   Menu,
+  Star,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@g4k/ui/components";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { useTheme } from "next-themes";
+import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useUIStore } from "@/lib/ui-store";
 
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { CommandPalette } from "@/components/app-shell/command-palette";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
-import { OfflineBanner } from "@/components/ui/offline-banner";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
+import { HelpOverlay, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,9 +48,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+} from "@g4k/ui/components";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@g4k/ui/components";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 
 const primaryNav = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -103,10 +106,38 @@ export default function DashboardLayout({
   const { user: authUser, clearAuth } = useAuthStore();
   const { theme, setTheme } = useTheme();
 
+  const { data: pins = [], refetch: refetchPins } = useQuery({
+    queryKey: ["pins"],
+    queryFn: () => apiFetch("/pins"),
+  });
+
+  const handleTogglePin = async (item: any, existingPin: any) => {
+    try {
+      if (existingPin) {
+        await apiFetch(`/pins/${existingPin.id}`, { method: "DELETE" });
+      } else {
+        await apiFetch("/pins", {
+          method: "POST",
+          body: JSON.stringify({
+            type: "nav",
+            target_id: item.name,
+            label: item.name,
+            href: item.href,
+            icon: item.name, // using name as icon reference for now
+          }),
+        });
+      }
+      refetchPins();
+    } catch (error) {
+      console.error("Failed to toggle pin", error);
+    }
+  };
+
   // Close mobile menu on navigate
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
 
   useEffect(() => {
     initPreferences();
@@ -118,15 +149,12 @@ export default function DashboardLayout({
     }
   }, []);
 
+  useShortcuts();
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "b" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        cycleSidebarState();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const handleToggle = () => cycleSidebarState();
+    document.addEventListener("shortcut-toggle-sidebar", handleToggle);
+    return () => document.removeEventListener("shortcut-toggle-sidebar", handleToggle);
   }, [cycleSidebarState]);
 
   const filteredPrimaryNav = primaryNav.filter(
@@ -155,29 +183,44 @@ export default function DashboardLayout({
       const accent = getAccent(item.href);
       const currentlyCollapsed = !isSheet && isCollapsed;
       
+      const existingPin = pins.find((p: any) => p.target_id === item.name);
+      const isPinned = !!existingPin;
+      
       const content = (
-        <Link
-          key={item.name}
-          href={item.href}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg group transition-all relative overflow-hidden text-xs",
-            isActive
-              ? `${accent.bg} ${accent.bgDark} ${accent.text} ${accent.textDark} font-bold shadow-sm`
-              : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white",
-            currentlyCollapsed && "justify-center px-0"
-          )}
-        >
-          {isActive && (
-            <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-r-md", accent.border)} />
-          )}
-          <item.icon
+        <div key={item.name} className="relative group/nav flex items-center">
+          <Link
+            href={item.href}
             className={cn(
-              "w-4 h-4 shrink-0 transition-colors",
-              isActive ? `${accent.text} ${accent.textDark}` : "text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-200"
+              "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative overflow-hidden text-xs",
+              isActive
+                ? `${accent.bg} ${accent.bgDark} ${accent.text} ${accent.textDark} font-bold shadow-sm`
+                : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white",
+              currentlyCollapsed && "justify-center px-0"
             )}
-          />
-          {!currentlyCollapsed && <span className="whitespace-nowrap">{item.name}</span>}
-        </Link>
+          >
+            {isActive && (
+              <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-r-md", accent.border)} />
+            )}
+            <item.icon
+              className={cn(
+                "w-4 h-4 shrink-0 transition-colors",
+                isActive ? `${accent.text} ${accent.textDark}` : "text-neutral-400 group-hover/nav:text-neutral-700 dark:group-hover/nav:text-neutral-200"
+              )}
+            />
+            {!currentlyCollapsed && <span className="whitespace-nowrap">{item.name}</span>}
+          </Link>
+          {!currentlyCollapsed && (
+            <button 
+              onClick={(e) => { e.preventDefault(); handleTogglePin(item, existingPin); }}
+              className={cn(
+                "absolute right-2 p-1.5 rounded-md transition-opacity",
+                isPinned ? "opacity-100 text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40" : "opacity-0 group-hover/nav:opacity-100 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+              )}
+            >
+              <Star className={cn("w-3.5 h-3.5", isPinned && "fill-current")} />
+            </button>
+          )}
+        </div>
       );
 
       if (currentlyCollapsed) {
@@ -195,19 +238,16 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <TooltipProvider>
-        <div className="flex h-screen bg-app overflow-hidden">
-          <OfflineBanner />
-          <CommandPalette />
-
+        <HelpOverlay />
+        <CommandPalette />
+        <div className={cn(
+          "grid h-screen w-full bg-app overflow-hidden transition-[grid-template-columns] duration-300 ease-[cubic-bezier(.4,0,.2,1)]",
+          sidebarState === "expanded" ? "md:grid-cols-[264px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[72px_1fr]" : "grid-cols-1"
+        )}>
           {/* Desktop Sidebar */}
-          <aside
-            className={cn(
-              "hidden md:flex flex-col bg-surface border-r border-border transition-all duration-220 ease-[cubic-bezier(.4,0,.2,1)] relative z-20",
-              sidebarState === "expanded" ? "w-[264px]" : sidebarState === "collapsed" ? "w-[72px]" : "w-0 overflow-hidden border-none"
-            )}
-          >
+          <aside className="hidden md:flex flex-col bg-surface border-r border-border relative z-20 overflow-hidden h-full">
             <div className="flex items-center h-16 shrink-0 px-4 gap-3 border-b border-border">
-              <img src="/icon.png" alt="Logo" className="w-7 h-7 rounded-md shrink-0" />
+              <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-md shrink-0" priority />
               {!isCollapsed && (
                 <span className="font-display font-bold text-lg text-primary tracking-tight whitespace-nowrap">
                   Workplace OS
@@ -219,6 +259,19 @@ export default function DashboardLayout({
               {renderNavItems(filteredPrimaryNav)}
               {filteredSecondaryNav.length > 0 && <div className="my-4 h-px bg-border mx-2" />}
               {renderNavItems(filteredSecondaryNav)}
+              
+              {pins.length > 0 && (
+                <>
+                  <div className="my-4 h-px bg-border mx-2" />
+                  {!isCollapsed && <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Pinned</div>}
+                  {pins.map((pin: any) => {
+                    // Match back to primaryNav to get the icon
+                    const navItem = primaryNav.find(n => n.name === pin.target_id) || secondaryNav.find(n => n.name === pin.target_id);
+                    const IconComp = navItem ? navItem.icon : Star;
+                    return renderNavItems([{ name: pin.label, href: pin.href, icon: IconComp, capability: "" }])[0];
+                  })}
+                </>
+              )}
             </div>
 
             <div className="mt-auto p-4 border-t border-border flex flex-col gap-2">
@@ -251,8 +304,8 @@ export default function DashboardLayout({
           </aside>
 
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col min-w-0 transition-all duration-220 ease-[cubic-bezier(.4,0,.2,1)]">
-            <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface border-b border-border z-20 sticky top-0 backdrop-blur-md">
+          <div className="flex flex-col min-w-0 h-full overflow-hidden">
+            <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface/80 border-b border-border z-20 sticky top-0 backdrop-blur-md">
               <div className="flex items-center gap-2 md:gap-4">
                 {(isHidden || typeof window !== 'undefined' && window.innerWidth < 768) && (
                   <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -269,7 +322,7 @@ export default function DashboardLayout({
                     <SheetContent side="left" className="w-[280px] p-0 flex flex-col bg-surface border-border">
                       <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                       <div className="flex items-center h-16 shrink-0 px-6 gap-3 border-b border-border">
-                        <img src="/icon.png" alt="Logo" className="w-7 h-7 rounded-md" />
+                        <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-md" priority />
                         <span className="font-display font-bold text-lg text-primary tracking-tight">
                           Workplace OS
                         </span>
@@ -322,18 +375,18 @@ export default function DashboardLayout({
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 outline-none shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-white font-bold text-xs flex items-center justify-center shadow">
-                        {authUser?.name?.charAt(0) || "U"}
-                      </div>
+                    <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-violet-500">
+                      <Avatar size="md">
+                        <AvatarFallback name={authUser?.name || "U"} />
+                      </Avatar>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 text-xs">
-                    <DropdownMenuLabel>
-                      <div className="font-bold truncate">{authUser?.name}</div>
-                      <div className="text-[10px] text-neutral-400 font-normal truncate">
+                  <DropdownMenuContent align="end" className="w-56 text-xs">
+                    <DropdownMenuLabel className="flex flex-col gap-1">
+                      <span className="font-bold truncate text-sm">{authUser?.name}</span>
+                      <span className="text-xs text-neutral-400 font-normal truncate">
                         {authUser?.email}
-                      </div>
+                      </span>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
@@ -348,10 +401,17 @@ export default function DashboardLayout({
                         Settings
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                        const event = new KeyboardEvent("keydown", { key: "/", ctrlKey: true });
+                        document.dispatchEvent(event);
+                      }} className="cursor-pointer gap-2">
+                      <Search className="w-4 h-4 text-violet-600" />
+                      Keyboard Shortcuts
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="text-rose-600 focus:text-rose-700 cursor-pointer gap-2"
+                      className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 dark:focus:bg-rose-950/40 cursor-pointer gap-2"
                     >
                       <LogOut className="w-4 h-4" />
                       Log out
@@ -373,7 +433,7 @@ export default function DashboardLayout({
               <Link
                 href="/dashboard"
                 className={cn(
-                  "flex flex-col items-center gap-1 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
                   pathname === "/dashboard" ? "text-violet-600" : "text-neutral-500"
                 )}
               >
@@ -384,7 +444,7 @@ export default function DashboardLayout({
               <Link
                 href="/dashboard/directory"
                 className={cn(
-                  "flex flex-col items-center gap-1 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
                   pathname === "/dashboard/directory" ? "text-violet-600" : "text-neutral-500"
                 )}
               >
@@ -402,7 +462,7 @@ export default function DashboardLayout({
               <Link
                 href="/dashboard/org/users"
                 className={cn(
-                  "flex flex-col items-center gap-1 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
                   pathname.startsWith("/dashboard/org") ? "text-violet-600" : "text-neutral-500"
                 )}
               >
@@ -413,7 +473,7 @@ export default function DashboardLayout({
               <Link
                 href="/dashboard/profile"
                 className={cn(
-                  "flex flex-col items-center gap-1 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
                   pathname === "/dashboard/profile" ? "text-violet-600" : "text-neutral-500"
                 )}
               >

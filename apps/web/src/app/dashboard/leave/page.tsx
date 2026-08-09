@@ -6,11 +6,12 @@ import { apiFetch } from "@/lib/api-client";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
 import { HolidayCalendar } from "@/components/leave/holiday-calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { useUrlState } from "@/hooks/use-url-state";
 
 export default function LeavePage() {
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useUrlState("type", "all");
+  const [statusFilter, setStatusFilter] = useUrlState("status", "all");
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-leave-history", typeFilter, statusFilter],

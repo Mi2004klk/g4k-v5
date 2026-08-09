@@ -5,10 +5,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Briefcase, Trash2, Loader2, Edit2, Search, MoreVertical } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useUrlState } from "@/hooks/use-url-state";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { Card, CardContent } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@g4k/ui/components";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,11 +26,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+} from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { EmptyState } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/data-table/data-table";
+import { DataTable } from "@g4k/ui/components";
 import { FilterBar } from "@/components/data-table/filter-bar";
 
 export default function DesignationsPage() {
@@ -36,7 +38,8 @@ export default function DesignationsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [editingDesig, setEditingDesig] = useState<any>(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useUrlState("search", "");
+  const debouncedSearch = useDebounce(search, 250);
 
   const { data, isLoading } = useQuery({
     queryKey: ["designations"],
@@ -94,7 +97,7 @@ export default function DesignationsPage() {
   });
 
   const designations = (data?.data || []).filter((desig: any) =>
-    desig.name.toLowerCase().includes(search.toLowerCase())
+    desig.name.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   const handleEdit = (desig: any) => {

@@ -87,6 +87,18 @@ class AuthController extends Controller
         if ($lastSuccessfulLogin && $lastSuccessfulLogin->ip_address !== $request->ip()) {
             $isSuspicious = true;
             Log::warning("Suspicious login detected for User ID {$user->id} ({$user->email}) from IP {$request->ip()} (previous: {$lastSuccessfulLogin->ip_address})");
+            
+            $adminIds = RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+            foreach ($adminIds as $adminId) {
+                \App\Models\Notification::create([
+                    'user_id' => $adminId,
+                    'title' => 'Suspicious Login Detected',
+                    'message' => "User {$user->name} ({$user->email}) logged in from a new IP: {$request->ip()} (User-Agent: {$request->header('User-Agent')}).",
+                    'type' => 'security',
+                    'priority' => 'urgent',
+                    'is_read' => false
+                ]);
+            }
         }
 
         // Record successful login
@@ -106,10 +118,19 @@ class AuthController extends Controller
         $deviceName = $request->device_name ?? 'Unknown Device';
 
         // Issue Access Token
-        $accessToken = $user->createToken($deviceName, ['role:' . $primaryRole])->plainTextToken;
+        $accessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole]);
+        $accessTokenObj->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'expires_at' => now()->addMinutes(15)
+        ])->save();
+        $accessToken = $accessTokenObj->plainTextToken;
 
         // Issue Refresh Token
         $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh']);
+        $refreshTokenObj->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'expires_at' => now()->addDays(7)
+        ])->save();
         $refreshToken = $refreshTokenObj->plainTextToken;
 
         $cookie = $this->createAuthCookies($refreshToken);
@@ -152,8 +173,18 @@ class AuthController extends Controller
         $primaryRole = $rolesCollection->first() ?? 'employee';
 
         // Issue new pair
-        $newAccessToken = $user->createToken('Refreshed Session', ['role:' . $primaryRole])->plainTextToken;
+        $newAccessTokenObj = $user->createToken('Refreshed Session', ['role:' . $primaryRole]);
+        $newAccessTokenObj->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'expires_at' => now()->addMinutes(15)
+        ])->save();
+        $newAccessToken = $newAccessTokenObj->plainTextToken;
+
         $newRefreshTokenObj = $user->createToken('Refreshed Session_refresh', ['refresh']);
+        $newRefreshTokenObj->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'expires_at' => now()->addDays(7)
+        ])->save();
         $newRefreshToken = $newRefreshTokenObj->plainTextToken;
 
         $cookie = $this->createAuthCookies($newRefreshToken);
@@ -207,7 +238,37 @@ class AuthController extends Controller
 
         if ($user) {
             Log::info("Password reset request for User ID {$user->id} via channel {$request->channel}");
-            // Return 202 Accepted to prevent user enumeration attacks
+            
+            if ($request->channel === 'admin') {
+                \App\Models\PasswordResetRequest::create([
+                    'user_id' => $user->id,
+                    'status' => 'pending'
+                ]);
+
+                $adminIds = RoleAssignment::where('role', 'super_admin')->pluck('user_id')->unique();
+                foreach ($adminIds as $adminId) {
+                    \App\Models\Notification::create([
+                        'user_id' => $adminId,
+                        'title' => 'Password Reset Requested',
+                        'message' => "User {$user->name} ({$user->email}) requested a password reset.",
+                        'type' => 'security',
+                        'priority' => 'normal',
+                        'is_read' => false
+                    ]);
+                }
+            } elseif ($request->channel === 'smtp') {
+                $token = \Illuminate\Support\Str::random(60);
+                \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
+                    ['email' => $user->email],
+                    ['token' => \Illuminate\Support\Facades\Hash::make($token), 'created_at' => now()]
+                );
+                
+                try {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($token, $user->email));
+                } catch (\Exception $e) {
+                    Log::error("Failed to send password reset email to {$user->email}: " . $e->getMessage());
+                }
+            }
         }
 
         return response()->json(['message' => 'If the account exists, password recovery instructions have been sent.'], 202);
@@ -216,6 +277,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
+            'token' => 'required|string',
             'identifier' => 'required|string',
             'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
         ]);
@@ -231,9 +293,26 @@ class AuthController extends Controller
             ]);
         }
 
+        $resetRecord = \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->first();
+        
+        if (!$resetRecord || !\Illuminate\Support\Facades\Hash::check($request->token, $resetRecord->token)) {
+            throw ValidationException::withMessages([
+                'token' => ['Invalid or expired password reset token.'],
+            ]);
+        }
+        
+        if (\Carbon\Carbon::parse($resetRecord->created_at)->addMinutes(60)->isPast()) {
+            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->delete();
+            throw ValidationException::withMessages([
+                'token' => ['Invalid or expired password reset token.'],
+            ]);
+        }
+
         $user->password = Hash::make($request->password);
         $user->must_change_password = false;
         $user->save();
+
+        \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->delete();
 
         return response()->json(['message' => 'Password reset successful.']);
     }

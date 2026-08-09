@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Send, Paperclip } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@g4k/ui/components";
 
 export function MessageComposer({
   onSend,

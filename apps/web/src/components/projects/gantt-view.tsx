@@ -1,7 +1,7 @@
 "use client";
 
 import { format, addDays, differenceInDays } from "date-fns";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 
 export function GanttView({ tasks }: { tasks: any[] }) {
   const startDate = new Date();

@@ -1,14 +1,14 @@
 import * as React from "react"
 import { Search, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@g4k/ui/components"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+} from "@g4k/ui/components"
+import { Button } from "@g4k/ui/components"
 
 export interface FilterOption {
   key: string

@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@g4k/ui/components";
 import {
   Form,
   FormControl,
@@ -18,36 +17,52 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+} from "@g4k/ui/components";
+import { Input, PasswordInput } from "@g4k/ui/components";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 
-const resetSchema = z
-  .object({
-    identifier: z.string().min(1, "Identifier is required"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    password_confirmation: z.string().min(1, "Confirm password is required"),
-  })
-  .refine((data) => data.password === data.password_confirmation, {
-    message: "Passwords do not match",
-    path: ["password_confirmation"],
-  });
+// Strong password policy: min 8, mixed case, numbers, symbols
+const resetSchema = z.object({
+  identifier: z.string().min(1, "Identifier is required"),
+  token: z.string().min(1, "Reset token is required"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Must contain at least one symbol"),
+  password_confirmation: z.string()
+}).refine((data) => data.password === data.password_confirmation, {
+  message: "Passwords do not match",
+  path: ["password_confirmation"],
+});
 
 type FormValues = z.infer<typeof resetSchema>;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(resetSchema),
     defaultValues: {
       identifier: "",
+      token: "",
       password: "",
       password_confirmation: "",
     },
+    mode: "onChange"
   });
+
+  useEffect(() => {
+    const token = searchParams.get("token");
+    const email = searchParams.get("email");
+    
+    if (token) form.setValue("token", token);
+    if (email) form.setValue("identifier", email);
+  }, [searchParams, form]);
 
   async function onSubmit(data: FormValues) {
     setIsLoading(true);
@@ -57,55 +72,76 @@ export default function ResetPasswordPage() {
         body: JSON.stringify(data),
       });
 
-      toast.success("Password reset successfully! You may now sign in.");
+      toast.success("Password reset successfully! Please sign in with your new password.");
       router.push("/login");
     } catch (error: any) {
-      toast.error(error.message || "Password reset failed.");
+      form.setError("root", { type: "manual", message: error.message || "Failed to reset password." });
+      toast.error(error.message || "Failed to reset password.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
-
-        <CardHeader className="space-y-4 pb-6 pt-8 text-center">
-          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
-            <Image
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
+      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+        <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center pt-2 pb-2">
+           <Image
               src="/landscape-logo.png"
               alt="Games4King Logo"
-              fill
+              width={200}
+              height={80}
               priority
-              className="object-contain"
+              className="object-contain max-h-[80px]"
             />
-          </div>
-          <div className="space-y-1">
-            <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">
-              Reset Your Password
-            </CardTitle>
-            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
-              Enter your identifier and set a new password.
-            </CardDescription>
-          </div>
+        </div>
+
+        <CardHeader className="space-y-2 pb-6 pt-6 text-center">
+          <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
+            Create New Password
+          </CardTitle>
+          <CardDescription className="text-sm font-sans text-neutral-500 dark:text-neutral-400">
+            Choose a strong password for your account
+          </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="space-y-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {form.formState.errors.root && (
+                <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-md text-sm font-medium text-center font-sans">
+                  {form.formState.errors.root.message}
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                      Email, Username, or Employee ID
+                    <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
+                      Email or Username
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your identifier..." {...field} />
+                      <Input placeholder="Enter your identifier..." {...field} className="font-sans" disabled={isLoading} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="font-sans" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="token"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
+                      Reset Token
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Paste your reset token..." {...field} className="font-sans" disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage className="font-sans" />
                   </FormItem>
                 )}
               />
@@ -115,13 +151,13 @@ export default function ResetPasswordPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
                       New Password
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder="New password (min 8 chars)" {...field} />
+                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="font-sans" />
                   </FormItem>
                 )}
               />
@@ -131,30 +167,35 @@ export default function ResetPasswordPage() {
                 name="password_confirmation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
                       Confirm New Password
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder="Confirm new password" {...field} />
+                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="font-sans" />
                   </FormItem>
                 )}
               />
 
               <Button
                 type="submit"
-                className="w-full h-10 mt-2 bg-gradient-brand text-white font-medium shadow-e2 transition-all duration-150 active:scale-[0.96]"
+                className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Resetting Password...
-                  </>
-                ) : (
-                  "Set New Password"
-                )}
+                <div className="absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-[2px] bg-gradient-brand mask-border z-0" style={{ WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }} />
+                
+                <span className="relative z-10 flex items-center justify-center">
+                  {isLoading ? (
+                    <div className="flex space-x-1.5 items-center justify-center h-full">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  ) : (
+                    "Reset Password"
+                  )}
+                </span>
               </Button>
             </form>
           </Form>

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Megaphone, Pin } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 
 export function AnnouncementBoard() {
   const { data: announcements = [] } = useQuery({

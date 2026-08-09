@@ -20,7 +20,9 @@ interface AuthState {
   token: string | null;
   user: UserProfile | null;
   activeRole: string | null;
+  density: "comfortable" | "compact";
   setAuth: (token: string, user: UserProfile, activeRole?: string) => void;
+  setDensity: (density: "comfortable" | "compact") => void;
   clearAuth: () => void;
 }
 
@@ -30,13 +32,25 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       activeRole: null,
-      setAuth: (token, user, activeRole) =>
-        set({
+      density: "comfortable",
+      setAuth: (token, user, activeRole) => {
+        if (typeof window !== "undefined") {
+          document.cookie = `g4k_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+        }
+        return set({
           token,
           user,
           activeRole: activeRole || user.active_role || user.roles?.[0] || "employee",
-        }),
-      clearAuth: () => set({ token: null, user: null, activeRole: null }),
+        });
+      },
+      setDensity: (density) => set({ density }),
+      clearAuth: () => {
+        if (typeof window !== "undefined") {
+          document.cookie = `g4k_token=; path=/; max-age=0; SameSite=Lax`;
+          document.cookie = `g4k_capabilities=; path=/; max-age=0; SameSite=Lax`;
+        }
+        return set({ token: null, user: null, activeRole: null });
+      },
     }),
     {
       name: "g4k-auth",

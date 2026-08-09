@@ -12,8 +12,8 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+} from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
 
 export function NotificationsBell() {
   const { user } = useAuthStore();

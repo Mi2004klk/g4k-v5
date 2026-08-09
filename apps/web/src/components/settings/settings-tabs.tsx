@@ -5,10 +5,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
 
 export function SettingsTabs() {
   const queryClient = useQueryClient();

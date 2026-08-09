@@ -1,132 +1,135 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Loader2, ShieldAlert, UserCheck, Users } from "lucide-react";
-import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/lib/auth-store";
+import { User, Shield, Briefcase, ChevronRight } from "lucide-react";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 
 export default function RoleSelectPage() {
   const router = useRouter();
-  const { user, setAuth } = useAuthStore();
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, setAuth, token } = useAuthStore();
+  const [isLoading, setIsLoading] = useState<string | null>(null);
 
-  const availableRoles = user?.roles || ["employee"];
+  useEffect(() => {
+    if (user && user.roles && user.roles.length === 1) {
+      handleSelectRole(user.roles[0]);
+    }
+  }, [user]);
 
-  async function handleRoleSelect(role: string) {
-    setSelectedRole(role);
-    setIsLoading(true);
+  async function handleSelectRole(role: string) {
+    setIsLoading(role);
     try {
-      const result = await apiFetch("/auth/role-select", {
+      await apiFetch("/auth/role-select", {
         method: "POST",
         body: JSON.stringify({ role }),
       });
 
-      setAuth(result.token, result.user, result.active_role);
-      toast.success(`Switched active role to ${role.replace("_", " ").toUpperCase()}`);
-      router.push("/dashboard");
+      // Silently refresh to get new active_role token
+      if (token) {
+         try {
+            const result = await apiFetch("/auth/refresh");
+            setAuth(result.token, result.user, result.active_role);
+            router.push("/dashboard");
+         } catch {
+            router.push("/dashboard");
+         }
+      } else {
+         router.push("/dashboard");
+      }
     } catch (error: any) {
-      toast.error(error.message || "Failed to switch role.");
+      if (error.status === 429) {
+        toast.error("Too many requests. Please try again later.");
+      } else {
+        toast.error(error.message || "Failed to select role.");
+      }
     } finally {
-      setIsLoading(false);
+      setIsLoading(null);
     }
   }
 
-  const roleMeta: Record<string, { label: string; desc: string; icon: any }> = {
-    super_admin: {
-      label: "Super Admin",
-      desc: "Full organization access, system configurations & administrative controls.",
-      icon: ShieldAlert,
-    },
-    hr: {
-      label: "HR Manager",
-      desc: "Team management, leave approvals, attendance monitoring & employee logs.",
-      icon: Users,
-    },
-    employee: {
-      label: "Employee",
-      desc: "Personal attendance, tasks, schedule, leave requests & profile management.",
-      icon: UserCheck,
-    },
+  const getRoleInfo = (role: string) => {
+    switch (role) {
+      case "super_admin":
+        return { icon: Shield, title: "Super Admin", desc: "Full system access" };
+      case "hr":
+        return { icon: Briefcase, title: "HR Manager", desc: "Manage employees & attendance" };
+      case "employee":
+      default:
+        return { icon: User, title: "Employee", desc: "Access your personal workspace" };
+    }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-lg shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+  if (!user || !user.roles || user.roles.length <= 1) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
+        <div className="flex space-x-1.5 items-center justify-center">
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
+      </div>
+    );
+  }
 
-        <CardHeader className="text-center space-y-4 pb-6 pt-8">
-          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
-            <Image
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
+      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+        <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center pt-2 pb-2">
+           <Image
               src="/landscape-logo.png"
               alt="Games4King Logo"
-              fill
+              width={200}
+              height={80}
               priority
-              className="object-contain"
+              className="object-contain max-h-[80px]"
             />
-          </div>
-          <div className="space-y-1">
-            <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">
-              Select Active Role
-            </CardTitle>
-            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
-              Your account holds multiple permission roles. Choose how you wish to operate in this session.
-            </CardDescription>
-          </div>
+        </div>
+
+        <CardHeader className="space-y-2 pb-6 pt-6 text-center">
+          <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
+            Select Workspace
+          </CardTitle>
+          <CardDescription className="text-sm font-sans text-neutral-500 dark:text-neutral-400">
+            Choose which role you want to continue as
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <div className="grid gap-3">
-            {availableRoles.map((roleKey) => {
-              const meta = roleMeta[roleKey] || {
-                label: roleKey,
-                desc: "Standard access role",
-                icon: UserCheck,
-              };
-              const Icon = meta.icon;
-              const isPending = isLoading && selectedRole === roleKey;
-
-              return (
-                <button
-                  key={roleKey}
-                  onClick={() => handleRoleSelect(roleKey)}
-                  disabled={isLoading}
-                  className="flex items-start gap-4 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-brand-violet hover:bg-brand-violet/5 text-left transition-all group active:scale-[0.98]"
-                >
-                  <div className="p-3 rounded-lg bg-brand-violet/10 text-brand-violet group-hover:scale-105 transition-transform">
-                    <Icon className="w-6 h-6" />
+        <CardContent className="space-y-3 pb-8">
+          {user.roles.map((role: string) => {
+            const info = getRoleInfo(role);
+            const Icon = info.icon;
+            
+            return (
+              <button
+                key={role}
+                onClick={() => handleSelectRole(role)}
+                disabled={isLoading !== null}
+                className="w-full flex items-center p-4 text-left border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-brand-violet dark:hover:border-brand-violet hover:bg-brand-violet/5 transition-all group disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-900 shadow-sm"
+              >
+                <div className="w-10 h-10 rounded-full bg-brand-violet/10 flex items-center justify-center mr-4 shrink-0 group-hover:scale-110 transition-transform">
+                  <Icon className="w-5 h-5 text-brand-violet" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-neutral-900 dark:text-white text-sm font-sans">{info.title}</h3>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">{info.desc}</p>
+                </div>
+                {isLoading === role ? (
+                  <div className="flex space-x-1 shrink-0 ml-2">
+                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-sm text-neutral-900 dark:text-white group-hover:text-brand-violet-deep transition-colors">
-                        {meta.label}
-                      </h4>
-                      {isPending && <Loader2 className="w-4 h-4 animate-spin text-brand-violet" />}
-                    </div>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
-                      {meta.desc}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="text-center pt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-neutral-500 hover:text-neutral-700"
-              onClick={() => router.push("/login")}
-            >
-              Sign out & return to login
-            </Button>
-          </div>
+                ) : (
+                  <ChevronRight className="w-5 h-5 text-neutral-300 dark:text-neutral-600 group-hover:text-brand-violet transition-colors shrink-0 ml-2" />
+                )}
+              </button>
+            );
+          })}
         </CardContent>
       </Card>
     </div>

@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Download, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
 
 export function ExportHistory() {
   const { data: exports = [], isLoading } = useQuery({

@@ -5,13 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { LeaveApprovalRow } from "@/components/leave/leave-approval-row";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { EmptyState } from "@g4k/ui/components";
 import { AlertCircle } from "lucide-react";
+import { useUrlState } from "@/hooks/use-url-state";
 
 export default function OrgLeaveApprovalsPage() {
-  const [filter, setFilter] = useState("pending");
+  const [filter, setFilter] = useUrlState("status", "pending");
 
   const { data, isLoading } = useQuery({
     queryKey: ["org-leave-requests", filter],

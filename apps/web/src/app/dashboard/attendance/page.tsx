@@ -5,9 +5,9 @@ import { format } from "date-fns";
 import { Clock, Calendar as CalendarIcon, CheckCircle, AlertTriangle, Coffee } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { EmptyState } from "@g4k/ui/components";
 import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
 
 export default function PersonalAttendancePage() {

@@ -5,8 +5,8 @@ import { ResponsiveGridLayout, useContainerWidth } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { apiFetch } from "@/lib/api-client";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorBoundary } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
 
 interface WidgetEngineProps {
   availableWidgets: Array<{

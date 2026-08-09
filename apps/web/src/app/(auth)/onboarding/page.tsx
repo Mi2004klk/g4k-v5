@@ -4,16 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, token, setAuth } = useAuthStore();
-  const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleFinish() {
@@ -24,12 +22,22 @@ export default function OnboardingPage() {
       });
 
       if (user && token) {
-        const updatedUser = { ...user, onboarded_at: new Date().toISOString() };
-        setAuth(token, updatedUser, user.roles?.[0] || 'employee');
+        // Silently refresh to clear the needs_onboarding flag correctly from backend
+        try {
+            const result = await apiFetch("/auth/refresh");
+            setAuth(result.token, result.user, result.active_role);
+        } catch {
+            const updatedUser = { ...user, onboarded_at: new Date().toISOString() };
+            setAuth(token, updatedUser, user.roles?.[0] || 'employee');
+        }
       }
 
       toast.success("Welcome aboard!");
-      router.push("/dashboard");
+      if (user?.roles && user.roles.length > 1) {
+          router.push("/role-select");
+      } else {
+          router.push("/dashboard");
+      }
     } catch (error: any) {
       toast.error(error.message || "Could not complete onboarding.");
     } finally {
@@ -37,92 +45,87 @@ export default function OnboardingPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-lg shadow-xl border border-neutral-200/50 dark:border-neutral-800/50 relative overflow-hidden bg-white dark:bg-neutral-900">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
+        <div className="flex space-x-1.5 items-center justify-center">
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
+      </div>
+    );
+  }
 
-        <CardHeader className="text-center space-y-4 pb-6 pt-8">
-          <div className="mx-auto w-48 h-16 relative flex items-center justify-center mb-2">
-            <Image
-              src="/landscape-logo.png"
-              alt="Games4King Logo"
-              fill
-              priority
-              className="object-contain"
-            />
-          </div>
-          <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
-              Welcome to Games4King
-            </CardTitle>
-            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400">
-              Your Workplace OS environment is ready. Let’s get you oriented.
-            </CardDescription>
-          </div>
+  const primaryRole = user.roles?.[0] || 'employee';
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
+      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+        <div className="w-full relative flex flex-col items-center justify-center pt-8 pb-4">
+           {/* Replace gradient hero with the animated logo */}
+           <video 
+              src="/animated-logo.mp4" 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              className="w-32 h-32 object-contain"
+           />
+        </div>
+
+        <CardHeader className="text-center space-y-2 pb-6 pt-2">
+          <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
+            Welcome to Games4King
+          </CardTitle>
+          <CardDescription className="text-sm font-sans text-neutral-500 dark:text-neutral-400">
+            Let’s confirm your workspace details
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-brand-violet/5 dark:bg-brand-violet/10 border border-brand-violet/10 dark:border-brand-violet/20 space-y-2">
-                <h4 className="font-semibold text-sm text-brand-violet-deep dark:text-brand-violet">
-                  Step 1: Attendance & Time Tracking
-                </h4>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                  Clock in from your personal dashboard widget when starting your shift. Your hours, break times, and extra hours are automatically calculated.
-                </p>
-              </div>
-
-              <Button
-                onClick={() => setStep(2)}
-                className="w-full h-10 bg-gradient-brand text-white gap-2 shadow-e2 transition-all duration-150 active:scale-[0.96]"
-              >
-                <span>Next Step</span>
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-brand-violet/5 dark:bg-brand-violet/10 border border-brand-violet/10 dark:border-brand-violet/20 space-y-2">
-                <h4 className="font-semibold text-sm text-brand-violet-deep dark:text-brand-violet">
-                  Step 2: Leave & Requests
-                </h4>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                  Need time off? Submit leave requests directly from the dashboard. Track your balances and review approval notifications in real-time.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  className="w-1/2 h-10"
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={handleFinish}
-                  disabled={isLoading}
-                  className="w-1/2 h-10 bg-gradient-brand text-white gap-2 shadow-e2 transition-all duration-150 active:scale-[0.96]"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      Get Started
-                    </>
-                  )}
-                </Button>
+          <div className="space-y-4">
+            <div className="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm font-sans">
+                <div>
+                  <div className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold mb-1 uppercase tracking-wider">Name</div>
+                  <div className="font-medium text-neutral-900 dark:text-white">{user.name}</div>
+                </div>
+                <div>
+                  <div className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold mb-1 uppercase tracking-wider">Emp ID</div>
+                  <div className="font-medium text-neutral-900 dark:text-white">{user.employee_id || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold mb-1 uppercase tracking-wider">Primary Role</div>
+                  <div className="font-medium text-neutral-900 dark:text-white capitalize">{primaryRole.replace('_', ' ')}</div>
+                </div>
+                <div>
+                  <div className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold mb-1 uppercase tracking-wider">Department</div>
+                  <div className="font-medium text-neutral-900 dark:text-white">{user.department?.name || 'N/A'}</div>
+                </div>
               </div>
             </div>
-          )}
+
+            <Button
+              onClick={handleFinish}
+              disabled={isLoading}
+              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
+            >
+              <div className="absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-[2px] bg-gradient-brand mask-border z-0" style={{ WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }} />
+              
+              <span className="relative z-10 flex items-center justify-center">
+                {isLoading ? (
+                  <div className="flex space-x-1.5 items-center justify-center h-full">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                ) : (
+                  "Get Started"
+                )}
+              </span>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

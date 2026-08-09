@@ -4,30 +4,33 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, FolderPlus, Search, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useUrlState } from "@/hooks/use-url-state";
 import { ProjectCard } from "@/components/projects/project-card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { EmptyState } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@g4k/ui/components";
 
 export default function ProjectsPage() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useUrlState("search", "");
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
+  const debouncedSearch = useDebounce(search, 250);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["projects", search],
-    queryFn: () => apiFetch(`/projects${search ? `?search=${search}` : ""}`),
+    queryKey: ["projects", debouncedSearch],
+    queryFn: () => apiFetch(`/projects${debouncedSearch ? `?search=${debouncedSearch}` : ""}`),
   });
 
   const createMutation = useMutation({
