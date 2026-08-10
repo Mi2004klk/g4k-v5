@@ -1,9 +1,1 @@
-{
-  "installCommand": "pnpm install",
-  "buildCommand": "pnpm run build",
-  "build": {
-    "env": {
-      "ENABLE_EXPERIMENTAL_COREPACK": "1"
-    }
-  }
-}
+{ "build": { "env": { "ENABLE_EXPERIMENTAL_COREPACK": "1", "NPM_CONFIG_IGNORE_SCRIPTS": "true" } } }
