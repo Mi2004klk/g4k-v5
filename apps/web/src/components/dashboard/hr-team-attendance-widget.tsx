@@ -1,0 +1,87 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { Users, ArrowRight, Loader2 } from "lucide-react";
+import Link from "next/link";
+
+import { Card } from "@g4k/ui/components";
+import { apiFetch } from "@/lib/api-client";
+
+export function HrTeamAttendanceWidget() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["hr-attendance-today", format(new Date(), "yyyy-MM-dd"), "all", ""],
+    queryFn: () => apiFetch(`/attendance/admin/overview?date=${format(new Date(), "yyyy-MM-dd")}`),
+  });
+
+  const records = data?.data || [];
+  const presentCount = records.filter((r: any) => r.status === "present" || r.status === "late").length;
+  const totalCount = records.length;
+  const topRecords = records.slice(0, 3);
+
+  return (
+    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden p-0 relative">
+      <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+            <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight">Team Attendance</h3>
+            <p className="text-[10px] text-neutral-500 font-medium">Today's snapshot</p>
+          </div>
+        </div>
+        
+        {totalCount > 0 && (
+          <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">
+            <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{presentCount}</span>
+            <span className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 p-4 flex flex-col">
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
+          </div>
+        ) : records.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <p className="text-sm font-medium text-neutral-400">No team members scheduled</p>
+          </div>
+        ) : (
+          <div className="space-y-3 flex-1">
+            {topRecords.map((r: any) => (
+              <div key={r.user_id} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
+                    {r.user_name?.charAt(0) || "U"}
+                  </div>
+                  <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{r.user_name}</span>
+                </div>
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                  r.status === "present" ? "bg-emerald-100 text-emerald-700" :
+                  r.status === "late" ? "bg-amber-100 text-amber-700" :
+                  r.status === "leave" ? "bg-violet-100 text-violet-700" :
+                  "bg-rose-100 text-rose-700"
+                }`}>
+                  {r.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+        <Link 
+          href="/dashboard/org/attendance"
+          className="flex items-center justify-between w-full text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group transition-colors"
+        >
+          View Full Report
+          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
+    </Card>
+  );
+}

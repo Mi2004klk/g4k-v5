@@ -1,0 +1,108 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
+import { toast } from "sonner";
+import { apiFetch } from "@/lib/api-client";
+import { Save } from "lucide-react";
+
+export function RemindersConfig() {
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState<any>({});
+
+  const { data: settingsGrouped, isLoading } = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => apiFetch("/settings"),
+  });
+
+  useEffect(() => {
+    if (settingsGrouped?.reminders) {
+      const remindersMap: any = {};
+      settingsGrouped.reminders.forEach((s: any) => {
+        remindersMap[s.key] = s.value;
+      });
+      setFormData(remindersMap);
+    }
+  }, [settingsGrouped]);
+
+  const updateMutation = useMutation({
+    mutationFn: (updates: any[]) =>
+      apiFetch("/settings/bulk", {
+        method: "POST",
+        body: JSON.stringify({ settings: updates }),
+      }),
+    onSuccess: () => {
+      toast.success("Reminder settings updated");
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updates = [
+      { category: "reminders", key: "reminders.shift_offset", value: formData["reminders.shift_offset"]?.toString() || "15" },
+      { category: "reminders", key: "reminders.missed_clock_in_offset", value: formData["reminders.missed_clock_in_offset"]?.toString() || "30" },
+      { category: "reminders", key: "reminders.open_shift_flag_time", value: formData["reminders.open_shift_flag_time"]?.toString() || "10" },
+    ];
+    updateMutation.mutate(updates);
+  };
+
+  if (isLoading) {
+    return <Skeleton className="h-64 w-full rounded-2xl" />;
+  }
+
+  return (
+    <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+      <CardHeader>
+        <CardTitle className="text-base">Shift & Attendance Reminders</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+          <div>
+            <label className="text-xs font-medium">Shift Reminder Offset (Minutes Before)</label>
+            <input
+              type="number"
+              min={0}
+              className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+              value={formData["reminders.shift_offset"] || "15"}
+              onChange={(e) => setFormData({ ...formData, "reminders.shift_offset": e.target.value })}
+            />
+            <p className="text-[10px] text-neutral-500 mt-1">When to remind users before their shift starts.</p>
+          </div>
+          
+          <div>
+            <label className="text-xs font-medium">Missed Clock-In Alert Offset (Minutes After)</label>
+            <input
+              type="number"
+              min={0}
+              className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+              value={formData["reminders.missed_clock_in_offset"] || "30"}
+              onChange={(e) => setFormData({ ...formData, "reminders.missed_clock_in_offset": e.target.value })}
+            />
+            <p className="text-[10px] text-neutral-500 mt-1">When to notify managers/HR if a user misses clock-in.</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium">Open Shift Flag Time (Minutes After End + Grace)</label>
+            <input
+              type="number"
+              min={0}
+              className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+              value={formData["reminders.open_shift_flag_time"] || "10"}
+              onChange={(e) => setFormData({ ...formData, "reminders.open_shift_flag_time": e.target.value })}
+            />
+            <p className="text-[10px] text-neutral-500 mt-1">When to flag a shift as abandoned if no clock-out.</p>
+          </div>
+
+          <Button type="submit" disabled={updateMutation.isPending} className="mt-4">
+            <Save className="w-4 h-4 mr-2" />
+            {updateMutation.isPending ? "Saving..." : "Save Settings"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
