@@ -29,10 +29,24 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         if (data.preferences?.dashboard_layout) {
           setLayouts(data.preferences.dashboard_layout);
         } else {
-          setLayouts({ lg: availableWidgets.map((w) => w.defaultLayout) });
+          const defaultBreakpoints = {
+            lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+            md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+            sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+            xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+            xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+          };
+          setLayouts(defaultBreakpoints);
         }
       } catch {
-        setLayouts({ lg: availableWidgets.map((w) => w.defaultLayout) });
+        const defaultBreakpoints = {
+          lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+          md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+          sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+          xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+          xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+        };
+        setLayouts(defaultBreakpoints);
       } finally {
         setLoading(false);
         setMounted(true);

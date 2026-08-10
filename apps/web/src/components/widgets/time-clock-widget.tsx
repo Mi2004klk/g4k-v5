@@ -113,29 +113,24 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   return (
     <div className={cn("relative w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between", className)}>
-      {(loading || error) && (
+      {loading && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 dark:bg-neutral-950/90 backdrop-blur-sm rounded-2xl gap-2">
-          {loading ? (
-            <>
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Loading schedule...</p>
-            </>
-          ) : (
-            <>
-              <AlertCircle className="w-8 h-8 text-rose-500" />
-              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Couldn't load attendance status</p>
-              <Button size="sm" variant="outline" onClick={fetchTodayStatus} className="mt-2">
-                Retry
-              </Button>
-            </>
-          )}
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+          <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Loading schedule...</p>
         </div>
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-          Time Clock
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            Time Clock
+          </span>
+          {error && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-rose-500 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
+              <AlertCircle className="w-3 h-3" /> Offline Mode
+            </span>
+          )}
+        </div>
         <span
           className={cn(
             "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
