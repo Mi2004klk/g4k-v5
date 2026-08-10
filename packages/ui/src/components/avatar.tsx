@@ -25,7 +25,10 @@ const avatarVariants = cva(
 
 export interface AvatarProps
   extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>,
-    VariantProps<typeof avatarVariants> {}
+    VariantProps<typeof avatarVariants> {
+  children?: React.ReactNode;
+  className?: string;
+}
 
 const Avatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Root>,
@@ -72,6 +75,8 @@ function getHashColor(name: string) {
 
 export interface AvatarFallbackProps extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> {
   name?: string;
+  children?: React.ReactNode;
+  className?: string;
 }
 
 const AvatarFallback = React.forwardRef<

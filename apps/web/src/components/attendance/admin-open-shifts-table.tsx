@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Search, AlertCircle, Building2, Bell } from "lucide-react";
 import { toast } from "sonner";
@@ -54,32 +54,36 @@ export function AdminOpenShiftsTable() {
   const allRecords = data?.data || [];
   const openShifts = allRecords.filter((r: any) => r.clock_in && !r.clock_out);
 
+  const notifyMutation = useMutation({
+    mutationFn: (ids: string[]) => apiFetch('/attendance/admin/notify-open-shifts', { method: 'POST', body: JSON.stringify({ ids }) }),
+    onSuccess: () => {
+      toast.success("Notified HR about open shifts.");
+      setRowSelection({});
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to notify HR."),
+  });
+
   const handleBulkNotify = async () => {
     const selectedIds = Object.keys(rowSelection);
     if (selectedIds.length === 0) return;
-    
-    // In a real app, this would be an API call to notify HR/Managers
-    // await apiFetch('/attendance/admin/notify-open-shifts', { method: 'POST', body: JSON.stringify({ ids: selectedIds }) });
-    
-    toast.success(`Notified HR about ${selectedIds.length} open shift(s)`);
-    setRowSelection({});
+    notifyMutation.mutate(selectedIds);
   };
 
-  const columns: ColumnDef<any>[] = [
+  const columns: any[] = [
     {
       id: "select",
-      header: ({ table }) => (
+      header: ({ table }: any) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="ml-2"
         />
       ),
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={(value: any) => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="ml-2"
         />
@@ -90,7 +94,7 @@ export function AdminOpenShiftsTable() {
     {
       accessorKey: "user_name",
       header: "Employee",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         return (
           <div className="flex flex-col text-left">
             <span className="font-semibold text-neutral-900 dark:text-white">{row.original.user_name || "Employee"}</span>
@@ -102,14 +106,14 @@ export function AdminOpenShiftsTable() {
     {
       accessorKey: "department",
       header: "Department",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         return <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">{row.original.department_name || "—"}</span>;
       },
     },
     {
       accessorKey: "clock_in",
       header: "Clock In",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const val = row.getValue("clock_in") as string;
         return (
           <div className="flex items-center gap-2">
@@ -125,7 +129,7 @@ export function AdminOpenShiftsTable() {
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         return (
           <Button 
             variant="outline" 

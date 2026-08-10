@@ -3,6 +3,7 @@
 import { useUrlState } from '@/hooks/use-url-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { HrAttendanceTable } from '@/components/attendance/hr-attendance-table';
+import { HrAttendanceAnalytics } from '@/components/attendance/hr-attendance-analytics';
 import { HrAttendanceGraph } from '@/components/attendance/hr-attendance-graph';
 import Link from 'next/link';
 import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
@@ -12,7 +13,7 @@ export default function HrAttendancePage() {
   const [tab, setTab] = useUrlState('tab', 'today');
 
   return (
-    <div className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950 p-6">
+    <div className="flex-1 overflow-auto">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-start justify-between">
           <div>
@@ -48,7 +49,8 @@ export default function HrAttendancePage() {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0">
+          <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0 space-y-6">
+            <HrAttendanceAnalytics />
             <HrAttendanceTable />
           </TabsContent>
           

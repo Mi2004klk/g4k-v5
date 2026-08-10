@@ -48,8 +48,8 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { EmptyState } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components";
 
-import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@g4k/ui/components";
 
 export default function UsersPage() {
@@ -82,7 +82,7 @@ export default function UsersPage() {
   });
 
   // Queries
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["users", debouncedSearch, roleFilter, statusFilter, deptFilter],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -157,6 +157,16 @@ export default function UsersPage() {
     onError: (err: any) => toast.error(err.message || "Failed to reset password."),
   });
 
+  const bulkMutation = useMutation({
+    mutationFn: (payload: { ids: number[], action: string }) => apiFetch('/users/bulk', { method: 'POST', body: JSON.stringify(payload) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Bulk action completed.");
+      setRowSelection({});
+    },
+    onError: (err: any) => toast.error(err.message || "Bulk action failed."),
+  });
+
   const bulkExport = async () => {
     try {
       const params = new URLSearchParams();
@@ -190,20 +200,20 @@ export default function UsersPage() {
   const usersList = data?.data || [];
   const selectedCount = Object.keys(rowSelection).length;
 
-  const columns = useMemo<ColumnDef<any>[]>(() => [
+  const columns: any[] = useMemo<any[]>(() => [
     {
       id: "select",
-      header: ({ table }) => (
+      header: ({ table }: any) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
       ),
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={(value: any) => row.toggleSelected(!!value)}
           aria-label="Select row"
         />
       ),
@@ -213,7 +223,7 @@ export default function UsersPage() {
     {
       accessorKey: "name",
       header: "Employee",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const user = row.original;
         return (
           <div className="flex items-center gap-3" onClick={() => {
@@ -247,7 +257,7 @@ export default function UsersPage() {
     {
       accessorKey: "employee_id",
       header: "Code",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const code = row.original.employee_code || row.original.employee_id || "N/A";
         return <span className="font-mono font-medium text-neutral-600 dark:text-neutral-300">{code}</span>;
       }
@@ -255,7 +265,7 @@ export default function UsersPage() {
     {
       accessorKey: "department.name",
       header: "Department",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const dept = row.original.department;
         const desig = row.original.designation;
         return (
@@ -274,7 +284,7 @@ export default function UsersPage() {
     {
       accessorKey: "roles",
       header: "Role",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const activeRoles = row.original.role_assignments?.map((r: any) => r.role) || [];
         return (
           <div className="flex flex-wrap gap-1">
@@ -294,19 +304,19 @@ export default function UsersPage() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const isInactive = row.original.status === "inactive";
         return (
-          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${isInactive ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>
+          <StatusBadge status={isInactive ? "danger" : "success"} dot className="uppercase">
             {row.original.status || "active"}
-          </span>
+          </StatusBadge>
         );
       }
     },
     {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const user = row.original;
         const isInactive = user.status === "inactive";
         return (
@@ -353,7 +363,7 @@ export default function UsersPage() {
   const deptOptions = departments?.map((d: any) => ({ label: d.name, value: d.id.toString() })) || [];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
@@ -427,8 +437,8 @@ export default function UsersPage() {
         <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-900/50 rounded-lg p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
           <span className="text-sm font-medium text-violet-700 dark:text-violet-300">{selectedCount} users selected</span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8">Bulk Activate</Button>
-            <Button variant="outline" size="sm" className="h-8 text-rose-600">Bulk Deactivate</Button>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => bulkMutation.mutate({ ids: Object.keys(rowSelection).map(Number), action: 'activate' })}>Bulk Activate</Button>
+            <Button variant="outline" size="sm" className="h-8 text-rose-600" onClick={() => bulkMutation.mutate({ ids: Object.keys(rowSelection).map(Number), action: 'deactivate' })}>Bulk Deactivate</Button>
           </div>
         </div>
       )}
@@ -440,6 +450,13 @@ export default function UsersPage() {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
+            </div>
+          ) : isError ? (
+            <div className="p-12">
+              <EmptyState title="Failed to load employees" description="There was an error fetching the user list. Please try again." />
+              <div className="flex justify-center mt-4">
+                <Button onClick={() => refetch()} variant="outline">Retry</Button>
+              </div>
             </div>
           ) : usersList.length === 0 ? (
             <div className="p-12">
@@ -461,29 +478,61 @@ export default function UsersPage() {
           <DialogHeader>
             <DialogTitle>Add New Employee</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2 text-xs">
-            <div>
-              <label className="block mb-1 font-semibold">Name *</label>
-              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+          <div className="space-y-4 py-2 text-xs max-h-[60vh] overflow-y-auto px-1">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-semibold">Name *</label>
+                <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block mb-1 font-semibold">Username</label>
+                <Input value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-semibold">Email *</label>
+                <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+              </div>
+              <div>
+                <label className="block mb-1 font-semibold">Phone</label>
+                <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-semibold">Department</label>
+                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
+                  <option value="">Select Department</option>
+                  {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block mb-1 font-semibold">Designation</label>
+                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.designation_id} onChange={e => setFormData({ ...formData, designation_id: e.target.value })}>
+                  <option value="">Select Designation</option>
+                  {designations?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
             </div>
             <div>
-              <label className="block mb-1 font-semibold">Email *</label>
-              <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold">Department</label>
-              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
-                <option value="">Select Department</option>
-                {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold">Roles</label>
-              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.roles[0]} onChange={e => setFormData({ ...formData, roles: [e.target.value] })}>
-                <option value="employee">Employee</option>
-                <option value="hr">HR</option>
-                <option value="super_admin">Super Admin</option>
-              </select>
+              <label className="block mb-2 font-semibold">Roles</label>
+              <div className="flex gap-4">
+                {['employee', 'hr', 'super_admin'].map((role) => (
+                  <label key={role} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={formData.roles.includes(role)}
+                      onCheckedChange={(checked: boolean) => {
+                        const newRoles = checked
+                          ? [...formData.roles, role]
+                          : formData.roles.filter(r => r !== role);
+                        setFormData({ ...formData, roles: newRoles });
+                      }}
+                    />
+                    <span className="capitalize">{role.replace('_', ' ')}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -500,29 +549,61 @@ export default function UsersPage() {
           <DialogHeader>
             <DialogTitle>Edit Employee</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2 text-xs">
-            <div>
-              <label className="block mb-1 font-semibold">Name *</label>
-              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+          <div className="space-y-4 py-2 text-xs max-h-[60vh] overflow-y-auto px-1">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-semibold">Name *</label>
+                <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block mb-1 font-semibold">Username</label>
+                <Input value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-semibold">Email *</label>
+                <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+              </div>
+              <div>
+                <label className="block mb-1 font-semibold">Phone</label>
+                <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-semibold">Department</label>
+                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
+                  <option value="">Select Department</option>
+                  {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block mb-1 font-semibold">Designation</label>
+                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.designation_id} onChange={e => setFormData({ ...formData, designation_id: e.target.value })}>
+                  <option value="">Select Designation</option>
+                  {designations?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
             </div>
             <div>
-              <label className="block mb-1 font-semibold">Email *</label>
-              <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold">Department</label>
-              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
-                <option value="">Select Department</option>
-                {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold">Roles</label>
-              <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.roles[0]} onChange={e => setFormData({ ...formData, roles: [e.target.value] })}>
-                <option value="employee">Employee</option>
-                <option value="hr">HR</option>
-                <option value="super_admin">Super Admin</option>
-              </select>
+              <label className="block mb-2 font-semibold">Roles</label>
+              <div className="flex gap-4">
+                {['employee', 'hr', 'super_admin'].map((role) => (
+                  <label key={role} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={formData.roles.includes(role)}
+                      onCheckedChange={(checked: boolean) => {
+                        const newRoles = checked
+                          ? [...formData.roles, role]
+                          : formData.roles.filter(r => r !== role);
+                        setFormData({ ...formData, roles: newRoles });
+                      }}
+                    />
+                    <span className="capitalize">{role.replace('_', ' ')}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>

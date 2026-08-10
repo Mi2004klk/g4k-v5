@@ -13,7 +13,7 @@ export default function AdminAttendancePage() {
   const [tab, setTab] = useUrlState('tab', 'today');
 
   return (
-    <div className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950 p-6">
+    <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">Company Attendance Console</h1>

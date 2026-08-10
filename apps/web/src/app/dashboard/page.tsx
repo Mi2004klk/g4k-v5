@@ -2,6 +2,9 @@
 
 import { useAuthStore } from "@/lib/auth-store";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
 import { HrTeamAttendanceWidget } from "@/components/dashboard/hr-team-attendance-widget";
@@ -31,6 +34,17 @@ import { AdminTodayAttendanceWidget } from "@/components/dashboard/admin-today-a
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const activeRole = user?.active_role || "employee";
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("error") === "unauthorized") {
+        toast.error("You don't have access to that section.");
+        router.replace("/dashboard");
+      }
+    }
+  }, [router]);
 
   // Widget catalog based on active role
   const getWidgetsForRole = () => {
@@ -192,7 +206,7 @@ export default function DashboardPage() {
         )}
         {activeRole === "hr" && (
           <>
-            <Link href="/dashboard/attendance" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+            <Link href="/dashboard/org/attendance" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
               <Clock className="w-4 h-4 text-emerald-500" /> View Team Attendance
             </Link>
             <Link href="/dashboard/org/leave?status=pending" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">

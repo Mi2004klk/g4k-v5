@@ -26,10 +26,11 @@ class DirectoryController extends Controller
         if ($visibility === 'public' || $visibility === 'internal') {
             $data['email'] = $user->email;
             $data['phone'] = $user->phone;
-            $data['alternate_mobile'] = null; // Always hidden
-            $data['emergency_contact'] = null; // Always hidden
-            $data['blood_group'] = null; // Always hidden
         }
+
+        $data['alternate_mobile'] = null; // Always hidden
+        $data['emergency_contact'] = null; // Always hidden
+        $data['blood_group'] = null; // Always hidden
 
         return $data;
     }

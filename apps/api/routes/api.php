@@ -100,6 +100,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     });
 
     Route::get('/attendance/admin/overview', [AttendanceController::class, 'overview'])->middleware('capability:admin.view-all-attendance');
+    Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:admin.view-all-attendance');
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
         Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
@@ -108,7 +109,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::get('/attendance/hr/history/{userId}', [AttendanceController::class, 'hrHistory']);
     });
 
-    Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware('capability:admin.correct-attendance');
+    Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware('capability:admin.correct-attendance|attendance.correct-team');
     Route::get('/attendance/export', [AttendanceController::class, 'export'])->middleware('capability:admin.view-all-attendance');
 
     // Phase 6 API
@@ -185,6 +186,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     // Admin & Master Data APIs
     Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage');
     Route::middleware('capability:users.hr.manage|users.employee.manage')->group(function () {
+        Route::post('/users/bulk', [UserController::class, 'bulk']);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::patch('/users/{id}/status', [UserController::class, 'updateStatus']);
         Route::get('/users/{id}/activity', [UserController::class, 'activity']);

@@ -21,7 +21,7 @@ class WorkScheduleController extends Controller
             'end_time' => 'required|string',
             'break_minutes' => 'required|integer',
             'standard_seconds' => 'required|integer',
-            'grace_period_minutes' => 'required|integer',
+            'grace_minutes' => 'required|integer|min:0|max:120',
             'working_days' => 'required|array',
         ]);
 

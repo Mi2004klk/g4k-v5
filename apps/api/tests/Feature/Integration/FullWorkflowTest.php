@@ -14,6 +14,7 @@ class FullWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutMockingConsoleOutput();
         Cache::flush();
         // Seed standard DB structure including roles, capabilities, default schedules
         $this->seed();

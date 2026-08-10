@@ -261,7 +261,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-48 w-full rounded-xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Skeleton className="h-64 w-full rounded-xl" />
@@ -272,7 +272,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-5xl mx-auto font-sans">
+    <div className="space-y-6 max-w-5xl mx-auto font-sans">
       {/* Header Profile Card */}
       <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />

@@ -66,7 +66,7 @@ class AttendanceService
     public static function reconcileDay(int $userId, string $date, bool $forceRecompute = false): array
     {
         $startWindow = Carbon::parse($date)->startOfDay();
-        $endWindow = Carbon::parse($date)->addHours(36);
+        $endWindow = Carbon::parse($date)->addHours(48);
 
         $allEvents = AttendanceEvent::where('user_id', $userId)
             ->whereBetween('timestamp', [$startWindow, $endWindow])
@@ -181,10 +181,15 @@ class AttendanceService
 
         $overtimeSeconds = max(0, $totalSeconds - $standardSeconds);
         $lateMinutes = 0;
+        
+        $grace = (int) ($schedule->grace_minutes ?? 10);
+        $graceSeconds = $grace * 60;
+
         if ($firstClockIn) {
             $scheduledStart = Carbon::parse($date . ' ' . $startTimeStr);
-            if ($firstClockIn->gt($scheduledStart)) {
-                $lateMinutes = abs($firstClockIn->diffInMinutes($scheduledStart));
+            if ($firstClockIn->timestamp > $scheduledStart->timestamp + $graceSeconds) {
+                $lateSeconds = $firstClockIn->diffInSeconds($scheduledStart) - $graceSeconds;
+                $lateMinutes = (int) floor($lateSeconds / 60);
             }
         }
 

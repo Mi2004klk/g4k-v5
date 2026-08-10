@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Designation extends Model
 {
-    protected $fillable = ['company_id', 'name', 'description'];
+    protected $fillable = ['company_id', 'name', 'description', 'is_active'];
 
     public function users()
     {

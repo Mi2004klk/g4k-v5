@@ -238,6 +238,7 @@ class DatabaseSeeder extends Seeder
                     "joining_date" => $emp["joining_date"],
                     "blood_group" => $emp["blood_group"],
                     "working_hours" => $emp["working_hours"],
+                    "work_schedule_id" => 1,
                 ]
             );
 
@@ -291,5 +292,11 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+
+        // 9. Demo Data Seeders (Phase 2)
+        $this->call([
+            AttendanceDemoDataSeeder::class,
+            LeaveRequestsDemoSeeder::class,
+        ]);
     }
 }

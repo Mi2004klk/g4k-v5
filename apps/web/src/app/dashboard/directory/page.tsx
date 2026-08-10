@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -32,11 +33,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@g4k/ui/components";
-import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@g4k/ui/components";
 import { useTrackRecent } from "@/hooks/use-track-recent";
 
 export default function DirectoryPage() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
@@ -54,7 +55,7 @@ export default function DirectoryPage() {
       : null
   );
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["directory", debouncedSearch],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -68,7 +69,8 @@ export default function DirectoryPage() {
       return apiFetch(`/directory/${userId}/send-message`, { method: "POST" });
     },
     onSuccess: (res: any) => {
-      toast.success(`Message session started! Conversation ID: ${res.conversation_id}`);
+      toast.success(`Message session started!`);
+      router.push(`/dashboard/chat?conversation=${res.conversation_id}`);
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to start conversation.");
@@ -77,11 +79,11 @@ export default function DirectoryPage() {
 
   const users = data?.data || [];
 
-  const columns: ColumnDef<any>[] = [
+  const columns: any[] = [
     {
       accessorKey: "name",
       header: "Employee",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <div
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => setSelectedUser(row.original)}
@@ -98,7 +100,7 @@ export default function DirectoryPage() {
     {
       accessorKey: "designation.name",
       header: "Designation",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <span className="text-neutral-600 dark:text-neutral-300 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
           {row.original.designation?.name || "—"}
         </span>
@@ -107,7 +109,7 @@ export default function DirectoryPage() {
     {
       accessorKey: "department.name",
       header: "Department",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <span className="text-neutral-600 dark:text-neutral-300 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
           {row.original.department?.name || "—"}
         </span>
@@ -116,7 +118,7 @@ export default function DirectoryPage() {
     {
       accessorKey: "email",
       header: "Contact",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <span className="text-neutral-500 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
           {row.original.email}
         </span>
@@ -125,7 +127,7 @@ export default function DirectoryPage() {
     {
       id: "actions",
       header: () => <div className="text-right">Action</div>,
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <div className="text-right">
           <Button
             onClick={(e) => {
@@ -144,7 +146,7 @@ export default function DirectoryPage() {
   ];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
@@ -191,6 +193,13 @@ export default function DirectoryPage() {
           <Skeleton className="h-48 w-full" />
           <Skeleton className="h-48 w-full" />
           <Skeleton className="h-48 w-full" />
+        </div>
+      ) : isError ? (
+        <div className="p-12">
+          <EmptyState title="Failed to load directory" description="There was an error fetching the directory. Please try again." />
+          <div className="flex justify-center mt-4">
+            <Button onClick={() => refetch()} variant="outline">Retry</Button>
+          </div>
         </div>
       ) : users.length === 0 ? (
         <EmptyState

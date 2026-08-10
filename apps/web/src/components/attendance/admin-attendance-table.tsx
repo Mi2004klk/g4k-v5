@@ -8,8 +8,7 @@ import Link from "next/link";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
-import { Input, Button, Checkbox, DataTable } from "@g4k/ui/components";
-import { ColumnDef } from "@tanstack/react-table";
+import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 
@@ -75,7 +74,7 @@ export function AdminAttendanceTable() {
       params.append("end_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
       
-      const token = document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1];
+      const token = document.cookie.split('; ').find(row => row.startsWith('g4k_token='))?.split('=')[1];
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
         headers: {
@@ -100,22 +99,22 @@ export function AdminAttendanceTable() {
     }
   };
 
-  const columns: ColumnDef<any>[] = [
+  const columns: any[] = [
     {
       id: "select",
-      header: ({ table }) => (
+      header: ({ table }: any) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="ml-2 translate-y-[2px]"
         />
       ),
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <div onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            onCheckedChange={(value: any) => row.toggleSelected(!!value)}
             aria-label="Select row"
             className="ml-2 translate-y-[2px]"
           />
@@ -127,7 +126,7 @@ export function AdminAttendanceTable() {
     {
       accessorKey: "user_name",
       header: "Employee",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const isOpenShift = row.original.clock_in && !row.original.clock_out;
         
         return (
@@ -162,32 +161,26 @@ export function AdminAttendanceTable() {
     {
       accessorKey: "department",
       header: "Department",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         return <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">{row.original.department_name || "—"}</span>;
       },
     },
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const status = row.getValue("status") as string;
         const isLeave = status === "leave";
         
         return (
           <div className="flex items-center gap-2">
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                status === "present"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : status === "late"
-                  ? "bg-amber-100 text-amber-700"
-                  : isLeave
-                  ? "bg-violet-100 text-violet-700"
-                  : "bg-rose-100 text-rose-700"
-              }`}
+            <StatusBadge 
+              status={status === "present" ? "success" : status === "late" ? "warning" : isLeave ? "info" : "danger"} 
+              dot 
+              className="uppercase"
             >
               {status}
-            </span>
+            </StatusBadge>
             {isLeave && (
               <Link 
                 href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
@@ -205,7 +198,7 @@ export function AdminAttendanceTable() {
     {
       accessorKey: "clock_in",
       header: "Clock In",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const val = row.getValue("clock_in") as string;
         return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
       },
@@ -213,7 +206,7 @@ export function AdminAttendanceTable() {
     {
       accessorKey: "clock_out",
       header: "Clock Out",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const val = row.getValue("clock_out") as string;
         return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
       },
@@ -221,7 +214,7 @@ export function AdminAttendanceTable() {
     {
       id: "worked_hours",
       header: "Worked Hours",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const secs = row.original.total_seconds || 0;
         const hours = Math.floor(secs / 3600);
         const mins = Math.floor((secs % 3600) / 60);
@@ -231,7 +224,7 @@ export function AdminAttendanceTable() {
     {
       id: "overtime",
       header: "Overtime",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const secs = row.original.overtime_seconds || 0;
         const hours = Math.floor(secs / 3600);
         const mins = Math.floor((secs % 3600) / 60);

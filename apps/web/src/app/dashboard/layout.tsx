@@ -27,6 +27,11 @@ import {
   ShieldAlert,
   Menu,
   Star,
+  Rows3,
+  Rows2,
+  Check,
+  Command,
+  Monitor,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@g4k/ui/components";
@@ -42,6 +47,7 @@ import { CommandPalette } from "@/components/app-shell/command-palette";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
 import { TopbarTimer } from "@/components/app-shell/topbar-timer";
+import { NavGroup, NavItem } from "@/components/app-shell/nav-group";
 import { HelpOverlay, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import {
   DropdownMenu,
@@ -54,25 +60,32 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@g4k/ui/components";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 
-const primaryNav = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Chat & Hub", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
-  { name: "Projects", href: "/dashboard/projects", icon: Folder, capability: "projects.manage" },
-  { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, capability: "tasks.submit" },
-  { name: "Directory", href: "/dashboard/directory", icon: Users, capability: "directory.view" },
-  { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "leave.request-self" },
-  { name: "Employees", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
-  { name: "Team Attendance", href: "/dashboard/org/attendance", icon: Clock, capability: "hr.view-team-attendance" },
-  { name: "Org Leave Approvals", href: "/dashboard/org/leave", icon: CalendarDays, capability: "leave.approve-employee" },
-  { name: "Departments", href: "/dashboard/org/departments", icon: Building2, capability: "departments.manage" },
-  { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.manage" },
-  { name: "Profile", href: "/dashboard/profile", icon: UserCircle, capability: "profile.edit" },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
-  { name: "Audit Log", href: "/dashboard/audit", icon: ShieldAlert, capability: "audit.view" },
-];
-
-const secondaryNav = [
-  { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
+export const navGroups = [
+  { label: "Workspace", items: [
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Chat & Hub", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
+  ]},
+  { label: "My Work", items: [
+    { name: "Attendance", href: "/dashboard/attendance", icon: Clock },
+    { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "leave.request-self" },
+    { name: "Projects", href: "/dashboard/projects", icon: Folder, capability: "projects.manage" },
+    { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, capability: "tasks.submit" },
+  ]},
+  { label: "People", items: [
+    { name: "Directory", href: "/dashboard/directory", icon: Users, capability: "directory.view" },
+  ]},
+  { label: "Administration", items: [
+    { name: "Employees", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
+    { name: "Team Attendance", href: "/dashboard/org/attendance", icon: Clock, capability: "hr.view-team-attendance" },
+    { name: "Org Leave Approvals", href: "/dashboard/org/leave", icon: CalendarDays, capability: "leave.approve-employee" },
+    { name: "Departments", href: "/dashboard/org/departments", icon: Building2, capability: "departments.manage" },
+    { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.manage" },
+    { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
+    { name: "Audit Log", href: "/dashboard/audit", icon: ShieldAlert, capability: "audit.view" },
+  ]},
+  { label: "Account", items: [
+    { name: "Profile", href: "/dashboard/profile", icon: UserCircle, capability: "profile.edit" },
+  ]},
 ];
 
 const accentClasses: Record<string, { bg: string; text: string; bgDark: string; textDark: string; border: string }> = {
@@ -83,15 +96,29 @@ const accentClasses: Record<string, { bg: string; text: string; bgDark: string; 
   slate: { bg: "bg-slate-100", text: "text-slate-700", bgDark: "dark:bg-slate-900", textDark: "dark:text-slate-300", border: "bg-slate-600" },
   rose: { bg: "bg-rose-100", text: "text-rose-700", bgDark: "dark:bg-rose-950", textDark: "dark:text-rose-300", border: "bg-rose-600" },
   violet: { bg: "bg-violet-100", text: "text-violet-700", bgDark: "dark:bg-violet-950", textDark: "dark:text-violet-300", border: "bg-violet-600" },
+  indigo: { bg: "bg-indigo-100", text: "text-indigo-700", bgDark: "dark:bg-indigo-950", textDark: "dark:text-indigo-300", border: "bg-indigo-600" },
+  teal: { bg: "bg-teal-100", text: "text-teal-700", bgDark: "dark:bg-teal-950", textDark: "dark:text-teal-300", border: "bg-teal-600" },
+  cyan: { bg: "bg-cyan-100", text: "text-cyan-700", bgDark: "dark:bg-cyan-950", textDark: "dark:text-cyan-300", border: "bg-cyan-600" },
+  orange: { bg: "bg-orange-100", text: "text-orange-700", bgDark: "dark:bg-orange-950", textDark: "dark:text-orange-300", border: "bg-orange-600" },
+  green: { bg: "bg-green-100", text: "text-green-700", bgDark: "dark:bg-green-950", textDark: "dark:text-green-300", border: "bg-green-600" },
 };
 
 function getAccent(href: string) {
   let color = "violet";
-  if (href.startsWith("/dashboard/attendance")) color = "emerald";
+  if (href === "/dashboard") color = "blue";
+  else if (href.startsWith("/dashboard/chat")) color = "violet";
+  else if (href.startsWith("/dashboard/projects")) color = "orange";
+  else if (href.startsWith("/dashboard/tasks")) color = "green";
+  else if (href.startsWith("/dashboard/attendance")) color = "emerald";
   else if (href.startsWith("/dashboard/leave")) color = "amber";
   else if (href.startsWith("/dashboard/directory")) color = "pink";
-  else if (href.startsWith("/dashboard/org") || href.startsWith("/dashboard/profile")) color = "blue";
-  else if (href.startsWith("/dashboard/settings")) color = "slate";
+  else if (href.startsWith("/dashboard/org/users")) color = "indigo";
+  else if (href.startsWith("/dashboard/org/attendance")) color = "emerald";
+  else if (href.startsWith("/dashboard/org/leave")) color = "amber";
+  else if (href.startsWith("/dashboard/org/departments")) color = "indigo";
+  else if (href.startsWith("/dashboard/org/designations")) color = "indigo";
+  else if (href.startsWith("/dashboard/profile")) color = "cyan";
+  else if (href.startsWith("/dashboard/settings")) color = "teal";
   else if (href.startsWith("/dashboard/audit")) color = "rose";
   return accentClasses[color];
 }
@@ -106,7 +133,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const { data: userCapabilities = [] } = useCapabilities();
-  const { user: authUser, clearAuth } = useAuthStore();
+  const { user: authUser, clearAuth, density, setDensity } = useAuthStore();
   const { theme, setTheme } = useTheme();
 
   const { data: pins = [], refetch: refetchPins } = useQuery({
@@ -170,14 +197,6 @@ export default function DashboardLayout({
     return () => document.removeEventListener("shortcut-toggle-sidebar", handleToggle);
   }, [cycleSidebarState]);
 
-  const filteredPrimaryNav = primaryNav.filter(
-    (item) => !item.capability || hasCapability(userCapabilities, item.capability)
-  );
-
-  const filteredSecondaryNav = secondaryNav.filter(
-    (item) => !item.capability || hasCapability(userCapabilities, item.capability)
-  );
-
   const handleLogout = async () => {
     try {
       await apiFetch("/auth/logout", { method: "POST" });
@@ -189,65 +208,6 @@ export default function DashboardLayout({
 
   const isCollapsed = sidebarState === "collapsed";
   const isHidden = sidebarState === "hidden";
-
-  const renderNavItems = (items: typeof primaryNav, isSheet = false) => {
-    return items.map((item) => {
-      const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-      const accent = getAccent(item.href);
-      const currentlyCollapsed = !isSheet && isCollapsed;
-      
-      const existingPin = pins.find((p: any) => p.target_id === item.name);
-      const isPinned = !!existingPin;
-      
-      const content = (
-        <div key={item.name} className="relative group/nav flex items-center">
-          <Link
-            href={item.href}
-            className={cn(
-              "flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative overflow-hidden text-xs",
-              isActive
-                ? `${accent.bg} ${accent.bgDark} ${accent.text} ${accent.textDark} font-bold shadow-sm`
-                : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white",
-              currentlyCollapsed && "justify-center px-0"
-            )}
-          >
-            {isActive && (
-              <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-r-md", accent.border)} />
-            )}
-            <item.icon
-              className={cn(
-                "w-4 h-4 shrink-0 transition-colors",
-                isActive ? `${accent.text} ${accent.textDark}` : "text-neutral-400 group-hover/nav:text-neutral-700 dark:group-hover/nav:text-neutral-200"
-              )}
-            />
-            {!currentlyCollapsed && <span className="whitespace-nowrap">{item.name}</span>}
-          </Link>
-          {!currentlyCollapsed && (
-            <button 
-              onClick={(e) => { e.preventDefault(); handleTogglePin(item, existingPin); }}
-              className={cn(
-                "absolute right-2 p-1.5 rounded-md transition-opacity",
-                isPinned ? "opacity-100 text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40" : "opacity-0 group-hover/nav:opacity-100 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-              )}
-            >
-              <Star className={cn("w-3.5 h-3.5", isPinned && "fill-current")} />
-            </button>
-          )}
-        </div>
-      );
-
-      if (currentlyCollapsed) {
-        return (
-          <Tooltip key={item.name} delayDuration={150}>
-            <TooltipTrigger asChild>{content}</TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">{item.name}</TooltipContent>
-          </Tooltip>
-        );
-      }
-      return content;
-    });
-  };
-
   return (
     <AuthGuard>
       <TooltipProvider>
@@ -258,32 +218,64 @@ export default function DashboardLayout({
           sidebarState === "expanded" ? "md:grid-cols-[264px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[72px_1fr]" : "grid-cols-1"
         )}>
           {/* Desktop Sidebar */}
-          <aside className="hidden md:flex flex-col bg-surface border-r border-border relative z-20 overflow-hidden h-full">
+          <aside className={cn(
+            "bg-surface border-r border-border relative z-20 overflow-hidden h-full transition-[width] duration-200 ease-[cubic-bezier(.4,0,.2,1)]",
+            sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col"
+          )}>
             <div className="flex items-center h-16 shrink-0 px-4 gap-3 border-b border-border">
-              <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-md shrink-0" priority />
+              <Image src="/icon.png" alt="Logo" width={isCollapsed ? 28 : 32} height={isCollapsed ? 28 : 32} className="rounded-md shrink-0 transition-all duration-200" priority />
               {!isCollapsed && (
-                <span className="font-display font-bold text-lg text-primary tracking-tight whitespace-nowrap">
+                <span className="font-display font-bold text-lg text-primary tracking-tight whitespace-nowrap transition-opacity duration-200">
                   Workplace OS
                 </span>
               )}
             </div>
 
             <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1 thin-scrollbar">
-              {renderNavItems(filteredPrimaryNav)}
-              {filteredSecondaryNav.length > 0 && <div className="my-4 h-px bg-border mx-2" />}
-              {renderNavItems(filteredSecondaryNav)}
+              {navGroups.map(group => (
+                <NavGroup
+                  key={group.label}
+                  group={group}
+                  userCapabilities={userCapabilities}
+                  isCollapsed={isCollapsed}
+                  isSheet={false}
+                  pins={pins}
+                  handleTogglePin={handleTogglePin}
+                  getAccent={getAccent}
+                />
+              ))}
               
               {pins.length > 0 && (
-                <>
-                  <div className="my-4 h-px bg-border mx-2" />
-                  {!isCollapsed && <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Pinned</div>}
-                  {pins.map((pin: any) => {
-                    // Match back to primaryNav to get the icon
-                    const navItem = primaryNav.find(n => n.name === pin.target_id) || secondaryNav.find(n => n.name === pin.target_id);
-                    const IconComp = navItem ? navItem.icon : Star;
-                    return renderNavItems([{ name: pin.label, href: pin.href, icon: IconComp, capability: "" }])[0];
-                  })}
-                </>
+                <div className="mt-4">
+                  {!isCollapsed && <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-muted uppercase transition-opacity duration-200">Pinned</div>}
+                  {isCollapsed && <div className="h-px bg-border mx-2 my-3 transition-opacity duration-200" />}
+                  <div className="flex flex-col gap-1">
+                    {pins.map((pin: any) => {
+                      let navItem: any = null;
+                      navGroups.forEach(g => {
+                        const found = g.items.find((i: any) => i.name === pin.target_id);
+                        if (found) navItem = found;
+                      });
+                      
+                      if (navItem?.capability && !hasCapability(userCapabilities, navItem.capability)) {
+                        return null;
+                      }
+
+                      const item = navItem || { name: pin.label, href: pin.href, icon: Star, capability: "" };
+                      return (
+                        <NavItem
+                          key={item.name}
+                          item={item}
+                          isCollapsed={isCollapsed}
+                          isSheet={false}
+                          pins={pins}
+                          handleTogglePin={handleTogglePin}
+                          getAccent={getAccent}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -309,7 +301,7 @@ export default function DashboardLayout({
                 variant="ghost"
                 size="icon"
                 onClick={cycleSidebarState}
-                className="hidden md:flex ml-auto self-end text-muted hover:text-primary absolute -right-4 top-20 bg-surface border border-border shadow-e1 rounded-full w-8 h-8 z-30 transition-transform active:scale-95"
+                className="hidden md:flex ml-auto self-end text-muted hover:text-primary absolute -right-[18px] top-20 bg-surface border border-border shadow-e1 rounded-full w-9 h-9 z-30 transition-transform active:scale-95"
               >
                 {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
               </Button>
@@ -320,18 +312,23 @@ export default function DashboardLayout({
           <div className="flex flex-col min-w-0 h-full overflow-hidden">
             <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface/80 border-b border-border z-20 sticky top-0 backdrop-blur-md">
               <div className="flex items-center gap-2 md:gap-4">
-                {(isHidden || typeof window !== 'undefined' && window.innerWidth < 768) && (
-                  <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="md:hidden shrink-0">
-                        <Menu className="w-5 h-5" />
-                      </Button>
-                    </SheetTrigger>
-                    {isHidden && (
-                      <Button variant="ghost" size="icon" className="hidden md:flex shrink-0" onClick={() => setIsMobileMenuOpen(true)}>
-                        <Menu className="w-5 h-5" />
-                      </Button>
-                    )}
+                {sidebarState === "hidden" && (
+                  <div className="hidden md:flex items-center gap-2 shrink-0 mr-4">
+                    <Image src="/icon.png" alt="Logo" width={24} height={24} className="rounded-md" priority />
+                    <span className="font-display font-bold text-sm text-primary tracking-tight hidden lg:inline">Workplace OS</span>
+                  </div>
+                )}
+                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="md:hidden shrink-0">
+                      <Menu className="w-5 h-5" />
+                    </Button>
+                  </SheetTrigger>
+                  {sidebarState === "hidden" && (
+                    <Button variant="ghost" size="icon" className="hidden md:flex shrink-0" onClick={() => setIsMobileMenuOpen(true)}>
+                      <Menu className="w-5 h-5" />
+                    </Button>
+                  )}
                     <SheetContent side="left" className="w-[280px] p-0 flex flex-col bg-surface border-border">
                       <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                       <div className="flex items-center h-16 shrink-0 px-6 gap-3 border-b border-border">
@@ -340,10 +337,51 @@ export default function DashboardLayout({
                           Workplace OS
                         </span>
                       </div>
-                      <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
-                        {renderNavItems(filteredPrimaryNav, true)}
-                        {filteredSecondaryNav.length > 0 && <div className="my-4 h-px bg-border mx-2" />}
-                        {renderNavItems(filteredSecondaryNav, true)}
+                      <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1 thin-scrollbar">
+                        {navGroups.map(group => (
+                          <NavGroup
+                            key={group.label}
+                            group={group}
+                            userCapabilities={userCapabilities}
+                            isCollapsed={false}
+                            isSheet={true}
+                            pins={pins}
+                            handleTogglePin={handleTogglePin}
+                            getAccent={getAccent}
+                          />
+                        ))}
+                        
+                        {pins.length > 0 && (
+                          <div className="mt-4">
+                            <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-muted uppercase">Pinned</div>
+                            <div className="flex flex-col gap-1">
+                              {pins.map((pin: any) => {
+                                let navItem: any = null;
+                                navGroups.forEach(g => {
+                                  const found = g.items.find((i: any) => i.name === pin.target_id);
+                                  if (found) navItem = found;
+                                });
+
+                                if (navItem?.capability && !hasCapability(userCapabilities, navItem.capability)) {
+                                  return null;
+                                }
+
+                                const item = navItem || { name: pin.label, href: pin.href, icon: Star, capability: "" };
+                                return (
+                                  <NavItem
+                                    key={item.name}
+                                    item={item}
+                                    isCollapsed={false}
+                                    isSheet={true}
+                                    pins={pins}
+                                    handleTogglePin={handleTogglePin}
+                                    getAccent={getAccent}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="mt-auto p-4 border-t border-border">
                         <Button
@@ -357,18 +395,17 @@ export default function DashboardLayout({
                       </div>
                     </SheetContent>
                   </Sheet>
-                )}
 
                 <button
                   onClick={() => {
                     const event = new KeyboardEvent("keydown", { key: "k", ctrlKey: true });
                     document.dispatchEvent(event);
                   }}
-                  className="flex items-center gap-3 px-3 py-1.5 rounded-lg border border-input bg-neutral-50 dark:bg-neutral-900 text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors w-40 sm:w-64"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg border border-input bg-surface-2 text-xs text-muted hover:text-secondary transition-colors w-40 sm:w-64"
                 >
                   <Search className="w-3.5 h-3.5 shrink-0" />
                   <span className="flex-1 text-left truncate">Search...</span>
-                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-neutral-200 dark:bg-neutral-800 rounded shrink-0">
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-surface-2 rounded shrink-0">
                     Ctrl+K
                   </kbd>
                 </button>
@@ -405,21 +442,40 @@ export default function DashboardLayout({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard/profile" className="cursor-pointer gap-2">
-                        <UserCircle className="w-4 h-4 text-violet-600" />
+                        <UserCircle className="w-4 h-4 text-muted-foreground" />
                         My Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard/settings" className="cursor-pointer gap-2">
-                        <Settings className="w-4 h-4 text-violet-600" />
+                        <Settings className="w-4 h-4 text-muted-foreground" />
                         Settings
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Theme</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer gap-2">
+                      <Monitor className="w-4 h-4 text-muted-foreground" />
+                      System Theme
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Density</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setDensity("comfortable")} className="cursor-pointer gap-2">
+                      <Rows3 className="w-4 h-4 text-muted-foreground" />
+                      <span>Comfortable</span>
+                      {density === "comfortable" && <Check className="w-3 h-3 ml-auto text-primary" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDensity("compact")} className="cursor-pointer gap-2">
+                      <Rows2 className="w-4 h-4 text-muted-foreground" />
+                      <span>Compact</span>
+                      {density === "compact" && <Check className="w-3 h-3 ml-auto text-primary" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => {
                         const event = new KeyboardEvent("keydown", { key: "/", ctrlKey: true });
                         document.dispatchEvent(event);
                       }} className="cursor-pointer gap-2">
-                      <Search className="w-4 h-4 text-violet-600" />
+                      <Command className="w-4 h-4 text-muted-foreground" />
                       Keyboard Shortcuts
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -448,7 +504,7 @@ export default function DashboardLayout({
                 href="/dashboard"
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname === "/dashboard" ? "text-violet-600" : "text-neutral-500"
+                  pathname === "/dashboard" ? "text-blue-600 dark:text-blue-400" : "text-neutral-500 hover:text-neutral-700"
                 )}
               >
                 <LayoutDashboard className="w-5 h-5" />
@@ -459,7 +515,7 @@ export default function DashboardLayout({
                 href="/dashboard/directory"
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname === "/dashboard/directory" ? "text-violet-600" : "text-neutral-500"
+                  pathname === "/dashboard/directory" ? "text-pink-600 dark:text-pink-400" : "text-neutral-500 hover:text-neutral-700"
                 )}
               >
                 <Users className="w-5 h-5" />
@@ -467,28 +523,28 @@ export default function DashboardLayout({
               </Link>
 
               <Link
-                href="/dashboard/org/attendance"
-                className="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-violet-600 text-white shadow-lg -mt-5 hover:bg-violet-700 transition-transform active:scale-95"
+                href="/dashboard/attendance"
+                className="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-emerald-600 text-white shadow-lg -mt-5 hover:bg-emerald-700 transition-transform active:scale-95"
               >
                 <Clock className="w-6 h-6" />
               </Link>
 
               <Link
-                href="/dashboard/org/users"
+                href="/dashboard/leave"
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname.startsWith("/dashboard/org") ? "text-violet-600" : "text-neutral-500"
+                  pathname.startsWith("/dashboard/leave") ? "text-amber-600 dark:text-amber-400" : "text-neutral-500 hover:text-neutral-700"
                 )}
               >
-                <Building2 className="w-5 h-5" />
-                <span>Org</span>
+                <CalendarDays className="w-5 h-5" />
+                <span>Leave</span>
               </Link>
 
               <Link
                 href="/dashboard/profile"
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname === "/dashboard/profile" ? "text-violet-600" : "text-neutral-500"
+                  pathname === "/dashboard/profile" ? "text-cyan-600 dark:text-cyan-400" : "text-neutral-500 hover:text-neutral-700"
                 )}
               >
                 <UserCircle className="w-5 h-5" />

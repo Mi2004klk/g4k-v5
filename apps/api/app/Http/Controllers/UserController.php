@@ -213,6 +213,17 @@ class UserController extends Controller
         ]);
 
         $user = User::findOrFail($id);
+        
+        // Capability Check
+        $targetRoles = $user->roleAssignments->pluck('role')->toArray();
+        $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
+        if ($isHRTarget && !$this->hasCapability($request, 'users.hr.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage HR/Admin users.'], 403);
+        }
+        if (!$isHRTarget && !$this->hasCapability($request, 'users.employee.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
+        }
+
         $before = $user->toArray();
 
         if ($validated['status'] === 'inactive') {
@@ -238,6 +249,16 @@ class UserController extends Controller
     public function destroy(Request $request, string $id)
     {
         $user = User::findOrFail($id);
+
+        // Capability Check
+        $targetRoles = $user->roleAssignments->pluck('role')->toArray();
+        $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
+        if ($isHRTarget && !$this->hasCapability($request, 'users.hr.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage HR/Admin users.'], 403);
+        }
+        if (!$isHRTarget && !$this->hasCapability($request, 'users.employee.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
+        }
 
         $isSuperAdmin = RoleAssignment::where('user_id', $user->id)->where('role', 'super_admin')->exists();
         if ($isSuperAdmin) {
@@ -281,6 +302,17 @@ class UserController extends Controller
     public function resetPassword(Request $request, string $id)
     {
         $user = User::findOrFail($id);
+        
+        // Capability Check
+        $targetRoles = $user->roleAssignments->pluck('role')->toArray();
+        $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
+        if ($isHRTarget && !$this->hasCapability($request, 'users.hr.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage HR/Admin users.'], 403);
+        }
+        if (!$isHRTarget && !$this->hasCapability($request, 'users.employee.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
+        }
+
         $user->password = Hash::make('Password123!');
         $user->must_change_password = true;
         $user->save();
@@ -288,5 +320,50 @@ class UserController extends Controller
         AuditLogger::log($request, 'reset_password', 'user', $user->id, null, ['status' => 'password_reset']);
 
         return response()->json(['message' => 'Password reset to default (Password123!)']);
+    }
+
+    public function bulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:users,id',
+            'action' => 'required|in:activate,deactivate'
+        ]);
+
+        $users = User::whereIn('id', $validated['ids'])->get();
+        $status = $validated['action'] === 'activate' ? 'active' : 'inactive';
+        
+        $canManageHR = $this->hasCapability($request, 'users.hr.manage');
+        $canManageEmployee = $this->hasCapability($request, 'users.employee.manage');
+
+        foreach ($users as $user) {
+            $targetRoles = $user->roleAssignments->pluck('role')->toArray();
+            $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
+            
+            if ($isHRTarget && !$canManageHR) {
+                continue; // Skip unauthorized
+            }
+            if (!$isHRTarget && !$canManageEmployee) {
+                continue; // Skip unauthorized
+            }
+
+            // Super Admin check for deactivate
+            if ($status === 'inactive' && in_array('super_admin', $targetRoles)) {
+                $activeSuperAdminCount = User::where('status', 'active')
+                    ->whereHas('roleAssignments', function ($q) {
+                        $q->where('role', 'super_admin');
+                    })->count();
+
+                if ($activeSuperAdminCount <= 1 && $user->status === 'active') {
+                    continue; // Skip last super admin
+                }
+            }
+
+            $before = $user->toArray();
+            $user->update(['status' => $status]);
+            AuditLogger::log($request, "bulk_{$status}", 'user', $user->id, $before, $user->toArray());
+        }
+
+        return response()->json(['message' => 'Bulk action completed.']);
     }
 }

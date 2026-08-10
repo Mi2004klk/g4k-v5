@@ -6,6 +6,12 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutMockingConsoleOutput();
+    }
+
     /**
      * Assert that the executed SQL queries during a callback are strictly less than or equal to a given limit.
      */

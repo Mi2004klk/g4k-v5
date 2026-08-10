@@ -73,7 +73,7 @@ class AlertMissedClockIn implements ShouldQueue
                         Notification::create([
                             'user_id' => $hr->id,
                             'title' => 'Missed Clock-In Alert',
-                            'message' => "{$user->name} has missed their clock-in today (overdue by {$offsetMinutes}m).",
+                            'body' => "{$user->name} has missed their clock-in today (overdue by {$offsetMinutes}m).",
                             'type' => 'alert',
                             'priority' => 'high'
                         ]);

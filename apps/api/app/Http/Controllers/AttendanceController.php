@@ -314,8 +314,35 @@ class AttendanceController extends Controller
 
     public function hrToday(Request $request)
     {
-        $request->merge(['date' => now()->toDateString()]);
-        return $this->overview($request);
+        $query = DB::table('attendance_days')
+            ->join('users', 'users.id', '=', 'attendance_days.user_id')
+            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id')
+            ->where('date', now()->toDateString())
+            ->orderBy('date', 'desc');
+
+        $this->applyHrScoping($query, $request->user());
+
+        if ($request->filled('department_id')) {
+            $query->where('users.department_id', $request->query('department_id'));
+        }
+        if ($request->filled('status')) {
+            $query->where('attendance_days.status', $request->query('status'));
+        }
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->query('search') . '%';
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('users.name', 'like', $searchTerm)
+                  ->orWhere('users.email', 'like', $searchTerm);
+            });
+        }
+
+        $results = $query->cursorPaginate(20);
+        $response = response()->json($results);
+        $response->setEtag(md5($response->getContent()));
+        $response->header('Cache-Control', 'private, max-age=30');
+        $response->isNotModified($request);
+
+        return $response;
     }
 
     public function hrGraph(Request $request)
@@ -492,6 +519,37 @@ class AttendanceController extends Controller
 
             $writer->close();
         }, "attendance_export_{$startDate}_to_{$endDate}.xlsx");
+    }
+
+    public function notifyOpenShifts(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:attendance_days,id',
+        ]);
+
+        $days = AttendanceDay::whereIn('id', $validated['ids'])->with('user.department')->get();
+        $hrUsers = User::whereHas('roleAssignments', function($q) {
+            $q->whereIn('role', ['hr', 'super_admin']);
+        })->get();
+
+        foreach ($days as $day) {
+            foreach ($hrUsers as $hr) {
+                // simple scoping: HR sees their own dept unless they are super admin
+                $isSuper = $hr->roleAssignments->pluck('role')->contains('super_admin');
+                if ($isSuper || $hr->department_id === $day->user->department_id) {
+                    \App\Models\Notification::create([
+                        'user_id' => $hr->id,
+                        'title' => 'Open Shift Alert',
+                        'body' => "Employee {$day->user->name} has an open shift for {$day->date}.",
+                        'type' => 'warning',
+                        'link' => "/dashboard/org/attendance?date={$day->date}"
+                    ]);
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Notifications sent successfully.']);
     }
 }
 

@@ -31,9 +31,10 @@ import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@g4k/ui/components";
+import { DataTable, StatusBadge } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
-import { Avatar, AvatarFallback } from "@g4k/ui/components";
+import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
 
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
@@ -47,7 +48,15 @@ export default function DepartmentsPage() {
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [editingDept, setEditingDept] = useState<any>(null);
 
-  const { data, isLoading } = useQuery({
+  const [selectedDeptMembers, setSelectedDeptMembers] = useState<any>(null);
+
+  const { data: deptDetails, isLoading: isDeptLoading } = useQuery({
+    queryKey: ["department", selectedDeptMembers?.id],
+    queryFn: () => apiFetch(`/departments/${selectedDeptMembers?.id}`),
+    enabled: !!selectedDeptMembers,
+  });
+
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["departments", debouncedSearch, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -137,17 +146,20 @@ export default function DepartmentsPage() {
 
   const deptList = data?.data || [];
 
-  const columns = useMemo<ColumnDef<any>[]>(() => [
+  const columns: any[] = useMemo<ColumnDef<any>[]>(() => [
     {
       accessorKey: "name",
       header: "Department",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
             <Building2 className="w-4 h-4" />
           </div>
           <div>
-            <span className="font-semibold text-neutral-900 dark:text-white block">
+            <span 
+              className="font-semibold text-neutral-900 dark:text-white block cursor-pointer hover:underline decoration-violet-500 underline-offset-4"
+              onClick={() => setSelectedDeptMembers(row.original)}
+            >
               {row.original.name}
             </span>
             {row.original.description && (
@@ -160,14 +172,14 @@ export default function DepartmentsPage() {
     {
       accessorKey: "users_count",
       header: "Members",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const count = row.original.users_count || 0;
         return (
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {[...Array(Math.min(count, 3))].map((_, i) => (
+              {(row.original.users || []).slice(0, 3).map((u: any, i: number) => (
                 <Avatar key={i} className="w-6 h-6 border-2 border-background">
-                  <AvatarFallback className="text-[9px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
+                  <AvatarFallback className="text-[9px] bg-violet-100 text-violet-700 font-bold">{u.name?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
               ))}
             </div>
@@ -179,7 +191,7 @@ export default function DepartmentsPage() {
     {
       accessorKey: "teams",
       header: "Sub-teams",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const teams = row.original.teams || [];
         return (
           <div className="flex flex-wrap gap-1">
@@ -198,20 +210,20 @@ export default function DepartmentsPage() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const isActive = row.original.is_active;
         const isArchived = !!row.original.archived_at;
         return (
-          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${isArchived ? "bg-neutral-100 text-neutral-600" : (isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}`}>
+          <StatusBadge status={isArchived ? "neutral" : (isActive ? "success" : "danger")} dot className="uppercase">
             {isArchived ? "Archived" : (isActive ? "Active" : "Inactive")}
-          </span>
+          </StatusBadge>
         );
       }
     },
     {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const dept = row.original;
         const isArchived = !!dept.archived_at;
         return (
@@ -249,7 +261,7 @@ export default function DepartmentsPage() {
   ], []);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
@@ -301,6 +313,13 @@ export default function DepartmentsPage() {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
+          ) : isError ? (
+            <div className="p-12">
+              <EmptyState title="Failed to load departments" description="There was an error fetching the department list. Please try again." />
+              <div className="flex justify-center mt-4">
+                <Button onClick={() => refetch()} variant="outline">Retry</Button>
+              </div>
+            </div>
           ) : deptList.length === 0 ? (
             <div className="p-12">
               <EmptyState title="No departments found" description="Try adjusting your search query or create a new department." />
@@ -346,6 +365,37 @@ export default function DepartmentsPage() {
         description={confirmState.type === "delete" ? "Are you sure? This cannot be undone and will fail if employees are assigned." : "Archived departments will no longer be available for new assignments."}
         isLoading={archiveMutation.isPending || deleteMutation.isPending}
       />
+
+      <Sheet open={!!selectedDeptMembers} onOpenChange={(open: boolean) => !open && setSelectedDeptMembers(null)}>
+        <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetHeader>
+            <SheetTitle>{selectedDeptMembers?.name} Members</SheetTitle>
+            <SheetDescription>View employees assigned to this department.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-4">
+            {isDeptLoading ? (
+              <div className="space-y-2"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
+            ) : !deptDetails?.users?.length ? (
+              <EmptyState title="No members" description="This department has no employees yet." />
+            ) : (
+              <div className="space-y-3">
+                {deptDetails.users.map((user: any) => (
+                  <div key={user.id} className="p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-900 flex items-center gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={user.avatar_url || ""} />
+                      <AvatarFallback className="bg-violet-100 text-violet-700 font-bold">{user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-sm text-neutral-900 dark:text-white">{user.name}</p>
+                      <p className="text-xs text-neutral-500">{user.designation?.name || "Employee"} • {user.employee_id || "N/A"}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

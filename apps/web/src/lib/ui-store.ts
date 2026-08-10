@@ -34,11 +34,11 @@ export const useUIStore = create<UIState>()(
       cycleSidebarState: () => {
         const current = get().sidebarState;
         const nextState =
-          current === "expanded"
-            ? "collapsed"
-            : current === "collapsed"
+          current === "collapsed"
+            ? "expanded"
+            : current === "expanded"
             ? "hidden"
-            : "expanded";
+            : "collapsed";
         get().setSidebarState(nextState);
       },
 

@@ -78,7 +78,7 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+    <div className="flex-1 max-w-7xl mx-auto w-full space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">

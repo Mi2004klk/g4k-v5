@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
-import { format } from "date-fns";
+import { format, addMonths, subMonths } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import {
   Dialog,
@@ -44,8 +46,11 @@ interface AttendanceDay {
 }
 
 export function AttendanceHistoryCalendar({ days, userId }: { days: AttendanceDay[], userId?: number }) {
-  const currentYear = new Date().getFullYear();
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<AttendanceDay | null>(null);
+
+  const prevMonth = () => setCurrentDate(prev => subMonths(prev, 1));
+  const nextMonth = () => setCurrentDate(prev => addMonths(prev, 1));
 
   const chartData = useMemo(() => {
     return days.map(day => {
@@ -105,15 +110,16 @@ export function AttendanceHistoryCalendar({ days, userId }: { days: AttendanceDa
       top: 60,
       left: 30,
       right: 30,
-      cellSize: ['auto', 20],
-      range: currentYear.toString(),
+      cellSize: ['auto', 30],
+      range: format(currentDate, 'yyyy-MM'),
       itemStyle: {
         borderWidth: 1,
         borderColor: 'transparent',
         borderRadius: 4
       },
       splitLine: { show: false },
-      yearLabel: { show: false }
+      yearLabel: { show: false },
+      dayLabel: { nameMap: 'en', firstDay: 1 }
     },
     series: {
       type: 'heatmap',
@@ -128,8 +134,21 @@ export function AttendanceHistoryCalendar({ days, userId }: { days: AttendanceDa
   };
 
   return (
-    <div className="w-full relative">
-      <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 overflow-x-auto min-w-[800px]">
+    <div className="w-full relative space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-lg text-neutral-900 dark:text-white">
+          {format(currentDate, 'MMMM yyyy')}
+        </h3>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={prevMonth}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={nextMonth}>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 overflow-hidden w-full">
         <ReactECharts
           option={option}
           style={{ height: '300px', width: '100%' }}
@@ -137,7 +156,7 @@ export function AttendanceHistoryCalendar({ days, userId }: { days: AttendanceDa
         />
       </div>
 
-      <Dialog open={!!selectedDay} onOpenChange={(open) => !open && setSelectedDay(null)}>
+      <Dialog open={!!selectedDay} onOpenChange={(open: boolean) => !open && setSelectedDay(null)}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

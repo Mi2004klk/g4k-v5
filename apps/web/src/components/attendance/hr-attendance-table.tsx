@@ -8,8 +8,7 @@ import Link from "next/link";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
-import { Input, Button, Checkbox, DataTable } from "@g4k/ui/components";
-import { ColumnDef } from "@tanstack/react-table";
+import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 
@@ -17,6 +16,7 @@ export function HrAttendanceTable() {
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
+  const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
   const [search, setSearch] = useUrlState("search", "");
   
   const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -44,12 +44,19 @@ export function HrAttendanceTable() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data, isLoading } = useQuery({
-    queryKey: ["hr-attendance-today", selectedDate, statusFilter, debouncedSearch],
+    queryKey: ["hr-attendance-today", selectedDate, statusFilter, debouncedSearch, deptFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
       if (debouncedSearch) params.append("search", debouncedSearch);
       
       // Use the overview endpoint directly since it supports date parameters
@@ -71,7 +78,7 @@ export function HrAttendanceTable() {
       // If we supported passing specific user IDs to export we would add them here
       // For now, we'll just download the whole team for the date
       
-      const token = document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1];
+      const token = document.cookie.split('; ').find(row => row.startsWith('g4k_token='))?.split('=')[1];
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
         headers: {
@@ -96,21 +103,21 @@ export function HrAttendanceTable() {
     }
   };
 
-  const columns: ColumnDef<any>[] = [
+  const columns: any[] = [
     {
       id: "select",
-      header: ({ table }) => (
+      header: ({ table }: any) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="ml-2"
         />
       ),
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          onCheckedChange={(value: any) => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="ml-2"
         />
@@ -121,7 +128,7 @@ export function HrAttendanceTable() {
     {
       accessorKey: "user_name",
       header: "Employee",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const isOpenShift = row.original.clock_in && !row.original.clock_out;
         
         return (
@@ -156,34 +163,29 @@ export function HrAttendanceTable() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const status = row.getValue("status") as string;
         const isLeave = status === "leave";
         
         return (
           <div className="flex items-center gap-2">
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                status === "present"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : status === "late"
-                  ? "bg-amber-100 text-amber-700"
-                  : isLeave
-                  ? "bg-violet-100 text-violet-700"
-                  : "bg-rose-100 text-rose-700"
-              }`}
+            <StatusBadge 
+              status={status === "present" ? "success" : status === "late" ? "warning" : isLeave ? "info" : "danger"} 
+              dot 
+              className="uppercase"
             >
               {status}
-            </span>
+            </StatusBadge>
             {isLeave && (
-              <Link 
-                href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
-                className="text-xs text-violet-600 hover:underline flex items-center gap-1"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <CalendarDays className="w-3 h-3" />
-                View Leave
-              </Link>
+              <div onClick={(e) => e.stopPropagation()}>
+                <Link 
+                  href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
+                  className="text-xs text-violet-600 hover:underline flex items-center gap-1"
+                >
+                  <CalendarDays className="w-3 h-3" />
+                  View Leave
+                </Link>
+              </div>
             )}
           </div>
         );
@@ -192,7 +194,7 @@ export function HrAttendanceTable() {
     {
       accessorKey: "clock_in",
       header: "Clock In",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const val = row.getValue("clock_in") as string;
         return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
       },
@@ -200,7 +202,7 @@ export function HrAttendanceTable() {
     {
       accessorKey: "clock_out",
       header: "Clock Out",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const val = row.getValue("clock_out") as string;
         return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
       },
@@ -208,7 +210,7 @@ export function HrAttendanceTable() {
     {
       id: "worked_hours",
       header: "Worked Hours",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const secs = row.original.total_seconds || 0;
         const hours = Math.floor(secs / 3600);
         const mins = Math.floor((secs % 3600) / 60);
@@ -218,7 +220,7 @@ export function HrAttendanceTable() {
     {
       id: "overtime",
       header: "Overtime",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const secs = row.original.overtime_seconds || 0;
         const hours = Math.floor(secs / 3600);
         const mins = Math.floor((secs % 3600) / 60);
@@ -246,46 +248,54 @@ export function HrAttendanceTable() {
             className="pl-9 h-10 w-full"
             value={search || ""}
             onChange={(e) => setSearch(e.target.value)}
-            aria-label="Search team members"
             id="hr-team-search"
           />
         </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 w-full sm:w-auto" role="group" aria-label="Filter by status">
-          {statusOptions.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setStatusFilter(opt.value)}
-              aria-pressed={statusFilter === opt.value}
-              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border focus-visible:ring-2 focus-visible:ring-violet-500 focus:outline-none ${
-                statusFilter === opt.value
-                  ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white"
-                  : "bg-transparent text-neutral-600 border-neutral-200 hover:bg-neutral-100 dark:text-neutral-400 dark:border-neutral-700 dark:hover:bg-neutral-800"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 flex justify-end items-center gap-2">
-          {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-10 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
-              <Download className="w-4 h-4 mr-2" aria-hidden="true" />
-              Export Selected ({Object.keys(rowSelection).length})
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-10" aria-label="Export team report for selected date">
-            <Download className="w-4 h-4 mr-2" aria-hidden="true" />
-            Export Team
-          </Button>
+        
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           <Input 
-            type="date" 
-            value={selectedDate || ""} 
+            type="date"
+            value={selectedDate || ""}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-auto h-10"
+            className="w-[150px] shrink-0 h-10"
             aria-label="Filter by date"
           />
+
+          <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg shrink-0">
+            {statusOptions.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setStatusFilter(opt.value)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  statusFilter === opt.value
+                    ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm"
+                    : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <select 
+            value={deptFilter || "all"}
+            onChange={(e) => setDeptFilter(e.target.value)}
+            className="h-10 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
+          >
+            <option value="all">All Departments</option>
+            {departments.map((d: any) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+
+          <Button 
+            variant="outline" 
+            onClick={() => handleExport()}
+            className="shrink-0 gap-2 font-medium h-10"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </div>
       </div>
 

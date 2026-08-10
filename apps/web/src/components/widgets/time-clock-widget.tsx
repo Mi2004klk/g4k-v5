@@ -24,6 +24,7 @@ import { useTimerStore } from "@/stores/timer-store";
 
 export function TimeClockWidget({ className }: { className?: string }) {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showConfirmOut, setShowConfirmOut] = useState(false);
   const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
 
@@ -46,13 +47,15 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   const fetchTodayStatus = async () => {
     try {
+      setError(false);
+      setLoading(true);
       const data = await apiFetch("/attendance/me/today");
       if (data.standard_seconds) {
         setStandardSeconds(data.standard_seconds);
       }
       syncWithServer(data.day, data.events || []);
     } catch {
-      // Fallback
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -108,16 +111,27 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   const isOvertime = activeSeconds > standardSeconds;
 
-  if (loading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm">
-        <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-      </div>
-    );
-  }
-
   return (
-    <div className={cn("w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between", className)}>
+    <div className={cn("relative w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between", className)}>
+      {(loading || error) && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 dark:bg-neutral-950/90 backdrop-blur-sm rounded-2xl gap-2">
+          {loading ? (
+            <>
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Loading schedule...</p>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="w-8 h-8 text-rose-500" />
+              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Couldn't load attendance status</p>
+              <Button size="sm" variant="outline" onClick={fetchTodayStatus} className="mt-2">
+                Retry
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
           Time Clock

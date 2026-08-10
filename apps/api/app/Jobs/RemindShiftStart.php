@@ -61,7 +61,7 @@ class RemindShiftStart implements ShouldQueue
                     Notification::create([
                         'user_id' => $user->id,
                         'title' => 'Shift Starting Soon',
-                        'message' => "Friendly reminder: Your shift starts at " . $shiftStart->format('H:i') . ". Don't forget to clock in!",
+                        'body' => "Friendly reminder: Your shift starts at " . $shiftStart->format('H:i') . ". Don't forget to clock in!",
                         'type' => 'info',
                     ]);
                 }
