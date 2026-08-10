@@ -8,6 +8,9 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
+import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
+import { Textarea } from "@g4k/ui/components";
+import { Label } from "@g4k/ui/components";
 
 export function LeaveRequestForm() {
   const queryClient = useQueryClient();
@@ -42,11 +45,29 @@ export function LeaveRequestForm() {
       toast.error("End date must be on or after start date.");
       return;
     }
+
+    // Task 245: Check client-side for overlaps
+    const historyData: any = queryClient.getQueryData(["my-leave-history", "all", "all"]);
+    const existingLeaves = historyData?.data || [];
+    const hasOverlap = existingLeaves.some((leave: any) => {
+      if (leave.approval?.status !== "pending") return false;
+      const existStart = new Date(leave.start_date);
+      const existEnd = new Date(leave.end_date);
+      const newStart = new Date(startDate);
+      const newEnd = new Date(endDate);
+      return newStart <= existEnd && newEnd >= existStart;
+    });
+
+    if (hasOverlap) {
+      toast.error("You already have a pending leave request that overlaps with these dates.");
+      return;
+    }
+
     submitMutation.mutate({ start_date: startDate, end_date: endDate, type, reason });
   };
 
   return (
-    <Card className="border-none shadow-sm">
+    <Card className="border-none shadow-sm h-full">
       <CardHeader>
         <CardTitle className="text-base font-bold">Request Time Off</CardTitle>
       </CardHeader>
@@ -75,45 +96,40 @@ export function LeaveRequestForm() {
             </div>
           </div>
           
-          <div className="space-y-1">
+          <div className="space-y-2">
             <label className="text-xs font-semibold text-neutral-500">Leave Type *</label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
+            <RadioGroup value={type} onValueChange={setType} className="grid grid-cols-2 gap-2 mt-1">
               {[
                 { id: "casual", label: "Casual Leave (CL)" },
                 { id: "sick", label: "Sick Leave (SL)" },
                 { id: "earned", label: "Earned/Privileged Leave (EL)" },
                 { id: "unpaid", label: "Leave Without Pay (LWP)" },
               ].map((item) => (
-                <label
-                  key={item.id}
-                  className={`flex items-center p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
-                    type === item.id
-                      ? "border-violet-600 bg-violet-50/50 dark:bg-violet-950/20 text-violet-700 dark:text-violet-300 font-semibold"
-                      : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="leave_type"
+                <div key={item.id}>
+                  <RadioGroupItem
                     value={item.id}
-                    checked={type === item.id}
-                    onChange={(e) => setType(e.target.value)}
-                    className="mr-2 accent-violet-600"
+                    id={`type-${item.id}`}
+                    className="peer sr-only"
                   />
-                  {item.label}
-                </label>
+                  <Label
+                    htmlFor={`type-${item.id}`}
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-violet-600 peer-data-[state=checked]:bg-violet-50 dark:peer-data-[state=checked]:bg-violet-900/20 [&:has([data-state=checked])]:border-primary text-xs cursor-pointer text-center"
+                  >
+                    {item.label}
+                  </Label>
+                </div>
               ))}
-            </div>
+            </RadioGroup>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-neutral-500">Reason *</label>
-            <textarea
+            <Textarea
               required
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-md border border-input bg-background resize-none focus:outline-none focus:ring-1 focus:ring-violet-500"
+              className="text-xs resize-none focus-visible:ring-violet-500"
               placeholder="Provide a brief reason for your leave request..."
             />
           </div>

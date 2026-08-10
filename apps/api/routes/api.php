@@ -29,8 +29,8 @@ use App\Http\Controllers\AutoNumberingController;
 
 // Public (unauthenticated) endpoints
 Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'g4k-api']));
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::get('/auth/refresh', [AuthController::class, 'refresh']);
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
+Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
@@ -93,6 +93,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::post('/attendance/start-break', [AttendanceController::class, 'startBreak']);
         Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
         Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+        Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
         Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);
         Route::get('/attendance/me/history', [AttendanceController::class, 'meHistory']);
         Route::get('/attendance/me/day/{date}', [AttendanceController::class, 'meDay']);
@@ -103,6 +104,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
         Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
         Route::get('/attendance/hr/graph', [AttendanceController::class, 'hrGraph']);
+        Route::get('/attendance/hr/day/{date}/{userId}', [AttendanceController::class, 'hrDay']);
+        Route::get('/attendance/hr/history/{userId}', [AttendanceController::class, 'hrHistory']);
     });
 
     Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware('capability:admin.correct-attendance');
@@ -124,6 +127,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
     Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markRead']);
+    Route::post('/notifications/{id}/mark-unread', [NotificationController::class, 'markUnread']);
 
     // Phase 7 API (Projects & Tasks)
     Route::apiResource('projects', ProjectController::class);
@@ -161,6 +165,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::get('/reports/data', [\App\Http\Controllers\ReportController::class, 'data']);
     Route::post('/reports/export', [\App\Http\Controllers\ReportController::class, 'export']);
     Route::get('/reports/exports', [\App\Http\Controllers\ReportController::class, 'exports']);
+    Route::get('/reports/attendance-summary', [\App\Http\Controllers\ReportController::class, 'attendanceSummary']);
+    Route::get('/reports/leave-summary', [\App\Http\Controllers\ReportController::class, 'leaveSummary']);
     
     // Phase 10 API (Settings & Audit Logs)
     Route::middleware('capability:settings.manage')->group(function () {
@@ -168,11 +174,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::post('/settings/bulk', [\App\Http\Controllers\SettingsController::class, 'bulkUpdate']);
         Route::get('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'show']);
         Route::post('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'update']);
+        Route::post('/company-profile/logo', [\App\Http\Controllers\CompanyProfileController::class, 'uploadLogo']);
         Route::get('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'index']);
         Route::put('/work-schedules/{id}', [\App\Http\Controllers\WorkScheduleController::class, 'update']);
     });
     
     Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->middleware('capability:audit.view');
+    Route::get('/audit-logs/export', [\App\Http\Controllers\AuditLogController::class, 'export'])->middleware('capability:audit.view');
 
     // Admin & Master Data APIs
     Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage');
@@ -185,6 +193,23 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::apiResource('companies', CompanyController::class)->middleware('capability:settings.manage');
     Route::apiResource('auto-numberings', AutoNumberingController::class)->middleware('capability:settings.manage');
     
+    // Leave Module
+    Route::get('/holidays', [\App\Http\Controllers\HolidayController::class, 'index']);
+    Route::middleware('capability:settings.manage')->group(function () {
+        Route::post('/holidays', [\App\Http\Controllers\HolidayController::class, 'store']);
+        Route::put('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'update']);
+        Route::delete('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'destroy']);
+    });
+
+    Route::prefix('leave-requests')->group(function () {
+        Route::get('/', [\App\Http\Controllers\LeaveRequestController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\LeaveRequestController::class, 'store']);
+        Route::get('/pending', [\App\Http\Controllers\LeaveRequestController::class, 'pending']);
+        Route::get('/history', [\App\Http\Controllers\LeaveRequestController::class, 'history']);
+        Route::get('/{id}', [\App\Http\Controllers\LeaveRequestController::class, 'show']);
+        Route::post('/{id}/decision', [\App\Http\Controllers\LeaveRequestController::class, 'decision']);
+    });
+
     // Departments
     Route::middleware('capability:departments.manage')->group(function () {
         Route::get('/departments/export', [DepartmentController::class, 'export']);

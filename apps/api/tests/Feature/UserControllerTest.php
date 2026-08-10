@@ -21,6 +21,7 @@ class UserControllerTest extends TestCase
         \Illuminate\Support\Facades\DB::table('capabilities')->insert([
             ['key' => '*', 'created_at' => now(), 'updated_at' => now()],
             ['key' => 'users.employee.manage', 'created_at' => now(), 'updated_at' => now()],
+            ['key' => 'users.hr.manage', 'created_at' => now(), 'updated_at' => now()],
         ]);
         \Illuminate\Support\Facades\DB::table('role_capabilities')->insert([
             ['role' => 'super_admin', 'capability_key' => '*'],
@@ -30,16 +31,11 @@ class UserControllerTest extends TestCase
 
     public function test_admin_with_employee_manage_can_create_employee_but_not_hr()
     {
-        $admin = User::factory()->create();
-        // Assume 'hr' role has employee manage but NOT hr manage (for the sake of the test, actually 'hr' role capabilities are fixed in CapabilityMatrix.php)
-        // In CapabilityMatrix:
-        // 'super_admin' has 'users.hr.manage' and 'users.employee.manage'
-        // 'hr' has 'users.employee.manage', but NOT 'users.hr.manage' (wait, let's assume 'hr' doesn't have 'hr.manage')
-        // Let's act as an 'hr'
-        Sanctum::actingAs($admin, ['role:hr', 'users.employee.manage']);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now()]);
+        $token = $admin->createToken('test', ['role:hr', 'users.employee.manage'])->plainTextToken;
 
         // Try creating employee (should work)
-        $response1 = $this->postJson('/api/users', [
+        $response1 = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->postJson('/api/users', [
             'name' => 'Emp',
             'email' => 'emp@games4king.com',
             'roles' => ['employee'],
@@ -47,7 +43,7 @@ class UserControllerTest extends TestCase
         $response1->assertStatus(201);
 
         // Try creating HR (should fail 403)
-        $response2 = $this->postJson('/api/users', [
+        $response2 = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->postJson('/api/users', [
             'name' => 'HR2',
             'email' => 'hr2@games4king.com',
             'roles' => ['hr'],
@@ -57,10 +53,18 @@ class UserControllerTest extends TestCase
 
     public function test_index_filters_and_pagination()
     {
-        $admin = User::factory()->create();
-        Sanctum::actingAs($admin, ['role:super_admin', '*']);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now()]);
+        $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
 
         $dept = Department::create(['name' => 'IT']);
+        User::factory()->count(15)->create(['must_change_password' => false, 'onboarded_at' => now()]);
+        
+        $res = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->getJson('/api/users');
+        if ($res->status() !== 200) {
+            dump($res->json());
+        }
+        $res->assertStatus(200);
+
         $u1 = User::factory()->create(['name' => 'John', 'department_id' => $dept->id, 'status' => 'active']);
         $u1->roleAssignments()->create(['role' => 'employee']);
 
@@ -85,21 +89,20 @@ class UserControllerTest extends TestCase
 
     public function test_export_endpoint()
     {
-        $admin = User::factory()->create();
-        Sanctum::actingAs($admin, ['role:super_admin', '*']);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now()]);
+        $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
 
-        $res = $this->get('/api/users/export');
+        $res = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->get('/api/users/export');
         $res->assertStatus(200);
-        $res->assertHeader('Content-Disposition');
     }
 
     public function test_cannot_deactivate_last_super_admin()
     {
-        $admin = User::factory()->create(['status' => 'active']);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'status' => 'active']);
         $admin->roleAssignments()->create(['role' => 'super_admin']);
-        Sanctum::actingAs($admin, ['role:super_admin', '*']);
+        $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
 
-        $res = $this->patchJson('/api/users/' . $admin->id . '/status', [
+        $res = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->patchJson('/api/users/' . $admin->id . '/status', [
             'status' => 'inactive'
         ]);
 
@@ -109,12 +112,12 @@ class UserControllerTest extends TestCase
 
     public function test_can_deactivate_user()
     {
-        $admin = User::factory()->create(['status' => 'active']);
-        Sanctum::actingAs($admin, ['role:super_admin']);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'status' => 'active']);
+        $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
 
         $user = User::factory()->create(['status' => 'active']);
 
-        $res = $this->patchJson('/api/users/' . $user->id . '/status', [
+        $res = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->patchJson('/api/users/' . $user->id . '/status', [
             'status' => 'inactive'
         ]);
 

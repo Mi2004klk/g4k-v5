@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow, format } from "date-fns";
 import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase, MailOpen } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { PageContainer } from "@/components/layout/page-container";
 import { DataTable } from "@g4k/ui/components";
@@ -80,9 +81,15 @@ export default function NotificationsPage() {
       cell: (row: any) => (
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <span className={`text-sm ${!row.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
-              {row.title}
-            </span>
+            {row.link ? (
+              <Link href={row.link} className={`text-sm hover:underline hover:text-violet-600 dark:hover:text-violet-400 ${!row.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
+                {row.title}
+              </Link>
+            ) : (
+              <span className={`text-sm ${!row.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
+                {row.title}
+              </span>
+            )}
             {row.priority === 'urgent' && (
               <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">Urgent</span>
             )}

@@ -1,26 +1,101 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
+import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import { ColumnDef } from "@tanstack/react-table";
+import { Download } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { LeaveApprovalRow } from "@/components/leave/leave-approval-row";
-import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
-import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
-import { EmptyState } from "@g4k/ui/components";
-import { AlertCircle } from "lucide-react";
+import { Card, Button, DataTable } from "@g4k/ui/components";
+import { FilterBar } from "@/components/data-table/filter-bar";
+import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
 import { useUrlState } from "@/hooks/use-url-state";
 
 export default function OrgLeaveApprovalsPage() {
-  const [filter, setFilter] = useUrlState("status", "pending");
+  const [statusFilter, setStatusFilter] = useUrlState("status", "pending");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["org-leave-requests", filter],
-    queryFn: () => apiFetch(`/leave-requests${filter !== "all" ? `?status=${filter}` : ""}`),
+    queryKey: ["org-leave-requests", statusFilter],
+    queryFn: () => apiFetch(`/leave-requests${statusFilter !== "all" ? `?status=${statusFilter}` : ""}`),
   });
 
   const records = data?.data || [];
-  const pendingCount = filter === "pending" ? records.length : 0; // rough estimation for badging
+  const pendingCount = records.filter((r: any) => r.approval?.status === "pending").length;
+
+  const columns = useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        accessorKey: "employee",
+        header: "Employee",
+        cell: ({ row }) => {
+          const startDate = new Date(row.original.start_date);
+          const endDate = new Date(row.original.end_date);
+          return (
+            <div>
+              <div className="font-semibold text-neutral-900 dark:text-white">
+                {row.original.user?.name || "Employee"}
+              </div>
+              <div className="text-[11px] text-neutral-400 font-normal">
+                {format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "type",
+        header: "Type",
+        cell: ({ row }) => (
+          <span className="px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-medium capitalize text-[10px]">
+            {row.original.type}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "reason",
+        header: "Reason",
+        cell: ({ row }) => (
+          <span className="text-neutral-500 truncate max-w-[200px] block" title={row.original.reason}>
+            {row.original.reason}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+          const status = row.original.approval?.status || "pending";
+          return (
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                status === "approved"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : status === "rejected"
+                  ? "bg-rose-100 text-rose-700"
+                  : "bg-amber-100 text-amber-700"
+              }`}
+            >
+              {status}
+            </span>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <LeaveApprovalActionsCell record={row.original} />
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
+  const handleExport = () => {
+    window.location.href = `/api/leave-requests/export?status=${statusFilter}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -36,75 +111,40 @@ export default function OrgLeaveApprovalsPage() {
           </h1>
           <p className="text-sm text-neutral-500 mt-1">Review and manage team time off requests.</p>
         </div>
-        
-        <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
-          <button
-            onClick={() => setFilter("pending")}
-            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
-              filter === "pending"
-                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm"
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-            }`}
-          >
-            Pending Action
-          </button>
-          <button
-            onClick={() => setFilter("all")}
-            className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
-              filter === "all"
-                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm"
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-            }`}
-          >
-            All Requests
-          </button>
-        </div>
       </div>
 
-      <Card className="border-none shadow-sm overflow-hidden">
-        {filter === "pending" ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 uppercase font-semibold border-b border-neutral-100 dark:border-neutral-800">
-                <tr>
-                  <th className="px-6 py-3">Employee</th>
-                  <th className="px-6 py-3">Type</th>
-                  <th className="px-6 py-3">Reason</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="p-6">
-                      <div className="space-y-3">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                      </div>
-                    </td>
-                  </tr>
-                ) : records.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8">
-                      <EmptyState
-                        icon={<AlertCircle className="w-12 h-12 text-neutral-300" />}
-                        title="All caught up!"
-                        description="There are no pending leave requests requiring your attention."
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  records.map((record: any) => (
-                    <LeaveApprovalRow key={record.id} record={record} />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <LeaveHistoryTable records={records} isLoading={isLoading} />
-        )}
+      <Card className="border-none shadow-sm flex flex-col h-[calc(100vh-200px)]">
+        <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
+          <FilterBar
+            searchQuery=""
+            onSearchChange={() => {}}
+            filters={[
+              {
+                key: "status",
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { label: "All Statuses", value: "all" },
+                  { label: "Pending", value: "pending" },
+                  { label: "Approved", value: "approved" },
+                  { label: "Rejected", value: "rejected" },
+                ],
+              },
+            ]}
+          />
+          <Button variant="outline" size="sm" onClick={handleExport} className="h-8 text-xs font-semibold">
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Export
+          </Button>
+        </div>
+        <div className="flex-1 min-h-[300px]">
+          <DataTable
+            columns={columns}
+            data={records}
+            isFetchingNextPage={isLoading}
+          />
+        </div>
       </Card>
     </div>
   );

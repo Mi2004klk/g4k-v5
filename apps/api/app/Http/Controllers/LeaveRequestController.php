@@ -86,11 +86,14 @@ class LeaveRequestController extends Controller
             'end_date' => $validated['end_date'],
             'reason' => $validated['reason'],
             'type' => $validated['type'],
+            'status' => 'pending',
         ]);
 
         $approval = ApprovalService::submit($leave, $userId, $validated);
 
         $leave->update(['approval_id' => $approval->id]);
+
+        \App\Services\AuditLogger::log($request, 'leave.request', 'LeaveRequest', $leave->id, null, $validated);
 
         return response()->json($leave->load('approval'));
     }
@@ -135,8 +138,7 @@ class LeaveRequestController extends Controller
     public function history(Request $request)
     {
         $query = LeaveRequest::with(['approval'])
-            ->where('user_id', $request->user()->id)
-            ->where('status', '!=', 'pending');
+            ->where('user_id', $request->user()->id);
 
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));

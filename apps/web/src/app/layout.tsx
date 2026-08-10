@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Sora } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { WebVitals } from "@/components/web-vitals";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import "./globals.css";
 
 const inter = Inter({
@@ -64,7 +66,11 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground font-sans">
-        <Providers>{children}</Providers>
+        <WebVitals />
+        <Providers>
+          {children}
+          <OfflineIndicator />
+        </Providers>
       </body>
     </html>
   );

@@ -35,6 +35,7 @@ export interface DataTableProps<TData, TValue> {
   density?: "comfortable" | "compact"
   stickyHeader?: boolean
   stickyFirstCol?: boolean
+  rowSelection?: RowSelectionState
   onRowSelectionChange?: (rowSelection: RowSelectionState) => void
   onInlineEditSave?: (rowId: string, columnId: string, value: any) => void
 }
@@ -189,12 +190,13 @@ export function DataTable<TData, TValue>({
   density = "comfortable",
   stickyHeader = true,
   stickyFirstCol = true,
+  rowSelection: externalRowSelection,
   onRowSelectionChange,
   onInlineEditSave,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -238,21 +240,23 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: (updaterOrValue) => {
+      const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(internalRowSelection) : updaterOrValue;
+      setInternalRowSelection(newValue);
+      onRowSelectionChange?.(newValue);
+    },
     getRowId: getRowId || defaultGetRowId,
     state: {
       sorting,
       columnVisibility,
-      rowSelection,
+      rowSelection: externalRowSelection !== undefined ? externalRowSelection : internalRowSelection,
     },
   })
 
-  // Notify parent of selection changes
   useEffect(() => {
-    if (onRowSelectionChange) {
-      onRowSelectionChange(rowSelection)
-    }
-  }, [rowSelection, onRowSelectionChange])
+    // Legacy sync - the controlled state handler above is preferred
+    // onRowSelectionChange?.(externalRowSelection !== undefined ? externalRowSelection : internalRowSelection)
+  }, [internalRowSelection, externalRowSelection, onRowSelectionChange])
 
   // Virtualization setup
   const tableContainerRef = useRef<HTMLDivElement>(null)

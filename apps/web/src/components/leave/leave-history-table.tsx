@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
-import { Check, X } from "lucide-react";
-import { DataTable } from "@g4k/ui/components";
+import { Check, X, Plane } from "lucide-react";
+import { DataTable, EmptyState } from "@g4k/ui/components";
 import { FilterBar } from "@/components/data-table/filter-bar";
 
 interface LeaveHistoryTableProps {
@@ -128,6 +128,7 @@ export function LeaveHistoryTable({
               onChange: setStatusFilter,
               options: [
                 { label: "All Statuses", value: "all" },
+                { label: "Pending", value: "pending" },
                 { label: "Approved", value: "approved" },
                 { label: "Rejected", value: "rejected" },
               ],
@@ -136,11 +137,21 @@ export function LeaveHistoryTable({
         />
       </div>
       <div className="flex-1 min-h-[300px]">
-        <DataTable
-          columns={columns}
-          data={records || []}
-          isFetchingNextPage={isLoading}
-        />
+        {records && records.length > 0 ? (
+          <DataTable
+            columns={columns}
+            data={records}
+            isFetchingNextPage={isLoading}
+          />
+        ) : !isLoading ? (
+          <div className="p-8">
+            <EmptyState
+              icon={<Plane className="w-12 h-12 text-neutral-300" />}
+              title="No leave requests yet."
+              description="You haven't requested any time off, or no requests match your current filters."
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

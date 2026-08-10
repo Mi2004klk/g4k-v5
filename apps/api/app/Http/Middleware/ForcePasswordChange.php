@@ -16,7 +16,8 @@ class ForcePasswordChange
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user && $user->must_change_password) {
+        // Disabled: reset password on first login
+        if (false && $user && $user->must_change_password) {
             // Exclude allowed routes. Note: $request->path() does not include a leading slash
             $allowedRoutes = ['api/auth/change-password', 'api/auth/logout'];
             

@@ -50,6 +50,7 @@ class NotifyApprovalSubmitted
                 'title' => 'New Approval Request',
                 'body' => "{$submitter->name} has submitted a new {$approval->approvable_type} request that requires your approval.",
                 'link' => '/dashboard/org/leave',
+                'priority' => 'high',
             ]);
         }
     }

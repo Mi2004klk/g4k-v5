@@ -1,6 +1,7 @@
 "use client";
 
 import { AuditLogTable } from "@/components/settings/audit-log-table";
+import { ErrorBoundary } from "@g4k/ui/components";
 
 export default function AuditPage() {
   return (
@@ -10,7 +11,9 @@ export default function AuditPage() {
         <p className="text-sm text-neutral-500 mt-1">Review system events, access logs, and user activity.</p>
       </div>
 
-      <AuditLogTable />
+      <ErrorBoundary>
+        <AuditLogTable />
+      </ErrorBoundary>
     </div>
   );
 }

@@ -28,6 +28,7 @@ import {
   Menu,
   Star,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@g4k/ui/components";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth-store";
@@ -40,6 +41,7 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { CommandPalette } from "@/components/app-shell/command-palette";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
+import { TopbarTimer } from "@/components/app-shell/topbar-timer";
 import { HelpOverlay, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import {
   DropdownMenu,
@@ -60,6 +62,7 @@ const primaryNav = [
   { name: "Directory", href: "/dashboard/directory", icon: Users, capability: "directory.view" },
   { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "leave.request-self" },
   { name: "Employees", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
+  { name: "Team Attendance", href: "/dashboard/org/attendance", icon: Clock, capability: "hr.view-team-attendance" },
   { name: "Org Leave Approvals", href: "/dashboard/org/leave", icon: CalendarDays, capability: "leave.approve-employee" },
   { name: "Departments", href: "/dashboard/org/departments", icon: Building2, capability: "departments.manage" },
   { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.manage" },
@@ -115,21 +118,31 @@ export default function DashboardLayout({
     try {
       if (existingPin) {
         await apiFetch(`/pins/${existingPin.id}`, { method: "DELETE" });
+        refetchPins();
+        toast("Unpinned from sidebar", {
+          action: { label: "Undo", onClick: () => handleTogglePin(item, null) },
+          duration: 5000,
+        });
       } else {
-        await apiFetch("/pins", {
+        const res = await apiFetch("/pins", {
           method: "POST",
           body: JSON.stringify({
             type: "nav",
             target_id: item.name,
             label: item.name,
             href: item.href,
-            icon: item.name, // using name as icon reference for now
+            icon: item.name,
           }),
         });
+        refetchPins();
+        toast("Pinned to sidebar", {
+          action: { label: "Undo", onClick: () => handleTogglePin(item, res) },
+          duration: 5000,
+        });
       }
-      refetchPins();
     } catch (error) {
       console.error("Failed to toggle pin", error);
+      toast.error("Failed to toggle pin");
     }
   };
 
@@ -362,6 +375,7 @@ export default function DashboardLayout({
               </div>
 
               <div className="flex items-center gap-2 md:gap-3">
+                <TopbarTimer />
                 <Button
                   variant="ghost"
                   size="icon"

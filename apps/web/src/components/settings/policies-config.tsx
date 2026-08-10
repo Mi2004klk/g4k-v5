@@ -47,6 +47,8 @@ export function PoliciesConfig() {
       { category: "security", key: "password.require_mixed", value: formData["password.require_mixed"]?.toString() || "true" },
       { category: "security", key: "password.require_number", value: formData["password.require_number"]?.toString() || "true" },
       { category: "security", key: "password.require_symbol", value: formData["password.require_symbol"]?.toString() || "true" },
+      { category: "security", key: "session.access_token_ttl", value: formData["session.access_token_ttl"]?.toString() || "15" },
+      { category: "security", key: "session.refresh_token_ttl", value: formData["session.refresh_token_ttl"]?.toString() || "7" },
     ];
     updateMutation.mutate(updates);
   };
@@ -56,10 +58,11 @@ export function PoliciesConfig() {
   }
 
   return (
-    <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
-      <CardHeader>
-        <CardTitle className="text-base">Password Policy</CardTitle>
-      </CardHeader>
+    <div className="space-y-6">
+      <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+        <CardHeader>
+          <CardTitle className="text-base">Password Policy</CardTitle>
+        </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
           <div>
@@ -110,6 +113,47 @@ export function PoliciesConfig() {
           </Button>
         </form>
       </CardContent>
-    </Card>
+      </Card>
+
+      <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+        <CardHeader>
+          <CardTitle className="text-base">Session & Device Rules</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+            <div>
+              <label className="text-xs font-medium">Access Token Expiration (Minutes)</label>
+              <input
+                type="number"
+                min={5}
+                max={1440}
+                className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+                value={formData["session.access_token_ttl"] || "15"}
+                onChange={(e) => setFormData({ ...formData, "session.access_token_ttl": e.target.value })}
+              />
+              <p className="text-[10px] text-neutral-500 mt-1">Short-lived token for API access.</p>
+            </div>
+            
+            <div>
+              <label className="text-xs font-medium">Refresh Token Expiration (Days)</label>
+              <input
+                type="number"
+                min={1}
+                max={90}
+                className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+                value={formData["session.refresh_token_ttl"] || "7"}
+                onChange={(e) => setFormData({ ...formData, "session.refresh_token_ttl": e.target.value })}
+              />
+              <p className="text-[10px] text-neutral-500 mt-1">Long-lived token used to obtain new access tokens.</p>
+            </div>
+
+            <Button type="submit" disabled={updateMutation.isPending} className="mt-4">
+              <Save className="w-4 h-4 mr-2" />
+              {updateMutation.isPending ? "Saving..." : "Save Rules"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

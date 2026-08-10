@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase } from "lucide-react";
+import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase, AlertCircle, Clock, FileEdit } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
@@ -21,11 +21,46 @@ export function NotificationsBell() {
   const { subscribe } = useReverb();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | "unread">("unread");
+
+  const { data: countData } = useQuery({
+    queryKey: ["unread-count"],
+    queryFn: () => apiFetch("/notifications/unread-count"),
+    enabled: !!user,
+  });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => apiFetch("/notifications"),
+    queryKey: ["notifications", filter],
+    queryFn: () => apiFetch(`/notifications${filter === "unread" ? "?unreadOnly=true" : ""}`),
     enabled: !!user,
+  });
+
+  const markUnreadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiFetch(`/notifications/${id}/mark-unread`, { method: "POST" });
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      const previous = queryClient.getQueryData(["notifications"]);
+      
+      queryClient.setQueryData(["notifications"], (old: any) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((n: any) => 
+            n.id === id ? { ...n, read_at: null } : n
+          )
+        };
+      });
+      return { previous };
+    },
+    onError: (err, id, context: any) => {
+      queryClient.setQueryData(["notifications"], context.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+    },
   });
 
   const markReadMutation = useMutation({
@@ -48,11 +83,21 @@ export function NotificationsBell() {
 
       return { previous };
     },
+    onSuccess: (data, id) => {
+      toast("Notification marked as read", {
+        action: {
+          label: "Undo",
+          onClick: () => markUnreadMutation.mutate(id),
+        },
+        duration: 5000,
+      });
+    },
     onError: (err, id, context: any) => {
       queryClient.setQueryData(["notifications"], context.previous);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
     },
   });
 
@@ -64,6 +109,7 @@ export function NotificationsBell() {
     
     const handleNotification = (e: any) => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
       if (e.title) {
         toast.info(e.title, { description: e.body || "You have a new notification." });
       } else {
@@ -90,7 +136,7 @@ export function NotificationsBell() {
   }, [user, subscribe, queryClient]);
 
   const notifications = data?.data || [];
-  const unreadCount = notifications.filter((n: any) => !n.read_at).length;
+  const unreadCount = countData?.count || 0;
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -100,6 +146,12 @@ export function NotificationsBell() {
         return <Briefcase className="w-4 h-4 text-violet-500" />;
       case "message":
         return <MessageSquare className="w-4 h-4 text-blue-500" />;
+      case "missed_clock_in":
+        return <AlertCircle className="w-4 h-4 text-rose-500" />;
+      case "shift_reminder":
+        return <Clock className="w-4 h-4 text-amber-500" />;
+      case "attendance_correction":
+        return <FileEdit className="w-4 h-4 text-blue-500" />;
       default:
         return <CircleAlert className="w-4 h-4 text-amber-500" />;
     }
@@ -117,12 +169,28 @@ export function NotificationsBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0 shadow-lg border-neutral-100 dark:border-neutral-800 rounded-xl overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
-          <h3 className="font-semibold text-sm">Notifications</h3>
-          {unreadCount > 0 && (
-            <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">
-              {unreadCount} new
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            <h3 className="font-semibold text-sm">Notifications</h3>
+            {unreadCount > 0 && (
+              <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">
+                {unreadCount} new
+              </span>
+            )}
+          </div>
+          <div className="flex bg-neutral-200/50 dark:bg-neutral-800 p-0.5 rounded-lg">
+            <button 
+              onClick={() => setFilter("all")} 
+              className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${filter === "all" ? "bg-white dark:bg-neutral-700 shadow-sm" : "text-neutral-500"}`}
+            >
+              All
+            </button>
+            <button 
+              onClick={() => setFilter("unread")} 
+              className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${filter === "unread" ? "bg-white dark:bg-neutral-700 shadow-sm" : "text-neutral-500"}`}
+            >
+              Unread
+            </button>
+          </div>
         </div>
         
         <div className="max-h-[300px] overflow-y-auto">
@@ -145,7 +213,13 @@ export function NotificationsBell() {
                   <div className="mt-0.5 shrink-0">{getIcon(n.type)}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate flex items-center gap-1.5">
-                      {n.title}
+                      {n.link ? (
+                        <Link href={n.link} className="hover:underline hover:text-violet-600 dark:hover:text-violet-400" onClick={() => setOpen(false)}>
+                          {n.title}
+                        </Link>
+                      ) : (
+                        <span>{n.title}</span>
+                      )}
                       {n.priority === 'urgent' && (
                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" title="Urgent" />
                       )}

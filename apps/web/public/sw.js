@@ -1,8 +1,16 @@
 const CACHE_NAME = 'g4k-workplace-v2';
 
-// On install, skip waiting to immediately take control
+// On install, cache app shell and take control
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll([
+        '/',
+        '/login',
+        '/dashboard'
+      ]);
+    }).then(() => self.skipWaiting())
+  );
 });
 
 // On activate, purge ALL old caches and claim clients

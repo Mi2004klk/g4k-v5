@@ -58,15 +58,31 @@ class LeaveAttendanceIntegration
                 }
 
                 if ($isWorkingDay && !$isHoliday) {
-                    DB::table('attendance_days')->updateOrInsert(
-                        ['user_id' => $userId, 'date' => $dateStr],
-                        [
+                    $existing = DB::table('attendance_days')
+                        ->where('user_id', $userId)
+                        ->where('date', $dateStr)
+                        ->first();
+
+                    if ($existing) {
+                        DB::table('attendance_days')
+                            ->where('id', $existing->id)
+                            ->update([
+                                'status' => 'leave',
+                                'source' => 'server',
+                                'updated_at' => now(),
+                                'version' => DB::raw('version + 1')
+                            ]);
+                    } else {
+                        DB::table('attendance_days')->insert([
+                            'user_id' => $userId,
+                            'date' => $dateStr,
                             'status' => 'leave',
                             'source' => 'server',
+                            'created_at' => now(),
                             'updated_at' => now(),
-                            'version' => DB::raw('version + 1')
-                        ]
-                    );
+                            'version' => 1
+                        ]);
+                    }
                 }
 
                 $currentDate->addDay();

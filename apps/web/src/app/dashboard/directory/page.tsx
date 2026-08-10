@@ -21,6 +21,7 @@ import { Input } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
+import { Avatar, AvatarFallback } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 import { FilterBar } from "@/components/data-table/filter-bar";
@@ -33,12 +34,25 @@ import {
 } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@g4k/ui/components";
+import { useTrackRecent } from "@/hooks/use-track-recent";
 
 export default function DirectoryPage() {
   const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+
+  useTrackRecent(
+    selectedUser
+      ? {
+          id: String(selectedUser.id),
+          type: "employee",
+          title: selectedUser.name,
+          subtitle: selectedUser.designation?.name || "Employee",
+          url: `/dashboard/directory?search=${selectedUser.name}`, // Preserving search context roughly
+        }
+      : null
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["directory", debouncedSearch],
@@ -191,12 +205,12 @@ export default function DirectoryPage() {
               onClick={() => setSelectedUser(user)}
               className="border-none shadow-sm hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 text-white font-bold text-lg flex items-center justify-center shadow">
-                    {user.name.charAt(0)}
-                  </div>
+                  <Avatar size="lg">
+                    <AvatarFallback name={user.name} />
+                  </Avatar>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-bold text-sm text-neutral-900 dark:text-white truncate">
                       {user.name}
@@ -250,9 +264,9 @@ export default function DirectoryPage() {
           {selectedUser && (
             <div className="space-y-6 pt-4">
               <SheetHeader className="text-left space-y-2">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 text-white font-bold text-2xl flex items-center justify-center shadow-lg">
-                  {selectedUser.name.charAt(0)}
-                </div>
+                <Avatar size="lg" className="w-16 h-16 text-2xl">
+                  <AvatarFallback name={selectedUser.name} />
+                </Avatar>
                 <SheetTitle className="text-xl font-bold font-display">
                   {selectedUser.name}
                 </SheetTitle>

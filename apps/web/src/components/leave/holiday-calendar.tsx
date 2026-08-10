@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
+import { Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
 
 export function HolidayCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -67,14 +68,12 @@ export function HolidayCalendar() {
                 const isCurrentMonth = isSameMonth(day, monthStart);
                 const holiday = holidayList.find((h: any) => isSameDay(new Date(h.date), day));
                 
-                return (
+                const CellContent = (
                   <div
-                    key={idx}
-                    title={holiday?.name}
                     className={`
                       relative flex flex-col items-center justify-center p-1 rounded-md text-xs transition-all min-h-[40px]
                       ${!isCurrentMonth ? 'text-neutral-300 dark:text-neutral-700' : 'text-neutral-700 dark:text-neutral-300'}
-                      ${holiday ? 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300 font-bold' : ''}
+                      ${holiday ? 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300 font-bold hover:bg-violet-200 dark:hover:bg-violet-900/60 cursor-pointer' : ''}
                       ${isSameDay(day, new Date()) && !holiday ? 'bg-neutral-100 dark:bg-neutral-800 font-bold' : ''}
                     `}
                   >
@@ -84,6 +83,33 @@ export function HolidayCalendar() {
                     )}
                   </div>
                 );
+
+                if (holiday) {
+                  return (
+                    <Popover key={idx}>
+                      <PopoverTrigger asChild>
+                        {CellContent}
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-3 z-50">
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-sm leading-none">{holiday.name}</h4>
+                          {holiday.description && (
+                            <p className="text-xs text-neutral-500">{holiday.description}</p>
+                          )}
+                          <div className="flex gap-2 mt-2">
+                            {holiday.recurring && (
+                              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                                Recurring
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  );
+                }
+
+                return <div key={idx}>{CellContent}</div>;
               })}
             </div>
           </div>

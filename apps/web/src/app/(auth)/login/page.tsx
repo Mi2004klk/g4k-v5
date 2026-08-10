@@ -67,7 +67,8 @@ export default function LoginPage() {
       setAuth(result.token, result.user, result.active_role);
       toast.success("Login successful!");
 
-      if (result.must_change_password) {
+      // Disabled reset password on first login
+      if (false && result.must_change_password) {
         router.push("/change-password");
       } else if (!result.onboarded) {
         router.push("/onboarding");

@@ -85,6 +85,7 @@ class DatabaseSeeder extends Seeder
                 'start_time' => '09:00:00',
                 'end_time' => '18:30:00',
                 'break_minutes' => 45,
+                'grace_minutes' => 10,
                 'standard_seconds' => 31500, // 8h 45m
                 'working_days' => json_encode([1, 2, 3, 4, 5, 6]), // Mon-Sat
                 'effective_from' => '2026-01-01',
@@ -228,7 +229,7 @@ class DatabaseSeeder extends Seeder
                     "name" => $emp["name"],
                     "username" => $emp["username"],
                     "password" => Hash::make($emp["password"]),
-                    "must_change_password" => false,
+                    "must_change_password" => true,
                     "department_id" => $emp["dept"],
                     "designation_id" => $desigMap[$emp["designation"]]->id,
                     "phone" => $emp["mobile"],
@@ -243,6 +244,25 @@ class DatabaseSeeder extends Seeder
             DB::table("role_assignments")->updateOrInsert(
                 ["user_id" => $user->id, "role" => $emp["role"]],
                 ["created_at" => now(), "updated_at" => now()]
+            );
+        }
+
+        // 7. Settings
+        $settings = [
+            ['key' => 'password_policy_min_length', 'value' => json_encode(8), 'category' => 'security'],
+            ['key' => 'password_policy_require_numbers', 'value' => json_encode(true), 'category' => 'security'],
+            ['key' => 'session_ttl_minutes', 'value' => json_encode(1440), 'category' => 'security'],
+            ['key' => 'attendance_reminder_offset_minutes', 'value' => json_encode(15), 'category' => 'attendance'],
+        ];
+
+        foreach ($settings as $setting) {
+            DB::table('settings')->updateOrInsert(
+                ['key' => $setting['key'], 'category' => $setting['category']],
+                [
+                    'value' => $setting['value'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
             );
         }
 

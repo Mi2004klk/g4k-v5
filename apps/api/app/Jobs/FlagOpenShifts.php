@@ -17,15 +17,18 @@ class FlagOpenShifts implements ShouldQueue
     {
         $today = now()->toDateString();
         
-        // Find open shifts from previous days
+        // Find open shifts from previous days that haven't been flagged yet
         $openDays = AttendanceDay::where('has_open_shift', true)
             ->where('date', '<', $today)
+            ->where('is_flagged', false)
             ->with('user')
             ->get();
 
         foreach ($openDays as $day) {
             $user = $day->user;
             if (!$user) continue;
+
+            $day->update(['is_flagged' => true]);
 
             // Notify the user
             Notification::create([

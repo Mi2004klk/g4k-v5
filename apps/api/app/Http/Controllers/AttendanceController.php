@@ -56,6 +56,11 @@ class AttendanceController extends Controller
             $validated['meta'] ?? null
         );
 
+        AuditLogger::log($request, "attendance.{$type}", 'AttendanceDay', $dayRecord['id'] ?? 0, null, [
+            'client_id' => $validated['client_id'],
+            'device_meta' => $validated['meta'] ?? null
+        ]);
+
         $events = AttendanceEvent::where('user_id', $user->id)
             ->whereDate('timestamp', Carbon::parse($timestamp)->toDateString())
             ->orderBy('timestamp', 'asc')
@@ -64,6 +69,59 @@ class AttendanceController extends Controller
         return response()->json([
             'day' => $dayRecord,
             'events' => $events,
+        ]);
+    }
+
+    public function sync(Request $request)
+    {
+        $validated = $request->validate([
+            'events' => 'required|array',
+            'events.*.client_id' => 'required|string',
+            'events.*.type' => 'required|string',
+            'events.*.timestamp' => 'required|date',
+            'events.*.meta' => 'nullable|array',
+        ]);
+
+        $user = $request->user();
+        $syncedDates = [];
+        $now = now();
+
+        // Sort events chronologically to process them in order
+        $events = collect($validated['events'])->sortBy('timestamp')->values();
+
+        foreach ($events as $ev) {
+            $ts = Carbon::parse($ev['timestamp']);
+            
+            // Reject future timestamps (allow 5 min drift max)
+            if ($ts->gt($now->copy()->addMinutes(5))) {
+                continue;
+            }
+
+            try {
+                AttendanceService::recordEvent(
+                    $user->id,
+                    $ev['type'],
+                    $ev['timestamp'],
+                    $ev['client_id'],
+                    $ev['meta'] ?? null
+                );
+                $syncedDates[] = $ts->toDateString();
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // If sequence is invalid during sync, we skip that event
+                // Usually client-side state machine prevents this, but server is authority
+                continue;
+            }
+        }
+
+        $syncedDates = array_unique($syncedDates);
+        $reconciledDays = [];
+        foreach ($syncedDates as $date) {
+            $reconciledDays[] = AttendanceService::reconcileDay($user->id, $date);
+        }
+
+        return response()->json([
+            'message' => 'Sync successful',
+            'reconciled_days' => $reconciledDays,
         ]);
     }
 
@@ -98,6 +156,24 @@ class AttendanceController extends Controller
         $days = AttendanceDay::where('user_id', $user->id)
             ->orderBy('date', 'desc')
             ->cursorPaginate(30);
+
+        // Fetch task_time_logs for the paginated dates
+        $dates = collect($days->items())->pluck('date')->toArray();
+        $logs = \App\Models\TaskTimeLog::with(['project', 'task'])
+            ->where('user_id', $user->id)
+            ->whereIn('log_date', $dates)
+            ->get();
+
+        $logsByDate = $logs->groupBy('log_date');
+
+        foreach ($days->items() as $day) {
+            $dayLogs = $logsByDate->get($day->date, collect());
+            $projects = $dayLogs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
+            $tasks = $dayLogs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
+            
+            $day->projects = $projects;
+            $day->tasks = $tasks;
+        }
 
         return response()->json($days);
     }
@@ -150,8 +226,90 @@ class AttendanceController extends Controller
         if ($request->filled('status')) {
             $query->where('attendance_days.status', $request->query('status'));
         }
+        if ($request->filled('search')) {
+            $searchTerm = '%' . $request->query('search') . '%';
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('users.name', 'like', $searchTerm)
+                  ->orWhere('users.email', 'like', $searchTerm);
+            });
+        }
 
-        return response()->json($query->cursorPaginate(20));
+        $results = $query->cursorPaginate(20);
+        $response = response()->json($results);
+        $response->setEtag(md5($response->getContent()));
+        $response->header('Cache-Control', 'private, max-age=30');
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    public function hrDay(Request $request, string $date, int $userId)
+    {
+        // First verify they have access to this user (same department or admin)
+        $targetUser = \App\Models\User::findOrFail($userId);
+        $isAdmin = RoleAssignment::where('user_id', $request->user()->id)
+            ->whereIn('role', ['super_admin', 'admin'])
+            ->exists();
+            
+        if (!$isAdmin && $request->user()->department_id !== $targetUser->department_id) {
+            return response()->json(['message' => 'Unauthorized access to this user\'s attendance.'], 403);
+        }
+
+        $day = AttendanceDay::where('user_id', $userId)
+            ->where('date', $date)
+            ->first();
+
+        $events = AttendanceEvent::where('user_id', $userId)
+            ->whereDate('timestamp', $date)
+            ->orderBy('timestamp', 'asc')
+            ->get();
+
+        return response()->json([
+            'day' => $day,
+            'events' => $events,
+            'user' => [
+                'id' => $targetUser->id,
+                'name' => $targetUser->name,
+                'email' => $targetUser->email,
+            ]
+        ]);
+    }
+
+    public function hrHistory(Request $request, int $userId)
+    {
+        // First verify they have access to this user
+        $targetUser = \App\Models\User::findOrFail($userId);
+        $isAdmin = RoleAssignment::where('user_id', $request->user()->id)
+            ->whereIn('role', ['super_admin', 'admin'])
+            ->exists();
+            
+        if (!$isAdmin && $request->user()->department_id !== $targetUser->department_id) {
+            return response()->json(['message' => 'Unauthorized access to this user\'s history.'], 403);
+        }
+
+        $days = AttendanceDay::where('user_id', $userId)
+            ->orderBy('date', 'desc')
+            ->cursorPaginate(30);
+
+        // Fetch task_time_logs for the paginated dates
+        $dates = collect($days->items())->pluck('date')->toArray();
+        $logs = \App\Models\TaskTimeLog::with(['project', 'task'])
+            ->where('user_id', $userId)
+            ->whereIn('log_date', $dates)
+            ->get();
+
+        $logsByDate = $logs->groupBy('log_date');
+
+        foreach ($days->items() as $day) {
+            $dayLogs = $logsByDate->get($day->date, collect());
+            $projects = $dayLogs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
+            $tasks = $dayLogs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
+            
+            $day->projects = $projects;
+            $day->tasks = $tasks;
+        }
+
+        return response()->json($days);
     }
 
     public function hrToday(Request $request)
@@ -164,6 +322,7 @@ class AttendanceController extends Controller
     {
         $mode = $request->query('mode', 'weekly');
         $date = $request->query('date', now()->toDateString());
+        $groupBy = $request->query('groupBy', 'date');
         $carbonDate = Carbon::parse($date);
 
         $query = DB::table('attendance_days')
@@ -181,10 +340,17 @@ class AttendanceController extends Controller
             $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
         }
 
-        $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status="present" then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status="late" then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status="absent" then 1 else 0 end) as absent'))
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
+        if ($groupBy === 'employee') {
+            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status="present" then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status="late" then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status="absent" then 1 else 0 end) as absent'))
+                ->groupBy('users.id', 'users.name')
+                ->orderBy('users.name', 'asc')
+                ->get();
+        } else {
+            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status="present" then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status="late" then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status="absent" then 1 else 0 end) as absent'))
+                ->groupBy('date')
+                ->orderBy('date', 'asc')
+                ->get();
+        }
 
         return response()->json(['stats' => $stats, 'mode' => $mode]);
     }
@@ -192,9 +358,11 @@ class AttendanceController extends Controller
     public function correct(Request $request)
     {
         $validated = $request->validate([
+            'action' => 'required|in:add_event,edit_event,remove_event',
             'attendance_day_id' => 'required|exists:attendance_days,id',
-            'field' => 'required|string',
-            'new_value' => 'required',
+            'event_id' => 'nullable|exists:attendance_events,id',
+            'type' => 'nullable|string|in:clock_in,clock_out,break_start,break_end',
+            'timestamp' => 'nullable|date',
             'reason' => 'required|string|max:500',
         ]);
 
@@ -213,87 +381,117 @@ class AttendanceController extends Controller
             }
         }
 
-        $before = $day->toArray();
+        $action = $validated['action'];
+        $oldValue = null;
+        $newValue = null;
+        $field = $action;
 
-        $field = $validated['field'];
-        $oldValue = $day->$field ?? null;
+        DB::beginTransaction();
 
-        // Apply correction
-        $day->update([
-            $field => $validated['new_value'],
-            'corrected_by' => $request->user()->id,
-            'source' => 'manual', // Triggers protection in reconcileDay
-            'version' => DB::raw('version + 1'),
-            'updated_at' => now(),
-        ]);
+        try {
+            if ($action === 'add_event') {
+                $ev = AttendanceEvent::create([
+                    'client_id' => \Illuminate\Support\Str::uuid()->toString(),
+                    'user_id' => $day->user_id,
+                    'type' => $validated['type'],
+                    'timestamp' => Carbon::parse($validated['timestamp']),
+                    'source' => 'server',
+                ]);
+                $newValue = $ev->toArray();
+            } elseif ($action === 'edit_event') {
+                $ev = AttendanceEvent::findOrFail($validated['event_id']);
+                $oldValue = $ev->toArray();
+                if ($request->filled('type')) $ev->type = $validated['type'];
+                if ($request->filled('timestamp')) $ev->timestamp = Carbon::parse($validated['timestamp']);
+                $ev->source = 'server';
+                $ev->save();
+                $newValue = $ev->toArray();
+            } elseif ($action === 'remove_event') {
+                $ev = AttendanceEvent::findOrFail($validated['event_id']);
+                $oldValue = $ev->toArray();
+                $ev->delete();
+            }
+
+            // Ensure the day is marked manual so we know it was tampered with
+            $day->update(['source' => 'manual']);
+
+            // Insert audit correction record
+            DB::table('attendance_corrections')->insert([
+                'attendance_day_id' => $day->id,
+                'corrected_by' => $request->user()->id,
+                'field' => $field,
+                'old_value' => $oldValue ? json_encode($oldValue) : null,
+                'new_value' => $newValue ? json_encode($newValue) : null,
+                'reason' => $validated['reason'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to apply correction.', 'error' => $e->getMessage()], 500);
+        }
+
+        // Run reconciliation based on the new events
+        $reconciledDayData = AttendanceService::reconcileDay($day->user_id, $day->date, true);
         
-        // Ensure reconcileDay is called if it was open shift fix or structural
-        AttendanceService::reconcileDay($day->user_id, $day->date);
-
-        // Insert audit correction record
-        DB::table('attendance_corrections')->insert([
-            'attendance_day_id' => $day->id,
-            'corrected_by' => $request->user()->id,
-            'field' => $field,
-            'old_value' => json_encode($oldValue),
-            'new_value' => json_encode($validated['new_value']),
-            'reason' => $validated['reason'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
         $updatedDay = AttendanceDay::where('id', $day->id)->first();
-        AuditLogger::log($request, 'correct', 'attendance_day', $day->id, $before, $updatedDay->toArray());
+        AuditLogger::log($request, 'correct_event', 'attendance_day', $day->id, ['action' => $action, 'old' => $oldValue], $updatedDay->toArray());
+
+        // Notify affected employee
+        if ($day->user_id !== $actor->id) {
+            \App\Models\Notification::create([
+                'user_id' => $day->user_id,
+                'title' => 'Attendance Corrected',
+                'body' => "Your attendance for {$day->date} was corrected by {$actor->name}.",
+                'type' => 'info',
+            ]);
+        }
 
         return response()->json([
-            'message' => 'Attendance record corrected successfully.',
+            'message' => 'Attendance event corrected successfully.',
             'day' => $updatedDay,
+            'events' => AttendanceEvent::where('user_id', $day->user_id)->whereDate('timestamp', $day->date)->orderBy('timestamp')->get(),
         ]);
     }
 
     public function export(Request $request)
     {
-        $date = $request->query('date', now()->toDateString());
+        $startDate = $request->query('start_date', now()->toDateString());
+        $endDate = $request->query('end_date', $startDate);
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"attendance_export_{$date}.csv\"",
-        ];
-
-        $callback = function () use ($date, $request) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['Date', 'Employee Name', 'Email', 'Status', 'Total Worked (hh:mm)', 'Overtime (hh:mm)', 'Late (mins)']);
-
-            $query = DB::table('attendance_days')
-                ->join('users', 'users.id', '=', 'attendance_days.user_id')
-                ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email')
-                ->where('date', $date);
-                
-            $this->applyHrScoping($query, $request->user());
+        $query = DB::table('attendance_days')
+            ->join('users', 'users.id', '=', 'attendance_days.user_id')
+            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('date', 'asc');
             
-            $records = $query->get();
+        $this->applyHrScoping($query, $request->user());
+        $records = $query->get();
 
+        return response()->streamDownload(function () use ($records) {
+            $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload('attendance_export.xlsx');
+            
             foreach ($records as $row) {
                 $hours = floor($row->total_seconds / 3600);
                 $mins = floor(($row->total_seconds % 3600) / 60);
                 $otHours = floor($row->overtime_seconds / 3600);
                 $otMins = floor(($row->overtime_seconds % 3600) / 60);
 
-                fputcsv($file, [
-                    $row->date,
-                    $row->user_name,
-                    $row->user_email,
-                    strtoupper($row->status),
-                    sprintf('%02dh %02dm', $hours, $mins),
-                    sprintf('%02dh %02dm', $otHours, $otMins),
-                    $row->late_minutes,
+                $writer->addRow([
+                    'Date' => $row->date,
+                    'Employee Name' => $row->user_name,
+                    'Email' => $row->user_email,
+                    'Status' => strtoupper($row->status),
+                    'Total Worked (hh:mm)' => sprintf('%02dh %02dm', $hours, $mins),
+                    'Overtime (hh:mm)' => sprintf('%02dh %02dm', $otHours, $otMins),
+                    'Late (mins)' => $row->late_minutes,
                 ]);
             }
 
-            fclose($file);
-        };
-
-        return new StreamedResponse($callback, 200, $headers);
+            $writer->close();
+        }, "attendance_export_{$startDate}_to_{$endDate}.xlsx");
     }
 }
 

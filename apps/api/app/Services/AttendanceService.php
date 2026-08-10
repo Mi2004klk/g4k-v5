@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use App\Models\WorkSchedule;
+use App\Models\User;
 
 class AttendanceService
 {
@@ -62,7 +63,7 @@ class AttendanceService
     /**
      * Reconcile day summary from immutable events log.
      */
-    public static function reconcileDay(int $userId, string $date): array
+    public static function reconcileDay(int $userId, string $date, bool $forceRecompute = false): array
     {
         $startWindow = Carbon::parse($date)->startOfDay();
         $endWindow = Carbon::parse($date)->addHours(36);
@@ -88,7 +89,15 @@ class AttendanceService
             }
         }
 
-        $schedule = DB::table('work_schedules')->where('is_default', true)->first();
+        // Get user's specific work schedule if assigned, otherwise default
+        $user = User::find($userId);
+        $schedule = null;
+        if ($user && $user->work_schedule_id) {
+            $schedule = DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
+        }
+        if (!$schedule) {
+            $schedule = DB::table('work_schedules')->where('is_default', true)->first();
+        }
         $startTimeStr = $schedule->start_time ?? '09:00:00';
         $standardSeconds = $schedule->standard_seconds ?? 31500;
 
@@ -116,7 +125,7 @@ class AttendanceService
 
                 case 'break_start':
                     if ($currentWorkStart) {
-                        $totalSeconds += $ts->diffInSeconds($currentWorkStart);
+                        $totalSeconds += abs($ts->diffInSeconds($currentWorkStart));
                         $currentWorkStart = null;
                     }
                     $currentBreakStart = $ts;
@@ -124,7 +133,7 @@ class AttendanceService
 
                 case 'break_end':
                     if ($currentBreakStart) {
-                        $breakSeconds += $ts->diffInSeconds($currentBreakStart);
+                        $breakSeconds += abs($ts->diffInSeconds($currentBreakStart));
                         $currentBreakStart = null;
                     }
                     $currentWorkStart = $ts;
@@ -133,11 +142,11 @@ class AttendanceService
                 case 'clock_out':
                     $lastClockOut = $ts;
                     if ($currentWorkStart) {
-                        $totalSeconds += $ts->diffInSeconds($currentWorkStart);
+                        $totalSeconds += abs($ts->diffInSeconds($currentWorkStart));
                         $currentWorkStart = null;
                     }
                     if ($currentBreakStart) {
-                        $breakSeconds += $ts->diffInSeconds($currentBreakStart);
+                        $breakSeconds += abs($ts->diffInSeconds($currentBreakStart));
                         $currentBreakStart = null;
                     }
                     break;
@@ -156,7 +165,7 @@ class AttendanceService
         // Get existing to check for manual overrides
         $existingDay = AttendanceDay::where('user_id', $userId)->where('date', $date)->first();
         
-        if ($existingDay && $existingDay->source === 'manual') {
+        if (!$forceRecompute && $existingDay && $existingDay->source === 'manual') {
             // Do not override manually corrected total_seconds or break_seconds.
             // Just update structural things if needed, or skip.
             // For safety, we will just update has_open_shift and last_event.
@@ -175,7 +184,7 @@ class AttendanceService
         if ($firstClockIn) {
             $scheduledStart = Carbon::parse($date . ' ' . $startTimeStr);
             if ($firstClockIn->gt($scheduledStart)) {
-                $lateMinutes = $firstClockIn->diffInMinutes($scheduledStart);
+                $lateMinutes = abs($firstClockIn->diffInMinutes($scheduledStart));
             }
         }
 
@@ -183,6 +192,10 @@ class AttendanceService
         if ($totalSeconds > 0) {
             $status = ($lateMinutes > 0) ? 'late' : 'present';
         }
+
+        $existingSource = $existingDay ? $existingDay->source : 'server';
+        $source = ($existingSource === 'manual' || $forceRecompute && $existingSource === 'manual') ? 'manual' : 'server';
+        $version = $existingDay ? $existingDay->version + 1 : 1;
 
         $dayRecord = AttendanceDay::updateOrCreate(
             ['user_id' => $userId, 'date' => $date],
@@ -197,8 +210,8 @@ class AttendanceService
                 'late_minutes' => $lateMinutes,
                 'has_open_shift' => $hasOpenShift,
                 'status' => $status,
-                'source' => 'server',
-                'version' => DB::raw('version + 1'),
+                'source' => $source,
+                'version' => $version,
                 'updated_at' => now(),
             ]
         );

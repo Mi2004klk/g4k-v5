@@ -3,3 +3,8 @@ packages:
   - 'packages/*'
 allowBuilds:
   '@sentry/cli': set this to true or false
+  esbuild: set this to true or false
+  unrs-resolver: set this to true or false
+minimumReleaseAgeExclude:
+  - lucide-react@1.31.0
+  - sonner@2.0.8

@@ -75,4 +75,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Pin::class);
     }
+
+    public function attendanceDays()
+    {
+        return $this->hasMany(AttendanceDay::class);
+    }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
 }

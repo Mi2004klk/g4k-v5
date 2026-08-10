@@ -15,7 +15,9 @@ import {
   Map,
   Moon,
   Sun,
-  Laptop
+  Laptop,
+  Plane,
+  ClipboardList
 } from "lucide-react"
 
 import {
@@ -79,6 +81,25 @@ export function CommandMenu() {
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
             <CommandShortcut>⌘S</CommandShortcut>
+          </CommandItem>
+        </CommandGroup>
+
+        <CommandSeparator />
+
+        {/* Time Off Group */}
+        <CommandGroup heading="Time Off">
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/leave"))}>
+            <Plane className="mr-2 h-4 w-4" />
+            <span>Request Leave</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/leave"))}>
+            <Calendar className="mr-2 h-4 w-4" />
+            <span>View My Leave</span>
+          </CommandItem>
+          {/* Note: In a real app we'd conditionally render this based on role */}
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/leave?status=pending"))}>
+            <ClipboardList className="mr-2 h-4 w-4" />
+            <span>View Pending Approvals</span>
           </CommandItem>
         </CommandGroup>
 

@@ -62,4 +62,50 @@ class ReportController extends Controller
 
         return response()->json($exports);
     }
+
+    public function attendanceSummary(Request $request)
+    {
+        $start = $request->query('start', now()->subDays(30)->toDateString());
+        $end = $request->query('end', now()->toDateString());
+        $dept = $request->query('dept');
+
+        $query = User::query()
+            ->with('department')
+            ->withCount([
+                'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
+                'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
+                'attendanceDays as absent_days' => fn($q) => $q->where('status', 'absent')->whereBetween('date', [$start, $end]),
+                'attendanceDays as leave_days' => fn($q) => $q->where('status', 'on_leave')->whereBetween('date', [$start, $end]),
+            ])
+            ->withSum(['attendanceDays as total_hours' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds')
+            ->withSum(['attendanceDays as overtime_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'overtime_seconds');
+
+        if ($dept && $dept !== 'all') {
+            $query->where('department_id', $dept);
+        }
+
+        return response()->json($query->paginate(25));
+    }
+
+    public function leaveSummary(Request $request)
+    {
+        $start = $request->query('start', now()->subDays(30)->toDateString());
+        $end = $request->query('end', now()->toDateString());
+        $dept = $request->query('dept');
+
+        $query = User::query()
+            ->with('department')
+            ->withCount([
+                'leaveRequests as total_requests' => fn($q) => $q->whereBetween('start_date', [$start, $end]),
+                'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->whereBetween('start_date', [$start, $end]),
+                'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->whereBetween('start_date', [$start, $end]),
+                'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->whereBetween('start_date', [$start, $end]),
+            ]);
+
+        if ($dept && $dept !== 'all') {
+            $query->where('department_id', $dept);
+        }
+
+        return response()->json($query->paginate(25));
+    }
 }

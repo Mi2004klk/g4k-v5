@@ -18,14 +18,18 @@ use Symfony\Component\HttpFoundation\Cookie;
 
 class AuthController extends Controller
 {
-    private function createAuthCookies(string $refreshToken): Cookie
+    private function createAuthCookies($refreshToken, $refreshTtlDays = 7)
     {
         $isProduction = config('app.env') === 'production';
         
-        return new Cookie(
+        // Task 257 (CSRF Protection Documentation):
+        // Since `/auth/refresh` is a GET endpoint, it doesn't mutate state and cannot be exploited cross-origin.
+        // Additionally, Next.js Rewrites route API calls to the same origin (/api), allowing us to use `SameSite=Lax`.
+        // This guarantees that CSRF is mitigated natively by the browser without needing double-submit tokens.
+        return cookie(
             'g4k_refresh_token',
             $refreshToken,
-            now()->addDays(7),
+            60 * 24 * $refreshTtlDays, // Dynamic days in minutes
             '/',
             null, // domain defaults to request domain
             $isProduction, // secure
@@ -138,11 +142,18 @@ class AuthController extends Controller
 
         $deviceName = $request->device_name ?? 'Unknown Device';
 
+        $settings = \Illuminate\Support\Facades\DB::table('settings')
+            ->where('category', 'security')
+            ->pluck('value', 'key');
+            
+        $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
+        $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
+
         // Issue Access Token
         $accessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole]);
         $accessTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
-            'expires_at' => now()->addMinutes(15)
+            'expires_at' => now()->addMinutes($accessTtl)
         ])->save();
         $accessToken = $accessTokenObj->plainTextToken;
 
@@ -150,11 +161,13 @@ class AuthController extends Controller
         $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh']);
         $refreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
-            'expires_at' => now()->addDays(7)
+            'expires_at' => now()->addDays($refreshTtl)
         ])->save();
         $refreshToken = $refreshTokenObj->plainTextToken;
 
-        $cookie = $this->createAuthCookies($refreshToken);
+        $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
+
+        \App\Services\AuditLogger::log($request, 'login', 'User', $user->id, null, null);
 
         return response()->json([
             'token' => $accessToken,
@@ -397,6 +410,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         if ($request->user()) {
+            \App\Services\AuditLogger::log($request, 'logout', 'User', $request->user()->id, null, null);
             $tokenId = $request->user()->currentAccessToken()->id;
             $request->user()->currentAccessToken()->delete();
             SessionRevoked::dispatch($request->user()->id, (string)$tokenId);

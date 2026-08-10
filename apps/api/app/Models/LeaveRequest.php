@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class LeaveRequest extends Model
 {
     protected $fillable = [
-        'user_id', 'start_date', 'end_date', 'reason', 'type', 'approval_id'
+        'user_id', 'start_date', 'end_date', 'reason', 'type', 'approval_id', 'status'
     ];
 
     protected $casts = [

@@ -97,12 +97,17 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 
 ## Phase 3 — App shell & design  (`app-shell`)  ✅
 **Requirements:** R3.1–R3.16. **Milestone:** polished shell on desktop + mobile.
+**Decisions:** DR-DS1 (charcoal primary, rainbow hover palette).
 **Acceptance:**
-- [x] Design tokens + brand palette in code
+- [x] Design tokens + brand palette in code per DR-DS1
+- [x] Unified component library established (`packages/ui`)
 - [x] Light + dark (both colorful); density control
 - [x] Top bar + role-aware sidebar + mobile nav + breadcrumbs
-- [x] Pinned items engine
-- [x] Component library in packages/ui (button/card/table/badge/dialog/drawer/tooltip/toast/skeleton/empty/palette/shortcut-overlay)
+- [x] Global search (cmd+k) empty state
+- [x] Notifications bell (empty state)
+- [x] Theme toggle / avatar dropdown
+- [x] Offline banner + toast notifications
+- [x] Dashboard blank canvas (roles: Admin, HR, Employee)
 - [x] Form system (validation/autosave/draft/restore)
 - [x] Filter/sort bar; confirmation dialogs; inline editing; dnd reorder; pagination
 - [x] Keyboard shortcuts (Ctrl+K/N//, Esc, Enter)

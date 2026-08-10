@@ -20,46 +20,37 @@ import {
   AlertDialogTrigger,
 } from "@g4k/ui/components";
 
+import { useTimerStore } from "@/stores/timer-store";
+
 export function TimeClockWidget({ className }: { className?: string }) {
   const [loading, setLoading] = useState(true);
-  const [day, setDay] = useState<any>(null);
-  const [events, setEvents] = useState<any[]>([]);
-  const [totalSeconds, setTotalSeconds] = useState(0);
-  const [activeState, setActiveState] = useState<"not_started" | "active" | "on_break" | "completed">("not_started");
   const [showConfirmOut, setShowConfirmOut] = useState(false);
-
   const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
-  const startTimeRef = useRef<number | null>(null);
-  const baseSecondsRef = useRef<number>(0);
+
+  const {
+    isActive,
+    isOnBreak,
+    activeSeconds,
+    syncWithServer,
+    startTimer,
+    stopTimer,
+    startBreak,
+    endBreak,
+  } = useTimerStore();
+
+  let activeState: "not_started" | "active" | "on_break" | "completed" = "not_started";
+  if (isActive && !isOnBreak) activeState = "active";
+  if (isOnBreak) activeState = "on_break";
+  if (!isActive && !isOnBreak && activeSeconds > 0) activeState = "completed";
+  if (!isActive && !isOnBreak && activeSeconds === 0) activeState = "not_started";
 
   const fetchTodayStatus = async () => {
     try {
       const data = await apiFetch("/attendance/me/today");
-      setDay(data.day);
-      setEvents(data.events || []);
       if (data.standard_seconds) {
         setStandardSeconds(data.standard_seconds);
       }
-
-      const evts = data.events || [];
-      const lastEvent = evts[evts.length - 1];
-
-      let state: "not_started" | "active" | "on_break" | "completed" = "not_started";
-      if (!lastEvent) {
-        state = "not_started";
-      } else if (lastEvent.type === "clock_in" || lastEvent.type === "break_end") {
-        state = "active";
-      } else if (lastEvent.type === "break_start") {
-        state = "on_break";
-      } else if (lastEvent.type === "clock_out") {
-        state = "completed";
-      }
-
-      setActiveState(state);
-      const seconds = data.day?.total_seconds || 0;
-      setTotalSeconds(seconds);
-      baseSecondsRef.current = seconds;
-      startTimeRef.current = Date.now();
+      syncWithServer(data.day, data.events || []);
     } catch {
       // Fallback
     } finally {
@@ -71,40 +62,30 @@ export function TimeClockWidget({ className }: { className?: string }) {
     fetchTodayStatus();
   }, []);
 
-  // Isolated requestAnimationFrame live timer tick
-  useEffect(() => {
-    if (activeState !== "active") return;
-
-    let animId: number;
-    const tick = () => {
-      if (startTimeRef.current !== null) {
-        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-        setTotalSeconds(baseSecondsRef.current + elapsed);
-      }
-      animId = requestAnimationFrame(tick);
-    };
-
-    animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
-  }, [activeState]);
-
   const handlePunch = async (type: string) => {
     // Optimistic UI state
-    const prevSeconds = totalSeconds;
-    const prevActiveState = activeState;
+    const timestamp = new Date().toISOString();
+    
+    // Check auto-end break on clock out
+    if (type === "clock_out" && isOnBreak) {
+      await offlineEngine.recordPunch("break_end", timestamp);
+      endBreak();
+    }
 
-    if (type === "clock_in" || type === "end_break") {
-      setActiveState("active");
+    if (type === "clock_in") {
+      startTimer(timestamp, 0);
+    } else if (type === "end_break") {
+      // resume ticking
+      startTimer(timestamp, activeSeconds);
     } else if (type === "start_break") {
-      setActiveState("on_break");
+      startBreak(timestamp);
     } else if (type === "clock_out") {
-      setActiveState("completed");
+      stopTimer();
     }
 
     try {
       // Use OfflineEngine for resilience
-      const timestamp = new Date().toISOString();
-      await offlineEngine.recordPunch(type, timestamp);
+      await offlineEngine.recordPunch(type === "end_break" ? "break_end" : type === "start_break" ? "break_start" : type, timestamp);
 
       // Re-fetch to ensure exact server state once online
       if (navigator.onLine) {
@@ -113,10 +94,8 @@ export function TimeClockWidget({ className }: { className?: string }) {
       toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
     } catch (err: any) {
       // Revert optimistic state on fatal error
-      toast.error(err.message || "Failed to record punch.");
-      setActiveState(prevActiveState);
-      setTotalSeconds(prevSeconds);
-      toast.error(err.message || "Failed to record punch. Try again.");
+      toast.error(err.message || "Failed to record punch. Syncing with server...");
+      fetchTodayStatus(); // Re-sync store state
     }
   };
 
@@ -127,7 +106,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const isOvertime = totalSeconds > standardSeconds;
+  const isOvertime = activeSeconds > standardSeconds;
 
   if (loading) {
     return (
@@ -138,7 +117,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   }
 
   return (
-    <div className="w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+    <div className={cn("w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between", className)}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
           Time Clock
@@ -163,11 +142,11 @@ export function TimeClockWidget({ className }: { className?: string }) {
             isOvertime ? "text-amber-500" : "text-neutral-900 dark:text-white"
           )}
         >
-          {formatTime(totalSeconds)}
+          {formatTime(activeSeconds)}
         </div>
         {isOvertime && (
           <p className="text-[11px] text-amber-500 font-medium mt-1">
-            Overtime Threshold Exceeded (+{formatTime(totalSeconds - standardSeconds)})
+            Overtime Threshold Exceeded (+{formatTime(activeSeconds - standardSeconds)})
           </p>
         )}
       </div>

@@ -21,7 +21,11 @@ class WorkScheduleController extends Controller
             'end_time' => 'required|string',
             'break_minutes' => 'required|integer',
             'standard_seconds' => 'required|integer',
+            'grace_period_minutes' => 'required|integer',
+            'working_days' => 'required|array',
         ]);
+
+        $validated['working_days'] = json_encode($validated['working_days']);
 
         DB::table('work_schedules')
             ->where('id', $id)

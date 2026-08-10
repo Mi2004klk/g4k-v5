@@ -42,3 +42,4 @@ export * from "./help-overlay";
 export * from "./confirm-dialog";
 export * from "./file-upload-popup";
 export * from "./avatar";
+export * from "./inline-edit";

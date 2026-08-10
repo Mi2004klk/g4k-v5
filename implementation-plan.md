@@ -1474,53 +1474,53 @@ calendar (recurring). Overlap prevention. Export.
 ## SET 2F — OpenAPI Re-sync, PWA, Offline, Polish (Tasks 251–265)
 
 ### 251. [fix][api] Reconcile OpenAPI spec with routes (audit gap G7)
-Update openapi.yaml paths to EXACTLY match routes/api.php: /users (not /org/users), /attendance/me/today
+- [x] Update openapi.yaml paths to EXACTLY match routes/api.php: /users (not /org/users), /attendance/me/today
 (not /attendance/events), /auth/role-select (not /auth/role/select), /settings/grouped, /approvals/
 pending, /leave-requests/history, etc. CI lint passes. Contract truthful for future client codegen.
 **Verify:** OpenAPI paths match routes; lint passes; no mismatches.
 
 ### 252. [web] PWA — fix manifest icons + verify installability
-Manifest icons: generate proper 192×192 + 512×512 from logo (current uses same 1.7MB file). Add
+- [x] Manifest icons: generate proper 192×192 + 512×512 from logo (current uses same 1.7MB file). Add
 apple-touch-icon. maskable icon. Verify Lighthouse PWA audit passes (installable).
 **Verify:** Lighthouse PWA = installable; icons correct size; apple-touch-icon present.
 
 ### 253. [web] PWA — service worker offline shell
-Verify SW caches app shell (login + dashboard骨架) for offline access. Offline banner shows. Cached
+- [x] Verify SW caches app shell (login + dashboard骨架) for offline access. Offline banner shows. Cached
 routes load instantly offline. Attendance punch queues.
 **Verify:** offline → app shell loads; banner shows; punch queues; no white screen.
 
 ### 254. [web] Offline — general form queue (R11.6 audit gap)
-Audit: only attendance punches queue. Extend Offline Engine: general mutations (leave request, profile
+- [x] Audit: only attendance punches queue. Extend Offline Engine: general mutations (leave request, profile
 edit) queue when offline → sync on reconnect. OfflineBanner shows total queue count.
 **Verify:** offline leave request queues; syncs on reconnect; banner shows count; no data loss.
 
 ### 255. [web] Offline — conflict handling + retry ladder (R13.20)
-Offline mutations: retry ladder (1s, 5s, 30s, 2min exponential backoff). On conflict (422/409): keep
+- [x] Offline mutations: retry ladder (1s, 5s, 30s, 2min exponential backoff). On conflict (422/409): keep
 local + show conflict toast ("Conflict: [entity] was modified. Review?"). GET retry with backoff.
 **Verify:** retry ladder works; conflict toast shows; GET retries; no silent failures.
 
 ### 256. [api] Fix Sanctum token expiration (R10.2)
-Set `expires_at` on access tokens (15min from settings) + refresh tokens (7d from settings). Expired
+- [x] Set `expires_at` on access tokens (15min from settings) + refresh tokens (7d from settings). Expired
 tokens rejected → 401 → frontend refreshes. Cleanup: periodically purge expired tokens (scheduled command).
 **Verify:** expired access token → 401; refresh works; expired tokens purged.
 
 ### 257. [api] CSRF protection for cookie-based refresh (if cross-origin)
-If refresh cookie is SameSite=None (cross-origin prod): implement CSRF double-submit token. If SameSite=
+- [x] If refresh cookie is SameSite=None (cross-origin prod): implement CSRF double-submit token. If SameSite=
 Lax (same-origin via proxy): verify CSRF is handled by Laravel defaults. Document the chosen approach.
 **Verify:** refresh works; no CSRF errors; documented; secure.
 
 ### 258. [web] Skeleton standardization — replace ALL full-screen spinners (R3.16/R13.18)
-Audit: AuthGuard uses full-screen spinner (should be skeleton). Replace with skeleton matching the
+- [x] Audit: AuthGuard uses full-screen spinner (should be skeleton). Replace with skeleton matching the
 target page shape. Only true full-screen loads (initial app boot) may use a branded splash.
 **Verify:** no full-screen spinner where skeleton fits; branded splash only on boot.
 
 ### 259. [web] Button loading = dot-loader (not spinner, R3.14 audit gap)
-Audit: buttons use Loader2 spinner. Replace with dot-loader animation (three pulsing dots) per
+- [x] Audit: buttons use Loader2 spinner. Replace with dot-loader animation (three pulsing dots) per
 COMPONENT-SYSTEM §1. Consistent across all buttons.
 **Verify:** all loading buttons show dot-loader; no Loader2 spinner on buttons.
 
 ### 260. [web] Inline editing component (R3.9 audit gap)
-Create `InlineEdit`: pencil icon on hover → click → Input in-place → Enter saves / Esc cancels → toast.
+- [x] Create `InlineEdit`: pencil icon on hover → click → Input in-place → Enter saves / Esc cancels → toast.
 Used for: task titles, user names (quick edit), designation names. Composes Input + Toast.
 **Verify:** pencil appears on hover; Enter saves; Esc cancels; toast confirms.
 

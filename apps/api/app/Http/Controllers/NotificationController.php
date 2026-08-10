@@ -34,6 +34,19 @@ class NotificationController extends Controller
         return response()->json($notification);
     }
 
+    public function markUnread(Request $request, $id)
+    {
+        $user = $request->user();
+        
+        $notification = Notification::where('id', $id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        $notification->update(['read_at' => null]);
+
+        return response()->json($notification);
+    }
+
     public function unreadCount(Request $request)
     {
         $count = Notification::where('user_id', $request->user()->id)

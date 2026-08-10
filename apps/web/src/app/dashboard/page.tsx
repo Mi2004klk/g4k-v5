@@ -4,6 +4,8 @@ import { useAuthStore } from "@/lib/auth-store";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
+import { HrTeamAttendanceWidget } from "@/components/dashboard/hr-team-attendance-widget";
+import { HrActivityFeedWidget } from "@/components/attendance/hr-activity-feed-widget";
 import {
   Users,
   Building2,
@@ -24,6 +26,8 @@ import { RecentActivityWidget } from "@/components/widgets/recent-activity-widge
 import { EmptyState } from "@g4k/ui/components";
 import { Card } from "@g4k/ui/components";
 
+import { AdminTodayAttendanceWidget } from "@/components/dashboard/admin-today-attendance-widget";
+
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const activeRole = user?.active_role || "employee";
@@ -41,9 +45,7 @@ export default function DashboardPage() {
         },
         {
           id: "present-today",
-          component: (
-            <MetricWidget title="Present Today" metricKey="present_today" icon={UserCheck} color="emerald" subtitle="Company-wide" />
-          ),
+          component: <AdminTodayAttendanceWidget />,
           defaultLayout: { x: 3, y: 0, w: 3, h: 2 },
         },
         {
@@ -81,9 +83,7 @@ export default function DashboardPage() {
       return [
         {
           id: "team-attendance",
-          component: (
-            <MetricWidget title="Team Present Today" metricKey="present_today" icon={UserCheck} color="emerald" subtitle="Your department" />
-          ),
+          component: <HrTeamAttendanceWidget />,
           defaultLayout: { x: 0, y: 0, w: 4, h: 2 },
         },
         {
@@ -101,10 +101,8 @@ export default function DashboardPage() {
           defaultLayout: { x: 8, y: 0, w: 4, h: 2 },
         },
         {
-          id: "pending-submissions",
-          component: (
-            <MetricWidget title="Pending Submissions" metricKey="pending_submissions" icon={Activity} color="blue" subtitle="Employee form submissions" hasModule={false} />
-          ),
+          id: "team-activity",
+          component: <HrActivityFeedWidget />,
           defaultLayout: { x: 0, y: 2, w: 6, h: 3 },
         },
         {
@@ -163,12 +161,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-violet-900 via-purple-900 to-indigo-900 p-6 rounded-2xl text-white shadow-lg">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-primary p-6 rounded-2xl text-primary-foreground shadow-lg">
         <div>
           <h1 className="text-2xl font-bold font-display">
             Welcome back, {user?.name || "Team Member"}!
           </h1>
-          <p className="text-xs text-purple-200 mt-1">
+          <p className="text-xs text-primary-foreground/80 mt-1">
             {activeRole === "super_admin"
               ? "Super Admin Command Dashboard"
               : activeRole === "hr"
@@ -197,13 +195,13 @@ export default function DashboardPage() {
             <Link href="/dashboard/attendance" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
               <Clock className="w-4 h-4 text-emerald-500" /> View Team Attendance
             </Link>
-            <Link href="/dashboard/leave/approvals" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+            <Link href="/dashboard/org/leave?status=pending" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
               <CalendarCheck className="w-4 h-4 text-amber-500" /> Approve Leave
             </Link>
           </>
         )}
         {activeRole === "employee" && (
-          <Link href="/dashboard/leave/requests" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+          <Link href="/dashboard/leave" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
             <Send className="w-4 h-4 text-emerald-500" /> Request Leave
           </Link>
         )}

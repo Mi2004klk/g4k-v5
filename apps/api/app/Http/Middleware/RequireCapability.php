@@ -43,6 +43,11 @@ class RequireCapability
             return response()->json(['message' => 'Role not selected.'], 403);
         }
 
+        if ($activeRole !== 'super_admin' && !\App\Services\CapabilityMatrix::hasCapability($activeRole, $capability)) {
+            \Illuminate\Support\Facades\Log::info('Capability check failed', ['role' => $activeRole, 'cap' => $capability]);
+            return response()->json(['message' => 'Lacking capability ' . $capability], 403);
+        }
+
         $capabilities = explode('|', $capability);
         $hasAny = false;
         foreach ($capabilities as $cap) {

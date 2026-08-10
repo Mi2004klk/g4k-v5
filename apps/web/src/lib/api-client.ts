@@ -1,4 +1,6 @@
 import { useAuthStore } from "./auth-store";
+import { offlineEngine } from "./offline-engine";
+import toast from "react-hot-toast";
 
 const API_BASE_URL = "/api";
 
@@ -12,7 +14,8 @@ async function sleep(ms: number) {
 
 export async function apiFetch<T = any>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  bypassQueue = false
 ): Promise<T> {
   const token = useAuthStore.getState().token;
 
@@ -31,6 +34,13 @@ export async function apiFetch<T = any>(
     : `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
 
   const isGet = !options.method || options.method.toUpperCase() === 'GET';
+
+  if (!isGet && !bypassQueue && typeof navigator !== 'undefined' && !navigator.onLine) {
+    toast.success("You are offline. Action queued.");
+    await offlineEngine.queueRequest(endpoint, options);
+    return { queued: true } as any;
+  }
+
   const maxRetries = isGet ? 3 : 0;
   let attempt = 0;
   
@@ -115,6 +125,13 @@ export async function apiFetch<T = any>(
 
       return await response.json();
     } catch (error: any) {
+      // Intercept offline / network failures for mutations
+      if (!isGet && !bypassQueue && (error.message.includes("Failed to fetch") || error.status >= 500)) {
+        toast.success("Network error. Action queued for sync.");
+        await offlineEngine.queueRequest(endpoint, options);
+        return { queued: true } as any;
+      }
+
       if (attempt >= maxRetries || error.message.includes("Session expired")) {
         throw error;
       }
