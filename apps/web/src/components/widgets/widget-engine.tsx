@@ -26,8 +26,28 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     const fetchPreferences = async () => {
       try {
         const data = await apiFetch("/auth/preferences");
-        if (data.preferences?.dashboard_layout) {
-          setLayouts(data.preferences.dashboard_layout);
+        if (data.preferences?.dashboard_layout && Object.keys(data.preferences.dashboard_layout).length > 0) {
+          const savedLayouts = data.preferences.dashboard_layout;
+          const mergedBreakpoints: any = {};
+          const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'];
+          
+          breakpoints.forEach(bp => {
+            const savedBp = Array.isArray(savedLayouts[bp]) ? savedLayouts[bp] : [];
+            const mergedBp = [...savedBp];
+            
+            // Append missing widgets
+            availableWidgets.forEach(w => {
+              const exists = mergedBp.find((item: any) => item.i === w.id);
+              if (!exists) {
+                mergedBp.push({ ...w.defaultLayout, i: w.id });
+              }
+            });
+            
+            // Filter out old/removed widgets
+            mergedBreakpoints[bp] = mergedBp.filter((item: any) => availableWidgets.find(w => w.id === item.i));
+          });
+          
+          setLayouts(mergedBreakpoints);
         } else {
           const defaultBreakpoints = {
             lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
