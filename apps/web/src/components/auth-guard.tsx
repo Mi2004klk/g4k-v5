@@ -46,7 +46,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
       if (currentToken && currentUser) {
         // Disabled forced password change on first login
-        if (false && currentUser.must_change_password && pathname !== "/change-password") {
+        if (false && currentUser?.must_change_password && pathname !== "/change-password") {
           router.push("/change-password");
           return;
         }
