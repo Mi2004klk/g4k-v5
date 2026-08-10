@@ -87,14 +87,16 @@ class AuthController extends Controller
         if (! $user || ! Hash::check($request->password, $user->password)) {
             RateLimiter::hit($throttleKey, 600);
 
-            LoginAttempt::create([
-                'identifier' => $request->identifier,
-                'user_id' => $user?->id,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->header('User-Agent'),
-                'success' => false,
-                'is_suspicious' => false,
-            ]);
+            defer(function () use ($request, $user) {
+                LoginAttempt::create([
+                    'identifier' => $request->identifier,
+                    'user_id' => $user?->id,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->header('User-Agent'),
+                    'success' => false,
+                    'is_suspicious' => false,
+                ]);
+            });
 
             throw ValidationException::withMessages([
                 'identifier' => ['Invalid credentials.'],
@@ -112,57 +114,64 @@ class AuthController extends Controller
         $isSuspicious = false;
         if ($lastSuccessfulLogin && $lastSuccessfulLogin->ip_address !== $request->ip()) {
             $isSuspicious = true;
-            Log::warning("Suspicious login detected for User ID {$user->id} ({$user->email}) from IP {$request->ip()} (previous: {$lastSuccessfulLogin->ip_address})");
             
-            $adminIds = RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-            foreach ($adminIds as $adminId) {
-                \App\Models\Notification::create([
-                    'user_id' => $adminId,
-                    'title' => 'Suspicious Login Detected',
-                    'body' => "User {$user->name} ({$user->email}) logged in from a new IP: {$request->ip()} (User-Agent: {$request->header('User-Agent')}).",
-                    'type' => 'security',
-                    'priority' => 'urgent'
-                ]);
-            }
+            defer(function () use ($user, $request, $lastSuccessfulLogin) {
+                Log::warning("Suspicious login detected for User ID {$user->id} ({$user->email}) from IP {$request->ip()} (previous: {$lastSuccessfulLogin->ip_address})");
+                
+                $adminIds = RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+                foreach ($adminIds as $adminId) {
+                    \App\Models\Notification::create([
+                        'user_id' => $adminId,
+                        'title' => 'Suspicious Login Detected',
+                        'body' => "User {$user->name} ({$user->email}) logged in from a new IP: {$request->ip()} (User-Agent: {$request->header('User-Agent')}).",
+                        'type' => 'security',
+                        'priority' => 'urgent'
+                    ]);
+                }
+            });
         }
 
-        // Record successful login
-        LoginAttempt::create([
-            'identifier' => $request->identifier,
-            'user_id' => $user->id,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->header('User-Agent'),
-            'success' => true,
-            'is_suspicious' => $isSuspicious,
-        ]);
+        // Defer non-critical DB inserts to after response
+        defer(function () use ($user, $request, $isSuspicious) {
+            // Record successful login
+            LoginAttempt::create([
+                'identifier' => $request->identifier,
+                'user_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->header('User-Agent'),
+                'success' => true,
+                'is_suspicious' => $isSuspicious,
+            ]);
+        });
 
+        // Load roles and settings efficiently
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
         $primaryRole = $rolesCollection->first() ?? 'employee';
 
         $deviceName = $request->device_name ?? 'Unknown Device';
 
-        $settings = \Illuminate\Support\Facades\DB::table('settings')
-            ->where('category', 'security')
-            ->pluck('value', 'key');
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            return \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key');
+        });
             
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
         $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
 
         // Issue Access Token
-        $accessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole]);
+        $accessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole], now()->addMinutes($accessTtl));
         $accessTokenObj->accessToken->forceFill([
-            'ip_address' => $request->ip(),
-            'expires_at' => now()->addMinutes($accessTtl)
-        ])->save();
+            'ip_address' => $request->ip()
+        ])->saveQuietly();
         $accessToken = $accessTokenObj->plainTextToken;
 
         // Issue Refresh Token
-        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh']);
+        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl));
         $refreshTokenObj->accessToken->forceFill([
-            'ip_address' => $request->ip(),
-            'expires_at' => now()->addDays($refreshTtl)
-        ])->save();
+            'ip_address' => $request->ip()
+        ])->saveQuietly();
         $refreshToken = $refreshTokenObj->plainTextToken;
 
         $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
