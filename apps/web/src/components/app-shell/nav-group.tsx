@@ -46,7 +46,7 @@ export function NavItem({
           currentlyCollapsed ? "justify-center px-0 text-xs" : "text-sm",
           isActive
             ? `${accent.bg} ${accent.bgDark} ${accent.text} ${accent.textDark} font-bold shadow-sm`
-            : "text-secondary hover:bg-surface-2 hover:text-primary"
+            : "text-neutral-500 dark:text-neutral-400 hover:bg-surface-2 hover:text-primary"
         )}
       >
         {isActive && (

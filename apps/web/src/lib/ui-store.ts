@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { apiFetch } from "./api-client";
 
-export type SidebarState = "expanded" | "collapsed" | "hidden";
+export type SidebarState = "expanded" | "collapsed";
 
 interface UIState {
   sidebarState: SidebarState;
@@ -36,8 +36,6 @@ export const useUIStore = create<UIState>()(
         const nextState =
           current === "collapsed"
             ? "expanded"
-            : current === "expanded"
-            ? "hidden"
             : "collapsed";
         get().setSidebarState(nextState);
       },

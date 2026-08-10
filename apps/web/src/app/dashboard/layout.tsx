@@ -207,7 +207,6 @@ export default function DashboardLayout({
   };
 
   const isCollapsed = sidebarState === "collapsed";
-  const isHidden = sidebarState === "hidden";
   return (
     <AuthGuard>
       <TooltipProvider>
@@ -220,7 +219,7 @@ export default function DashboardLayout({
           {/* Desktop Sidebar */}
           <aside className={cn(
             "bg-surface border-r border-border relative z-20 overflow-hidden h-full transition-[width] duration-200 ease-[cubic-bezier(.4,0,.2,1)]",
-            sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col"
+            "hidden md:flex flex-col"
           )}>
             <div className="flex items-center h-16 shrink-0 px-4 gap-3 border-b border-border">
               <Image src="/icon.png" alt="Logo" width={isCollapsed ? 28 : 32} height={isCollapsed ? 28 : 32} className="rounded-md shrink-0 transition-all duration-200" priority />
@@ -312,23 +311,12 @@ export default function DashboardLayout({
           <div className="flex flex-col min-w-0 h-full overflow-hidden">
             <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface/80 border-b border-border z-20 sticky top-0 backdrop-blur-md">
               <div className="flex items-center gap-2 md:gap-4">
-                {sidebarState === "hidden" && (
-                  <div className="hidden md:flex items-center gap-2 shrink-0 mr-4">
-                    <Image src="/icon.png" alt="Logo" width={24} height={24} className="rounded-md" priority />
-                    <span className="font-display font-bold text-sm text-primary tracking-tight hidden lg:inline">Workplace OS</span>
-                  </div>
-                )}
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="md:hidden shrink-0">
                       <Menu className="w-5 h-5" />
                     </Button>
                   </SheetTrigger>
-                  {sidebarState === "hidden" && (
-                    <Button variant="ghost" size="icon" className="hidden md:flex shrink-0" onClick={() => setIsMobileMenuOpen(true)}>
-                      <Menu className="w-5 h-5" />
-                    </Button>
-                  )}
                     <SheetContent side="left" className="w-[280px] p-0 flex flex-col bg-surface border-border">
                       <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                       <div className="flex items-center h-16 shrink-0 px-6 gap-3 border-b border-border">
