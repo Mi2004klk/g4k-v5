@@ -36,8 +36,12 @@
   --color-overtime: var(--overtime);
 
   --color-background: var(--bg-app);
+  --color-app: var(--bg-app);
   --color-foreground: var(--text-primary);
   
+  --color-surface: var(--bg-surface);
+  --color-surface-2: var(--bg-surface-2);
+
   --color-card: var(--bg-surface);
   --color-card-foreground: var(--text-primary);
   
