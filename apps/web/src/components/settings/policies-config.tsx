@@ -17,6 +17,7 @@ const passwordSchema = z.object({
   require_mixed: z.boolean(),
   require_number: z.boolean(),
   require_symbol: z.boolean(),
+  force_password_change: z.boolean(),
 });
 
 const sessionSchema = z.object({
@@ -42,6 +43,7 @@ export function PoliciesConfig() {
       require_mixed: true,
       require_number: true,
       require_symbol: true,
+      force_password_change: false,
     },
     mode: "onTouched",
     delayError: 400,
@@ -68,6 +70,7 @@ export function PoliciesConfig() {
         require_mixed: securityMap["password.require_mixed"] === "true",
         require_number: securityMap["password.require_number"] === "true",
         require_symbol: securityMap["password.require_symbol"] === "true",
+        force_password_change: securityMap["force_password_change"] === "true" || securityMap["force_password_change"] === true,
       });
       sessionForm.reset({
         access_token_ttl: parseInt(securityMap["session.access_token_ttl"]) || 15,
@@ -94,6 +97,7 @@ export function PoliciesConfig() {
       { category: "security", key: "password.require_mixed", value: data.require_mixed.toString() },
       { category: "security", key: "password.require_number", value: data.require_number.toString() },
       { category: "security", key: "password.require_symbol", value: data.require_symbol.toString() },
+      { category: "security", key: "force_password_change", value: data.force_password_change.toString() },
     ];
     updateMutation.mutate(updates);
   };
@@ -153,6 +157,18 @@ export function PoliciesConfig() {
               {...passwordForm.register("require_symbol")}
             />
             <label htmlFor="require_symbol" className="text-sm">Require at least one symbol</label>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20 mt-4">
+            <div>
+              <h4 className="text-sm font-medium">Force password change</h4>
+              <p className="text-xs text-neutral-500">Require users to change password on first login or after admin reset</p>
+            </div>
+            <input
+              type="checkbox"
+              {...passwordForm.register("force_password_change")}
+              className="h-4 w-4 rounded border-neutral-300 text-violet-600 focus:ring-violet-500"
+            />
           </div>
 
           <Button type="submit" disabled={updateMutation.isPending || !passwordForm.formState.isValid} className="mt-4">

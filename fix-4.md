@@ -463,6 +463,7 @@
   `getAuthToken()`. Working-days editor explicit. Separate password-policy vs session-rules submit.
 - [x] **8.9.2** [web] Audit log: real user list for the filter (remove hard-coded placeholder);
   export CSV (escaped — 5.3.1). Virtualize for large log.
+- [x] **8.9.3** [api/web] Make the "must change password on first login" requirement optional via a global setting (`force_password_change`), disabled by default. Add toggle to Security settings.
 
 ### 8.10 Profile (all roles)
 - [x] **8.10.1** [web] Shared password validator (extract from duplicated regex in
@@ -482,6 +483,9 @@
   typecheck` are clean.
 - [x] **8.12.2** [web] Remove misleading/stale code comments (e.g. "hrToday is just an alias for
   overview" in `hr-attendance-table.tsx`, "Modals omitted for brevity" in `users/page.tsx`).
+
+### 8.13 Global UI & Design
+- [x] **8.13.1** [web/ui] Remove all hardcoded violet focus rings (`focus-visible:ring-violet-500`) across the entire UI component library (`@g4k/ui`). Replace them with a clean, subtle 1px neutral focus state (`focus-visible:ring-1 focus-visible:ring-ring`) and remap `--color-ring` in `globals.css` to `--color-border-strong`.
 
 ---
 

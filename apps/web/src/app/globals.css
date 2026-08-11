@@ -60,7 +60,7 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--border);
-  --color-ring: var(--accent-violet);
+  --color-ring: var(--border-strong);
 
   --radius-sm: 6px;
   --radius-md: 10px;

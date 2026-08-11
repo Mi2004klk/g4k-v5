@@ -120,6 +120,9 @@ class UserController extends Controller
 
         $employeeCode = AutoNumberingService::generateNext('employee');
 
+        $forceChange = \App\Models\Setting::where('category', 'security')->where('key', 'force_password_change')->value('value');
+        $mustChange = filter_var($forceChange, FILTER_VALIDATE_BOOLEAN);
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -131,7 +134,7 @@ class UserController extends Controller
             'team_id' => $validated['team_id'] ?? null,
             'designation_id' => $validated['designation_id'] ?? null,
             'password' => Hash::make('Password123!'),
-            'must_change_password' => true,
+            'must_change_password' => $mustChange,
             'status' => 'active',
         ]);
 
@@ -313,8 +316,11 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
         }
 
+        $forceChange = \App\Models\Setting::where('category', 'security')->where('key', 'force_password_change')->value('value');
+        $mustChange = filter_var($forceChange, FILTER_VALIDATE_BOOLEAN);
+
         $user->password = Hash::make('Password123!');
-        $user->must_change_password = true;
+        $user->must_change_password = $mustChange;
         $user->save();
 
         AuditLogger::log($request, 'reset_password', 'user', $user->id, null, ['status' => 'password_reset']);
