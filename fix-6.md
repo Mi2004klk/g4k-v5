@@ -1334,61 +1334,61 @@ For EACH base workflow below, verify and fix if missing:
 
 The application is production-ready for daily office usage when ALL of the following are true:
 
-### No broken workflows
-1. Every base workflow (auth, users, departments, designations, directory, profile, leave,
+### ✅ No broken workflows
+1. ✅ Every base workflow (auth, users, departments, designations, directory, profile, leave,
    attendance, settings, audit) works end-to-end: UI → API → DB → response → UI update.
 
-### No critical console errors
-2. Zero Radix "Missing Description" warnings (UI-1). Zero React hydration errors. Zero `useSearchParams`
+### ✅ No critical console errors
+2. ✅ Zero Radix "Missing Description" warnings (UI-1). Zero React hydration errors. Zero `useSearchParams`
    SSR bailouts.
 
-### No critical backend errors
-3. `meToday` never 500s (ATT-1). No Postgres SQL syntax errors (DB-2). No `employee_code` column
+### ✅ No critical backend errors
+3. ✅ `meToday` never 500s (ATT-1). No Postgres SQL syntax errors (DB-2). No `employee_code` column
    errors (VAL-2). No `audit_logs.created_at` ordering errors.
 
-### No unresolved database errors
-4. `migrate:fresh --seed` succeeds. All FKs present (DB-4). Soft deletes on User (DB-1).
+### ✅ No unresolved database errors
+4. ✅ `migrate:fresh --seed` succeeds. All FKs present (DB-4). Soft deletes on User (DB-1).
 
-### No missing permissions
-5. AnnouncementController authorization enforced (SEC-2). Every role sees only permitted data.
+### ✅ No missing permissions
+5. ✅ AnnouncementController authorization enforced (SEC-2). Every role sees only permitted data.
    Backend enforces all capabilities.
 
-### No unauthorized data access
-6. Sensitive fields (`blood_group`, `emergency_contact`) hidden everywhere (SEC-1). HR scoped to own
+### ✅ No unauthorized data access
+6. ✅ Sensitive fields (`blood_group`, `emergency_contact`) hidden everywhere (SEC-1). HR scoped to own
    department (ROLE-4). Attendance scoping uses active token role (ROLE-3).
 
-### No placeholder data
-7. Dashboard widgets show real data — no crashes (DASH-1/2/3), no stub-0 metrics (DASH-4).
+### ✅ No placeholder data
+7. ✅ Dashboard widgets show real data — no crashes (DASH-1/2/3), no stub-0 metrics (DASH-4).
 
-### No dead functionality
-8. No dead endpoints, no orphaned widgets (ATT-11), no unused imports, no no-op search boxes.
+### ✅ No dead functionality
+8. ✅ No dead endpoints, no orphaned widgets (ATT-11), no unused imports, no no-op search boxes.
 
-### No incomplete modules
-9. Employee Detail/History view exists (EMP-1/2/3). Holiday CRUD UI exists (LEAVE-4). Admin trends
+### ✅ No incomplete modules
+9. ✅ Employee Detail/History view exists (EMP-1/2/3). Holiday CRUD UI exists (LEAVE-4). Admin trends
    graph works (ATT-2). Leave→attendance integration fires (LEAVE-3).
 
-### No obvious performance bottlenecks
-10. No N+1 queries (PERF-1). Role lookups cached (PERF-2). Dashboard query count ≤5 (PERFBE-1/2).
+### ✅ No obvious performance bottlenecks
+10. ✅ No N+1 queries (PERF-1). Role lookups cached (PERF-2). Dashboard query count ≤5 (PERFBE-1/2).
     Navigation shows cached data instantly (no skeleton on revisit).
 
-### No critical loading problems
-11. No wall-of-skeletons on cold load (fix-5.md items implemented). Widgets prefetch in parallel.
+### ✅ No critical loading problems
+11. ✅ No wall-of-skeletons on cold load (fix-5.md items implemented). Widgets prefetch in parallel.
     `placeholderData: keepPreviousData` everywhere. No 30s polling spinners.
 
-### No inconsistent role behaviour
-12. Refresh preserves selected role (AUTH-1). No self-approval (ROLE-2). HR sees only team leave
+### ✅ No inconsistent role behaviour
+12. ✅ Refresh preserves selected role (AUTH-1). No self-approval (ROLE-2). HR sees only team leave
     (ROLE-4). Employees can view own activity (ROLE-5).
 
-### No broken responsive states
-13. All base-workflow pages work at 360/768/1024/1440px. Tables → cards on mobile. Dialogs
+### ✅ No broken responsive states
+13. ✅ All base-workflow pages work at 360/768/1024/1440px. Tables → cards on mobile. Dialogs
     full-screen on mobile. No horizontal scroll.
 
-### No missing validation
-14. All mutation endpoints validate input (VAL-1..7). Timestamp bounds enforced (AUTH-7). Max
+### ✅ No missing validation
+14. ✅ All mutation endpoints validate input (VAL-1..7). Timestamp bounds enforced (AUTH-7). Max
     lengths on text fields. Enum validation on type fields.
 
-### No critical integration failures
-15. MAIL_* configured → emails actually send (INT-1). Reverb origins restricted (SEC-6). Queue
+### ✅ No critical integration failures
+15. ✅ MAIL_* configured → emails actually send (INT-1). Reverb origins restricted (SEC-6). Queue
     worker + scheduler supervised (INT-6). Toast library unified (AUTH-6).
 
 ---
