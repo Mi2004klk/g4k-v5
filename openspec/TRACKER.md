@@ -16,17 +16,17 @@
 
 | # | Phase | Capability | Status | Depends on | Live URL | Spec state |
 |---|---|---|---|---|---|---|
-| 0 | Foundation & infra | `foundation` | 🟡 In-revamp | — | `/health` | Implementation present; in-revamp per `fix-3.md`. |
-| 1 | Authentication | `authentication` | 🟡 In-revamp | 0 | `/login` | Implementation present; in-revamp per `fix-3.md`. |
-| 2 | Users, roles & org | `org-management` | 🟡 In-revamp | 0,1 | `/dashboard/org/users` | Implementation present; in-revamp per `fix-3.md`. |
-| 3 | App shell & design | `app-shell` | 🟡 In-revamp | 0,2 | `/dashboard` | Implementation present; in-revamp per `fix-3.md`. |
-| 4 | Dashboard framework | `dashboards` | 🟡 In-revamp | 3 | `/dashboard` | Implementation present; in-revamp per `fix-3.md`. |
-| 5 | Attendance | `attendance` | 🟡 In-revamp | 2,3,4 | `/dashboard/attendance` | Implementation present; in-revamp per `fix-3.md`. |
-| 6 | Leave & approvals | `leave-approvals` | 🟡 In-revamp | 2,3,8-partial | `/dashboard/leave` | Implementation present; in-revamp per `fix-3.md`. |
-| 7 | Projects & tasks | `projects-tasks` | 🟡 In-revamp | 2,3,4 | `/dashboard/projects` | Implementation present; in-revamp per `fix-3.md`. |
-| 8 | Chat & notifications | `communication` | 🟡 In-revamp | 2,3 | `/dashboard/chat` | Implementation present; in-revamp per `fix-3.md`. |
-| 9 | Reports & exports | `reporting` | 🟡 In-revamp | 5,7 | `/dashboard/reports` | Implementation present; in-revamp per `fix-3.md`. |
-| 10 | Settings & audit | `system-settings` | 🟡 In-revamp | 2,5,7 | `/dashboard/settings` | Implementation present; in-revamp per `fix-3.md`. |
+| 0 | Foundation & infra | `foundation` | 🟡 In-revamp | — | `/health` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 1 | Authentication | `authentication` | 🟡 In-revamp | 0 | `/login` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 2 | Users, roles & org | `org-management` | 🟡 In-revamp | 0,1 | `/dashboard/org/users` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 3 | App shell & design | `app-shell` | 🟡 In-revamp | 0,2 | `/dashboard` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 4 | Dashboard framework | `dashboards` | 🟡 In-revamp | 3 | `/dashboard` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 5 | Attendance | `attendance` | 🟡 In-revamp | 2,3,4 | `/dashboard/attendance` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 6 | Leave & approvals | `leave-approvals` | 🟡 In-revamp | 2,3,8-partial | `/dashboard/leave` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 7 | Projects & tasks | `projects-tasks` | 🟡 In-revamp | 2,3,4 | `/dashboard/projects` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 8 | Chat & notifications | `communication` | 🟡 In-revamp | 2,3 | `/dashboard/chat` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 9 | Reports & exports | `reporting` | 🟡 In-revamp | 5,7 | `/dashboard/reports` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 10 | Settings & audit | `system-settings` | 🟡 In-revamp | 2,5,7 | `/dashboard/settings` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
 
 > **Sequencing note (user-confirmed):** build strictly one phase at a time; all 3 role
 > screens together within a phase; ship to production before starting the next. Phase 6 needs

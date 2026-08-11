@@ -1,3 +1,5 @@
+> **ARCHIVED:** This file is stale and superseded by context.md and fix-4.md.
+
 # fix-3.md — Games4King Workplace OS: Final Implementation Blueprint (Exhaustive Checklist)
 
 > **Companion to `context.md`.** This is the single, ordered, dependency-aware checklist to take the

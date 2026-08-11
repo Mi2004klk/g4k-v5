@@ -1,3 +1,5 @@
+> **ARCHIVED:** This file is stale and superseded by context.md and fix-4.md.
+
 > **ARCHIVED:** This file is stale and superseded by context.md and ix-3.md.
 
 # Tracker — Missed Implementation Checklist
