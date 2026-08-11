@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_METRICS } from "@/lib/query-keys";
+import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
@@ -32,8 +32,8 @@ export function MetricWidget({
   const isFirstRender = useRef(true);
   const prevValueRef = useRef<number | null>(null);
 
-  const { data, isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ["dashboard-metrics"],
+  const { data, isPending, isFetching, isError, refetch } = useQuery({
+    queryKey: queryKeys.dashboardMetrics,
     queryFn: () => apiFetch(endpoint),
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,
@@ -42,42 +42,34 @@ export function MetricWidget({
   const rawValue = data?.metrics?.[metricKey] ?? 0;
   const isModuleAvailable = data?.metrics?.[`has_${metricKey.split('_')[1] || metricKey}_module`] ?? hasModule;
 
-  // Animated counter effect (600ms on first render / value change)
+  // Animated counter effect
   useEffect(() => {
-    if (isLoading || typeof rawValue !== "number") return;
+    if (isPending || typeof rawValue !== "number") return;
+    
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      
+      let current = 0;
+      const duration = 600;
+      const stepTime = 20;
+      const totalSteps = duration / stepTime;
+      const increment = rawValue / totalSteps;
 
-    if (!isFirstRender.current && prevValueRef.current === rawValue) {
-      setDisplayValue(rawValue);
-      return;
+      const timer = setInterval(() => {
+        current += increment;
+        if ((increment >= 0 && current >= rawValue) || (increment < 0 && current <= rawValue)) {
+          setDisplayValue(rawValue);
+          clearInterval(timer);
+        } else {
+          setDisplayValue(Math.floor(current));
+        }
+      }, stepTime);
+
+      return () => clearInterval(timer);
+    } else {
+      setDisplayValue(rawValue); // instant update, no animation
     }
-
-    const startVal = isFirstRender.current ? 0 : displayValue;
-    isFirstRender.current = false;
-    prevValueRef.current = rawValue;
-
-    if (startVal === rawValue) {
-      setDisplayValue(rawValue);
-      return;
-    }
-
-    let current = startVal;
-    const duration = 600;
-    const stepTime = 20;
-    const totalSteps = duration / stepTime;
-    const increment = (rawValue - startVal) / totalSteps;
-
-    const timer = setInterval(() => {
-      current += increment;
-      if ((increment >= 0 && current >= rawValue) || (increment < 0 && current <= rawValue)) {
-        setDisplayValue(rawValue);
-        clearInterval(timer);
-      } else {
-        setDisplayValue(Math.floor(current));
-      }
-    }, stepTime);
-
-    return () => clearInterval(timer);
-  }, [rawValue, isLoading]);
+  }, [rawValue, isPending]);
 
   const colorStyles = {
     violet: "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300",
@@ -87,7 +79,7 @@ export function MetricWidget({
     blue: "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300",
   };
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Card className="border-none shadow-sm h-full flex flex-col justify-between">
         <CardContent className="p-5 space-y-3">

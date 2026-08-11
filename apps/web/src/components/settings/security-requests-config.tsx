@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ShieldAlert, Check, X, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
@@ -19,11 +20,9 @@ export function SecurityRequestsConfig() {
   const queryClient = useQueryClient();
   const [resetLink, setResetLink] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["password-resets", "pending"],
+  const { data = [], isLoading } = useQuery({
+    queryKey: queryKeys.passwordResets("pending"),
     queryFn: async () => {
-      // Return unpaginated array or map paginated data.
-      // Laravel paginate returns { data: [...], current_page: 1, ... }
       const res = await apiFetch("/admin/password-resets");
       return Array.isArray(res) ? res : (res.data || []);
     },
@@ -38,7 +37,7 @@ export function SecurityRequestsConfig() {
       if (data.reset_link) {
         setResetLink(data.reset_link);
       }
-      queryClient.invalidateQueries({ queryKey: ["password-resets", "pending"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.passwordResets("pending") });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to approve request.");
@@ -51,7 +50,7 @@ export function SecurityRequestsConfig() {
     },
     onSuccess: () => {
       toast.success("Password reset request rejected.");
-      queryClient.invalidateQueries({ queryKey: ["password-resets", "pending"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.passwordResets("pending") });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to reject request.");

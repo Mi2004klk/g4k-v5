@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Se
 import { useQuery } from "@tanstack/react-query";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+
 const ReactECharts = dynamic((() => import("echarts-for-react")) as any, { 
   ssr: false,
   loading: () => <Skeleton className="w-full h-[200px]" />
@@ -176,7 +178,7 @@ export function AttendanceHistoryCalendar({ days, userId }: { days: AttendanceDa
 
 function DayDetailContent({ date, summaryDay, userId }: { date: string, summaryDay: AttendanceDay, userId?: number }) {
   const { data, isLoading } = useQuery({
-    queryKey: ["attendance-day-detail", date, userId],
+    queryKey: queryKeys.attendanceDayDetail(date, userId),
     queryFn: () => apiFetch(userId ? `/attendance/hr/day/${date}/${userId}` : `/attendance/me/day/${date}`),
   });
 

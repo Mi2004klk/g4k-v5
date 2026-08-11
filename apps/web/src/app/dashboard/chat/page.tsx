@@ -14,6 +14,7 @@ import { MessageComposer } from "@/components/chat/message-composer";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { FeedbackForm } from "@/components/widgets/feedback-form";
+import { queryKeys } from "@/lib/query-keys";
 
 function ChatPageContent() {
   const queryClient = useQueryClient();
@@ -31,7 +32,7 @@ function ChatPageContent() {
   }, [initialConvId]);
 
   const { data: conversations = [] } = useQuery({
-    queryKey: ["conversations"],
+    queryKey: queryKeys.conversations,
     queryFn: () => apiFetch("/conversations"),
   });
 
@@ -41,7 +42,7 @@ function ChatPageContent() {
     hasNextPage,
     isFetchingNextPage
   } = useInfiniteQuery({
-    queryKey: ["messages", selectedId],
+    queryKey: queryKeys.messages(selectedId as number),
     queryFn: ({ pageParam }) => apiFetch(`/conversations/${selectedId}/messages${pageParam ? `?cursor=${pageParam}` : ''}`),
     getNextPageParam: (lastPage: any) => lastPage.next_cursor || null,
     initialPageParam: null as string | null,
@@ -55,7 +56,7 @@ function ChatPageContent() {
     const channel = subscribe(channelName);
     if (channel) {
       const handler = (e: any) => {
-        queryClient.setQueryData(["messages", selectedId], (old: any) => {
+        queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: any) => {
           if (!old?.pages) return old;
           const firstPage = old.pages[0];
           const updatedFirstPage = {
@@ -86,8 +87,8 @@ function ChatPageContent() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", selectedId] });
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
     },
   });
 
@@ -170,7 +171,7 @@ function ChatPageContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-neutral-500">Loading chat...</div>}>
+    <Suspense fallback={<div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading chat...</div>}>
       <ChatPageContent />
     </Suspense>
   );

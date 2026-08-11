@@ -15,6 +15,7 @@ import {
 } from "@g4k/ui/components";
 import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 interface HrCorrectionDialogProps {
   isOpen: boolean;
@@ -44,7 +45,7 @@ export function HrCorrectionDialog({
   const [reason, setReason] = useState("");
 
   const { data: dayData, isLoading } = useQuery({
-    queryKey: ["hr-member-attendance-day", userId, date],
+    queryKey: queryKeys.memberAttendanceDay(userId, date),
     queryFn: () => apiFetch(`/attendance/hr/day/${date}/${userId}`),
     enabled: isOpen && !!userId && !!date,
   });
@@ -127,9 +128,9 @@ export function HrCorrectionDialog({
     },
     onSuccess: () => {
       toast.success("Attendance record corrected and audited.");
-      queryClient.invalidateQueries({ queryKey: ["hr-attendance-today"] });
-      queryClient.invalidateQueries({ queryKey: ["hr-member-attendance-day"] });
-      queryClient.invalidateQueries({ queryKey: ["org-attendance"] }); // generic cache
+      queryClient.invalidateQueries({ queryKey: [queryKeys.hrAttendance(date, "all")[0]] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.memberAttendanceDay(userId, date)[0]] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orgAttendance }); // generic cache
       onOpenChange(false);
       setReason("");
     },

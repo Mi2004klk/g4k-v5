@@ -8,13 +8,14 @@ import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Save } from "lucide-react";
+import { queryKeys } from "@/lib/query-keys";
 
 export function RemindersConfig() {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<any>({});
 
   const { data: settingsGrouped, isLoading } = useQuery({
-    queryKey: ["settings"],
+    queryKey: queryKeys.settings,
     queryFn: () => apiFetch("/settings/grouped"),
   });
 
@@ -36,7 +37,7 @@ export function RemindersConfig() {
       }),
     onSuccess: () => {
       toast.success("Reminder settings updated");
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings });
     },
   });
 

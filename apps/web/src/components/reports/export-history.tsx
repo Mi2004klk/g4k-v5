@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api-client";
 import { useReverb } from "@/hooks/use-reverb";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 
 export function ExportHistory() {
   const queryClient = useQueryClient();
@@ -18,7 +19,7 @@ export function ExportHistory() {
     const channel = subscribe(channelName);
     if (channel) {
       channel.listen(".ExportCompleted", () => {
-        queryClient.invalidateQueries({ queryKey: ["export-history"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
       });
     }
 
@@ -31,7 +32,7 @@ export function ExportHistory() {
   }, [subscribe, leaveChannel, queryClient]);
 
   const { data: exports = [], isLoading } = useQuery({
-    queryKey: ["export-history"],
+    queryKey: queryKeys.exportHistory,
     queryFn: () => apiFetch("/reports/exports"),
   });
 

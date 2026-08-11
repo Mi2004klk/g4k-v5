@@ -12,6 +12,10 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { 
+  queryKeys, 
+  STALE_TIME_DEPARTMENTS 
+} from "@/lib/query-keys";
 
 const deptSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -66,13 +70,13 @@ export default function DepartmentsPage() {
   const [selectedDeptMembers, setSelectedDeptMembers] = useState<any>(null);
 
   const { data: deptDetails, isLoading: isDeptLoading } = useQuery({
-    queryKey: ["department", selectedDeptMembers?.id],
+    queryKey: queryKeys.department(selectedDeptMembers?.id),
     queryFn: () => apiFetch(`/departments/${selectedDeptMembers?.id}`),
     enabled: !!selectedDeptMembers,
   });
 
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["departments", debouncedSearch, statusFilter],
+    queryKey: queryKeys.departmentsPaginated(debouncedSearch, statusFilter),
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
@@ -82,6 +86,7 @@ export default function DepartmentsPage() {
     },
     initialPageParam: "",
     getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
+    staleTime: STALE_TIME_DEPARTMENTS,
   });
 
   const createDeptMutation = useMutation({
@@ -89,7 +94,7 @@ export default function DepartmentsPage() {
     onSuccess: () => {
       toast.success("Department created!");
       setIsDeptModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: any) => toast.error(err.message || "Failed to create department."),
   });
@@ -99,7 +104,7 @@ export default function DepartmentsPage() {
     onSuccess: () => {
       toast.success("Department updated!");
       setIsDeptModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: any) => toast.error(err.message || "Failed to update department."),
   });
@@ -109,7 +114,7 @@ export default function DepartmentsPage() {
     onSuccess: () => {
       toast.success("Department archived.");
       setConfirmState({ isOpen: false, type: "" });
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: any) => toast.error(err.message || "Failed to archive department."),
   });
@@ -118,7 +123,7 @@ export default function DepartmentsPage() {
     mutationFn: (id: number) => apiFetch(`/departments/${id}/restore`, { method: "PATCH" }),
     onSuccess: () => {
       toast.success("Department restored.");
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: any) => toast.error(err.message || "Failed to restore department."),
   });
@@ -128,7 +133,7 @@ export default function DepartmentsPage() {
     onSuccess: () => {
       toast.success("Department deleted.");
       setConfirmState({ isOpen: false, type: "" });
-      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to delete department.");

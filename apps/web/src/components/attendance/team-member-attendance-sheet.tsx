@@ -23,18 +23,19 @@ interface TeamMemberAttendanceSheetProps {
   date: string;
   onClose: () => void;
 }
+import { queryKeys } from "@/lib/query-keys";
 
 export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberAttendanceSheetProps) {
   const [tab, setTab] = useState("day");
 
   const { data: dayData, isLoading: isLoadingDay } = useQuery({
-    queryKey: ["hr-member-attendance-day", userId, date],
+    queryKey: userId !== null ? queryKeys.memberAttendanceDay(userId, date) : [],
     queryFn: () => apiFetch(`/attendance/hr/day/${date}/${userId}`),
     enabled: !!userId && !!date && tab === "day",
   });
 
   const { data: historyData, isLoading: isLoadingHistory } = useQuery({
-    queryKey: ["hr-member-history", userId],
+    queryKey: userId !== null ? queryKeys.memberHistory(userId) : [],
     queryFn: () => apiFetch(`/attendance/hr/history/${userId}`),
     enabled: !!userId && tab === "history",
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Plus, Calendar as CalendarIcon } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
@@ -17,11 +17,14 @@ import {
   DialogTrigger,
 } from "@g4k/ui/components";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
+import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 
 export default function PersonalAttendancePage() {
-  const { data: historyData, isLoading } = useQuery({
-    queryKey: ["my-attendance-history"],
+  const { data: historyData, isPending } = useQuery({
+    queryKey: queryKeys.myAttendanceHistory(),
     queryFn: () => apiFetch("/attendance/me/history"),
+    placeholderData: keepPreviousData,
+    staleTime: STALE_TIME_ATTENDANCE,
   });
 
   const historyList = historyData?.data || [];
@@ -74,7 +77,7 @@ export default function PersonalAttendancePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 overflow-hidden rounded-b-xl border-t border-neutral-100 dark:border-neutral-800">
-            {isLoading ? (
+            {isPending ? (
               <div className="p-6 space-y-3">
                 <Skeleton className="h-40 w-full" />
               </div>

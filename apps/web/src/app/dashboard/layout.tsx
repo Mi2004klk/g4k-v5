@@ -44,6 +44,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { useTheme } from "next-themes";
+import { queryKeys } from "@/lib/query-keys";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useUIStore } from "@/lib/ui-store";
 
@@ -150,7 +151,7 @@ export default function DashboardLayout({
   const { theme, setTheme } = useTheme();
 
   const { data: pins = EMPTY_PINS, refetch: refetchPins } = useQuery({
-    queryKey: ["pins"],
+    queryKey: queryKeys.pins,
     queryFn: () => apiFetch("/pins"),
   });
 

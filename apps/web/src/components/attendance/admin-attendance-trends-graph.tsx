@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -19,7 +20,7 @@ export function AdminAttendanceTrendsGraph() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-attendance-graph", groupBy, mode, date],
+    queryKey: queryKeys.adminAttendanceGraph(groupBy, mode, date),
     // Assume /attendance/admin/graph handles these params similar to HR
     queryFn: () => apiFetch(`/attendance/admin/graph?groupBy=${groupBy}&mode=${mode}&date=${date}`),
   });

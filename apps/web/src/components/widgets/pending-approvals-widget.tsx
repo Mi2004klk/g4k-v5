@@ -5,12 +5,14 @@ import { ClipboardList, Check, X, AlertTriangle, Calendar, Loader2 } from "lucid
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
+import { toast } from "sonner";
 
 export function PendingApprovalsWidget() {
   const queryClient = useQueryClient();
 
   const { data: requests = [], isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ["pending-approvals-list"],
+    queryKey: queryKeys.pendingApprovals,
     queryFn: async () => {
       const res = await apiFetch("/approvals/pending");
       return Array.isArray(res) ? res : res?.data || [];
@@ -26,7 +28,8 @@ export function PendingApprovalsWidget() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending-approvals-list"], exact: true });
+      toast.success("Action recorded successfully!");
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingApprovals, exact: true });
     },
   });
 

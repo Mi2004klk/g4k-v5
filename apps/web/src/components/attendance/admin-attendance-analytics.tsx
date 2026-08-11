@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Users, Clock, LogIn, CalendarX, Loader2, CalendarDays } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useMemo } from "react";
 
@@ -13,7 +13,7 @@ export function AdminAttendanceAnalytics() {
   const [deptFilter] = useUrlState("dept", "all");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-attendance-overview", selectedDate, deptFilter],
+    queryKey: queryKeys.adminAttendance(selectedDate, deptFilter),
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);

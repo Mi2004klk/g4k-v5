@@ -9,14 +9,15 @@ import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 
 export function AutoNumberingConfig() {
   const queryClient = useQueryClient();
 
   const { data: records = [], isLoading } = useQuery({
-    queryKey: ["auto-numberings"],
+    queryKey: queryKeys.autoNumberings,
     queryFn: async () => {
-      const res = await apiFetch("/auto-numberings");
+      const res = await apiFetch("/settings/auto-numberings");
       return Array.isArray(res) ? res : res.data || [];
     },
   });
@@ -25,8 +26,8 @@ export function AutoNumberingConfig() {
     mutationFn: ({ id, data }: { id: number; data: any }) =>
       apiFetch(`/auto-numberings/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     onSuccess: () => {
-      toast.success("Numbering format updated");
-      queryClient.invalidateQueries({ queryKey: ["auto-numberings"] });
+      toast.success("Settings saved");
+      queryClient.invalidateQueries({ queryKey: queryKeys.autoNumberings });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to update format");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Plus,
@@ -21,6 +21,12 @@ import {
   History
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { 
+  queryKeys, 
+  STALE_TIME_DIRECTORY, 
+  STALE_TIME_DEPARTMENTS, 
+  STALE_TIME_DESIGNATIONS 
+} from "@/lib/query-keys";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -152,9 +158,9 @@ export default function UsersPage() {
   });
 
   // Queries
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["users", debouncedSearch, roleFilter, statusFilter, deptFilter],
-    queryFn: ({ pageParam }) => {
+  const { data, isPending, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: queryKeys.usersPaginated(debouncedSearch, roleFilter, statusFilter, deptFilter),
+    queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
@@ -165,11 +171,13 @@ export default function UsersPage() {
     },
     initialPageParam: "",
     getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
+    placeholderData: keepPreviousData,
   });
 
-  const { data: departments } = useQuery({
-    queryKey: ["departments"],
+  const { data: departments = [] } = useQuery({
+    queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    staleTime: STALE_TIME_DEPARTMENTS,
   });
 
   const watchDept = watch("department_id");
@@ -180,13 +188,14 @@ export default function UsersPage() {
   const selectedEditDept = departments?.find((d: any) => d.id === Number(watchEditDept));
   const availableEditTeams = selectedEditDept?.teams || [];
 
-  const { data: designations } = useQuery({
-    queryKey: ["designations"],
+  const { data: designations = [] } = useQuery({
+    queryKey: queryKeys.designations,
     queryFn: () => apiFetch("/designations").then(res => res.data || []),
+    staleTime: STALE_TIME_DESIGNATIONS,
   });
 
   const { data: activityData, isLoading: isLoadingActivity } = useQuery({
-    queryKey: ["user-activity", activityUser?.id],
+    queryKey: queryKeys.userActivity(activityUser?.id),
     queryFn: () => apiFetch(`/users/${activityUser.id}/activity`),
     enabled: !!activityUser && isActivityOpen,
   });
@@ -207,7 +216,7 @@ export default function UsersPage() {
       setIsCreateOpen(false);
       reset();
       clearDraft();
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
     },
     onError: (err: any) => toast.error(err.message || "Failed to create user."),
   });
@@ -217,7 +226,7 @@ export default function UsersPage() {
     onSuccess: () => {
       toast.success("User updated successfully!");
       setIsEditOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
     },
     onError: (err: any) => toast.error(err.message || "Failed to update user."),
   });
@@ -227,7 +236,7 @@ export default function UsersPage() {
     onSuccess: () => {
       toast.success("User status updated.");
       setConfirmState({ isOpen: false, type: "" });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
     },
     onError: (err: any) => toast.error(err.message || "Failed to update status."),
   });
@@ -237,7 +246,7 @@ export default function UsersPage() {
     onSuccess: () => {
       toast.success("User deleted.");
       setConfirmState({ isOpen: false, type: "" });
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
     },
     onError: (err: any) => toast.error(err.message || "Failed to delete user."),
   });
@@ -251,7 +260,7 @@ export default function UsersPage() {
   const bulkMutation = useMutation({
     mutationFn: (payload: { ids: number[], action: string }) => apiFetch('/users/bulk', { method: 'POST', body: JSON.stringify(payload) }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       toast.success("Bulk action completed.");
       setRowSelection({});
     },
@@ -524,7 +533,7 @@ export default function UsersPage() {
 
       <Card className="border-none shadow-sm">
         <CardContent className="p-0">
-          {isLoading ? (
+          {isPending ? (
             <div className="p-6 space-y-4">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />

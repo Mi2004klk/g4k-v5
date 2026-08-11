@@ -1,18 +1,19 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Users, ArrowRight, Loader2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 
 export function AdminTodayAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: ["admin-attendance-today", format(new Date(), "yyyy-MM-dd")],
+    queryKey: queryKeys.adminAttendance(format(new Date(), "yyyy-MM-dd")),
     queryFn: () => apiFetch(`/attendance/admin/overview?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
+    placeholderData: keepPreviousData,
   });
 
   const records = data?.data || [];

@@ -43,6 +43,11 @@ import { EmptyState } from "@g4k/ui/components";
 import { DataTable, StatusBadge } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
+import { Badge } from "@g4k/ui/components";
+import { 
+  queryKeys, 
+  STALE_TIME_DESIGNATIONS 
+} from "@/lib/query-keys";
 
 export default function DesignationsPage() {
   const queryClient = useQueryClient();
@@ -63,7 +68,7 @@ export default function DesignationsPage() {
   const [editingDesig, setEditingDesig] = useState<any>(null);
 
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["designations", debouncedSearch, statusFilter],
+    queryKey: queryKeys.designationsPaginated(debouncedSearch, statusFilter),
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
@@ -73,6 +78,7 @@ export default function DesignationsPage() {
     },
     initialPageParam: "",
     getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
+    staleTime: STALE_TIME_DESIGNATIONS,
   });
 
   const createMutation = useMutation({
@@ -80,7 +86,7 @@ export default function DesignationsPage() {
     onSuccess: () => {
       toast.success("Designation created!");
       setIsModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["designations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
     onError: (err: any) => toast.error(err.message || "Failed to create designation."),
   });
@@ -90,7 +96,7 @@ export default function DesignationsPage() {
     onSuccess: () => {
       toast.success("Designation updated!");
       setIsModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["designations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
     onError: (err: any) => toast.error(err.message || "Failed to update designation."),
   });
@@ -100,7 +106,7 @@ export default function DesignationsPage() {
     onSuccess: () => {
       toast.success("Designation status updated.");
       setConfirmState({ isOpen: false, type: "" });
-      queryClient.invalidateQueries({ queryKey: ["designations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
     onError: (err: any) => toast.error(err.message || "Failed to update status."),
   });
@@ -110,7 +116,7 @@ export default function DesignationsPage() {
     onSuccess: () => {
       toast.success("Designation deleted.");
       setConfirmState({ isOpen: false, type: "" });
-      queryClient.invalidateQueries({ queryKey: ["designations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to delete designation.");

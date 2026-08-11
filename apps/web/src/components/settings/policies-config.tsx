@@ -11,6 +11,7 @@ import { Save, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { queryKeys } from "@/lib/query-keys";
 
 const passwordSchema = z.object({
   min_length: z.coerce.number().min(8, "Minimum 8 characters required").max(32, "Maximum 32 characters allowed"),
@@ -32,7 +33,7 @@ export function PoliciesConfig() {
   const queryClient = useQueryClient();
 
   const { data: settingsGrouped, isLoading } = useQuery({
-    queryKey: ["settings"],
+    queryKey: queryKeys.settings,
     queryFn: () => apiFetch("/settings/grouped"),
   });
 
@@ -86,8 +87,8 @@ export function PoliciesConfig() {
         body: JSON.stringify({ settings: updates }),
       }),
     onSuccess: () => {
-      toast.success("Security policies updated");
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      toast.success("Policy updated successfully");
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings });
     },
   });
 

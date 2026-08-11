@@ -7,6 +7,7 @@ import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
@@ -38,7 +39,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const { containerRef, width } = useContainerWidth();
 
   const { data: preferencesData, isLoading } = useQuery({
-    queryKey: ["dashboard-layout"],
+    queryKey: queryKeys.dashboardLayout,
     queryFn: () => apiFetch("/auth/preferences"),
     staleTime: 5 * 60_000,
   });
@@ -172,12 +173,24 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     }, 150);
   };
 
-  if ((isLoading && !preferencesData) || !mounted) {
+  if (!mounted) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
+
+  if (!layouts || Object.keys(layouts).length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 p-4">
+        {availableWidgets.map(w => (
+          <div key={w.id} className="min-h-[250px]">
+             <ErrorBoundary name={`Widget-${w.id}`}>{w.component}</ErrorBoundary>
+          </div>
+        ))}
       </div>
     );
   }

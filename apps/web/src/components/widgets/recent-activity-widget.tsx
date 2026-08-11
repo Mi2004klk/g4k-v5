@@ -6,11 +6,11 @@ import { formatDistanceToNow } from "date-fns";
 import { Activity, AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { STALE_TIME_METRICS } from "@/lib/query-keys";
+import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 
 export function RecentActivityWidget() {
   const { data, isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ["dashboard-metrics"],
+    queryKey: queryKeys.dashboardMetrics,
     queryFn: () => apiFetch("/dashboard/metrics"),
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,

@@ -12,15 +12,7 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    private static array $schemaCache = [];
 
-    private function hasTable(string $table): bool
-    {
-        if (!isset(self::$schemaCache[$table])) {
-            self::$schemaCache[$table] = Cache::remember("schema_has_{$table}", 3600, fn() => Schema::hasTable($table));
-        }
-        return self::$schemaCache[$table];
-    }
 
     public function metrics(Request $request)
     {
@@ -42,25 +34,28 @@ class DashboardController extends Controller
         $metrics = Cache::remember($cacheKey, 300, function () use ($user, $activeRole, $today) {
             $data = [];
 
-            // Module schema availability checks (cached)
-            $hasProjects = $this->hasTable('projects');
-            $hasProjectMembers = $this->hasTable('project_members');
-            $hasTasks = $this->hasTable('tasks');
-            $hasLeaveRequests = $this->hasTable('leave_requests');
+            // Modules are confirmed to exist in production
+            $hasProjects = true;
+            $hasProjectMembers = true;
+            $hasTasks = true;
+            $hasLeaveRequests = true;
 
             $data['has_projects_module'] = $hasProjects;
             $data['has_tasks_module'] = $hasTasks;
 
             if ($activeRole === 'super_admin') {
                 // Shared role-agnostic global stats
-                $globalStats = Cache::remember("dashboard_global_stats", 300, function () {
+                $globalStats = Cache::remember("dashboard_global", 300, function () {
                     return [
                         'total_employees' => User::count(),
                         'active_employees' => User::where('status', 'active')->count(),
                         'departments' => Department::count(),
+                        'active_projects' => DB::table('projects')->where('status', 'active')->count(),
                     ];
                 });
-                $data = array_merge($data, $globalStats);
+                $data['total_employees'] = $globalStats['total_employees'];
+                $data['active_employees'] = $globalStats['active_employees'];
+                $data['departments'] = $globalStats['departments'];
 
                 $attendance = DB::table('attendance_days')
                     ->where('date', $today)
@@ -81,7 +76,13 @@ class DashboardController extends Controller
                 
                 // Shared admin recent activity cache
                 $data['recent_activity'] = Cache::remember("dashboard_recent_activity", 300, function () {
-                    return DB::table('audit_logs')->orderBy('at', 'desc')->limit(10)->get();
+                    return DB::table('audit_logs')
+                        ->leftJoin('users', 'audit_logs.user_id', '=', 'users.id')
+                        ->select('audit_logs.id', 'audit_logs.action', 'audit_logs.subject_type',
+                                 'audit_logs.subject_id', 'audit_logs.at', 'users.name as user_name', 'audit_logs.meta')
+                        ->orderBy('audit_logs.at', 'desc')
+                        ->limit(10)
+                        ->get();
                 });
             }
 
@@ -124,8 +125,14 @@ class DashboardController extends Controller
             }
 
             if ($activeRole === 'super_admin' || $activeRole === 'hr') {
-                $data['active_projects'] = $hasProjects
-                    ? Cache::remember("dashboard_active_projects_count", 300, fn() => DB::table('projects')->where('status', 'active')->count()) : 0;
+                $data['active_projects'] = Cache::remember("dashboard_global", 300, function () {
+                    return [
+                        'total_employees' => User::count(),
+                        'active_employees' => User::where('status', 'active')->count(),
+                        'departments' => Department::count(),
+                        'active_projects' => DB::table('projects')->where('status', 'active')->count(),
+                    ];
+                })['active_projects'];
                 $data['pending_tasks'] = $hasTasks
                     ? Cache::remember("dashboard_pending_tasks_count", 300, fn() => DB::table('tasks')->whereIn('status', ['todo', 'in_progress', 'review'])->count()) : 0;
             } elseif ($activeRole === 'employee') {

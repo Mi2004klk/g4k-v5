@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -19,7 +20,7 @@ export function HrAttendanceGraph() {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["hr-attendance-graph", groupBy, mode, date],
+    queryKey: queryKeys.hrAttendanceGraph(groupBy, mode, date),
     queryFn: () => apiFetch(`/attendance/hr/graph?groupBy=${groupBy}&mode=${mode}&date=${date}`),
   });
 

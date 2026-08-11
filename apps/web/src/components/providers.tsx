@@ -2,27 +2,15 @@
 
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { QueryClient, MutationCache } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { openDB } from "idb";
+import { QueryClient, MutationCache, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { ErrorBoundary, OfflineBanner } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 
-const idbPromise = typeof window !== 'undefined' ? openDB('g4k-react-query', 1, {
-  upgrade(db) {
-    db.createObjectStore('keyval');
-  },
-}) : null;
-
-const persister = createAsyncStoragePersister({
-  storage: {
-    getItem: async (key) => (idbPromise ? (await idbPromise).get('keyval', key) : null),
-    setItem: async (key, value) => (idbPromise ? (await idbPromise).put('keyval', value, key) : undefined),
-    removeItem: async (key) => (idbPromise ? (await idbPromise).delete('keyval', key) : undefined),
-  },
-});
+// Architectural Decision:
+// We use a standard in-memory QueryClientProvider rather than PersistQueryClientProvider.
+// This resolves the hydration race condition that forced skeletons to flash on cold load.
+// Offline mutation queueing is handled separately by the OfflineEngine.
 
 function DensityProvider() {
   const density = useAuthStore((state) => state.density);
@@ -46,7 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30000, // 30 seconds
+            staleTime: 60000, // 60 seconds
             gcTime: 1000 * 60 * 30, // 30 minutes
             refetchOnWindowFocus: false,
             retry: 1,
@@ -77,14 +65,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+      <QueryClientProvider client={queryClient}>
         <DensityProvider />
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
         <Toaster position="top-right" duration={4000} richColors />
         <OfflineBanner />
-      </PersistQueryClientProvider>
+      </QueryClientProvider>
     </NextThemesProvider>
   );
 }

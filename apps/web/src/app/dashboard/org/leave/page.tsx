@@ -10,6 +10,7 @@ import { Card, Button, DataTable } from "@g4k/ui/components";
 import { FilterBar } from "@/components/data-table/filter-bar";
 import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
 import { useUrlState } from "@/hooks/use-url-state";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 
 export default function OrgLeaveApprovalsPage() {
@@ -17,7 +18,7 @@ export default function OrgLeaveApprovalsPage() {
   const [search, setSearch] = useUrlState("search", "");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["org-leave-requests", statusFilter, search],
+    queryKey: queryKeys.orgLeaveRequestsPaginated(statusFilter, search),
     queryFn: () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);

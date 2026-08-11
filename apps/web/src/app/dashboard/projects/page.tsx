@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Plus, FolderPlus, Search, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys, STALE_TIME_PROJECTS } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -38,9 +39,11 @@ export default function ProjectsPage() {
   const [priority, setPriority] = useState("medium");
   const debouncedSearch = useDebounce(search, 250);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["projects", debouncedSearch, sort, page],
+  const { data, isPending } = useQuery({
+    queryKey: queryKeys.projects(debouncedSearch, sort, page),
     queryFn: () => apiFetch(`/projects?search=${debouncedSearch || ""}&sort=${sort || "created_at"}&page=${page || 1}`),
+    placeholderData: keepPreviousData,
+    staleTime: STALE_TIME_PROJECTS,
   });
 
   const createMutation = useMutation({
@@ -55,7 +58,7 @@ export default function ProjectsPage() {
       setName("");
       setDescription("");
       toast.success("Project created successfully");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create project");
@@ -136,7 +139,7 @@ export default function ProjectsPage() {
         </select>
       </div>
 
-      {isLoading ? (
+      {isPending ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Skeleton className="h-40 w-full" />
           <Skeleton className="h-40 w-full" />

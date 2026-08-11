@@ -9,14 +9,16 @@ import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_DIRECTORY, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
+import { useReverb } from "@/hooks/use-reverb";
 import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 
 export function AdminAttendanceTable() {
   const queryClient = useQueryClient();
+  const { subscribe } = useReverb();
   const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
@@ -47,14 +49,23 @@ export function AdminAttendanceTable() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    const channel = subscribe("presence-org");
+    if (channel) {
+      channel.listen(".attendance.updated", () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.adminAttendance(selectedDate, deptFilter) });
+      });
+    }
+  }, [subscribe, selectedDate, deptFilter, queryClient]);
+
   const { data: departments = [] } = useQuery({
-    queryKey: ["departments"],
-    queryFn: () => apiFetch("/departments").then(res => res.data || []),
-    staleTime: STALE_TIME_DIRECTORY,
+    queryKey: queryKeys.departments,
+    queryFn: () => apiFetch("/departments").then((res) => res.data || []),
+    staleTime: STALE_TIME_DEPARTMENTS,
   });
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["admin-attendance-overview", selectedDate, deptFilter],
+    queryKey: queryKeys.adminAttendance(selectedDate, deptFilter),
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
@@ -77,7 +88,7 @@ export function AdminAttendanceTable() {
       return { ...raw, data: items };
     },
     staleTime: STALE_TIME_ATTENDANCE,
-    refetchInterval: STALE_TIME_ATTENDANCE,
+    refetchInterval: 120_000,
   });
 
   const records = data?.data || [];

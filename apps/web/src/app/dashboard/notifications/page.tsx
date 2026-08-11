@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { formatDistanceToNow, format } from "date-fns";
 import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase, MailOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { DataTable, Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
+import { queryKeys, STALE_TIME_NOTIFICATIONS } from "@/lib/query-keys";
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
@@ -23,7 +24,7 @@ export default function NotificationsPage() {
   });
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["notifications-full", page, filter, search],
+    queryKey: queryKeys.notifications(filter, search, page),
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("page", page.toString());
@@ -31,7 +32,9 @@ export default function NotificationsPage() {
       if (filter.type !== "all") params.set("type", filter.type);
       if (search) params.set("search", search);
       return apiFetch(`/notifications?${params.toString()}`);
-    }
+    },
+    placeholderData: keepPreviousData,
+    staleTime: STALE_TIME_NOTIFICATIONS,
   });
 
   const markReadMutation = useMutation({
@@ -39,8 +42,7 @@ export default function NotificationsPage() {
       return apiFetch(`/notifications/${id}/mark-read`, { method: "POST" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications-full"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications"] }); // update bell
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     }
   });
 
@@ -49,9 +51,8 @@ export default function NotificationsPage() {
       return apiFetch(`/notifications/mark-all-read`, { method: "POST" });
     },
     onSuccess: () => {
-      toast.success("All notifications marked as read");
-      queryClient.invalidateQueries({ queryKey: ["notifications-full"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("All notifications marked as read");
     }
   });
 

@@ -1,19 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Users, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
 import { Card, Skeleton, Button, StatusBadge } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 
 export function HrTeamAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: ["hr-attendance-today", format(new Date(), "yyyy-MM-dd"), "all", ""],
+    queryKey: queryKeys.hrAttendance(format(new Date(), "yyyy-MM-dd")),
     queryFn: () => apiFetch(`/attendance/hr/today?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
+    placeholderData: keepPreviousData,
   });
 
   const records = data?.data || [];

@@ -13,6 +13,7 @@ import { FilterBar } from "@g4k/ui/components";
 import { getAuthToken } from "@/lib/auth-store";
 
 import { useUrlState } from "@/hooks/use-url-state";
+import { queryKeys } from "@/lib/query-keys";
 
 export function AuditLogTable() {
   const [action, setAction] = useUrlState("action", "");
@@ -23,7 +24,7 @@ export function AuditLogTable() {
   const [isExporting, setIsExporting] = useState(false);
 
   const { data: usersResponse } = useQuery({
-    queryKey: ["users-list"],
+    queryKey: queryKeys.usersList,
     queryFn: () => apiFetch("/users?per_page=1000"),
   });
   const users = usersResponse?.data || [];
@@ -38,7 +39,7 @@ export function AuditLogTable() {
     hasNextPage,
     isFetchingNextPage
   } = useInfiniteQuery({
-    queryKey: ["audit-logs", filters],
+    queryKey: queryKeys.auditLogs(filters),
     queryFn: ({ pageParam = "" }: { pageParam?: any }) => {
       const params = new URLSearchParams();
       if (filters.action) params.append("action", filters.action);

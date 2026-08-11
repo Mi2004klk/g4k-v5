@@ -12,6 +12,7 @@ import { useUIStore } from "@/lib/ui-store";
 import { useReverb } from "@/hooks/use-reverb";
 import { Button } from "@g4k/ui/components";
 import { useShallow } from "zustand/react/shallow";
+import { queryKeys } from "@/lib/query-keys";
 
 export function NotificationsBell() {
   const user = useAuthStore((s) => s.user);
@@ -24,13 +25,13 @@ export function NotificationsBell() {
   const clearPopupNotifications = useUIStore((s) => s.clearPopupNotifications);
 
   const { data: countData } = useQuery({
-    queryKey: ["unread-count"],
+    queryKey: queryKeys.unreadCount,
     queryFn: () => apiFetch("/notifications/unread-count"),
     enabled: !!user,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["notifications", filter],
+    queryKey: queryKeys.notifications(filter),
     queryFn: () => apiFetch(`/notifications${filter === "unread" ? "?unreadOnly=true" : ""}`),
     enabled: !!user,
   });
@@ -40,7 +41,7 @@ export function NotificationsBell() {
       return apiFetch(`/notifications/${id}/mark-read`, { method: "POST" });
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
       const previous = queryClient.getQueryData(["notifications"]);
       
       queryClient.setQueryData(["notifications"], (old: any) => {
@@ -64,7 +65,7 @@ export function NotificationsBell() {
       queryClient.setQueryData(["notifications"], context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
     },
   });
 
@@ -73,7 +74,7 @@ export function NotificationsBell() {
       return apiFetch("/notifications/mark-all-read", { method: "POST" });
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
       const previous = queryClient.getQueryData(["notifications"]);
 
       queryClient.setQueryData(["notifications"], (old: any) => {
@@ -94,7 +95,7 @@ export function NotificationsBell() {
       toast.error("Failed to mark notifications as read");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
     },
   });
 
@@ -106,8 +107,8 @@ export function NotificationsBell() {
     const channel = subscribe(channelName);
     
     const handleNotification = (e: any) => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unread-count"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
       if (e.title) {
         toast.info(e.title, { description: e.body || "You have a new notification." });
       } else {
@@ -116,8 +117,8 @@ export function NotificationsBell() {
     };
 
     const handleApproval = () => {
-      queryClient.invalidateQueries({ queryKey: ["my-leave-history"] });
-      queryClient.invalidateQueries({ queryKey: ["org-leave-requests"] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.myLeaveHistory()[0]] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.orgLeaveRequestsPaginated()[0]] });
     };
 
     if (channel) {

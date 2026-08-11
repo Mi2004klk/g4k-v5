@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2, CheckCircle, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Plus, X, Trash2, ArrowUp, ArrowDown, CheckCircle, Loader2 } from "lucide-react";
+import { queryKeys } from "@/lib/query-keys";
 
 export function QAFormBuilder() {
   const queryClient = useQueryClient();
@@ -43,7 +44,7 @@ export function QAFormBuilder() {
       setTitle("");
       setDescription("");
       setFields([{ label: "Check Code Formatting", field_type: "checkbox", required: true }]);
-      queryClient.invalidateQueries({ queryKey: ["qa-forms"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.qaForms });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create QA form.");

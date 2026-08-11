@@ -9,6 +9,7 @@ import { Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
+import { queryKeys } from "@/lib/query-keys";
 
 export function QuickNotes() {
   const queryClient = useQueryClient();
@@ -18,7 +19,7 @@ export function QuickNotes() {
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
 
   const { data: notes = [], isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ["quick-notes"],
+    queryKey: queryKeys.quickNotes,
     queryFn: () => apiFetch("/quick-notes"),
     placeholderData: keepPreviousData,
   });
@@ -32,7 +33,7 @@ export function QuickNotes() {
     },
     onSuccess: () => {
       setText("");
-      queryClient.invalidateQueries({ queryKey: ["quick-notes"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.quickNotes });
     },
   });
 
@@ -41,7 +42,7 @@ export function QuickNotes() {
       return apiFetch(`/quick-notes/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["quick-notes"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.quickNotes });
     },
   });
 

@@ -1,17 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton } from "@g4k/ui/components";
 import { Activity, CheckCircle2 } from "lucide-react";
 
 export function EmployeeTaskProgressWidget() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["dashboard-metrics"],
+  const { data, isPending } = useQuery({
+    queryKey: queryKeys.dashboardMetrics,
     queryFn: () => apiFetch("/dashboard/metrics"),
+    staleTime: STALE_TIME_METRICS,
+    placeholderData: keepPreviousData,
   });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm p-4">
         <Skeleton className="h-5 w-32 mb-4" />

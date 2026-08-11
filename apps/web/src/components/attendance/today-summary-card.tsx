@@ -7,13 +7,15 @@ import { Clock, Coffee, LogOut, Info, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
+import { Badge } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 
 export function TodaySummaryCard() {
   const isActive = useTimerStore((s) => s.isActive);
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["attendance-today"],
+    queryKey: queryKeys.attendanceToday,
     queryFn: () => apiFetch("/attendance/me/today"),
     // Since offline punch is resilient, the store handles immediate local state updates.
     // The query is to fetch the server's absolute record including grace periods and lates.

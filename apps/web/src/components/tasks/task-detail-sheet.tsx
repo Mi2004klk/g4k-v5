@@ -10,6 +10,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
+import { ConfirmDialog } from "@g4k/ui/components";
+
+import { queryKeys } from "@/lib/query-keys";
 
 export function TaskDetailSheet({
   task,
@@ -36,7 +39,7 @@ export function TaskDetailSheet({
     onSuccess: () => {
       setComment("");
       toast.success("Comment added.");
-      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks, exact: true });
     },
   });
 
@@ -53,7 +56,7 @@ export function TaskDetailSheet({
     onSuccess: () => {
       toast.success("Task submitted for review.");
       onOpenChange(false);
-      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks, exact: true });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to submit task.");
@@ -74,7 +77,7 @@ export function TaskDetailSheet({
     onSuccess: () => {
       setMinutesLogged("");
       toast.success("Time logged successfully.");
-      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks, exact: true });
     },
     onError: (err: any) => toast.error(err.message || "Failed to log time"),
   });

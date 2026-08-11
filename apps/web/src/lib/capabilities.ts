@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "./api-client";
 import { useAuthStore } from "./auth-store";
+import { queryKeys } from "./query-keys";
 
 export function useCapabilities() {
   const token = useAuthStore((state) => state.token);
 
-  return useQuery<string[]>({
-    queryKey: ["capabilities", token],
+  return useQuery({
+    queryKey: queryKeys.capabilities(token || ""),
     queryFn: async () => {
       if (!token) return [];
       const res = await apiFetch("/me/capabilities");

@@ -11,6 +11,9 @@ import { Input } from "@g4k/ui/components";
 import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
 import { Label } from "@g4k/ui/components";
+import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
+import { format } from "date-fns";
+import { queryKeys } from "@/lib/query-keys";
 
 export function LeaveRequestForm() {
   const queryClient = useQueryClient();
@@ -32,7 +35,8 @@ export function LeaveRequestForm() {
       setEndDate("");
       setReason("");
       setType("casual");
-      queryClient.invalidateQueries({ queryKey: ["my-leave-history"] });
+      queryClient.invalidateQueries({ queryKey: [queryKeys.myLeaveHistory()[0]] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to submit leave request.");
@@ -46,8 +50,8 @@ export function LeaveRequestForm() {
       return;
     }
 
-    // Task 245: Check client-side for overlaps across any cached my-leave-history queries
-    const queries = queryClient.getQueriesData<any>({ queryKey: ["my-leave-history"], exact: false });
+    // Optimistic checking of overlapping dates based on cached data
+    const queries = queryClient.getQueriesData<any>({ queryKey: [queryKeys.myLeaveHistory()[0]], exact: false });
     const existingLeaves = queries.flatMap(([_, data]) => data?.data || []);
     const hasOverlap = existingLeaves.some((leave: any) => {
       if (leave.approval?.status !== "pending") return false;

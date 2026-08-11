@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_DIRECTORY, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { Input, Button, Checkbox, DataTable } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { ColumnDef } from "@tanstack/react-table";
@@ -34,13 +34,13 @@ export function AdminOpenShiftsTable() {
   }, [search]);
 
   const { data: departments = [] } = useQuery({
-    queryKey: ["departments"],
+    queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
-    staleTime: STALE_TIME_DIRECTORY,
+    staleTime: STALE_TIME_DEPARTMENTS,
   });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-attendance-overview", selectedDate, deptFilter],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: queryKeys.adminAttendance(selectedDate, deptFilter),
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);

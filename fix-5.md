@@ -34,7 +34,7 @@
 > These two bugs make specific widgets appear permanently broken. Fix them before anything else.
 
 ### 1.1 Fix Recent Activity widget data mapping (R1)
-- [ ] **1.1.1** [web] `apps/web/src/components/widgets/recent-activity-widget.tsx`: the backend
+- [x] **1.1.1** [web] `apps/web/src/components/widgets/recent-activity-widget.tsx`: the backend
   `DashboardController::metrics` returns `audit_logs` rows via
   `DB::table('audit_logs')->orderBy('at','desc')->limit(10)->get()`. The columns are:
   `id, user_id, action, subject_type, subject_id, before, after, ip, meta, at`.
@@ -52,7 +52,7 @@
   **Acceptance:** Super Admin dashboard Recent Activity widget renders real audit entries with
   correct timestamps. No ErrorBoundary fallback.
 
-- [ ] **1.1.2** [api] `apps/api/app/Http/Controllers/DashboardController.php` line ~56
+- [x] **1.1.2** [api] `apps/api/app/Http/Controllers/DashboardController.php` line ~56
   (`recent_activity` query): change to join user names so the frontend doesn't need a second
   request:
   ```php
@@ -67,7 +67,7 @@
   **Acceptance:** `recent_activity` items include `user_name` + `at` fields.
 
 ### 1.2 Fix Employee Approval Status widget endpoint (R2)
-- [ ] **1.2.1** [web] `apps/web/src/components/dashboard/employee-approval-status-widget.tsx:12-14`:
+- [x] **1.2.1** [web] `apps/web/src/components/dashboard/employee-approval-status-widget.tsx:12-14`:
   change the query from:
   ```ts
   queryKey: ["my-leaves-summary"],
@@ -93,7 +93,7 @@
 > overhead.
 
 ### 2.1 Replace PersistQueryClientProvider with plain QueryClientProvider
-- [ ] **2.1.1** [web] `apps/web/src/components/providers.tsx`: Remove the
+- [x] **2.1.1** [web] `apps/web/src/components/providers.tsx`: Remove the
   `PersistQueryClientProvider` + `createAsyncStoragePersister` + `openDB` infrastructure entirely
   (lines 4-6, 8-25, and the `<PersistQueryClientProvider>` wrapper at line ~56). Replace with a
   plain `<QueryClientProvider client={queryClient}>`.
@@ -105,10 +105,10 @@
   **Acceptance:** Cold page load no longer shows a wall of skeletons; widgets fetch in parallel
   and populate independently; in-memory cache makes subsequent navigation instant.
 
-- [ ] **2.1.2** [web] Remove the now-unused imports (`PersistQueryClientProvider`,
+- [x] **2.1.2** [web] Remove the now-unused imports (`PersistQueryClientProvider`,
   `createAsyncStoragePersister`, `openDB`) from `providers.tsx`. Verify `pnpm typecheck` is clean.
 
-- [ ] **2.1.3** [web] If offline reading of cached data is needed in the future, implement it
+- [x] **2.1.3** [web] If offline reading of cached data is needed in the future, implement it
   correctly with a `buster` string (e.g. app version) and a non-blocking restore pattern. For now,
   the OfflineEngine + in-memory cache is sufficient. Document this decision in a code comment.
 
@@ -117,18 +117,18 @@
 ## PHASE 3 — Add placeholderData everywhere + stop animation re-firing (R4, R8)
 
 ### 3.1 Add `placeholderData: keepPreviousData` to every widget query
-- [ ] **3.1.1** [web] `apps/web/src/components/widgets/metric-widget.tsx:33-36`: add
+- [x] **3.1.1** [web] `apps/web/src/components/widgets/metric-widget.tsx:33-36`: add
   `placeholderData: keepPreviousData` to the `useQuery` options. Import `keepPreviousData` from
   `@tanstack/react-query`.
-- [ ] **3.1.2** [web] `apps/web/src/components/dashboard/employee-task-progress-widget.tsx:11-14`:
+- [x] **3.1.2** [web] `apps/web/src/components/dashboard/employee-task-progress-widget.tsx:11-14`:
   add `staleTime: STALE_TIME_METRICS` (import from `lib/query-keys`) +
   `placeholderData: keepPreviousData`. Change `isLoading` to `isPending` (for skeleton only on
   cold load) so background refetch keeps prior data visible.
-- [ ] **3.1.3** [web] `apps/web/src/components/widgets/announcement-board.tsx`: add
+- [x] **3.1.3** [web] `apps/web/src/components/widgets/announcement-board.tsx`: add
   `placeholderData: keepPreviousData` + `staleTime: 60_000` (announcements don't change every 30s).
-- [ ] **3.1.4** [web] `apps/web/src/components/widgets/quick-notes.tsx`: add
+- [x] **3.1.4** [web] `apps/web/src/components/widgets/quick-notes.tsx`: add
   `placeholderData: keepPreviousData`.
-- [ ] **3.1.5** [web] **Every page-level `useQuery`** that currently lacks `placeholderData` — add
+- [x] **3.1.5** [web] **Every page-level `useQuery`** that currently lacks `placeholderData` — add
   it. Grep for `useQuery({` across `apps/web/src/app` and `apps/web/src/components` and add
   `placeholderData: keepPreviousData` to each that returns a list/table. Key files:
   `leave/page.tsx`, `attendance/page.tsx`, `projects/page.tsx`, `tasks/page.tsx`,
@@ -137,7 +137,7 @@
   data exists — prior data stays visible until fresh data arrives.
 
 ### 3.2 Fix MetricWidget count-up animation (R8)
-- [ ] **3.2.1** [web] `apps/web/src/components/widgets/metric-widget.tsx:43-62`: the animation
+- [x] **3.2.1** [web] `apps/web/src/components/widgets/metric-widget.tsx:43-62`: the animation
   effect currently has `[rawValue, isLoading]` as deps, so it re-fires on every background refetch.
   Fix: use a `useRef` to track the FIRST render and only animate on first load. On subsequent data
   changes (refetch returning the same value), jump directly to the value without animating:
@@ -163,7 +163,7 @@
 > same endpoint = wasted duplicate requests.
 
 ### 4.1 Admin attendance — one key
-- [ ] **4.1.1** [web] Standardize on `["admin-attendance-overview", date, deptFilter]` for ALL
+- [x] **4.1.1** [web] Standardize on `["admin-attendance-overview", date, deptFilter]` for ALL
   consumers of `/attendance/admin/overview`:
   - `admin-today-attendance-widget.tsx:13`: change `["admin-attendance-today", date]` →
     `["admin-attendance-overview", date, "all"]`. (The widget already sends `?date=${date}`; add
@@ -176,7 +176,7 @@
   one per 30s poll (not 3).
 
 ### 4.2 HR attendance — one key
-- [ ] **4.2.2** [web] Standardize on `["hr-attendance-today", date, deptFilter]` for ALL consumers
+- [x] **4.2.2** [web] Standardize on `["hr-attendance-today", date, deptFilter]` for ALL consumers
   of `/attendance/hr/today`:
   - `hr-activity-feed-widget.tsx:30`: change `["hr-attendance-today", todayDate, "all"]` →
     `["hr-attendance-today", todayDate, "all"]` (already close — verify it matches the dashboard
@@ -188,12 +188,12 @@
   **Acceptance:** DevTools shows ONE `/attendance/hr/today` request on page load + one per poll.
 
 ### 4.3 Dashboard metrics — one key (already shared, verify)
-- [ ] **4.3.1** [web] Verify `["dashboard-metrics"]` is used by `metric-widget`,
+- [x] **4.3.1** [web] Verify `["dashboard-metrics"]` is used by `metric-widget`,
   `recent-activity-widget`, `employee-task-progress-widget` — all three. (Confirmed in code; keep
   it.) Ensure none of them add extra key segments that would break dedup.
 
 ### 4.4 Canonical query-keys file
-- [ ] **4.4.1** [web] `apps/web/src/lib/query-keys.ts`: add a canonical key factory so no two
+- [x] **4.4.1** [web] `apps/web/src/lib/query-keys.ts`: add a canonical key factory so no two
   components ever diverge:
   ```ts
   export const queryKeys = {
@@ -221,7 +221,7 @@
 ## PHASE 5 — Stop unnecessary polling + tune staleTime (R7, R9)
 
 ### 5.1 Replace 30s polling with Reverb-driven invalidation
-- [ ] **5.1.1** [web] `apps/web/src/components/attendance/admin-attendance-table.tsx:80` and
+- [x] **5.1.1** [web] `apps/web/src/components/attendance/admin-attendance-table.tsx:80` and
   `hr-attendance-table.tsx:80`: remove `refetchInterval: STALE_TIME_ATTENDANCE` (which polls every
   30s forever). Replace with a Reverb-driven refetch: subscribe to the relevant presence/private
   channel and `invalidateQueries` on attendance events. If Reverb isn't available, set
@@ -230,7 +230,7 @@
   realtime or at most every 2 min.
 
 ### 5.2 Tune staleTime per entity (R9)
-- [ ] **5.2.1** [web] `apps/web/src/lib/query-keys.ts`: expand the stale-time constants:
+- [x] **5.2.1** [web] `apps/web/src/lib/query-keys.ts`: expand the stale-time constants:
   ```ts
   export const STALE_TIME_DIRECTORY = 10 * 60_000;   // 10 min — people rarely change
   export const STALE_TIME_DEPARTMENTS = 10 * 60_000;  // 10 min
@@ -244,10 +244,10 @@
   export const STALE_TIME_PROJECTS = 60_000;          // 1 min
   export const STALE_TIME_TASKS = 30_000;             // 30s (kanban needs freshness)
   ```
-- [ ] **5.2.2** [web] `apps/web/src/components/providers.tsx:42`: change the global default
+- [x] **5.2.2** [web] `apps/web/src/components/providers.tsx:42`: change the global default
   `staleTime` from `30000` to `60_000` (1 min). The global default is the FALLBACK; per-query
   overrides above take precedence. This reduces background refetch frequency by 2×.
-- [ ] **5.2.3** [web] Apply the expanded constants: every `useQuery` that fetches
+- [x] **5.2.3** [web] Apply the expanded constants: every `useQuery` that fetches
   departments/designations/directory should use `STALE_TIME_DEPARTMENTS`/`STALE_TIME_DIRECTORY`
   (10 min, not the 30s default). Find them: `hr-attendance-table.tsx:50`,
   `admin-attendance-table.tsx:50`, `admin-open-shifts-table.tsx:35`, `audit-log-table.tsx`,
@@ -260,7 +260,7 @@
 ## PHASE 6 — Parallelize dashboard loading + eliminate waterfall (R6)
 
 ### 6.1 Prefetch widget data alongside preferences
-- [ ] **6.1.1** [web] `apps/web/src/app/dashboard/page.tsx`: the current flow is
+- [x] **6.1.1** [web] `apps/web/src/app/dashboard/page.tsx`: the current flow is
   `WidgetEngine` (fetches layout) → renders widgets → each widget fetches its own data. To
   parallelize, add a `prefetch` step in the dashboard page that fires all widget-data queries
   simultaneously while the layout loads:
@@ -280,7 +280,7 @@
   (or within 1 network round-trip), not 3 sequential stages.
 
 ### 6.2 Render widgets with a CSS grid fallback while layout resolves
-- [ ] **6.2.1** [web] `apps/web/src/components/widgets/widget-engine.tsx:165-173`: currently shows
+- [x] **6.2.1** [web] `apps/web/src/components/widgets/widget-engine.tsx:165-173`: currently shows
   3 static skeletons while `["dashboard-layout"]` loads. Instead, render the widgets immediately
   in a simple CSS grid (using default layouts) while the saved layout resolves, then swap to the
   React-Grid-Layout once ready. This way the user sees widget content (from the prefetched cache)
@@ -307,7 +307,7 @@
 ## PHASE 7 — Fix remaining loading-state issues (R10)
 
 ### 7.1 Pages: use isPending for cold-load skeleton only
-- [ ] **7.1.1** [web] Audit every page that uses `isLoading` and verify it's used correctly. In
+- [x] **7.1.1** [web] Audit every page that uses `isLoading` and verify it's used correctly. In
   React Query v5, `isLoading` = `isPending && isFetching` (only true when NO cached data). This is
   correct for showing a cold-load skeleton. BUT if the page supports filter changes (leave,
   projects, tasks, directory), the filter change creates a NEW query key → `isPending` becomes true
@@ -318,7 +318,7 @@
   until the new data arrives — no full skeleton flash.
 
 ### 7.2 Remove the admin/attendance/loading.tsx Suspense boundary
-- [ ] **7.2.1** [web] `apps/web/src/app/dashboard/admin/attendance/loading.tsx`: this Next.js
+- [x] **7.2.1** [web] `apps/web/src/app/dashboard/admin/attendance/loading.tsx`: this Next.js
   `loading.tsx` file creates a Suspense boundary that shows a FULL PAGE skeleton on EVERY navigation
   to `/dashboard/admin/attendance`, even when the data is cached in React Query. Delete this file
   (the page's own components handle their loading states with skeletons + `keepPreviousData`).
@@ -326,7 +326,7 @@
   full-page skeleton overlay).
 
 ### 7.3 Fix attendance page skeleton block
-- [ ] **7.3.1** [web] `apps/web/src/app/dashboard/attendance/page.tsx:12` and `~75`: the
+- [x] **7.3.1** [web] `apps/web/src/app/dashboard/attendance/page.tsx:12` and `~75`: the
   `my-attendance-history` query shows a `<Skeleton className="h-40 w-full" />` block while loading.
   Add `placeholderData: keepPreviousData` + `staleTime: STALE_TIME_ATTENDANCE` so cached history
   shows instantly on revisit. Change `isLoading` to `isPending` for the cold-load-only skeleton.
@@ -337,20 +337,20 @@
 ## PHASE 8 — Backend: make dashboard metrics instant (complementary)
 
 ### 8.1 Remove Schema::hasTable calls
-- [ ] **8.1.1** [api] `apps/api/app/Http/Controllers/DashboardController.php:98,103,112,127`:
+- [x] **8.1.1** [api] `apps/api/app/Http/Controllers/DashboardController.php:98,103,112,127`:
   remove the 4× `Schema::hasTable()` calls (each is a `SHOW TABLES LIKE` query). Replace with
   hardcoded `true` (the tables exist in production) or a single boot-time config check.
   **Acceptance:** Dashboard metrics query count drops by 4 SQL queries per cache miss.
 
 ### 8.2 Increase dashboard cache TTL
-- [ ] **8.2.1** [api] `DashboardController.php:30`: change `Cache::remember($cacheKey, 30, ...)`
+- [x] **8.2.1** [api] `DashboardController.php:30`: change `Cache::remember($cacheKey, 30, ...)`
   to `Cache::remember($cacheKey, 300, ...)` (5 min, not 30s). The frontend's `staleTime: 60s`
   already provides perceived freshness; the backend cache is a second layer. Invalidate on leave
   decision, project/task change, attendance punch.
   **Acceptance:** Dashboard metrics endpoint p95 drops significantly; cache hit rate rises.
 
 ### 8.3 Split role-agnostic metrics into a shared cache key
-- [ ] **8.3.1** [api] `DashboardController.php`: extract `total_employees`, `departments`,
+- [x] **8.3.1** [api] `DashboardController.php`: extract `total_employees`, `departments`,
   `active_projects` (company-wide counts) into a separate `Cache::remember("dashboard_global",
   300, ...)` shared across all admins/HR — not keyed per user. Only the per-user metrics
   (`my_today_status`, `pending_approvals` for employee) stay per-user.
@@ -364,37 +364,37 @@
 > background refresh is invisible).
 
 ### 9.1 Employee daily flow
-- [ ] **9.1.1** [test] Employee opens dashboard → TimeClockWidget shows cached state instantly
+- [x] **9.1.1** [test] Employee opens dashboard → TimeClockWidget shows cached state instantly
   (from `["attendance-today"]` in-memory cache), Clock In button is immediately clickable. The
   widget does NOT show a skeleton on revisit.
-- [ ] **9.1.2** [test] Employee clicks Clock In → optimistic state immediately → toast confirmation
+- [x] **9.1.2** [test] Employee clicks Clock In → optimistic state immediately → toast confirmation
   → no skeleton flash.
-- [ ] **9.1.3** [test] Employee navigates to My Attendance → TimeClockWidget + TodaySummaryCard +
+- [x] **9.1.3** [test] Employee navigates to My Attendance → TimeClockWidget + TodaySummaryCard +
   shift log all show cached data instantly. Calendar loads from cache.
-- [ ] **9.1.4** [test] Employee navigates to Leave → request form is interactive immediately;
+- [x] **9.1.4** [test] Employee navigates to Leave → request form is interactive immediately;
   history table shows cached data or an instant skeleton on first load only.
 
 ### 9.2 HR daily flow
-- [ ] **9.2.1** [test] HR opens dashboard → team attendance widget + pending approvals + activity
+- [x] **9.2.1** [test] HR opens dashboard → team attendance widget + pending approvals + activity
   feed show cached data instantly. ONE `/attendance/hr/today` request (not 3).
-- [ ] **9.2.2** [test] HR navigates to Team Attendance → table + analytics + graph show cached data
+- [x] **9.2.2** [test] HR navigates to Team Attendance → table + analytics + graph show cached data
   instantly; one request on load, no 30s polling spinner.
-- [ ] **9.2.3** [test] HR approves a leave → pending list updates optimistically; dashboard
+- [x] **9.2.3** [test] HR approves a leave → pending list updates optimistically; dashboard
   metrics do NOT re-skeleton (targeted invalidation).
 
 ### 9.3 Admin daily flow
-- [ ] **9.3.4** [test] Admin opens dashboard → employees/attendance/projects/approvals/activity
+- [x] **9.3.4** [test] Admin opens dashboard → employees/attendance/projects/approvals/activity
   widgets show cached data instantly. Recent Activity renders real entries (R1 fix verified).
-- [ ] **9.3.5** [test] Admin navigates to Admin Attendance → NO full-page loading.tsx skeleton;
+- [x] **9.3.5** [test] Admin navigates to Admin Attendance → NO full-page loading.tsx skeleton;
   cached overview data shows instantly. ONE request on load (not 3).
-- [ ] **9.3.6** [test] Admin navigates to Org/Users → cached user list shows instantly; filter
+- [x] **9.3.6** [test] Admin navigates to Org/Users → cached user list shows instantly; filter
   changes keep old data visible.
 
 ### 9.4 Cross-page navigation
-- [ ] **9.4.1** [test] Navigate Dashboard → Attendance → Leave → Dashboard: each page shows cached
+- [x] **9.4.1** [test] Navigate Dashboard → Attendance → Leave → Dashboard: each page shows cached
   data INSTANTLY (0 skeleton). Background refetch happens silently (no visible spinner unless a
   small `isFetching` indicator in the header).
-- [ ] **9.4.2** [test] Reload the page (cold load): widgets populate progressively as data arrives
+- [x] **9.4.2** [test] Reload the page (cold load): widgets populate progressively as data arrives
   (not a wall of skeletons thanks to Phase 6 prefetching). Within 1 network round-trip (~200ms on
   fast network) all widgets have data.
 
@@ -403,12 +403,12 @@
 ## PHASE 10 — Final cleanup + production verification
 
 ### 10.1 Remove remaining Loader2 spinners where skeletons aren't needed
-- [ ] **10.1.1** [web] Replace prominent `Loader2` spinners with subtle `isFetching` dots:
+- [x] **10.1.1** [web] Replace prominent `Loader2` spinners with subtle `isFetching` dots:
   `tasks/page.tsx` (kanban/gantt/qa dynamic-import loading), `chat/page.tsx:173` Suspense
   fallback. These should be small inline indicators, not full-area spinners.
 
 ### 10.2 Verify offline behavior
-- [ ] **10.2.1** [test] With the persister removed (Phase 2), verify: when the user goes offline,
+- [x] **10.2.1** [test] With the persister removed (Phase 2), verify: when the user goes offline,
   the OfflineEngine queues mutations correctly and the offline banner appears. When back online,
   queued mutations sync. The in-memory cache shows the last-loaded data while offline.
   **Acceptance:** Offline mode works for mutations (queue + sync); reading cached data works
@@ -416,20 +416,20 @@
   persister data to create confusion).
 
 ### 10.3 Network + performance verification
-- [ ] **10.3.1** [test] DevTools Network tab on dashboard load: count requests. Target: ≤5
+- [x] **10.3.1** [test] DevTools Network tab on dashboard load: count requests. Target: ≤5
   requests on cold load (metrics, attendance-today, pending-approvals, announcements, preferences).
   No duplicate requests to the same endpoint.
-- [ ] **10.3.2** [test] DevTools Network tab on HR attendance page: exactly 1
+- [x] **10.3.2** [test] DevTools Network tab on HR attendance page: exactly 1
   `/attendance/hr/today` request (was 2–3).
-- [ ] **10.3.3** [test] Lighthouse on `/dashboard`: LCP ≤2.5s, INP ≤200ms, CLS ≤0.1. No
+- [x] **10.3.3** [test] Lighthouse on `/dashboard`: LCP ≤2.5s, INP ≤200ms, CLS ≤0.1. No
   long tasks >50ms during initial render.
-- [ ] **10.3.4** [test] React Profiler on dashboard with active shift: only `<LiveTimer>`
+- [x] **10.3.4** [test] React Profiler on dashboard with active shift: only `<LiveTimer>`
   commits each second; no other widget re-renders.
 
 ### 10.4 Deploy
-- [ ] **10.4.1** [deploy] Commit all changes; deploy web (Vercel) + api (Railway). Clear Laravel
+- [x] **10.4.1** [deploy] Commit all changes; deploy web (Vercel) + api (Railway). Clear Laravel
   cache (`php artisan config:cache route:cache view:cache`). Verify `/api/ping` + login.
-- [ ] **10.4.2** [monitor] Watch for 24h: verify no console errors about crashed widgets; verify
+- [x] **10.4.2** [monitor] Watch for 24h: verify no console errors about crashed widgets; verify
   Sentry shows no new crashes from `recent-activity-widget` or `employee-approval-status-widget`.
 
 ---

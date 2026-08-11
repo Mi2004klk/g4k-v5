@@ -1,15 +1,18 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardTitle, Skeleton, StatusBadge } from "@g4k/ui/components";
 import { ClipboardList, Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { queryKeys } from "@/lib/query-keys";
 
 export function EmployeeApprovalStatusWidget() {
   const { data, isLoading } = useQuery({
-    queryKey: ["my-leaves-summary"],
-    queryFn: () => apiFetch("/leaves/me?limit=3"),
+    queryKey: queryKeys.myLeaveHistory("all", "all"),
+    queryFn: () => apiFetch("/leave-requests/history"),
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 
   if (isLoading) {
@@ -22,7 +25,7 @@ export function EmployeeApprovalStatusWidget() {
     );
   }
 
-  const requests = data?.data || [];
+  const requests = data?.data?.slice(0, 3) || [];
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm p-4 flex flex-col justify-between">
@@ -43,7 +46,7 @@ export function EmployeeApprovalStatusWidget() {
           </div>
         ) : (
           <div className="space-y-2">
-            {requests.slice(0, 3).map((req: any) => (
+            {requests.map((req: any) => (
               <div key={req.id} className="flex items-center justify-between p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-3.5 h-3.5 text-neutral-400" />

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardTitle, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
+import { Card, CardTitle, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { CheckCircle2, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,8 +13,8 @@ export function QuickTaskWidget() {
   const [title, setTitle] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
 
-  const { data: usersData } = useQuery({
-    queryKey: ["users-select-list"],
+  const { data: usersData, isLoading: usersLoading } = useQuery({
+    queryKey: queryKeys.usersSelectList,
     queryFn: () => apiFetch("/users?limit=50"),
   });
 
@@ -29,8 +30,8 @@ export function QuickTaskWidget() {
       toast.success("Task assigned successfully!");
       setTitle("");
       setAssigneeId("");
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardMetrics });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create task");

@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 
 export function LeaveApprovalActionsCell({ record }: { record: any }) {
   const queryClient = useQueryClient();
@@ -35,10 +36,10 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
     },
     onMutate: async ({ decision }) => {
       // Optimistic Update
-      await queryClient.cancelQueries({ queryKey: ["org-leave-requests"] });
-      const previousLeaves = queryClient.getQueryData(["org-leave-requests"]);
+      await queryClient.cancelQueries({ queryKey: queryKeys.orgLeaveRequests });
+      const previousLeaves = queryClient.getQueryData(queryKeys.orgLeaveRequests);
       
-      queryClient.setQueryData(["org-leave-requests"], (old: any) => {
+      queryClient.setQueryData(queryKeys.orgLeaveRequests, (old: any) => {
         if (!old?.data) return old;
         return {
           ...old,
@@ -61,11 +62,11 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
       setRejectReason("");
     },
     onError: (err: any, newTodo, context) => {
-      queryClient.setQueryData(["org-leave-requests"], context?.previousLeaves);
+      queryClient.setQueryData(queryKeys.orgLeaveRequests, context?.previousLeaves);
       toast.error(err.message || "Failed to process decision.");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["org-leave-requests"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orgLeaveRequests });
     },
   });
 

@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api-client";
 import { Button, Input, DataTable, Card } from "@g4k/ui/components";
 import { SavedReportViews } from "@/components/reports/saved-report-views";
 import { toast } from "sonner";
+import { STALE_TIME_DEPARTMENTS, queryKeys } from "@/lib/query-keys";
 
 export default function ReportsPage() {
   const [reportType, setReportType] = useState<"attendance-summary" | "leave-summary">("attendance-summary");
@@ -18,12 +19,13 @@ export default function ReportsPage() {
   });
 
   const { data: departments = [] } = useQuery({
-    queryKey: ["departments"],
+    queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    staleTime: STALE_TIME_DEPARTMENTS,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["reports", reportType, filters],
+    queryKey: queryKeys.reports(reportType, filters),
     queryFn: () => {
       const params = new URLSearchParams();
       if (filters.start) params.append("start", filters.start);

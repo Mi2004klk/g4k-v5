@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, DataTable, FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 
 export function ReportBuilder() {
   const queryClient = useQueryClient();
@@ -14,7 +15,7 @@ export function ReportBuilder() {
   const [search, setSearch] = useState("");
 
   const { data: reportData, isLoading, refetch } = useQuery({
-    queryKey: ["report-data", reportKey],
+    queryKey: queryKeys.reportData(reportKey),
     queryFn: () => apiFetch(`/reports/data?key=${reportKey}`),
   });
 
@@ -27,7 +28,7 @@ export function ReportBuilder() {
     },
     onSuccess: (data: any) => {
       toast.success(`Export job started (${data.format.toUpperCase()}). You will be notified when ready.`);
-      queryClient.invalidateQueries({ queryKey: ["export-history"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to initiate export.");

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -43,12 +44,12 @@ export function SettingsTabs() {
   const [logoUploadOpen, setLogoUploadOpen] = useState(false);
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
-    queryKey: ["company-profile"],
+    queryKey: queryKeys.companyProfile,
     queryFn: () => apiFetch("/company-profile"),
   });
 
   const { data: schedules = [], isLoading: isSchedulesLoading } = useQuery({
-    queryKey: ["work-schedules"],
+    queryKey: queryKeys.workSchedules,
     queryFn: () => apiFetch("/work-schedules"),
   });
 
@@ -105,7 +106,7 @@ export function SettingsTabs() {
       apiFetch("/company-profile", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
       toast.success("Company profile updated");
-      queryClient.invalidateQueries({ queryKey: ["company-profile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companyProfile });
     },
   });
 
@@ -126,7 +127,7 @@ export function SettingsTabs() {
     },
     onSuccess: () => {
       toast.success("Logo uploaded successfully");
-      queryClient.invalidateQueries({ queryKey: ["company-profile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companyProfile });
       setLogoUploadOpen(false);
     },
     onError: () => {
@@ -139,7 +140,7 @@ export function SettingsTabs() {
       apiFetch(`/work-schedules/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     onSuccess: () => {
       toast.success("Work schedule updated");
-      queryClient.invalidateQueries({ queryKey: ["work-schedules"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.workSchedules });
     },
   });
 

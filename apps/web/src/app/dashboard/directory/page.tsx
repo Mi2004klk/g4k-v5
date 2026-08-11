@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Grid,
@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
 
 import { Button } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
@@ -58,17 +59,19 @@ export default function DirectoryPage() {
   );
 
   const { data: deptsData } = useQuery({
-    queryKey: ["departments-list"],
+    queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments?limit=100"),
+    staleTime: STALE_TIME_DEPARTMENTS,
   });
 
   const { data: desigsData } = useQuery({
-    queryKey: ["designations-list"],
+    queryKey: queryKeys.designations,
     queryFn: () => apiFetch("/designations?limit=100"),
+    staleTime: STALE_TIME_DESIGNATIONS,
   });
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } = useInfiniteQuery({
-    queryKey: ["directory-users", debouncedSearch, deptFilter, desigFilter, visFilter],
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, refetch } = useInfiniteQuery({
+    queryKey: queryKeys.directory(debouncedSearch, deptFilter, desigFilter, visFilter),
     queryFn: ({ pageParam = 1 }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
@@ -85,6 +88,8 @@ export default function DirectoryPage() {
       return undefined;
     },
     initialPageParam: 1,
+    placeholderData: keepPreviousData,
+    staleTime: STALE_TIME_DIRECTORY,
   });
 
   const sendMessageMutation = useMutation({
@@ -226,7 +231,7 @@ export default function DirectoryPage() {
       </Card>
 
       {/* Grid or List View */}
-      {isLoading ? (
+      {isPending ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <Skeleton className="h-48 w-full" />
           <Skeleton className="h-48 w-full" />

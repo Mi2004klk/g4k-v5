@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { offlineEngine } from "@/lib/offline-engine";
 import {
@@ -43,7 +44,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const endBreak = useTimerStore((s) => s.endBreak);
 
   const { data: todayData, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: ["attendance-today"],
+    queryKey: queryKeys.attendanceToday,
     queryFn: () => apiFetch("/attendance/me/today"),
     placeholderData: keepPreviousData,
   });
@@ -59,7 +60,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   useEffect(() => {
     const handleSyncFail = () => {
-      queryClient.invalidateQueries({ queryKey: ["attendance-today"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
     };
     window.addEventListener("attendance-sync-failed", handleSyncFail);
     return () => window.removeEventListener("attendance-sync-failed", handleSyncFail);
@@ -101,13 +102,13 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
       // Re-fetch to ensure exact server state once online
       if (navigator.onLine) {
-        queryClient.invalidateQueries({ queryKey: ["attendance-today"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
       }
       toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
     } catch (err: any) {
       // Revert optimistic state on fatal error
       toast.error(err.message || "Failed to record punch. Syncing with server...");
-      queryClient.invalidateQueries({ queryKey: ["attendance-today"] }); // Re-sync store state
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday }); // Re-sync store state
     }
   };
 

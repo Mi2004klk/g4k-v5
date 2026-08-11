@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
 import dynamic from "next/dynamic";
@@ -18,14 +19,15 @@ export default function LeavePage() {
   const [typeFilter, setTypeFilter] = useUrlState("type", "all");
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["my-leave-history", typeFilter, statusFilter],
+  const { data, isPending } = useQuery({
+    queryKey: queryKeys.myLeaveHistory(typeFilter, statusFilter),
     queryFn: () => {
       const params = new URLSearchParams();
       if (typeFilter !== "all") params.append("type", typeFilter);
       if (statusFilter !== "all") params.append("status", statusFilter);
       return apiFetch(`/leave-requests/history?${params.toString()}`);
     },
+    placeholderData: keepPreviousData,
   });
 
   const records = data?.data || [];
@@ -58,7 +60,7 @@ export default function LeavePage() {
                   <CardContent className="p-0 flex-1">
                     <LeaveHistoryTable 
                       records={records} 
-                      isLoading={isLoading} 
+                      isLoading={isPending} 
                       typeFilter={typeFilter}
                       setTypeFilter={setTypeFilter}
                       statusFilter={statusFilter}

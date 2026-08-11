@@ -7,6 +7,8 @@ import { apiFetch } from "@/lib/api-client";
 import { Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useIsMobile } from "@g4k/ui/hooks";
+import { formatDistanceToNow } from "date-fns";
+import { queryKeys } from "@/lib/query-keys";
 
 interface SavedReportViewsProps {
   module: string;
@@ -22,7 +24,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
   const isMobile = useIsMobile();
 
   const { data: views = [], isLoading } = useQuery({
-    queryKey: ["saved-views", module],
+    queryKey: queryKeys.savedViews(module),
     queryFn: () => apiFetch(`/saved-views?module=${module}`).then(res => res.data || []),
   });
 
@@ -32,7 +34,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
       body: JSON.stringify({ module, name, filters: currentFilters })
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["saved-views", module] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
       toast.success("View saved successfully");
       setSaveName("");
       setIsSaving(false);
@@ -42,7 +44,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/saved-views/${id}`, { method: "DELETE" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["saved-views", module] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
       toast.success("View deleted");
     }
   });

@@ -10,6 +10,7 @@ import { apiFetch } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { Button, Input, Textarea } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -22,7 +23,7 @@ export default function ProjectDetailPage() {
   const [editForm, setEditForm] = useState({ name: "", description: "", priority: "" });
 
   const { data: projectResponse, isLoading } = useQuery({
-    queryKey: ["project", projectId],
+    queryKey: queryKeys.project(projectId),
     queryFn: () => apiFetch(`/projects/${projectId}`),
   });
 
@@ -35,7 +36,7 @@ export default function ProjectDetailPage() {
     },
     onSuccess: () => {
       toast.success("Project submitted for review.");
-      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
       setSubmissionNote("");
     },
     onError: (err: any) => {
@@ -53,8 +54,8 @@ export default function ProjectDetailPage() {
     onSuccess: () => {
       toast.success("Project updated successfully.");
       setIsEditOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to update project.");
@@ -70,7 +71,7 @@ export default function ProjectDetailPage() {
     },
     onSuccess: (_, status) => {
       toast.success(`Project marked as ${status}.`);
-      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
     },
     onError: (err: any) => {
       toast.error(err.message || "Review failed.");

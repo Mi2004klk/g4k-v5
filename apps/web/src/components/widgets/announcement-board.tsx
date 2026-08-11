@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Loader2, Megaphone, Trash2, Pin, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
+import { queryKeys } from "@/lib/query-keys";
 
 export function AnnouncementBoard() {
   const queryClient = useQueryClient();
@@ -15,8 +16,9 @@ export function AnnouncementBoard() {
   const isAdminOrHr = user?.active_role === "super_admin" || user?.active_role === "hr";
 
   const { data: announcements = [], isLoading, isFetching, isError, refetch } = useQuery({
-    queryKey: ["announcements"],
+    queryKey: queryKeys.announcements,
     queryFn: () => apiFetch("/announcements"),
+    staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
 
@@ -25,7 +27,7 @@ export function AnnouncementBoard() {
     if (typeof window !== "undefined" && (window as any).Echo) {
       const channel = (window as any).Echo.channel("public-announcements");
       channel.listen(".AnnouncementPosted", () => {
-        queryClient.invalidateQueries({ queryKey: ["announcements"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
       });
       return () => {
         channel.stopListening(".AnnouncementPosted");
@@ -41,7 +43,7 @@ export function AnnouncementBoard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
     },
   });
 
@@ -53,7 +55,7 @@ export function AnnouncementBoard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
     },
   });
 
@@ -62,7 +64,7 @@ export function AnnouncementBoard() {
       return apiFetch(`/announcements/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
       toast.success("Announcement deleted");
     },
   });

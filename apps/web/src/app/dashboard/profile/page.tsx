@@ -36,6 +36,8 @@ import {
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
+import { CheckCircle2, Shield, EyeOff, LayoutDashboard, Settings } from "lucide-react";
+import { queryKeys } from "@/lib/query-keys";
 import { DataTable } from "@g4k/ui/components";
 
 export default function ProfilePage() {
@@ -69,7 +71,7 @@ export default function ProfilePage() {
   }, [authUser?.preferences?.directory_visibility]);
 
   const { data: profile, isLoading } = useQuery({
-    queryKey: ["profile"],
+    queryKey: queryKeys.profile,
     queryFn: async () => {
       const data = await apiFetch("/profile");
       setName(data.name || "");
@@ -79,12 +81,12 @@ export default function ProfilePage() {
   });
 
   const { data: sessions } = useQuery({
-    queryKey: ["sessions"],
+    queryKey: queryKeys.sessions,
     queryFn: async () => apiFetch("/auth/sessions"),
   });
 
   const { data: companyProfile, isLoading: isCompanyLoading } = useQuery({
-    queryKey: ["company-profile"],
+    queryKey: queryKeys.companyProfile,
     queryFn: () => apiFetch("/company-profile"),
   });
 
@@ -100,7 +102,7 @@ export default function ProfilePage() {
       if (authUser) {
         setAuth(useAuthStore.getState().token!, res, authUser.active_role);
       }
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to update profile.");
@@ -144,7 +146,7 @@ export default function ProfilePage() {
       toast.success("Avatar updated!");
       setIsAvatarOpen(false);
       setAvatarFile(null);
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to upload avatar.");
@@ -186,7 +188,7 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       toast.success("Session revoked!");
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
       setIsRevokeOpen(false);
       setRevokeId(null);
     },

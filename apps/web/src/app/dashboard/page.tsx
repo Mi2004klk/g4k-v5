@@ -4,6 +4,10 @@ import { useAuthStore } from "@/lib/auth-store";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { apiFetch } from "@/lib/api-client";
+import { format } from "date-fns";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { toast } from "sonner";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
@@ -40,6 +44,25 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const activeRole = user?.active_role || "employee";
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Prefetch all widget data in parallel
+    const today = format(new Date(), "yyyy-MM-dd");
+    
+    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardMetrics, queryFn: () => apiFetch("/dashboard/metrics") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.attendanceToday, queryFn: () => apiFetch("/attendance/me/today") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.pendingApprovals, queryFn: () => apiFetch("/approvals/pending") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.announcements, queryFn: () => apiFetch("/announcements") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.quickNotes, queryFn: () => apiFetch("/quick-notes") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.tasks, queryFn: () => apiFetch("/tasks") });
+
+    if (activeRole === "super_admin") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.adminAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/admin/overview?date=${today}`) });
+    } else if (activeRole === "hr") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.hrAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/hr/today?date=${today}`) });
+    }
+  }, [activeRole, queryClient]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

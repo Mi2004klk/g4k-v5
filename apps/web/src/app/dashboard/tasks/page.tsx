@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Plus, Kanban, Calendar, CheckSquare, Loader2, List as ListIcon, Trash2, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import dynamic from "next/dynamic";
-const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div> });
-const GanttView = dynamic(() => import("@/components/projects/gantt-view").then(mod => mod.GanttView), { ssr: false, loading: () => <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div> });
-const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div> });
+const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
+const GanttView = dynamic(() => import("@/components/projects/gantt-view").then(mod => mod.GanttView), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
+const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
 import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
@@ -33,8 +34,10 @@ export default function TasksPage() {
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tasks"],
+    queryKey: queryKeys.tasks,
     queryFn: () => apiFetch("/tasks"),
+    placeholderData: keepPreviousData,
+    staleTime: STALE_TIME_TASKS,
   });
 
   const moveTaskMutation = useMutation({
@@ -45,10 +48,10 @@ export default function TasksPage() {
       });
     },
     onMutate: async ({ taskId, status }) => {
-      await queryClient.cancelQueries({ queryKey: ["tasks"] });
-      const previous = queryClient.getQueryData(["tasks"]);
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks });
+      const previous = queryClient.getQueryData(queryKeys.tasks);
       
-      queryClient.setQueryData(["tasks"], (old: any) => {
+      queryClient.setQueryData(queryKeys.tasks, (old: any) => {
         if (!old?.data) return old;
         return {
           ...old,
@@ -60,10 +63,10 @@ export default function TasksPage() {
     },
     onError: (err: any, vars, context: any) => {
       toast.error(err.message || "Failed to move task.");
-      queryClient.setQueryData(["tasks"], context.previous);
+      queryClient.setQueryData(queryKeys.tasks, context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks, exact: true });
     },
   });
 
@@ -73,7 +76,7 @@ export default function TasksPage() {
     },
     onSuccess: () => {
       toast.success("Task deleted successfully.");
-      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks, exact: true });
     }
   });
 
@@ -84,7 +87,7 @@ export default function TasksPage() {
     onSuccess: () => {
       toast.success("Tasks deleted successfully.");
       setRowSelection({});
-      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks, exact: true });
     }
   });
 
@@ -95,7 +98,7 @@ export default function TasksPage() {
     onSuccess: () => {
       toast.success("Tasks status updated.");
       setRowSelection({});
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
     }
   });
 
@@ -125,7 +128,7 @@ export default function TasksPage() {
       setDescription("");
       setDueDate("");
       toast.success("Task created successfully.");
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
     },
   });
 
