@@ -46,6 +46,21 @@ class AttendanceController extends Controller
         ]);
 
         $user = $request->user();
+        
+        if (!empty($validated['timestamp'])) {
+            $parsedTs = Carbon::parse($validated['timestamp']);
+            if ($parsedTs->gt(now()->addMinutes(5))) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'timestamp' => ['Timestamp cannot be more than 5 minutes in the future.']
+                ]);
+            }
+            if ($parsedTs->lt(now()->subHours(48))) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'timestamp' => ['Timestamp cannot be more than 48 hours in the past.']
+                ]);
+            }
+        }
+
         $timestamp = $validated['timestamp'] ?? now()->toIso8601String();
 
         $dayRecord = AttendanceService::recordEvent(

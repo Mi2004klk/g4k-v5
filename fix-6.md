@@ -1031,89 +1031,89 @@ The application is production-ready for daily use when ALL of the following are 
 
 ## PHASE 21 — Auth Module: Security & Correctness Fixes
 
-### AUTH-1: Refresh loses user's selected role (CRITICAL)
+### ✅ AUTH-1: Refresh loses user's selected role (CRITICAL)
 **What's broken:** `AuthController::refresh()` (line 217) recomputes `$primaryRole =
 $rolesCollection->first()` — ignoring the role the user selected via `roleSelect()`. On the next
 silent refresh (which happens automatically in `auth-guard.tsx`, `change-password/page.tsx`,
 `role-select/page.tsx`, `onboarding/page.tsx`), a dual-role user's active role silently reverts to
 whatever `RoleAssignment` comes first in the DB.
 **Fix:**
-- [ ] Store the user's active/selected role on the `users` table (e.g., `active_role` column) in
+- [x] Store the user's active/selected role on the `users` table (e.g., `active_role` column) in
   `roleSelect()`. Then `refresh()` reads `$user->active_role` instead of `$rolesCollection->first()`.
-- [ ] Alternatively: store the role on the refresh token's abilities (not just `['refresh']` but
+- [x] Alternatively: store the role on the refresh token's abilities (not just `['refresh']` but
   `['refresh', 'role:hr']`) so refresh can mint the new access token with the correct role.
 **Acceptance:** A dual-role user who selects "hr" stays as "hr" after silent refresh.
 
-### AUTH-2: Password change/reset doesn't revoke existing sessions (CRITICAL)
+### ✅ AUTH-2: Password change/reset doesn't revoke existing sessions (CRITICAL)
 **What's broken:** `changePassword()` and `resetPassword()` update the password but do NOT revoke the
 user's existing access/refresh tokens. An attacker who still holds a session keeps access. The
 frontend even calls `/auth/refresh` immediately after password change — handing the OLD refresh cookie
 a fresh token pair.
 **Fix:**
-- [ ] `AuthController::changePassword`: after updating the password, call `$user->tokens()->delete()`
+- [x] `AuthController::changePassword`: after updating the password, call `$user->tokens()->delete()`
   to revoke ALL sessions (force re-login everywhere). Return a NEW token pair in the response so the
   current session continues seamlessly.
-- [ ] `AuthController::resetPassword`: same — revoke all tokens for the reset user.
-- [ ] Frontend `change-password/page.tsx`: instead of calling `/auth/refresh`, use the new token
+- [x] `AuthController::resetPassword`: same — revoke all tokens for the reset user.
+- [x] Frontend `change-password/page.tsx`: instead of calling `/auth/refresh`, use the new token
   returned from the change-password response.
 **Acceptance:** Changing/resetting a password kicks out all other sessions.
 
-### AUTH-3: Login doesn't check user status (HIGH)
+### ✅ AUTH-3: Login doesn't check user status (HIGH)
 **What's broken:** `AuthController::login` (line 82): `User::where('email',$id)->orWhere(...)`
 does NOT filter by `status='active'`. Inactive/suspended users can still authenticate.
 **Fix:**
-- [ ] Add `->where('status', 'active')` to the user lookup. Return the same error as invalid
+- [x] Add `->where('status', 'active')` to the user lookup. Return the same error as invalid
   credentials (don't reveal whether the account is suspended vs. doesn't exist).
 **Acceptance:** Suspended/inactive users cannot log in.
 
-### AUTH-4: Hardcoded default password + response leak (CRITICAL)
+### ✅ AUTH-4: Hardcoded default password + response leak (CRITICAL)
 **What's broken:** `UserController::store` (line 136) and `resetPassword` (line 322) hardcode
 `'Password123!'` as the default password. `resetPassword` returns it in the JSON response
 (`"Password reset to default (Password123!)"`), exposing the password to anyone with `users.hr.manage`.
 **Fix:**
-- [ ] Generate a random temporary password (`Str::random(16)`) instead of hardcoding.
-- [ ] Do NOT return the password in the response. Instead, force `must_change_password = true` and
+- [x] Generate a random temporary password (`Str::random(16)`) instead of hardcoding.
+- [x] Do NOT return the password in the response. Instead, force `must_change_password = true` and
   communicate the temp password through a secure channel (email the user directly, or display it
   ONCE in a dialog that the Admin copies — not in the API response payload).
-- [ ] Revoke all existing tokens for the user after a reset (AUTH-2).
+- [x] Revoke all existing tokens for the user after a reset (AUTH-2).
 **Acceptance:** No hardcoded default password. Reset passwords are random. Password is not leaked
 in API responses.
 
-### AUTH-5: ForcePasswordChange middleware off by default (HIGH)
+### ✅ AUTH-5: ForcePasswordChange middleware off by default (HIGH)
 **What's broken:** `ForcePasswordChange.php` reads the `security.force_password_change` setting
 (default: off). With it off, a user with `must_change_password=true` can call any API endpoint with
 a bearer token — server-side enforcement is opt-in. Only the frontend AuthGuard redirects.
 **Fix:**
-- [ ] Either enable `force_password_change` in the seeder (so the seed default is ON), OR change the
+- [x] Either enable `force_password_change` in the seeder (so the seed default is ON), OR change the
   middleware to default-on (ignore the setting and always enforce when `must_change_password=true`).
-- [ ] Document the decision.
+- [x] Document the decision.
 **Acceptance:** A user with `must_change_password=true` cannot call non-auth API endpoints server-side.
 
-### AUTH-6: Toast library mismatch — offline toasts invisible (HIGH)
+### ✅ AUTH-6: Toast library mismatch — offline toasts invisible (HIGH)
 **What's broken:** `api-client.ts:3` and `offline-engine.ts:3` import `toast` from `react-hot-toast`,
 but the app only mounts the Sonner `<Toaster>` (`providers.tsx:62`). Offline-queue toasts ("You are
 offline. Action queued.") are **invisible** — they fire but no renderer exists.
 **Fix:**
-- [ ] `api-client.ts` and `offline-engine.ts`: replace `import toast from "react-hot-toast"` with
+- [x] `api-client.ts` and `offline-engine.ts`: replace `import toast from "react-hot-toast"` with
   `import { toast } from "sonner"`. Update all calls (sonner's `toast.success(msg)` API is compatible).
-- [ ] Remove `react-hot-toast` from `package.json` if no other file uses it.
+- [x] Remove `react-hot-toast` from `package.json` if no other file uses it.
 **Acceptance:** Offline/network-error toasts are visible to the user.
 
-### AUTH-7: Attendance punch timestamp has no future-bound validation (HIGH)
+### ✅ AUTH-7: Attendance punch timestamp has no future-bound validation (HIGH)
 **What's broken:** `AttendanceController::handlePunch` accepts `timestamp` as `nullable|date` with
 no upper bound — unlike `sync()` (line 96) which rejects timestamps >5 min in the future. An employee
 can back-date a clock-in or submit a future timestamp to appear on-time.
 **Fix:**
-- [ ] `handlePunch`: add a check — if `$timestamp && Carbon::parse($timestamp)->gt(now()->addMinutes(5))`,
+- [x] `handlePunch`: add a check — if `$timestamp && Carbon::parse($timestamp)->gt(now()->addMinutes(5))`,
   throw a `ValidationException("Timestamp too far in the future")`.
-- [ ] Also consider a lower bound (don't allow timestamps >48h in the past, except via manual correction).
+- [x] Also consider a lower bound (don't allow timestamps >48h in the past, except via manual correction).
 **Acceptance:** Punch timestamps cannot be more than 5 minutes in the future.
 
-### AUTH-8: Refresh endpoint not behind ForcePasswordChange/ForceOnboarding (MEDIUM)
+### ✅ AUTH-8: Refresh endpoint not behind ForcePasswordChange/ForceOnboarding (MEDIUM)
 **What's broken:** `GET /auth/refresh` is public (not inside the middleware group). A user who needs
 to change password or complete onboarding can still refresh their token, bypassing the gate.
 **Fix:**
-- [ ] Move `/auth/refresh` inside the authenticated group (it already requires the cookie), OR
+- [x] Move `/auth/refresh` inside the authenticated group (it already requires the cookie), OR
   explicitly run the force-password/onboarding checks inside the refresh method.
 **Acceptance:** Users with pending password-change/onboarding cannot silently refresh past the gate.
 

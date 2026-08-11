@@ -62,10 +62,12 @@ class AuthController extends Controller
             ], 423);
         }
 
-        $user = User::where('email', $request->identifier)
-                    ->orWhere('employee_id', $request->identifier)
-                    ->orWhere('username', $request->identifier)
-                    ->first();
+        $user = User::where('status', 'active')
+            ->where(function($query) use ($request) {
+                $query->where('email', $request->identifier)
+                      ->orWhere('employee_id', $request->identifier)
+                      ->orWhere('username', $request->identifier);
+            })->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             RateLimiter::hit($throttleKey, 600);
@@ -130,7 +132,7 @@ class AuthController extends Controller
         // Load roles and settings efficiently
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
-        $primaryRole = $rolesCollection->first() ?? 'employee';
+        $primaryRole = $user->active_role ?? $rolesCollection->first() ?? 'employee';
 
         $deviceName = $request->device_name ?? 'Unknown Device';
 
@@ -192,12 +194,20 @@ class AuthController extends Controller
             return response()->json(['message' => 'User not found'], 401);
         }
 
+        // AUTH-8: Explicitly run the force-password and onboarding checks inside refresh
+        if ($user->must_change_password) {
+            return response()->json(['message' => 'You must change your password before continuing.', 'must_change_password' => true], 403);
+        }
+        if (is_null($user->onboarded_at)) {
+            return response()->json(['message' => 'You must complete onboarding before continuing.', 'onboarding_required' => true], 403);
+        }
+
         // Revoke old refresh token (Token Rotation)
         $tokenInstance->delete();
 
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
-        $primaryRole = $rolesCollection->first() ?? 'employee';
+        $primaryRole = $user->active_role ?? $rolesCollection->first() ?? 'employee';
 
         // Issue new pair
         $newAccessTokenObj = $user->createToken('Refreshed Session', ['role:' . $primaryRole]);
@@ -243,6 +253,8 @@ class AuthController extends Controller
 
         $token = $user->createToken($deviceName, ['role:' . $request->role])->plainTextToken;
         $user->roles = $roles;
+        $user->active_role = $request->role;
+        $user->save();
 
         return response()->json([
             'token' => $token,
@@ -338,6 +350,9 @@ class AuthController extends Controller
         $user->must_change_password = false;
         $user->save();
 
+        // Revoke all existing tokens to kick out attackers/old sessions (AUTH-2)
+        $user->tokens()->delete();
+
         \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->delete();
 
         return response()->json(['message' => 'Password reset successful.']);
@@ -362,7 +377,27 @@ class AuthController extends Controller
         $user->must_change_password = false;
         $user->save();
 
-        return response()->json(['message' => 'Password changed successfully.']);
+        $deviceName = $user->currentAccessToken()->name ?? 'Unknown Device';
+        $user->tokens()->delete(); // Revoke ALL existing tokens
+
+        // Issue new pair so current session continues
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            return \Illuminate\Support\Facades\DB::table('settings')->where('category', 'security')->pluck('value', 'key')->toArray();
+        });
+        $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
+        $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
+
+        $activeRole = $user->active_role ?? 'employee';
+        $accessToken = $user->createToken($deviceName, ['role:' . $activeRole], now()->addMinutes($accessTtl))->plainTextToken;
+        $refreshToken = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl))->plainTextToken;
+        
+        $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
+
+        return response()->json([
+            'message' => 'Password changed successfully.',
+            'token' => $accessToken,
+            'user' => $user
+        ])->withCookie($cookie);
     }
 
     public function completeOnboarding(Request $request)

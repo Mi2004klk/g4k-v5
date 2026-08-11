@@ -17,30 +17,15 @@ class ForcePasswordChange
     {
         $user = $request->user();
         if ($user && $user->must_change_password) {
-            // Check if force password change is enabled in Admin Settings (default: false)
-            $isForceSettingEnabled = false;
-            try {
-                $setting = \App\Models\Setting::where('category', 'security')
-                    ->where('key', 'force_password_change')
-                    ->first();
-                if ($setting) {
-                    $val = $setting->value;
-                    $isForceSettingEnabled = ($val === true || $val === 'true' || $val === '1' || $val === 1);
-                }
-            } catch (\Throwable $e) {
-                $isForceSettingEnabled = false;
-            }
-
-            if ($isForceSettingEnabled) {
-                // Exclude allowed routes. Note: $request->path() does not include a leading slash
-                $allowedRoutes = ['api/auth/change-password', 'api/auth/logout'];
-                
-                if (!in_array($request->path(), $allowedRoutes)) {
-                    return response()->json([
-                        'message' => 'You must change your password before continuing.',
-                        'must_change_password' => true
-                    ], 403);
-                }
+            // AUTH-5: Always enforce force_password_change when must_change_password=true
+            // (Ignoring the security.force_password_change setting from the database for stricter security)
+            $allowedRoutes = ['api/auth/change-password', 'api/auth/logout'];
+            
+            if (!in_array($request->path(), $allowedRoutes)) {
+                return response()->json([
+                    'message' => 'You must change your password before continuing.',
+                    'must_change_password' => true
+                ], 403);
             }
         }
         return $next($request);

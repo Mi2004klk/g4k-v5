@@ -1,6 +1,6 @@
 import { useAuthStore, getAuthToken } from "./auth-store";
 import { offlineEngine } from "./offline-engine";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const API_BASE_URL = "/api";
 

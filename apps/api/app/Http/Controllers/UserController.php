@@ -132,8 +132,8 @@ class UserController extends Controller
             'department_id' => $validated['department_id'] ?? null,
             'team_id' => $validated['team_id'] ?? null,
             'designation_id' => $validated['designation_id'] ?? null,
-            'password' => Hash::make('Password123!'),
-            'must_change_password' => $mustChange,
+            'password' => Hash::make(\Illuminate\Support\Str::random(16)),
+            'must_change_password' => true,
             'status' => 'active',
         ]);
 
@@ -339,16 +339,23 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
         }
 
-        $forceChange = \App\Models\Setting::where('category', 'security')->where('key', 'force_password_change')->value('value');
-        $mustChange = filter_var($forceChange, FILTER_VALIDATE_BOOLEAN);
-
-        $user->password = Hash::make('Password123!');
-        $user->must_change_password = $mustChange;
+        $tempPassword = \Illuminate\Support\Str::random(16);
+        $user->password = Hash::make($tempPassword);
+        $user->must_change_password = true;
         $user->save();
+        $user->tokens()->delete();
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw("Your password has been reset by an administrator. Your temporary password is: {$tempPassword}\nPlease login and change it immediately.", function ($message) use ($user) {
+                $message->to($user->email)->subject('Password Reset by Administrator');
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to email temp password to {$user->email}: " . $e->getMessage());
+        }
 
         AuditLogger::log($request, 'reset_password', 'user', $user->id, null, ['status' => 'password_reset']);
 
-        return response()->json(['message' => 'Password reset to default (Password123!)']);
+        return response()->json(['message' => 'Password reset and temporary password emailed to user.']);
     }
 
     public function bulk(Request $request)
