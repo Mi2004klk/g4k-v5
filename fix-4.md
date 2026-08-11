@@ -55,11 +55,11 @@
   (P-MON). Add web-vitals reporting to the prod build.
 
 ### 0.3 Environment sanity
-- [ ] **0.3.1** Confirm Railway builds PHP 8.4 from root `nixpacks.toml`; `/api/ping` →
+- [x] **0.3.1** Confirm Railway builds PHP 8.4 from root `nixpacks.toml`; `/api/ping` →
   `{"status":"ok"}`; login returns 200+token.
-- [ ] **0.3.2** Confirm Vercel `NEXT_PUBLIC_API_URL` (bare Railway host, no `/api`) + Reverb env
+- [x] **0.3.2** Confirm Vercel `NEXT_PUBLIC_API_URL` (bare Railway host, no `/api`) + Reverb env
   (`NEXT_PUBLIC_REVERB_HOST/PORT/APP_KEY/SCHEME`) for Production + Preview.
-- [ ] **0.3.3** Confirm `BROADCAST_CONNECTION=reverb` + `QUEUE_CONNECTION=database` (or redis) +
+- [x] **0.3.3** Confirm `BROADCAST_CONNECTION=reverb` + `QUEUE_CONNECTION=database` (or redis) +
   Reverb service running on Railway.
 
 ---

@@ -312,7 +312,10 @@ interface AvatarProps extends React$1.ComponentPropsWithoutRef<typeof AvatarPrim
     className?: string;
 }
 declare const Avatar: React$1.ForwardRefExoticComponent<AvatarProps & React$1.RefAttributes<HTMLSpanElement>>;
-declare const AvatarImage: React$1.ForwardRefExoticComponent<Omit<AvatarPrimitive.AvatarImageProps & React$1.RefAttributes<HTMLImageElement>, "ref"> & React$1.RefAttributes<HTMLImageElement>>;
+declare const AvatarImage: React$1.ForwardRefExoticComponent<Omit<AvatarPrimitive.AvatarImageProps & React$1.RefAttributes<HTMLImageElement>, "ref"> & {
+    src?: string;
+    alt?: string;
+} & React$1.RefAttributes<HTMLImageElement>>;
 interface AvatarFallbackProps extends React$1.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> {
     name?: string;
     children?: React$1.ReactNode;
@@ -447,9 +450,8 @@ interface DataTableProps<TData, TValue> {
     rowSelection?: RowSelectionState;
     onRowSelectionChange?: (rowSelection: RowSelectionState) => void;
     onInlineEditSave?: (rowId: string, columnId: string, value: any) => void;
-    containerHeight?: string;
 }
-declare function DataTable<TData, TValue>({ columns, data, getRowId, fetchNextPage, hasNextPage, isFetchingNextPage, density, stickyHeader, stickyFirstCol, rowSelection: externalRowSelection, onRowSelectionChange, onInlineEditSave, containerHeight, }: DataTableProps<TData, TValue>): React__default.JSX.Element;
+declare function DataTable<TData, TValue>({ columns, data, getRowId, fetchNextPage, hasNextPage, isFetchingNextPage, density, stickyHeader, stickyFirstCol, rowSelection: externalRowSelection, onRowSelectionChange, onInlineEditSave, }: DataTableProps<TData, TValue>): React__default.JSX.Element;
 
 interface FilterOption {
     key: string;

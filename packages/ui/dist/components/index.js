@@ -30,6 +30,783 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// ../../node_modules/.pnpm/@swc+helpers@0.5.15/node_modules/@swc/helpers/cjs/_interop_require_default.cjs
+var require_interop_require_default = __commonJS({
+  "../../node_modules/.pnpm/@swc+helpers@0.5.15/node_modules/@swc/helpers/cjs/_interop_require_default.cjs"(exports2) {
+    "use strict";
+    function _interop_require_default(obj) {
+      return obj && obj.__esModule ? obj : { default: obj };
+    }
+    exports2._ = _interop_require_default;
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/deployment-id.js
+var require_deployment_id = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/deployment-id.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    function _export(target, all) {
+      for (var name in all) Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+      });
+    }
+    _export(exports2, {
+      getAssetToken: function() {
+        return getAssetToken;
+      },
+      getAssetTokenQuery: function() {
+        return getAssetTokenQuery;
+      },
+      getDeploymentId: function() {
+        return getDeploymentId;
+      },
+      getDeploymentIdQuery: function() {
+        return getDeploymentIdQuery;
+      }
+    });
+    var deploymentId;
+    if (typeof window !== "undefined") {
+      deploymentId = document.documentElement.dataset.dplId;
+      delete document.documentElement.dataset.dplId;
+    } else {
+      deploymentId = process.env.NEXT_DEPLOYMENT_ID || void 0;
+    }
+    function getDeploymentId() {
+      return deploymentId;
+    }
+    function getDeploymentIdQuery(ampersand = false) {
+      let id = getDeploymentId();
+      if (id) {
+        return `${ampersand ? "&" : "?"}dpl=${id}`;
+      }
+      return "";
+    }
+    function getAssetToken() {
+      return process.env.NEXT_SUPPORTS_IMMUTABLE_ASSETS ? void 0 : process.env.NEXT_DEPLOYMENT_ID;
+    }
+    function getAssetTokenQuery(ampersand = false) {
+      let id = getAssetToken();
+      if (id) {
+        return `${ampersand ? "&" : "?"}dpl=${id}`;
+      }
+      return "";
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-blur-svg.js
+var require_image_blur_svg = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-blur-svg.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "getImageBlurSvg", {
+      enumerable: true,
+      get: function() {
+        return getImageBlurSvg;
+      }
+    });
+    function getImageBlurSvg({ widthInt, heightInt, blurWidth, blurHeight, blurDataURL, objectFit }) {
+      const std = 20;
+      const svgWidth = blurWidth ? blurWidth * 40 : widthInt;
+      const svgHeight = blurHeight ? blurHeight * 40 : heightInt;
+      const viewBox = svgWidth && svgHeight ? `viewBox='0 0 ${svgWidth} ${svgHeight}'` : "";
+      const preserveAspectRatio = viewBox ? "none" : objectFit === "contain" ? "xMidYMid" : objectFit === "cover" ? "xMidYMid slice" : "none";
+      return `%3Csvg xmlns='http://www.w3.org/2000/svg' ${viewBox}%3E%3Cfilter id='b' color-interpolation-filters='sRGB'%3E%3CfeGaussianBlur stdDeviation='${std}'/%3E%3CfeColorMatrix values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 100 -1' result='s'/%3E%3CfeFlood x='0' y='0' width='100%25' height='100%25'/%3E%3CfeComposite operator='out' in='s'/%3E%3CfeComposite in2='SourceGraphic'/%3E%3CfeGaussianBlur stdDeviation='${std}'/%3E%3C/filter%3E%3Cimage width='100%25' height='100%25' x='0' y='0' preserveAspectRatio='${preserveAspectRatio}' style='filter: url(%23b);' href='${blurDataURL}'/%3E%3C/svg%3E`;
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-config.js
+var require_image_config = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-config.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    function _export(target, all) {
+      for (var name in all) Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+      });
+    }
+    _export(exports2, {
+      VALID_LOADERS: function() {
+        return VALID_LOADERS;
+      },
+      imageConfigDefault: function() {
+        return imageConfigDefault;
+      }
+    });
+    var VALID_LOADERS = [
+      "default",
+      "imgix",
+      "cloudinary",
+      "akamai",
+      "custom"
+    ];
+    var imageConfigDefault = {
+      deviceSizes: [
+        640,
+        750,
+        828,
+        1080,
+        1200,
+        1920,
+        2048,
+        3840
+      ],
+      imageSizes: [
+        32,
+        48,
+        64,
+        96,
+        128,
+        256,
+        384
+      ],
+      path: "/_next/image",
+      loader: "default",
+      loaderFile: "",
+      /**
+      * @deprecated Use `remotePatterns` instead to protect your application from malicious users.
+      */
+      domains: [],
+      disableStaticImages: false,
+      minimumCacheTTL: 14400,
+      formats: [
+        "image/webp"
+      ],
+      maximumDiskCacheSize: void 0,
+      maximumRedirects: 3,
+      maximumResponseBody: 5e7,
+      dangerouslyAllowLocalIP: false,
+      dangerouslyAllowSVG: false,
+      contentSecurityPolicy: `script-src 'none'; frame-src 'none'; sandbox;`,
+      contentDispositionType: "attachment",
+      localPatterns: void 0,
+      remotePatterns: [],
+      qualities: [
+        75
+      ],
+      unoptimized: false,
+      customCacheHandler: false
+    };
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/utils/warn-once.js
+var require_warn_once = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/utils/warn-once.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "warnOnce", {
+      enumerable: true,
+      get: function() {
+        return warnOnce;
+      }
+    });
+    var warnOnce = (_) => {
+    };
+    if (process.env.NODE_ENV !== "production") {
+      const warnings = /* @__PURE__ */ new Set();
+      warnOnce = (msg) => {
+        if (!warnings.has(msg)) {
+          console.warn(msg);
+        }
+        warnings.add(msg);
+      };
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/get-img-props.js
+var require_get_img_props = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/get-img-props.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "getImgProps", {
+      enumerable: true,
+      get: function() {
+        return getImgProps;
+      }
+    });
+    var _deploymentid = require_deployment_id();
+    var _imageblursvg = require_image_blur_svg();
+    var _imageconfig = require_image_config();
+    var VALID_LOADING_VALUES = [
+      "lazy",
+      "eager",
+      void 0
+    ];
+    var INVALID_BACKGROUND_SIZE_VALUES = [
+      "-moz-initial",
+      "fill",
+      "none",
+      "scale-down",
+      void 0
+    ];
+    function isStaticRequire(src) {
+      return src.default !== void 0;
+    }
+    function isStaticImageData(src) {
+      return src.src !== void 0;
+    }
+    function isStaticImport(src) {
+      return !!src && typeof src === "object" && (isStaticRequire(src) || isStaticImageData(src));
+    }
+    var allImgs = /* @__PURE__ */ new Map();
+    var perfObserver;
+    function getInt(x) {
+      if (typeof x === "undefined") {
+        return x;
+      }
+      if (typeof x === "number") {
+        return Number.isFinite(x) ? x : NaN;
+      }
+      if (typeof x === "string" && /^[0-9]+$/.test(x)) {
+        return parseInt(x, 10);
+      }
+      return NaN;
+    }
+    function getWidths({ deviceSizes, allSizes }, width, sizes) {
+      if (sizes) {
+        const viewportWidthRe = /(^|\s)(1?\d?\d)vw/g;
+        const percentSizes = [];
+        for (let match; match = viewportWidthRe.exec(sizes); match) {
+          percentSizes.push(parseInt(match[2]));
+        }
+        if (percentSizes.length) {
+          const smallestRatio = Math.min(...percentSizes) * 0.01;
+          return {
+            widths: allSizes.filter((s) => s >= deviceSizes[0] * smallestRatio),
+            kind: "w"
+          };
+        }
+        return {
+          widths: allSizes,
+          kind: "w"
+        };
+      }
+      if (typeof width !== "number") {
+        return {
+          widths: deviceSizes,
+          kind: "w"
+        };
+      }
+      const widths = [
+        ...new Set(
+          // > This means that most OLED screens that say they are 3x resolution,
+          // > are actually 3x in the green color, but only 1.5x in the red and
+          // > blue colors. Showing a 3x resolution image in the app vs a 2x
+          // > resolution image will be visually the same, though the 3x image
+          // > takes significantly more data. Even true 3x resolution screens are
+          // > wasteful as the human eye cannot see that level of detail without
+          // > something like a magnifying glass.
+          // https://blog.twitter.com/engineering/en_us/topics/infrastructure/2019/capping-image-fidelity-on-ultra-high-resolution-devices.html
+          [
+            width,
+            width * 2
+            /*, width * 3*/
+          ].map((w) => allSizes.find((p) => p >= w) || allSizes[allSizes.length - 1])
+        )
+      ];
+      return {
+        widths,
+        kind: "x"
+      };
+    }
+    function generateImgAttrs({ config, src, unoptimized, width, quality, sizes, loader }) {
+      if (unoptimized) {
+        if (src.startsWith("/") && !src.startsWith("//")) {
+          let deploymentId = (0, _deploymentid.getDeploymentId)();
+          if (src.includes("/_next/static/immutable") && !(0, _deploymentid.getAssetToken)()) {
+            deploymentId = void 0;
+          } else if (deploymentId) {
+            const qIndex = src.indexOf("?");
+            if (qIndex !== -1) {
+              const params = new URLSearchParams(src.slice(qIndex + 1));
+              const srcDpl = params.get("dpl");
+              if (!srcDpl) {
+                params.append("dpl", deploymentId);
+                src = src.slice(0, qIndex) + "?" + params.toString();
+              }
+            } else {
+              src = src + `?dpl=${deploymentId}`;
+            }
+          }
+        }
+        return {
+          src,
+          srcSet: void 0,
+          sizes: void 0
+        };
+      }
+      const { widths, kind } = getWidths(config, width, sizes);
+      const last = widths.length - 1;
+      return {
+        sizes: !sizes && kind === "w" ? "100vw" : sizes,
+        srcSet: widths.map((w, i) => `${loader({
+          config,
+          src,
+          quality,
+          width: w
+        })} ${kind === "w" ? w : i + 1}${kind}`).join(", "),
+        // It's intended to keep `src` the last attribute because React updates
+        // attributes in order. If we keep `src` the first one, Safari will
+        // immediately start to fetch `src`, before `sizes` and `srcSet` are even
+        // updated by React. That causes multiple unnecessary requests if `srcSet`
+        // and `sizes` are defined.
+        // This bug cannot be reproduced in Chrome or Firefox.
+        src: loader({
+          config,
+          src,
+          quality,
+          width: widths[last]
+        })
+      };
+    }
+    function getImgProps({ src, sizes, unoptimized = false, priority = false, preload = false, loading, className, quality, width, height, fill = false, style, overrideSrc, onLoad, onLoadingComplete, placeholder = "empty", blurDataURL, fetchPriority, decoding = "async", layout, objectFit, objectPosition, lazyBoundary, lazyRoot, ...rest }, _state) {
+      const { imgConf, showAltText, blurComplete, defaultLoader } = _state;
+      let config;
+      let c = imgConf || _imageconfig.imageConfigDefault;
+      if ("allSizes" in c) {
+        config = c;
+      } else {
+        const allSizes = [
+          ...c.deviceSizes,
+          ...c.imageSizes
+        ].sort((a, b) => a - b);
+        const deviceSizes = c.deviceSizes.sort((a, b) => a - b);
+        const qualities = c.qualities?.sort((a, b) => a - b);
+        config = {
+          ...c,
+          allSizes,
+          deviceSizes,
+          qualities
+        };
+      }
+      if (typeof defaultLoader === "undefined") {
+        throw Object.defineProperty(new Error("images.loaderFile detected but the file is missing default export.\nRead more: https://nextjs.org/docs/messages/invalid-images-config"), "__NEXT_ERROR_CODE", {
+          value: "E163",
+          enumerable: false,
+          configurable: true
+        });
+      }
+      let loader = rest.loader || defaultLoader;
+      delete rest.loader;
+      delete rest.srcSet;
+      const isDefaultLoader = "__next_img_default" in loader;
+      if (isDefaultLoader) {
+        if (config.loader === "custom") {
+          throw Object.defineProperty(new Error(`Image with src "${src}" is missing "loader" prop.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader`), "__NEXT_ERROR_CODE", {
+            value: "E252",
+            enumerable: false,
+            configurable: true
+          });
+        }
+      } else {
+        const customImageLoader = loader;
+        loader = (obj) => {
+          const { config: _, ...opts } = obj;
+          return customImageLoader(opts);
+        };
+      }
+      if (layout) {
+        if (layout === "fill") {
+          fill = true;
+        }
+        const layoutToStyle = {
+          intrinsic: {
+            maxWidth: "100%",
+            height: "auto"
+          },
+          responsive: {
+            width: "100%",
+            height: "auto"
+          }
+        };
+        const layoutToSizes = {
+          responsive: "100vw",
+          fill: "100vw"
+        };
+        const layoutStyle = layoutToStyle[layout];
+        if (layoutStyle) {
+          style = {
+            ...style,
+            ...layoutStyle
+          };
+        }
+        const layoutSizes = layoutToSizes[layout];
+        if (layoutSizes && !sizes) {
+          sizes = layoutSizes;
+        }
+      }
+      let staticSrc = "";
+      let widthInt = getInt(width);
+      let heightInt = getInt(height);
+      let blurWidth;
+      let blurHeight;
+      if (isStaticImport(src)) {
+        const staticImageData = isStaticRequire(src) ? src.default : src;
+        if (!staticImageData.src) {
+          throw Object.defineProperty(new Error(`An object should only be passed to the image component src parameter if it comes from a static image import. It must include src. Received ${JSON.stringify(staticImageData)}`), "__NEXT_ERROR_CODE", {
+            value: "E460",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (!staticImageData.height || !staticImageData.width) {
+          throw Object.defineProperty(new Error(`An object should only be passed to the image component src parameter if it comes from a static image import. It must include height and width. Received ${JSON.stringify(staticImageData)}`), "__NEXT_ERROR_CODE", {
+            value: "E48",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        blurWidth = staticImageData.blurWidth;
+        blurHeight = staticImageData.blurHeight;
+        blurDataURL = blurDataURL || staticImageData.blurDataURL;
+        staticSrc = staticImageData.src;
+        if (!fill) {
+          if (!widthInt && !heightInt) {
+            widthInt = staticImageData.width;
+            heightInt = staticImageData.height;
+          } else if (widthInt && !heightInt) {
+            const ratio = widthInt / staticImageData.width;
+            heightInt = Math.round(staticImageData.height * ratio);
+          } else if (!widthInt && heightInt) {
+            const ratio = heightInt / staticImageData.height;
+            widthInt = Math.round(staticImageData.width * ratio);
+          }
+        }
+      }
+      src = typeof src === "string" ? src : staticSrc;
+      let isLazy = !priority && !preload && (loading === "lazy" || typeof loading === "undefined");
+      if (!src || src.startsWith("data:") || src.startsWith("blob:")) {
+        unoptimized = true;
+        isLazy = false;
+      }
+      if (config.unoptimized) {
+        unoptimized = true;
+      }
+      if (isDefaultLoader && !config.dangerouslyAllowSVG && src.split("?", 1)[0].endsWith(".svg")) {
+        unoptimized = true;
+      }
+      const qualityInt = getInt(quality);
+      if (process.env.NODE_ENV !== "production") {
+        const { warnOnce } = require_warn_once();
+        if (config.output === "export" && isDefaultLoader && !unoptimized) {
+          throw Object.defineProperty(new Error(`Image Optimization using the default loader is not compatible with \`{ output: 'export' }\`.
+  Possible solutions:
+    - Remove \`{ output: 'export' }\` and run "next start" to run server mode including the Image Optimization API.
+    - Configure \`{ images: { unoptimized: true } }\` in \`next.config.js\` to disable the Image Optimization API.
+  Read more: https://nextjs.org/docs/messages/export-image-api`), "__NEXT_ERROR_CODE", {
+            value: "E500",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (!src) {
+          unoptimized = true;
+        } else {
+          if (fill) {
+            if (width) {
+              throw Object.defineProperty(new Error(`Image with src "${src}" has both "width" and "fill" properties. Only one should be used.`), "__NEXT_ERROR_CODE", {
+                value: "E96",
+                enumerable: false,
+                configurable: true
+              });
+            }
+            if (height) {
+              throw Object.defineProperty(new Error(`Image with src "${src}" has both "height" and "fill" properties. Only one should be used.`), "__NEXT_ERROR_CODE", {
+                value: "E115",
+                enumerable: false,
+                configurable: true
+              });
+            }
+            if (style?.position && style.position !== "absolute") {
+              throw Object.defineProperty(new Error(`Image with src "${src}" has both "fill" and "style.position" properties. Images with "fill" always use position absolute - it cannot be modified.`), "__NEXT_ERROR_CODE", {
+                value: "E216",
+                enumerable: false,
+                configurable: true
+              });
+            }
+            if (style?.width && style.width !== "100%") {
+              throw Object.defineProperty(new Error(`Image with src "${src}" has both "fill" and "style.width" properties. Images with "fill" always use width 100% - it cannot be modified.`), "__NEXT_ERROR_CODE", {
+                value: "E73",
+                enumerable: false,
+                configurable: true
+              });
+            }
+            if (style?.height && style.height !== "100%") {
+              throw Object.defineProperty(new Error(`Image with src "${src}" has both "fill" and "style.height" properties. Images with "fill" always use height 100% - it cannot be modified.`), "__NEXT_ERROR_CODE", {
+                value: "E404",
+                enumerable: false,
+                configurable: true
+              });
+            }
+          } else {
+            if (typeof widthInt === "undefined") {
+              throw Object.defineProperty(new Error(`Image with src "${src}" is missing required "width" property.`), "__NEXT_ERROR_CODE", {
+                value: "E451",
+                enumerable: false,
+                configurable: true
+              });
+            } else if (isNaN(widthInt)) {
+              throw Object.defineProperty(new Error(`Image with src "${src}" has invalid "width" property. Expected a numeric value in pixels but received "${width}".`), "__NEXT_ERROR_CODE", {
+                value: "E66",
+                enumerable: false,
+                configurable: true
+              });
+            }
+            if (typeof heightInt === "undefined") {
+              throw Object.defineProperty(new Error(`Image with src "${src}" is missing required "height" property.`), "__NEXT_ERROR_CODE", {
+                value: "E397",
+                enumerable: false,
+                configurable: true
+              });
+            } else if (isNaN(heightInt)) {
+              throw Object.defineProperty(new Error(`Image with src "${src}" has invalid "height" property. Expected a numeric value in pixels but received "${height}".`), "__NEXT_ERROR_CODE", {
+                value: "E444",
+                enumerable: false,
+                configurable: true
+              });
+            }
+            if (/^[\x00-\x20]/.test(src)) {
+              throw Object.defineProperty(new Error(`Image with src "${src}" cannot start with a space or control character. Use src.trimStart() to remove it or encodeURIComponent(src) to keep it.`), "__NEXT_ERROR_CODE", {
+                value: "E176",
+                enumerable: false,
+                configurable: true
+              });
+            }
+            if (/[\x00-\x20]$/.test(src)) {
+              throw Object.defineProperty(new Error(`Image with src "${src}" cannot end with a space or control character. Use src.trimEnd() to remove it or encodeURIComponent(src) to keep it.`), "__NEXT_ERROR_CODE", {
+                value: "E21",
+                enumerable: false,
+                configurable: true
+              });
+            }
+          }
+        }
+        if (!VALID_LOADING_VALUES.includes(loading)) {
+          throw Object.defineProperty(new Error(`Image with src "${src}" has invalid "loading" property. Provided "${loading}" should be one of ${VALID_LOADING_VALUES.map(String).join(",")}.`), "__NEXT_ERROR_CODE", {
+            value: "E357",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (priority && loading === "lazy") {
+          throw Object.defineProperty(new Error(`Image with src "${src}" has both "priority" and "loading='lazy'" properties. Only one should be used.`), "__NEXT_ERROR_CODE", {
+            value: "E218",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (preload && loading === "lazy") {
+          throw Object.defineProperty(new Error(`Image with src "${src}" has both "preload" and "loading='lazy'" properties. Only one should be used.`), "__NEXT_ERROR_CODE", {
+            value: "E803",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (preload && priority) {
+          throw Object.defineProperty(new Error(`Image with src "${src}" has both "preload" and "priority" properties. Only "preload" should be used.`), "__NEXT_ERROR_CODE", {
+            value: "E802",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (placeholder !== "empty" && placeholder !== "blur" && !placeholder.startsWith("data:image/")) {
+          throw Object.defineProperty(new Error(`Image with src "${src}" has invalid "placeholder" property "${placeholder}".`), "__NEXT_ERROR_CODE", {
+            value: "E431",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (placeholder !== "empty") {
+          if (widthInt && heightInt && widthInt * heightInt < 1600) {
+            warnOnce(`Image with src "${src}" is smaller than 40x40. Consider removing the "placeholder" property to improve performance.`);
+          }
+        }
+        if (qualityInt && config.qualities && !config.qualities.includes(qualityInt)) {
+          warnOnce(`Image with src "${src}" is using quality "${qualityInt}" which is not configured in images.qualities [${config.qualities.join(", ")}]. Please update your config to [${[
+            ...config.qualities,
+            qualityInt
+          ].sort().join(", ")}].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities`);
+        }
+        if (placeholder === "blur" && !blurDataURL) {
+          const VALID_BLUR_EXT = [
+            "jpeg",
+            "png",
+            "webp",
+            "avif"
+          ];
+          throw Object.defineProperty(new Error(`Image with src "${src}" has "placeholder='blur'" property but is missing the "blurDataURL" property.
+        Possible solutions:
+          - Add a "blurDataURL" property, the contents should be a small Data URL to represent the image
+          - Change the "src" property to a static import with one of the supported file types: ${VALID_BLUR_EXT.join(",")} (animated images not supported)
+          - Remove the "placeholder" property, effectively no blur effect
+        Read more: https://nextjs.org/docs/messages/placeholder-blur-data-url`), "__NEXT_ERROR_CODE", {
+            value: "E371",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if ("ref" in rest) {
+          warnOnce(`Image with src "${src}" is using unsupported "ref" property. Consider using the "onLoad" property instead.`);
+        }
+        if (!unoptimized && !isDefaultLoader) {
+          const urlStr = loader({
+            config,
+            src,
+            width: widthInt || 400,
+            quality: qualityInt || 75
+          });
+          let url;
+          try {
+            url = new URL(urlStr);
+          } catch (err) {
+          }
+          if (urlStr === src || url && url.pathname === src && !url.search) {
+            warnOnce(`Image with src "${src}" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader-width`);
+          }
+        }
+        if (onLoadingComplete) {
+          warnOnce(`Image with src "${src}" is using deprecated "onLoadingComplete" property. Please use the "onLoad" property instead.`);
+        }
+        for (const [legacyKey, legacyValue] of Object.entries({
+          layout,
+          objectFit,
+          objectPosition,
+          lazyBoundary,
+          lazyRoot
+        })) {
+          if (legacyValue) {
+            warnOnce(`Image with src "${src}" has legacy prop "${legacyKey}". Did you forget to run the codemod?
+Read more: https://nextjs.org/docs/messages/next-image-upgrade-to-13`);
+          }
+        }
+        if (typeof window !== "undefined" && !perfObserver && window.PerformanceObserver) {
+          perfObserver = new PerformanceObserver((entryList) => {
+            for (const entry of entryList.getEntries()) {
+              const imgSrc = entry?.element?.src || "";
+              const lcpImage = allImgs.get(imgSrc);
+              if (lcpImage && lcpImage.loading === "lazy" && lcpImage.placeholder === "empty" && !lcpImage.src.startsWith("data:") && !lcpImage.src.startsWith("blob:")) {
+                warnOnce(`Image with src "${lcpImage.src}" was detected as the Largest Contentful Paint (LCP). Please add the \`loading="eager"\` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading`);
+              }
+            }
+          });
+          try {
+            perfObserver.observe({
+              type: "largest-contentful-paint",
+              buffered: true
+            });
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      }
+      const imgStyle = Object.assign(fill ? {
+        position: "absolute",
+        height: "100%",
+        width: "100%",
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        objectFit,
+        objectPosition
+      } : {}, showAltText ? {} : {
+        color: "transparent"
+      }, style);
+      const backgroundImage = !blurComplete && placeholder !== "empty" ? placeholder === "blur" ? `url("data:image/svg+xml;charset=utf-8,${(0, _imageblursvg.getImageBlurSvg)({
+        widthInt,
+        heightInt,
+        blurWidth,
+        blurHeight,
+        blurDataURL: blurDataURL || "",
+        objectFit: imgStyle.objectFit
+      })}")` : `url("${placeholder}")` : null;
+      const backgroundSize = !INVALID_BACKGROUND_SIZE_VALUES.includes(imgStyle.objectFit) ? imgStyle.objectFit : imgStyle.objectFit === "fill" ? "100% 100%" : "cover";
+      let placeholderStyle = backgroundImage ? {
+        backgroundSize,
+        backgroundPosition: imgStyle.objectPosition || "50% 50%",
+        backgroundRepeat: "no-repeat",
+        backgroundImage
+      } : {};
+      if (process.env.NODE_ENV === "development") {
+        if (placeholderStyle.backgroundImage && placeholder === "blur" && blurDataURL?.startsWith("/")) {
+          placeholderStyle.backgroundImage = `url("${blurDataURL}")`;
+        }
+      }
+      const imgAttributes = generateImgAttrs({
+        config,
+        src,
+        unoptimized,
+        width: widthInt,
+        quality: qualityInt,
+        sizes,
+        loader
+      });
+      const loadingFinal = isLazy ? "lazy" : loading;
+      if (process.env.NODE_ENV !== "production") {
+        if (typeof window !== "undefined") {
+          let fullUrl;
+          try {
+            fullUrl = new URL(imgAttributes.src);
+          } catch (e) {
+            fullUrl = new URL(imgAttributes.src, window.location.href);
+          }
+          allImgs.set(fullUrl.href, {
+            src,
+            loading: loadingFinal,
+            placeholder
+          });
+        }
+      }
+      const props = {
+        ...rest,
+        loading: loadingFinal,
+        fetchPriority,
+        width: widthInt,
+        height: heightInt,
+        decoding,
+        className,
+        style: {
+          ...imgStyle,
+          ...placeholderStyle
+        },
+        sizes: imgAttributes.sizes,
+        srcSet: imgAttributes.srcSet,
+        src: overrideSrc || imgAttributes.src
+      };
+      const meta = {
+        unoptimized,
+        preload: preload || priority,
+        placeholder,
+        fill
+      };
+      return {
+        props,
+        meta
+      };
+    }
+  }
+});
+
 // ../../node_modules/.pnpm/@swc+helpers@0.5.15/node_modules/@swc/helpers/cjs/_interop_require_wildcard.cjs
 var require_interop_require_wildcard = __commonJS({
   "../../node_modules/.pnpm/@swc+helpers@0.5.15/node_modules/@swc/helpers/cjs/_interop_require_wildcard.cjs"(exports2) {
@@ -61,6 +838,2191 @@ var require_interop_require_wildcard = __commonJS({
       return newObj;
     }
     exports2._ = _interop_require_wildcard;
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/side-effect.js
+var require_side_effect = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/side-effect.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "default", {
+      enumerable: true,
+      get: function() {
+        return SideEffect;
+      }
+    });
+    var _react = require("react");
+    var isServer = typeof window === "undefined";
+    var useClientOnlyLayoutEffect = isServer ? () => {
+    } : _react.useLayoutEffect;
+    var useClientOnlyEffect = isServer ? () => {
+    } : _react.useEffect;
+    function SideEffect(props) {
+      const { headManager, reduceComponentsToState } = props;
+      function emitChange() {
+        if (headManager && headManager.mountedInstances) {
+          const headElements = _react.Children.toArray(Array.from(headManager.mountedInstances).filter(Boolean));
+          headManager.updateHead(reduceComponentsToState(headElements));
+        }
+      }
+      if (isServer) {
+        headManager?.mountedInstances?.add(props.children);
+        emitChange();
+      }
+      useClientOnlyLayoutEffect(() => {
+        headManager?.mountedInstances?.add(props.children);
+        return () => {
+          headManager?.mountedInstances?.delete(props.children);
+        };
+      });
+      useClientOnlyLayoutEffect(() => {
+        if (headManager) {
+          headManager._pendingUpdate = emitChange;
+        }
+        return () => {
+          if (headManager) {
+            headManager._pendingUpdate = emitChange;
+          }
+        };
+      });
+      useClientOnlyEffect(() => {
+        if (headManager && headManager._pendingUpdate) {
+          headManager._pendingUpdate();
+          headManager._pendingUpdate = null;
+        }
+        return () => {
+          if (headManager && headManager._pendingUpdate) {
+            headManager._pendingUpdate();
+            headManager._pendingUpdate = null;
+          }
+        };
+      });
+      return null;
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js
+var require_head_manager_context_shared_runtime = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "HeadManagerContext", {
+      enumerable: true,
+      get: function() {
+        return HeadManagerContext;
+      }
+    });
+    var _interop_require_default = require_interop_require_default();
+    var _react = /* @__PURE__ */ _interop_require_default._(require("react"));
+    var HeadManagerContext = _react.default.createContext({});
+    if (process.env.NODE_ENV !== "production") {
+      HeadManagerContext.displayName = "HeadManagerContext";
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/head.js
+var require_head = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/head.js"(exports2, module2) {
+    "use strict";
+    "use client";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    function _export(target, all) {
+      for (var name in all) Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+      });
+    }
+    _export(exports2, {
+      default: function() {
+        return _default;
+      },
+      defaultHead: function() {
+        return defaultHead;
+      }
+    });
+    var _interop_require_default = require_interop_require_default();
+    var _interop_require_wildcard = require_interop_require_wildcard();
+    var _jsxruntime = require("react/jsx-runtime");
+    var _react = /* @__PURE__ */ _interop_require_wildcard._(require("react"));
+    var _sideeffect = /* @__PURE__ */ _interop_require_default._(require_side_effect());
+    var _headmanagercontextsharedruntime = require_head_manager_context_shared_runtime();
+    function defaultHead() {
+      const head = [
+        /* @__PURE__ */ (0, _jsxruntime.jsx)("meta", {
+          charSet: "utf-8"
+        }, "charset"),
+        /* @__PURE__ */ (0, _jsxruntime.jsx)("meta", {
+          name: "viewport",
+          content: "width=device-width"
+        }, "viewport")
+      ];
+      return head;
+    }
+    function onlyReactElement(list, child) {
+      if (typeof child === "string" || typeof child === "number") {
+        return list;
+      }
+      if (child.type === _react.default.Fragment) {
+        return list.concat(
+          // @ts-expect-error @types/react does not remove fragments but this could also return ReactPortal[]
+          _react.default.Children.toArray(child.props.children).reduce(
+            // @ts-expect-error @types/react does not remove fragments but this could also return ReactPortal[]
+            (fragmentList, fragmentChild) => {
+              if (typeof fragmentChild === "string" || typeof fragmentChild === "number") {
+                return fragmentList;
+              }
+              return fragmentList.concat(fragmentChild);
+            },
+            []
+          )
+        );
+      }
+      return list.concat(child);
+    }
+    var METATYPES = [
+      "name",
+      "httpEquiv",
+      "charSet",
+      "itemProp"
+    ];
+    function unique() {
+      const keys = /* @__PURE__ */ new Set();
+      const tags = /* @__PURE__ */ new Set();
+      const metaTypes = /* @__PURE__ */ new Set();
+      const metaCategories = {};
+      return (h) => {
+        let isUnique = true;
+        let hasKey = false;
+        if (h.key && typeof h.key !== "number" && h.key.indexOf("$") > 0) {
+          hasKey = true;
+          const key = h.key.slice(h.key.indexOf("$") + 1);
+          if (keys.has(key)) {
+            isUnique = false;
+          } else {
+            keys.add(key);
+          }
+        }
+        switch (h.type) {
+          case "title":
+          case "base":
+            if (tags.has(h.type)) {
+              isUnique = false;
+            } else {
+              tags.add(h.type);
+            }
+            break;
+          case "meta":
+            for (let i = 0, len = METATYPES.length; i < len; i++) {
+              const metatype = METATYPES[i];
+              if (!h.props.hasOwnProperty(metatype)) continue;
+              if (metatype === "charSet") {
+                if (metaTypes.has(metatype)) {
+                  isUnique = false;
+                } else {
+                  metaTypes.add(metatype);
+                }
+              } else {
+                const category = h.props[metatype];
+                const categories = metaCategories[metatype] || /* @__PURE__ */ new Set();
+                if ((metatype !== "name" || !hasKey) && categories.has(category)) {
+                  isUnique = false;
+                } else {
+                  categories.add(category);
+                  metaCategories[metatype] = categories;
+                }
+              }
+            }
+            break;
+          default:
+            break;
+        }
+        return isUnique;
+      };
+    }
+    function reduceComponents(headChildrenElements) {
+      return headChildrenElements.reduce(onlyReactElement, []).reverse().concat(defaultHead().reverse()).filter(unique()).reverse().map((c, i) => {
+        const key = c.key || i;
+        if (process.env.NODE_ENV === "development") {
+          const { warnOnce } = require_warn_once();
+          if (c.type === "script" && c.props["type"] !== "application/ld+json") {
+            const srcMessage = c.props["src"] ? `<script> tag with src="${c.props["src"]}"` : `inline <script>`;
+            warnOnce(`Do not add <script> tags using next/head (see ${srcMessage}). Use next/script instead. 
+See more info here: https://nextjs.org/docs/messages/no-script-tags-in-head-component`);
+          } else if (c.type === "link" && c.props["rel"] === "stylesheet") {
+            warnOnce(`Do not add stylesheets using next/head (see <link rel="stylesheet"> tag with href="${c.props["href"]}"). Use Document instead. 
+See more info here: https://nextjs.org/docs/messages/no-stylesheets-in-head-component`);
+          }
+        }
+        return /* @__PURE__ */ _react.default.cloneElement(c, {
+          key
+        });
+      });
+    }
+    function Head({ children }) {
+      const headManager = (0, _react.useContext)(_headmanagercontextsharedruntime.HeadManagerContext);
+      return /* @__PURE__ */ (0, _jsxruntime.jsx)(_sideeffect.default, {
+        reduceComponentsToState: reduceComponents,
+        headManager,
+        children
+      });
+    }
+    var _default = Head;
+    if ((typeof exports2.default === "function" || typeof exports2.default === "object" && exports2.default !== null) && typeof exports2.default.__esModule === "undefined") {
+      Object.defineProperty(exports2.default, "__esModule", { value: true });
+      Object.assign(exports2.default, exports2);
+      module2.exports = exports2.default;
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-config-context.shared-runtime.js
+var require_image_config_context_shared_runtime = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-config-context.shared-runtime.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "ImageConfigContext", {
+      enumerable: true,
+      get: function() {
+        return ImageConfigContext;
+      }
+    });
+    var _interop_require_default = require_interop_require_default();
+    var _react = /* @__PURE__ */ _interop_require_default._(require("react"));
+    var _imageconfig = require_image_config();
+    var ImageConfigContext = _react.default.createContext(_imageconfig.imageConfigDefault);
+    if (process.env.NODE_ENV !== "production") {
+      ImageConfigContext.displayName = "ImageConfigContext";
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/router-context.shared-runtime.js
+var require_router_context_shared_runtime = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/router-context.shared-runtime.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "RouterContext", {
+      enumerable: true,
+      get: function() {
+        return RouterContext;
+      }
+    });
+    var _interop_require_default = require_interop_require_default();
+    var _react = /* @__PURE__ */ _interop_require_default._(require("react"));
+    var RouterContext = _react.default.createContext(null);
+    if (process.env.NODE_ENV !== "production") {
+      RouterContext.displayName = "RouterContext";
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/find-closest-quality.js
+var require_find_closest_quality = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/find-closest-quality.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "findClosestQuality", {
+      enumerable: true,
+      get: function() {
+        return findClosestQuality;
+      }
+    });
+    function findClosestQuality(quality, config) {
+      const q = quality || 75;
+      if (!config?.qualities?.length) {
+        return q;
+      }
+      return config.qualities.reduce((prev, cur) => Math.abs(cur - q) < Math.abs(prev - q) ? cur : prev, config.qualities[0]);
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/compiled/picomatch/index.js
+var require_picomatch = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/compiled/picomatch/index.js"(exports2, module2) {
+    "use strict";
+    (() => {
+      "use strict";
+      var t = { 286: (t2, e2, u2) => {
+        const n = u2(696);
+        const isWindows = () => {
+          if (typeof navigator !== "undefined" && navigator.platform) {
+            const t3 = navigator.platform.toLowerCase();
+            return t3 === "win32" || t3 === "windows";
+          }
+          if (typeof process !== "undefined" && process.platform) {
+            return process.platform === "win32";
+          }
+          return false;
+        };
+        function picomatch(t3, e3, u3 = false) {
+          if (e3 && (e3.windows === null || e3.windows === void 0)) {
+            e3 = { ...e3, windows: isWindows() };
+          }
+          return n(t3, e3, u3);
+        }
+        Object.assign(picomatch, n);
+        t2.exports = picomatch;
+      }, 963: (t2) => {
+        const e2 = "\\\\/";
+        const u2 = `[^${e2}]`;
+        const n = "\\.";
+        const o = "\\+";
+        const s = "\\?";
+        const r = "\\/";
+        const a = "(?=.)";
+        const i = "[^/]";
+        const c = `(?:${r}|$)`;
+        const p = `(?:^|${r})`;
+        const l = `${n}{1,2}${c}`;
+        const f = `(?!${n})`;
+        const A = `(?!${p}${l})`;
+        const _ = `(?!${n}{0,1}${c})`;
+        const R = `(?!${l})`;
+        const E = `[^.${r}]`;
+        const h = `${i}*?`;
+        const g = "/";
+        const b = { DOT_LITERAL: n, PLUS_LITERAL: o, QMARK_LITERAL: s, SLASH_LITERAL: r, ONE_CHAR: a, QMARK: i, END_ANCHOR: c, DOTS_SLASH: l, NO_DOT: f, NO_DOTS: A, NO_DOT_SLASH: _, NO_DOTS_SLASH: R, QMARK_NO_DOT: E, STAR: h, START_ANCHOR: p, SEP: g };
+        const C = { ...b, SLASH_LITERAL: `[${e2}]`, QMARK: u2, STAR: `${u2}*?`, DOTS_SLASH: `${n}{1,2}(?:[${e2}]|$)`, NO_DOT: `(?!${n})`, NO_DOTS: `(?!(?:^|[${e2}])${n}{1,2}(?:[${e2}]|$))`, NO_DOT_SLASH: `(?!${n}{0,1}(?:[${e2}]|$))`, NO_DOTS_SLASH: `(?!${n}{1,2}(?:[${e2}]|$))`, QMARK_NO_DOT: `[^.${e2}]`, START_ANCHOR: `(?:^|[${e2}])`, END_ANCHOR: `(?:[${e2}]|$)`, SEP: "\\" };
+        const y = { alnum: "a-zA-Z0-9", alpha: "a-zA-Z", ascii: "\\x00-\\x7F", blank: " \\t", cntrl: "\\x00-\\x1F\\x7F", digit: "0-9", graph: "\\x21-\\x7E", lower: "a-z", print: "\\x20-\\x7E ", punct: "\\-!\"#$%&'()\\*+,./:;<=>?@[\\]^_`{|}~", space: " \\t\\r\\n\\v\\f", upper: "A-Z", word: "A-Za-z0-9_", xdigit: "A-Fa-f0-9" };
+        t2.exports = { MAX_LENGTH: 1024 * 64, POSIX_REGEX_SOURCE: y, REGEX_BACKSLASH: /\\(?![*+?^${}(|)[\]])/g, REGEX_NON_SPECIAL_CHARS: /^[^@![\].,$*+?^{}()|\\/]+/, REGEX_SPECIAL_CHARS: /[-*+?.^${}(|)[\]]/, REGEX_SPECIAL_CHARS_BACKREF: /(\\?)((\W)(\3*))/g, REGEX_SPECIAL_CHARS_GLOBAL: /([-*+?.^${}(|)[\]])/g, REGEX_REMOVE_BACKSLASH: /(?:\[.*?[^\\]\]|\\(?=.))/g, REPLACEMENTS: { "***": "*", "**/**": "**", "**/**/**": "**" }, CHAR_0: 48, CHAR_9: 57, CHAR_UPPERCASE_A: 65, CHAR_LOWERCASE_A: 97, CHAR_UPPERCASE_Z: 90, CHAR_LOWERCASE_Z: 122, CHAR_LEFT_PARENTHESES: 40, CHAR_RIGHT_PARENTHESES: 41, CHAR_ASTERISK: 42, CHAR_AMPERSAND: 38, CHAR_AT: 64, CHAR_BACKWARD_SLASH: 92, CHAR_CARRIAGE_RETURN: 13, CHAR_CIRCUMFLEX_ACCENT: 94, CHAR_COLON: 58, CHAR_COMMA: 44, CHAR_DOT: 46, CHAR_DOUBLE_QUOTE: 34, CHAR_EQUAL: 61, CHAR_EXCLAMATION_MARK: 33, CHAR_FORM_FEED: 12, CHAR_FORWARD_SLASH: 47, CHAR_GRAVE_ACCENT: 96, CHAR_HASH: 35, CHAR_HYPHEN_MINUS: 45, CHAR_LEFT_ANGLE_BRACKET: 60, CHAR_LEFT_CURLY_BRACE: 123, CHAR_LEFT_SQUARE_BRACKET: 91, CHAR_LINE_FEED: 10, CHAR_NO_BREAK_SPACE: 160, CHAR_PERCENT: 37, CHAR_PLUS: 43, CHAR_QUESTION_MARK: 63, CHAR_RIGHT_ANGLE_BRACKET: 62, CHAR_RIGHT_CURLY_BRACE: 125, CHAR_RIGHT_SQUARE_BRACKET: 93, CHAR_SEMICOLON: 59, CHAR_SINGLE_QUOTE: 39, CHAR_SPACE: 32, CHAR_TAB: 9, CHAR_UNDERSCORE: 95, CHAR_VERTICAL_LINE: 124, CHAR_ZERO_WIDTH_NOBREAK_SPACE: 65279, extglobChars(t3) {
+          return { "!": { type: "negate", open: "(?:(?!(?:", close: `))${t3.STAR})` }, "?": { type: "qmark", open: "(?:", close: ")?" }, "+": { type: "plus", open: "(?:", close: ")+" }, "*": { type: "star", open: "(?:", close: ")*" }, "@": { type: "at", open: "(?:", close: ")" } };
+        }, globChars(t3) {
+          return t3 === true ? C : b;
+        } };
+      }, 929: (t2, e2, u2) => {
+        const n = u2(963);
+        const o = u2(971);
+        const { MAX_LENGTH: s, POSIX_REGEX_SOURCE: r, REGEX_NON_SPECIAL_CHARS: a, REGEX_SPECIAL_CHARS_BACKREF: i, REPLACEMENTS: c } = n;
+        const expandRange = (t3, e3) => {
+          if (typeof e3.expandRange === "function") {
+            return e3.expandRange(...t3, e3);
+          }
+          t3.sort();
+          const u3 = `[${t3.join("-")}]`;
+          try {
+            new RegExp(u3);
+          } catch (e4) {
+            return t3.map(((t4) => o.escapeRegex(t4))).join("..");
+          }
+          return u3;
+        };
+        const syntaxError = (t3, e3) => `Missing ${t3}: "${e3}" - use "\\\\${e3}" to match literal characters`;
+        const parse = (t3, e3) => {
+          if (typeof t3 !== "string") {
+            throw new TypeError("Expected a string");
+          }
+          t3 = c[t3] || t3;
+          const u3 = { ...e3 };
+          const p = typeof u3.maxLength === "number" ? Math.min(s, u3.maxLength) : s;
+          let l = t3.length;
+          if (l > p) {
+            throw new SyntaxError(`Input length: ${l}, exceeds maximum allowed length: ${p}`);
+          }
+          const f = { type: "bos", value: "", output: u3.prepend || "" };
+          const A = [f];
+          const _ = u3.capture ? "" : "?:";
+          const R = n.globChars(u3.windows);
+          const E = n.extglobChars(R);
+          const { DOT_LITERAL: h, PLUS_LITERAL: g, SLASH_LITERAL: b, ONE_CHAR: C, DOTS_SLASH: y, NO_DOT: $, NO_DOT_SLASH: x, NO_DOTS_SLASH: S, QMARK: H, QMARK_NO_DOT: v, STAR: d, START_ANCHOR: L } = R;
+          const globstar = (t4) => `(${_}(?:(?!${L}${t4.dot ? y : h}).)*?)`;
+          const T = u3.dot ? "" : $;
+          const O = u3.dot ? H : v;
+          let k = u3.bash === true ? globstar(u3) : d;
+          if (u3.capture) {
+            k = `(${k})`;
+          }
+          if (typeof u3.noext === "boolean") {
+            u3.noextglob = u3.noext;
+          }
+          const m = { input: t3, index: -1, start: 0, dot: u3.dot === true, consumed: "", output: "", prefix: "", backtrack: false, negated: false, brackets: 0, braces: 0, parens: 0, quotes: 0, globstar: false, tokens: A };
+          t3 = o.removePrefix(t3, m);
+          l = t3.length;
+          const w = [];
+          const N = [];
+          const I = [];
+          let B = f;
+          let G;
+          const eos = () => m.index === l - 1;
+          const D = m.peek = (e4 = 1) => t3[m.index + e4];
+          const M = m.advance = () => t3[++m.index] || "";
+          const remaining = () => t3.slice(m.index + 1);
+          const consume = (t4 = "", e4 = 0) => {
+            m.consumed += t4;
+            m.index += e4;
+          };
+          const append = (t4) => {
+            m.output += t4.output != null ? t4.output : t4.value;
+            consume(t4.value);
+          };
+          const negate = () => {
+            let t4 = 1;
+            while (D() === "!" && (D(2) !== "(" || D(3) === "?")) {
+              M();
+              m.start++;
+              t4++;
+            }
+            if (t4 % 2 === 0) {
+              return false;
+            }
+            m.negated = true;
+            m.start++;
+            return true;
+          };
+          const increment = (t4) => {
+            m[t4]++;
+            I.push(t4);
+          };
+          const decrement = (t4) => {
+            m[t4]--;
+            I.pop();
+          };
+          const push = (t4) => {
+            if (B.type === "globstar") {
+              const e4 = m.braces > 0 && (t4.type === "comma" || t4.type === "brace");
+              const u4 = t4.extglob === true || w.length && (t4.type === "pipe" || t4.type === "paren");
+              if (t4.type !== "slash" && t4.type !== "paren" && !e4 && !u4) {
+                m.output = m.output.slice(0, -B.output.length);
+                B.type = "star";
+                B.value = "*";
+                B.output = k;
+                m.output += B.output;
+              }
+            }
+            if (w.length && t4.type !== "paren") {
+              w[w.length - 1].inner += t4.value;
+            }
+            if (t4.value || t4.output) append(t4);
+            if (B && B.type === "text" && t4.type === "text") {
+              B.output = (B.output || B.value) + t4.value;
+              B.value += t4.value;
+              return;
+            }
+            t4.prev = B;
+            A.push(t4);
+            B = t4;
+          };
+          const extglobOpen = (t4, e4) => {
+            const n2 = { ...E[e4], conditions: 1, inner: "" };
+            n2.prev = B;
+            n2.parens = m.parens;
+            n2.output = m.output;
+            const o2 = (u3.capture ? "(" : "") + n2.open;
+            increment("parens");
+            push({ type: t4, value: e4, output: m.output ? "" : C });
+            push({ type: "paren", extglob: true, value: M(), output: o2 });
+            w.push(n2);
+          };
+          const extglobClose = (t4) => {
+            let n2 = t4.close + (u3.capture ? ")" : "");
+            let o2;
+            if (t4.type === "negate") {
+              let s2 = k;
+              if (t4.inner && t4.inner.length > 1 && t4.inner.includes("/")) {
+                s2 = globstar(u3);
+              }
+              if (s2 !== k || eos() || /^\)+$/.test(remaining())) {
+                n2 = t4.close = `)$))${s2}`;
+              }
+              if (t4.inner.includes("*") && (o2 = remaining()) && /^\.[^\\/.]+$/.test(o2)) {
+                const u4 = parse(o2, { ...e3, fastpaths: false }).output;
+                n2 = t4.close = `)${u4})${s2})`;
+              }
+              if (t4.prev.type === "bos") {
+                m.negatedExtglob = true;
+              }
+            }
+            push({ type: "paren", extglob: true, value: G, output: n2 });
+            decrement("parens");
+          };
+          if (u3.fastpaths !== false && !/(^[*!]|[/()[\]{}"])/.test(t3)) {
+            let n2 = false;
+            let s2 = t3.replace(i, ((t4, e4, u4, o2, s3, r2) => {
+              if (o2 === "\\") {
+                n2 = true;
+                return t4;
+              }
+              if (o2 === "?") {
+                if (e4) {
+                  return e4 + o2 + (s3 ? H.repeat(s3.length) : "");
+                }
+                if (r2 === 0) {
+                  return O + (s3 ? H.repeat(s3.length) : "");
+                }
+                return H.repeat(u4.length);
+              }
+              if (o2 === ".") {
+                return h.repeat(u4.length);
+              }
+              if (o2 === "*") {
+                if (e4) {
+                  return e4 + o2 + (s3 ? k : "");
+                }
+                return k;
+              }
+              return e4 ? t4 : `\\${t4}`;
+            }));
+            if (n2 === true) {
+              if (u3.unescape === true) {
+                s2 = s2.replace(/\\/g, "");
+              } else {
+                s2 = s2.replace(/\\+/g, ((t4) => t4.length % 2 === 0 ? "\\\\" : t4 ? "\\" : ""));
+              }
+            }
+            if (s2 === t3 && u3.contains === true) {
+              m.output = t3;
+              return m;
+            }
+            m.output = o.wrapOutput(s2, m, e3);
+            return m;
+          }
+          while (!eos()) {
+            G = M();
+            if (G === "\0") {
+              continue;
+            }
+            if (G === "\\") {
+              const t4 = D();
+              if (t4 === "/" && u3.bash !== true) {
+                continue;
+              }
+              if (t4 === "." || t4 === ";") {
+                continue;
+              }
+              if (!t4) {
+                G += "\\";
+                push({ type: "text", value: G });
+                continue;
+              }
+              const e5 = /^\\+/.exec(remaining());
+              let n3 = 0;
+              if (e5 && e5[0].length > 2) {
+                n3 = e5[0].length;
+                m.index += n3;
+                if (n3 % 2 !== 0) {
+                  G += "\\";
+                }
+              }
+              if (u3.unescape === true) {
+                G = M();
+              } else {
+                G += M();
+              }
+              if (m.brackets === 0) {
+                push({ type: "text", value: G });
+                continue;
+              }
+            }
+            if (m.brackets > 0 && (G !== "]" || B.value === "[" || B.value === "[^")) {
+              if (u3.posix !== false && G === ":") {
+                const t4 = B.value.slice(1);
+                if (t4.includes("[")) {
+                  B.posix = true;
+                  if (t4.includes(":")) {
+                    const t5 = B.value.lastIndexOf("[");
+                    const e5 = B.value.slice(0, t5);
+                    const u4 = B.value.slice(t5 + 2);
+                    const n3 = r[u4];
+                    if (n3) {
+                      B.value = e5 + n3;
+                      m.backtrack = true;
+                      M();
+                      if (!f.output && A.indexOf(B) === 1) {
+                        f.output = C;
+                      }
+                      continue;
+                    }
+                  }
+                }
+              }
+              if (G === "[" && D() !== ":" || G === "-" && D() === "]") {
+                G = `\\${G}`;
+              }
+              if (G === "]" && (B.value === "[" || B.value === "[^")) {
+                G = `\\${G}`;
+              }
+              if (u3.posix === true && G === "!" && B.value === "[") {
+                G = "^";
+              }
+              B.value += G;
+              append({ value: G });
+              continue;
+            }
+            if (m.quotes === 1 && G !== '"') {
+              G = o.escapeRegex(G);
+              B.value += G;
+              append({ value: G });
+              continue;
+            }
+            if (G === '"') {
+              m.quotes = m.quotes === 1 ? 0 : 1;
+              if (u3.keepQuotes === true) {
+                push({ type: "text", value: G });
+              }
+              continue;
+            }
+            if (G === "(") {
+              increment("parens");
+              push({ type: "paren", value: G });
+              continue;
+            }
+            if (G === ")") {
+              if (m.parens === 0 && u3.strictBrackets === true) {
+                throw new SyntaxError(syntaxError("opening", "("));
+              }
+              const t4 = w[w.length - 1];
+              if (t4 && m.parens === t4.parens + 1) {
+                extglobClose(w.pop());
+                continue;
+              }
+              push({ type: "paren", value: G, output: m.parens ? ")" : "\\)" });
+              decrement("parens");
+              continue;
+            }
+            if (G === "[") {
+              if (u3.nobracket === true || !remaining().includes("]")) {
+                if (u3.nobracket !== true && u3.strictBrackets === true) {
+                  throw new SyntaxError(syntaxError("closing", "]"));
+                }
+                G = `\\${G}`;
+              } else {
+                increment("brackets");
+              }
+              push({ type: "bracket", value: G });
+              continue;
+            }
+            if (G === "]") {
+              if (u3.nobracket === true || B && B.type === "bracket" && B.value.length === 1) {
+                push({ type: "text", value: G, output: `\\${G}` });
+                continue;
+              }
+              if (m.brackets === 0) {
+                if (u3.strictBrackets === true) {
+                  throw new SyntaxError(syntaxError("opening", "["));
+                }
+                push({ type: "text", value: G, output: `\\${G}` });
+                continue;
+              }
+              decrement("brackets");
+              const t4 = B.value.slice(1);
+              if (B.posix !== true && t4[0] === "^" && !t4.includes("/")) {
+                G = `/${G}`;
+              }
+              B.value += G;
+              append({ value: G });
+              if (u3.literalBrackets === false || o.hasRegexChars(t4)) {
+                continue;
+              }
+              const e5 = o.escapeRegex(B.value);
+              m.output = m.output.slice(0, -B.value.length);
+              if (u3.literalBrackets === true) {
+                m.output += e5;
+                B.value = e5;
+                continue;
+              }
+              B.value = `(${_}${e5}|${B.value})`;
+              m.output += B.value;
+              continue;
+            }
+            if (G === "{" && u3.nobrace !== true) {
+              increment("braces");
+              const t4 = { type: "brace", value: G, output: "(", outputIndex: m.output.length, tokensIndex: m.tokens.length };
+              N.push(t4);
+              push(t4);
+              continue;
+            }
+            if (G === "}") {
+              const t4 = N[N.length - 1];
+              if (u3.nobrace === true || !t4) {
+                push({ type: "text", value: G, output: G });
+                continue;
+              }
+              let e5 = ")";
+              if (t4.dots === true) {
+                const t5 = A.slice();
+                const n3 = [];
+                for (let e6 = t5.length - 1; e6 >= 0; e6--) {
+                  A.pop();
+                  if (t5[e6].type === "brace") {
+                    break;
+                  }
+                  if (t5[e6].type !== "dots") {
+                    n3.unshift(t5[e6].value);
+                  }
+                }
+                e5 = expandRange(n3, u3);
+                m.backtrack = true;
+              }
+              if (t4.comma !== true && t4.dots !== true) {
+                const u4 = m.output.slice(0, t4.outputIndex);
+                const n3 = m.tokens.slice(t4.tokensIndex);
+                t4.value = t4.output = "\\{";
+                G = e5 = "\\}";
+                m.output = u4;
+                for (const t5 of n3) {
+                  m.output += t5.output || t5.value;
+                }
+              }
+              push({ type: "brace", value: G, output: e5 });
+              decrement("braces");
+              N.pop();
+              continue;
+            }
+            if (G === "|") {
+              if (w.length > 0) {
+                w[w.length - 1].conditions++;
+              }
+              push({ type: "text", value: G });
+              continue;
+            }
+            if (G === ",") {
+              let t4 = G;
+              const e5 = N[N.length - 1];
+              if (e5 && I[I.length - 1] === "braces") {
+                e5.comma = true;
+                t4 = "|";
+              }
+              push({ type: "comma", value: G, output: t4 });
+              continue;
+            }
+            if (G === "/") {
+              if (B.type === "dot" && m.index === m.start + 1) {
+                m.start = m.index + 1;
+                m.consumed = "";
+                m.output = "";
+                A.pop();
+                B = f;
+                continue;
+              }
+              push({ type: "slash", value: G, output: b });
+              continue;
+            }
+            if (G === ".") {
+              if (m.braces > 0 && B.type === "dot") {
+                if (B.value === ".") B.output = h;
+                const t4 = N[N.length - 1];
+                B.type = "dots";
+                B.output += G;
+                B.value += G;
+                t4.dots = true;
+                continue;
+              }
+              if (m.braces + m.parens === 0 && B.type !== "bos" && B.type !== "slash") {
+                push({ type: "text", value: G, output: h });
+                continue;
+              }
+              push({ type: "dot", value: G, output: h });
+              continue;
+            }
+            if (G === "?") {
+              const t4 = B && B.value === "(";
+              if (!t4 && u3.noextglob !== true && D() === "(" && D(2) !== "?") {
+                extglobOpen("qmark", G);
+                continue;
+              }
+              if (B && B.type === "paren") {
+                const t5 = D();
+                let e5 = G;
+                if (B.value === "(" && !/[!=<:]/.test(t5) || t5 === "<" && !/<([!=]|\w+>)/.test(remaining())) {
+                  e5 = `\\${G}`;
+                }
+                push({ type: "text", value: G, output: e5 });
+                continue;
+              }
+              if (u3.dot !== true && (B.type === "slash" || B.type === "bos")) {
+                push({ type: "qmark", value: G, output: v });
+                continue;
+              }
+              push({ type: "qmark", value: G, output: H });
+              continue;
+            }
+            if (G === "!") {
+              if (u3.noextglob !== true && D() === "(") {
+                if (D(2) !== "?" || !/[!=<:]/.test(D(3))) {
+                  extglobOpen("negate", G);
+                  continue;
+                }
+              }
+              if (u3.nonegate !== true && m.index === 0) {
+                negate();
+                continue;
+              }
+            }
+            if (G === "+") {
+              if (u3.noextglob !== true && D() === "(" && D(2) !== "?") {
+                extglobOpen("plus", G);
+                continue;
+              }
+              if (B && B.value === "(" || u3.regex === false) {
+                push({ type: "plus", value: G, output: g });
+                continue;
+              }
+              if (B && (B.type === "bracket" || B.type === "paren" || B.type === "brace") || m.parens > 0) {
+                push({ type: "plus", value: G });
+                continue;
+              }
+              push({ type: "plus", value: g });
+              continue;
+            }
+            if (G === "@") {
+              if (u3.noextglob !== true && D() === "(" && D(2) !== "?") {
+                push({ type: "at", extglob: true, value: G, output: "" });
+                continue;
+              }
+              push({ type: "text", value: G });
+              continue;
+            }
+            if (G !== "*") {
+              if (G === "$" || G === "^") {
+                G = `\\${G}`;
+              }
+              const t4 = a.exec(remaining());
+              if (t4) {
+                G += t4[0];
+                m.index += t4[0].length;
+              }
+              push({ type: "text", value: G });
+              continue;
+            }
+            if (B && (B.type === "globstar" || B.star === true)) {
+              B.type = "star";
+              B.star = true;
+              B.value += G;
+              B.output = k;
+              m.backtrack = true;
+              m.globstar = true;
+              consume(G);
+              continue;
+            }
+            let e4 = remaining();
+            if (u3.noextglob !== true && /^\([^?]/.test(e4)) {
+              extglobOpen("star", G);
+              continue;
+            }
+            if (B.type === "star") {
+              if (u3.noglobstar === true) {
+                consume(G);
+                continue;
+              }
+              const n3 = B.prev;
+              const o2 = n3.prev;
+              const s2 = n3.type === "slash" || n3.type === "bos";
+              const r2 = o2 && (o2.type === "star" || o2.type === "globstar");
+              if (u3.bash === true && (!s2 || e4[0] && e4[0] !== "/")) {
+                push({ type: "star", value: G, output: "" });
+                continue;
+              }
+              const a2 = m.braces > 0 && (n3.type === "comma" || n3.type === "brace");
+              const i2 = w.length && (n3.type === "pipe" || n3.type === "paren");
+              if (!s2 && n3.type !== "paren" && !a2 && !i2) {
+                push({ type: "star", value: G, output: "" });
+                continue;
+              }
+              while (e4.slice(0, 3) === "/**") {
+                const u4 = t3[m.index + 4];
+                if (u4 && u4 !== "/") {
+                  break;
+                }
+                e4 = e4.slice(3);
+                consume("/**", 3);
+              }
+              if (n3.type === "bos" && eos()) {
+                B.type = "globstar";
+                B.value += G;
+                B.output = globstar(u3);
+                m.output = B.output;
+                m.globstar = true;
+                consume(G);
+                continue;
+              }
+              if (n3.type === "slash" && n3.prev.type !== "bos" && !r2 && eos()) {
+                m.output = m.output.slice(0, -(n3.output + B.output).length);
+                n3.output = `(?:${n3.output}`;
+                B.type = "globstar";
+                B.output = globstar(u3) + (u3.strictSlashes ? ")" : "|$)");
+                B.value += G;
+                m.globstar = true;
+                m.output += n3.output + B.output;
+                consume(G);
+                continue;
+              }
+              if (n3.type === "slash" && n3.prev.type !== "bos" && e4[0] === "/") {
+                const t4 = e4[1] !== void 0 ? "|$" : "";
+                m.output = m.output.slice(0, -(n3.output + B.output).length);
+                n3.output = `(?:${n3.output}`;
+                B.type = "globstar";
+                B.output = `${globstar(u3)}${b}|${b}${t4})`;
+                B.value += G;
+                m.output += n3.output + B.output;
+                m.globstar = true;
+                consume(G + M());
+                push({ type: "slash", value: "/", output: "" });
+                continue;
+              }
+              if (n3.type === "bos" && e4[0] === "/") {
+                B.type = "globstar";
+                B.value += G;
+                B.output = `(?:^|${b}|${globstar(u3)}${b})`;
+                m.output = B.output;
+                m.globstar = true;
+                consume(G + M());
+                push({ type: "slash", value: "/", output: "" });
+                continue;
+              }
+              m.output = m.output.slice(0, -B.output.length);
+              B.type = "globstar";
+              B.output = globstar(u3);
+              B.value += G;
+              m.output += B.output;
+              m.globstar = true;
+              consume(G);
+              continue;
+            }
+            const n2 = { type: "star", value: G, output: k };
+            if (u3.bash === true) {
+              n2.output = ".*?";
+              if (B.type === "bos" || B.type === "slash") {
+                n2.output = T + n2.output;
+              }
+              push(n2);
+              continue;
+            }
+            if (B && (B.type === "bracket" || B.type === "paren") && u3.regex === true) {
+              n2.output = G;
+              push(n2);
+              continue;
+            }
+            if (m.index === m.start || B.type === "slash" || B.type === "dot") {
+              if (B.type === "dot") {
+                m.output += x;
+                B.output += x;
+              } else if (u3.dot === true) {
+                m.output += S;
+                B.output += S;
+              } else {
+                m.output += T;
+                B.output += T;
+              }
+              if (D() !== "*") {
+                m.output += C;
+                B.output += C;
+              }
+            }
+            push(n2);
+          }
+          while (m.brackets > 0) {
+            if (u3.strictBrackets === true) throw new SyntaxError(syntaxError("closing", "]"));
+            m.output = o.escapeLast(m.output, "[");
+            decrement("brackets");
+          }
+          while (m.parens > 0) {
+            if (u3.strictBrackets === true) throw new SyntaxError(syntaxError("closing", ")"));
+            m.output = o.escapeLast(m.output, "(");
+            decrement("parens");
+          }
+          while (m.braces > 0) {
+            if (u3.strictBrackets === true) throw new SyntaxError(syntaxError("closing", "}"));
+            m.output = o.escapeLast(m.output, "{");
+            decrement("braces");
+          }
+          if (u3.strictSlashes !== true && (B.type === "star" || B.type === "bracket")) {
+            push({ type: "maybe_slash", value: "", output: `${b}?` });
+          }
+          if (m.backtrack === true) {
+            m.output = "";
+            for (const t4 of m.tokens) {
+              m.output += t4.output != null ? t4.output : t4.value;
+              if (t4.suffix) {
+                m.output += t4.suffix;
+              }
+            }
+          }
+          return m;
+        };
+        parse.fastpaths = (t3, e3) => {
+          const u3 = { ...e3 };
+          const r2 = typeof u3.maxLength === "number" ? Math.min(s, u3.maxLength) : s;
+          const a2 = t3.length;
+          if (a2 > r2) {
+            throw new SyntaxError(`Input length: ${a2}, exceeds maximum allowed length: ${r2}`);
+          }
+          t3 = c[t3] || t3;
+          const { DOT_LITERAL: i2, SLASH_LITERAL: p, ONE_CHAR: l, DOTS_SLASH: f, NO_DOT: A, NO_DOTS: _, NO_DOTS_SLASH: R, STAR: E, START_ANCHOR: h } = n.globChars(u3.windows);
+          const g = u3.dot ? _ : A;
+          const b = u3.dot ? R : A;
+          const C = u3.capture ? "" : "?:";
+          const y = { negated: false, prefix: "" };
+          let $ = u3.bash === true ? ".*?" : E;
+          if (u3.capture) {
+            $ = `(${$})`;
+          }
+          const globstar = (t4) => {
+            if (t4.noglobstar === true) return $;
+            return `(${C}(?:(?!${h}${t4.dot ? f : i2}).)*?)`;
+          };
+          const create = (t4) => {
+            switch (t4) {
+              case "*":
+                return `${g}${l}${$}`;
+              case ".*":
+                return `${i2}${l}${$}`;
+              case "*.*":
+                return `${g}${$}${i2}${l}${$}`;
+              case "*/*":
+                return `${g}${$}${p}${l}${b}${$}`;
+              case "**":
+                return g + globstar(u3);
+              case "**/*":
+                return `(?:${g}${globstar(u3)}${p})?${b}${l}${$}`;
+              case "**/*.*":
+                return `(?:${g}${globstar(u3)}${p})?${b}${$}${i2}${l}${$}`;
+              case "**/.*":
+                return `(?:${g}${globstar(u3)}${p})?${i2}${l}${$}`;
+              default: {
+                const e4 = /^(.*?)\.(\w+)$/.exec(t4);
+                if (!e4) return;
+                const u4 = create(e4[1]);
+                if (!u4) return;
+                return u4 + i2 + e4[2];
+              }
+            }
+          };
+          const x = o.removePrefix(t3, y);
+          let S = create(x);
+          if (S && u3.strictSlashes !== true) {
+            S += `${p}?`;
+          }
+          return S;
+        };
+        t2.exports = parse;
+      }, 696: (t2, e2, u2) => {
+        const n = u2(229);
+        const o = u2(929);
+        const s = u2(971);
+        const r = u2(963);
+        const isObject = (t3) => t3 && typeof t3 === "object" && !Array.isArray(t3);
+        const picomatch = (t3, e3, u3 = false) => {
+          if (Array.isArray(t3)) {
+            const n3 = t3.map(((t4) => picomatch(t4, e3, u3)));
+            const arrayMatcher = (t4) => {
+              for (const e4 of n3) {
+                const u4 = e4(t4);
+                if (u4) return u4;
+              }
+              return false;
+            };
+            return arrayMatcher;
+          }
+          const n2 = isObject(t3) && t3.tokens && t3.input;
+          if (t3 === "" || typeof t3 !== "string" && !n2) {
+            throw new TypeError("Expected pattern to be a non-empty string");
+          }
+          const o2 = e3 || {};
+          const s2 = o2.windows;
+          const r2 = n2 ? picomatch.compileRe(t3, e3) : picomatch.makeRe(t3, e3, false, true);
+          const a = r2.state;
+          delete r2.state;
+          let isIgnored = () => false;
+          if (o2.ignore) {
+            const t4 = { ...e3, ignore: null, onMatch: null, onResult: null };
+            isIgnored = picomatch(o2.ignore, t4, u3);
+          }
+          const matcher = (u4, n3 = false) => {
+            const { isMatch: i, match: c, output: p } = picomatch.test(u4, r2, e3, { glob: t3, posix: s2 });
+            const l = { glob: t3, state: a, regex: r2, posix: s2, input: u4, output: p, match: c, isMatch: i };
+            if (typeof o2.onResult === "function") {
+              o2.onResult(l);
+            }
+            if (i === false) {
+              l.isMatch = false;
+              return n3 ? l : false;
+            }
+            if (isIgnored(u4)) {
+              if (typeof o2.onIgnore === "function") {
+                o2.onIgnore(l);
+              }
+              l.isMatch = false;
+              return n3 ? l : false;
+            }
+            if (typeof o2.onMatch === "function") {
+              o2.onMatch(l);
+            }
+            return n3 ? l : true;
+          };
+          if (u3) {
+            matcher.state = a;
+          }
+          return matcher;
+        };
+        picomatch.test = (t3, e3, u3, { glob: n2, posix: o2 } = {}) => {
+          if (typeof t3 !== "string") {
+            throw new TypeError("Expected input to be a string");
+          }
+          if (t3 === "") {
+            return { isMatch: false, output: "" };
+          }
+          const r2 = u3 || {};
+          const a = r2.format || (o2 ? s.toPosixSlashes : null);
+          let i = t3 === n2;
+          let c = i && a ? a(t3) : t3;
+          if (i === false) {
+            c = a ? a(t3) : t3;
+            i = c === n2;
+          }
+          if (i === false || r2.capture === true) {
+            if (r2.matchBase === true || r2.basename === true) {
+              i = picomatch.matchBase(t3, e3, u3, o2);
+            } else {
+              i = e3.exec(c);
+            }
+          }
+          return { isMatch: Boolean(i), match: i, output: c };
+        };
+        picomatch.matchBase = (t3, e3, u3) => {
+          const n2 = e3 instanceof RegExp ? e3 : picomatch.makeRe(e3, u3);
+          return n2.test(s.basename(t3));
+        };
+        picomatch.isMatch = (t3, e3, u3) => picomatch(e3, u3)(t3);
+        picomatch.parse = (t3, e3) => {
+          if (Array.isArray(t3)) return t3.map(((t4) => picomatch.parse(t4, e3)));
+          return o(t3, { ...e3, fastpaths: false });
+        };
+        picomatch.scan = (t3, e3) => n(t3, e3);
+        picomatch.compileRe = (t3, e3, u3 = false, n2 = false) => {
+          if (u3 === true) {
+            return t3.output;
+          }
+          const o2 = e3 || {};
+          const s2 = o2.contains ? "" : "^";
+          const r2 = o2.contains ? "" : "$";
+          let a = `${s2}(?:${t3.output})${r2}`;
+          if (t3 && t3.negated === true) {
+            a = `^(?!${a}).*$`;
+          }
+          const i = picomatch.toRegex(a, e3);
+          if (n2 === true) {
+            i.state = t3;
+          }
+          return i;
+        };
+        picomatch.makeRe = (t3, e3 = {}, u3 = false, n2 = false) => {
+          if (!t3 || typeof t3 !== "string") {
+            throw new TypeError("Expected a non-empty string");
+          }
+          let s2 = { negated: false, fastpaths: true };
+          if (e3.fastpaths !== false && (t3[0] === "." || t3[0] === "*")) {
+            s2.output = o.fastpaths(t3, e3);
+          }
+          if (!s2.output) {
+            s2 = o(t3, e3);
+          }
+          return picomatch.compileRe(s2, e3, u3, n2);
+        };
+        picomatch.toRegex = (t3, e3) => {
+          try {
+            const u3 = e3 || {};
+            return new RegExp(t3, u3.flags || (u3.nocase ? "i" : ""));
+          } catch (t4) {
+            if (e3 && e3.debug === true) throw t4;
+            return /$^/;
+          }
+        };
+        picomatch.constants = r;
+        t2.exports = picomatch;
+      }, 229: (t2, e2, u2) => {
+        const n = u2(971);
+        const { CHAR_ASTERISK: o, CHAR_AT: s, CHAR_BACKWARD_SLASH: r, CHAR_COMMA: a, CHAR_DOT: i, CHAR_EXCLAMATION_MARK: c, CHAR_FORWARD_SLASH: p, CHAR_LEFT_CURLY_BRACE: l, CHAR_LEFT_PARENTHESES: f, CHAR_LEFT_SQUARE_BRACKET: A, CHAR_PLUS: _, CHAR_QUESTION_MARK: R, CHAR_RIGHT_CURLY_BRACE: E, CHAR_RIGHT_PARENTHESES: h, CHAR_RIGHT_SQUARE_BRACKET: g } = u2(963);
+        const isPathSeparator = (t3) => t3 === p || t3 === r;
+        const depth = (t3) => {
+          if (t3.isPrefix !== true) {
+            t3.depth = t3.isGlobstar ? Infinity : 1;
+          }
+        };
+        const scan = (t3, e3) => {
+          const u3 = e3 || {};
+          const b = t3.length - 1;
+          const C = u3.parts === true || u3.scanToEnd === true;
+          const y = [];
+          const $ = [];
+          const x = [];
+          let S = t3;
+          let H = -1;
+          let v = 0;
+          let d = 0;
+          let L = false;
+          let T = false;
+          let O = false;
+          let k = false;
+          let m = false;
+          let w = false;
+          let N = false;
+          let I = false;
+          let B = false;
+          let G = false;
+          let D = 0;
+          let M;
+          let P;
+          let K = { value: "", depth: 0, isGlob: false };
+          const eos = () => H >= b;
+          const peek = () => S.charCodeAt(H + 1);
+          const advance = () => {
+            M = P;
+            return S.charCodeAt(++H);
+          };
+          while (H < b) {
+            P = advance();
+            let t4;
+            if (P === r) {
+              N = K.backslashes = true;
+              P = advance();
+              if (P === l) {
+                w = true;
+              }
+              continue;
+            }
+            if (w === true || P === l) {
+              D++;
+              while (eos() !== true && (P = advance())) {
+                if (P === r) {
+                  N = K.backslashes = true;
+                  advance();
+                  continue;
+                }
+                if (P === l) {
+                  D++;
+                  continue;
+                }
+                if (w !== true && P === i && (P = advance()) === i) {
+                  L = K.isBrace = true;
+                  O = K.isGlob = true;
+                  G = true;
+                  if (C === true) {
+                    continue;
+                  }
+                  break;
+                }
+                if (w !== true && P === a) {
+                  L = K.isBrace = true;
+                  O = K.isGlob = true;
+                  G = true;
+                  if (C === true) {
+                    continue;
+                  }
+                  break;
+                }
+                if (P === E) {
+                  D--;
+                  if (D === 0) {
+                    w = false;
+                    L = K.isBrace = true;
+                    G = true;
+                    break;
+                  }
+                }
+              }
+              if (C === true) {
+                continue;
+              }
+              break;
+            }
+            if (P === p) {
+              y.push(H);
+              $.push(K);
+              K = { value: "", depth: 0, isGlob: false };
+              if (G === true) continue;
+              if (M === i && H === v + 1) {
+                v += 2;
+                continue;
+              }
+              d = H + 1;
+              continue;
+            }
+            if (u3.noext !== true) {
+              const t5 = P === _ || P === s || P === o || P === R || P === c;
+              if (t5 === true && peek() === f) {
+                O = K.isGlob = true;
+                k = K.isExtglob = true;
+                G = true;
+                if (P === c && H === v) {
+                  B = true;
+                }
+                if (C === true) {
+                  while (eos() !== true && (P = advance())) {
+                    if (P === r) {
+                      N = K.backslashes = true;
+                      P = advance();
+                      continue;
+                    }
+                    if (P === h) {
+                      O = K.isGlob = true;
+                      G = true;
+                      break;
+                    }
+                  }
+                  continue;
+                }
+                break;
+              }
+            }
+            if (P === o) {
+              if (M === o) m = K.isGlobstar = true;
+              O = K.isGlob = true;
+              G = true;
+              if (C === true) {
+                continue;
+              }
+              break;
+            }
+            if (P === R) {
+              O = K.isGlob = true;
+              G = true;
+              if (C === true) {
+                continue;
+              }
+              break;
+            }
+            if (P === A) {
+              while (eos() !== true && (t4 = advance())) {
+                if (t4 === r) {
+                  N = K.backslashes = true;
+                  advance();
+                  continue;
+                }
+                if (t4 === g) {
+                  T = K.isBracket = true;
+                  O = K.isGlob = true;
+                  G = true;
+                  break;
+                }
+              }
+              if (C === true) {
+                continue;
+              }
+              break;
+            }
+            if (u3.nonegate !== true && P === c && H === v) {
+              I = K.negated = true;
+              v++;
+              continue;
+            }
+            if (u3.noparen !== true && P === f) {
+              O = K.isGlob = true;
+              if (C === true) {
+                while (eos() !== true && (P = advance())) {
+                  if (P === f) {
+                    N = K.backslashes = true;
+                    P = advance();
+                    continue;
+                  }
+                  if (P === h) {
+                    G = true;
+                    break;
+                  }
+                }
+                continue;
+              }
+              break;
+            }
+            if (O === true) {
+              G = true;
+              if (C === true) {
+                continue;
+              }
+              break;
+            }
+          }
+          if (u3.noext === true) {
+            k = false;
+            O = false;
+          }
+          let U = S;
+          let X5 = "";
+          let F = "";
+          if (v > 0) {
+            X5 = S.slice(0, v);
+            S = S.slice(v);
+            d -= v;
+          }
+          if (U && O === true && d > 0) {
+            U = S.slice(0, d);
+            F = S.slice(d);
+          } else if (O === true) {
+            U = "";
+            F = S;
+          } else {
+            U = S;
+          }
+          if (U && U !== "" && U !== "/" && U !== S) {
+            if (isPathSeparator(U.charCodeAt(U.length - 1))) {
+              U = U.slice(0, -1);
+            }
+          }
+          if (u3.unescape === true) {
+            if (F) F = n.removeBackslashes(F);
+            if (U && N === true) {
+              U = n.removeBackslashes(U);
+            }
+          }
+          const Q = { prefix: X5, input: t3, start: v, base: U, glob: F, isBrace: L, isBracket: T, isGlob: O, isExtglob: k, isGlobstar: m, negated: I, negatedExtglob: B };
+          if (u3.tokens === true) {
+            Q.maxDepth = 0;
+            if (!isPathSeparator(P)) {
+              $.push(K);
+            }
+            Q.tokens = $;
+          }
+          if (u3.parts === true || u3.tokens === true) {
+            let e4;
+            for (let n2 = 0; n2 < y.length; n2++) {
+              const o2 = e4 ? e4 + 1 : v;
+              const s2 = y[n2];
+              const r2 = t3.slice(o2, s2);
+              if (u3.tokens) {
+                if (n2 === 0 && v !== 0) {
+                  $[n2].isPrefix = true;
+                  $[n2].value = X5;
+                } else {
+                  $[n2].value = r2;
+                }
+                depth($[n2]);
+                Q.maxDepth += $[n2].depth;
+              }
+              if (n2 !== 0 || r2 !== "") {
+                x.push(r2);
+              }
+              e4 = s2;
+            }
+            if (e4 && e4 + 1 < t3.length) {
+              const n2 = t3.slice(e4 + 1);
+              x.push(n2);
+              if (u3.tokens) {
+                $[$.length - 1].value = n2;
+                depth($[$.length - 1]);
+                Q.maxDepth += $[$.length - 1].depth;
+              }
+            }
+            Q.slashes = y;
+            Q.parts = x;
+          }
+          return Q;
+        };
+        t2.exports = scan;
+      }, 971: (t2, e2, u2) => {
+        const { REGEX_BACKSLASH: n, REGEX_REMOVE_BACKSLASH: o, REGEX_SPECIAL_CHARS: s, REGEX_SPECIAL_CHARS_GLOBAL: r } = u2(963);
+        e2.isObject = (t3) => t3 !== null && typeof t3 === "object" && !Array.isArray(t3);
+        e2.hasRegexChars = (t3) => s.test(t3);
+        e2.isRegexChar = (t3) => t3.length === 1 && e2.hasRegexChars(t3);
+        e2.escapeRegex = (t3) => t3.replace(r, "\\$1");
+        e2.toPosixSlashes = (t3) => t3.replace(n, "/");
+        e2.removeBackslashes = (t3) => t3.replace(o, ((t4) => t4 === "\\" ? "" : t4));
+        e2.escapeLast = (t3, u3, n2) => {
+          const o2 = t3.lastIndexOf(u3, n2);
+          if (o2 === -1) return t3;
+          if (t3[o2 - 1] === "\\") return e2.escapeLast(t3, u3, o2 - 1);
+          return `${t3.slice(0, o2)}\\${t3.slice(o2)}`;
+        };
+        e2.removePrefix = (t3, e3 = {}) => {
+          let u3 = t3;
+          if (u3.startsWith("./")) {
+            u3 = u3.slice(2);
+            e3.prefix = "./";
+          }
+          return u3;
+        };
+        e2.wrapOutput = (t3, e3 = {}, u3 = {}) => {
+          const n2 = u3.contains ? "" : "^";
+          const o2 = u3.contains ? "" : "$";
+          let s2 = `${n2}(?:${t3})${o2}`;
+          if (e3.negated === true) {
+            s2 = `(?:^(?!${s2}).*$)`;
+          }
+          return s2;
+        };
+        e2.basename = (t3, { windows: e3 } = {}) => {
+          const u3 = t3.split(e3 ? /[\\/]/ : "/");
+          const n2 = u3[u3.length - 1];
+          if (n2 === "") {
+            return u3[u3.length - 2];
+          }
+          return n2;
+        };
+      } };
+      var e = {};
+      function __nccwpck_require__2(u2) {
+        var n = e[u2];
+        if (n !== void 0) {
+          return n.exports;
+        }
+        var o = e[u2] = { exports: {} };
+        var s = true;
+        try {
+          t[u2](o, o.exports, __nccwpck_require__2);
+          s = false;
+        } finally {
+          if (s) delete e[u2];
+        }
+        return o.exports;
+      }
+      if (typeof __nccwpck_require__2 !== "undefined") __nccwpck_require__2.ab = __dirname + "/";
+      var u = __nccwpck_require__2(286);
+      module2.exports = u;
+    })();
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/match-local-pattern.js
+var require_match_local_pattern = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/match-local-pattern.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    function _export(target, all) {
+      for (var name in all) Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+      });
+    }
+    _export(exports2, {
+      hasLocalMatch: function() {
+        return hasLocalMatch;
+      },
+      matchLocalPattern: function() {
+        return matchLocalPattern;
+      }
+    });
+    var _picomatch = require_picomatch();
+    function matchLocalPattern(pattern, url) {
+      if (pattern.search !== void 0) {
+        if (pattern.search !== url.search) {
+          return false;
+        }
+      }
+      if (!(0, _picomatch.makeRe)(pattern.pathname ?? "**", {
+        dot: true
+      }).test(url.pathname)) {
+        return false;
+      }
+      return true;
+    }
+    function hasLocalMatch(localPatterns, urlPathAndQuery) {
+      if (!localPatterns) {
+        return true;
+      }
+      const url = new URL(urlPathAndQuery, "http://n");
+      return localPatterns.some((p) => matchLocalPattern(p, url));
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/match-remote-pattern.js
+var require_match_remote_pattern = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/match-remote-pattern.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    function _export(target, all) {
+      for (var name in all) Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+      });
+    }
+    _export(exports2, {
+      hasRemoteMatch: function() {
+        return hasRemoteMatch;
+      },
+      matchRemotePattern: function() {
+        return matchRemotePattern;
+      }
+    });
+    var _picomatch = require_picomatch();
+    function matchRemotePattern(pattern, url) {
+      if (pattern.protocol !== void 0) {
+        if (pattern.protocol.replace(/:$/, "") !== url.protocol.replace(/:$/, "")) {
+          return false;
+        }
+      }
+      if (pattern.port !== void 0) {
+        if (pattern.port !== url.port) {
+          return false;
+        }
+      }
+      if (pattern.hostname === void 0) {
+        throw Object.defineProperty(new Error(`Pattern should define hostname but found
+${JSON.stringify(pattern)}`), "__NEXT_ERROR_CODE", {
+          value: "E410",
+          enumerable: false,
+          configurable: true
+        });
+      } else {
+        if (!(0, _picomatch.makeRe)(pattern.hostname).test(url.hostname)) {
+          return false;
+        }
+      }
+      if (pattern.search !== void 0) {
+        if (pattern.search !== url.search) {
+          return false;
+        }
+      }
+      if (!(0, _picomatch.makeRe)(pattern.pathname ?? "**", {
+        dot: true
+      }).test(url.pathname)) {
+        return false;
+      }
+      return true;
+    }
+    function hasRemoteMatch(domains, remotePatterns, url) {
+      return domains.some((domain) => url.hostname === domain) || remotePatterns.some((p) => matchRemotePattern(p, url));
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-loader.js
+var require_image_loader = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-loader.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "default", {
+      enumerable: true,
+      get: function() {
+        return _default;
+      }
+    });
+    var _findclosestquality = require_find_closest_quality();
+    var _deploymentid = require_deployment_id();
+    function defaultLoader({ config, src, width, quality }) {
+      if (process.env.NODE_ENV !== "production") {
+        const missingValues = [];
+        if (!src) missingValues.push("src");
+        if (!width) missingValues.push("width");
+        if (missingValues.length > 0) {
+          throw Object.defineProperty(new Error(`Next Image Optimization requires ${missingValues.join(", ")} to be provided. Make sure you pass them as props to the \`next/image\` component. Received: ${JSON.stringify({
+            src,
+            width,
+            quality
+          })}`), "__NEXT_ERROR_CODE", {
+            value: "E188",
+            enumerable: false,
+            configurable: true
+          });
+        }
+      }
+      let deploymentId = (0, _deploymentid.getDeploymentId)();
+      if (src.startsWith("/") && !src.startsWith("//")) {
+        if (src.includes("/_next/static/immutable") && !(0, _deploymentid.getAssetToken)()) {
+          deploymentId = void 0;
+        } else {
+          const qIndex = src.indexOf("?");
+          if (qIndex !== -1) {
+            const params = new URLSearchParams(src.slice(qIndex + 1));
+            const srcDpl = params.get("dpl");
+            if (srcDpl) {
+              deploymentId = srcDpl;
+              params.delete("dpl");
+              const remaining = params.toString();
+              src = src.slice(0, qIndex) + (remaining ? "?" + remaining : "");
+            }
+          }
+        }
+      }
+      if (src.startsWith("/") && src.includes("?") && config.localPatterns?.length === 1 && config.localPatterns[0].pathname === "**" && config.localPatterns[0].search === "") {
+        throw Object.defineProperty(new Error(`Image with src "${src}" is using a query string which is not configured in images.localPatterns.
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-localpatterns`), "__NEXT_ERROR_CODE", {
+          value: "E871",
+          enumerable: false,
+          configurable: true
+        });
+      }
+      if (process.env.NODE_ENV !== "production") {
+        if (src.startsWith("//")) {
+          throw Object.defineProperty(new Error(`Failed to parse src "${src}" on \`next/image\`, protocol-relative URL (//) must be changed to an absolute URL (http:// or https://)`), "__NEXT_ERROR_CODE", {
+            value: "E360",
+            enumerable: false,
+            configurable: true
+          });
+        }
+        if (src.startsWith("/") && config.localPatterns) {
+          if (process.env.NODE_ENV !== "test" && // micromatch isn't compatible with edge runtime
+          process.env.NEXT_RUNTIME !== "edge") {
+            const { hasLocalMatch } = require_match_local_pattern();
+            if (!hasLocalMatch(config.localPatterns, src)) {
+              throw Object.defineProperty(new Error(`Invalid src prop (${src}) on \`next/image\` does not match \`images.localPatterns\` configured in your \`next.config.js\`
+See more info: https://nextjs.org/docs/messages/next-image-unconfigured-localpatterns`), "__NEXT_ERROR_CODE", {
+                value: "E426",
+                enumerable: false,
+                configurable: true
+              });
+            }
+          }
+        }
+        if (!src.startsWith("/") && (config.domains || config.remotePatterns)) {
+          let parsedSrc;
+          try {
+            parsedSrc = new URL(src);
+          } catch (err) {
+            console.error(err);
+            throw Object.defineProperty(new Error(`Failed to parse src "${src}" on \`next/image\`, if using relative image it must start with a leading slash "/" or be an absolute URL (http:// or https://)`), "__NEXT_ERROR_CODE", {
+              value: "E63",
+              enumerable: false,
+              configurable: true
+            });
+          }
+          if (process.env.NODE_ENV !== "test" && // micromatch isn't compatible with edge runtime
+          process.env.NEXT_RUNTIME !== "edge") {
+            const { hasRemoteMatch } = require_match_remote_pattern();
+            if (!hasRemoteMatch(config.domains, config.remotePatterns, parsedSrc)) {
+              throw Object.defineProperty(new Error(`Invalid src prop (${src}) on \`next/image\`, hostname "${parsedSrc.hostname}" is not configured under images in your \`next.config.js\`
+See more info: https://nextjs.org/docs/messages/next-image-unconfigured-host`), "__NEXT_ERROR_CODE", {
+                value: "E231",
+                enumerable: false,
+                configurable: true
+              });
+            }
+          }
+        }
+      }
+      const q = (0, _findclosestquality.findClosestQuality)(quality, config);
+      return `${config.path}?url=${encodeURIComponent(src)}&w=${width}&q=${q}${src.startsWith("/") && deploymentId ? `&dpl=${deploymentId}` : ""}`;
+    }
+    defaultLoader.__next_img_default = true;
+    var _default = defaultLoader;
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/use-merged-ref.js
+var require_use_merged_ref = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/use-merged-ref.js"(exports2, module2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "useMergedRef", {
+      enumerable: true,
+      get: function() {
+        return useMergedRef;
+      }
+    });
+    var _react = require("react");
+    function useMergedRef(refA, refB) {
+      const cleanupA = (0, _react.useRef)(null);
+      const cleanupB = (0, _react.useRef)(null);
+      return (0, _react.useCallback)((current) => {
+        if (current === null) {
+          const cleanupFnA = cleanupA.current;
+          if (cleanupFnA) {
+            cleanupA.current = null;
+            cleanupFnA();
+          }
+          const cleanupFnB = cleanupB.current;
+          if (cleanupFnB) {
+            cleanupB.current = null;
+            cleanupFnB();
+          }
+        } else {
+          if (refA) {
+            cleanupA.current = applyRef(refA, current);
+          }
+          if (refB) {
+            cleanupB.current = applyRef(refB, current);
+          }
+        }
+      }, [
+        refA,
+        refB
+      ]);
+    }
+    function applyRef(refA, current) {
+      if (typeof refA === "function") {
+        const cleanup = refA(current);
+        if (typeof cleanup === "function") {
+          return cleanup;
+        } else {
+          return () => refA(null);
+        }
+      } else {
+        refA.current = current;
+        return () => {
+          refA.current = null;
+        };
+      }
+    }
+    if ((typeof exports2.default === "function" || typeof exports2.default === "object" && exports2.default !== null) && typeof exports2.default.__esModule === "undefined") {
+      Object.defineProperty(exports2.default, "__esModule", { value: true });
+      Object.assign(exports2.default, exports2);
+      module2.exports = exports2.default;
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/image-component.js
+var require_image_component = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/image-component.js"(exports2, module2) {
+    "use strict";
+    "use client";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports2, "Image", {
+      enumerable: true,
+      get: function() {
+        return Image3;
+      }
+    });
+    var _interop_require_default = require_interop_require_default();
+    var _interop_require_wildcard = require_interop_require_wildcard();
+    var _jsxruntime = require("react/jsx-runtime");
+    var _react = /* @__PURE__ */ _interop_require_wildcard._(require("react"));
+    var _reactdom = /* @__PURE__ */ _interop_require_default._(require("react-dom"));
+    var _head = /* @__PURE__ */ _interop_require_default._(require_head());
+    var _getimgprops = require_get_img_props();
+    var _imageconfig = require_image_config();
+    var _imageconfigcontextsharedruntime = require_image_config_context_shared_runtime();
+    var _routercontextsharedruntime = require_router_context_shared_runtime();
+    var _imageloader = /* @__PURE__ */ _interop_require_default._(require_image_loader());
+    var _usemergedref = require_use_merged_ref();
+    var configEnv = process.env.__NEXT_IMAGE_OPTS;
+    if (typeof window === "undefined") {
+      ;
+      globalThis.__NEXT_IMAGE_IMPORTED = true;
+    }
+    function handleLoading(img, placeholder, onLoadRef, onLoadingCompleteRef, setBlurComplete, unoptimized, sizesInput) {
+      const src = img?.src;
+      if (!img || img["data-loaded-src"] === src) {
+        return;
+      }
+      img["data-loaded-src"] = src;
+      const p = "decode" in img ? img.decode() : Promise.resolve();
+      p.catch(() => {
+      }).then(() => {
+        if (!img.parentElement || !img.isConnected) {
+          return;
+        }
+        if (placeholder !== "empty") {
+          setBlurComplete(true);
+        }
+        if (onLoadRef?.current) {
+          const event = new Event("load");
+          Object.defineProperty(event, "target", {
+            writable: false,
+            value: img
+          });
+          let prevented = false;
+          let stopped = false;
+          onLoadRef.current({
+            ...event,
+            nativeEvent: event,
+            currentTarget: img,
+            target: img,
+            isDefaultPrevented: () => prevented,
+            isPropagationStopped: () => stopped,
+            persist: () => {
+            },
+            preventDefault: () => {
+              prevented = true;
+              event.preventDefault();
+            },
+            stopPropagation: () => {
+              stopped = true;
+              event.stopPropagation();
+            }
+          });
+        }
+        if (onLoadingCompleteRef?.current) {
+          onLoadingCompleteRef.current(img);
+        }
+        if (process.env.NODE_ENV !== "production") {
+          const { warnOnce } = require_warn_once();
+          const origSrc = new URL(src, "http://n").searchParams.get("url") || src;
+          if (img.getAttribute("data-nimg") === "fill") {
+            if (!unoptimized && (!sizesInput || sizesInput === "100vw")) {
+              let widthViewportRatio = img.getBoundingClientRect().width / window.innerWidth;
+              if (widthViewportRatio < 0.6) {
+                if (sizesInput === "100vw") {
+                  warnOnce(`Image with src "${origSrc}" has "fill" prop and "sizes" prop of "100vw", but image is not rendered at full viewport width. Please adjust "sizes" to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes`);
+                } else {
+                  warnOnce(`Image with src "${origSrc}" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes`);
+                }
+              }
+            }
+            if (img.parentElement) {
+              const { position } = window.getComputedStyle(img.parentElement);
+              const valid = [
+                "absolute",
+                "fixed",
+                "relative"
+              ];
+              if (!valid.includes(position)) {
+                warnOnce(`Image with src "${origSrc}" has "fill" and parent element with invalid "position". Provided "${position}" should be one of ${valid.map(String).join(",")}.`);
+              }
+            }
+            if (img.height === 0) {
+              warnOnce(`Image with src "${origSrc}" has "fill" and a height value of 0. This is likely because the parent element of the image has not been styled to have a set height.`);
+            }
+          }
+          const heightModified = img.height.toString() !== img.getAttribute("height");
+          const widthModified = img.width.toString() !== img.getAttribute("width");
+          if (heightModified && !widthModified || !heightModified && widthModified) {
+            warnOnce(`Image with src "${origSrc}" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.`);
+          }
+        }
+      });
+    }
+    function getDynamicProps(fetchPriority) {
+      if (Boolean(_react.use)) {
+        return {
+          fetchPriority
+        };
+      }
+      return {
+        fetchpriority: fetchPriority
+      };
+    }
+    var useNonWarningLayoutEffect = typeof window === "undefined" ? _react.useEffect : _react.useLayoutEffect;
+    var ImageElement = /* @__PURE__ */ (0, _react.forwardRef)(({ src, srcSet, sizes, height, width, decoding, className, style, fetchPriority, placeholder, loading, unoptimized, fill, onLoadRef, onLoadingCompleteRef, setBlurComplete, setShowAltText, sizesInput, onLoad, onError, ...rest }, forwardedRef) => {
+      const didInsertRef = (0, _react.useRef)(false);
+      const insertedImgRef = (0, _react.useRef)(null);
+      useNonWarningLayoutEffect(() => {
+        const { current: didInsert } = didInsertRef;
+        const { current: img } = insertedImgRef;
+        if (!didInsert && img !== null) {
+          if (onError) {
+            img.src = img.src;
+          }
+          if (process.env.NODE_ENV !== "production") {
+            if (!src) {
+              console.error(`Image is missing required "src" property:`, img);
+            }
+            if (img.getAttribute("alt") === null) {
+              console.error(`Image is missing required "alt" property. Please add Alternative Text to describe the image for screen readers and search engines.`);
+            }
+          }
+          if (img.complete) {
+            handleLoading(img, placeholder, onLoadRef, onLoadingCompleteRef, setBlurComplete, unoptimized, sizesInput);
+          }
+          didInsertRef.current = true;
+        }
+      }, [
+        src,
+        placeholder,
+        onLoadRef,
+        onLoadingCompleteRef,
+        onError,
+        unoptimized,
+        sizesInput
+      ]);
+      const ref = (0, _usemergedref.useMergedRef)(forwardedRef, insertedImgRef);
+      return (
+        // If you move this element creation, also move the Layout Effect above
+        // reading from the ref. Otherwise we might run the Layout Effect when
+        // the current value isn't set to the HTMLImageElement instance.
+        /* @__PURE__ */ (0, _jsxruntime.jsx)("img", {
+          ...rest,
+          ...getDynamicProps(fetchPriority),
+          // It's intended to keep `loading` before `src` because React updates
+          // props in order which causes Safari/Firefox to not lazy load properly.
+          // See https://github.com/facebook/react/issues/25883
+          loading,
+          width,
+          height,
+          decoding,
+          "data-nimg": fill ? "fill" : "1",
+          className,
+          style,
+          // It's intended to keep `src` the last attribute because React updates
+          // attributes in order. If we keep `src` the first one, Safari will
+          // immediately start to fetch `src`, before `sizes` and `srcSet` are even
+          // updated by React. That causes multiple unnecessary requests if `srcSet`
+          // and `sizes` are defined.
+          // This bug cannot be reproduced in Chrome or Firefox.
+          sizes,
+          srcSet,
+          src,
+          ref,
+          onLoad: (event) => {
+            const currentImage = event.currentTarget;
+            handleLoading(currentImage, placeholder, onLoadRef, onLoadingCompleteRef, setBlurComplete, unoptimized, sizesInput);
+          },
+          onError: (event) => {
+            setShowAltText(true);
+            if (placeholder !== "empty") {
+              setBlurComplete(true);
+            }
+            if (onError) {
+              onError(event);
+            }
+          }
+        })
+      );
+    });
+    function ImagePreload({ isAppRouter, imgAttributes }) {
+      const opts = {
+        as: "image",
+        imageSrcSet: imgAttributes.srcSet,
+        imageSizes: imgAttributes.sizes,
+        crossOrigin: imgAttributes.crossOrigin,
+        referrerPolicy: imgAttributes.referrerPolicy,
+        ...getDynamicProps(imgAttributes.fetchPriority)
+      };
+      if (isAppRouter && _reactdom.default.preload) {
+        _reactdom.default.preload(imgAttributes.src, opts);
+        return null;
+      }
+      return /* @__PURE__ */ (0, _jsxruntime.jsx)(_head.default, {
+        children: /* @__PURE__ */ (0, _jsxruntime.jsx)("link", {
+          rel: "preload",
+          // Note how we omit the `href` attribute, as it would only be relevant
+          // for browsers that do not support `imagesrcset`, and in those cases
+          // it would cause the incorrect image to be preloaded.
+          //
+          // https://html.spec.whatwg.org/multipage/semantics.html#attr-link-imagesrcset
+          href: imgAttributes.srcSet ? void 0 : imgAttributes.src,
+          ...opts
+        }, "__nimg-" + imgAttributes.src + imgAttributes.srcSet + imgAttributes.sizes)
+      });
+    }
+    var Image3 = /* @__PURE__ */ (0, _react.forwardRef)((props, forwardedRef) => {
+      const pagesRouter = (0, _react.useContext)(_routercontextsharedruntime.RouterContext);
+      const isAppRouter = !pagesRouter;
+      const configContext = (0, _react.useContext)(_imageconfigcontextsharedruntime.ImageConfigContext);
+      const config = (0, _react.useMemo)(() => {
+        const c = configEnv || configContext || _imageconfig.imageConfigDefault;
+        const allSizes = [
+          ...c.deviceSizes,
+          ...c.imageSizes
+        ].sort((a, b) => a - b);
+        const deviceSizes = c.deviceSizes.sort((a, b) => a - b);
+        const qualities = c.qualities?.sort((a, b) => a - b);
+        return {
+          ...c,
+          allSizes,
+          deviceSizes,
+          qualities,
+          // During the SSR, configEnv (__NEXT_IMAGE_OPTS) does not include
+          // security sensitive configs like `localPatterns`, which is needed
+          // during the server render to ensure it's validated. Therefore use
+          // configContext, which holds the config from the server for validation.
+          localPatterns: typeof window === "undefined" ? configContext?.localPatterns : c.localPatterns
+        };
+      }, [
+        configContext
+      ]);
+      const { onLoad, onLoadingComplete } = props;
+      const onLoadRef = (0, _react.useRef)(onLoad);
+      (0, _react.useEffect)(() => {
+        onLoadRef.current = onLoad;
+      }, [
+        onLoad
+      ]);
+      const onLoadingCompleteRef = (0, _react.useRef)(onLoadingComplete);
+      (0, _react.useEffect)(() => {
+        onLoadingCompleteRef.current = onLoadingComplete;
+      }, [
+        onLoadingComplete
+      ]);
+      const [blurComplete, setBlurComplete] = (0, _react.useState)(false);
+      const [showAltText, setShowAltText] = (0, _react.useState)(false);
+      const { props: imgAttributes, meta: imgMeta } = (0, _getimgprops.getImgProps)(props, {
+        defaultLoader: _imageloader.default,
+        imgConf: config,
+        blurComplete,
+        showAltText
+      });
+      return /* @__PURE__ */ (0, _jsxruntime.jsxs)(_jsxruntime.Fragment, {
+        children: [
+          /* @__PURE__ */ (0, _jsxruntime.jsx)(ImageElement, {
+            ...imgAttributes,
+            unoptimized: imgMeta.unoptimized,
+            placeholder: imgMeta.placeholder,
+            fill: imgMeta.fill,
+            onLoadRef,
+            onLoadingCompleteRef,
+            setBlurComplete,
+            setShowAltText,
+            sizesInput: props.sizes,
+            ref: forwardedRef
+          }),
+          imgMeta.preload ? /* @__PURE__ */ (0, _jsxruntime.jsx)(ImagePreload, {
+            isAppRouter,
+            imgAttributes
+          }) : null
+        ]
+      });
+    });
+    if ((typeof exports2.default === "function" || typeof exports2.default === "object" && exports2.default !== null) && typeof exports2.default.__esModule === "undefined") {
+      Object.defineProperty(exports2.default, "__esModule", { value: true });
+      Object.assign(exports2.default, exports2);
+      module2.exports = exports2.default;
+    }
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-external.js
+var require_image_external = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/image-external.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    function _export(target, all) {
+      for (var name in all) Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+      });
+    }
+    _export(exports2, {
+      default: function() {
+        return _default;
+      },
+      getImageProps: function() {
+        return getImageProps;
+      }
+    });
+    var _interop_require_default = require_interop_require_default();
+    var _getimgprops = require_get_img_props();
+    var _imagecomponent = require_image_component();
+    var _imageloader = /* @__PURE__ */ _interop_require_default._(require_image_loader());
+    function getImageProps(imgProps) {
+      const { props } = (0, _getimgprops.getImgProps)(imgProps, {
+        defaultLoader: _imageloader.default,
+        // This is replaced by webpack define plugin
+        imgConf: process.env.__NEXT_IMAGE_OPTS
+      });
+      for (const [key, value] of Object.entries(props)) {
+        if (value === void 0) {
+          delete props[key];
+        }
+      }
+      return {
+        props
+      };
+    }
+    var _default = _imagecomponent.Image;
+  }
+});
+
+// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/image.js
+var require_image = __commonJS({
+  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/image.js"(exports2, module2) {
+    "use strict";
+    module2.exports = require_image_external();
   }
 });
 
@@ -3178,39 +6140,6 @@ var require_add_locale2 = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/@swc+helpers@0.5.15/node_modules/@swc/helpers/cjs/_interop_require_default.cjs
-var require_interop_require_default = __commonJS({
-  "../../node_modules/.pnpm/@swc+helpers@0.5.15/node_modules/@swc/helpers/cjs/_interop_require_default.cjs"(exports2) {
-    "use strict";
-    function _interop_require_default(obj) {
-      return obj && obj.__esModule ? obj : { default: obj };
-    }
-    exports2._ = _interop_require_default;
-  }
-});
-
-// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/router-context.shared-runtime.js
-var require_router_context_shared_runtime = __commonJS({
-  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/shared/lib/router-context.shared-runtime.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", {
-      value: true
-    });
-    Object.defineProperty(exports2, "RouterContext", {
-      enumerable: true,
-      get: function() {
-        return RouterContext;
-      }
-    });
-    var _interop_require_default = require_interop_require_default();
-    var _react = /* @__PURE__ */ _interop_require_default._(require("react"));
-    var RouterContext = _react.default.createContext(null);
-    if (process.env.NODE_ENV !== "production") {
-      RouterContext.displayName = "RouterContext";
-    }
-  }
-});
-
 // ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/request-idle-callback.js
 var require_request_idle_callback = __commonJS({
   "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/request-idle-callback.js"(exports2, module2) {
@@ -3553,71 +6482,6 @@ var require_add_base_path = __commonJS({
     var basePath = process.env.__NEXT_ROUTER_BASEPATH || "";
     function addBasePath(path, required) {
       return (0, _normalizetrailingslash.normalizePathTrailingSlash)(process.env.__NEXT_MANUAL_CLIENT_BASE_PATH && !required ? path : (0, _addpathprefix.addPathPrefix)(path, basePath));
-    }
-    if ((typeof exports2.default === "function" || typeof exports2.default === "object" && exports2.default !== null) && typeof exports2.default.__esModule === "undefined") {
-      Object.defineProperty(exports2.default, "__esModule", { value: true });
-      Object.assign(exports2.default, exports2);
-      module2.exports = exports2.default;
-    }
-  }
-});
-
-// ../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/use-merged-ref.js
-var require_use_merged_ref = __commonJS({
-  "../../node_modules/.pnpm/next@16.3.0_@babel+core@7.29.7_@opentelemetry+api@1.9.1_@types+node@20.19.43_react-dom@19.2.8_react@19.2.8__react@19.2.8/node_modules/next/dist/client/use-merged-ref.js"(exports2, module2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", {
-      value: true
-    });
-    Object.defineProperty(exports2, "useMergedRef", {
-      enumerable: true,
-      get: function() {
-        return useMergedRef;
-      }
-    });
-    var _react = require("react");
-    function useMergedRef(refA, refB) {
-      const cleanupA = (0, _react.useRef)(null);
-      const cleanupB = (0, _react.useRef)(null);
-      return (0, _react.useCallback)((current) => {
-        if (current === null) {
-          const cleanupFnA = cleanupA.current;
-          if (cleanupFnA) {
-            cleanupA.current = null;
-            cleanupFnA();
-          }
-          const cleanupFnB = cleanupB.current;
-          if (cleanupFnB) {
-            cleanupB.current = null;
-            cleanupFnB();
-          }
-        } else {
-          if (refA) {
-            cleanupA.current = applyRef(refA, current);
-          }
-          if (refB) {
-            cleanupB.current = applyRef(refB, current);
-          }
-        }
-      }, [
-        refA,
-        refB
-      ]);
-    }
-    function applyRef(refA, current) {
-      if (typeof refA === "function") {
-        const cleanup = refA(current);
-        if (typeof cleanup === "function") {
-          return cleanup;
-        } else {
-          return () => refA(null);
-        }
-      } else {
-        refA.current = current;
-        return () => {
-          refA.current = null;
-        };
-      }
     }
     if ((typeof exports2.default === "function" || typeof exports2.default === "object" && exports2.default !== null) && typeof exports2.default.__esModule === "undefined") {
       Object.defineProperty(exports2.default, "__esModule", { value: true });
@@ -9237,7 +12101,7 @@ function cn(...inputs) {
 // src/components/button.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
 var buttonVariants = (0, import_class_variance_authority.cva)(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -9317,7 +12181,7 @@ var React2 = __toESM(require("react"));
 var import_class_variance_authority2 = require("class-variance-authority");
 var import_jsx_runtime2 = require("react/jsx-runtime");
 var inputVariants = (0, import_class_variance_authority2.cva)(
-  "flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+  "flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -9406,7 +12270,7 @@ function EmptyState({
       ),
       ...props,
       children: [
-        icon ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "mb-4 text-muted-foreground", children: icon }) : videoSrc ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+        icon ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "mb-4 text-muted-foreground animate-pulse motion-reduce:animate-none", children: icon }) : videoSrc ? /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
           "video",
           {
             src: videoSrc,
@@ -9416,7 +12280,7 @@ function EmptyState({
             playsInline: true,
             className: "mb-4 h-16 w-16 opacity-75 rounded-full"
           }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(import_lucide_react2.Inbox, { className: "mb-4 h-12 w-12 text-muted-foreground opacity-50" }),
+        ) : /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(import_lucide_react2.Inbox, { className: "mb-4 h-12 w-12 text-muted-foreground opacity-50 animate-bounce motion-reduce:animate-none" }),
         /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("h3", { className: "text-base font-semibold", children: title }),
         description && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("p", { className: "mt-1 max-w-sm text-sm text-muted-foreground", children: description }),
         action && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: "mt-5", children: action })
@@ -9439,7 +12303,7 @@ var DialogOverlay = React4.forwardRef(({ className, ...props }, ref) => /* @__PU
   {
     ref,
     className: cn(
-      "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-[280ms]",
+      "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
       className
     ),
     ...props
@@ -9453,7 +12317,7 @@ var DialogContent = React4.forwardRef(({ className, children, ...props }, ref) =
     {
       ref,
       className: cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full h-[100dvh] sm:h-auto sm:max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-[280ms] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        "fixed left-[50%] top-[50%] z-50 grid w-full h-[100dvh] sm:h-auto sm:max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-e4 duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
         className
       ),
       "aria-describedby": props["aria-describedby"] ?? void 0,
@@ -9637,7 +12501,7 @@ var SheetOverlay = React6.forwardRef(({ className, ...props }, ref) => /* @__PUR
   SheetPrimitive.Overlay,
   {
     className: cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-[200ms]",
+      "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-[200ms]",
       className
     ),
     ...props,
@@ -9646,7 +12510,7 @@ var SheetOverlay = React6.forwardRef(({ className, ...props }, ref) => /* @__PUR
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 var sheetVariants = (0, import_class_variance_authority3.cva)(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out duration-[200ms]",
+  "fixed z-50 gap-4 bg-background p-6 shadow-e4 transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out duration-[200ms]",
   {
     variants: {
       side: {
@@ -9744,7 +12608,7 @@ var TooltipContent = React7.forwardRef(({ className, sideOffset = 4, ...props },
     ref,
     sideOffset,
     className: cn(
-      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-tooltip-content-transform-origin]",
+      "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md duration-150 animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-tooltip-content-transform-origin]",
       className
     ),
     onPointerDownOutside: (e) => {
@@ -9813,7 +12677,7 @@ var DropdownMenuContent = React8.forwardRef(({ className, sideOffset = 4, ...pro
     ref,
     sideOffset,
     className: cn(
-      "z-50 max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-dropdown-menu-content-transform-origin]",
+      "z-50 max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-e3 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-dropdown-menu-content-transform-origin]",
       className
     ),
     ...props
@@ -10162,7 +13026,7 @@ var Checkbox = React11.forwardRef(({ className, ...props }, ref) => /* @__PURE__
   {
     ref,
     className: cn(
-      "peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
+      "peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
       className
     ),
     ...props,
@@ -10185,7 +13049,7 @@ var Switch = React12.forwardRef(({ className, ...props }, ref) => /* @__PURE__ *
   SwitchPrimitives.Root,
   {
     className: cn(
-      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
+      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
       className
     ),
     ...props,
@@ -10224,7 +13088,7 @@ var RadioGroupItem = React13.forwardRef(({ className, ...props }, ref) => {
     {
       ref,
       className: cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
         className
       ),
       ...props,
@@ -10249,7 +13113,7 @@ var Slider = React14.forwardRef(({ className, ...props }, ref) => /* @__PURE__ *
     ...props,
     children: [
       /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SliderPrimitive.Track, { className: "relative h-2 w-full grow overflow-hidden rounded-full bg-secondary", children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SliderPrimitive.Range, { className: "absolute h-full bg-primary" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SliderPrimitive.Thumb, { className: "block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" })
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(SliderPrimitive.Thumb, { className: "block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50" })
     ]
   }
 ));
@@ -10277,7 +13141,7 @@ var TabsTrigger = React15.forwardRef(({ className, ...props }, ref) => /* @__PUR
   {
     ref,
     className: cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
       className
     ),
     ...props
@@ -10666,7 +13530,7 @@ var React21 = __toESM(require("react"));
 var import_class_variance_authority5 = require("class-variance-authority");
 var import_jsx_runtime25 = require("react/jsx-runtime");
 var textareaVariants = (0, import_class_variance_authority5.cva)(
-  "flex min-h-[80px] w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+  "flex min-h-[80px] w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -10776,7 +13640,7 @@ Separator4.displayName = SeparatorPrimitive.Root.displayName;
 var import_class_variance_authority6 = require("class-variance-authority");
 var import_jsx_runtime28 = require("react/jsx-runtime");
 var badgeVariants = (0, import_class_variance_authority6.cva)(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
@@ -10807,7 +13671,7 @@ function StatusBadge({ className, status, dot = false, children, ...props }) {
     "div",
     {
       className: cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors duration-150",
         colors.bg,
         colors.text,
         className
@@ -10824,6 +13688,7 @@ function StatusBadge({ className, status, dot = false, children, ...props }) {
 // src/components/avatar.tsx
 var React24 = __toESM(require("react"));
 var AvatarPrimitive = __toESM(require("@radix-ui/react-avatar"));
+var import_image = __toESM(require_image());
 var import_class_variance_authority7 = require("class-variance-authority");
 var import_jsx_runtime29 = require("react/jsx-runtime");
 var avatarVariants = (0, import_class_variance_authority7.cva)(
@@ -10851,12 +13716,14 @@ var Avatar = React24.forwardRef(({ className, size, ...props }, ref) => /* @__PU
   }
 ));
 Avatar.displayName = AvatarPrimitive.Root.displayName;
-var AvatarImage = React24.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
+var AvatarImage = React24.forwardRef(({ className, src, alt, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
   AvatarPrimitive.Image,
   {
     ref,
+    asChild: true,
     className: cn("aspect-square h-full w-full object-cover", className),
-    ...props
+    ...props,
+    children: src ? /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(import_image.default, { src, alt: alt || "", fill: true, sizes: "96px", className: "object-cover" }) : /* @__PURE__ */ (0, import_jsx_runtime29.jsx)("img", { src: "", alt: alt || "" })
   }
 ));
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
@@ -10975,7 +13842,7 @@ var PopoverContent = React26.forwardRef(({ className, align = "center", sideOffs
     align,
     sideOffset,
     className: cn(
-      "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-e3 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+      "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-e3 outline-none duration-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
       className
     ),
     ...props
@@ -11316,8 +14183,7 @@ function DataTable({
   stickyFirstCol = true,
   rowSelection: externalRowSelection,
   onRowSelectionChange,
-  onInlineEditSave,
-  containerHeight
+  onInlineEditSave
 }) {
   const [sorting, setSorting] = (0, import_react4.useState)([]);
   const [columnVisibility, setColumnVisibility] = (0, import_react4.useState)({});
@@ -11392,12 +14258,8 @@ function DataTable({
     (e) => {
       const target = e.target;
       const bottom = target.scrollHeight - target.scrollTop === target.clientHeight;
-      if (bottom && hasNextPage && !isFetchingNextPage) {
-        if (fetchNextPage) {
-          fetchNextPage();
-        } else {
-          console.warn("DataTable: hasNextPage is true but fetchNextPage is missing. Infinite scroll is disabled.");
-        }
+      if (bottom && hasNextPage && !isFetchingNextPage && fetchNextPage) {
+        fetchNextPage();
       }
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage]
@@ -11426,7 +14288,7 @@ function DataTable({
       {
         ref: tableContainerRef,
         onScroll: handleScroll,
-        className: cn("rounded-md border bg-background relative overflow-auto", containerHeight),
+        className: "rounded-md border bg-background relative h-[600px] overflow-auto",
         children: [
           !isMobile ? /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)("table", { className: "w-full caption-bottom text-sm grid", children: [
             /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(
@@ -11510,9 +14372,7 @@ function DataTable({
           isFetchingNextPage && /* @__PURE__ */ (0, import_jsx_runtime34.jsx)("div", { className: "p-4 text-center text-sm text-muted-foreground", children: "Loading more..." })
         ]
       }
-    ),
-    hasNextPage && !fetchNextPage && /* @__PURE__ */ (0, import_jsx_runtime34.jsx)("div", { className: "flex justify-center pt-2", children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Button, { variant: "outline", disabled: true, children: "Load more (missing handler)" }) }),
-    hasNextPage && fetchNextPage && /* @__PURE__ */ (0, import_jsx_runtime34.jsx)("div", { className: "flex justify-center pt-2 md:hidden", children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Button, { variant: "outline", onClick: () => fetchNextPage(), disabled: isFetchingNextPage, children: isFetchingNextPage ? "Loading..." : "Load more" }) })
+    )
   ] });
 }
 
@@ -11539,7 +14399,9 @@ function FilterBar({
   const debouncedSearch = useDebounce(localSearch, 250);
   (0, import_react5.useEffect)(() => {
     if (debouncedSearch !== searchQuery) {
-      onSearchChange(debouncedSearch);
+      (0, import_react5.startTransition)(() => {
+        onSearchChange(debouncedSearch);
+      });
     }
   }, [debouncedSearch, onSearchChange, searchQuery]);
   (0, import_react5.useEffect)(() => {
