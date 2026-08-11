@@ -33,6 +33,14 @@ function DensityProvider() {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  React.useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+      import('@axe-core/react').then((axe) => {
+        axe.default(React, require('react-dom'), 1000);
+      }).catch(() => {});
+    }
+  }, []);
+
   const [queryClient] = React.useState(
     () =>
       new QueryClient({

@@ -87,4 +87,48 @@ describe('Performance - AdminAttendanceTable', () => {
     // We set a budget of <= 4 renders.
     expect(renderCount).toBeLessThanOrEqual(4);
   });
+
+  it('asserts only LiveTimer commits each second while siblings do not', () => {
+    let timerRenderCount = 0;
+    let siblingRenderCount = 0;
+
+    const SiblingComponent = () => {
+      siblingRenderCount++;
+      return <div>Sibling Component</div>;
+    };
+
+    const MockLiveTimer = () => {
+      const [ticks, setTicks] = React.useState(0);
+      React.useEffect(() => {
+        const interval = setInterval(() => setTicks((t) => t + 1), 1000);
+        return () => clearInterval(interval);
+      }, []);
+      timerRenderCount++;
+      return <div>Timer Ticks: {ticks}</div>;
+    };
+
+    const DashboardShell = () => (
+      <div>
+        <MockLiveTimer />
+        <SiblingComponent />
+      </div>
+    );
+
+    vi.useFakeTimers();
+
+    render(<DashboardShell />);
+
+    const initialTimerRenders = timerRenderCount;
+    const initialSiblingRenders = siblingRenderCount;
+
+    // Advance by 3 seconds
+    vi.act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(timerRenderCount).toBe(initialTimerRenders + 3);
+    expect(siblingRenderCount).toBe(initialSiblingRenders); // Sibling did not re-render!
+
+    vi.useRealTimers();
+  });
 });

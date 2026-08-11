@@ -41,17 +41,17 @@
   ("Implementation present and wired; performance revamp + polish in progress per `fix-4.md`").
 
 ### 0.2 CI performance/a11y guardrails (must exist before changes — gates regressions)
-- [ ] **0.2.1** [test] Add `@next/bundle-analyzer` + CI budget: First-Load JS ≤200KB gz/route,
+- [x] **0.2.1** [test] Add `@next/bundle-analyzer` + CI budget: First-Load JS ≤200KB gz/route,
   route chunk ≤350KB gz (P-BUNDLE / R13.7). Fail build on breach.
-- [ ] **0.2.2** [test] Add **Lighthouse CI** on PRs for `/login`, `/dashboard`, `/dashboard/attendance`,
+- [x] **0.2.2** [test] Add **Lighthouse CI** on PRs for `/login`, `/dashboard`, `/dashboard/attendance`,
   `/dashboard/leave`, `/dashboard/org/users`, `/dashboard/chat` — LCP≤2.5, INP≤200, CLS≤0.1, FCP≤1.8.
-- [ ] **0.2.3** [test] Add **axe-core** CI on primary routes (zero critical/serious) (P-A11Y / R13.23).
-- [ ] **0.2.4** [test] Add Laravel query-count test asserting ≤5 SQL + zero N+1 on `/dashboard/metrics`,
+- [x] **0.2.3** [test] Add **axe-core** CI on primary routes (zero critical/serious) (P-A11Y / R13.23).
+- [x] **0.2.4** [test] Add Laravel query-count test asserting ≤5 SQL + zero N+1 on `/dashboard/metrics`,
   `/attendance/me/history`, `/attendance/admin/overview`, `/attendance/hr/today`, `/leave-requests`,
   `/audit-logs`, `/reports/attendance-summary` (P-NO-N1/Q-COUNT).
-- [ ] **0.2.5** [test] Add a React Profiler render-count test on the dashboard (assert only
+- [x] **0.2.5** [test] Add a React Profiler render-count test on the dashboard (assert only
   `LiveTimer` commits each second; siblings do not) (P-RERENDER).
-- [ ] **0.2.6** Verify Sentry (api+web) + Laravel Pulse + web-vitals field collection are wired
+- [x] **0.2.6** Verify Sentry (api+web) + Laravel Pulse + web-vitals field collection are wired
   (P-MON). Add web-vitals reporting to the prod build.
 
 ### 0.3 Environment sanity

@@ -20,7 +20,7 @@ module.exports = {
     assert: {
       assertions: {
         'largest-contentful-paint': ['error', { maxNumericValue: 2500 }],
-        'interaction-to-next-paint': ['warn', { maxNumericValue: 200 }],
+        'interaction-to-next-paint': ['error', { maxNumericValue: 200 }],
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
         'first-contentful-paint': ['error', { maxNumericValue: 1800 }],
         'categories:accessibility': ['error', { minScore: 1 }]
