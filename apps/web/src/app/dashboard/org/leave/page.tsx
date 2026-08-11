@@ -24,7 +24,7 @@ export default function OrgLeaveApprovalsPage() {
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (search) params.append("search", search);
       if (pageParam) params.append("cursor", pageParam as string);
-      return apiFetch(\/leave-requests?\\);
+      return apiFetch(`/leave-requests?${params.toString()}`);
     },
     getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
     initialPageParam: undefined,
@@ -81,7 +81,11 @@ export default function OrgLeaveApprovalsPage() {
           const status = row.original.approval?.status || "pending";
           return (
             <span
-              className={\px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase \\}
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                status === "approved" ? "bg-emerald-100 text-emerald-800" :
+                status === "rejected" ? "bg-rose-100 text-rose-800" :
+                "bg-amber-100 text-amber-800"
+              }`}
             >
               {status}
             </span>
@@ -103,9 +107,9 @@ export default function OrgLeaveApprovalsPage() {
 
   const handleExport = async () => {
     try {
-      const url = \\/leave-requests/export?status=\\;
+      const url = `/api/leave-requests/export?status=${statusFilter}`;
       const response = await fetch(url, {
-        headers: { 'Authorization': \Bearer \\ }
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
       });
       if (!response.ok) throw new Error("Export failed");
       
@@ -113,7 +117,7 @@ export default function OrgLeaveApprovalsPage() {
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = \leave_export_\.csv\;
+      a.download = `leave_export_${statusFilter}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();

@@ -39,9 +39,7 @@ class LeaveRequestController extends Controller
 
         if ($request->filled('status')) {
             $status = $request->query('status');
-            $query->whereHas('approval', function($q) use ($status) {
-                $q->where('status', $status);
-            });
+            $query->where('status', $status);
         }
         
         if ($request->filled('type')) {
@@ -69,9 +67,8 @@ class LeaveRequestController extends Controller
                          ->where('end_date', '>=', $validated['end_date']);
                   });
             })
-            ->whereHas('approval', function ($q) {
-                $q->where('status', 'pending');
-            })->exists();
+            ->where('status', 'pending')
+            ->exists();
 
         if ($overlap) {
             return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);

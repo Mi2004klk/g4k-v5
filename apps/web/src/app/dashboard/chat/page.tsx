@@ -97,11 +97,25 @@ function ChatPageContent() {
   }, [selectedId]);
 
   const sendMessageMutation = useMutation({
-    mutationFn: async (body: string) => {
-      return apiFetch(`/conversations/${selectedId}/messages`, {
-        method: "POST",
-        body: JSON.stringify({ body }),
-      });
+    mutationFn: async ({ body, mentions, attachment }: { body: string; mentions?: number[]; attachment?: File | null }) => {
+      if (attachment) {
+        const formData = new FormData();
+        formData.append("body", body);
+        if (mentions?.length) {
+          mentions.forEach(m => formData.append("mentions[]", m.toString()));
+        }
+        formData.append("attachment", attachment);
+        
+        return apiFetch(`/conversations/${selectedId}/messages`, {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        return apiFetch(`/conversations/${selectedId}/messages`, {
+          method: "POST",
+          body: JSON.stringify({ body, mentions }),
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
@@ -163,8 +177,9 @@ function ChatPageContent() {
                 />
 
                 <MessageComposer
-                  onSend={(body) => sendMessageMutation.mutate(body)}
+                  onSend={(body, mentions, attachment) => sendMessageMutation.mutate({ body, mentions, attachment })}
                   disabled={sendMessageMutation.isPending}
+                  conversation={selectedConv}
                 />
               </>
             ) : (

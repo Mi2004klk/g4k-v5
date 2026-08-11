@@ -48,7 +48,7 @@ export const queryKeys = {
   auditLogs: (filters: any) => ["audit-logs", filters] as const,
   savedViews: (module: string) => ["saved-views", module] as const,
   reports: (reportType: string, filters: any) => ["reports", reportType, filters] as const,
-  reportData: (reportKey: string) => ["report-data", reportKey] as const,
+  reportData: (reportKey: string, search?: string) => ["report-data", reportKey, search ?? ""] as const,
   exportHistory: ["export-history"] as const,
 
   // --- Comm & Tasks ---
@@ -62,7 +62,7 @@ export const queryKeys = {
   quickNotes: ["quick-notes"] as const,
   // --- Entities & Global ---
   unreadCount: ["unread-count"] as const,
-  notifications: (filter?: any, search?: string, page?: number | string) => ["notifications", filter, search ?? "", String(page ?? 1)] as const,
+  notifications: (filter?: any, search?: string, cursor?: string | null) => ["notifications", filter, search ?? "", cursor ?? ""] as const,
   project: (id: string | number) => ["project", String(id)] as const,
   profile: ["profile"] as const,
   sessions: ["sessions"] as const,

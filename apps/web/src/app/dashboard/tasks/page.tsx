@@ -8,6 +8,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
+import { usePathname, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const GanttView = dynamic(() => import("@/components/projects/gantt-view").then(mod => mod.GanttView), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
@@ -37,11 +38,13 @@ export default function TasksPage() {
   const [recurrencePattern, setRecurrencePattern] = useState("daily");
   const [recurrenceInterval, setRecurrenceInterval] = useState("1");
   
-  const { data: usersData } = useQuery({ queryKey: queryKeys.users, queryFn: () => apiFetch("/users") });
-  const { data: projectsData } = useQuery({ queryKey: queryKeys.projects, queryFn: () => apiFetch("/projects") });
+  const { data: usersData } = useQuery({ queryKey: ["users"], queryFn: () => apiFetch<any>("/users") });
+  const { data: projectsData } = useQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch<any>("/projects") });
   const { data: qaFormsData } = useQuery({ queryKey: ["qa-forms"], queryFn: () => apiFetch("/qa-forms") });
   
-  const [assigneeFilter, setAssigneeFilter] = useState("all");
+  const searchParams = useSearchParams();
+  const isMe = searchParams.get("me") === "1";
+  const [assigneeFilter, setAssigneeFilter] = useState(isMe ? "me" : "all");
   const user = useAuthStore(s => s.user);
 
   const [searchQuery, setSearchQuery] = useState("");

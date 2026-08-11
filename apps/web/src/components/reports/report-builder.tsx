@@ -15,15 +15,15 @@ export function ReportBuilder() {
   const [search, setSearch] = useState("");
 
   const { data: reportData, isLoading, refetch } = useQuery({
-    queryKey: queryKeys.reportData(reportKey),
-    queryFn: () => apiFetch(`/reports/data?key=${reportKey}`),
+    queryKey: queryKeys.reportData(reportKey, search),
+    queryFn: () => apiFetch(`/reports/data?key=${reportKey}&search=${encodeURIComponent(search)}`),
   });
 
   const exportMutation = useMutation({
     mutationFn: async (format: "xlsx" | "pdf") => {
       return apiFetch("/reports/export", {
         method: "POST",
-        body: JSON.stringify({ key: reportKey, format }),
+        body: JSON.stringify({ key: reportKey, format, filters: { search } }),
       });
     },
     onSuccess: (data: any) => {
@@ -61,7 +61,8 @@ export function ReportBuilder() {
                 options: [
                   { label: "Tasks & Deliverables", value: "tasks" },
                   { label: "Projects & Milestones", value: "projects" },
-                  { label: "Employee Directory", value: "users" }
+                  { label: "Employee Directory", value: "users" },
+                  { label: "Productivity", value: "productivity" }
                 ],
                 value: reportKey,
                 onChange: setReportKey

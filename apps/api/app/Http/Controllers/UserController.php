@@ -33,7 +33,7 @@ class UserController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('username', 'like', "%{$search}%")
-                  ->orWhere('employee_id', 'like', "%{$search}%")
+                  ->orWhere('employee_id', 'like', "%{$search}%");
             });
         }
 
@@ -202,7 +202,7 @@ class UserController extends Controller
             'status' => 'required|in:active,inactive',
         ]);
 
-        $user = User::findOrFail($id);
+        $user = User::with('roleAssignments')->findOrFail($id);
         
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -238,7 +238,7 @@ class UserController extends Controller
 
         public function restore(Request $request, string $id)
     {
-        $user = User::withTrashed()->findOrFail($id);
+        $user = User::with('roleAssignments')->withTrashed()->findOrFail($id);
 
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -260,7 +260,7 @@ class UserController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('roleAssignments')->findOrFail($id);
 
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -313,7 +313,7 @@ class UserController extends Controller
 
     public function resetPassword(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('roleAssignments')->findOrFail($id);
         
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -358,7 +358,15 @@ class UserController extends Controller
         $canManageHR = $this->hasCapability($request, 'users.hr.manage');
         $canManageEmployee = $this->hasCapability($request, 'users.employee.manage');
 
-        foreach ($query->orderBy('id', 'desc')->cursor() as $user) {
+        $activeSuperAdminCount = null;
+        if ($status === 'inactive') {
+            $activeSuperAdminCount = User::where('status', 'active')
+                ->whereHas('roleAssignments', function ($q) {
+                    $q->where('role', 'super_admin');
+                })->count();
+        }
+
+        foreach ($users as $user) {
             $targetRoles = $user->roleAssignments->pluck('role')->toArray();
             $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
             
@@ -371,13 +379,11 @@ class UserController extends Controller
 
             // Super Admin check for deactivate
             if ($status === 'inactive' && in_array('super_admin', $targetRoles)) {
-                $activeSuperAdminCount = User::where('status', 'active')
-                    ->whereHas('roleAssignments', function ($q) {
-                        $q->where('role', 'super_admin');
-                    })->count();
-
                 if ($activeSuperAdminCount <= 1 && $user->status === 'active') {
                     continue; // Skip last super admin
+                }
+                if ($user->status === 'active') {
+                    $activeSuperAdminCount--;
                 }
             }
 

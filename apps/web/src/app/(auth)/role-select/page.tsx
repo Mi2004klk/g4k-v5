@@ -38,7 +38,7 @@ export default function RoleSelectPage() {
       if (token) {
          try {
             const result = await apiFetch("/auth/refresh");
-            setAuth(result.token, result.user, result.active_role);
+            setAuth(result.token, result.user, result.active_role, result.refresh_token);
             router.push("/dashboard");
          } catch {
             router.push("/dashboard");

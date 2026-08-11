@@ -27,7 +27,13 @@ interface WidgetEngineProps {
 }
 
 export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
-  const [layouts, setLayouts] = useState<any>({});
+  const [layouts, setLayouts] = useState<any>(() => ({
+    lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+    md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+    sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+    xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+    xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+  }));
   const [mounted, setMounted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const widgetStates = useUIStore(useShallow((s) => s.widgetStates));
@@ -92,19 +98,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
 
   useEffect(() => {
     setMounted(true);
-    if (!preferencesData) {
-      if (!isLoading) {
-        const defaultBreakpoints = {
-          lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-          md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-          sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-          xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-          xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-        };
-        setLayouts(defaultBreakpoints);
-      }
-      return;
-    }
+    if (!preferencesData) return;
 
     if (preferencesData.preferences?.dashboard_layout && Object.keys(preferencesData.preferences.dashboard_layout).length > 0) {
       const savedLayouts = preferencesData.preferences.dashboard_layout;
@@ -128,17 +122,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
       });
       
       setLayouts(mergedBreakpoints);
-    } else {
-      const defaultBreakpoints = {
-        lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-        md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-        sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-        xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-        xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-      };
-      setLayouts(defaultBreakpoints);
     }
-  }, [preferencesData, isLoading, availableWidgets]);
+  }, [preferencesData, availableWidgets]);
 
   const handleLayoutChange = (_currentLayout: any, allLayouts: any) => {
     setLayouts(allLayouts);
@@ -183,17 +168,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     );
   }
 
-  if (!layouts || Object.keys(layouts).length === 0) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 p-4">
-        {availableWidgets.map(w => (
-          <div key={w.id} className="min-h-[250px]">
-             <ErrorBoundary name={`Widget-${w.id}`}>{w.component}</ErrorBoundary>
-          </div>
-        ))}
-      </div>
-    );
-  }
+
 
   return (
     <div ref={containerRef} className={`w-full min-h-[500px] ${isDragging ? "is-dragging-widget" : ""}`}>

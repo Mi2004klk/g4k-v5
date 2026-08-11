@@ -35,21 +35,7 @@ const ReverbContext = createContext<ReverbContextType>({
  */
 function isReverbAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-
-  const explicitHost = process.env.NEXT_PUBLIC_REVERB_HOST;
-  if (explicitHost) return true; // Explicitly configured → always try
-
-  // On Vercel domains the Reverb server is never co-located
-  const hostname = window.location.hostname;
-  if (
-    hostname.endsWith('.vercel.app') ||
-    hostname.endsWith('.vercel.sh')
-  ) {
-    return false;
-  }
-
-  // localhost / custom domain → assume Reverb is running locally
-  return true;
+  return !!process.env.NEXT_PUBLIC_REVERB_HOST; // Only connect if explicitly configured
 }
 
 export function ReverbProvider({ children }: { children: ReactNode }) {
@@ -75,11 +61,16 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     const echo = new Echo({
       broadcaster: 'reverb',
       key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || 'g4k_reverb_key',
+      cluster: 'mt1',
       wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || window.location.hostname,
       wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 8080),
       wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 8080),
       forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME || 'http') === 'https',
       enabledTransports: ['ws', 'wss'],
+      activityTimeout: 120000,
+      pongTimeout: 30000,
+      maxReconnectionAttempts: 5,
+      maxReconnectGap: 10000,
       authEndpoint: '/api/broadcasting/auth',
       auth: {
         headers: {

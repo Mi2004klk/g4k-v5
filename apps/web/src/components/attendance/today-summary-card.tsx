@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, StatusBadge } from "@g4k/ui/components";
 import { Clock, Coffee, LogOut, Info, AlertTriangle } from "lucide-react";
@@ -8,20 +8,20 @@ import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
 import { Badge } from "@g4k/ui/components";
-import { queryKeys } from "@/lib/query-keys";
+import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 
 export function TodaySummaryCard() {
   const isActive = useTimerStore((s) => s.isActive);
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
 
-  const { data, isLoading } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: queryKeys.attendanceToday,
     queryFn: () => apiFetch("/attendance/me/today"),
-    // Since offline punch is resilient, the store handles immediate local state updates.
-    // The query is to fetch the server's absolute record including grace periods and lates.
+    staleTime: STALE_TIME_ATTENDANCE,
+    placeholderData: keepPreviousData,
   });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Card className="border-none shadow-sm h-full">
         <CardHeader>

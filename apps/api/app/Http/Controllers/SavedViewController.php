@@ -28,7 +28,7 @@ class SavedViewController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'module' => 'required|in:tasks,projects,attendance',
+            'module' => 'required|in:tasks,projects,attendance,reports',
             'name' => 'required|string|max:255',
             'filters' => 'required|array',
         ]);

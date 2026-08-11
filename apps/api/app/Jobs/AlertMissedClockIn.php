@@ -38,6 +38,19 @@ class AlertMissedClockIn implements ShouldQueue
             })
             ->get();
 
+        $isHoliday = DB::table('holidays')->where('date', $today)->exists();
+        $usersOnLeave = DB::table('leave_requests')
+            ->where('status', 'approved')
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->pluck('user_id')
+            ->toArray();
+
+        $superAdmins = User::whereHas('roleAssignments', fn($q) => $q->where('role', 'super_admin'))->get();
+        $hrByDept = User::whereHas('roleAssignments', fn($q) => $q->where('role', 'hr'))->get()->groupBy('department_id');
+
+        $notifications = [];
+
         foreach ($users as $user) {
             $schedule = $defaultSchedule; 
             $startTimeStr = $schedule->start_time ?? '09:00:00';
@@ -48,38 +61,28 @@ class AlertMissedClockIn implements ShouldQueue
             
             // Check if current time is within a 5-minute window of the target
             if ($now->between($targetTime->copy()->subMinutes(1), $targetTime->copy()->addMinutes(4))) {
-                
-                $onLeave = DB::table('leave_requests')
-                    ->where('user_id', $user->id)
-                    ->where('status', 'approved')
-                    ->where('start_date', '<=', $today)
-                    ->where('end_date', '>=', $today)
-                    ->exists();
-                    
-                $isHoliday = DB::table('holidays')->where('date', $today)->exists();
+                $onLeave = in_array($user->id, $usersOnLeave);
 
                 if (!$onLeave && !$isHoliday) {
-                    // Notify HR for this department
-                    $hrUsers = User::whereHas('roles', function($q) {
-                        $q->where('role', 'super_admin');
-                    })->orWhere(function($q) use ($user) {
-                        $q->where('department_id', $user->department_id)
-                          ->whereHas('roles', function($q2) {
-                              $q2->where('role', 'hr');
-                          });
-                    })->get();
+                    $hrUsers = collect($superAdmins)->merge($hrByDept[$user->department_id] ?? [])->unique('id');
 
                     foreach ($hrUsers as $hr) {
-                        Notification::create([
+                        $notifications[] = [
                             'user_id' => $hr->id,
                             'title' => 'Missed Clock-In Alert',
                             'body' => "{$user->name} has missed their clock-in today (overdue by {$offsetMinutes}m).",
                             'type' => 'alert',
-                            'priority' => 'high'
-                        ]);
+                            'priority' => 'high',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
                     }
                 }
             }
+        }
+
+        if (!empty($notifications)) {
+            Notification::insert($notifications);
         }
     }
 }

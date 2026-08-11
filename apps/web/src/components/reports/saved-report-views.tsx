@@ -25,7 +25,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
 
   const { data: views = [], isLoading } = useQuery({
     queryKey: queryKeys.savedViews(module),
-    queryFn: () => apiFetch(`/saved-views?module=${module}`).then(res => res.data || []),
+    queryFn: () => apiFetch(`/saved-views?module=${module}`).then(res => Array.isArray(res) ? res : (res.data || [])),
   });
 
   const saveMutation = useMutation({

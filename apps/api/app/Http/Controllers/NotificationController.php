@@ -23,14 +23,14 @@ class NotificationController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = strtolower($request->search);
             $query->where(function($q) use ($search) {
-                $q->where('title', 'ilike', "%{$search}%")
-                  ->orWhere('body', 'ilike', "%{$search}%");
+                $q->whereRaw('lower(title) like ?', ["%{$search}%"])
+                  ->orWhereRaw('lower(body) like ?', ["%{$search}%"]);
             });
         }
 
-        return response()->json($query->paginate(50));
+        return response()->json($query->cursorPaginate(50));
     }
 
     public function markRead(Request $request, $id)

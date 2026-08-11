@@ -24,8 +24,8 @@ class SendWeeklySummaryCommand extends Command
         $end = now()->endOfWeek();
         
         $metrics = [
-            'tasks_completed' => Task::where('status', 'completed')
-                ->whereBetween('created_at', [$start, $end])
+            'tasks_completed' => Task::where('status', 'done')
+                ->whereBetween('updated_at', [$start, $end])
                 ->count(),
             'active_projects' => Project::where('status', 'active')
                 ->whereBetween('created_at', [$start, $end])

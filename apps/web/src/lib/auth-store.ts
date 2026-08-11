@@ -25,10 +25,11 @@ export interface UserProfile {
 
 interface AuthState {
   token: string | null;
+  refreshToken: string | null;
   user: UserProfile | null;
   activeRole: string | null;
   density: "comfortable" | "compact";
-  setAuth: (token: string, user: UserProfile, activeRole?: string) => void;
+  setAuth: (token: string, user: UserProfile, activeRole?: string, refreshToken?: string) => void;
   setDensity: (density: "comfortable" | "compact") => void;
   clearAuth: () => void;
 }
@@ -37,18 +38,20 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       token: null,
+      refreshToken: null,
       user: null,
       activeRole: null,
       density: "comfortable",
-      setAuth: (token, user, activeRole) => {
+      setAuth: (token, user, activeRole, refreshToken) => {
         if (typeof window !== "undefined") {
           document.cookie = `g4k_token=${token}; path=/; max-age=86400; SameSite=Lax`;
         }
-        return set({
+        return set((state) => ({
           token,
+          refreshToken: refreshToken ?? state.refreshToken,
           user,
           activeRole: activeRole || user.active_role || user.roles?.[0] || "employee",
-        });
+        }));
       },
       setDensity: (density) => set({ density }),
       clearAuth: () => {
@@ -56,7 +59,7 @@ export const useAuthStore = create<AuthState>()(
           document.cookie = `g4k_token=; path=/; max-age=0; SameSite=Lax`;
           document.cookie = `g4k_capabilities=; path=/; max-age=0; SameSite=Lax`;
         }
-        return set({ token: null, user: null, activeRole: null });
+        return set({ token: null, refreshToken: null, user: null, activeRole: null });
       },
     }),
     {

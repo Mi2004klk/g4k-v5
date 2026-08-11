@@ -37,6 +37,16 @@ class RemindShiftStart implements ShouldQueue
             })
             ->get();
 
+        $isHoliday = DB::table('holidays')->where('date', $today)->exists();
+        $usersOnLeave = DB::table('leave_requests')
+            ->where('status', 'approved')
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->pluck('user_id')
+            ->toArray();
+
+        $notifications = [];
+
         foreach ($users as $user) {
             $schedule = $defaultSchedule; // Assuming default for now, could be loaded per user if relationships exist
             $startTimeStr = $schedule->start_time ?? '09:00:00';
@@ -48,24 +58,23 @@ class RemindShiftStart implements ShouldQueue
             // Check if current time is within a 5-minute window of the target (since job runs every 5 mins)
             if ($now->between($targetTime->copy()->subMinutes(1), $targetTime->copy()->addMinutes(4))) {
                 
-                $onLeave = DB::table('leave_requests')
-                    ->where('user_id', $user->id)
-                    ->where('status', 'approved')
-                    ->where('start_date', '<=', $today)
-                    ->where('end_date', '>=', $today)
-                    ->exists();
-                    
-                $isHoliday = DB::table('holidays')->where('date', $today)->exists();
+                $onLeave = in_array($user->id, $usersOnLeave);
 
                 if (!$onLeave && !$isHoliday) {
-                    Notification::create([
+                    $notifications[] = [
                         'user_id' => $user->id,
                         'title' => 'Shift Starting Soon',
                         'body' => "Friendly reminder: Your shift starts at " . $shiftStart->format('H:i') . ". Don't forget to clock in!",
                         'type' => 'info',
-                    ]);
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
                 }
             }
+        }
+
+        if (!empty($notifications)) {
+            Notification::insert($notifications);
         }
     }
 }

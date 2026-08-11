@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -14,6 +15,9 @@ export function AnnouncementBoard() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const isAdminOrHr = user?.active_role === "super_admin" || user?.active_role === "hr";
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
 
   const { data: announcements = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.announcements,
@@ -75,6 +79,21 @@ export function AnnouncementBoard() {
     { key: "party", label: "🎉" },
   ];
 
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof createData) => {
+      return apiFetch("/announcements", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
+      setShowCreate(false);
+      setCreateData({ title: "", body: "", scope: "company", pinned: false });
+      toast.success("Announcement posted");
+    },
+  });
+
   return (
     <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
       <CardHeader className="pb-3">
@@ -89,7 +108,7 @@ export function AnnouncementBoard() {
               <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
                 Refresh
               </Button>
-              <Button variant="default" size="sm" onClick={() => setShowCreate(true)} className="h-6 text-[10px] px-2">
+              <Button variant="primary" size="sm" onClick={() => setShowCreate(true)} className="h-6 text-[10px] px-2">
                 Post
               </Button>
             </div>

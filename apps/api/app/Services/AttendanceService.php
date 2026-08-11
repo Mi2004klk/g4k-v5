@@ -23,7 +23,7 @@ class AttendanceService
 
             // Validate punch state machine
             $lastEvent = AttendanceEvent::where('user_id', $userId)
-                ->whereDate('timestamp', $date)
+                ->whereBetween('timestamp', [$date . ' 00:00:00', $date . ' 23:59:59'])
                 ->orderBy('timestamp', 'desc')
                 ->first();
 
@@ -63,7 +63,7 @@ class AttendanceService
     /**
      * Reconcile day summary from immutable events log.
      */
-    public static function reconcileDay(int $userId, string $date, bool $forceRecompute = false): array
+    public static function reconcileDay(int $userId, string $date, bool $forceRecompute = false, ?User $cachedUser = null, $cachedSchedule = null): array
     {
         $startWindow = Carbon::parse($date)->startOfDay();
         $endWindow = Carbon::parse($date)->addHours(48);
@@ -90,13 +90,19 @@ class AttendanceService
         }
 
         // Get user's specific work schedule if assigned, otherwise default
-        $user = User::find($userId);
-        $schedule = null;
-        if ($user && $user->work_schedule_id) {
-            $schedule = DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
-        }
+        $user = $cachedUser ?? User::find($userId);
+        $schedule = $cachedSchedule;
         if (!$schedule) {
-            $schedule = DB::table('work_schedules')->where('is_default', true)->first();
+            if ($user && $user->work_schedule_id) {
+                $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$user->work_schedule_id}", 300, function() use ($user) {
+                    return DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
+                });
+            }
+            if (!$schedule) {
+                $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 3600, function() {
+                    return DB::table('work_schedules')->where('is_default', true)->first();
+                });
+            }
         }
         $startTimeStr = $schedule->start_time ?? '09:00:00';
         $standardSeconds = $schedule->standard_seconds ?? 31500;

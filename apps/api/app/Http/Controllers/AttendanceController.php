@@ -130,8 +130,21 @@ class AttendanceController extends Controller
 
         $syncedDates = array_unique($syncedDates);
         $reconciledDays = [];
+        
+        $schedule = null;
+        if ($user->work_schedule_id) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$user->work_schedule_id}", 300, function() use ($user) {
+                return \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
+            });
+        }
+        if (!$schedule) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 3600, function() {
+                return \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
+            });
+        }
+
         foreach ($syncedDates as $date) {
-            $reconciledDays[] = AttendanceService::reconcileDay($user->id, $date);
+            $reconciledDays[] = AttendanceService::reconcileDay($user->id, $date, false, $user, $schedule);
         }
 
         return response()->json([
@@ -155,7 +168,9 @@ class AttendanceController extends Controller
             ->get();
 
         // Pass work_schedules standard_seconds to frontend
-        $schedule = DB::table('work_schedules')->where('is_default', true)->first();
+        $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 3600, function() {
+            return DB::table('work_schedules')->where('is_default', true)->first();
+        });
         $standardSeconds = $schedule ? $schedule->standard_seconds : 31500;
 
         $lastMod = max(($day?->updated_at) ?? '', ($events->max('updated_at')) ?? '');
@@ -406,12 +421,12 @@ class AttendanceController extends Controller
         }
 
         if ($groupBy === 'employee') {
-            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
+            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status=\'present\' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status=\'late\' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status=\'absent\' then 1 else 0 end) as absent'))
                 ->groupBy('users.id', 'users.name')
                 ->orderBy('users.name', 'asc')
                 ->get();
         } else {
-            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
+            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status=\'present\' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status=\'late\' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status=\'absent\' then 1 else 0 end) as absent'))
                 ->groupBy('date')
                 ->orderBy('date', 'asc')
                 ->get();
@@ -447,12 +462,12 @@ class AttendanceController extends Controller
         }
 
         if ($groupBy === 'employee') {
-            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
+            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status=\'present\' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status=\'late\' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status=\'absent\' then 1 else 0 end) as absent'))
                 ->groupBy('users.id', 'users.name')
                 ->orderBy('users.name', 'asc')
                 ->get();
         } else {
-            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
+            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status=\'present\' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status=\'late\' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status=\'absent\' then 1 else 0 end) as absent'))
                 ->groupBy('date')
                 ->orderBy('date', 'asc')
                 ->get();
@@ -577,27 +592,27 @@ class AttendanceController extends Controller
         }
             
         $this->applyHrScoping($query, $request->user());
-        $records = $query->get();
-
         return response()->streamDownload(function () use ($query) {
             $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload('attendance_export.xlsx');
             
-            foreach ($records as $row) {
-                $hours = floor($row->total_seconds / 3600);
-                $mins = floor(($row->total_seconds % 3600) / 60);
-                $otHours = floor($row->overtime_seconds / 3600);
-                $otMins = floor(($row->overtime_seconds % 3600) / 60);
+            $query->chunk(500, function ($records) use ($writer) {
+                foreach ($records as $row) {
+                    $hours = floor($row->total_seconds / 3600);
+                    $mins = floor(($row->total_seconds % 3600) / 60);
+                    $otHours = floor($row->overtime_seconds / 3600);
+                    $otMins = floor(($row->overtime_seconds % 3600) / 60);
 
-                $writer->addRow([
-                    'Date' => $row->date,
-                    'Employee Name' => $row->user_name,
-                    'Email' => $row->user_email,
-                    'Status' => strtoupper($row->status),
-                    'Total Worked (hh:mm)' => sprintf('%02dh %02dm', $hours, $mins),
-                    'Overtime (hh:mm)' => sprintf('%02dh %02dm', $otHours, $otMins),
-                    'Late (mins)' => $row->late_minutes,
-                ]);
-            }
+                    $writer->addRow([
+                        'Date' => $row->date,
+                        'Employee Name' => $row->user_name,
+                        'Email' => $row->user_email,
+                        'Status' => strtoupper($row->status),
+                        'Total Worked (hh:mm)' => sprintf('%02dh %02dm', $hours, $mins),
+                        'Overtime (hh:mm)' => sprintf('%02dh %02dm', $otHours, $otMins),
+                        'Late (mins)' => $row->late_minutes,
+                    ]);
+                }
+            });
 
             $writer->close();
         }, "attendance_export_{$startDate}_to_{$endDate}.xlsx");
@@ -611,24 +626,32 @@ class AttendanceController extends Controller
         ]);
 
         $days = AttendanceDay::whereIn('id', $validated['ids'])->with('user.department')->get();
-        $hrUsers = User::whereHas('roleAssignments', function($q) {
+        $hrUsers = User::with('roleAssignments')->whereHas('roleAssignments', function($q) {
             $q->whereIn('role', ['hr', 'super_admin']);
         })->get();
+
+        $notifications = [];
 
         foreach ($days as $day) {
             foreach ($hrUsers as $hr) {
                 // simple scoping: HR sees their own dept unless they are super admin
                 $isSuper = $hr->roleAssignments->pluck('role')->contains('super_admin');
                 if ($isSuper || $hr->department_id === $day->user->department_id) {
-                    \App\Models\Notification::create([
+                    $notifications[] = [
                         'user_id' => $hr->id,
                         'title' => 'Open Shift Alert',
                         'body' => "Employee {$day->user->name} has an open shift for {$day->date}.",
                         'type' => 'warning',
-                        'link' => "/dashboard/org/attendance?date={$day->date}"
-                    ]);
+                        'link' => "/dashboard/org/attendance?date={$day->date}",
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
                 }
             }
+        }
+
+        if (!empty($notifications)) {
+            \App\Models\Notification::insert($notifications);
         }
 
         return response()->json(['message' => 'Notifications sent successfully.']);

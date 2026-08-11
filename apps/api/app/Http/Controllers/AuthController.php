@@ -169,6 +169,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $accessToken,
+            'refresh_token' => $refreshToken,
             'user' => $user,
             'active_role' => $primaryRole,
             'must_change_password' => (bool)$user->must_change_password,
@@ -178,10 +179,12 @@ class AuthController extends Controller
 
     public function refresh(Request $request)
     {
-        $rawRefreshToken = $request->cookie('g4k_refresh_token');
+        $rawRefreshToken = $request->cookie('g4k_refresh_token')
+            ?? $request->header('X-Refresh-Token')
+            ?? $request->input('refresh_token');
 
         if (!$rawRefreshToken) {
-            return response()->json(['message' => 'Unauthenticated (No refresh cookie)'], 401);
+            return response()->json(['message' => 'Unauthenticated (No refresh token provided)'], 401);
         }
 
         $tokenInstance = PersonalAccessToken::findToken($rawRefreshToken);
@@ -231,6 +234,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $newAccessToken,
+            'refresh_token' => $newRefreshToken,
             'user' => $user,
             'active_role' => $primaryRole,
             'must_change_password' => (bool)$user->must_change_password,
@@ -399,6 +403,7 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Password changed successfully.',
             'token' => $accessToken,
+            'refresh_token' => $refreshToken,
             'user' => $user
         ])->withCookie($cookie);
     }
@@ -462,6 +467,14 @@ class AuthController extends Controller
             $tokenId = $request->user()->currentAccessToken()->id;
             $request->user()->currentAccessToken()->delete();
             SessionRevoked::dispatch($request->user()->id, (string)$tokenId);
+        }
+
+        $rawRefreshToken = $request->cookie('g4k_refresh_token') ?? $request->header('X-Refresh-Token');
+        if ($rawRefreshToken) {
+            $tokenInstance = \Laravel\Sanctum\PersonalAccessToken::findToken($rawRefreshToken);
+            if ($tokenInstance) {
+                $tokenInstance->delete();
+            }
         }
 
         $forgetCookie = cookie()->forget('g4k_refresh_token');

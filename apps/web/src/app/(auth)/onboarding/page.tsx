@@ -46,7 +46,7 @@ export default function OnboardingPage() {
         // Silently refresh to clear the needs_onboarding flag correctly from backend
         try {
             const result = await apiFetch("/auth/refresh");
-            setAuth(result.token, result.user, result.active_role);
+            setAuth(result.token, result.user, result.active_role, result.refresh_token);
         } catch {
             const updatedUser = { ...user, onboarded_at: new Date().toISOString() };
             setAuth(token, updatedUser, user.roles?.[0] || 'employee');

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, Send, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, Send, Loader2, AlertCircle, Play, Square } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
@@ -28,6 +28,29 @@ export function TaskDetailSheet({
   const [submissionNote, setSubmissionNote] = useState("");
   const [qaValues, setQaValues] = useState<Record<string, any>>({});
   const [minutesLogged, setMinutesLogged] = useState("");
+  const [progress, setProgress] = useState(task?.progress || 0);
+
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setElapsedSeconds(s => s + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning]);
+
+  const handleStopTimer = () => {
+    setIsTimerRunning(false);
+    const mins = Math.ceil(elapsedSeconds / 60);
+    if (mins > 0) {
+      setMinutesLogged(mins.toString());
+    }
+    setElapsedSeconds(0);
+  };
 
   const commentMutation = useMutation({
     mutationFn: async (body: string) => {
@@ -60,6 +83,19 @@ export function TaskDetailSheet({
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to submit task.");
+    },
+  });
+
+  const progressMutation = useMutation({
+    mutationFn: async (newProgress: number) => {
+      return apiFetch(`/tasks/${task.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ progress: newProgress }),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Progress updated.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks, exact: true });
     },
   });
 
@@ -112,6 +148,23 @@ export function TaskDetailSheet({
               <p className="text-neutral-800 dark:text-neutral-200 leading-relaxed">
                 {task.description || "No description provided."}
               </p>
+            </div>
+
+            <div className="space-y-2 py-2">
+              <div className="flex justify-between text-neutral-500 font-semibold text-[11px]">
+                <span>Progress</span>
+                <span>{progress}%</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={progress}
+                onChange={(e) => setProgress(parseInt(e.target.value))}
+                onMouseUp={() => progressMutation.mutate(progress)}
+                onTouchEnd={() => progressMutation.mutate(progress)}
+                className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4 py-2 border-y border-neutral-100 dark:border-neutral-800">
@@ -203,7 +256,26 @@ export function TaskDetailSheet({
 
           <TabsContent value="time" className="space-y-4 py-4 text-xs">
             <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-100 dark:border-neutral-800">
-              <h4 className="font-semibold text-neutral-800 dark:text-neutral-200 mb-2">Log Time</h4>
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">Log Time</h4>
+                <div className="flex items-center gap-2">
+                  {isTimerRunning && (
+                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                      {Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
+                    </span>
+                  )}
+                  <Button 
+                    size="sm" 
+                    variant={isTimerRunning ? "destructive" : "outline"} 
+                    className="h-7 px-2"
+                    onClick={() => isTimerRunning ? handleStopTimer() : setIsTimerRunning(true)}
+                  >
+                    {isTimerRunning ? <Square className="w-3.5 h-3.5 mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                    {isTimerRunning ? "Stop Timer" : "Start Timer"}
+                  </Button>
+                </div>
+              </div>
+              
               <div className="flex gap-2">
                 <Input
                   type="number"

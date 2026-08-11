@@ -139,7 +139,7 @@ export default function DashboardLayout({
 }) {
   const sidebarState = useUIStore((s) => s.sidebarState);
   const cycleSidebarState = useUIStore((s) => s.cycleSidebarState);
-  const initPreferences = useUIStore((s) => s.initPreferences);
+  const setSidebarStateSilent = useUIStore((s) => s.setSidebarStateSilent);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -154,6 +154,18 @@ export default function DashboardLayout({
     queryKey: queryKeys.pins,
     queryFn: () => apiFetch("/pins"),
   });
+
+  const { data: preferencesData } = useQuery({
+    queryKey: queryKeys.dashboardLayout,
+    queryFn: () => apiFetch("/auth/preferences"),
+    staleTime: 5 * 60_000,
+  });
+
+  useEffect(() => {
+    if (preferencesData?.preferences?.sidebar_state) {
+      setSidebarStateSilent(preferencesData.preferences.sidebar_state);
+    }
+  }, [preferencesData, setSidebarStateSilent]);
 
   const handleTogglePin = useCallback(async (item: any, existingPin: any) => {
     try {
@@ -193,9 +205,7 @@ export default function DashboardLayout({
   }, [pathname]);
 
 
-  useEffect(() => {
-    initPreferences();
-  }, [initPreferences]);
+
 
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {

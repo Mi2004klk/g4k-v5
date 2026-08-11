@@ -10,9 +10,8 @@ class CacheInvalidationObserver
     private function clearDashboardCaches(Model $model)
     {
         // Global and Admin caches
-        Cache::forget('dashboard_global_stats');
+        Cache::forget('dashboard_global');
         Cache::forget('dashboard_recent_activity');
-        Cache::forget('dashboard_active_projects_count');
         Cache::forget('dashboard_pending_tasks_count');
 
         // If it's related to a user, clear their specific caches

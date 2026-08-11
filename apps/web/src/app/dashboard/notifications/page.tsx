@@ -16,7 +16,7 @@ import { queryKeys, STALE_TIME_NOTIFICATIONS } from "@/lib/query-keys";
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
+  const [cursor, setCursor] = useState<string | null>(null);
   const [search, setSearch] = useUrlState("search", "");
   const [filter, setFilter] = useState<{ readStatus: string; type: string }>({
     readStatus: "all",
@@ -24,10 +24,10 @@ export default function NotificationsPage() {
   });
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: queryKeys.notifications(filter, search, page),
+    queryKey: queryKeys.notifications(filter, search, cursor),
     queryFn: () => {
       const params = new URLSearchParams();
-      params.set("page", page.toString());
+      if (cursor) params.set("cursor", cursor);
       if (filter.readStatus === "unread") params.set("unreadOnly", "true");
       if (filter.type !== "all") params.set("type", filter.type);
       if (search) params.set("search", search);
@@ -222,25 +222,25 @@ export default function NotificationsPage() {
         />
       )}
       
-      {/* Basic Pagination (assume standard Laravel pagination response) */}
-      {data?.last_page > 1 && (
+      {/* Basic Pagination (cursor-based) */}
+      {(data?.next_cursor || data?.prev_cursor) && (
         <div className="flex items-center justify-between mt-4 bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm border border-neutral-100 dark:border-neutral-800">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
+            onClick={() => setCursor(data.prev_cursor)}
+            disabled={!data.prev_cursor}
           >
             Previous
           </Button>
           <span className="text-xs text-neutral-500">
-            Page {data.current_page} of {data.last_page}
+            Navigation
           </span>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPage(p => Math.min(data.last_page, p + 1))}
-            disabled={page === data?.last_page}
+            onClick={() => setCursor(data.next_cursor)}
+            disabled={!data.next_cursor}
           >
             Next
           </Button>

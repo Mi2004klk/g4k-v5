@@ -71,7 +71,7 @@ export default function LoginPage() {
         body: JSON.stringify(data),
       });
 
-      setAuth(result.token, result.user, result.active_role);
+      setAuth(result.token, result.user, result.active_role, result.refresh_token);
       toast.success("Login successful!");
 
       if (result.must_change_password) {
@@ -138,7 +138,7 @@ export default function LoginPage() {
                       Email, Username, or Employee ID
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. karthik or dev@games4king.in" {...field} disabled={lockoutSeconds > 0} className="font-sans" />
+                      <Input placeholder="e.g. karthik or dev@games4king.in" {...field} disabled={lockoutSeconds > 0} className="font-sans" autoComplete="username" />
                     </FormControl>
                     <FormMessage className="font-sans" />
                   </FormItem>
@@ -162,7 +162,7 @@ export default function LoginPage() {
                       </Link>
                     </div>
                     <FormControl>
-                      <PasswordInput placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} className="font-sans" />
+                      <PasswordInput placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} className="font-sans" autoComplete="current-password" />
                     </FormControl>
                     <FormMessage className="font-sans" />
                   </FormItem>

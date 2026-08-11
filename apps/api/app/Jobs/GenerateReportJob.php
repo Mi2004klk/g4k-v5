@@ -133,10 +133,10 @@ class GenerateReportJob implements ShouldQueue
                     ])
                     ->withSum(['attendanceDays as total_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds');
 
-                if ($dept && $dept !== 'all') {
-                    $query->where('department_id', $dept);
-                } elseif (!$hasManage) {
+                if (!$hasManage) {
                     $query->where('department_id', $departmentId);
+                } elseif ($dept && $dept !== 'all') {
+                    $query->where('department_id', $dept);
                 }
 
                 return $query->get()->map(fn($u) => [
@@ -162,10 +162,10 @@ class GenerateReportJob implements ShouldQueue
                         'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->whereBetween('start_date', [$start, $end]),
                     ]);
 
-                if ($dept && $dept !== 'all') {
-                    $query->where('department_id', $dept);
-                } elseif (!$hasManage) {
+                if (!$hasManage) {
                     $query->where('department_id', $departmentId);
+                } elseif ($dept && $dept !== 'all') {
+                    $query->where('department_id', $dept);
                 }
 
                 return $query->get()->map(fn($u) => [
@@ -179,7 +179,6 @@ class GenerateReportJob implements ShouldQueue
 
             case 'users':
             case 'productivity':
-            default:
                 $query = User::with(['department', 'roleAssignments']);
                 if ($search) {
                     $query->where('name', 'ilike', '%' . $search . '%');
@@ -190,7 +189,7 @@ class GenerateReportJob implements ShouldQueue
                 
                 if ($key === 'productivity') {
                     $query->withCount([
-                        'assignedTasks as completed_tasks' => fn($q) => $q->where('status', 'completed'),
+                        'assignedTasks as completed_tasks' => fn($q) => $q->where('status', 'done'),
                         'assignedTasks as total_tasks',
                     ])->withSum('taskTimeLogs as total_seconds', 'duration_seconds');
                 }
@@ -214,6 +213,9 @@ class GenerateReportJob implements ShouldQueue
                     'Department' => $u->department?->name ?? 'N/A',
                     'Productivity Score' => $key === 'productivity' ? $u->productivity_score : 'N/A',
                 ])->toArray();
+
+            default:
+                throw new \Exception("Invalid report key: {$key}");
         }
     }
 }

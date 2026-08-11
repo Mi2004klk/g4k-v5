@@ -66,7 +66,7 @@ export default function ChangePasswordPage() {
       if (token) {
          try {
             const result = await apiFetch("/auth/refresh");
-            setAuth(result.token, result.user, result.active_role);
+            setAuth(result.token, result.user, result.active_role, result.refresh_token);
             if (!result.user.onboarded_at) {
                router.push("/onboarding");
             } else if (result.user.roles?.length > 1) {
@@ -132,7 +132,7 @@ export default function ChangePasswordPage() {
                       Current Password
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} />
+                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} autoComplete="current-password" />
                     </FormControl>
                     <FormMessage className="font-sans" />
                   </FormItem>
@@ -148,7 +148,7 @@ export default function ChangePasswordPage() {
                       New Password
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} />
+                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} autoComplete="new-password" />
                     </FormControl>
                     <FormMessage className="font-sans" />
                   </FormItem>
@@ -164,7 +164,7 @@ export default function ChangePasswordPage() {
                       Confirm New Password
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} />
+                      <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} autoComplete="new-password" />
                     </FormControl>
                     <FormMessage className="font-sans" />
                   </FormItem>

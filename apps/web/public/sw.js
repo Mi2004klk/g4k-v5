@@ -1,4 +1,4 @@
-const CACHE_NAME = 'g4k-workplace-v2';
+const CACHE_NAME = 'g4k-workplace-v3';
 
 // On install, cache app shell and take control
 self.addEventListener('install', (event) => {
@@ -6,8 +6,7 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
         '/',
-        '/login',
-        '/dashboard'
+        '/login'
       ]);
     }).then(() => self.skipWaiting())
   );
@@ -45,26 +44,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation requests and Next.js RSC (_rsc) payloads: Network-First
+  // Navigation requests: ALWAYS network-only (no caching of authenticated pages)
   if (request.mode === 'navigate' || url.searchParams.has('_rsc')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache successful responses for offline fallback
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => {
-          // Offline: try cache, then a basic offline page
-          return caches.match(request).then((cached) => {
-            return cached || caches.match('/');
-          });
-        })
-    );
-    return;
+    return; // Let the browser handle it natively — SW does NOT intercept
   }
 
   // Static assets (JS, CSS, images, fonts): Stale-While-Revalidate

@@ -30,7 +30,7 @@ export function HolidayCalendar() {
 
   const { data: holidays, isLoading } = useQuery({
     queryKey: queryKeys.holidays(currentYear),
-    queryFn: () => apiFetch(/holidays?year=\),
+    queryFn: () => apiFetch(`/holidays?year=${currentYear}`),
     staleTime: STALE_TIME_CONFIG,
   });
 
@@ -45,7 +45,7 @@ export function HolidayCalendar() {
   });
 
   const editHoliday = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: any }) => apiFetch(/holidays/\, { method: "PUT", body: JSON.stringify(data) }),
+    mutationFn: ({ id, data }: { id: number, data: any }) => apiFetch(`/holidays/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.holidays(currentYear) });
       setIsEditOpen(false);
@@ -55,7 +55,7 @@ export function HolidayCalendar() {
   });
 
   const deleteHoliday = useMutation({
-    mutationFn: (id: number) => apiFetch(/holidays/\, { method: "DELETE" }),
+    mutationFn: (id: number) => apiFetch(`/holidays/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.holidays(currentYear) });
       toast.success("Holiday deleted successfully");
@@ -177,12 +177,9 @@ export function HolidayCalendar() {
                 
                 const CellContent = (
                   <div
-                    className={
-                      \elative flex flex-col items-center justify-center p-1 rounded-md text-xs transition-all min-h-[40px]
-                      \
-                      \
-                      \\
-                    }
+                    className={`relative flex flex-col items-center justify-center p-1 rounded-md text-xs transition-all min-h-[40px]
+                      ${isCurrentMonth ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-600 opacity-50"}
+                      ${holiday ? "bg-violet-50 dark:bg-violet-900/20 font-semibold border border-violet-100 dark:border-violet-800/50 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900/40" : ""}`}
                   >
                     <span>{format(day, "d")}</span>
                     {holiday && (

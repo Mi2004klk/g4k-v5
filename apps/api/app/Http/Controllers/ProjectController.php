@@ -37,8 +37,9 @@ class ProjectController extends Controller
 
         if ($request->filled('sort')) {
             $sort = $request->query('sort');
-            if (in_array($sort, ['created_at', 'deadline', 'priority'])) {
-                $query->orderBy($sort, $sort === 'priority' ? 'desc' : 'desc');
+            $direction = $request->query('direction', 'desc');
+            if (in_array($sort, ['created_at', 'deadline', 'priority', 'name'])) {
+                $query->orderBy($sort, $direction);
             } else {
                 $query->orderBy('updated_at', 'desc');
             }
@@ -46,7 +47,8 @@ class ProjectController extends Controller
             $query->orderBy('updated_at', 'desc');
         }
 
-        return response()->json($query->paginate(15));
+        $perPage = $request->query('per_page', 15);
+        return response()->json($query->paginate($perPage));
     }
 
     public function store(Request $request)

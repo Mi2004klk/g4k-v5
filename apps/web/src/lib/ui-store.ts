@@ -10,8 +10,8 @@ interface UIState {
   dismissedNotificationIds: number[];
   widgetStates: Record<string, { collapsed?: boolean }>;
   setSidebarState: (state: SidebarState) => void;
+  setSidebarStateSilent: (state: SidebarState) => void;
   cycleSidebarState: () => void;
-  initPreferences: () => Promise<void>;
   dismissNotification: (id: number) => void;
   clearPopupNotifications: (ids: number[]) => void;
   toggleWidgetCollapse: (widgetId: string) => void;
@@ -36,6 +36,10 @@ export const useUIStore = create<UIState>()(
         }).catch(() => {
           // Ignore sync errors gracefully
         });
+      },
+
+      setSidebarStateSilent: (state) => {
+        set({ sidebarState: state });
       },
 
       cycleSidebarState: () => {
@@ -68,19 +72,6 @@ export const useUIStore = create<UIState>()(
         });
       },
 
-      initPreferences: async () => {
-        if (get().isInitialized) return;
-        try {
-          const res: any = await apiFetch("/auth/preferences");
-          if (res.preferences?.sidebar_state) {
-            set({ sidebarState: res.preferences.sidebar_state });
-          }
-        } catch (err) {
-          // Fallback to persisted state
-        } finally {
-          set({ isInitialized: true });
-        }
-      },
     }),
     {
       name: "g4k-ui-storage",

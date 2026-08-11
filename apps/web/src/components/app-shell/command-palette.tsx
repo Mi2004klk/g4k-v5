@@ -44,7 +44,8 @@ export function CommandPalette() {
   const [search, setSearch] = useState("");
   const router = useRouter();
   const { setTheme } = useTheme();
-  const { isActive, isOnBreak } = useTimerStore();
+  const isActive = useTimerStore((s) => s.isActive);
+  const isOnBreak = useTimerStore((s) => s.isOnBreak);
   const { data: capabilities = [] } = useCapabilities();
   const { recentItems } = useRecentStore();
 

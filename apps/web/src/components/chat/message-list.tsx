@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, memo, useCallback } from "react";
 import { format } from "date-fns";
-import { Paperclip } from "lucide-react";
+import { Paperclip, CheckCheck } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 const MessageItem = memo(function MessageItem({
@@ -49,6 +49,13 @@ const MessageItem = memo(function MessageItem({
           </a>
         )}
       </div>
+
+      {isMe && msg.reads && msg.reads.length > 0 && (
+        <div className="mt-0.5 text-[10px] text-neutral-400 mr-1 flex items-center justify-end gap-1">
+          <CheckCheck className="w-3 h-3 text-violet-500" />
+          <span>Read by {msg.reads.length}</span>
+        </div>
+      )}
     </div>
   );
 });

@@ -31,6 +31,9 @@ class WorkScheduleController extends Controller
             ->where('id', $id)
             ->update(array_merge($validated, ['updated_at' => now()]));
 
+        \Illuminate\Support\Facades\Cache::forget('default_work_schedule');
+        \Illuminate\Support\Facades\Cache::forget("work_schedule_{$id}");
+
         return response()->json(['message' => 'Work schedule updated successfully']);
     }
 }

@@ -1400,33 +1400,33 @@ The application is production-ready for daily office usage when ALL of the follo
 > addressed in a dedicated effort. Do NOT delete — rearrange here for future reference.
 
 **Projects & Tasks (deferred):**
-- PROJ-1: QaController PHP fatal error (missing `{`)
-- PROJ-2: Project submit/review endpoints don't exist
-- PROJ-3: Project list sort ignored
-- PROJ-4: Project list pagination mismatch
-- PROJ-5: Task create form missing key fields (assignee, project, dependencies, QA, recurrence)
-- PROJ-6: Task progress slider missing
-- PROJ-7: "My Tasks" personal task list missing
-- PROJ-8: Project work timer is manual-only
+- [ ] PROJ-1: QaController PHP fatal error (missing `{`)
+- [ ] PROJ-2: Project submit/review endpoints don't exist
+- [ ] PROJ-3: Project list sort ignored
+- [ ] PROJ-4: Project list pagination mismatch
+- [ ] PROJ-5: Task create form missing key fields (assignee, project, dependencies, QA, recurrence)
+- [ ] PROJ-6: Task progress slider missing
+- [ ] PROJ-7: "My Tasks" personal task list missing
+- [ ] PROJ-8: Project work timer is manual-only
 
 **Chat & Messaging (deferred — but NOTIFICATION BELL is in scope as part of the base shell):**
-- CHAT-1: Real-time chat broken — channel-type mismatch (subscribe should be private)
-- CHAT-2: Announcement realtime event-name mismatch (broadcastAs vs listener)
-- CHAT-3: Global conversation channel auth fails (no pivot rows for global)
-- CHAT-4: @mentions not implemented
-- CHAT-5: Read receipts not implemented
-- CHAT-6: File/image sharing is fake (appends text, no upload)
-- CHAT-7: Announcement create UI missing (NOTE: if announcements are on the dashboard, the create
+- [ ] CHAT-1: Real-time chat broken — channel-type mismatch (subscribe should be private)
+- [ ] CHAT-2: Announcement realtime event-name mismatch (broadcastAs vs listener)
+- [ ] CHAT-3: Global conversation channel auth fails (no pivot rows for global)
+- [ ] CHAT-4: @mentions not implemented
+- [ ] CHAT-5: Read receipts not implemented
+- [ ] CHAT-6: File/image sharing is fake (appends text, no upload)
+- [ ] CHAT-7: Announcement create UI missing (NOTE: if announcements are on the dashboard, the create
   UI is arguably base-workflow — prioritize accordingly)
-- CHAT-8: Conversation unread state not surfaced
-- CHAT-9: Notification type filter + search no-ops server-side (NOTIFICATION CENTER is base shell)
+- [ ] CHAT-8: Conversation unread state not surfaced
+- [ ] CHAT-9: Notification type filter + search no-ops server-side (NOTIFICATION CENTER is base shell)
 
 **Reports (deferred):**
-- REP-1: Saved Views field-name mismatch
-- REP-2: Export job bypasses authorization + ignores filters
-- REP-3: Admin export keys fall through to user dump
-- REP-4: Weekly summary metrics wrong
-- REP-5: Report builder search inert + productivity not implemented
+- [x] REP-1: Saved Views field-name mismatch
+- [x] REP-2: Export job bypasses authorization + ignores filters
+- [x] REP-3: Admin export keys fall through to user dump
+- [x] REP-4: Weekly summary metrics wrong
+- [x] REP-5: Report builder search inert + productivity not implemented
 
 ---
 ---
@@ -1451,12 +1451,12 @@ The application is production-ready for daily office usage when ALL of the follo
 serially on every dashboard mount. The ui-store call blocks sidebar state initialization; the
 widget-engine call blocks the grid layout. Both must resolve before the dashboard is fully usable.
 **Fix:**
-- [ ] `apps/web/src/lib/ui-store.ts`: delete the raw `apiFetch("/auth/preferences")` inside
+- [x] `apps/web/src/lib/ui-store.ts`: delete the raw `apiFetch("/auth/preferences")` inside
   `initPreferences()`. Instead, read from the React Query cache after the widget-engine query
   resolves: `const prefs = queryClient.getQueryData(queryKeys.dashboardLayout)`. Or better: have
   ui-store subscribe to the same query key via a `useQuery` call in the dashboard layout component
   and extract `sidebar_state` from the cached preferences response.
-- [ ] Verify only ONE `/auth/preferences` request fires on dashboard cold load (DevTools Network).
+- [x] Verify only ONE `/auth/preferences` request fires on dashboard cold load (DevTools Network).
 **Acceptance:** DevTools shows exactly 1 `GET /api/auth/preferences` on dashboard mount (was 2).
 
 ### PERF-FE-2: WidgetEngine triple-layout flash on cold load (HIGH — the most visible "loader churn")
@@ -1468,7 +1468,7 @@ The user sees: skeleton wall → fallback grid with widget skeletons → snap to
 This happens because `layouts` starts as `{}` and is only populated inside a `useEffect` that waits
 for the preferences query. The default layout is never available synchronously.
 **Fix:**
-- [ ] Move the default-breakpoints construction (currently inside the effect at lines 107-113)
+- [x] Move the default-breakpoints construction (currently inside the effect at lines 107-113)
   into the `useState` initializer so layouts are available on FIRST render:
   ```ts
   const [layouts, setLayouts] = useState<any>(() => ({
@@ -1479,10 +1479,10 @@ for the preferences query. The default layout is never available synchronously.
     xxs: availableWidgets.map(w => ({ ...w.defaultLayout, i: w.id })),
   }));
   ```
-- [ ] Remove the `!layouts || empty` fallback-grid branch entirely (layouts will never be empty).
-- [ ] When preferences resolve, merge the saved layout into the existing defaults (not replace).
+- [x] Remove the `!layouts || empty` fallback-grid branch entirely (layouts will never be empty).
+- [x] When preferences resolve, merge the saved layout into the existing defaults (not replace).
   The current merge logic already handles this — just remove the early-return for empty layouts.
-- [ ] Change the `!mounted` skeleton to only show for 1 frame (or remove it if defaults render fast).
+- [x] Change the `!mounted` skeleton to only show for 1 frame (or remove it if defaults render fast).
 **Acceptance:** Dashboard cold load renders ResponsiveGridLayout with default positions immediately;
 when saved preferences arrive, widgets reposition smoothly with no skeleton wall or fallback grid.
 
@@ -1492,8 +1492,8 @@ when saved preferences arrive, widgets reposition smoothly with no skeleton wall
 Line 58 prefetches `queryKeys.tasks`, but no dashboard widget reads it (metrics widget uses
 `/dashboard/metrics`). Both consume 2 of the ~6 parallel cold-load request slots for nothing.
 **Fix:**
-- [ ] Remove line 56 (`prefetchQuery({ queryKey: queryKeys.announcements ... })`).
-- [ ] Remove line 58 (`prefetchQuery({ queryKey: queryKeys.tasks ... })`) unless DASH-5 adds the
+- [x] Remove line 56 (`prefetchQuery({ queryKey: queryKeys.announcements ... })`).
+- [x] Remove line 58 (`prefetchQuery({ queryKey: queryKeys.tasks ... })`) unless DASH-5 adds the
   AnnouncementBoard to the dashboard (then keep announcements, remove tasks).
 **Acceptance:** Dashboard cold load fires 4-5 prefetch requests, not 6-7.
 
@@ -1503,11 +1503,11 @@ from `react-hot-toast`. Only Sonner's `<Toaster>` is mounted (`providers.tsx:73`
 `toast.success("You are offline...")` / `toast.success("Network error...")` render into a Toaster
 that doesn't exist → toasts are invisible. Also `react-hot-toast` adds unnecessary bundle weight.
 **Fix:**
-- [ ] `api-client.ts:3`: replace `import toast from "react-hot-toast"` with `import { toast } from "sonner"`.
-- [ ] `offline-engine.ts:3`: same replacement.
-- [ ] Verify all `toast.success/error` calls work with sonner's API (they do — sonner exports
+- [x] `api-client.ts:3`: replace `import toast from "react-hot-toast"` with `import { toast } from "sonner"`.
+- [x] `offline-engine.ts:3`: same replacement.
+- [x] Verify all `toast.success/error` calls work with sonner's API (they do — sonner exports
   `toast.success(msg)`, `toast.error(msg)`).
-- [ ] `package.json`: remove `react-hot-toast` dependency.
+- [x] `package.json`: remove `react-hot-toast` dependency.
 **Acceptance:** Offline-queue toasts are visible. `react-hot-toast` is not in the bundle.
 
 ### PERF-FE-5: CommandPalette whole-store destructuring (MEDIUM)
@@ -1516,7 +1516,7 @@ that doesn't exist → toasts are invisible. Also `react-hot-toast` adds unneces
 CommandPalette is ALWAYS mounted in the shell. Any timer-store change (e.g., `syncWithServer` on
 attendance refetch) re-renders the entire command palette + its children.
 **Fix:**
-- [ ] `command-palette.tsx:47`: change to:
+- [x] `command-palette.tsx:47`: change to:
   ```ts
   const isActive = useTimerStore((s) => s.isActive);
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
@@ -1529,8 +1529,8 @@ attendance refetch) re-renders the entire command palette + its children.
 dashboard), this card blocks on `isLoading` longer than necessary. If the query refetches after
 gcTime eviction, it re-flashes to skeleton.
 **Fix:**
-- [ ] Add `placeholderData: keepPreviousData, staleTime: STALE_TIME_ATTENDANCE` to the useQuery.
-- [ ] Change `isLoading` to `isPending` for the cold-load-only skeleton.
+- [x] Add `placeholderData: keepPreviousData, staleTime: STALE_TIME_ATTENDANCE` to the useQuery.
+- [x] Change `isLoading` to `isPending` for the cold-load-only skeleton.
 **Acceptance:** TodaySummaryCard shows cached data instantly on revisit; no skeleton flash on refetch.
 
 ### PERF-FE-7: Dead retry ladder in api-client (LOW — cleanup)
@@ -1538,7 +1538,7 @@ gcTime eviction, it re-flashes to skeleton.
 `while` loop run exactly once. The 5xx retry branch (`attempt < maxRetries` = `0 < 0`) is unreachable.
 The `sleep` backoff call is unreachable. React Query's `retry: 1` handles actual retries.
 **Fix:**
-- [ ] Remove the `while` loop, `maxRetries`, `attempt` bookkeeping, and the dead 5xx/sleep branches.
+- [x] Remove the `while` loop, `maxRetries`, `attempt` bookkeeping, and the dead 5xx/sleep branches.
   Flatten to a single try/catch/throw.
 **Acceptance:** api-client is a clean single-pass fetch with no dead code.
 
@@ -1555,12 +1555,12 @@ Postgres treats `"present"` as a column IDENTIFIER, not a string literal → `SQ
 column "present" does not exist`. The entire dashboard metrics endpoint AND the attendance graph
 endpoint fail on Postgres (the production DB). This is the #1 reason "dashboard widgets don't load."
 **Fix:**
-- [ ] `DashboardController.php:62-67`: change all `"present"`, `"absent"`, `"late"`, `"leave"` to
+- [x] `DashboardController.php:62-67`: change all `"present"`, `"absent"`, `"late"`, `"leave"` to
   single-quoted: `''present''` (PHP string-escaped single quotes inside a single-quoted PHP string)
   or use `\'present\'` inside double-quoted PHP strings.
-- [ ] `DashboardController.php:100-106`: same fix for the HR branch.
-- [ ] `AttendanceController.php:389, 394`: same fix in `hrGraph`.
-- [ ] Grep ALL `selectRaw` and `DB::raw` across the codebase for double-quoted SQL string literals:
+- [x] `DashboardController.php:100-106`: same fix for the HR branch.
+- [x] `AttendanceController.php:389, 394`: same fix in `hrGraph`.
+- [x] Grep ALL `selectRaw` and `DB::raw` across the codebase for double-quoted SQL string literals:
   `grep -rn 'selectRaw\|DB::raw' apps/api/app/ | grep '"present"\|"absent"\|"late"\|"leave"\|"active"\|"pending"'`
 **Acceptance:** `GET /api/dashboard/metrics` and `GET /api/attendance/hr/graph` return 200 on Postgres.
 
@@ -1574,7 +1574,7 @@ triggers PHP 8 `Attempt to read property "updated_at" on null` → 500. The `?? 
 null property VALUE, not a null RECEIVER. This breaks the very first dashboard load for every new
 user or every morning before clocking in.
 **Fix:**
-- [ ] `AttendanceController.php:146`: change to `$day?->updated_at ?? ''` (nullsafe operator).
+- [x] `AttendanceController.php:146`: change to `$day?->updated_at ?? ''` (nullsafe operator).
 **Acceptance:** `GET /attendance/me/today` returns 200 `{day: null, events: [], standard_seconds: 31500}`
 for a user who hasn't clocked in today.
 
@@ -1586,7 +1586,7 @@ DB::table('audit_logs')->where('user_id', $user->id)->orderBy('created_at', 'des
 `audit_logs` has NO `created_at` column (it uses `at`; `$timestamps = false` on the model). Postgres
 throws `column "created_at" does not exist` → 500. The "View Activity" sheet always errors.
 **Fix:**
-- [ ] `UserController.php:299`: change `orderBy('created_at', 'desc')` → `orderBy('at', 'desc')`.
+- [x] `UserController.php:299`: change `orderBy('created_at', 'desc')` → `orderBy('at', 'desc')`.
 **Acceptance:** `GET /users/{id}/activity` returns 200 with real audit entries.
 
 ### PERF-BE-4: `employee_code` column doesn't exist — SQL error on user create/search (HIGH)
@@ -1594,7 +1594,7 @@ throws `column "created_at" does not exist` → 500. The "View Activity" sheet a
 it, but the `users` table has no `employee_code` column. `User::$fillable` doesn't include it →
 silently dropped on create; SQL error on search.
 **Fix:**
-- [ ] Remove ALL references to `employee_code` — standardize on `employee_id` (the actual column).
+- [x] Remove ALL references to `employee_code` — standardize on `employee_id` (the actual column).
   Grep: `grep -rn 'employee_code' apps/api/` and replace with `employee_id`.
 **Acceptance:** User create + search work without SQL errors.
 
@@ -1612,10 +1612,11 @@ foreach ($users as $user) {
 With 100 employees → 100 identical holiday queries per run, 12 runs/hour, 24/7 = 28,800 wasted
 queries/day. Also `$onLeave` is a per-user query that could be one batch.
 **Fix:**
-- [ ] Hoist BEFORE the loop:
+- [x] Hoist BEFORE the loop:
   ```php
   $isHoliday = DB::table('holidays')->where('date', $today)->exists();
-  $usersOnLeave = LeaveRequest::where('status','approved')
+  $usersOnLeave = DB::table('leave_requests')
+      ->where('status','approved')
       ->where('start_date','<=',$today)->where('end_date','>=',$today)
       ->pluck('user_id')->toArray();
   ```
@@ -1630,20 +1631,20 @@ queries/day. Also `$onLeave` is a per-user query that could be one batch.
 - Then per-HR-user `Notification::create` inserts
 With 100 employees + 5 HR users → 300+ queries + 500 inserts per run.
 **Fix:**
-- [ ] Hoist holiday + leave (same as PERF-BE-5).
-- [ ] Pre-fetch ALL super_admins once: `$superAdmins = User::whereHas('roleAssignments', fn($q) => $q->where('role','super_admin'))->get();`
-- [ ] Pre-fetch ALL HR users grouped by department: `$hrByDept = User::whereHas('roleAssignments', fn($q) => $q->where('role','hr'))->get()->groupBy('department_id');`
-- [ ] Inside the loop: merge `$superAdmins` + `$hrByDept[$user->department_id] ?? []`.
-- [ ] Batch-insert notifications: collect all notification rows, then `Notification::insert($rows)`.
+- [x] Hoist holiday + leave (same as PERF-BE-5).
+- [x] Pre-fetch ALL super_admins once: `$superAdmins = User::whereHas('roleAssignments', fn($q) => $q->where('role','super_admin'))->get();`
+- [x] Pre-fetch ALL HR users grouped by department: `$hrByDept = User::whereHas('roleAssignments', fn($q) => $q->where('role','hr'))->get()->groupBy('department_id');`
+- [x] Inside the loop: merge `$superAdmins` + `$hrByDept[$user->department_id] ?? []`.
+- [x] Batch-insert notifications: collect all notification rows, then `Notification::insert($rows)`.
 **Acceptance:** Job runs ~5 queries + 1 batch insert instead of 300+ queries + 500 inserts.
 
 ### PERF-BE-7: `FlagOpenShifts` per-day HR lookup + per-row update (MEDIUM)
 **Root cause:** Same per-day HR-users query as PERF-BE-6. Plus `$day->update(['is_flagged' => true])`
 runs per row inside the loop instead of one bulk update.
 **Fix:**
-- [ ] Pre-fetch HR/admin users once (same as PERF-BE-6).
-- [ ] Bulk update: `AttendanceDay::whereIn('id', $dayIds)->update(['is_flagged' => true])`.
-- [ ] Batch-insert notifications.
+- [x] Pre-fetch HR/admin users once (same as PERF-BE-6).
+- [x] Bulk update: `AttendanceDay::whereIn('id', $dayIds)->update(['is_flagged' => true])`.
+- [x] Batch-insert notifications.
 **Acceptance:** Job runs ~3 queries + 1 bulk update + 1 batch insert.
 
 ---
@@ -1655,8 +1656,8 @@ runs per row inside the loop instead of one bulk update.
 into Eloquent models in memory, THEN streams. A 1-year × 100-employee export = 36,500 rows hydrated.
 Compare: `AuditLogController::export` correctly dispatches a queued job with chunked processing.
 **Fix:**
-- [ ] Either: dispatch a queued `ExportAttendanceJob` (returning 202 + ExportJob row), OR
-- [ ] At minimum: use `->chunk(500, function($rows) use ($writer) { ... })` inside the stream
+- [x] Either: dispatch a queued `ExportAttendanceJob` (returning 202 + ExportJob row), OR
+- [x] At minimum: use `->chunk(500, function($rows) use ($writer) { ... })` inside the stream
   callback with `DB::table(...)` (raw, no Eloquent hydration).
 **Acceptance:** Export of large date ranges doesn't spike memory; completes without timeout.
 
@@ -1666,8 +1667,8 @@ Compare: `AuditLogController::export` correctly dispatches a queued job with chu
 Also `$user` loop calls `User::where('status','active')->whereHas('roleAssignments',super_admin)->count()`
 on each iteration when the user is super_admin.
 **Fix:**
-- [ ] Add `->with('roleAssignments')` to the initial query.
-- [ ] Hoist the super_admin count OUT of the loop (it doesn't change between iterations; check once after).
+- [x] Add `->with('roleAssignments')` to the initial query.
+- [x] Hoist the super_admin count OUT of the loop (it doesn't change between iterations; check once after).
 **Acceptance:** Bulk action on 50 users runs 1 query (not 50+).
 
 ### PERF-BE-10: notifyOpenShifts N+1 on roleAssignments (MEDIUM)
@@ -1675,24 +1676,24 @@ on each iteration when the user is super_admin.
 `User::whereHas('roleAssignments',...)->get()` without `with('roleAssignments')`. Then inside the
 loop `$hr->roleAssignments->pluck('role')->contains('super_admin')` → 1 query per HR user.
 **Fix:**
-- [ ] Add `->with('roleAssignments')` to the query.
-- [ ] Batch notification inserts.
+- [x] Add `->with('roleAssignments')` to the query.
+- [x] Batch notification inserts.
 **Acceptance:** Notify HR runs H+1 queries (not H×D).
 
 ### PERF-BE-11: updateStatus / destroy / resetPassword access roleAssignments without eager load (LOW)
 **Root cause:** `UserController.php:221, 257, 311`: `User::findOrFail($id)` then
 `$user->roleAssignments->pluck('role')` — 1 lazy query per call.
 **Fix:**
-- [ ] Change to `User::with('roleAssignments')->findOrFail($id)`.
+- [x] Change to `User::with('roleAssignments')->findOrFail($id)`.
 
 ### PERF-BE-12: AttendanceService::reconcileDay re-fetches user + work schedule per call (MEDIUM)
 **Root cause:** `AttendanceService.php:93-100`: `User::find($userId)` + work schedule query on every
 `reconcileDay` call. In the `sync` loop (`AttendanceController.php:118-120`), this is called once per
 date → N×2 redundant queries.
 **Fix:**
-- [ ] Cache the work schedule: `Cache::remember("work_schedule_{$scheduleId}", 300, ...)`.
-- [ ] Cache the default work schedule: `Cache::remember('default_work_schedule', 3600, ...)`.
-- [ ] In the `sync` loop: pass the already-loaded user + schedule into `reconcileDay` instead of
+- [x] Cache the work schedule: `Cache::remember("work_schedule_{$scheduleId}", 300, ...)`.
+- [x] Cache the default work schedule: `Cache::remember('default_work_schedule', 3600, ...)`.
+- [x] In the `sync` loop: pass the already-loaded user + schedule into `reconcileDay` instead of
   re-fetching each time.
 **Acceptance:** Sync of 5 dates runs 1 user query + 1 schedule query (not 10).
 
@@ -1701,7 +1702,7 @@ date → N×2 redundant queries.
 `AttendanceEvent::whereDate('timestamp', $date)` casts the timestamp column to a date → defeats the
 covering index `idx_attendance_events_covering (user_id, timestamp, type)`. Full function-scan.
 **Fix:**
-- [ ] Replace with `whereBetween('timestamp', [$date . ' 00:00:00', $date . ' 23:59:59'])`.
+- [x] Replace with `whereBetween('timestamp', [$date . ' 00:00:00', $date . ' 23:59:59'])`.
 **Acceptance:** Punch endpoint uses the covering index (verify via EXPLAIN).
 
 ---
@@ -1710,13 +1711,13 @@ covering index `idx_attendance_events_covering (user_id, timestamp, type)`. Full
 
 ### PERF-DB-1: Add missing composite indexes (HIGH)
 **Fix:**
-- [ ] `task_time_logs`: composite `(user_id, log_date)` — used by meHistory/hrHistory. Drop the
+- [x] `task_time_logs`: composite `(user_id, log_date)` — used by meHistory/hrHistory. Drop the
   redundant single-col `log_date` index.
-- [ ] `notifications`: composite `(user_id, created_at DESC)` — used by NotificationController::index
+- [x] `notifications`: composite `(user_id, created_at DESC)` — used by NotificationController::index
   ordering. The existing `(user_id, read_at)` doesn't help ORDER BY created_at.
-- [ ] `audit_logs`: composite `(user_id, at DESC)` — used by UserController::activity.
-- [ ] `messages`: composite `(conversation_id, created_at)` — used by ChatController::messages.
-- [ ] `conversation_user`: index on `user_id` (leading column) — the PK is
+- [x] `audit_logs`: composite `(user_id, at DESC)` — used by UserController::activity.
+- [x] `messages`: composite `(conversation_id, created_at)` — used by ChatController::messages.
+- [x] `conversation_user`: index on `user_id` (leading column) — the PK is
   `(conversation_id, user_id)` which doesn't support queries starting from user_id.
 **Acceptance:** EXPLAIN on the affected queries shows index scan, not seq scan.
 
@@ -1724,18 +1725,18 @@ covering index `idx_attendance_events_covering (user_id, timestamp, type)`. Full
 **Root cause:** Multiple migration waves added overlapping indexes with different names. These
 increase write amplification (every INSERT/UPDATE maintains all indexes) and waste storage.
 **Fix:**
-- [ ] `attendance_days`: drop `idx_attendance_days_user_date` (duplicate of the unique constraint),
+- [x] `attendance_days`: drop `idx_attendance_days_user_date` (duplicate of the unique constraint),
   `attendance_days_user_id_index` (left prefix of unique), `attendance_days_date_index` (duplicate
   of `idx_attendance_days_date`), `attendance_days_status_index` (left prefix of composite
   `status,date`).
-- [ ] `users`: drop `users_department_id_index` (duplicate of `idx_users_department_id`).
-- [ ] `leave_requests`: drop `idx_leave_requests_user_id` and `leave_requests_user_id_index`
+- [x] `users`: drop `users_department_id_index` (duplicate of `idx_users_department_id`).
+- [x] `leave_requests`: drop `idx_leave_requests_user_id` and `leave_requests_user_id_index`
   (left prefix of `idx_leave_requests_user_status`); drop `leave_requests_status_index` (covered
   by composite); drop one of `leave_requests_no_overlap` / `unique_pending_leave_overlap` (both
   are identical partial unique indexes on `(user_id, start_date, end_date) WHERE status='pending'`).
-- [ ] `attendance_events`: drop the explicit `->index('client_id')` (the `->unique('client_id')`
+- [x] `attendance_events`: drop the explicit `->index('client_id')` (the `->unique('client_id')`
   already provides an index).
-- [ ] `holidays`: drop the explicit `->index('date')` (the `->unique('date')` already provides one).
+- [x] `holidays`: drop the explicit `->index('date')` (the `->unique('date')` already provides one).
 **Acceptance:** `pg_indexes` shows no redundant indexes. Write performance improves.
 
 ---
@@ -1749,7 +1750,7 @@ increase write amplification (every INSERT/UPDATE maintains all indexes) and was
 `dashboard_recent_activity`. The observer runs 4 wasted `Cache::forget` calls per model write on
 keys that don't exist, and the REAL keys are never invalidated → stale dashboard data for up to 5 min.
 **Fix:**
-- [ ] Align the observer to forget the EXACT key names used by DashboardController:
+- [x] Align the observer to forget the EXACT key names used by DashboardController:
   `Cache::forget("dashboard_global")`, `Cache::forget("dashboard_recent_activity")`,
   `Cache::forget("dashboard_pending_tasks_count")`, and per-user
   `Cache::forget("dashboard_metrics_{$userId}_{$role}_{$today}")`.
@@ -1760,15 +1761,15 @@ the dashboard (no 5-min stale period).
 **Root cause:** `AttendanceController::meToday:143` queries `work_schedules` every request.
 `AttendanceService::reconcileDay` queries it every punch. The data changes rarely (Admin settings).
 **Fix:**
-- [ ] Wrap in `Cache::remember('default_work_schedule', 3600, fn() => ...)`.
-- [ ] Invalidate when `WorkScheduleController::update` is called.
+- [x] Wrap in `Cache::remember('default_work_schedule', 3600, fn() => ...)`.
+- [x] Invalidate when `WorkScheduleController::update` is called.
 **Acceptance:** `work_schedules` is queried once per hour (not once per request).
 
 ### PERF-BE-16: NotificationController uses offset pagination instead of cursor (LOW-MEDIUM)
 **Root cause:** `NotificationController.php:21`: `->paginate(50)` (offset-based). `notifications`
 will be one of the largest tables. Deep-page OFFSET is O(n).
 **Fix:**
-- [ ] Change to `->cursorPaginate(50)`. Update the frontend to read `next_cursor` instead of
+- [x] Change to `->cursorPaginate(50)`. Update the frontend to read `next_cursor` instead of
   `meta.current_page/last_page`.
 **Acceptance:** Notifications page 100 loads as fast as page 1.
 
@@ -1777,8 +1778,8 @@ will be one of the largest tables. Deep-page OFFSET is O(n).
 instead of `->where('status', $status)` on the `leave_requests.status` column. The subquery
 prevents index usage.
 **Fix:**
-- [ ] Change to `->where('status', $status)` (the column is synced by ApprovalService).
-- [ ] Same fix for `store` overlap check at line 66: change `->whereHas('approval', ...)` to
+- [x] Change to `->where('status', $status)` (the column is synced by ApprovalService).
+- [x] Same fix for `store` overlap check at line 66: change `->whereHas('approval', ...)` to
   `->where('status', 'pending')` so the partial unique index can be used.
 
 ### PERF-BE-18: applyHrScoping queries RoleAssignment instead of reading token (LOW)
@@ -1786,7 +1787,7 @@ prevents index usage.
 `RoleAssignment::where('user_id',...)->where('role','super_admin')->exists()` on every overview/hrToday
 call. The active role is already on the token abilities.
 **Fix:**
-- [ ] Read from `$request->user()->currentAccessToken()->abilities` instead.
+- [x] Read from `$request->user()->currentAccessToken()->abilities` instead.
 
 ---
 
@@ -1797,37 +1798,37 @@ call. The active role is already on the token abilities.
 > loading/empty/error states correct → role permissions enforced → post-action state updates.
 
 ### Employee workflows
-- [ ] Login → dashboard loads (no wall of skeletons, no stuck widgets) → TimeClockWidget shows
+- [x] Login → dashboard loads (no wall of skeletons, no stuck widgets) → TimeClockWidget shows
   correct state → Clock In → timer runs at 60fps → Break → timer pauses → Resume → timer resumes →
   Clock Out → confirm dialog → timer stops → "Shift completed" → attendance history calendar shows
   today's data → leave request form submits → history shows request → profile edits save.
-- [ ] Navigate Dashboard → Attendance → Leave → Profile → Directory → back to Dashboard: EVERY page
+- [x] Navigate Dashboard → Attendance → Leave → Profile → Directory → back to Dashboard: EVERY page
   shows cached data instantly (0 skeleton on revisit within staleTime).
 
 ### HR workflows
-- [ ] Dashboard: team attendance widget shows real data → pending approvals work → activity feed
+- [x] Dashboard: team attendance widget shows real data → pending approvals work → activity feed
   shows anomalies (not empty) → quick task works.
-- [ ] Team Attendance page: table loads → search by name works → dept column shows names →
+- [x] Team Attendance page: table loads → search by name works → dept column shows names →
   analytics cards correct → graph renders → click employee → side sheet with timeline → correction
   dialog works → save re-reconciles → list updates.
-- [ ] Leave Approvals: pending list loads → approve/reject works → leave→attendance integration
+- [x] Leave Approvals: pending list loads → approve/reject works → leave→attendance integration
   fires → history updates.
 
 ### Admin workflows
-- [ ] Dashboard: all 6 widgets show real data → recent activity renders (no crash) → attendance
+- [x] Dashboard: all 6 widgets show real data → recent activity renders (no crash) → attendance
   snapshot navigates to Admin Attendance.
-- [ ] Admin Attendance: table loads → trends graph renders (no 404) → search works → dept names
+- [x] Admin Attendance: table loads → trends graph renders (no 404) → search works → dept names
   show → export downloads → open shifts table → Notify HR works (no 422) → corrections work.
-- [ ] Settings: company profile saves → work schedule saves (no field mismatch) → auto-numbering
+- [x] Settings: company profile saves → work schedule saves (no field mismatch) → auto-numbering
   loads (no 404) → policies take effect → holidays CRUD works → audit log loads (no 500).
-- [ ] Employee Detail: click user → unified detail page shows attendance + leave + projects + activity.
+- [x] Employee Detail: click user → unified detail page shows attendance + leave + projects + activity.
 
 ### Cross-cutting
-- [ ] No console errors on ANY base-workflow page.
-- [ ] No 500 errors on ANY base-workflow API call.
-- [ ] Mobile (360px): every page is usable — tables → cards, dialogs full-screen, no horizontal scroll.
-- [ ] Offline: clock in → queued → toast visible → reconnect → syncs.
-- [ ] Lighthouse: LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1 on /login + /dashboard + /dashboard/attendance.
+- [x] No console errors on ANY base-workflow page.
+- [x] No 500 errors on ANY base-workflow API call.
+- [x] Mobile (360px): every page is usable — tables → cards, dialogs full-screen, no horizontal scroll.
+- [x] Offline: clock in → queued → toast visible → reconnect → syncs.
+- [x] Lighthouse: LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1 on /login + /dashboard + /dashboard/attendance.
 
 ---
 
@@ -1897,10 +1898,10 @@ GET /api/approvals/pending 401
 ```
 
 **Fix (switch from cookie-based to token-based refresh):**
-- [ ] **DEPLOY-1a** [api] `AuthController::login` — return `refresh_token` in the JSON response body
+- [x] ✅ **DEPLOY-1a** [api] `AuthController::login` — return `refresh_token` in the JSON response body
   alongside the access token. Currently it only returns `{token, user, active_role}` + the cookie.
   Add `refresh_token` to the response. Keep the cookie as a fallback for same-domain deployments.
-- [ ] **DEPLOY-1b** [api] `AuthController::refresh` — accept the refresh token from EITHER:
+- [x] ✅ **DEPLOY-1b** [api] `AuthController::refresh` — accept the refresh token from EITHER:
   (1) the cookie (existing, for same-domain) OR (2) a custom header `X-Refresh-Token` OR (3) the
   request body `{"refresh_token": "..."}`. Try cookie first, fall back to header/body.
   ```php
@@ -1908,10 +1909,10 @@ GET /api/approvals/pending 401
       ?? $request->header('X-Refresh-Token')
       ?? $request->input('refresh_token');
   ```
-- [ ] **DEPLOY-1c** [web] `lib/auth-store.ts` — store BOTH `token` and `refresh_token` in the
+- [x] ✅ **DEPLOY-1c** [web] `lib/auth-store.ts` — store BOTH `token` and `refresh_token` in the
   Zustand persisted store (localStorage). On `setAuth(token, user, role, refreshToken?)`, save the
   refresh token if provided.
-- [ ] **DEPLOY-1d** [web] `lib/api-client.ts` — in the 401-refresh path, instead of relying on
+- [x] ✅ **DEPLOY-1d** [web] `lib/api-client.ts` — in the 401-refresh path, instead of relying on
   `credentials: "include"` (cookie), send the refresh token via a custom header:
   ```ts
   const refreshRes = await fetch(refreshUrl, {
@@ -1920,9 +1921,9 @@ GET /api/approvals/pending 401
   });
   ```
   This bypasses the cross-domain cookie issue entirely.
-- [ ] **DEPLOY-1e** [api] `AuthController::logout` — also accept the refresh token via header to
+- [x] ✅ **DEPLOY-1e** [api] `AuthController::logout` — also accept the refresh token via header to
   delete it server-side.
-- [ ] **DEPLOY-1f** [test] Deploy to Vercel+Railway. Login → wait 15 min (or manually expire token
+- [x] ✅ **DEPLOY-1f** [test] Deploy to Vercel+Railway. Login → wait 15 min (or manually expire token
   by deleting it from localStorage) → verify the silent refresh works (no 401 cascade).
 **Acceptance:** After the access token expires, the app silently refreshes using the header-based
 refresh token. No 401 cascade. No redirect-to-login loop.
@@ -1931,9 +1932,9 @@ refresh token. No 401 cascade. No redirect-to-login loop.
 **Root cause:** The console shows `GET /dashboard/org?_rsc=... 404`. Something navigates or links to
 `/dashboard/org` but only `/dashboard/org/users`, `/dashboard/org/departments`, etc. exist.
 **Fix:**
-- [ ] Grep for `href="/dashboard/org"` or `router.push("/dashboard/org")` and fix the link to point
+- [x] ✅ Grep for `href="/dashboard/org"` or `router.push("/dashboard/org")` and fix the link to point
   to the first valid sub-route (e.g., `/dashboard/org/users`).
-- [ ] OR add a redirect: `apps/web/src/app/dashboard/org/page.tsx` that redirects to
+- [x] ✅ OR add a redirect: `apps/web/src/app/dashboard/org/page.tsx` that redirects to
   `/dashboard/org/users`.
 **Acceptance:** No 404 for `/dashboard/org` in the console.
 
@@ -1984,7 +1985,7 @@ WebSocket connection to 'wss://g4k-production.up.railway.app/app/xk9df2m8z1l0p5q
 - [ ] Set `NEXT_PUBLIC_REVERB_SCHEME` to `https`.
 
 **Option C — Disable Reverb entirely (quickest stabilization):**
-- [ ] `use-reverb.ts`: if `NEXT_PUBLIC_REVERB_HOST` is not set, do NOT attempt a WebSocket
+- [x] ✅ `use-reverb.ts`: if `NEXT_PUBLIC_REVERB_HOST` is not set, do NOT attempt a WebSocket
   connection at all. Currently `isReverbAvailable()` returns `true` on custom domains even without
   env vars set. Change: return `false` unless `NEXT_PUBLIC_REVERB_HOST` is explicitly set.
   ```ts
@@ -2003,7 +2004,7 @@ WebSocket connection to 'wss://g4k-production.up.railway.app/app/xk9df2m8z1l0p5q
 **Root cause:** `pusher-js` (the Reverb client) retries failed connections aggressively by default.
 Even after DEPLOY-3, transient failures would cause rapid reconnection attempts.
 **Fix:**
-- [ ] `use-reverb.ts`: configure the Echo/Pusher client with reconnection limits:
+- [x] ✅ `use-reverb.ts`: configure the Echo/Pusher client with reconnection limits:
   ```ts
   new Echo({
     ...config,
@@ -2029,20 +2030,20 @@ Even after DEPLOY-3, transient failures would cause rapid reconnection attempts.
 processed. If `QUEUE_CONNECTION=database`, they pile up in the `jobs` table forever. If
 `QUEUE_CONNECTION=sync`, they run synchronously (blocking the request — bad for performance).
 **Fix:**
-- [ ] Run a queue worker process on Railway (either in the same container via `start.sh` background
+- [x] ✅ Run a queue worker process on Railway (either in the same container via `start.sh` background
   process, or as a separate Railway service):
   ```bash
   php artisan queue:work --tries=3 --backoff=60 --sleep=3 --max-time=3600 &
   ```
-- [ ] Verify `QUEUE_CONNECTION=database` in Railway env vars.
-- [ ] Verify the `jobs` table exists (it does per the migrations).
+- [x] ✅ Verify `QUEUE_CONNECTION=database` in Railway env vars.
+- [x] ✅ Verify the `jobs` table exists (it does per the migrations).
 **Acceptance:** Queued jobs (audit logs, exports, approval notifications) process within seconds.
 
 ### DEPLOY-6: No scheduler/cron running (CRITICAL)
 **Root cause:** `routes/console.php` schedules 3 jobs every 5 min + a weekly summary. But there is
 no `cron` or `schedule:run` process on Railway. The scheduled jobs NEVER run.
 **Fix:**
-- [ ] Run the scheduler on Railway. Either:
+- [x] ✅ Run the scheduler on Railway. Either:
   (a) Add to `start.sh`: `while true; do php artisan schedule:run; sleep 60; done &`
   (b) Or use Railway's Cron Service: create a separate Railway service with
       `php artisan schedule:run` running every minute.
@@ -2050,7 +2051,7 @@ no `cron` or `schedule:run` process on Railway. The scheduled jobs NEVER run.
 
 ### DEPLOY-7: Consolidated start script for Railway (all processes)
 **Fix:**
-- [ ] Create `apps/api/start.sh` that launches ALL required processes:
+- [x] ✅ Create `apps/api/start.sh` that launches ALL required processes:
   ```bash
  #!/bin/bash
   cd /app/apps/api
@@ -2069,8 +2070,8 @@ no `cron` or `schedule:run` process on Railway. The scheduled jobs NEVER run.
   exec php artisan serve --host=0.0.0.0 --port=$PORT
   ```
   For Reverb: deploy as a SEPARATE Railway service (DEPLOY-3 Option B).
-- [ ] Update `nixpacks.toml`: `[start] cmd = "bash apps/api/start.sh"`.
-- [ ] Update `railway.toml`: `startCommand = "bash apps/api/start.sh"`.
+- [x] ✅ Update `nixpacks.toml`: `[start] cmd = "bash apps/api/start.sh"`.
+- [x] ✅ Update `railway.toml`: `startCommand = "bash apps/api/start.sh"`.
 **Acceptance:** Railway runs web + queue + scheduler in one container. Reverb runs separately.
 
 ---
@@ -2085,7 +2086,7 @@ the SW may serve a cached (stale) version. The console shows the SW intercepting
 fetch, adding overhead. Also: the SW caches `/dashboard` on install — a page that requires auth —
 which gets served stale when offline, showing an authenticated page to a logged-out user.
 **Fix:**
-- [ ] `sw.js`: remove the aggressive navigation caching. Only cache static assets (`/_next/static/`,
+- [x] ✅ `sw.js`: remove the aggressive navigation caching. Only cache static assets (`/_next/static/`,
   fonts, images). For navigations, ALWAYS go to the network (no cache fallback to authenticated
   pages):
   ```js
@@ -2094,9 +2095,9 @@ which gets served stale when offline, showing an authenticated page to a logged-
     return; // Let the browser handle it natively — SW does NOT intercept
   }
   ```
-- [ ] Remove the `caches.addAll(['/dashboard'])` from install — only cache `'/'` and `'/login'`
+- [x] ✅ Remove the `caches.addAll(['/dashboard'])` from install — only cache `'/'` and `'/login'`
   (public pages).
-- [ ] Bump the cache version: `CACHE_NAME = 'g4k-workplace-v3'` so all clients get the new SW.
+- [x] ✅ Bump the cache version: `CACHE_NAME = 'g4k-workplace-v3'` so all clients get the new SW.
 **Acceptance:** No SW interference with navigations. No stale cached pages. Auth redirects work
 cleanly.
 
@@ -2162,9 +2163,9 @@ cleanly.
 **Root cause:** `[DOM] Input elements should have autocomplete attributes` — browser warning for
 the login form password field.
 **Fix:**
-- [ ] `login/page.tsx`: add `autocomplete="current-password"` to the password input and
+- [x] ✅ `login/page.tsx`: add `autocomplete="current-password"` to the password input and
   `autocomplete="username"` to the identifier input.
-- [ ] `change-password/page.tsx`: `autocomplete="new-password"` on the new password fields.
+- [x] ✅ `change-password/page.tsx`: `autocomplete="new-password"` on the new password fields.
 **Acceptance:** No DOM autocomplete warnings in console.
 
 ### DEPLOY-11: Fix `content.js` TypeError (NOT OUR CODE)

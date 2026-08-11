@@ -22,7 +22,8 @@ export function Breadcrumb() {
       </Link>
 
       {segments.slice(1).map((segment, index) => {
-        const url = `/${segments.slice(0, index + 2).join("/")}`;
+        let url = `/${segments.slice(0, index + 2).join("/")}`;
+        if (url === "/dashboard/org") url = "/dashboard/org/users";
         const isLast = index === segments.length - 2;
         const formatted = segment.replace(/-/g, " ");
 

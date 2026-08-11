@@ -3,5 +3,5 @@ builder = "NIXPACKS"
 watchPatterns = ["apps/api/**"]
 
 [deploy]
-startCommand = "cd apps/api && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+startCommand = "bash apps/api/start.sh"
 restartPolicyType = "ON_FAILURE"

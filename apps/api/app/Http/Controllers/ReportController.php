@@ -33,6 +33,10 @@ class ReportController extends Controller
                           ->orWhere('reporter_id', $user->id);
                     });
                 }
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where('title', 'ilike', "%{$search}%");
+                }
                 $data = $query->latest()->paginate(25);
                 break;
             case 'projects':
@@ -42,6 +46,10 @@ class ReportController extends Controller
                         $q->where('created_by', $user->id)
                           ->orWhereHas('members', fn ($m) => $m->where('users.id', $user->id));
                     });
+                }
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where('name', 'ilike', "%{$search}%");
                 }
                 $data = $query->latest()->paginate(25);
                 break;
@@ -56,7 +64,7 @@ class ReportController extends Controller
                 if ($key === 'productivity') {
                     $query->withCount([
                         'assignedTasks as completed_tasks' => function($q) {
-                            $q->where('status', 'completed');
+                            $q->where('status', 'done');
                         },
                         'assignedTasks as total_tasks'
                     ])->withSum('taskTimeLogs as total_seconds', 'duration_seconds');
@@ -86,7 +94,7 @@ class ReportController extends Controller
     public function export(Request $request)
     {
         $validated = $request->validate([
-            'key' => 'required|string',
+            'key' => 'required|string|in:tasks,projects,users,productivity,attendance-summary,leave-summary',
             'format' => 'required|in:xlsx,csv,pdf',
             'filters' => 'nullable|array',
         ]);
@@ -146,10 +154,10 @@ class ReportController extends Controller
                 ->withSum(['attendanceDays as total_hours' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds')
                 ->withSum(['attendanceDays as overtime_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'overtime_seconds');
 
-            if ($dept && $dept !== 'all') {
-                $query->where('department_id', $dept);
-            } elseif (!$hasManage) {
+            if (!$hasManage) {
                 $query->where('department_id', $user->department_id);
+            } elseif ($dept && $dept !== 'all') {
+                $query->where('department_id', $dept);
             }
 
             return $query->paginate(25);
@@ -176,10 +184,10 @@ class ReportController extends Controller
                 'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->whereBetween('start_date', [$start, $end]),
             ]);
 
-        if ($dept && $dept !== 'all') {
-            $query->where('department_id', $dept);
-        } elseif (!$hasManage) {
+        if (!$hasManage) {
             $query->where('department_id', $user->department_id);
+        } elseif ($dept && $dept !== 'all') {
+            $query->where('department_id', $dept);
         }
 
         return response()->json($query->paginate(25));

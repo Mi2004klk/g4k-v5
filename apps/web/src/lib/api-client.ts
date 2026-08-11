@@ -53,11 +53,7 @@ export async function apiFetch<T = any>(
     return { queued: true } as any;
   }
 
-  const maxRetries = 0;
-  let attempt = 0;
-
-  while (attempt <= maxRetries) {
-    try {
+  try {
       const response = await fetch(url, {
         ...options,
         headers,
@@ -76,6 +72,7 @@ export async function apiFetch<T = any>(
                 const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
                 const refreshRes = await fetch(refreshUrl, {
                   method: "GET",
+                  headers: { "X-Refresh-Token": useAuthStore.getState().refreshToken || "" },
                   credentials: "include",
                 });
 
@@ -84,7 +81,7 @@ export async function apiFetch<T = any>(
                 }
 
                 const data = await refreshRes.json();
-                useAuthStore.getState().setAuth(data.token, data.user, data.active_role);
+                useAuthStore.getState().setAuth(data.token, data.user, data.active_role, data.refresh_token);
                 return data.token as string;
               })().finally(() => {
                 refreshPromise = null;
@@ -113,10 +110,7 @@ export async function apiFetch<T = any>(
           throw new Error("Session expired. Please log in again.");
         }
 
-        // Retry for server errors on GET requests
-        if (isGet && response.status >= 500 && attempt < maxRetries) {
-          throw new Error(`Server error ${response.status}`);
-        }
+        // No client-side fetch retries (React Query handles GET retries)
 
         const errorData = await response.json().catch(() => ({}));
 
@@ -154,7 +148,7 @@ export async function apiFetch<T = any>(
         contentType.includes("application/octet-stream") ||
         contentType.includes("application/vnd.ms-excel")
       )) {
-        return await response.blob();
+        return (await response.blob()) as unknown as T;
       }
 
       return await response.json();
@@ -167,14 +161,6 @@ export async function apiFetch<T = any>(
         return { queued: true } as any;
       }
 
-      if (attempt >= maxRetries || error.message.includes("Session expired")) {
-        throw error;
-      }
-      attempt++;
-      // Exponential backoff: 500ms, 1000ms, 2000ms
-      await sleep(500 * Math.pow(2, attempt - 1));
+      throw error;
     }
-  }
-
-  throw new Error("Request failed after max retries");
 }

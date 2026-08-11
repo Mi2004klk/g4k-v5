@@ -8,6 +8,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 export function ConversationList({
   conversations,
   selectedId,
+  currentUserId,
   onSelect,
 }: {
   conversations: any[];
@@ -75,16 +76,19 @@ export function ConversationList({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                  <h4 className={`text-xs truncate ${isUnread ? "font-black text-violet-700 dark:text-violet-400" : "font-bold text-neutral-900 dark:text-white"}`}>
                     {title}
                   </h4>
                   {conv.latestMessage && (
-                    <span className="text-[10px] text-neutral-400">
-                      {format(new Date(conv.latestMessage.created_at), "h:mm a")}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isUnread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600" />}
+                      <span className={`text-[10px] ${isUnread ? "text-violet-600 font-bold" : "text-neutral-400"}`}>
+                        {format(new Date(conv.latestMessage.created_at), "h:mm a")}
+                      </span>
+                    </div>
                   )}
                 </div>
-                <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+                <p className={`text-[11px] truncate mt-0.5 ${isUnread ? "font-semibold text-neutral-800 dark:text-neutral-200" : "text-neutral-500"}`}>
                   {conv.latestMessage ? conv.latestMessage.body : "No messages yet"}
                 </p>
               </div>
