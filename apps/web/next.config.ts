@@ -4,7 +4,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     let backendUrl = process.env.NEXT_PUBLIC_API_URL 
       ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
-      : 'http://127.0.0.1:8000';
+      : (process.env.NODE_ENV === 'production' 
+          ? 'https://g4k-production.up.railway.app' 
+          : 'http://127.0.0.1:8000');
       
     // Ensure it has a protocol (required by Next.js rewrites)
     if (!backendUrl.startsWith('http://') && !backendUrl.startsWith('https://')) {

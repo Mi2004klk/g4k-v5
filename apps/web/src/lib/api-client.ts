@@ -35,7 +35,13 @@ export async function apiFetch<T = any>(
 
   const isGet = !options.method || options.method.toUpperCase() === 'GET';
 
-  if (!isGet && !bypassQueue && typeof navigator !== 'undefined' && !navigator.onLine) {
+  const isAuthEndpoint =
+    endpoint.includes("/auth/login") ||
+    endpoint.includes("/auth/forgot-password") ||
+    endpoint.includes("/auth/reset-password") ||
+    endpoint.includes("/auth/refresh");
+
+  if (!isAuthEndpoint && !isGet && !bypassQueue && typeof navigator !== 'undefined' && !navigator.onLine) {
     toast.success("You are offline. Action queued.");
     await offlineEngine.queueRequest(endpoint, options);
     return { queued: true } as any;
@@ -55,12 +61,6 @@ export async function apiFetch<T = any>(
       if (!response.ok) {
         // Auth endpoints (login/forgot/reset) own their 401 handling — never intercept.
         // A 401 on these means "invalid credentials", not "expired session".
-        const isAuthEndpoint =
-          endpoint.includes("/auth/login") ||
-          endpoint.includes("/auth/forgot-password") ||
-          endpoint.includes("/auth/reset-password") ||
-          endpoint.includes("/auth/refresh");
-
         if (response.status === 401 && !isAuthEndpoint) {
           // Session may have expired — attempt ONE silent refresh via the HttpOnly cookie.
           try {
@@ -123,7 +123,7 @@ export async function apiFetch<T = any>(
       return await response.json();
     } catch (error: any) {
       // Intercept offline / network failures for mutations
-      if (!isGet && !bypassQueue && (error.message.includes("Failed to fetch") || error.status >= 500)) {
+      if (!isAuthEndpoint && !isGet && !bypassQueue && (error.message.includes("Failed to fetch") || error.status >= 500)) {
         toast.success("Network error. Action queued for sync.");
         await offlineEngine.queueRequest(endpoint, options);
         return { queued: true } as any;
