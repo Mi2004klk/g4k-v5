@@ -92,7 +92,7 @@ export function AnnouncementBoard() {
         ) : isError ? (
           <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
             <AlertTriangle className="w-6 h-6 text-rose-400" />
-            <p className="text-xs font-medium text-rose-500">Failed to load announcements</p>
+            <p className="text-xs font-medium text-rose-600">Failed to load announcements</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
             </Button>
@@ -134,7 +134,7 @@ export function AnnouncementBoard() {
                         <button
                           onClick={() => deleteMutation.mutate(item.id)}
                           title="Delete Announcement"
-                          className="p-1 text-neutral-400 hover:text-rose-500 transition-colors"
+                          className="p-1 text-neutral-400 hover:text-rose-600 transition-colors"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>

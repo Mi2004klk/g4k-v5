@@ -86,7 +86,7 @@ export function LeaveHistoryTable({
               {approval.status === "approved" ? (
                 <Check className="w-4 h-4 text-emerald-500" />
               ) : (
-                <X className="w-4 h-4 text-rose-500" />
+                <X className="w-4 h-4 text-rose-600" />
               )}
               {approval.decision_reason && (
                 <span className="text-neutral-500 text-xs truncate max-w-[150px] block" title={approval.decision_reason}>

@@ -58,7 +58,7 @@ export function HrTeamAttendanceWidget() {
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
             <AlertCircle className="w-5 h-5 text-rose-400" />
-            <p className="text-xs font-medium text-rose-500">Failed to load team</p>
+            <p className="text-xs font-medium text-rose-600">Failed to load team</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
             </Button>

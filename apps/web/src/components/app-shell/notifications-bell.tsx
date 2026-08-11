@@ -148,7 +148,7 @@ export function NotificationsBell() {
       case "message":
         return <MessageSquare className="w-4 h-4 text-blue-500 shrink-0" />;
       case "missed_clock_in":
-        return <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />;
+        return <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />;
       case "shift_reminder":
         return <Clock className="w-4 h-4 text-amber-500 shrink-0" />;
       case "attendance_correction":
@@ -212,7 +212,7 @@ export function NotificationsBell() {
                     <button
                       onClick={handleClearPopup}
                       title="Clear from popup"
-                      className="flex items-center gap-1 text-[11px] font-medium text-rose-500 hover:text-rose-600 px-2 py-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                      className="flex items-center gap-1 text-[11px] font-medium text-rose-600 hover:text-rose-600 px-2 py-1 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Clear</span>

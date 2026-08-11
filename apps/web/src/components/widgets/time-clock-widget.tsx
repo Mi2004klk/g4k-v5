@@ -140,7 +140,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
           </span>
           {isError && (
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[10px] font-bold text-rose-500 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
                 <AlertCircle className="w-3 h-3" /> Offline Mode
               </span>
               <button onClick={() => refetch()} className="text-[10px] font-bold text-neutral-500 hover:text-neutral-700 underline">

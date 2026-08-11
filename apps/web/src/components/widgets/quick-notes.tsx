@@ -85,7 +85,7 @@ export function QuickNotes() {
               ) : isError ? (
                 <div className="flex flex-col items-center justify-center p-4 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
                   <AlertTriangle className="w-5 h-5 text-rose-400" />
-                  <p className="text-[10px] font-medium text-rose-500">Failed to load notes</p>
+                  <p className="text-[10px] font-medium text-rose-600">Failed to load notes</p>
                   <Button variant="outline" size="sm" onClick={() => refetch()} className="h-5 text-[10px] px-2">
                     Retry
                   </Button>
@@ -103,7 +103,7 @@ export function QuickNotes() {
                     <p className="text-neutral-800 dark:text-neutral-200">{n.body}</p>
                     <button
                       onClick={() => deleteMutation.mutate(n.id)}
-                      className="text-neutral-400 hover:text-rose-500 transition-colors"
+                      className="text-neutral-400 hover:text-rose-600 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

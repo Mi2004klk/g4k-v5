@@ -880,16 +880,16 @@
 
 - [x] **18.1** [test] Full test suite green: Laravel feature tests (with query-count + capability
   assertions) + web component/integration tests + the new perf/a11y/bundle CI gates (Phase 0.2).
-- [ ] **18.2** [test] `php artisan migrate:fresh --seed` succeeds on a clean DB (after Phase 5.10).
-- [ ] **18.3** [test] `pnpm build` + `pnpm lint` + `pnpm typecheck` green; bundle within budget.
-- [ ] **18.4** [test] Lighthouse CI meets route targets on staging.
-- [ ] **18.5** [deploy] Deploy api (Railway) + web (Vercel) to production; clear caches
+- [x] **18.2** [test] `php artisan migrate:fresh --seed` succeeds on a clean DB (after Phase 5.10).
+- [x] **18.3** [test] `pnpm build` + `pnpm lint` + `pnpm typecheck` green; bundle within budget.
+- [x] **18.4** [test] Lighthouse CI meets route targets on staging.
+- [x] **18.5** [deploy] Deploy api (Railway) + web (Vercel) to production; clear caches
   (`config:cache`, `route:cache`, `view:cache`, `migrate --force`). Verify `/api/ping` + login.
-- [ ] **18.6** [deploy] Verify rollback path (Railway redeploy + Vercel instant rollback) + Supabase
+- [x] **18.6** [deploy] Verify rollback path (Railway redeploy + Vercel instant rollback) + Supabase
   backup restore drill.
-- [ ] **18.7** [monitor] Watch Sentry + Laravel Pulse + Vercel web-vitals for 7 consecutive days;
+- [x] **18.7** [monitor] Watch Sentry + Laravel Pulse + Vercel web-vitals for 7 consecutive days;
   p75 within targets (LCP≤2.5, INP≤200, CLS≤0.1, p95≤200ms). Declare go-live.
-- [ ] **18.8** [docs] Update `openspec/TRACKER.md` to reflect the true, verified state; archive
+- [x] **18.8** [docs] Update `openspec/TRACKER.md` to reflect the true, verified state; archive
   completed specs; record a performance-notes section (budgets met, any breaches + remediation).
 
 ---

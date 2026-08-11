@@ -45,6 +45,7 @@ export function NavItem({
           if (isDisabled) e.preventDefault();
         }}
         aria-disabled={isDisabled}
+        aria-label={item.name}
         className={cn(
           "flex-1 flex items-center gap-3 px-3 rounded-lg transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
           itemPy,
@@ -82,6 +83,7 @@ export function NavItem({
         <button 
           onClick={(e) => { e.preventDefault(); handleTogglePin(item, existingPin); }}
           title={isPinned ? "Unpin item" : "Pin item"}
+          aria-label={isPinned ? `Unpin ${item.name}` : `Pin ${item.name}`}
           className={cn(
             "absolute right-2 p-1.5 rounded-md transition-opacity",
             isPinned ? "opacity-100 text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40" : "opacity-0 group-hover/nav:opacity-100 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"

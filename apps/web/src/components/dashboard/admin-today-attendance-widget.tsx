@@ -60,7 +60,7 @@ export function AdminTodayAttendanceWidget() {
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
             <AlertCircle className="w-5 h-5 text-rose-400" />
-            <p className="text-xs font-medium text-rose-500">Failed to load attendance</p>
+            <p className="text-xs font-medium text-rose-600">Failed to load attendance</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
             </Button>
@@ -102,7 +102,7 @@ export function AdminTodayAttendanceWidget() {
               </div>
               <div className="flex flex-col border-l border-neutral-100 dark:border-neutral-800 pl-2">
                 <span className="text-[10px] font-bold text-neutral-500 uppercase flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 text-rose-500" /> Absent
+                  <AlertCircle className="w-3 h-3 text-rose-600" /> Absent
                 </span>
                 <span className="text-sm font-bold text-neutral-900 dark:text-white">{absentCount}</span>
               </div>

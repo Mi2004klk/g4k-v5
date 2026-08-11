@@ -122,7 +122,7 @@ export function HrActivityFeedWidget() {
         )}
 
         {error && (
-          <div className="text-sm text-rose-500 p-2 text-center bg-rose-50 dark:bg-rose-950/30 rounded-lg">
+          <div className="text-sm text-rose-600 p-2 text-center bg-rose-50 dark:bg-rose-950/30 rounded-lg">
             Failed to load activity
           </div>
         )}

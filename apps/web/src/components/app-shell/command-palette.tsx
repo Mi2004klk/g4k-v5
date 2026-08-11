@@ -171,7 +171,7 @@ export function CommandPalette() {
               try { await offlineEngine.recordPunch("clock_out", ts); toast.success("Clocked Out"); } 
               catch(err: any) { toast.error(err.message); }
             })}>
-              <Square className="w-4 h-4 mr-2 text-rose-500" />
+              <Square className="w-4 h-4 mr-2 text-rose-600" />
               <span>Clock Out</span>
             </CommandItem>
           )}

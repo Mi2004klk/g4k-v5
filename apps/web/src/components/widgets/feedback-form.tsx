@@ -44,7 +44,7 @@ export function FeedbackForm() {
           rows={3}
         />
         {submitMutation.isError && (
-          <div className="flex items-center gap-2 text-[10px] text-rose-500 bg-rose-50 dark:bg-rose-950/20 p-2 rounded-lg">
+          <div className="flex items-center gap-2 text-[10px] text-rose-600 bg-rose-50 dark:bg-rose-950/20 p-2 rounded-lg">
             <AlertTriangle className="w-3 h-3" />
             <span>Failed to submit. Please try again.</span>
           </div>

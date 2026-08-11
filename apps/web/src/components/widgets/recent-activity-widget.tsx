@@ -47,7 +47,7 @@ export function RecentActivityWidget() {
         </CardHeader>
         <CardContent className="flex-1 flex flex-col items-center justify-center p-6 bg-rose-50/50 dark:bg-rose-950/10">
           <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
-          <span className="text-[11px] text-rose-500 font-medium mb-2">Failed to load</span>
+          <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
             Retry
           </Button>

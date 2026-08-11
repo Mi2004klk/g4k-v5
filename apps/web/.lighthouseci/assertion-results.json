@@ -1,0 +1,164 @@
+[
+  {
+    "name": "auditRan",
+    "expected": 1,
+    "actual": 0,
+    "values": [
+      0
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditId": "interaction-to-next-paint",
+    "level": "warn",
+    "url": "http://localhost:3000/login"
+  },
+  {
+    "name": "minScore",
+    "expected": 1,
+    "actual": 0.96,
+    "values": [
+      0.96
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "accessibility",
+    "auditId": "categories",
+    "level": "error",
+    "url": "http://localhost:3000/login"
+  },
+  {
+    "name": "auditRan",
+    "expected": 1,
+    "actual": 0,
+    "values": [
+      0
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditId": "interaction-to-next-paint",
+    "level": "warn",
+    "url": "http://localhost:3000/dashboard"
+  },
+  {
+    "name": "minScore",
+    "expected": 1,
+    "actual": 0.83,
+    "values": [
+      0.83
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "accessibility",
+    "auditId": "categories",
+    "level": "error",
+    "url": "http://localhost:3000/dashboard"
+  },
+  {
+    "name": "auditRan",
+    "expected": 1,
+    "actual": 0,
+    "values": [
+      0
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditId": "interaction-to-next-paint",
+    "level": "warn",
+    "url": "http://localhost:3000/dashboard/attendance"
+  },
+  {
+    "name": "minScore",
+    "expected": 1,
+    "actual": 0.83,
+    "values": [
+      0.83
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "accessibility",
+    "auditId": "categories",
+    "level": "error",
+    "url": "http://localhost:3000/dashboard/attendance"
+  },
+  {
+    "name": "auditRan",
+    "expected": 1,
+    "actual": 0,
+    "values": [
+      0
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditId": "interaction-to-next-paint",
+    "level": "warn",
+    "url": "http://localhost:3000/dashboard/leave"
+  },
+  {
+    "name": "minScore",
+    "expected": 1,
+    "actual": 0.82,
+    "values": [
+      0.82
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "accessibility",
+    "auditId": "categories",
+    "level": "error",
+    "url": "http://localhost:3000/dashboard/leave"
+  },
+  {
+    "name": "auditRan",
+    "expected": 1,
+    "actual": 0,
+    "values": [
+      0
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditId": "interaction-to-next-paint",
+    "level": "warn",
+    "url": "http://localhost:3000/dashboard?error=unauthorized"
+  },
+  {
+    "name": "minScore",
+    "expected": 1,
+    "actual": 0.85,
+    "values": [
+      0.85
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "accessibility",
+    "auditId": "categories",
+    "level": "error",
+    "url": "http://localhost:3000/dashboard?error=unauthorized"
+  },
+  {
+    "name": "auditRan",
+    "expected": 1,
+    "actual": 0,
+    "values": [
+      0
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditId": "interaction-to-next-paint",
+    "level": "warn",
+    "url": "http://localhost:3000/dashboard/chat"
+  },
+  {
+    "name": "minScore",
+    "expected": 1,
+    "actual": 0.83,
+    "values": [
+      0.83
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "accessibility",
+    "auditId": "categories",
+    "level": "error",
+    "url": "http://localhost:3000/dashboard/chat"
+  }
+]

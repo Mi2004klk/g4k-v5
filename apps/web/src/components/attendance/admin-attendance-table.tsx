@@ -323,7 +323,7 @@ export function AdminAttendanceTable() {
         )}
         
         {error ? (
-          <div className="p-8 text-center text-rose-500 dark:text-rose-400">
+          <div className="p-8 text-center text-rose-600 dark:text-rose-400">
             Failed to load attendance data. Please try again.
           </div>
         ) : records.length === 0 && !isLoading ? (

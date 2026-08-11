@@ -312,7 +312,7 @@ export default function DashboardLayout({
                     )}
                     onClick={handleLogout}
                   >
-                    <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
+                    <LogOut className="w-4 h-4 text-rose-600 shrink-0" />
                     {!isCollapsed && <span className="ml-2 font-medium whitespace-nowrap">Log out</span>}
                   </Button>
                 </TooltipTrigger>
@@ -393,7 +393,7 @@ export default function DashboardLayout({
                           className="w-full justify-start text-xs text-neutral-600 dark:text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                           onClick={handleLogout}
                         >
-                          <LogOut className="w-4 h-4 text-rose-500" />
+                          <LogOut className="w-4 h-4 text-rose-600" />
                           <span className="ml-2 font-medium">Log out</span>
                         </Button>
                       </div>
