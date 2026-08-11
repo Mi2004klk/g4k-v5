@@ -17,7 +17,7 @@ export function AutoNumberingConfig() {
   const { data: records = [], isLoading } = useQuery({
     queryKey: queryKeys.autoNumberings,
     queryFn: async () => {
-      const res = await apiFetch("/settings/auto-numberings");
+      const res = await apiFetch("/auto-numberings");
       return Array.isArray(res) ? res : res.data || [];
     },
   });

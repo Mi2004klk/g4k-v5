@@ -20,9 +20,16 @@ class SendWeeklySummaryCommand extends Command
             $q->whereIn('role', ['hr', 'super_admin']);
         })->get();
 
+        $start = now()->startOfWeek();
+        $end = now()->endOfWeek();
+        
         $metrics = [
-            'tasks_completed' => Task::where('status', 'completed')->count(),
-            'active_projects' => Project::where('status', 'in_progress')->count(),
+            'tasks_completed' => Task::where('status', 'completed')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
+            'active_projects' => Project::where('status', 'active')
+                ->whereBetween('created_at', [$start, $end])
+                ->count(),
         ];
 
         foreach ($recipients as $user) {

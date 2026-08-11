@@ -81,8 +81,8 @@ export function AdminAttendanceTable() {
       if (debouncedSearch) {
         const q = debouncedSearch.toLowerCase();
         items = items.filter((item: any) =>
-          item.user?.name?.toLowerCase().includes(q) ||
-          item.user?.email?.toLowerCase().includes(q)
+          item.user_name?.toLowerCase().includes(q) ||
+          item.user_email?.toLowerCase().includes(q)
         );
       }
       return { ...raw, data: items };
@@ -99,6 +99,17 @@ export function AdminAttendanceTable() {
       params.append("start_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
       params.append("end_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      
+      if (!all) {
+        const selectedIds = Object.keys(rowSelection);
+        if (selectedIds.length === 0) {
+          toast.error("Please select at least one record to export.");
+          return;
+        }
+        params.append("ids", selectedIds.join(","));
+        toast.info(`Exporting ${selectedIds.length} selected records...`);
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`
@@ -360,6 +371,7 @@ export function AdminAttendanceTable() {
             data={records}
             onRowSelectionChange={setRowSelection}
             rowSelection={rowSelection}
+            getRowId={(row: any) => String(row.id)}
           />
         )}
       </div>

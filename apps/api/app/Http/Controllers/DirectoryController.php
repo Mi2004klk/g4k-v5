@@ -66,7 +66,7 @@ class DirectoryController extends Controller
             $query->where('designation_id', $request->query('designation_id'));
         }
 
-        $users = $query->orderBy('name', 'asc')->cursorPaginate(20);
+        $users = $query->orderBy('name', 'asc')->paginate(24);
         
         $users->getCollection()->transform(function ($user) {
             return $this->applyVisibilityRules($user);

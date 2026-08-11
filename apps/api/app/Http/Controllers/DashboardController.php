@@ -60,7 +60,7 @@ class DashboardController extends Controller
                 $attendance = DB::table('attendance_days')
                     ->where('date', $today)
                     ->selectRaw('
-                        SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present,
+                        SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present,
                         SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent,
                         SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as late,
                         SUM(CASE WHEN status = "leave" THEN 1 ELSE 0 END) as on_leave
@@ -90,7 +90,7 @@ class DashboardController extends Controller
                 $deptId = $user->department_id;
                 
                 if ($deptId) {
-                    $deptUserIds = User::where('department_id', $deptId)->pluck('id');
+                    $deptUserIds = User::select('id')->where('department_id', $deptId);
                     $data['total_employees'] = $deptUserIds->count();
                     $data['active_employees'] = User::where('department_id', $deptId)->where('status', 'active')->count();
                     
@@ -98,7 +98,7 @@ class DashboardController extends Controller
                         ->whereIn('user_id', $deptUserIds)
                         ->where('date', $today)
                         ->selectRaw('
-                            SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present,
+                            SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present,
                             SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent,
                             SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as late,
                             SUM(CASE WHEN status = "leave" THEN 1 ELSE 0 END) as on_leave
@@ -121,7 +121,9 @@ class DashboardController extends Controller
                     $data['pending_approvals'] = 0;
                 }
                 
-                $data['pending_submissions'] = 0;
+                $data['pending_submissions'] = $hasTasks 
+                    ? DB::table('tasks')->whereIn('assignee_id', $deptUserIds)->where('status', 'review')->count() 
+                    : 0;
             }
 
             if ($activeRole === 'super_admin' || $activeRole === 'hr') {
@@ -144,6 +146,8 @@ class DashboardController extends Controller
                         ->count() : 0;
                 $data['pending_tasks'] = $hasTasks
                     ? DB::table('tasks')->where('assignee_id', $user->id)->whereIn('status', ['todo', 'in_progress', 'review'])->count() : 0;
+                $data['completed_tasks'] = $hasTasks
+                    ? DB::table('tasks')->where('assignee_id', $user->id)->where('status', 'done')->count() : 0;
             }
                 
             if ($activeRole === 'employee') {

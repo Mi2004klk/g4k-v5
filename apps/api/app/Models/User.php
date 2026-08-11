@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
@@ -19,8 +20,8 @@ use Illuminate\Notifications\Notifiable;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, \Laravel\Sanctum\HasApiTokens, \App\Traits\GeneratesAutoNumber;
+    /** @use HasFactory, SoftDeletes<UserFactory> */
+    use HasFactory, SoftDeletes, Notifiable, \Laravel\Sanctum\HasApiTokens, \App\Traits\GeneratesAutoNumber;
 
     public $autoNumberField = 'employee_id';
     public $autoNumberType = 'employee';

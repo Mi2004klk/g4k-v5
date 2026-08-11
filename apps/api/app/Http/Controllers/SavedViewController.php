@@ -9,30 +9,43 @@ class SavedViewController extends Controller
 {
     public function index(Request $request)
     {
-        $entity = $request->query('entity', 'tasks');
+        $module = $request->query('module', 'tasks');
         $views = SavedView::where('user_id', $request->user()->id)
-            ->where('entity', $entity)
+            ->where('entity', $module)
             ->limit(100)
-            ->get();
+            ->get()
+            ->map(function ($view) {
+                return [
+                    'id' => $view->id,
+                    'name' => $view->name,
+                    'module' => $view->entity,
+                    'filters' => $view->config,
+                ];
+            });
         return response()->json($views);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'entity' => 'required|in:tasks,projects',
+            'module' => 'required|in:tasks,projects,attendance',
             'name' => 'required|string|max:255',
-            'config' => 'required|array',
+            'filters' => 'required|array',
         ]);
 
         $view = SavedView::create([
             'user_id' => $request->user()->id,
-            'entity' => $validated['entity'],
+            'entity' => $validated['module'],
             'name' => $validated['name'],
-            'config' => $validated['config'],
+            'config' => $validated['filters'],
         ]);
 
-        return response()->json($view);
+        return response()->json([
+            'id' => $view->id,
+            'name' => $view->name,
+            'module' => $view->entity,
+            'filters' => $view->config,
+        ]);
     }
 
     public function destroy(Request $request, $id)

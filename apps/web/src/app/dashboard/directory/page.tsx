@@ -79,7 +79,7 @@ export default function DirectoryPage() {
       if (desigFilter !== "all") params.append("designation_id", desigFilter);
       if (visFilter !== "all") params.append("visibility", visFilter);
       params.append("page", String(pageParam));
-      return apiFetch(`/directory/users?${params.toString()}`);
+      return apiFetch(`/directory?${params.toString()}`);
     },
     getNextPageParam: (lastPage: any) => {
       if (lastPage?.meta?.current_page < lastPage?.meta?.last_page) {
@@ -93,12 +93,12 @@ export default function DirectoryPage() {
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: (recipientId: number) => apiFetch("/chat/direct", {
+    mutationFn: (recipientId: number) => apiFetch("/conversations/dm", {
       method: "POST",
       body: JSON.stringify({ recipient_id: recipientId }),
     }),
     onSuccess: (conversation: any) => {
-      router.push(`/dashboard/chat?c=${conversation.id}`);
+      router.push(`/dashboard/chat?conversation=${conversation.conversation_id || conversation.id}`);
     },
     onError: (err: any) => toast.error(err.message || "Failed to start chat."),
   });
@@ -374,13 +374,23 @@ export default function DirectoryPage() {
                 </div>
               </div>
 
-              <Button
-                onClick={() => sendMessageMutation.mutate(selectedUser.id)}
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white gap-2"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Initialize Direct Message</span>
-              </Button>
+              <div className="flex gap-2 w-full">
+                <Button
+                  onClick={() => sendMessageMutation.mutate(selectedUser.id)}
+                  className="flex-1 bg-violet-600 hover:bg-violet-700 text-white gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Message</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/dashboard/org/users/${selectedUser.id}`)}
+                  className="flex-1 gap-2"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  <span>View Profile</span>
+                </Button>
+              </div>
             </div>
           )}
         </SheetContent>

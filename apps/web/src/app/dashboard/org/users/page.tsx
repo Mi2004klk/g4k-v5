@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -88,6 +89,7 @@ type UserFormValues = z.infer<typeof userSchema>;
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
   
@@ -414,6 +416,9 @@ export default function UsersPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => router.push(`/dashboard/org/users/${user.id}`)} className="gap-2 font-medium text-violet-600">
+                  <UserCheck className="w-4 h-4" /> View Details
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   setActivityUser(user);
                   setIsActivityOpen(true);
@@ -841,8 +846,8 @@ export default function UsersPage() {
             ) : (
               activityData?.data?.map((log: any) => (
                 <div key={log.id} className="p-3 border rounded-lg text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">
-                  <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.entity_type}</span>
-                  <span className="text-xs text-neutral-500">{new Date(log.created_at).toLocaleString()} - IP: {log.ip_address}</span>
+                  <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type}</span>
+                  <span className="text-xs text-neutral-500">{new Date(log.at).toLocaleString()} - IP: {log.ip_address}</span>
                 </div>
               ))
             )}

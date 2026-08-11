@@ -46,10 +46,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
         },
         mutationCache: new MutationCache({
-          onError: (error: any) => {
+          onError: (error: any, variables: any, context: any, mutation: any) => {
             const status = error?.status;
             if (status >= 500) {
-              import("sonner").then(({ toast }) => toast.error("Server error. Please try again later."));
+              import("sonner").then(({ toast }) => 
+                toast.error("Server error. Please try again later.", {
+                  action: {
+                    label: "Retry",
+                    onClick: () => mutation.execute(variables),
+                  },
+                })
+              );
             } else {
               import("sonner").then(({ toast }) => toast.error(error?.message || "An unexpected error occurred"));
             }

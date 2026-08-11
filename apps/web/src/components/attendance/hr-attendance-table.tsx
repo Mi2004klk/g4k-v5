@@ -82,8 +82,8 @@ export function HrAttendanceTable() {
       if (debouncedSearch) {
         const q = debouncedSearch.toLowerCase();
         items = items.filter((item: any) =>
-          item.user?.name?.toLowerCase().includes(q) ||
-          item.user?.email?.toLowerCase().includes(q)
+          item.user_name?.toLowerCase().includes(q) ||
+          item.user_email?.toLowerCase().includes(q)
         );
       }
       return { ...raw, data: items };
@@ -94,37 +94,7 @@ export function HrAttendanceTable() {
 
   const records = data?.data || [];
 
-  const handleExport = async (all: boolean = true) => {
-    try {
-      const params = new URLSearchParams();
-      params.append("start_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
-      params.append("end_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
-      
-      // If we supported passing specific user IDs to export we would add them here
-      // For now, we'll just download the whole team for the date
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${getAuthToken()}`
-        }
-      });
-      
-      if (!response.ok) throw new Error("Export failed");
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `attendance_export_${selectedDate}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e?.message || "Failed to export attendance");
-    }
-  };
+
 
   const columns: any[] = [
     {
@@ -313,14 +283,7 @@ export function HrAttendanceTable() {
             ))}
           </select>
 
-          <Button 
-            variant="outline" 
-            onClick={() => handleExport()}
-            className="shrink-0 gap-2 font-medium h-10"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </Button>
+
         </div>
       </div>
 
@@ -334,6 +297,8 @@ export function HrAttendanceTable() {
           columns={columns} 
           data={records}
           onRowSelectionChange={setRowSelection}
+          rowSelection={rowSelection}
+          getRowId={(row: any) => String(row.id)}
         />
       </div>
 

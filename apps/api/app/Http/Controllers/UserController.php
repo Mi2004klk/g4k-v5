@@ -32,7 +32,6 @@ class UserController extends Controller
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('username', 'like', "%{$search}%")
                   ->orWhere('employee_id', 'like', "%{$search}%")
-                  ->orWhere('employee_code', 'like', "%{$search}%");
             });
         }
 
@@ -57,18 +56,19 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = $this->buildIndexQuery($request);
-        $users = $query->orderBy('id', 'desc')->cursorPaginate(20);
+        $limit = min($request->integer('limit', 20), 200);
+        $users = $query->orderBy('id', 'desc')->cursorPaginate($limit);
         return response()->json($users);
     }
 
     public function export(Request $request)
     {
         $query = $this->buildIndexQuery($request);
-        $users = $query->orderBy('id', 'desc')->get();
+        // $users = $query->orderBy('id', 'desc')->get(); removed to prevent OOM
 
-        return response()->streamDownload(function () use ($users) {
+        return response()->streamDownload(function () use ($query) {
             $writer = SimpleExcelWriter::streamDownload('users.csv');
-            foreach ($users as $user) {
+            foreach ($query->orderBy('id', 'desc')->cursor() as $user) {
                 $roles = $user->roleAssignments->pluck('role')->implode(', ');
                 $writer->addRow([
                     'ID' => $user->id,
@@ -128,7 +128,6 @@ class UserController extends Controller
             'email' => $validated['email'],
             'username' => $validated['username'] ?? null,
             'employee_id' => $validated['employee_id'] ?? $employeeCode,
-            'employee_code' => $employeeCode,
             'phone' => $validated['phone'] ?? null,
             'department_id' => $validated['department_id'] ?? null,
             'team_id' => $validated['team_id'] ?? null,
@@ -140,7 +139,8 @@ class UserController extends Controller
 
         foreach ($roles as $roleName) {
             $user->roleAssignments()->create(['role' => $roleName]);
-        }
+            }
+            \Illuminate\Support\Facades\Cache::forget("user.{$user->id}.roles");
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'create', 'user', $user->id, null, $user->toArray());
@@ -201,6 +201,7 @@ class UserController extends Controller
             foreach ($validated['roles'] as $roleName) {
                 $user->roleAssignments()->create(['role' => $roleName]);
             }
+            \Illuminate\Support\Facades\Cache::forget("user.{$user->id}.roles");
         }
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
@@ -247,6 +248,28 @@ class UserController extends Controller
         AuditLogger::log($request, 'update_status', 'user', $user->id, $before, $user->toArray());
 
         return response()->json($user);
+    }
+
+        public function restore(Request $request, string $id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+
+        // Capability Check
+        $targetRoles = $user->roleAssignments->pluck('role')->toArray();
+        $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
+        if ($isHRTarget && !$this->hasCapability($request, 'users.hr.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage HR/Admin users.'], 403);
+        }
+        if (!$isHRTarget && !$this->hasCapability($request, 'users.employee.manage')) {
+            return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
+        }
+
+        $before = $user->toArray();
+        $user->restore();
+        
+        AuditLogger::log($request, 'restore', 'user', $user->id, $before, $user->toArray());
+        
+        return response()->json(['message' => 'User restored successfully.', 'user' => $user]);
     }
 
     public function destroy(Request $request, string $id)
@@ -296,8 +319,8 @@ class UserController extends Controller
         // Usually, activity logs for a user means what they did.
         $logs = \Illuminate\Support\Facades\DB::table('audit_logs')
             ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->cursorPaginate(20);
+            ->orderBy('at', 'desc')
+            ->cursorPaginate(30);
 
         return response()->json($logs);
     }
@@ -336,13 +359,13 @@ class UserController extends Controller
             'action' => 'required|in:activate,deactivate'
         ]);
 
-        $users = User::whereIn('id', $validated['ids'])->get();
+        $users = User::with('roleAssignments')->whereIn('id', $validated['ids'])->get();
         $status = $validated['action'] === 'activate' ? 'active' : 'inactive';
         
         $canManageHR = $this->hasCapability($request, 'users.hr.manage');
         $canManageEmployee = $this->hasCapability($request, 'users.employee.manage');
 
-        foreach ($users as $user) {
+        foreach ($query->orderBy('id', 'desc')->cursor() as $user) {
             $targetRoles = $user->roleAssignments->pluck('role')->toArray();
             $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
             
@@ -371,5 +394,64 @@ class UserController extends Controller
         }
 
         return response()->json(['message' => 'Bulk action completed.']);
+    }
+
+    public function leaveHistory(Request $request, string $id)
+    {
+        $user = User::findOrFail($id);
+        
+        $canViewAny = $this->hasCapability($request, 'users.hr.manage');
+        $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
+        
+        if (!$canViewAny && !$canViewEmployee) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+        
+        $isHR = $request->user()->roleAssignments->pluck('role')->contains('hr');
+        $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
+        
+        if ($isHR && !$isSuperAdmin && $request->user()->department_id !== $user->department_id) {
+            return response()->json(['message' => 'Unauthorized to view this user.'], 403);
+        }
+
+        $leaves = \App\Models\LeaveRequest::with('approval')
+            ->where('user_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->cursorPaginate(20);
+
+        return response()->json($leaves);
+    }
+
+    public function assignments(Request $request, string $id)
+    {
+        $user = User::findOrFail($id);
+        
+        $canViewAny = $this->hasCapability($request, 'users.hr.manage');
+        $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
+        
+        if (!$canViewAny && !$canViewEmployee) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+        
+        $isHR = $request->user()->roleAssignments->pluck('role')->contains('hr');
+        $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
+        
+        if ($isHR && !$isSuperAdmin && $request->user()->department_id !== $user->department_id) {
+            return response()->json(['message' => 'Unauthorized to view this user.'], 403);
+        }
+
+        $projects = \App\Models\Project::whereHas('members', function($q) use ($id) {
+            $q->where('user_id', $id);
+        })->get();
+
+        $tasks = \App\Models\Task::where('assignee_id', $id)
+            ->with('project')
+            ->orderBy('status')
+            ->get();
+
+        return response()->json([
+            'projects' => $projects,
+            'tasks' => $tasks,
+        ]);
     }
 }

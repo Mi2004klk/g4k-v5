@@ -85,12 +85,81 @@ export function AnnouncementBoard() {
           </span>
           {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           {isAdminOrHr && (
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
-              Refresh
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+                Refresh
+              </Button>
+              <Button variant="default" size="sm" onClick={() => setShowCreate(true)} className="h-6 text-[10px] px-2">
+                Post
+              </Button>
+            </div>
           )}
         </CardTitle>
       </CardHeader>
+      
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Post Announcement</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="title" className="text-sm font-medium">Title</label>
+              <input
+                id="title"
+                value={createData.title}
+                onChange={(e) => setCreateData({ ...createData, title: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-violet-400 dark:focus:ring-offset-neutral-900"
+                placeholder="Announcement title"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="body" className="text-sm font-medium">Message</label>
+              <textarea
+                id="body"
+                value={createData.body}
+                onChange={(e) => setCreateData({ ...createData, body: e.target.value })}
+                className="flex min-h-[80px] w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-violet-400 dark:focus:ring-offset-neutral-900"
+                placeholder="Announcement body"
+              />
+            </div>
+            {user?.active_role === "super_admin" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="scope"
+                  checked={createData.scope === "company"}
+                  onChange={(e) => setCreateData({ ...createData, scope: e.target.checked ? "company" : "team" })}
+                  className="rounded border-neutral-300 text-violet-600 focus:ring-violet-500"
+                />
+                <label htmlFor="scope" className="text-sm font-medium">Company-wide (vs Team-only)</label>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="pinned"
+                checked={createData.pinned}
+                onChange={(e) => setCreateData({ ...createData, pinned: e.target.checked })}
+                className="rounded border-neutral-300 text-violet-600 focus:ring-violet-500"
+              />
+              <label htmlFor="pinned" className="text-sm font-medium">Pin to top</label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreate(false)} disabled={createMutation.isPending}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => createMutation.mutate(createData)} 
+              disabled={createMutation.isPending || !createData.title || !createData.body}
+            >
+              {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Post
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <CardContent className="space-y-3 max-h-[350px] overflow-y-auto">
         {isLoading ? (
           <div className="space-y-3">

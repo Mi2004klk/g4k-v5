@@ -19,6 +19,13 @@ Broadcast::channel('presence-org', function ($user) {
 });
 
 Broadcast::channel('conversation.{id}', function ($user, $id) {
+    $conversation = \App\Models\Conversation::find($id);
+    if (!$conversation) {
+        return false;
+    }
+    if ($conversation->scope === 'global') {
+        return true;
+    }
     return \Illuminate\Support\Facades\DB::table('conversation_user')
         ->where('user_id', $user->id)
         ->where('conversation_id', $id)

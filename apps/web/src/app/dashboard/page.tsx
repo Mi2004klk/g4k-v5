@@ -12,6 +12,7 @@ import { QuickNotes } from "@/components/widgets/quick-notes";
 import { toast } from "sonner";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
+import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { HrTeamAttendanceWidget } from "@/components/dashboard/hr-team-attendance-widget";
 import { HrActivityFeedWidget } from "@/components/attendance/hr-activity-feed-widget";
 import {
@@ -79,40 +80,50 @@ export default function DashboardPage() {
     if (activeRole === "super_admin") {
       return [
         {
+          id: "announcements",
+          component: <AnnouncementBoard />,
+          defaultLayout: { x: 0, y: 0, w: 12, h: 3 },
+        },
+        {
           id: "total-employees",
           component: (
             <MetricWidget title="Total Employees" metricKey="total_employees" icon={Users} color="violet" subtitle="Active directory" />
           ),
-          defaultLayout: { x: 0, y: 0, w: 3, h: 2 },
+          defaultLayout: { x: 0, y: 3, w: 3, h: 2 },
         },
         {
           id: "present-today",
           component: <AdminTodayAttendanceWidget />,
-          defaultLayout: { x: 3, y: 0, w: 3, h: 2 },
+          defaultLayout: { x: 3, y: 3, w: 3, h: 2 },
         },
         {
           id: "active-projects",
           component: (
             <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="blue" subtitle="Ongoing initiatives" />
           ),
-          defaultLayout: { x: 6, y: 0, w: 3, h: 2 },
+          defaultLayout: { x: 6, y: 3, w: 3, h: 2 },
         },
         {
           id: "pending-tasks",
           component: (
             <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="amber" subtitle="Global workload" />
           ),
-          defaultLayout: { x: 9, y: 0, w: 3, h: 2 },
+          defaultLayout: { x: 9, y: 3, w: 3, h: 2 },
         },
         {
           id: "recent-activity",
           component: <RecentActivityWidget />,
-          defaultLayout: { x: 0, y: 2, w: 6, h: 3 },
+          defaultLayout: { x: 0, y: 5, w: 6, h: 3 },
         },
         {
           id: "quick-notes",
           component: <QuickNotes />,
-          defaultLayout: { x: 6, y: 2, w: 6, h: 3 },
+          defaultLayout: { x: 6, y: 5, w: 6, h: 3 },
+        },
+        {
+          id: "pending-leave",
+          component: <PendingApprovalsWidget />,
+          defaultLayout: { x: 0, y: 8, w: 6, h: 3 },
         },
       ];
     }
@@ -120,38 +131,48 @@ export default function DashboardPage() {
     if (activeRole === "hr") {
       return [
         {
+          id: "announcements",
+          component: <AnnouncementBoard />,
+          defaultLayout: { x: 0, y: 0, w: 12, h: 3 },
+        },
+        {
           id: "team-attendance",
           component: <HrTeamAttendanceWidget />,
-          defaultLayout: { x: 0, y: 0, w: 4, h: 2 },
+          defaultLayout: { x: 0, y: 3, w: 4, h: 2 },
         },
         {
           id: "pending-leave",
           component: <PendingApprovalsWidget />,
-          defaultLayout: { x: 4, y: 0, w: 4, h: 3 },
+          defaultLayout: { x: 4, y: 3, w: 4, h: 3 },
         },
         {
           id: "active-projects",
           component: (
             <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Ongoing initiatives" />
           ),
-          defaultLayout: { x: 8, y: 0, w: 4, h: 2 },
+          defaultLayout: { x: 8, y: 3, w: 4, h: 2 },
         },
         {
           id: "pending-submissions",
           component: (
             <MetricWidget title="Pending Submissions" metricKey="pending_submissions" icon={ClipboardList} color="rose" subtitle="Task/project submissions" />
           ),
-          defaultLayout: { x: 8, y: 2, w: 4, h: 2 },
+          defaultLayout: { x: 8, y: 5, w: 4, h: 2 },
         },
         {
           id: "team-activity",
           component: <HrActivityFeedWidget />,
-          defaultLayout: { x: 0, y: 3, w: 6, h: 3 },
+          defaultLayout: { x: 0, y: 6, w: 6, h: 3 },
         },
         {
           id: "quick-task",
           component: <QuickTaskWidget />,
-          defaultLayout: { x: 6, y: 3, w: 6, h: 3 },
+          defaultLayout: { x: 6, y: 6, w: 6, h: 3 },
+        },
+        {
+          id: "quick-notes",
+          component: <QuickNotes />,
+          defaultLayout: { x: 0, y: 9, w: 6, h: 3 },
         },
       ];
     }
@@ -159,38 +180,43 @@ export default function DashboardPage() {
     // Default Employee view
     return [
       {
+        id: "announcements",
+        component: <AnnouncementBoard />,
+        defaultLayout: { x: 0, y: 0, w: 12, h: 3 },
+      },
+      {
         id: "time-clock",
         component: <TimeClockWidget />,
-        defaultLayout: { x: 0, y: 0, w: 4, h: 3 },
+        defaultLayout: { x: 0, y: 3, w: 4, h: 3 },
       },
       {
         id: "my-projects",
         component: (
           <MetricWidget title="My Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Active assignments" />
         ),
-        defaultLayout: { x: 4, y: 0, w: 4, h: 2 },
+        defaultLayout: { x: 4, y: 3, w: 4, h: 2 },
       },
       {
         id: "my-tasks",
         component: (
           <MetricWidget title="My Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="emerald" subtitle="Assigned work items" />
         ),
-        defaultLayout: { x: 8, y: 0, w: 4, h: 2 },
+        defaultLayout: { x: 8, y: 3, w: 4, h: 2 },
       },
       {
         id: "task-progress",
         component: <EmployeeTaskProgressWidget />,
-        defaultLayout: { x: 4, y: 2, w: 4, h: 2 },
+        defaultLayout: { x: 4, y: 5, w: 4, h: 2 },
       },
       {
         id: "quick-notes",
         component: <QuickNotes />,
-        defaultLayout: { x: 0, y: 3, w: 4, h: 3 },
+        defaultLayout: { x: 0, y: 6, w: 4, h: 3 },
       },
       {
         id: "approval-status",
         component: <EmployeeApprovalStatusWidget />,
-        defaultLayout: { x: 4, y: 3, w: 8, h: 2 },
+        defaultLayout: { x: 4, y: 6, w: 8, h: 2 },
       },
     ];
   }, [activeRole]);

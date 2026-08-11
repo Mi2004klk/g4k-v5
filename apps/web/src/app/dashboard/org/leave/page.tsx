@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
-import { Download } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Download, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { getAuthToken } from "@/lib/auth-store";
 import { Card, Button, DataTable } from "@g4k/ui/components";
@@ -17,17 +17,23 @@ export default function OrgLeaveApprovalsPage() {
   const [statusFilter, setStatusFilter] = useUrlState("status", "pending");
   const [search, setSearch] = useUrlState("search", "");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: queryKeys.orgLeaveRequestsPaginated(statusFilter, search),
-    queryFn: () => {
+    queryFn: ({ pageParam }) => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (search) params.append("search", search);
-      return apiFetch(`/leave-requests?${params.toString()}`);
+      if (pageParam) params.append("cursor", pageParam as string);
+      return apiFetch(\/leave-requests?\\);
     },
+    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
+    initialPageParam: undefined,
   });
 
-  const records = data?.data || [];
+  const records = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) || [];
+  }, [data]);
+
   const pendingCount = records.filter((r: any) => r.approval?.status === "pending").length;
 
   const columns = useMemo<any[]>(
@@ -75,13 +81,7 @@ export default function OrgLeaveApprovalsPage() {
           const status = row.original.approval?.status || "pending";
           return (
             <span
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                status === "approved"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : status === "rejected"
-                  ? "bg-rose-100 text-rose-700"
-                  : "bg-amber-100 text-amber-700"
-              }`}
+              className={\px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase \\}
             >
               {status}
             </span>
@@ -103,9 +103,9 @@ export default function OrgLeaveApprovalsPage() {
 
   const handleExport = async () => {
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/leave-requests/export?status=${statusFilter}`;
+      const url = \\/leave-requests/export?status=\\;
       const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        headers: { 'Authorization': \Bearer \\ }
       });
       if (!response.ok) throw new Error("Export failed");
       
@@ -113,7 +113,7 @@ export default function OrgLeaveApprovalsPage() {
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = `leave_export_${statusFilter}.csv`;
+      a.download = \leave_export_\.csv\;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -165,11 +165,30 @@ export default function OrgLeaveApprovalsPage() {
             Export
           </Button>
         </div>
-        <div className="flex-1 min-h-[300px]">
+        <div className="flex-1 min-h-[300px] flex flex-col">
           <DataTable
             columns={columns}
             data={records}
           />
+          {hasNextPage && (
+            <div className="flex justify-center p-4 border-t border-neutral-100 dark:border-neutral-800">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fetchNextPage()} 
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More"
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     </div>

@@ -5,11 +5,10 @@ namespace App\Listeners;
 use App\Events\ApprovalDecided;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class LeaveAttendanceIntegration implements ShouldQueue
+class LeaveAttendanceIntegration
 {
     /**
      * Handle the event.

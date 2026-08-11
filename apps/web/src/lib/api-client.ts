@@ -129,6 +129,14 @@ export async function apiFetch<T = any>(
             if (typeof window !== "undefined" && window.location.pathname !== "/onboarding") {
               window.location.href = "/onboarding";
             }
+          } else {
+            if (typeof window !== "undefined" && window.location.pathname !== "/dashboard") {
+              window.location.href = "/dashboard?error=unauthorized";
+            } else if (typeof window !== "undefined") {
+              // If already on dashboard, just replace state so it triggers the toast
+              window.history.replaceState(null, "", "/dashboard?error=unauthorized");
+              window.dispatchEvent(new Event("popstate"));
+            }
           }
         }
 
@@ -136,6 +144,17 @@ export async function apiFetch<T = any>(
         error.status = response.status;
         error.data = errorData;
         throw error;
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (contentType && (
+        contentType.includes("text/csv") ||
+        contentType.includes("application/pdf") ||
+        contentType.includes("application/vnd.openxmlformats-officedocument") ||
+        contentType.includes("application/octet-stream") ||
+        contentType.includes("application/vnd.ms-excel")
+      )) {
+        return await response.blob();
       }
 
       return await response.json();

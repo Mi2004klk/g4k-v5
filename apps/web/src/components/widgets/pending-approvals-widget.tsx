@@ -7,9 +7,11 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/auth-store";
 
 export function PendingApprovalsWidget() {
   const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
 
   const { data: requests = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.pendingApprovals,
@@ -77,49 +79,59 @@ export function PendingApprovalsWidget() {
             <p className="text-xs font-medium text-neutral-400">No pending leave requests</p>
           </div>
         ) : (
-          requests.map((item: any) => (
-            <div
-              key={item.id}
-              className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between border border-neutral-100 dark:border-neutral-800"
-            >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-neutral-900 dark:text-white">
-                    {item.user?.name || `Employee #${item.user_id}`}
-                  </span>
-                  <span className="text-[10px] uppercase font-semibold px-1.5 py-0.2 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
-                    {item.type || "Leave"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-neutral-400 font-medium">
-                  <Calendar className="w-3 h-3 text-neutral-400" />
-                  <span>
-                    {item.start_date ? format(new Date(item.start_date), "MMM d") : ""} -{" "}
-                    {item.end_date ? format(new Date(item.end_date), "MMM d") : ""}
-                  </span>
-                </div>
-              </div>
+          requests.map((item: any) => {
+            const isSelf = user?.id === item.user_id;
 
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => decisionMutation.mutate({ id: item.id, decision: "approved" })}
-                  disabled={decisionMutation.isPending}
-                  title="Approve Request"
-                  className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-colors"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => decisionMutation.mutate({ id: item.id, decision: "rejected" })}
-                  disabled={decisionMutation.isPending}
-                  title="Reject Request"
-                  className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900 transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+            return (
+              <div
+                key={item.id}
+                className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between border border-neutral-100 dark:border-neutral-800"
+              >
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-neutral-900 dark:text-white">
+                      {item.user?.name || `Employee #${item.user_id}`}
+                    </span>
+                    <span className="text-[10px] uppercase font-semibold px-1.5 py-0.2 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+                      {item.type || "Leave"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] text-neutral-400 font-medium">
+                    <Calendar className="w-3 h-3 text-neutral-400" />
+                    <span>
+                      {item.start_date ? format(new Date(item.start_date), "MMM d") : ""} -{" "}
+                      {item.end_date ? format(new Date(item.end_date), "MMM d") : ""}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {isSelf ? (
+                    <span className="text-[10px] text-neutral-400 italic px-1">Cannot self-approve</span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => decisionMutation.mutate({ id: item.id, decision: "approved" })}
+                        disabled={decisionMutation.isPending}
+                        title="Approve Request"
+                        className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-colors"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => decisionMutation.mutate({ id: item.id, decision: "rejected" })}
+                        disabled={decisionMutation.isPending}
+                        title="Reject Request"
+                        className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </CardContent>
     </Card>

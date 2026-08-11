@@ -35,9 +35,18 @@ class ProjectController extends Controller
             $query->where('name', 'ilike', '%' . $request->query('search') . '%');
         }
 
-        $query->orderBy('updated_at', 'desc');
+        if ($request->filled('sort')) {
+            $sort = $request->query('sort');
+            if (in_array($sort, ['created_at', 'deadline', 'priority'])) {
+                $query->orderBy($sort, $sort === 'priority' ? 'desc' : 'desc');
+            } else {
+                $query->orderBy('updated_at', 'desc');
+            }
+        } else {
+            $query->orderBy('updated_at', 'desc');
+        }
 
-        return response()->json($query->cursorPaginate(15));
+        return response()->json($query->paginate(15));
     }
 
     public function store(Request $request)
@@ -115,5 +124,42 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
         $project->delete();
         return response()->json(['message' => 'Project deleted successfully']);
+    }
+
+    public function submit(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+        
+        $approval = \App\Services\ApprovalService::submit($project, $request->user()->id, [
+            'notes' => 'Project submission',
+        ]);
+
+        $project->update(['status' => 'completed']);
+        
+        return response()->json($project->load(['approval']));
+    }
+
+    public function review(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+        $approval = $project->approval()->where('status', 'pending')->first();
+        
+        if (!$approval) {
+            return response()->json(['message' => 'No pending approval found'], 404);
+        }
+
+        $request->validate([
+            'decision' => 'required|in:approved,rejected',
+            'reason' => 'nullable|string',
+        ]);
+
+        if ($request->input('decision') === 'approved') {
+            \App\Services\ApprovalService::approve($approval, $request->user()->id, $request->input('reason'));
+        } else {
+            \App\Services\ApprovalService::reject($approval, $request->user()->id, $request->input('reason'));
+            $project->update(['status' => 'active']); // Revert to active if rejected
+        }
+
+        return response()->json($project->load(['approval']));
     }
 }

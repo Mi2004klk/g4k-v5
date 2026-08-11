@@ -16,7 +16,7 @@ class LeaveRequestController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
+        $roles = $user->getCachedRoles();
 
         $query = LeaveRequest::with(['approval', 'user']);
 
@@ -24,11 +24,12 @@ class LeaveRequestController extends Controller
         if (in_array('super_admin', $roles)) {
             // Admin sees all
         } elseif (in_array('hr', $roles)) {
-            // HR sees team (employees) + own
-            // Simplified: hr sees all where submitted by employee or themselves. 
-            // Better yet, HR sees approvals where current_approver_role = 'hr' or user_id = self.
-            $query->whereHas('approval', function($q) use ($user) {
-                $q->where('current_approver_role', 'hr')->orWhere('submitted_by', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->whereHas('approval', function($q2) {
+                    $q2->where('current_approver_role', 'hr');
+                })->whereHas('user', function($q3) use ($user) {
+                    $q3->where('department_id', $user->department_id);
+                })->orWhere('user_id', $user->id);
             });
         } else {
             // Employee sees own
@@ -125,7 +126,7 @@ class LeaveRequestController extends Controller
         $leave = LeaveRequest::with(['approval', 'user'])->findOrFail($id);
         
         $user = $request->user();
-        $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
+        $roles = $user->getCachedRoles();
         $isHrOrAdmin = count(array_intersect(['hr', 'super_admin'], $roles)) > 0;
 
         if ($leave->user_id !== $user->id && !$isHrOrAdmin) {
@@ -141,7 +142,10 @@ class LeaveRequestController extends Controller
             ->where('user_id', $request->user()->id);
 
         if ($request->filled('status')) {
-            $query->where('status', $request->query('status'));
+            $status = $request->query('status');
+            $query->whereHas('approval', function($q) use ($status) {
+                $q->where('status', $status);
+            });
         }
         
         if ($request->filled('type')) {
@@ -160,7 +164,7 @@ class LeaveRequestController extends Controller
     public function pending(Request $request)
     {
         $user = $request->user();
-        $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
+        $roles = $user->getCachedRoles();
 
         $query = LeaveRequest::with(['approval', 'user'])->where('status', 'pending');
 
@@ -177,5 +181,58 @@ class LeaveRequestController extends Controller
         $query->orderBy('created_at', 'asc');
 
         return response()->json($query->cursorPaginate(20));
+    }
+
+    public function export(Request $request)
+    {
+        $user = $request->user();
+        $roles = $user->getCachedRoles();
+
+        $query = LeaveRequest::with(['approval', 'user']);
+
+        if (in_array('super_admin', $roles)) {
+            // Admin sees all
+        } elseif (in_array('hr', $roles)) {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            });
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->query('status');
+            $query->whereHas('approval', function($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+        
+        if ($request->filled('type')) {
+            $query->where('type', $request->query('type'));
+        }
+
+        $query->orderBy('created_at', 'desc');
+
+        // get() removed for streaming
+
+        return response()->streamDownload(function () use ($query) {
+            $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload('leave_requests_export.xlsx');
+            
+            foreach ($query->cursor() as $leave) {
+                $writer->addRow([
+                    'ID' => $leave->id,
+                    'Employee Name' => $leave->user->name ?? 'Unknown',
+                    'Employee Email' => $leave->user->email ?? 'Unknown',
+                    'Leave Type' => ucfirst($leave->type),
+                    'Start Date' => $leave->start_date,
+                    'End Date' => $leave->end_date,
+                    'Reason' => $leave->reason,
+                    'Status' => ucfirst($leave->approval->status ?? 'pending'),
+                    'Submitted At' => $leave->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            $writer->close();
+        }, "leave_requests_export_" . now()->format('Y_m_d') . ".xlsx");
     }
 }

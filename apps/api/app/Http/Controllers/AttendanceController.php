@@ -143,7 +143,7 @@ class AttendanceController extends Controller
         $schedule = DB::table('work_schedules')->where('is_default', true)->first();
         $standardSeconds = $schedule ? $schedule->standard_seconds : 31500;
 
-        $lastMod = max($day->updated_at ?? '', $events->max('updated_at') ?? '');
+        $lastMod = max(($day?->updated_at) ?? '', ($events->max('updated_at')) ?? '');
         $response = response()->json([
             'day' => $day,
             'events' => $events,
@@ -204,9 +204,8 @@ class AttendanceController extends Controller
 
     private function applyHrScoping($query, $user)
     {
-        $isAdmin = RoleAssignment::where('user_id', $user->id)
-            ->where('role', 'super_admin')
-            ->exists();
+        $activeRole = str_replace('role:', '', $user->currentAccessToken()->abilities[0] ?? 'employee');
+        $isAdmin = $activeRole === 'super_admin';
         
         if (!$isAdmin) {
             $query->where('users.department_id', $user->department_id);
@@ -218,7 +217,8 @@ class AttendanceController extends Controller
     {
         $query = DB::table('attendance_days')
             ->join('users', 'users.id', '=', 'attendance_days.user_id')
-            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id')
+            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name')
             ->orderBy('date', 'desc');
 
         $this->applyHrScoping($query, $request->user());
@@ -254,9 +254,8 @@ class AttendanceController extends Controller
     {
         // First verify they have access to this user (same department or admin)
         $targetUser = \App\Models\User::findOrFail($userId);
-        $isAdmin = RoleAssignment::where('user_id', $request->user()->id)
-            ->where('role', 'super_admin')
-            ->exists();
+        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin && $request->user()->department_id !== $targetUser->department_id) {
             return response()->json(['message' => 'Unauthorized access to this user\'s attendance.'], 403);
@@ -286,9 +285,8 @@ class AttendanceController extends Controller
     {
         // First verify they have access to this user
         $targetUser = \App\Models\User::findOrFail($userId);
-        $isAdmin = RoleAssignment::where('user_id', $request->user()->id)
-            ->where('role', 'super_admin')
-            ->exists();
+        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin && $request->user()->department_id !== $targetUser->department_id) {
             return response()->json(['message' => 'Unauthorized access to this user\'s history.'], 403);
@@ -333,7 +331,8 @@ class AttendanceController extends Controller
     {
         $query = DB::table('attendance_days')
             ->join('users', 'users.id', '=', 'attendance_days.user_id')
-            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id')
+            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name')
             ->where('date', now()->toDateString())
             ->orderBy('date', 'desc');
 
@@ -386,12 +385,47 @@ class AttendanceController extends Controller
         }
 
         if ($groupBy === 'employee') {
-            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status="present" then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status="late" then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status="absent" then 1 else 0 end) as absent'))
+            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
                 ->groupBy('users.id', 'users.name')
                 ->orderBy('users.name', 'asc')
                 ->get();
         } else {
-            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status="present" then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status="late" then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status="absent" then 1 else 0 end) as absent'))
+            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
+                ->groupBy('date')
+                ->orderBy('date', 'asc')
+                ->get();
+        }
+
+        return response()->json(['stats' => $stats, 'mode' => $mode]);
+    }
+
+    public function adminGraph(Request $request)
+    {
+        $mode = $request->query('mode', 'weekly');
+        $date = $request->query('date', now()->toDateString());
+        $groupBy = $request->query('groupBy', 'date');
+        $carbonDate = Carbon::parse($date);
+
+        $query = DB::table('attendance_days')
+            ->join('users', 'users.id', '=', 'attendance_days.user_id');
+            
+        if ($mode === 'weekly') {
+            $start = $carbonDate->copy()->startOfWeek();
+            $end = $carbonDate->copy()->endOfWeek();
+            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
+        } else {
+            $start = $carbonDate->copy()->startOfMonth();
+            $end = $carbonDate->copy()->endOfMonth();
+            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
+        }
+
+        if ($groupBy === 'employee') {
+            $stats = $query->select('users.id', 'users.name', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
+                ->groupBy('users.id', 'users.name')
+                ->orderBy('users.name', 'asc')
+                ->get();
+        } else {
+            $stats = $query->select('date', DB::raw('count(*) as total'), DB::raw('sum(case when attendance_days.status='present' then 1 else 0 end) as present'), DB::raw('sum(case when attendance_days.status='late' then 1 else 0 end) as late'), DB::raw('sum(case when attendance_days.status='absent' then 1 else 0 end) as absent'))
                 ->groupBy('date')
                 ->orderBy('date', 'asc')
                 ->get();
@@ -415,9 +449,8 @@ class AttendanceController extends Controller
         $actor = $request->user();
 
         // HR-CORRECT: HR may only correct attendance within their own team/department.
-        $isAdmin = RoleAssignment::where('user_id', $actor->id)
-            ->where('role', 'super_admin')
-            ->exists();
+        $activeRole = str_replace('role:', '', $actor->currentAccessToken()->abilities[0] ?? 'employee');
+        $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin) {
             $targetUser = User::where('id', $day->user_id)->first();
@@ -512,10 +545,15 @@ class AttendanceController extends Controller
             ->whereBetween('date', [$startDate, $endDate])
             ->orderBy('date', 'asc');
             
+        if ($request->filled('ids')) {
+            $ids = explode(',', $request->query('ids'));
+            $query->whereIn('attendance_days.id', $ids);
+        }
+            
         $this->applyHrScoping($query, $request->user());
         $records = $query->get();
 
-        return response()->streamDownload(function () use ($records) {
+        return response()->streamDownload(function () use ($query) {
             $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload('attendance_export.xlsx');
             
             foreach ($records as $row) {

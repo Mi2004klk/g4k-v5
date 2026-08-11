@@ -102,6 +102,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     });
 
     Route::get('/attendance/admin/overview', [AttendanceController::class, 'overview'])->middleware('capability:admin.view-all-attendance');
+    Route::get('/attendance/admin/graph', [AttendanceController::class, 'adminGraph'])->middleware('capability:admin.view-all-attendance');
     Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:admin.view-all-attendance');
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
@@ -112,7 +113,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     });
 
     Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware(['capability:admin.correct-attendance|attendance.correct-team']);
-    Route::get('/attendance/export', [AttendanceController::class, 'export'])->middleware('capability:admin.view-all-attendance');
+    Route::get('/attendance/export', [AttendanceController::class, 'export'])->middleware(['capability:admin.view-all-attendance|hr.view-team-attendance']);
 
     // Phase 6 API
     Route::middleware('capability:leave.request-self')->group(function () {
@@ -125,6 +126,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware('capability:leave.approve-employee');
     Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
+    Route::get('/leave-requests/export', [LeaveRequestController::class, 'export'])->middleware('capability:leave.approve-employee|settings.manage');
     
     Route::get('/holidays', [HolidayController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag');
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -137,11 +139,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::middleware('capability:projects.view|projects.manage')->group(function () {
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::get('/projects/{id}', [ProjectController::class, 'show']);
+        Route::post('/projects/{id}/submit', [ProjectController::class, 'submit']);
     });
     Route::middleware('capability:projects.manage')->group(function () {
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+        Route::post('/projects/{id}/review', [ProjectController::class, 'review']);
     });
 
     Route::middleware('capability:tasks.view|tasks.manage')->group(function () {
@@ -183,13 +187,17 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
         Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
         Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+        Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
     });
 
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
-    Route::post('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'store']);
-    Route::put('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'update']);
-    Route::delete('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'destroy']);
     Route::post('/announcements/{id}/react', [\App\Http\Controllers\AnnouncementController::class, 'react']);
+    
+    Route::middleware('capability:announcements.manage')->group(function () {
+        Route::post('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'store']);
+        Route::put('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'update']);
+        Route::delete('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'destroy']);
+    });
 
     Route::get('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'index']);
     Route::post('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'store']);
@@ -225,10 +233,16 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::middleware('capability:users.hr.manage|users.employee.manage')->group(function () {
         Route::post('/users/bulk', [UserController::class, 'bulk']);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
+        Route::patch('/users/{id}/restore', [UserController::class, 'restore']);
         Route::patch('/users/{id}/status', [UserController::class, 'updateStatus']);
-        Route::get('/users/{id}/activity', [UserController::class, 'activity']);
-        Route::apiResource('users', UserController::class);
+        Route::get('/users/{id}/leave-history', [UserController::class, 'leaveHistory']);
+        Route::get('/users/{id}/assignments', [UserController::class, 'assignments']);
+        Route::apiResource('users', UserController::class)->except(['show']);
     });
+    
+    // Explicitly place show and activity outside so the controller can handle $isSelf bypasses
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::get('/users/{id}/activity', [UserController::class, 'activity']);
     Route::apiResource('companies', CompanyController::class)->middleware('capability:settings.manage');
     Route::apiResource('auto-numberings', AutoNumberingController::class)->only(['index', 'update'])->middleware('capability:settings.manage');
     

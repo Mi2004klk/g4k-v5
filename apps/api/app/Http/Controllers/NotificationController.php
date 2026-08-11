@@ -18,6 +18,18 @@ class NotificationController extends Controller
             $query->whereNull('read_at');
         }
 
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'ilike', "%{$search}%")
+                  ->orWhere('body', 'ilike', "%{$search}%");
+            });
+        }
+
         return response()->json($query->paginate(50));
     }
 

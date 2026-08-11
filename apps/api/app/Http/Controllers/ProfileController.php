@@ -9,8 +9,11 @@ use Illuminate\Validation\Rules\Password;
 use App\Services\AuditLogger;
 
 
+use App\Traits\ValidatesPasswordPolicy;
+
 class ProfileController extends Controller
 {
+    use ValidatesPasswordPolicy;
 
     public function show(Request $request)
     {
@@ -26,6 +29,7 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'avatar_url' => 'nullable|string',
+            'preferences' => 'nullable|array',
         ]);
 
         $user->update($validated);
@@ -62,7 +66,7 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'current_password' => 'required|string',
-            'new_password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'new_password' => ['required', 'string', 'confirmed', $this->getPasswordPolicyRule()],
         ]);
 
         if (!Hash::check($validated['current_password'], $user->password)) {

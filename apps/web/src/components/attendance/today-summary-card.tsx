@@ -104,7 +104,7 @@ export function TodaySummaryCard() {
               <div>
                 <p className="text-xs font-bold text-amber-700 dark:text-amber-500">Late Arrival</p>
                 <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
-                  You clocked in {lateMinutes} minutes past your grace period.
+                  You clocked in {lateMinutes} minutes after your shift start.
                 </p>
               </div>
             </div>

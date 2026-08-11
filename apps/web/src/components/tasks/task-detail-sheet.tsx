@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { CheckCircle2, Clock, Send, Loader2, AlertCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
+import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -95,6 +95,7 @@ export function TaskDetailSheet({
             <span className="text-xs font-semibold text-neutral-400">Task #{task.id}</span>
           </div>
           <SheetTitle className="text-base font-bold mt-2">{task.title}</SheetTitle>
+          <SheetDescription className="sr-only">Detailed view and management of the selected task.</SheetDescription>
         </SheetHeader>
 
         <Tabs defaultValue="overview" className="mt-4">

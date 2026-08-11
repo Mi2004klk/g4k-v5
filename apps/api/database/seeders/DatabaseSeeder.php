@@ -34,7 +34,8 @@ class DatabaseSeeder extends Seeder
             'designations.manage',
             'directory.view',
             'directory.send-message',
-            'profile.edit'
+            'profile.edit',
+            'announcements.manage'
         ];
 
         foreach ($capabilities as $cap) {
@@ -46,7 +47,7 @@ class DatabaseSeeder extends Seeder
             'hr' => [
                 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
                 'users.employee.manage', 'directory.view', 'directory.send-message',
-                'profile.edit', 'attendance.clock-self', 'leave.request-self'
+                'profile.edit', 'attendance.clock-self', 'leave.request-self', 'announcements.manage'
             ],
             'employee' => [
                 'attendance.clock-self', 'leave.request-self', 'profile.edit',

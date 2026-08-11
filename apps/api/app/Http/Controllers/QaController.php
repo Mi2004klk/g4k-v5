@@ -7,6 +7,7 @@ use App\Models\QaFormField;
 use Illuminate\Http\Request;
 
 class QaController extends Controller
+{
     public function index()
     {
         return response()->json(QaForm::with('fields')->latest()->limit(100)->get());

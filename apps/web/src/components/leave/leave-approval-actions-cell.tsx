@@ -19,13 +19,17 @@ import {
 } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
+import { useAuthStore } from "@/lib/auth-store";
+
 export function LeaveApprovalActionsCell({ record }: { record: any }) {
   const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
   const approvalId = record.approval?.id;
   const status = record.approval?.status;
+  const isSelf = user?.id === record.user_id;
 
   const decisionMutation = useMutation({
     mutationFn: async ({ decision, reason }: { decision: string; reason?: string }) => {
@@ -84,6 +88,10 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
 
   if (status !== "pending") {
     return <span className="text-xs text-neutral-400 italic">Decision made</span>;
+  }
+  
+  if (isSelf) {
+    return <span className="text-xs text-neutral-400 italic">Cannot self-approve</span>;
   }
 
   return (

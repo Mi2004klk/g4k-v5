@@ -226,6 +226,7 @@ export function AdminOpenShiftsTable() {
             columns={columns} 
             data={openShifts}
             onRowSelectionChange={setRowSelection}
+            getRowId={(row: any) => String(row.id)}
           />
         )}
       </div>

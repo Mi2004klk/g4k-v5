@@ -9,21 +9,15 @@ import { Avatar, AvatarFallback, AvatarImage, Skeleton, EmptyState } from "@g4k/
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 
-interface MemberEvent {
+interface MemberDay {
   id: number;
-  type: string;
-  timestamp: string;
-  is_manual?: boolean;
-}
-
-interface Member {
-  user: {
-    id: number;
-    name: string;
-    avatar_url?: string;
-  };
-  events: MemberEvent[];
+  user_id: number;
+  user_name: string;
+  user_email: string;
   status: string;
+  clock_in?: string;
+  clock_out?: string;
+  has_open_shift?: boolean;
 }
 
 export function HrActivityFeedWidget() {
@@ -36,60 +30,41 @@ export function HrActivityFeedWidget() {
   });
 
   const activities = useMemo(() => {
-    if (!data?.members) return [];
-    
+    const items = (data?.data || []) as MemberDay[];
     const acts: any[] = [];
     
-    data.members.forEach((member: Member) => {
+    items.forEach((member: MemberDay) => {
+      const userObj = {
+        id: member.user_id,
+        name: member.user_name || "Unknown",
+      };
+
       // Check for late arrivals
-      if (member.status === "late") {
-        const firstClockIn = member.events.find(e => e.type === "clock_in");
-        if (firstClockIn) {
-          acts.push({
-            id: `late-${member.user.id}`,
-            user: member.user,
-            type: "late",
-            message: "Clocked in late",
-            timestamp: firstClockIn.timestamp,
-            icon: Clock,
-            color: "text-amber-500",
-            bg: "bg-amber-100 dark:bg-amber-950/30",
-          });
-        }
+      if (member.status === "late" && member.clock_in) {
+        acts.push({
+          id: `late-${member.user_id}`,
+          user: userObj,
+          type: "late",
+          message: "Clocked in late",
+          timestamp: member.clock_in,
+          icon: Clock,
+          color: "text-amber-500",
+          bg: "bg-amber-100 dark:bg-amber-950/30",
+        });
       }
 
-      // Check for manual corrections
-      const manualEvents = member.events.filter(e => e.is_manual);
-      manualEvents.forEach(e => {
+      // Check for open shifts
+      if (member.has_open_shift && member.clock_in) {
         acts.push({
-          id: `manual-${e.id}`,
-          user: member.user,
-          type: "correction",
-          message: `Manual correction: ${e.type.replace("_", " ")}`,
-          timestamp: e.timestamp,
-          icon: FileEdit,
-          color: "text-blue-500",
-          bg: "bg-blue-100 dark:bg-blue-950/30",
+          id: `open-${member.user_id}`,
+          user: userObj,
+          type: "open_shift",
+          message: "Shift currently open",
+          timestamp: member.clock_in,
+          icon: Activity,
+          color: "text-emerald-500",
+          bg: "bg-emerald-100 dark:bg-emerald-950/30",
         });
-      });
-
-      // Check for open shifts (clock in without clock out, ignoring breaks)
-      const clockIns = member.events.filter(e => e.type === "clock_in").length;
-      const clockOuts = member.events.filter(e => e.type === "clock_out").length;
-      if (clockIns > clockOuts && member.events.length > 0) {
-        const lastClockIn = member.events.filter(e => e.type === "clock_in").pop();
-        if (lastClockIn) {
-          acts.push({
-            id: `open-${member.user.id}`,
-            user: member.user,
-            type: "open_shift",
-            message: "Shift currently open",
-            timestamp: lastClockIn.timestamp,
-            icon: Activity,
-            color: "text-emerald-500",
-            bg: "bg-emerald-100 dark:bg-emerald-950/30",
-          });
-        }
       }
     });
 

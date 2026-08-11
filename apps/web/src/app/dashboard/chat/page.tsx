@@ -53,7 +53,7 @@ function ChatPageContent() {
     if (!selectedId) return;
 
     const channelName = `conversation.${selectedId}`;
-    const channel = subscribe(channelName);
+    const channel = subscribe(channelName, true);
     if (channel) {
       const handler = (e: any) => {
         queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: any) => {
@@ -78,6 +78,23 @@ function ChatPageContent() {
       };
     }
   }, [selectedId, queryClient, subscribe, leaveChannel]);
+
+  
+  const markReadMutation = useMutation({
+    mutationFn: async () => {
+      return apiFetch(`/conversations/${selectedId}/read`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+    },
+  });
+
+  useEffect(() => {
+    if (selectedId) {
+      markReadMutation.mutate();
+    }
+  }, [selectedId]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (body: string) => {
@@ -112,6 +129,7 @@ function ChatPageContent() {
             </div>
             <div className="flex-1 overflow-y-auto">
               <ConversationList
+                currentUserId={user?.id as number}
                 conversations={conversations}
                 selectedId={selectedId}
                 onSelect={(id) => setSelectedId(id)}

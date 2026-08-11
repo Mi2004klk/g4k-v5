@@ -46,6 +46,11 @@ class AnnouncementController extends Controller
     public function update(Request $request, $id)
     {
         $announcement = Announcement::findOrFail($id);
+        
+        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        if ($announcement->created_by !== $request->user()->id && $activeRole !== 'super_admin') {
+            return response()->json(['message' => 'Unauthorized. You can only modify your own announcements.'], 403);
+        }
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -65,9 +70,15 @@ class AnnouncementController extends Controller
         return response()->json($announcement->load(['creator', 'team']));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $announcement = Announcement::findOrFail($id);
+
+        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        if ($announcement->created_by !== $request->user()->id && $activeRole !== 'super_admin') {
+            return response()->json(['message' => 'Unauthorized. You can only delete your own announcements.'], 403);
+        }
+
         $announcement->delete();
 
         return response()->json(['message' => 'Announcement deleted successfully']);

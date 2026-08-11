@@ -44,34 +44,12 @@ export function useExport() {
         const data = await response.json().catch(() => ({}));
 
         if (data.job_id) {
-          toast.loading(`Export queued (Job ${data.job_id}). We will notify you when it is ready.`, { id: toastId });
+          toast.success(`Export queued (Job ${data.job_id}). We will notify you when it is ready.`, { id: toastId });
           
-          // 2. Ideally, listen to reverb channel for this user/job
+          // In the future, listen to reverb channel for this user/job
           // const channel = subscribe(`private-exports.${data.job_id}`);
           // channel?.listen('.export.ready', (e: any) => { ... download ... });
-          
-          // Mocking the completion for frontend demo
-          setTimeout(() => {
-            toast.success(`Export ${filename} is ready to download!`, {
-              id: toastId,
-              action: {
-                label: "Download",
-                onClick: () => {
-                  // create dummy blob
-                  const blob = new Blob(["dummy data"], { type: "text/csv" });
-                  const url = URL.createObjectURL(blob);
-                  setDownloadUrls((prev) => [...prev, url]);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = filename;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                }
-              }
-            });
-            setIsExporting(false);
-          }, 3000);
+          setIsExporting(false);
         } else {
           toast.success(`Export completed.`, { id: toastId });
           setIsExporting(false);

@@ -29,6 +29,6 @@ class AnnouncementCreated implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'announcement-created';
+        return 'AnnouncementPosted';
     }
 }

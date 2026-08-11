@@ -101,12 +101,26 @@ export function LeaveHistoryTable({
     []
   );
 
+  const [search, setSearch] = useState("");
+
+  const filteredRecords = useMemo(() => {
+    if (!records) return [];
+    return records.filter(r => {
+      if (!search) return true;
+      const lowerSearch = search.toLowerCase();
+      const matchName = r.user?.name?.toLowerCase().includes(lowerSearch);
+      const matchType = r.type?.toLowerCase().includes(lowerSearch);
+      const matchReason = r.reason?.toLowerCase().includes(lowerSearch);
+      return matchName || matchType || matchReason;
+    });
+  }, [records, search]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
         <FilterBar
-          searchQuery=""
-          onSearchChange={() => {}}
+          searchQuery={search}
+          onSearchChange={setSearch}
           filters={[
             {
               key: "type",
@@ -137,10 +151,10 @@ export function LeaveHistoryTable({
         />
       </div>
       <div className="flex-1 min-h-[300px]">
-        {records && records.length > 0 ? (
+        {filteredRecords && filteredRecords.length > 0 ? (
           <DataTable
             columns={columns}
-            data={records}
+            data={filteredRecords}
           />
         ) : !isLoading ? (
           <div className="p-8">

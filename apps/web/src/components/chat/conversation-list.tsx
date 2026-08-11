@@ -12,6 +12,7 @@ export function ConversationList({
 }: {
   conversations: any[];
   selectedId: number | null;
+  currentUserId: number;
   onSelect: (id: number) => void;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -45,6 +46,13 @@ export function ConversationList({
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const conv = conversations[virtualRow.index];
           const isSelected = selectedId === conv.id;
+
+          const currentUserData = conv.users?.find((u: any) => u.id === currentUserId);
+          const lastReadAt = currentUserData?.pivot?.last_read_at;
+          const isUnread = conv.latestMessage &&
+            conv.latestMessage.sender_id !== currentUserId &&
+            (!lastReadAt || new Date(conv.latestMessage.created_at) > new Date(lastReadAt));
+
           const title = conv.name || (conv.scope === "direct" ? conv.users?.[0]?.name || "Direct Message" : "Chat");
 
           return (

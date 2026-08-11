@@ -62,6 +62,13 @@ export function RecentActivityWidget() {
 
   const activities = data?.metrics?.recent_activity || [];
 
+  function safeFormatDistance(dateString: string | undefined | null) {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "—";
+    return formatDistanceToNow(date, { addSuffix: true });
+  }
+
   return (
     <Card className="border-none shadow-sm h-full bg-white dark:bg-neutral-900 flex flex-col">
       <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
@@ -86,11 +93,11 @@ export function RecentActivityWidget() {
                   <span className="font-medium text-neutral-900 dark:text-white">
                     {activity.user_name || 'System'}
                   </span>{" "}
-                  {activity.action} {activity.model_type} 
-                  {activity.details ? ` (${activity.details})` : ''}
+                  {activity.action} {activity.subject_type} 
+                  {activity.meta ? ` (${activity.meta})` : ''}
                 </p>
                 <p className="text-[10px] text-neutral-500 mt-1">
-                  {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                  {safeFormatDistance(activity.at)}
                 </p>
               </div>
             ))}

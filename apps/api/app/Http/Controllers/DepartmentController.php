@@ -43,11 +43,11 @@ class DepartmentController extends Controller
     public function export(Request $request)
     {
         $query = $this->buildIndexQuery($request);
-        $departments = $query->orderBy('id', 'desc')->get();
+        // get() removed for streaming
 
-        return response()->streamDownload(function () use ($departments) {
+        return response()->streamDownload(function () use ($query) {
             $writer = SimpleExcelWriter::streamDownload('departments.csv');
-            foreach ($departments as $department) {
+            foreach ($query->cursor() as $department) {
                 $writer->addRow([
                     'ID' => $department->id,
                     'Name' => $department->name,

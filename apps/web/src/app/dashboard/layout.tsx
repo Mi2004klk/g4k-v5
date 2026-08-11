@@ -39,7 +39,7 @@ import {
   Monitor,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@g4k/ui/components";
+import { SheetDescription, Button } from "@g4k/ui/components";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
@@ -342,6 +342,7 @@ export default function DashboardLayout({
                   </SheetTrigger>
                     <SheetContent side="left" className="w-full sm:max-w-full h-full max-h-full p-0 flex flex-col bg-surface border-none transition-transform duration-[280ms] cubic-bezier(0.4,0,0.2,1)">
                       <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                    <SheetDescription className="sr-only">Main navigation menu for the dashboard.</SheetDescription>
                       <div className="flex items-center justify-between h-16 shrink-0 px-6 border-b border-border bg-surface-2/40">
                         <div className="flex items-center gap-3">
                           <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-md" priority />

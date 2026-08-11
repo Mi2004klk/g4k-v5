@@ -40,11 +40,11 @@ class DesignationController extends Controller
     public function export(Request $request)
     {
         $query = $this->buildIndexQuery($request);
-        $designations = $query->orderBy('id', 'desc')->get();
+        // get() removed for streaming
 
-        return response()->streamDownload(function () use ($designations) {
+        return response()->streamDownload(function () use ($query) {
             $writer = SimpleExcelWriter::streamDownload('designations.csv');
-            foreach ($designations as $designation) {
+            foreach ($query->cursor() as $designation) {
                 $writer->addRow([
                     'ID' => $designation->id,
                     'Name' => $designation->name,

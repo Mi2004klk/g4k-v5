@@ -16,8 +16,11 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Cookie;
 
+use App\Traits\ValidatesPasswordPolicy;
+
 class AuthController extends Controller
 {
+    use ValidatesPasswordPolicy;
     private function createAuthCookies($refreshToken, $refreshTtlDays = 7)
     {
         $isProduction = config('app.env') === 'production';
@@ -39,27 +42,7 @@ class AuthController extends Controller
         );
     }
 
-    private function getPasswordPolicyRule()
-    {
-        $settings = \Illuminate\Support\Facades\DB::table('settings')
-            ->where('category', 'security')
-            ->pluck('value', 'key');
-            
-        $min = (int) ($settings['password.min_length'] ?? 8);
-        $rule = Password::min($min);
-        
-        if (filter_var($settings['password.require_mixed'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) {
-            $rule = $rule->mixedCase();
-        }
-        if (filter_var($settings['password.require_number'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) {
-            $rule = $rule->numbers();
-        }
-        if (filter_var($settings['password.require_symbol'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) {
-            $rule = $rule->symbols();
-        }
-        
-        return $rule;
-    }
+
 
     public function login(Request $request)
     {
@@ -384,7 +367,25 @@ class AuthController extends Controller
 
     public function completeOnboarding(Request $request)
     {
+        $request->validate([
+            'phone' => 'nullable|string|max:20',
+            'emergency_contact' => 'nullable|string|max:20',
+            'password' => ['nullable', 'string', 'confirmed', $this->getPasswordPolicyRule()],
+        ]);
+
         $user = $request->user();
+        
+        if ($request->filled('phone')) {
+            $user->phone = $request->phone;
+        }
+        if ($request->filled('emergency_contact')) {
+            $user->emergency_contact = $request->emergency_contact;
+        }
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+            $user->must_change_password = false;
+        }
+
         $user->onboarded_at = now();
         $user->save();
 

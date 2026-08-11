@@ -29,7 +29,7 @@ const scheduleSchema = z.object({
   start_time: z.string(),
   end_time: z.string(),
   break_minutes: z.coerce.number().min(0).max(120),
-  grace_period_minutes: z.coerce.number().min(0).max(60),
+  grace_minutes: z.coerce.number().min(0).max(60),
   working_days: z.array(z.number()).min(1, "Select at least one working day"),
 });
 
@@ -70,7 +70,7 @@ export function SettingsTabs() {
       start_time: "09:00",
       end_time: "18:30",
       break_minutes: 45,
-      grace_period_minutes: 10,
+      grace_minutes: 10,
       working_days: [1, 2, 3, 4, 5, 6]
     },
     mode: "onTouched",
@@ -95,7 +95,7 @@ export function SettingsTabs() {
         start_time: activeSchedule.start_time || "09:00",
         end_time: activeSchedule.end_time || "18:30",
         break_minutes: activeSchedule.break_minutes ?? 45,
-        grace_period_minutes: activeSchedule.grace_period_minutes ?? 10,
+        grace_minutes: activeSchedule.grace_minutes ?? 10,
         working_days: activeSchedule.working_days ? JSON.parse(activeSchedule.working_days) : [1, 2, 3, 4, 5, 6],
       });
     }
@@ -341,10 +341,10 @@ export function SettingsTabs() {
                   <label className="text-xs font-medium">Grace (Mins) <span className="text-red-500">*</span></label>
                   <input
                     type="number"
-                    {...scheduleForm.register("grace_period_minutes")}
-                    className={`w-full text-sm rounded-lg border ${scheduleForm.formState.errors.grace_period_minutes ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
+                    {...scheduleForm.register("grace_minutes")}
+                    className={`w-full text-sm rounded-lg border ${scheduleForm.formState.errors.grace_minutes ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
                   />
-                  {scheduleForm.formState.errors.grace_period_minutes && <p className="text-[10px] text-red-500 mt-1">{scheduleForm.formState.errors.grace_period_minutes.message}</p>}
+                  {scheduleForm.formState.errors.grace_minutes && <p className="text-[10px] text-red-500 mt-1">{scheduleForm.formState.errors.grace_minutes.message}</p>}
                 </div>
               </div>
 

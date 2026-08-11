@@ -3,12 +3,10 @@
 namespace App\Listeners;
 
 use App\Events\ApprovalSubmitted;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use App\Models\User;
 use App\Models\Notification;
 
-class NotifyApprovalSubmitted implements ShouldQueue
+class NotifyApprovalSubmitted
 {
     /**
      * Create the event listener.

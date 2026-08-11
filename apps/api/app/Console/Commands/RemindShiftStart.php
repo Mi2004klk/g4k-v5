@@ -15,16 +15,20 @@ class RemindShiftStart extends Command
     public function handle()
     {
         $now = now();
-        $targetTime = $now->copy()->addMinutes(15)->format('H:i:00');
-
-        $schedule = DB::table('work_schedules')->where('is_default', true)->first();
-        if (!$schedule || $schedule->start_time !== $targetTime) {
-            return;
-        }
-
         $users = User::where('status', 'active')->get();
+        $defaultSchedule = DB::table('work_schedules')->where('is_default', true)->first();
 
         foreach ($users as $user) {
+            $schedule = $user->work_schedule_id 
+                ? DB::table('work_schedules')->where('id', $user->work_schedule_id)->first() 
+                : $defaultSchedule;
+                
+            if (!$schedule) continue;
+            
+            $targetTime = $now->copy()->addMinutes(15)->format('H:i:00');
+            $startTime = Carbon::parse($schedule->start_time)->format('H:i:00');
+            
+            if ($startTime !== $targetTime) continue;
             \App\Models\Notification::create([
                 'user_id' => $user->id,
                 'type' => 'attendance_reminder',

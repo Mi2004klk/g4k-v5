@@ -16,6 +16,9 @@ import {
   Eye,
   Building2,
   ExternalLink,
+  Calendar,
+  FileText,
+  CheckSquare
 } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
@@ -89,6 +92,35 @@ export default function ProfilePage() {
     queryKey: queryKeys.companyProfile,
     queryFn: () => apiFetch("/company-profile"),
   });
+
+  const { data: attendanceHistory } = useQuery({
+    queryKey: ["attendance-history-me"],
+    queryFn: () => apiFetch("/attendance/me/history?limit=31"),
+  });
+
+  const { data: leaveHistory } = useQuery({
+    queryKey: ["leave-history-me"],
+    queryFn: () => apiFetch("/leave-requests/history?limit=100"),
+  });
+
+  const { data: activeTasks } = useQuery({
+    queryKey: ["tasks-me"],
+    queryFn: () => apiFetch("/tasks"),
+  });
+
+  // Calculate summaries
+  const attendanceData = attendanceHistory?.data || [];
+  const presentCount = attendanceData.filter((r: any) => ["present", "late", "half_day"].includes(r.status)).length;
+  const absentCount = attendanceData.filter((r: any) => r.status === "absent").length;
+  const lateCount = attendanceData.filter((r: any) => r.status === "late").length;
+
+  const leaveData = leaveHistory?.data || [];
+  const approvedLeaves = leaveData.filter((l: any) => l.approval?.status === "approved").length;
+  const pendingLeaves = leaveData.filter((l: any) => !l.approval || l.approval.status === "pending").length;
+
+  const taskData = activeTasks?.data || [];
+  const pendingTasks = taskData.filter((t: any) => t.status === "pending" || t.status === "in_progress").length;
+  const completedTasks = taskData.filter((t: any) => t.status === "completed").length;
 
   const updateProfileMutation = useMutation({
     mutationFn: async (payload: any) => {
@@ -333,6 +365,53 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mini-Cards for EMP-5 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg shrink-0">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">My Attendance (Recent)</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">{presentCount} Present</span> •{" "}
+                <span className="font-medium text-amber-600 dark:text-amber-400">{lateCount} Late</span> •{" "}
+                <span className="font-medium text-rose-600 dark:text-rose-400">{absentCount} Absent</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg shrink-0">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">My Leave Summary</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">{approvedLeaves} Approved</span> •{" "}
+                <span className="font-medium text-amber-600 dark:text-amber-400">{pendingLeaves} Pending</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="p-3 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg shrink-0">
+              <CheckSquare className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">My Active Tasks</h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                <span className="font-medium text-violet-600 dark:text-violet-400">{pendingTasks} Active</span> •{" "}
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">{completedTasks} Completed</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Details Form */}

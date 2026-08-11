@@ -18,7 +18,7 @@ class ApprovalService
     public static function submit(\Illuminate\Database\Eloquent\Model $approvable, int $submittedBy, ?array $payload = null): Approval
     {
         $user = User::findOrFail($submittedBy);
-        $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
+        $roles = $user->getCachedRoles();
 
         // Determine next approver role based on submitter's highest role
         $currentApproverRole = in_array('hr', $roles) ? 'super_admin' : 'hr';
@@ -71,6 +71,10 @@ class ApprovalService
             throw new Exception("Approval is not in a pending state.");
         }
 
+        if ($approval->submitted_by === $decidedBy) {
+            throw new Exception("You cannot approve your own request.");
+        }
+
         self::checkRoleGating($approval, $decidedBy);
 
         DB::transaction(function () use ($approval, $decidedBy, $reason) {
@@ -102,6 +106,10 @@ class ApprovalService
     {
         if ($approval->status !== 'pending') {
             throw new Exception("Approval is not in a pending state.");
+        }
+
+        if ($approval->submitted_by === $decidedBy) {
+            throw new Exception("You cannot reject your own request.");
         }
 
         self::checkRoleGating($approval, $decidedBy);
