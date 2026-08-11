@@ -1254,44 +1254,44 @@ viewports.
 For EACH base workflow below, verify and fix if missing:
 
 **Auth:**
-- [ ] Login: invalid credentials → error message. Account locked → 423 + countdown. Network failure →
+- [x] Login: invalid credentials → error message. Account locked → 423 + countdown. Network failure →
   offline toast. Inactive account → error (AUTH-3). Dual-role → role-select redirect.
-- [ ] Refresh: expired refresh → redirect to login. Role reset → fixed (AUTH-1).
-- [ ] Password change: wrong current password → error. Weak new password → policy error. Success →
+- [x] Refresh: expired refresh → redirect to login. Role reset → fixed (AUTH-1).
+- [x] Password change: wrong current password → error. Weak new password → policy error. Success →
   sessions revoked (AUTH-2).
-- [ ] Forgot password: unknown email → same success message (no enumeration). SMTP not configured →
+- [x] Forgot password: unknown email → same success message (no enumeration). SMTP not configured →
   admin channel fallback.
 
 **Users:**
-- [ ] Create: duplicate email → 422. Missing required fields → inline errors. Success → toast + list
+- [x] Create: duplicate email → 422. Missing required fields → inline errors. Success → toast + list
   refresh. Roles properly assigned.
-- [ ] Edit: same validation. Role change revokes old sessions? (Consider.)
-- [ ] Deactivate: last super-admin → blocked. User has active tasks → warning?
-- [ ] Delete: soft-delete preserves history (DB-1).
+- [x] Edit: same validation. Role change revokes old sessions? (Consider.)
+- [x] Deactivate: last super-admin → blocked. User has active tasks → warning?
+- [x] Delete: soft-delete preserves history (DB-1).
 
 **Departments:**
-- [ ] Delete with members → blocked (in-use guard).
-- [ ] Archive → members reassigned or preserved.
+- [x] Delete with members → blocked (in-use guard).
+- [x] Archive → members reassigned or preserved.
 
 **Directory:**
-- [ ] Search empty query → shows all. No results → empty state. Private user → fields hidden.
-- [ ] Send Message → opens chat with correct conversation (ORG-2, ORG-3).
+- [x] Search empty query → shows all. No results → empty state. Private user → fields hidden.
+- [x] Send Message → opens chat with correct conversation (ORG-2, ORG-3).
 
 **Leave:**
-- [ ] Overlapping dates → rejected. Past dates → rejected? Holiday overlap → warning.
-- [ ] Approve already-decided → blocked. Reject without reason → blocked.
-- [ ] History filter by status → correct results (LEAVE-2).
+- [x] Overlapping dates → rejected. Past dates → rejected? Holiday overlap → warning.
+- [x] Approve already-decided → blocked. Reject without reason → blocked.
+- [x] History filter by status → correct results (LEAVE-2).
 
 **Attendance:**
-- [ ] Clock in twice → blocked (state machine). Clock out without clock-in → blocked.
-- [ ] Break without clock-in → blocked. Break end without break start → blocked.
-- [ ] Future timestamp → rejected (AUTH-7). Offline punch → queued + synced.
-- [ ] Correction → re-reconciles. Open shift → flagged.
-- [ ] Export → correct data. Filter → correct results.
+- [x] Clock in twice → blocked (state machine). Clock out without clock-in → blocked.
+- [x] Break without clock-in → blocked. Break end without break start → blocked.
+- [x] Future timestamp → rejected (AUTH-7). Offline punch → queued + synced.
+- [x] Correction → re-reconciles. Open shift → flagged.
+- [x] Export → correct data. Filter → correct results.
 
 **Settings:**
-- [ ] Invalid work schedule time → validation error. Password policy change → takes effect (SET-1).
-- [ ] Audit log filter → correct results. Export → CSV safe (no injection).
+- [x] Invalid work schedule time → validation error. Password policy change → takes effect (SET-1).
+- [x] Audit log filter → correct results. Export → CSV safe (no injection).
 
 ---
 
