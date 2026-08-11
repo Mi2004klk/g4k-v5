@@ -1299,34 +1299,34 @@ For EACH base workflow below, verify and fix if missing:
 
 ### SMOKE: Run these exact scenarios after all fixes
 
-- [ ] **Login as karthik/Admin@123** → Super Admin dashboard loads, all widgets show real data.
+- [x] **Login as karthik/Admin@123** → Super Admin dashboard loads, all widgets show real data.
   Navigate to Admin Attendance → table loads, search works, dept names show, trends graph renders.
   Export → downloads XLSX. Click employee → side sheet with timeline. Notify HR for open shifts →
   notifications sent (not 422).
-- [ ] **Login as aravind/Hr@123** → HR dashboard loads, team attendance widget works, pending
+- [x] **Login as aravind/Hr@123** → HR dashboard loads, team attendance widget works, pending
   approvals work, activity feed shows real anomalies. Navigate to Team Attendance → table loads,
   search works, corrections work, graph renders. Export button removed or works without 403.
   Navigate to Leave Approvals → approve/reject works, leave→attendance integration fires.
-- [ ] **Login as praveen/Dev@123** → Employee dashboard loads, clock-in widget works, task progress
+- [x] **Login as praveen/Dev@123** → Employee dashboard loads, clock-in widget works, task progress
   shows real %, approval status shows real leave requests, announcements visible. Clock in → timer
   runs. Start break → timer pauses. End break → resumes. Clock out → confirmation → timer stops.
   Navigate to My Attendance → calendar heatmap loads, per-day detail works. Navigate to Leave →
   request form works, history shows.
-- [ ] **Dual-role user** → role-select screen → pick role → dashboard for that role. Silent refresh
+- [x] **Dual-role user** → role-select screen → pick role → dashboard for that role. Silent refresh
   keeps the selected role (AUTH-1).
-- [ ] **Password change** → all other sessions kicked (AUTH-2). New password enforced with policy (SET-1).
-- [ ] **Directory** → grid/list loads (ORG-1). Click employee → profile sheet. Click "Message" →
+- [x] **Password change** → all other sessions kicked (AUTH-2). New password enforced with policy (SET-1).
+- [x] **Directory** → grid/list loads (ORG-1). Click employee → profile sheet. Click "Message" →
   DM opens in chat (ORG-2, ORG-3). Private user → email/phone hidden (SEC-1, SEC-3).
-- [ ] **Profile** → edit name/phone → saves. Upload avatar → Supabase. Change password → policy
+- [x] **Profile** → edit name/phone → saves. Upload avatar → Supabase. Change password → policy
   enforced. View devices → revoke → session ends.
-- [ ] **Settings** (Admin) → company profile, work schedule (CFG-1), auto-numbering (CFG-2), policies
+- [x] **Settings** (Admin) → company profile, work schedule (CFG-1), auto-numbering (CFG-2), policies
   (SET-1), holidays (LEAVE-4) → all save and take effect.
-- [ ] **Audit log** (Admin) → loads with real data, filterable, exportable.
-- [ ] **Mobile** (360px viewport) → sidebar hidden, bottom nav works, tables → cards, dialogs
+- [x] **Audit log** (Admin) → loads with real data, filterable, exportable.
+- [x] **Mobile** (360px viewport) → sidebar hidden, bottom nav works, tables → cards, dialogs
   full-screen, no horizontal scroll, touch targets ≥44px.
-- [ ] **Offline** → disconnect network → clock in → queued → reconnect → syncs. Offline banner
+- [x] **Offline** → disconnect network → clock in → queued → reconnect → syncs. Offline banner
   visible. Toast visible (AUTH-6).
-- [ ] **Console** → zero errors, zero warnings in all base-workflow pages (UI-1).
+- [x] **Console** → zero errors, zero warnings in all base-workflow pages (UI-1).
 
 ---
 
