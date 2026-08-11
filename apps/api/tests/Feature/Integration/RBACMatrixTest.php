@@ -82,7 +82,7 @@ class RBACMatrixTest extends TestCase
 
         // 4. Employee tries to approve their own leave (Should be 403 or exception thrown as 403/500)
         $response = $this->withToken($empToken)
-            ->postJson("/api/leave-requests/{$leave->id}/decision", [
+            ->postJson("/api/approvals/{$leave->id}/decision", [
                 'decision' => 'approved'
             ]);
         // Because of ApprovalService throwing an Exception, it might return 500 in test, 
@@ -93,7 +93,7 @@ class RBACMatrixTest extends TestCase
 
         // 5. Admin tries to approve the leave (Should be 200)
         $response = $this->withToken($adminToken)
-            ->postJson("/api/leave-requests/{$leave->id}/decision", [
+            ->postJson("/api/approvals/{$leave->id}/decision", [
                 'decision' => 'approved',
                 'reason' => 'Admin override'
             ]);
@@ -102,18 +102,24 @@ class RBACMatrixTest extends TestCase
         app('auth')->forgetGuards();
 
         // 6. Employee tests clock in (Should be 200)
+        \App\Models\AttendanceEvent::where('user_id', $employee->id)->delete();
+        \App\Models\AttendanceDay::where('user_id', $employee->id)->delete();
         $punchInTime = now()->setTime(10, 0, 0);
-        $this->withToken($empToken)
+        
+        $resp = $this->withToken($empToken)
             ->postJson('/api/attendance/clock-in', [
                 'timestamp' => $punchInTime->toISOString(),
                 'ip_address' => '127.0.0.1',
                 'client_id' => 'test-emp'
-            ])
-            ->assertStatus(200);
+            ]);
+        if ($resp->status() !== 200) dump("Employee ID in test: " . $employee->id, $resp->json());
+        $resp->assertStatus(200);
 
         app('auth')->forgetGuards();
 
         // 7. Admin tests clock in (Should be 200, Admins can punch in too)
+        \App\Models\AttendanceEvent::where('user_id', $admin->id)->delete();
+        \App\Models\AttendanceDay::where('user_id', $admin->id)->delete();
         $this->withToken($adminToken)
             ->postJson('/api/attendance/clock-in', [
                 'timestamp' => $punchInTime->toISOString(),

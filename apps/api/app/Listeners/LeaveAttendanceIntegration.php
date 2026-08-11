@@ -41,7 +41,8 @@ class LeaveAttendanceIntegration implements ShouldQueue
             $endYear = $endDate->year;
             $holidays = DB::table('holidays')
                 ->where(function ($q) use ($startYear, $endYear) {
-                    $q->whereBetween(DB::raw('EXTRACT(YEAR FROM date)'), [$startYear, $endYear])
+                    $q->whereYear('date', '>=', $startYear)
+                      ->whereYear('date', '<=', $endYear)
                       ->orWhere('recurring', true);
                 })->get();
 

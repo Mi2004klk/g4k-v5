@@ -38,6 +38,9 @@ class FullWorkflowTest extends TestCase
         $hrToken = $hr->createToken('hr-token', ['role:hr'])->plainTextToken;
 
         // 2. Employee Clocks In
+        \App\Models\AttendanceEvent::where('user_id', $employee->id)->delete();
+        \App\Models\AttendanceDay::where('user_id', $employee->id)->delete();
+        
         $punchInTime = now()->setTime(9, 30, 0); // 9:30 AM (Late)
         
         $response = $this->withToken($empToken)
@@ -60,9 +63,6 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-break-start',
             ]);
         
-        if ($response->status() !== 200) {
-            dd($response->json(), $response->status());
-        }
         $response->assertStatus(200);
 
         $breakEndTime = $breakStartTime->copy()->addMinutes(45);
@@ -72,10 +72,6 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-end-break',
             ]);
         
-        if ($response->status() !== 200) {
-            $events = \Illuminate\Support\Facades\DB::table('attendance_events')->get();
-            dd($response->json(), $response->status(), $events);
-        }
         $response->assertStatus(200);
 
         // 5. Employee Clocks Out
@@ -86,9 +82,6 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-clock-out',
             ]);
         
-        if ($response->status() !== 200) {
-            dd($response->json(), $response->status());
-        }
         $response->assertStatus(200);
         
         // Verify timesheet generation (assuming the clock_out creates or updates a timesheet)
@@ -107,11 +100,9 @@ class FullWorkflowTest extends TestCase
                 'reason' => 'Feeling unwell',
             ]);
         
-        if ($response->status() !== 200) {
-            dd($response->json(), $response->status());
-        }
-        $response->assertStatus(200);
-        $leaveRequestId = $response->json('id');
+        $response->assertStatus(201);
+        $leaveRequestId = $response->json('id') ?? $response->json('data.id');
+        $approvalId = $response->json('approval_id') ?? $response->json('data.approval_id') ?? $response->json('approval.id') ?? $response->json('data.approval.id');
 
         // 8. HR Views Leave Requests
         app('auth')->forgetGuards();
@@ -122,15 +113,11 @@ class FullWorkflowTest extends TestCase
         
         // 9. HR Approves Leave Request
         $response = $this->withToken($hrToken)
-            ->postJson("/api/leave-requests/{$leaveRequestId}/decision", [
+            ->postJson("/api/approvals/{$leaveRequestId}/decision", [
                 'decision' => 'approved',
                 'reason' => 'Get well soon!',
             ]);
         
-        if ($response->status() !== 200) {
-            $roles = \Illuminate\Support\Facades\DB::table('role_assignments')->get();
-            dd($response->json(), $hr->id, $roles);
-        }
         $response->assertStatus(200);
         
         $this->assertDatabaseHas('leave_requests', [

@@ -484,7 +484,7 @@ export default function DashboardLayout({
             </header>
 
             <main className="flex-1 overflow-y-auto relative z-10 bg-app p-4 pb-24 md:pb-6 md:p-6 lg:p-8">
-              <div className="mx-auto max-w-[1440px]">
+              <div key={pathname} className="mx-auto max-w-[1440px] animate-page-in">
                 <Breadcrumb />
                 {children}
               </div>

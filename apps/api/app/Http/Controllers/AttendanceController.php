@@ -309,7 +309,17 @@ class AttendanceController extends Controller
             $day->tasks = $tasks;
         }
 
-        return response()->json($days);
+        return response()->json([
+            'data' => collect($days->items())->map(function($day) {
+                return $day;
+            }),
+            'next_cursor' => $days->nextCursor()?->encode(),
+            'user' => [
+                'id' => $targetUser->id,
+                'name' => $targetUser->name,
+                'email' => $targetUser->email,
+            ]
+        ]);
     }
 
     public function hrToday(Request $request)

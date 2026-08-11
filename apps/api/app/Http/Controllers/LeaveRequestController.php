@@ -95,7 +95,7 @@ class LeaveRequestController extends Controller
 
         \App\Services\AuditLogger::log($request, 'leave.request', 'LeaveRequest', $leave->id, null, $validated);
 
-        return response()->json($leave->load('approval'));
+        return response()->json($leave->load('approval'), 201);
     }
 
     public function decision(Request $request, $id)

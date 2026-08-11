@@ -2,7 +2,7 @@ import { useAuthStore, getAuthToken } from "./auth-store";
 import { offlineEngine } from "./offline-engine";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_BASE_URL = "/api";
 
 export function getToken(): string | null {
   return getAuthToken();
@@ -20,7 +20,7 @@ export async function apiFetch<T = any>(
   const token = getAuthToken();
 
   const headers = new Headers(options.headers || {});
-  
+
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
@@ -43,7 +43,7 @@ export async function apiFetch<T = any>(
 
   const maxRetries = 0;
   let attempt = 0;
-  
+
   while (attempt <= maxRetries) {
     try {
       const response = await fetch(url, {
@@ -101,7 +101,7 @@ export async function apiFetch<T = any>(
         }
 
         const errorData = await response.json().catch(() => ({}));
-        
+
         if (response.status === 403) {
           if (errorData.must_change_password) {
             if (typeof window !== "undefined" && window.location.pathname !== "/change-password") {
@@ -137,6 +137,6 @@ export async function apiFetch<T = any>(
       await sleep(500 * Math.pow(2, attempt - 1));
     }
   }
-  
+
   throw new Error("Request failed after max retries");
 }

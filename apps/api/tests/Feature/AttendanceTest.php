@@ -28,8 +28,15 @@ class AttendanceTest extends TestCase
             \App\Http\Middleware\ForcePasswordChange::class,
         ]);
         
-        $this->user = User::factory()->create();
-        $this->hrUser = User::factory()->create(['department_id' => $this->user->department_id]);
+        $this->user = User::factory()->create([
+            'onboarded_at' => now(),
+            'must_change_password' => false,
+        ]);
+        $this->hrUser = User::factory()->create([
+            'department_id' => $this->user->department_id,
+            'onboarded_at' => now(),
+            'must_change_password' => false,
+        ]);
         
         \Illuminate\Support\Facades\DB::table('role_assignments')->insert([
             'user_id' => $this->hrUser->id,
@@ -147,8 +154,10 @@ class AttendanceTest extends TestCase
 
     public function test_offline_sync_deduplicates_and_sorts()
     {
-        $clientId = Str::uuid()->toString();
         $date = now()->format('Y-m-d');
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse($date . ' 18:00:00'));
+
+        $clientId = Str::uuid()->toString();
         
         $events = [
             [
@@ -180,6 +189,8 @@ class AttendanceTest extends TestCase
         // Day should be fully reconciled
         $day = AttendanceDay::where('user_id', $this->user->id)->where('date', $date)->first();
         $this->assertFalse($day->has_open_shift);
+
+        \Carbon\Carbon::setTestNow(null);
     }
 
     public function test_hr_can_correct_attendance()

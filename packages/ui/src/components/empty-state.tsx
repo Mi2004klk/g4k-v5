@@ -28,7 +28,7 @@ export function EmptyState({
       {...props}
     >
       {icon ? (
-        <div className="mb-4 text-muted-foreground">{icon}</div>
+        <div className="mb-4 text-muted-foreground animate-pulse motion-reduce:animate-none">{icon}</div>
       ) : videoSrc ? (
         <video
           src={videoSrc}
@@ -39,7 +39,7 @@ export function EmptyState({
           className="mb-4 h-16 w-16 opacity-75 rounded-full"
         />
       ) : (
-        <Inbox className="mb-4 h-12 w-12 text-muted-foreground opacity-50" />
+        <Inbox className="mb-4 h-12 w-12 text-muted-foreground opacity-50 animate-bounce motion-reduce:animate-none" />
       )}
       <h3 className="text-base font-semibold">{title}</h3>
       {description && (

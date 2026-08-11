@@ -817,13 +817,13 @@
 
 ## PHASE 15 — Animations & micro-interactions (DESIGN-SYSTEM §8, §14.5)
 
-- [ ] **15.1** [web] Primary button rainbow-hover + 0.96 active compression + dot-loader (Phase 1.2.2).
-- [ ] **15.2** [web] Cards lift to e2 on hover (100ms). Dropdowns e3. Dialogs/drawers e4 + backdrop
+- [x] **15.1** [web] Primary button rainbow-hover + 0.96 active compression + dot-loader (Phase 1.2.2).
+- [x] **15.2** [web] Cards lift to e2 on hover (100ms). Dropdowns e3. Dialogs/drawers e4 + backdrop
   blur. Badges transition color on state change (150ms).
-- [ ] **15.3** [web] Sidebar glide 220ms; drawer/panel 200ms; dialog ease-modal snap; tooltip/popover
+- [x] **15.3** [web] Sidebar glide 220ms; drawer/panel 200ms; dialog ease-modal snap; tooltip/popover
   150ms; list reorder 180ms; page transition 180ms; progress bar fill 600ms (0→value).
-- [ ] **15.4** [web] Instant feedback on every tap (compress 0.96, 120ms). Reduced-motion fallbacks.
-- [ ] **15.5** [web] Empty-state illustrations + animated logo where relevant (not inside small
+- [x] **15.4** [web] Instant feedback on every tap (compress 0.96, 120ms). Reduced-motion fallbacks.
+- [x] **15.5** [web] Empty-state illustrations + animated logo where relevant (not inside small
   metric cards — Phase 1.3.2).
 
 ---
@@ -833,52 +833,52 @@
 > Run after Phases 3–15. Every workflow from user interaction → frontend → backend → DB/state →
 > response → UI update, with loading/success/error/empty/permission states.
 
-- [ ] **16.1** Auth: login (all 3 roles), wrong password, lockout, forgot (SMTP + admin), reset,
+- [x] **16.1** Auth: login (all 3 roles), wrong password, lockout, forgot (SMTP + admin), reset,
   force-change, onboarding, role-select, device list + remote revoke, reload-persists.
-- [ ] **16.2** Attendance: clock in → break → break-end → clock out (optimistic + rollback);
+- [x] **16.2** Attendance: clock in → break → break-end → clock out (optimistic + rollback);
   late badge after grace; overtime amber; heatmap + per-day popover; forgot-clock-out → open shift
   → HR alerted → correction → re-reconcile; HR own-team; Admin all; export downloads.
-- [ ] **16.3** Leave: employee submit → HR approve → attendance days = leave (Mon-Sat only);
+- [x] **16.3** Leave: employee submit → HR approve → attendance days = leave (Mon-Sat only);
   HR submit → Admin approve/reject with reason; duplicate-overlap rejected; holiday calendar;
   bell notifications on submit + decision (submitter notified).
-- [ ] **16.4** Projects/Tasks: create project → assign team → add tasks → Kanban drag → submit →
+- [x] **16.4** Projects/Tasks: create project → assign team → add tasks → Kanban drag → submit →
   approve → history; Gantt renders; recurring task recreates; QA form; task timer; personal task
   list; saved views.
-- [ ] **16.5** Chat: send DM + read receipt; @mention notifies; post announcement → dashboard + bell
+- [x] **16.5** Chat: send DM + read receipt; @mention notifies; post announcement → dashboard + bell
   (realtime); create note; feedback → HR/Admin DM + high-priority notification; offline message
   queues; mobile chat UX.
-- [ ] **16.6** Reports: generate each; export Excel + PDF (queued); Sunday email (dry-run); HR
+- [x] **16.6** Reports: generate each; export Excel + PDF (queued); Sunday email (dry-run); HR
   limited set; saved views.
-- [ ] **16.7** Settings: edit each setting; audit captures create/approve actions; company profile
+- [x] **16.7** Settings: edit each setting; audit captures create/approve actions; company profile
   + working hours + holiday calendar + policies + reminders all save + take effect.
-- [ ] **16.8** Directory: search; grid/list; send message → opens conversation; sensitive fields
+- [x] **16.8** Directory: search; grid/list; send message → opens conversation; sensitive fields
   hidden by visibility.
-- [ ] **16.9** Notifications: bell popup centered modal with Clear (popup-only) + Mark-as-Read +
+- [x] **16.9** Notifications: bell popup centered modal with Clear (popup-only) + Mark-as-Read +
   close; clearing preserves Chats area; Notification Center shows full history.
-- [ ] **16.10** Dashboard: drag doesn't open widgets; widgets load independently; collapse Quick
+- [x] **16.10** Dashboard: drag doesn't open widgets; widgets load independently; collapse Quick
   Notes; announcement one-like-per-person; per-role widget composition correct; no flicker.
 
 ---
 
 ## PHASE 17 — Visual QA & consistency sweep
 
-- [ ] **17.1** [test] No random black/violet outlines, inconsistent input designs, excessive borders,
+- [x] **17.1** [test] No random black/violet outlines, inconsistent input designs, excessive borders,
   broken animations, inconsistent spacing, poor hierarchy, overlapping elements, inconsistent
   component sizes across every page.
-- [ ] **17.2** [test] One design system applied: palette, typography, spacing, radius, elevation,
+- [x] **17.2** [test] One design system applied: palette, typography, spacing, radius, elevation,
   motion, states — consistent across all 3 roles' screens.
-- [ ] **17.3** [test] Status badges consistent (Gray/Blue/Amber/Green/Red) across tasks/projects/
+- [x] **17.3** [test] Status badges consistent (Gray/Blue/Amber/Green/Red) across tasks/projects/
   leave/attendance.
-- [ ] **17.4** [test] Every page follows the same layout system (PageContainer header, FilterBar,
+- [x] **17.4** [test] Every page follows the same layout system (PageContainer header, FilterBar,
   DataTable/cards, pagination) and visual hierarchy (no duplicate breadcrumbs, consistent gutters).
-- [ ] **17.5** [test] No dead buttons, decorative controls, or disconnected actions remain. Every
+- [x] **17.5** [test] No dead buttons, decorative controls, or disconnected actions remain. Every
   visible control works.
 
 ---
 
 ## PHASE 18 — Regression, production-readiness & deploy
 
-- [ ] **18.1** [test] Full test suite green: Laravel feature tests (with query-count + capability
+- [x] **18.1** [test] Full test suite green: Laravel feature tests (with query-count + capability
   assertions) + web component/integration tests + the new perf/a11y/bundle CI gates (Phase 0.2).
 - [ ] **18.2** [test] `php artisan migrate:fresh --seed` succeeds on a clean DB (after Phase 5.10).
 - [ ] **18.3** [test] `pnpm build` + `pnpm lint` + `pnpm typecheck` green; bundle within budget.

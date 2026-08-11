@@ -77,9 +77,16 @@ class AuthFlowTest extends TestCase
     {
         $user = User::factory()->create([
             'must_change_password' => true,
+            'onboarded_at' => now(),
         ]);
 
-        $token = $user->createToken('test')->plainTextToken;
+        $token = $user->createToken('test', ['role:employee'])->plainTextToken;
+
+        \App\Models\Setting::create([
+            'category' => 'security',
+            'key' => 'force_password_change',
+            'value' => 'true'
+        ]);
 
         // Trying to access a protected route
         $response = $this->withToken($token)->getJson('/api/profile');

@@ -8,6 +8,7 @@ use App\Events\ApprovalDecided;
 use App\Events\ApprovalSubmitted;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class ApprovalService
 {
@@ -43,7 +44,8 @@ class ApprovalService
     {
         $deciderRoles = DB::table('role_assignments')->where('user_id', $decidedBy)->pluck('role')->toArray();
         if (!in_array($approval->current_approver_role, $deciderRoles) && !in_array('super_admin', $deciderRoles)) {
-            throw new Exception("You do not have the correct active role ({$approval->current_approver_role}) to decide this approval.");
+            $rolesStr = implode(', ', $deciderRoles);
+            throw new AuthorizationException("User {$decidedBy} does not have the correct active role ({$approval->current_approver_role}) to decide this approval. Roles found: {$rolesStr}");
         }
 
         // Capability Matrix defense-in-depth check
