@@ -8,6 +8,7 @@ use App\Models\Approval;
 use App\Services\ApprovalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\StoreLeaveRequestRequest;
 
 
 class LeaveRequestController extends Controller
@@ -52,14 +53,9 @@ class LeaveRequestController extends Controller
         return response()->json($query->cursorPaginate(20));
     }
 
-    public function store(Request $request)
+    public function store(StoreLeaveRequestRequest $request)
     {
-        $validated = $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'reason' => 'required|string',
-            'type' => 'required|in:casual,sick,earned,unpaid',
-        ]);
+        $validated = $request->validated();
 
         $userId = $request->user()->id;
 

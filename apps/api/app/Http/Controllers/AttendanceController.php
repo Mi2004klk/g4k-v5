@@ -12,7 +12,7 @@ use Carbon\Carbon;
 use App\Services\AttendanceService;
 use App\Services\AuditLogger;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-
+use App\Http\Requests\CorrectAttendanceRequest;
 
 class AttendanceController extends Controller
 {
@@ -92,7 +92,7 @@ class AttendanceController extends Controller
         $validated = $request->validate([
             'events' => 'required|array',
             'events.*.client_id' => 'required|string',
-            'events.*.type' => 'required|string',
+            'events.*.type' => 'required|in:clock_in,clock_out,break_start,break_end',
             'events.*.timestamp' => 'required|date',
             'events.*.meta' => 'nullable|array',
         ]);
@@ -379,9 +379,15 @@ class AttendanceController extends Controller
 
     public function hrGraph(Request $request)
     {
-        $mode = $request->query('mode', 'weekly');
-        $date = $request->query('date', now()->toDateString());
-        $groupBy = $request->query('groupBy', 'date');
+        $validated = $request->validate([
+            'mode' => 'nullable|in:weekly,monthly',
+            'groupBy' => 'nullable|in:date,employee',
+            'date' => 'nullable|date',
+        ]);
+
+        $mode = $validated['mode'] ?? 'weekly';
+        $date = $validated['date'] ?? now()->toDateString();
+        $groupBy = $validated['groupBy'] ?? 'date';
         $carbonDate = Carbon::parse($date);
 
         $query = DB::table('attendance_days')
@@ -416,9 +422,15 @@ class AttendanceController extends Controller
 
     public function adminGraph(Request $request)
     {
-        $mode = $request->query('mode', 'weekly');
-        $date = $request->query('date', now()->toDateString());
-        $groupBy = $request->query('groupBy', 'date');
+        $validated = $request->validate([
+            'mode' => 'nullable|in:weekly,monthly',
+            'groupBy' => 'nullable|in:date,employee',
+            'date' => 'nullable|date',
+        ]);
+
+        $mode = $validated['mode'] ?? 'weekly';
+        $date = $validated['date'] ?? now()->toDateString();
+        $groupBy = $validated['groupBy'] ?? 'date';
         $carbonDate = Carbon::parse($date);
 
         $query = DB::table('attendance_days')
@@ -449,16 +461,9 @@ class AttendanceController extends Controller
         return response()->json(['stats' => $stats, 'mode' => $mode]);
     }
 
-    public function correct(Request $request)
+    public function correct(CorrectAttendanceRequest $request)
     {
-        $validated = $request->validate([
-            'action' => 'required|in:add_event,edit_event,remove_event',
-            'attendance_day_id' => 'required|exists:attendance_days,id',
-            'event_id' => 'nullable|exists:attendance_events,id',
-            'type' => 'nullable|string|in:clock_in,clock_out,break_start,break_end',
-            'timestamp' => 'nullable|date',
-            'reason' => 'required|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         $day = AttendanceDay::where('id', $validated['attendance_day_id'])->first();
         $actor = $request->user();
@@ -551,8 +556,14 @@ class AttendanceController extends Controller
 
     public function export(Request $request)
     {
-        $startDate = $request->query('start_date', now()->toDateString());
-        $endDate = $request->query('end_date', $startDate);
+        $validated = $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'ids' => 'nullable|string',
+        ]);
+
+        $startDate = $validated['start_date'] ?? now()->toDateString();
+        $endDate = $validated['end_date'] ?? $startDate;
 
         $query = DB::table('attendance_days')
             ->join('users', 'users.id', '=', 'attendance_days.user_id')

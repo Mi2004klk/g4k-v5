@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use App\Http\Requests\BulkUpdateSettingsRequest;
 
 class SettingsController extends Controller
 {
@@ -13,14 +14,9 @@ class SettingsController extends Controller
         return response()->json($settings);
     }
 
-    public function bulkUpdate(Request $request)
+    public function bulkUpdate(BulkUpdateSettingsRequest $request)
     {
-        $validated = $request->validate([
-            'settings' => 'required|array',
-            'settings.*.category' => 'required|string',
-            'settings.*.key' => 'required|string',
-            'settings.*.value' => 'required', // Can be array, string, boolean
-        ]);
+        $validated = $request->validated();
 
         foreach ($validated['settings'] as $settingData) {
             Setting::updateOrCreate(

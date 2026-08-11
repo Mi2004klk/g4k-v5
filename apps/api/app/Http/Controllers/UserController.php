@@ -10,6 +10,8 @@ use App\Services\AuditLogger;
 use App\Services\AutoNumberingService;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 use App\Services\CapabilityMatrix;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 
 class UserController extends Controller
 {
@@ -87,20 +89,9 @@ class UserController extends Controller
         }, 'users.csv', ['Content-Type' => 'text/csv']);
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'username' => 'nullable|string|max:100|unique:users',
-            'employee_id' => 'nullable|string|max:50|unique:users',
-            'phone' => 'nullable|string|max:20',
-            'department_id' => 'nullable|exists:departments,id',
-            'team_id' => 'nullable|exists:teams,id',
-            'designation_id' => 'nullable|exists:designations,id',
-            'roles' => 'required|array|min:1',
-            'roles.*' => 'string',
-        ]);
+        $validated = $request->validated();
 
         $roles = $validated['roles'];
         $isCreatingHR = in_array('hr', $roles) || in_array('super_admin', $roles);
@@ -154,23 +145,12 @@ class UserController extends Controller
         return response()->json($user);
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdateUserRequest $request, string $id)
     {
         $user = User::findOrFail($id);
         $before = $user->toArray();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'username' => 'nullable|string|max:100|unique:users,username,' . $user->id,
-            'employee_id' => 'nullable|string|max:50|unique:users,employee_id,' . $user->id,
-            'phone' => 'nullable|string|max:20',
-            'department_id' => 'nullable|exists:departments,id',
-            'team_id' => 'nullable|exists:teams,id',
-            'designation_id' => 'nullable|exists:designations,id',
-            'roles' => 'sometimes|array|min:1',
-            'roles.*' => 'string',
-        ]);
+        $validated = $request->validated();
 
         // Access check for updating roles
         if (isset($validated['roles'])) {

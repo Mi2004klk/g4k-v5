@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Holiday;
 use Illuminate\Support\Facades\Cache;
+use App\Http\Requests\StoreHolidayRequest;
 
 class HolidayController extends Controller
 {
@@ -29,14 +30,9 @@ class HolidayController extends Controller
         return response()->json($holidays);
     }
 
-    public function store(Request $request)
+    public function store(StoreHolidayRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'date' => 'required|date',
-            'recurring' => 'boolean',
-            'description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $holiday = Holiday::create($validated);
         $this->clearHolidayCache($holiday->date);

@@ -1121,48 +1121,48 @@ to change password or complete onboarding can still refresh their token, bypassi
 
 ## PHASE 22 — Form Validation & Input Security
 
-### VAL-1: No Form Request classes exist — validation is all inline (MEDIUM)
+### ✅ VAL-1: No Form Request classes exist — validation is all inline (MEDIUM)
 **What's broken:** `app/Http/Requests/` doesn't exist. All validation is inline `$request->validate()`.
 This is functional but makes validation rules hard to reuse and audit.
 **Fix (incremental):**
-- [ ] Create Form Request classes for the most critical/most-complex endpoints:
+- [x] Create Form Request classes for the most critical/most-complex endpoints:
   `StoreUserRequest`, `UpdateUserRequest`, `StoreLeaveRequestRequest`, `CorrectAttendanceRequest`,
   `StoreHolidayRequest`, `BulkUpdateSettingsRequest`.
-- [ ] Move inline validation rules into the Form Request classes. This is an incremental refactor —
+- [x] Move inline validation rules into the Form Request classes. This is an incremental refactor —
   do it AFTER fixing the bugs below (which can be done inline first).
 **Acceptance:** Critical endpoints have reusable, testable Form Request validation.
 
-### VAL-2: `employee_code` written but not in `$fillable` (HIGH)
+### ✅ VAL-2: `employee_code` written but not in `$fillable` (HIGH)
 **What's broken:** `UserController::store` (line 131) writes `employee_code`, but `User::$fillable`
 doesn't include it — silently dropped. Then `buildIndexQuery` (line 35) tries to search by
 `employee_code` → query references a non-existent column → SQL error.
 **Fix:**
-- [ ] Either add `employee_code` to the `users` migration + `$fillable` + `$hidden`, OR remove all
+- [x] Either add `employee_code` to the `users` migration + `$fillable` + `$hidden`, OR remove all
   references to `employee_code` (use `employee_id` consistently). Recommended: standardize on
   `employee_id` (already the column name) and remove `employee_code`.
 **Acceptance:** User creation + search work without SQL errors.
 
-### VAL-3: Leave request reason has no max length (MEDIUM)
+### ✅ VAL-3: Leave request reason has no max length (MEDIUM)
 **Fix:**
-- [ ] `LeaveRequestController::store`: change `'reason' => 'required|string'` →
+- [x] `LeaveRequestController::store`: change `'reason' => 'required|string'` →
   `'reason' => 'required|string|max:1000'`.
 
-### VAL-4: Settings values have no type/size constraint (MEDIUM)
+### ✅ VAL-4: Settings values have no type/size constraint (MEDIUM)
 **Fix:**
-- [ ] `SettingsController::bulkUpdate`: validate each `value` is a scalar string with `max:500`.
+- [x] `SettingsController::bulkUpdate`: validate each `value` is a scalar string with `max:500`.
 
-### VAL-5: Attendance export date params not validated (LOW)
+### ✅ VAL-5: Attendance export date params not validated (LOW)
 **Fix:**
-- [ ] `AttendanceController::export`: validate `start_date` and `end_date` as `nullable|date`.
+- [x] `AttendanceController::export`: validate `start_date` and `end_date` as `nullable|date`.
 
-### VAL-6: Attendance graph params not enum-validated (LOW)
+### ✅ VAL-6: Attendance graph params not enum-validated (LOW)
 **Fix:**
-- [ ] `AttendanceController::hrGraph`: validate `mode` as `in:weekly,monthly` and `groupBy` as
+- [x] `AttendanceController::hrGraph` & `adminGraph`: validate `mode` as `in:weekly,monthly` and `groupBy` as
   `in:date,employee`. Validate `$date` as `date` before `Carbon::parse`.
 
-### VAL-7: `sync` events type not enum-validated (MEDIUM)
+### ✅ VAL-7: `sync` events type not enum-validated (MEDIUM)
 **Fix:**
-- [ ] `AttendanceController::sync`: change `events.*.type` validation from `string` to
+- [x] `AttendanceController::sync`: change `events.*.type` validation from `string` to
   `in:clock_in,clock_out,break_start,break_end`.
 
 ---
