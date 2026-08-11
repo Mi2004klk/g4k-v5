@@ -1330,7 +1330,7 @@ For EACH base workflow below, verify and fix if missing:
 
 ---
 
-# FINAL ACCEPTANCE — Base Workflows + Attendance Production-Ready
+# ✅ FINAL ACCEPTANCE — Base Workflows + Attendance Production-Ready
 
 The application is production-ready for daily office usage when ALL of the following are true:
 
