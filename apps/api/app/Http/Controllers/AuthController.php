@@ -154,7 +154,8 @@ class AuthController extends Controller
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
             return \Illuminate\Support\Facades\DB::table('settings')
                 ->where('category', 'security')
-                ->pluck('value', 'key');
+                ->pluck('value', 'key')
+                ->toArray();
         });
             
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
