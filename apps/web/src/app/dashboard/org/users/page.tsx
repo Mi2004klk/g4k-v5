@@ -576,7 +576,7 @@ export default function UsersPage() {
       </Card>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
+        <DialogContent aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Add New Employee</DialogTitle>
             <DialogDescription className="sr-only">Create a new employee record.</DialogDescription>

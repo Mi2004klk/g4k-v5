@@ -316,7 +316,7 @@ export function DataTable<TData, TValue>({
       <div
         ref={tableContainerRef}
         onScroll={handleScroll}
-        className="rounded-md border bg-background relative h-[600px] overflow-auto"
+        className="rounded-md border bg-background relative h-[400px] md:h-[600px] overflow-auto"
       >
         {!isMobile ? (
           <table className="w-full caption-bottom text-sm grid">

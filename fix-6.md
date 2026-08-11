@@ -1227,23 +1227,23 @@ Combined with the access token in localStorage, any XSS can exfiltrate the sessi
 
 ## PHASE 24 — Console Errors & React Warnings
 
-### UI-1: Missing DialogDescription/SheetDescription on many dialogs (MEDIUM)
+### ✅ UI-1: Missing DialogDescription/SheetDescription on many dialogs (MEDIUM)
 **What's broken:** Radix Dialog/Sheet emit a console warning when `DialogContent`/`SheetContent`
 lacks `aria-describedby` or a `*Description` child. ~16 of 19 dialog-using files omit it.
 **Fix:**
-- [ ] Audit every `<DialogContent>` and `<SheetContent>` in base workflows:
+- [x] Audit every `<DialogContent>` and `<SheetContent>` in base workflows:
   `org/users/page.tsx`, `profile/page.tsx`, `hr-correction-dialog.tsx`, `time-clock-widget.tsx`,
   `leave-approval-actions-cell.tsx`, `attendance/page.tsx` (Request Leave dialog),
   `dashboard/layout.tsx` (mobile nav Sheet).
-- [ ] Add `<DialogDescription className="sr-only">...</DialogDescription>` (or `aria-describedby=""`
+- [x] Add `<DialogDescription className="sr-only">...</DialogDescription>` (or `aria-describedby=""`
   to suppress when no description is needed).
 **Acceptance:** Zero Radix "Missing Description" console warnings.
 
-### UI-2: DataTable fixed height on mobile (LOW)
+### ✅ UI-2: DataTable fixed height on mobile (LOW)
 **What's broken:** `data-table.tsx:319`: fixed `h-[600px]` container — nested scrolling on small
 viewports.
 **Fix:**
-- [ ] Make the height responsive: `h-[400px] md:h-[600px]` or use `max-h-[calc(100vh-200px)]`.
+- [x] Make the height responsive: `h-[400px] md:h-[600px]` or use `max-h-[calc(100vh-200px)]`.
 
 ---
 
