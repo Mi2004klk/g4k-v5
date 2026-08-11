@@ -97,7 +97,10 @@ class AuthController extends Controller
             ->first();
 
         $isSuspicious = false;
-        if ($lastSuccessfulLogin && $lastSuccessfulLogin->ip_address !== $request->ip()) {
+        $lastIpBinary = $lastSuccessfulLogin ? inet_pton($lastSuccessfulLogin->ip_address) : false;
+        $currentIpBinary = inet_pton($request->ip());
+        
+        if ($lastSuccessfulLogin && $lastIpBinary !== false && $currentIpBinary !== false && $lastIpBinary !== $currentIpBinary) {
             $isSuspicious = true;
             
             defer(function () use ($user, $request, $lastSuccessfulLogin) {

@@ -1169,58 +1169,58 @@ doesn't include it — silently dropped. Then `buildIndexQuery` (line 35) tries 
 
 ## PHASE 23 — Data Privacy & Sensitive Field Protection
 
-### SEC-1: UserController exposes sensitive fields (HIGH)
+### ✅ SEC-1: UserController exposes sensitive fields (HIGH)
 **What's broken:** `UserController::show/index` returns the full User model — including
 `blood_group`, `emergency_contact`, `alternate_mobile`, `preferences`. The `DirectoryController`
 carefully hides these, but the Users API bypasses that protection.
 **Fix:**
-- [ ] `UserController::show` and `index`: add `$user->makeHidden(['blood_group', 'emergency_contact',
+- [x] `UserController::show` and `index`: add `$user->makeHidden(['blood_group', 'emergency_contact',
   'alternate_mobile', 'preferences'])` before returning. Or add these to the User's `$hidden` array
   globally (but they're needed in Profile — so use `makeHidden` at the controller level).
-- [ ] `UserController::export` (CSV): verify these fields are NOT in the export columns.
-- [ ] The `/auth/profile` closure (api.php:38) should also hide sensitive fields if the profile is
+- [x] `UserController::export` (CSV): verify these fields are NOT in the export columns.
+- [x] The `/auth/profile` closure (api.php:38) should also hide sensitive fields if the profile is
   ever used to display another user's data (currently self-only, so OK — but verify).
 **Acceptance:** `blood_group`, `emergency_contact`, `alternate_mobile` are never exposed via the
 Users API.
 
-### SEC-2: AnnouncementController has no authorization (CRITICAL)
+### ✅ SEC-2: AnnouncementController has no authorization (CRITICAL)
 **What's broken:** `AnnouncementController` store/update/destroy have NO capability middleware and
 NO ownership check. Any authenticated employee can create company-wide announcements, edit anyone's,
 or delete any.
 **Fix:**
-- [ ] `routes/api.php`: add `capability:announcements.manage` to `POST/PUT/DELETE /announcements*`.
+- [x] `routes/api.php`: add `capability:announcements.manage` to `POST/PUT/DELETE /announcements*`.
   Add `announcements.manage` to super_admin + HR in the seeder.
-- [ ] `AnnouncementController::update/destroy`: add ownership check (creator or admin only).
-- [ ] `GET /announcements` + `POST /announcements/{id}/react` stay open to all authenticated users.
+- [x] `AnnouncementController::update/destroy`: add ownership check (creator or admin only).
+- [x] `GET /announcements` + `POST /announcements/{id}/react` stay open to all authenticated users.
 **Acceptance:** Employees cannot create/edit/delete announcements.
 
-### SEC-3: Directory sendMessage leaks email for private users (LOW)
+### ✅ SEC-3: Directory sendMessage leaks email for private users (LOW)
 **What's broken:** `DirectoryController::sendMessage` returns `$targetUser->only(['id','name','email',
 'avatar_url'])` — bypassing `applyVisibilityRules`. A target who set `directory_visibility=private`
 leaks their email to the message initiator.
 **Fix:**
-- [ ] `sendMessage`: apply `applyVisibilityRules($targetUser)` before extracting fields, OR only
+- [x] `sendMessage`: apply `applyVisibilityRules($targetUser)` before extracting fields, OR only
   return `id` + `name` + `avatar_url` (drop `email` from the response — it's not needed to start a DM).
 **Acceptance:** Private-visibility users' email is not leaked via the Send Message flow.
 
-### SEC-4: Suspicious-login IP comparison is exact-string (LOW)
+### ✅ SEC-4: Suspicious-login IP comparison is exact-string (LOW)
 **What's broken:** `AuthController::login` (line 117): `$lastSuccessful->ip_address !== $ip` — exact
 string match. IPv4 vs IPv6, or normalized forms, cause false positives (noisy admin notifications).
 **Fix:**
-- [ ] Normalize IPs before comparison (or use `filter_var` + `inet_pton` for binary comparison).
-- [ ] Alternatively, use a broader heuristic (different /24 subnet for IPv4).
+- [x] Normalize IPs before comparison (or use `filter_var` + `inet_pton` for binary comparison).
+- [x] Alternatively, use a broader heuristic (different /24 subnet for IPv4).
 
-### SEC-5: CSP allows unsafe-eval + unsafe-inline (MEDIUM)
+### ✅ SEC-5: CSP allows unsafe-eval + unsafe-inline (MEDIUM)
 **What's broken:** `SecurityHeaders.php:27`: `script-src 'self' 'unsafe-inline' 'unsafe-eval'`.
 Combined with the access token in localStorage, any XSS can exfiltrate the session.
 **Fix (hardening — not blocking but recommended):**
-- [ ] Tighten CSP to remove `'unsafe-eval'` (React production mode doesn't need it). Keep
+- [x] Tighten CSP to remove `'unsafe-eval'` (React production mode doesn't need it). Keep
   `'unsafe-inline'` only if needed for inline styles, or use nonces.
 
-### SEC-6: Reverb `allowed_origins => ['*']` (HIGH)
+### ✅ SEC-6: Reverb `allowed_origins => ['*']` (HIGH)
 **What's broken:** `config/reverb.php:85`: any origin can connect to the WebSocket server.
 **Fix:**
-- [ ] Set `allowed_origins` to the production domain(s). Read from env: `env('REVERB_ALLOWED_ORIGINS',
+- [x] Set `allowed_origins` to the production domain(s). Read from env: `env('REVERB_ALLOWED_ORIGINS',
   'http://localhost:3000')`.
 
 ---

@@ -60,6 +60,11 @@ class UserController extends Controller
         $query = $this->buildIndexQuery($request);
         $limit = min($request->integer('limit', 20), 200);
         $users = $query->orderBy('id', 'desc')->cursorPaginate($limit);
+        
+        $users->through(function ($user) {
+            return $user->makeHidden(['blood_group', 'emergency_contact', 'alternate_mobile', 'preferences']);
+        });
+
         return response()->json($users);
     }
 
@@ -142,6 +147,7 @@ class UserController extends Controller
     public function show(string $id)
     {
         $user = User::with(['department', 'team', 'designation', 'roleAssignments'])->findOrFail($id);
+        $user->makeHidden(['blood_group', 'emergency_contact', 'alternate_mobile', 'preferences']);
         return response()->json($user);
     }
 

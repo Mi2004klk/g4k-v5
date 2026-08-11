@@ -140,7 +140,7 @@ class DirectoryController extends Controller
         return response()->json([
             'message' => 'Direct conversation initialized',
             'conversation_id' => $conversation,
-            'target_user' => $targetUser->only(['id', 'name', 'email', 'avatar_url']),
+            'target_user' => $targetUser->only(['id', 'name', 'avatar_url']),
         ]);
     }
 }
