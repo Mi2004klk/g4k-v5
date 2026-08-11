@@ -72,6 +72,13 @@ class User extends Authenticatable
         return $this->hasMany(RoleAssignment::class);
     }
 
+    public function getCachedRoles()
+    {
+        return cache()->remember("user_{$this->id}_roles", 3600, function () {
+            return $this->roleAssignments()->pluck('role')->toArray();
+        });
+    }
+
     public function pins()
     {
         return $this->hasMany(Pin::class);
