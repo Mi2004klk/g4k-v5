@@ -486,6 +486,7 @@
 
 ### 8.13 Global UI & Design
 - [x] **8.13.1** [web/ui] Remove all hardcoded violet focus rings (`focus-visible:ring-violet-500`) across the entire UI component library (`@g4k/ui`). Replace them with a clean, subtle 1px neutral focus state (`focus-visible:ring-1 focus-visible:ring-ring`) and remap `--color-ring` in `globals.css` to `--color-border-strong`.
+- [x] **8.13.2** [web] Fix duplicate breadcrumbs across the application. Removed `<Breadcrumb />` from the reusable `PageContainer` component and centralized it exclusively within `dashboard/layout.tsx`. This guarantees exactly one breadcrumb is rendered consistently on 100% of the pages.
 
 ---
 
@@ -690,3 +691,8 @@ Completing every checkbox yields a fully wired, polished, responsive, fast, cons
 intuitive, colorful, vibrant, and deployment-ready application — reliable enough for continuous
 real-world production use, with no unnecessary loading screens and no known duplicate, overlapping,
 dead, or disconnected functionality.
+
+### Recent Hotfixes
+- [x] **HF-1** [web] Fixed duplicate breadcrumbs issue globally across the dashboard routes.
+- [x] **HF-2** [api] Fixed 500 Internal Server Errors causing hydration mismatches by sending 'Accept: application/json' headers from the Next.js API client, enabling Laravel to correctly handle unauthorized requests.
+- [x] **HF-3** [web] Realigned the Profile page and removed extraneous headers for clean responsive rendering.

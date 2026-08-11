@@ -27,6 +27,10 @@ export async function apiFetch<T = any>(
     headers.set("Content-Type", "application/json");
   }
 
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "application/json");
+  }
+
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }

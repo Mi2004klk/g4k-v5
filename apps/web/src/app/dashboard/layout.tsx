@@ -549,7 +549,7 @@ export default function DashboardLayout({
                 )}
               >
                 <UserCircle className="w-5 h-5 shrink-0" />
-                <span>My Profile</span>
+                <span>Profile</span>
               </Link>
             </nav>
           </div>
