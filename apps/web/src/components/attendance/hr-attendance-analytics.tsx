@@ -17,7 +17,7 @@ export function HrAttendanceAnalytics() {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      return apiFetch(`/attendance/admin/overview?${params.toString()}`);
+      return apiFetch(`/attendance/hr/today?${params.toString()}`);
     },
     staleTime: 30000,
     refetchInterval: 30000,

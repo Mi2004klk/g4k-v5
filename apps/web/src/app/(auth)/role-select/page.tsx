@@ -15,11 +15,14 @@ export default function RoleSelectPage() {
   const { user, setAuth, token } = useAuthStore();
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
+  const autoSelectedRef = useState({ done: false })[0];
+
   useEffect(() => {
-    if (user && user.roles && user.roles.length === 1) {
+    if (user && user.roles && user.roles.length === 1 && !autoSelectedRef.done) {
+      autoSelectedRef.done = true;
       handleSelectRole(user.roles[0]);
     }
-  }, [user]);
+  }, [user?.id, user?.roles?.length]);
 
   async function handleSelectRole(role: string) {
     setIsLoading(role);

@@ -5,17 +5,31 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Download } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { toast } from "sonner";
 import { Card, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { DataTable } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
+import { getAuthToken } from "@/lib/auth-store";
 
 import { useUrlState } from "@/hooks/use-url-state";
 
 export function AuditLogTable() {
   const [action, setAction] = useUrlState("action", "");
   const [userId, setUserId] = useUrlState("user_id", "");
-  const filters = { action, user_id: userId };
+  const [startDate, setStartDate] = useUrlState("start_date", "");
+  const [endDate, setEndDate] = useUrlState("end_date", "");
+  const filters = { action, user_id: userId, start_date: startDate, end_date: endDate };
+  const [isExporting, setIsExporting] = useState(false);
+
+  const { data: usersResponse } = useQuery({
+    queryKey: ["users-list"],
+    queryFn: () => apiFetch("/users?per_page=1000"),
+  });
+  const users = usersResponse?.data || [];
+  const userOptions = [{ label: "All Users", value: "" }, { label: "System", value: "system" }].concat(
+    users.map((u: any) => ({ label: u.name, value: String(u.id) }))
+  );
   
   const { data: logsData, isLoading } = useQuery({
     queryKey: ["audit-logs", filters],
@@ -23,38 +37,30 @@ export function AuditLogTable() {
       const params = new URLSearchParams();
       if (filters.action) params.append("action", filters.action);
       if (filters.user_id) params.append("user_id", filters.user_id);
+      if (filters.start_date) params.append("start_date", filters.start_date);
+      if (filters.end_date) params.append("end_date", filters.end_date);
       return apiFetch(`/audit-logs?${params.toString()}`);
     },
   });
 
   const logs = logsData?.data || [];
 
-  const handleExport = () => {
-    const params = new URLSearchParams();
-    if (filters.action) params.append("action", filters.action);
-    if (filters.user_id) params.append("user_id", filters.user_id);
-    
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/audit-logs/export?${params.toString()}`;
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    
-    // Auth header for export usually requires cookie or token in URL. 
-    // If it's cookie-based (Sanctum), just opening it might work if credentials are included.
-    // However, fetch and blob is safer for auth.
-    fetch(url, {
-      headers: { "Authorization": `Bearer ${localStorage.getItem("g4k_token")}` }
-    })
-    .then(res => res.blob())
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "audit-logs.csv";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    });
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const params = new URLSearchParams();
+      if (filters.action) params.append("action", filters.action);
+      if (filters.user_id) params.append("user_id", filters.user_id);
+      if (filters.start_date) params.append("start_date", filters.start_date);
+      if (filters.end_date) params.append("end_date", filters.end_date);
+      
+      await apiFetch(`/audit-logs/export?${params.toString()}`, { method: "POST" });
+      toast.success("Export queued. You will be notified when it's ready.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start export.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const columns = [
@@ -106,16 +112,31 @@ export function AuditLogTable() {
                 key: "user_id",
                 label: "User",
                 type: "select",
-                options: [{ label: "All Users", value: "" }, { label: "My Events", value: "me" }], // Placeholder for users
+                options: userOptions,
                 value: filters.user_id,
                 onChange: (v) => setUserId(v)
               }
             ]}
           />
         </div>
-        <Button variant="outline" size="sm" onClick={handleExport} className="h-9">
+        <div className="flex items-center gap-2 text-sm text-neutral-500">
+          <input
+            type="date"
+            value={filters.start_date}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="h-9 px-3 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+          />
+          <span>to</span>
+          <input
+            type="date"
+            value={filters.end_date}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="h-9 px-3 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+          />
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap">
           <Download className="w-4 h-4 mr-2" />
-          Export CSV
+          {isExporting ? "Queuing..." : "Export CSV"}
         </Button>
       </div>
 

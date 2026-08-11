@@ -61,7 +61,7 @@ class AlertMissedClockIn implements ShouldQueue
                 if (!$onLeave && !$isHoliday) {
                     // Notify HR for this department
                     $hrUsers = User::whereHas('roles', function($q) {
-                        $q->whereIn('role', ['admin', 'super_admin']);
+                        $q->where('role', 'super_admin');
                     })->orWhere(function($q) use ($user) {
                         $q->where('department_id', $user->department_id)
                           ->whereHas('roles', function($q2) {

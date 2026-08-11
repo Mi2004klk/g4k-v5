@@ -179,6 +179,7 @@ export function HrCorrectionDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
+              <DialogDescription className="sr-only">Review and process this attendance correction request.</DialogDescription>
               <Clock className="w-5 h-5 text-violet-500" />
               Manual Correction
             </DialogTitle>

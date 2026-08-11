@@ -19,7 +19,6 @@ class NotificationService
             'link' => $link,
         ]);
 
-        event(new NotificationCreated($notification));
 
         return $notification;
     }

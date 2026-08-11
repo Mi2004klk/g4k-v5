@@ -21,7 +21,7 @@ class AttendanceDemoDataSeeder extends Seeder
         $today = Carbon::today();
         $holidays = DB::table('holidays')->pluck('date')->map(fn($d) => substr($d, 5, 5))->toArray();
 
-        for ($i = 30; $i >= 0; $i--) {
+        for ($i = 7; $i >= 0; $i--) {
             $date = $today->copy()->subDays($i);
             
             if ($date->isSunday()) {

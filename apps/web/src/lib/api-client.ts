@@ -1,11 +1,11 @@
-import { useAuthStore } from "./auth-store";
+import { useAuthStore, getAuthToken } from "./auth-store";
 import { offlineEngine } from "./offline-engine";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = "/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export function getToken(): string | null {
-  return useAuthStore.getState().token;
+  return getAuthToken();
 }
 
 async function sleep(ms: number) {
@@ -17,7 +17,7 @@ export async function apiFetch<T = any>(
   options: RequestInit = {},
   bypassQueue = false
 ): Promise<T> {
-  const token = useAuthStore.getState().token;
+  const token = getAuthToken();
 
   const headers = new Headers(options.headers || {});
   
@@ -41,7 +41,7 @@ export async function apiFetch<T = any>(
     return { queued: true } as any;
   }
 
-  const maxRetries = isGet ? 3 : 0;
+  const maxRetries = 0;
   let attempt = 0;
   
   while (attempt <= maxRetries) {
@@ -90,11 +90,8 @@ export async function apiFetch<T = any>(
             // refresh failed — fall through to clearing auth
           }
 
-          // Refresh failed or retry still 401 → clear and redirect (once, non-blocking).
+          // Refresh failed or retry still 401 → clear (AuthGuard will redirect).
           useAuthStore.getState().clearAuth();
-          if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
-            window.location.href = "/login";
-          }
           throw new Error("Session expired. Please log in again.");
         }
 

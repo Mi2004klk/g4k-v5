@@ -1,3 +1,5 @@
+> **ARCHIVED:** This file is stale and superseded by context.md and ix-3.md.
+
 # Implementation Plan — Base Module (Phase 1) + Attendance Module (Phase 2)
 ## Games4King Workplace OS — Production-Ready Finalization (EXPANDED)
 
@@ -1665,3 +1667,4 @@ After all ~280 tasks complete + verified:
 **Remaining M1 modules** (Projects/Tasks, Chat, full Reports) → `plan-future-modules.md`. The
 architecture, design system, and component library built in these ~280 tasks are the foundation — those
 modules compose from the same primitives.
+

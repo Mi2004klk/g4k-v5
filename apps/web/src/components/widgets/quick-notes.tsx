@@ -2,17 +2,20 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { StickyNote, Plus, Trash2 } from "lucide-react";
+import { StickyNote, Plus, Trash2, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
+import { useUIStore } from "@/lib/ui-store";
 
 export function QuickNotes() {
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
+  const { widgetStates, toggleWidgetCollapse } = useUIStore();
+  const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
 
-  const { data: notes = [] } = useQuery({
+  const { data: notes = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["quick-notes"],
     queryFn: () => apiFetch("/quick-notes"),
   });
@@ -40,48 +43,77 @@ export function QuickNotes() {
   });
 
   return (
-    <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-bold flex items-center gap-2">
-          <StickyNote className="w-4 h-4 text-amber-500" />
-          Quick Scratchpad
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Type a personal note..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="text-xs h-8"
-          />
-          <Button
-            size="sm"
-            onClick={() => createMutation.mutate(text)}
-            disabled={!text.trim()}
-            className="h-8 bg-amber-500 hover:bg-amber-600 text-white"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-
-        <div className="space-y-2 max-h-[200px] overflow-y-auto">
-          {notes.map((n: any) => (
-            <div
-              key={n.id}
-              className="p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 text-xs flex items-start justify-between gap-2 border border-amber-100 dark:border-amber-900/50"
-            >
-              <p className="text-neutral-800 dark:text-neutral-200">{n.body}</p>
-              <button
-                onClick={() => deleteMutation.mutate(n.id)}
-                className="text-neutral-400 hover:text-rose-500 transition-colors"
+    <Collapsible open={!isCollapsed} onOpenChange={() => toggleWidgetCollapse("quick-notes")}>
+      <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <StickyNote className="w-4 h-4 text-amber-500" />
+            Quick Scratchpad
+          </CardTitle>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">
+              {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            </Button>
+          </CollapsibleTrigger>
+        </CardHeader>
+        <CollapsibleContent>
+          <CardContent className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Type a personal note..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                className="text-xs h-8"
+              />
+              <Button
+                size="sm"
+                onClick={() => createMutation.mutate(text)}
+                disabled={!text.trim()}
+                className="h-8 bg-amber-500 hover:bg-amber-600 text-white"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+                <Plus className="w-3.5 h-3.5" />
+              </Button>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {isLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map(i => (
+                    <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : isError ? (
+                <div className="flex flex-col items-center justify-center p-4 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
+                  <AlertTriangle className="w-5 h-5 text-rose-400" />
+                  <p className="text-[10px] font-medium text-rose-500">Failed to load notes</p>
+                  <Button variant="outline" size="sm" onClick={() => refetch()} className="h-5 text-[10px] px-2">
+                    Retry
+                  </Button>
+                </div>
+              ) : notes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-4 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
+                  <p className="text-xs font-medium text-neutral-400">No notes yet</p>
+                </div>
+              ) : (
+                notes.map((n: any) => (
+                  <div
+                    key={n.id}
+                    className="p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 text-xs flex items-start justify-between gap-2 border border-amber-100 dark:border-amber-900/50"
+                  >
+                    <p className="text-neutral-800 dark:text-neutral-200">{n.body}</p>
+                    <button
+                      onClick={() => deleteMutation.mutate(n.id)}
+                      className="text-neutral-400 hover:text-rose-500 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }

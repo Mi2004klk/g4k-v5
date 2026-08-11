@@ -22,6 +22,10 @@ import {
   Moon,
   CalendarDays,
   Folder,
+  FolderKanban,
+  CalendarCheck,
+  Megaphone,
+  BarChart3,
   CheckSquare,
   MessageSquare,
   ShieldAlert,
@@ -61,30 +65,30 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@g4k/ui/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 
 export const navGroups = [
-  { label: "Workspace", items: [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Chat & Hub", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
-  ]},
   { label: "My Work", items: [
-    { name: "Attendance", href: "/dashboard/attendance", icon: Clock },
-    { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "leave.request-self" },
-    { name: "Projects", href: "/dashboard/projects", icon: Folder, capability: "projects.manage" },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "My Attendance", href: "/dashboard/attendance", icon: CalendarCheck },
+    { name: "Projects", href: "/dashboard/projects", icon: FolderKanban, capability: "projects.manage" },
     { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, capability: "tasks.submit" },
+    { name: "Chat", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
+    { name: "Announcement", href: "/dashboard/announcements", icon: Megaphone },
+    { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "leave.request-self" },
+    { name: "Reports", href: "/dashboard/reports", icon: BarChart3, capability: "reports.view" },
   ]},
   { label: "People", items: [
     { name: "Directory", href: "/dashboard/directory", icon: Users, capability: "directory.view" },
-  ]},
-  { label: "Administration", items: [
     { name: "Employees", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
     { name: "Team Attendance", href: "/dashboard/org/attendance", icon: Clock, capability: "hr.view-team-attendance" },
     { name: "Org Leave Approvals", href: "/dashboard/org/leave", icon: CalendarDays, capability: "leave.approve-employee" },
     { name: "Departments", href: "/dashboard/org/departments", icon: Building2, capability: "departments.manage" },
     { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.manage" },
+  ]},
+  { label: "Administration", items: [
     { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
     { name: "Audit Log", href: "/dashboard/audit", icon: ShieldAlert, capability: "audit.view" },
   ]},
   { label: "Account", items: [
-    { name: "Profile", href: "/dashboard/profile", icon: UserCircle, capability: "profile.edit" },
+    { name: "My Profile", href: "/dashboard/profile", icon: UserCircle, capability: "profile.edit" },
   ]},
 ];
 
@@ -106,14 +110,16 @@ const accentClasses: Record<string, { bg: string; text: string; bgDark: string; 
 function getAccent(href: string) {
   let color = "violet";
   if (href === "/dashboard") color = "blue";
-  else if (href.startsWith("/dashboard/chat")) color = "violet";
-  else if (href.startsWith("/dashboard/projects")) color = "orange";
+  else if (href.startsWith("/dashboard/attendance")) color = "green";
+  else if (href.startsWith("/dashboard/projects")) color = "indigo";
   else if (href.startsWith("/dashboard/tasks")) color = "green";
-  else if (href.startsWith("/dashboard/attendance")) color = "emerald";
+  else if (href.startsWith("/dashboard/chat")) color = "pink";
+  else if (href.startsWith("/dashboard/announcements")) color = "orange";
   else if (href.startsWith("/dashboard/leave")) color = "amber";
+  else if (href.startsWith("/dashboard/reports")) color = "violet";
   else if (href.startsWith("/dashboard/directory")) color = "pink";
   else if (href.startsWith("/dashboard/org/users")) color = "indigo";
-  else if (href.startsWith("/dashboard/org/attendance")) color = "emerald";
+  else if (href.startsWith("/dashboard/org/attendance")) color = "green";
   else if (href.startsWith("/dashboard/org/leave")) color = "amber";
   else if (href.startsWith("/dashboard/org/departments")) color = "indigo";
   else if (href.startsWith("/dashboard/org/designations")) color = "indigo";
@@ -213,20 +219,37 @@ export default function DashboardLayout({
         <HelpOverlay />
         <CommandPalette />
         <div className={cn(
-          "grid h-screen w-full bg-app overflow-hidden transition-[grid-template-columns] duration-300 ease-[cubic-bezier(.4,0,.2,1)]",
+          "grid h-screen w-full bg-app overflow-hidden transition-[grid-template-columns] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]",
           sidebarState === "expanded" ? "md:grid-cols-[264px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[72px_1fr]" : "grid-cols-1"
         )}>
           {/* Desktop Sidebar */}
           <aside className={cn(
-            "bg-surface border-r border-border relative z-20 overflow-hidden h-full transition-[width] duration-200 ease-[cubic-bezier(.4,0,.2,1)]",
-            "hidden md:flex flex-col"
+            "bg-surface border-r border-border relative z-20 h-full transition-[width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]",
+            sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col"
           )}>
             <div className="flex items-center h-16 shrink-0 px-4 gap-3 border-b border-border">
-              <Image src="/icon.png" alt="Logo" width={isCollapsed ? 28 : 32} height={isCollapsed ? 28 : 32} className="rounded-md shrink-0 transition-all duration-200" priority />
-              {!isCollapsed && (
-                <span className="font-display font-bold text-lg text-primary tracking-tight whitespace-nowrap transition-opacity duration-200">
-                  Workplace OS
-                </span>
+              {isCollapsed ? (
+                <Tooltip delayDuration={150}>
+                  <TooltipTrigger asChild>
+                    <div className="relative group w-8 h-8 flex items-center justify-center cursor-pointer ml-1" onClick={cycleSidebarState}>
+                      <Image src="/icon.png" alt="Logo" width={32} height={32} className="rounded-md absolute inset-0 transition-opacity duration-[220ms] group-hover:opacity-0" priority />
+                      <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-primary absolute opacity-0 group-hover:opacity-100 transition-opacity duration-[220ms]" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="text-xs">Expand sidebar (Ctrl+B)</TooltipContent>
+                </Tooltip>
+              ) : (
+                <div className="flex items-center gap-3 w-full">
+                  <Tooltip delayDuration={150}>
+                    <TooltipTrigger asChild>
+                      <button onClick={cycleSidebarState} className="text-neutral-500 hover:text-primary transition-colors flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-sm">
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-xs">Collapse sidebar (Ctrl+B)</TooltipContent>
+                  </Tooltip>
+                  <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={140} height={32} className="object-contain h-8 w-auto transition-opacity duration-[220ms]" priority />
+                </div>
               )}
             </div>
 
@@ -246,8 +269,8 @@ export default function DashboardLayout({
               
               {pins.length > 0 && (
                 <div className="mt-4">
-                  {!isCollapsed && <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-muted uppercase transition-opacity duration-200">Pinned</div>}
-                  {isCollapsed && <div className="h-px bg-border mx-2 my-3 transition-opacity duration-200" />}
+                  {!isCollapsed && <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-neutral-400 dark:text-neutral-500 uppercase transition-opacity duration-[120ms]">Pinned</div>}
+                  {isCollapsed && <div className="h-px bg-border mx-2 my-3 transition-opacity duration-[120ms]" />}
                   <div className="flex flex-col gap-1">
                     {pins.map((pin: any) => {
                       let navItem: any = null;
@@ -295,15 +318,6 @@ export default function DashboardLayout({
                 </TooltipTrigger>
                 {isCollapsed && <TooltipContent side="right" className="text-xs">Log out</TooltipContent>}
               </Tooltip>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={cycleSidebarState}
-                className="hidden md:flex ml-auto self-end text-muted hover:text-primary absolute -right-[18px] top-20 bg-surface border border-border shadow-e1 rounded-full w-9 h-9 z-30 transition-transform active:scale-95"
-              >
-                {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-              </Button>
             </div>
           </aside>
 
@@ -313,19 +327,21 @@ export default function DashboardLayout({
               <div className="flex items-center gap-2 md:gap-4">
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="md:hidden shrink-0">
+                    <Button variant="ghost" size="icon" className="md:hidden shrink-0" aria-label="Toggle Menu">
                       <Menu className="w-5 h-5" />
                     </Button>
                   </SheetTrigger>
-                    <SheetContent side="left" className="w-[280px] p-0 flex flex-col bg-surface border-border">
+                    <SheetContent side="left" className="w-full sm:max-w-full h-full max-h-full p-0 flex flex-col bg-surface border-none transition-transform duration-[280ms] cubic-bezier(0.4,0,0.2,1)">
                       <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                      <div className="flex items-center h-16 shrink-0 px-6 gap-3 border-b border-border">
-                        <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-md" priority />
-                        <span className="font-display font-bold text-lg text-primary tracking-tight">
-                          Workplace OS
-                        </span>
+                      <div className="flex items-center justify-between h-16 shrink-0 px-6 border-b border-border bg-surface-2/40">
+                        <div className="flex items-center gap-3">
+                          <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-md" priority />
+                          <span className="font-display font-bold text-lg text-primary tracking-tight">
+                            Workplace OS
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1 thin-scrollbar">
+                      <div className="flex-1 overflow-y-auto py-4 px-4 flex flex-col gap-1 thin-scrollbar">
                         {navGroups.map(group => (
                           <NavGroup
                             key={group.label}
@@ -341,7 +357,7 @@ export default function DashboardLayout({
                         
                         {pins.length > 0 && (
                           <div className="mt-4">
-                            <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-muted uppercase">Pinned</div>
+                            <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-neutral-400 dark:text-neutral-500 uppercase">Pinned</div>
                             <div className="flex flex-col gap-1">
                               {pins.map((pin: any) => {
                                 let navItem: any = null;
@@ -383,29 +399,17 @@ export default function DashboardLayout({
                       </div>
                     </SheetContent>
                   </Sheet>
-
-                <button
-                  onClick={() => {
-                    const event = new KeyboardEvent("keydown", { key: "k", ctrlKey: true });
-                    document.dispatchEvent(event);
-                  }}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg border border-input bg-surface-2 text-xs text-muted hover:text-secondary transition-colors w-40 sm:w-64"
-                >
-                  <Search className="w-3.5 h-3.5 shrink-0" />
-                  <span className="flex-1 text-left truncate">Search...</span>
-                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono bg-surface-2 rounded shrink-0">
-                    Ctrl+K
-                  </kbd>
-                </button>
               </div>
 
-              <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-2 md:gap-3 shrink-0">
                 <TopbarTimer />
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="h-9 w-9 text-neutral-500 hover:text-neutral-900 dark:hover:text-white shrink-0"
+                  className="h-9 w-9 rounded-full text-neutral-500 hover:text-neutral-900 dark:hover:text-white shrink-0 focus-visible:ring-2 focus-visible:ring-violet-500"
+                  title="Toggle theme"
+                  aria-label="Toggle theme"
                 >
                   {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </Button>
@@ -487,56 +491,57 @@ export default function DashboardLayout({
             </main>
 
             {/* Mobile Bottom Navigation (Visible on <= 768px screens) */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface border-t border-border flex items-center justify-around z-40 px-2 pb-safe">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-md border-t border-border flex items-center justify-around z-40 px-2 pb-safe">
               <Link
                 href="/dashboard"
                 className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname === "/dashboard" ? "text-blue-600 dark:text-blue-400" : "text-neutral-500 hover:text-neutral-700"
+                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                  pathname === "/dashboard" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
-                <LayoutDashboard className="w-5 h-5" />
+                <LayoutDashboard className="w-5 h-5 shrink-0" />
                 <span>Dashboard</span>
               </Link>
 
               <Link
-                href="/dashboard/directory"
+                href="/dashboard/projects"
                 className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname === "/dashboard/directory" ? "text-pink-600 dark:text-pink-400" : "text-neutral-500 hover:text-neutral-700"
+                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                  pathname.startsWith("/dashboard/projects") ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
-                <Users className="w-5 h-5" />
-                <span>Directory</span>
+                <FolderKanban className="w-5 h-5 shrink-0" />
+                <span>Projects</span>
               </Link>
 
               <Link
                 href="/dashboard/attendance"
-                className="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-emerald-600 text-white shadow-lg -mt-5 hover:bg-emerald-700 transition-transform active:scale-95"
+                title="My Attendance"
+                className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               >
-                <Clock className="w-6 h-6" />
+                <Clock className="w-6 h-6 shrink-0" />
               </Link>
 
               <Link
-                href="/dashboard/leave"
+                href="/dashboard/chat"
                 className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname.startsWith("/dashboard/leave") ? "text-amber-600 dark:text-amber-400" : "text-neutral-500 hover:text-neutral-700"
+                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                  pathname.startsWith("/dashboard/chat") ? "text-pink-600 dark:text-pink-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
-                <CalendarDays className="w-5 h-5" />
-                <span>Leave</span>
+                <MessageSquare className="w-5 h-5 shrink-0" />
+                <span>Chat</span>
               </Link>
 
               <Link
                 href="/dashboard/profile"
                 className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-1 text-[10px] font-medium transition-colors",
-                  pathname === "/dashboard/profile" ? "text-cyan-600 dark:text-cyan-400" : "text-neutral-500 hover:text-neutral-700"
+                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                  pathname === "/dashboard/profile" ? "text-cyan-600 dark:text-cyan-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
-                <UserCircle className="w-5 h-5" />
-                <span>Profile</span>
+                <UserCircle className="w-5 h-5 shrink-0" />
+                <span>My Profile</span>
               </Link>
             </nav>
           </div>

@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Inbox } from "lucide-react"
 import { cn } from "../utils/cn"
 
 export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -38,14 +39,7 @@ export function EmptyState({
           className="mb-4 h-16 w-16 opacity-75 rounded-full"
         />
       ) : (
-        <video
-          src="/animated-logo.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="mb-4 h-16 w-16 opacity-75 rounded-full"
-        />
+        <Inbox className="mb-4 h-12 w-12 text-muted-foreground opacity-50" />
       )}
       <h3 className="text-base font-semibold">{title}</h3>
       {description && (

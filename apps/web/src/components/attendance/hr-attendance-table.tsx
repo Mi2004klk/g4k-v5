@@ -5,9 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Search, CalendarDays, Loader2, AlertCircle, Download } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
+import { getAuthToken } from "@/lib/auth-store";
 import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
@@ -59,9 +61,8 @@ export function HrAttendanceTable() {
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
       if (debouncedSearch) params.append("search", debouncedSearch);
       
-      // Use the overview endpoint directly since it supports date parameters
-      // hrToday is just an alias for overview with today's date
-      return apiFetch(`/attendance/admin/overview?${params.toString()}`);
+      // Use the HR today endpoint with query parameters
+      return apiFetch(`/attendance/hr/today?${params.toString()}`);
     },
     staleTime: 30000,
     refetchInterval: 30000,
@@ -78,11 +79,9 @@ export function HrAttendanceTable() {
       // If we supported passing specific user IDs to export we would add them here
       // For now, we'll just download the whole team for the date
       
-      const token = document.cookie.split('; ').find(row => row.startsWith('g4k_token='))?.split('=')[1];
-      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${getAuthToken()}`
         }
       });
       
@@ -97,9 +96,9 @@ export function HrAttendanceTable() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Failed to export attendance");
+      toast.error(e?.message || "Failed to export attendance");
     }
   };
 

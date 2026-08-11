@@ -22,8 +22,9 @@ export function useUrlState(key: string, defaultValue: string = "") {
       params.delete(key);
     }
     
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [key, pathname, router, searchParams]);
+    const newUrl = `${pathname}?${params.toString()}`;
+    window.history.pushState(null, "", newUrl);
+  }, [key, pathname, searchParams]);
 
   // Sync state if URL changes externally (like back/forward buttons)
   useEffect(() => {

@@ -33,7 +33,7 @@ class AttendanceService
                 'clock_in' => $lastType === null || $lastType === 'clock_out',
                 'break_start' => $lastType === 'clock_in' || $lastType === 'break_end',
                 'break_end' => $lastType === 'break_start',
-                'clock_out' => $lastType === 'clock_in' || $lastType === 'break_end',
+                'clock_out' => in_array($lastType, ['clock_in', 'break_end', 'break_start']),
                 default => false,
             };
 
@@ -188,13 +188,13 @@ class AttendanceService
         if ($firstClockIn) {
             $scheduledStart = Carbon::parse($date . ' ' . $startTimeStr);
             if ($firstClockIn->timestamp > $scheduledStart->timestamp + $graceSeconds) {
-                $lateSeconds = $firstClockIn->diffInSeconds($scheduledStart) - $graceSeconds;
+                $lateSeconds = $firstClockIn->timestamp - $scheduledStart->timestamp;
                 $lateMinutes = (int) floor($lateSeconds / 60);
             }
         }
 
         $status = 'absent';
-        if ($totalSeconds > 0) {
+        if ($firstClockIn !== null) {
             $status = ($lateMinutes > 0) ? 'late' : 'present';
         }
 

@@ -7,25 +7,52 @@ use App\Models\Task;
 use App\Models\Project;
 use App\Models\User;
 use App\Jobs\GenerateReportJob;
+use App\Services\CapabilityMatrix;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    private function userHasManage(Request $request): bool
+    {
+        $role = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        return CapabilityMatrix::hasCapability($role, 'reports.manage');
+    }
+
     public function data(Request $request)
     {
         $key = $request->query('key', 'tasks');
+        $hasManage = $this->userHasManage($request);
+        $user = $request->user();
 
         switch ($key) {
             case 'tasks':
-                $data = Task::with(['project', 'assignee'])->latest()->paginate(25);
+                $query = Task::with(['project', 'assignee']);
+                if (!$hasManage) {
+                    $query->where(function ($q) use ($user) {
+                        $q->where('assignee_id', $user->id)
+                          ->orWhere('reporter_id', $user->id);
+                    });
+                }
+                $data = $query->latest()->paginate(25);
                 break;
             case 'projects':
-                $data = Project::with('owner')->latest()->paginate(25);
+                $query = Project::with(['creator', 'members']);
+                if (!$hasManage) {
+                    $query->where(function ($q) use ($user) {
+                        $q->where('created_by', $user->id)
+                          ->orWhereHas('members', fn ($m) => $m->where('users.id', $user->id));
+                    });
+                }
+                $data = $query->latest()->paginate(25);
                 break;
             case 'users':
             case 'productivity':
             default:
-                $data = User::latest()->paginate(25);
+                $query = User::query();
+                if (!$hasManage) {
+                    $query->where('id', $user->id);
+                }
+                $data = $query->latest()->paginate(25);
                 break;
         }
 
@@ -75,7 +102,7 @@ class ReportController extends Controller
                 'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
                 'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
                 'attendanceDays as absent_days' => fn($q) => $q->where('status', 'absent')->whereBetween('date', [$start, $end]),
-                'attendanceDays as leave_days' => fn($q) => $q->where('status', 'on_leave')->whereBetween('date', [$start, $end]),
+                'attendanceDays as leave_days' => fn($q) => $q->where('status', 'leave')->whereBetween('date', [$start, $end]),
             ])
             ->withSum(['attendanceDays as total_hours' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds')
             ->withSum(['attendanceDays as overtime_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'overtime_seconds');

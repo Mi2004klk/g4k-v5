@@ -40,10 +40,10 @@ export function HolidayCalendar() {
           {format(currentDate, "MMMM yyyy")}
         </CardTitle>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-7 w-7">
+          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-7 w-7" aria-label="Previous month">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-7 w-7">
+          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-7 w-7" aria-label="Next month">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

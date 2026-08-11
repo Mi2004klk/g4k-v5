@@ -252,8 +252,13 @@ class DatabaseSeeder extends Seeder
         $settings = [
             ['key' => 'password_policy_min_length', 'value' => json_encode(8), 'category' => 'security'],
             ['key' => 'password_policy_require_numbers', 'value' => json_encode(true), 'category' => 'security'],
+            ['key' => 'password_policy_require_symbols', 'value' => json_encode(false), 'category' => 'security'],
+            ['key' => 'password_policy_require_mixed', 'value' => json_encode(false), 'category' => 'security'],
             ['key' => 'session_ttl_minutes', 'value' => json_encode(1440), 'category' => 'security'],
+            ['key' => 'attendance_reminder_offset', 'value' => json_encode(15), 'category' => 'attendance'],
             ['key' => 'attendance_reminder_offset_minutes', 'value' => json_encode(15), 'category' => 'attendance'],
+            ['key' => 'missed_clockin_alert_offset', 'value' => json_encode(30), 'category' => 'attendance'],
+            ['key' => 'shift_reminder_offset', 'value' => json_encode(15), 'category' => 'attendance'],
         ];
 
         foreach ($settings as $setting) {
@@ -297,6 +302,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AttendanceDemoDataSeeder::class,
             LeaveRequestsDemoSeeder::class,
+            DayToDayDemoSeeder::class,
         ]);
     }
 }

@@ -2,42 +2,40 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Report {{ strtoupper($key) }}</title>
+    <title>Report Export - {{ ucfirst($key) }}</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; color: #333; }
-        h2 { text-transform: uppercase; color: #4f46e5; margin-bottom: 5px; }
-        .meta { font-size: 10px; color: #666; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        body { font-family: sans-serif; font-size: 12px; margin: 20px; }
+        h1 { color: #333; text-transform: capitalize; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f3f4f6; font-weight: bold; }
-        tr:nth-child(even) { background-color: #f9fafb; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
-    <h2>Report: {{ strtoupper($key) }}</h2>
-    <div class="meta">Generated at: {{ now()->toDayDateTimeString() }}</div>
-
+    <h1>{{ $key }} Report</h1>
+    <p>Generated on: {{ now()->toDateTimeString() }}</p>
+    
     @if(count($rows) > 0)
         <table>
             <thead>
                 <tr>
-                    @foreach(array_keys($rows[0]) as $col)
-                        <th>{{ $col }}</th>
+                    @foreach(array_keys($rows[0]) as $header)
+                        <th>{{ $header }}</th>
                     @endforeach
                 </tr>
             </thead>
             <tbody>
                 @foreach($rows as $row)
                     <tr>
-                        @foreach($row as $val)
-                            <td>{{ $val }}</td>
+                        @foreach($row as $cell)
+                            <td>{{ $cell }}</td>
                         @endforeach
                     </tr>
                 @endforeach
             </tbody>
         </table>
     @else
-        <p>No records found.</p>
+        <p>No data available for this report.</p>
     @endif
 </body>
 </html>

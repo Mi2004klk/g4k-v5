@@ -1,3 +1,5 @@
+> **ARCHIVED:** This file is stale and superseded by context.md and ix-3.md.
+
 # finalization.md — Games4King Workplace OS: Complete Fix & Go-Live Plan
 ## (Login 404 root cause found, code fixed & pushed, one manual Railway step remaining)
 
@@ -205,3 +207,4 @@ disable its nav entry. Tracked in `plan-future-modules.md`.
 - **8 small gaps** remain (G1–G8). G1 (export token) and G2 (leave working-days) affect daily use.
   The rest are polish/correctness. None are rework-risk.
 - **After Railway rebuilds + gaps close + §4 verification → go live.**
+

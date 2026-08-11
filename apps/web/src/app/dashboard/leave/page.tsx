@@ -4,13 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
-import { HolidayCalendar } from "@/components/leave/holiday-calendar";
+import dynamic from "next/dynamic";
+const HolidayCalendar = dynamic(() => import("@/components/leave/holiday-calendar").then(mod => mod.HolidayCalendar), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 
 export default function LeavePage() {
+  const [tab, setTab] = useUrlState("tab", "my-leave");
   const [typeFilter, setTypeFilter] = useUrlState("type", "all");
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
 
@@ -34,7 +36,7 @@ export default function LeavePage() {
       </div>
 
       <ErrorBoundary>
-        <Tabs defaultValue="my-leave" className="w-full">
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="my-leave" className="data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50 dark:data-[state=active]:bg-amber-950/30">My Leave</TabsTrigger>
             <TabsTrigger value="holidays" className="data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50 dark:data-[state=active]:bg-amber-950/30">Holidays</TabsTrigger>

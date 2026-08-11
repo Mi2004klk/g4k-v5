@@ -99,4 +99,37 @@ class CapabilitiesTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_or_capability_allows_access()
+    {
+        \Illuminate\Support\Facades\DB::table('capabilities')->insert([
+            ['key' => 'attendance.correct-team', 'description' => 'Correct Team Attendance', 'group' => 'Attendance'],
+        ]);
+        \Illuminate\Support\Facades\DB::table('role_capabilities')->insert([
+            ['role' => 'hr', 'capability_key' => 'attendance.correct-team'],
+        ]);
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $user = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now()]);
+        RoleAssignment::create([
+            'user_id' => $user->id,
+            'role' => 'hr'
+        ]);
+
+        $token = $user->createToken('test', ['role:hr'])->plainTextToken;
+
+        // POST /attendance/correct uses middleware capability:admin.correct-attendance|attendance.correct-team
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->postJson('/api/attendance/correct', [
+            'user_id' => $user->id,
+            'date' => now()->toDateString(),
+            'clock_in' => '09:00',
+            'clock_out' => '17:00',
+            'reason' => 'Testing OR capability',
+        ]);
+
+        // Should NOT be 403 (unauthorized due to missing capability)
+        $this->assertNotEquals(403, $response->status());
+    }
 }

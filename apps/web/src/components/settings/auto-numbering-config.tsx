@@ -15,7 +15,10 @@ export function AutoNumberingConfig() {
 
   const { data: records = [], isLoading } = useQuery({
     queryKey: ["auto-numberings"],
-    queryFn: () => apiFetch("/auto-numberings"),
+    queryFn: async () => {
+      const res = await apiFetch("/auto-numberings");
+      return Array.isArray(res) ? res : res.data || [];
+    },
   });
 
   const updateMutation = useMutation({

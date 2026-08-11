@@ -41,4 +41,65 @@ class AnnouncementController extends Controller
 
         return response()->json($announcement->load(['creator', 'team']));
     }
+
+    public function update(Request $request, $id)
+    {
+        $announcement = Announcement::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'body' => 'sometimes|string',
+            'scope' => 'nullable|in:company,team',
+            'team_id' => 'nullable|exists:teams,id',
+            'pinned' => 'nullable|boolean',
+        ]);
+
+        if (array_key_exists('pinned', $validated)) {
+            $validated['pinned_at'] = $validated['pinned'] ? now() : null;
+            unset($validated['pinned']);
+        }
+
+        $announcement->update($validated);
+
+        return response()->json($announcement->load(['creator', 'team']));
+    }
+
+    public function destroy($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->delete();
+
+        return response()->json(['message' => 'Announcement deleted successfully']);
+    }
+
+    public function react(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'emoji' => 'required|string|max:16',
+        ]);
+
+        $announcement = Announcement::findOrFail($id);
+        $userId = $request->user()->id;
+        $reactions = $announcement->reactions ?? [];
+
+        $emoji = $validated['emoji'];
+        if (!isset($reactions[$emoji])) {
+            $reactions[$emoji] = [];
+        }
+
+        if (in_array($userId, $reactions[$emoji])) {
+            // Remove reaction if already reacted
+            $reactions[$emoji] = array_values(array_filter($reactions[$emoji], fn($uid) => $uid !== $userId));
+            if (empty($reactions[$emoji])) {
+                unset($reactions[$emoji]);
+            }
+        } else {
+            // Add reaction
+            $reactions[$emoji][] = $userId;
+        }
+
+        $announcement->update(['reactions' => $reactions]);
+
+        return response()->json($announcement->fresh()->load(['creator', 'team']));
+    }
 }

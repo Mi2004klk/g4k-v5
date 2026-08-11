@@ -16,17 +16,17 @@
 
 | # | Phase | Capability | Status | Depends on | Live URL | Spec state |
 |---|---|---|---|---|---|---|
-| 0 | Foundation & infra | `foundation` | ✅ | — | `/health` | archived |
-| 1 | Authentication | `authentication` | ✅ | 0 | `/login` | archived |
-| 2 | Users, roles & org | `org-management` | ✅ | 0,1 | `/dashboard/org/users` | archived |
-| 3 | App shell & design | `app-shell` | ✅ | 0,2 | `/dashboard` | archived |
-| 4 | Dashboard framework | `dashboards` | ✅ | 3 | `/dashboard` | archived |
-| 5 | Attendance | `attendance` | ✅ | 2,3,4 | `/dashboard/attendance` | archived |
-| 6 | Leave & approvals | `leave-approvals` | ✅ | 2,3,8-partial | `/dashboard/leave` | archived |
-| 7 | Projects & tasks | `projects-tasks` | ✅ | 2,3,4 | `/dashboard/projects` | archived |
-| 8 | Chat & notifications | `communication` | ✅ | 2,3 | `/dashboard/chat` | archived |
-| 9 | Reports & exports | `reporting` | ✅ | 5,7 | `/dashboard/reports` | archived |
-| 10 | Settings & audit | `system-settings` | ✅ | 2,5,7 | `/dashboard/settings` | archived |
+| 0 | Foundation & infra | `foundation` | 🟡 In-revamp | — | `/health` | Implementation present; in-revamp per `fix-3.md`. |
+| 1 | Authentication | `authentication` | 🟡 In-revamp | 0 | `/login` | Implementation present; in-revamp per `fix-3.md`. |
+| 2 | Users, roles & org | `org-management` | 🟡 In-revamp | 0,1 | `/dashboard/org/users` | Implementation present; in-revamp per `fix-3.md`. |
+| 3 | App shell & design | `app-shell` | 🟡 In-revamp | 0,2 | `/dashboard` | Implementation present; in-revamp per `fix-3.md`. |
+| 4 | Dashboard framework | `dashboards` | 🟡 In-revamp | 3 | `/dashboard` | Implementation present; in-revamp per `fix-3.md`. |
+| 5 | Attendance | `attendance` | 🟡 In-revamp | 2,3,4 | `/dashboard/attendance` | Implementation present; in-revamp per `fix-3.md`. |
+| 6 | Leave & approvals | `leave-approvals` | 🟡 In-revamp | 2,3,8-partial | `/dashboard/leave` | Implementation present; in-revamp per `fix-3.md`. |
+| 7 | Projects & tasks | `projects-tasks` | 🟡 In-revamp | 2,3,4 | `/dashboard/projects` | Implementation present; in-revamp per `fix-3.md`. |
+| 8 | Chat & notifications | `communication` | 🟡 In-revamp | 2,3 | `/dashboard/chat` | Implementation present; in-revamp per `fix-3.md`. |
+| 9 | Reports & exports | `reporting` | 🟡 In-revamp | 5,7 | `/dashboard/reports` | Implementation present; in-revamp per `fix-3.md`. |
+| 10 | Settings & audit | `system-settings` | 🟡 In-revamp | 2,5,7 | `/dashboard/settings` | Implementation present; in-revamp per `fix-3.md`. |
 
 > **Sequencing note (user-confirmed):** build strictly one phase at a time; all 3 role
 > screens together within a phase; ship to production before starting the next. Phase 6 needs
@@ -57,7 +57,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 
 ---
 
-## Phase 0 — Foundation & infra  (`foundation`)  ✅
+## Phase 0 — Foundation & infra  (`foundation`)  🟡
 **Requirements:** none (infra). **Milestone:** live end-to-end pipeline.
 **Acceptance:**
 - [x] `apps/web` placeholder live on Vercel
@@ -69,7 +69,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Backups + rollback documented; envs (dev/staging/prod) configured
 **Verification:** curl `/health` returns 200; `pnpm build` + `php artisan test` pass; Vercel preview URL loads; Railway deploy log clean.
 
-## Phase 1 — Authentication  (`authentication`)  ✅
+## Phase 1 — Authentication  (`authentication`)  🟡
 **Requirements:** R1.1–R1.13. **Milestone:** all 13 seeded users can sign in across role paths.
 **Acceptance:**
 - [x] Sign-in screen matches R1.1–R1.3 (logo, welcome, copyright, tooltip, loading, errors)
@@ -82,7 +82,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Capability-gated route guards
 **Verification:** sign in as karthik/Admin, aravind/HR, praveen/Employee; trigger lockout; run reset; confirm device revocation.
 
-## Phase 2 — Users, roles & org  (`org-management`)  ✅
+## Phase 2 — Users, roles & org  (`org-management`)  🟡
 **Requirements:** R2.1–R2.13. **Milestone:** Admin manages full org in production.
 **Acceptance:**
 - [x] Capability matrix live + enforced on routes
@@ -95,7 +95,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Full seed loaded (1 co / 2 depts / 13 employees)
 **Verification:** create/edit/deactivate a user; assign dual role; search directory; verify non-admin blocked from user-create endpoint.
 
-## Phase 3 — App shell & design  (`app-shell`)  ✅
+## Phase 3 — App shell & design  (`app-shell`)  🟡
 **Requirements:** R3.1–R3.16. **Milestone:** polished shell on desktop + mobile.
 **Decisions:** DR-DS1 (charcoal primary, rainbow hover palette).
 **Acceptance:**
@@ -114,7 +114,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] PWA manifest + service worker
 **Verification:** toggle theme; pin an item; submit a form (autosave/restore); open palette; resize to mobile → bottom nav appears.
 
-## Phase 4 — Dashboard framework  (`dashboards`)  ✅
+## Phase 4 — Dashboard framework  (`dashboards`)  🟡
 **Requirements:** R4.1–R4.9. **Milestone:** 3 rearrangeable dashboards via Widget Engine.
 **Acceptance:**
 - [x] Widget engine (drag/resize/collapse/refresh/lazy/offline/realtime; adaptive sizes)
@@ -124,7 +124,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Quick Task Assignment widget wired to later module
 **Verification:** rearrange widgets → persists across reload; refresh one widget independently; resize changes adaptive content.
 
-## Phase 5 — Attendance  (`attendance`)  ✅
+## Phase 5 — Attendance  (`attendance`)  🟡
 **Requirements:** R5.1–R5.12. **Milestone:** live attendance + heatmaps + exports.
 **Acceptance:**
 - [x] Clock in/out + breaks; live timer (continues, amber overtime)
@@ -136,7 +136,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Offline timer + sync (Server-Validation)
 **Verification:** clock in, break, clock out; open heatmap; trigger late; export Excel; go offline mid-shift → syncs.
 
-## Phase 6 — Leave & approvals  (`leave-approvals`)  ✅
+## Phase 6 — Leave & approvals  (`leave-approvals`)  🟡
 **Requirements:** R6.1–R6.8. **Milestone:** leave flows + reusable Approval framework.
 **Acceptance:**
 - [x] Approval state-machine framework
@@ -146,7 +146,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Approval notifications surface in bell + Notification Center
 **Verification:** submit leave as employee → HR approves; submit as HR → Admin approves; check history + notifications.
 
-## Phase 7 — Projects & tasks  (`projects-tasks`)  ✅
+## Phase 7 — Projects & tasks  (`projects-tasks`)  🟡
 **Requirements:** R7.1–R7.18. **Milestone:** full project/task lifecycle with Kanban/Gantt/QA.
 **Acceptance:**
 - [x] Project CRUD + team auto-access; sort
@@ -161,7 +161,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Project history; personal task list; saved views/custom columns
 **Verification:** create project → assign team → add tasks → Kanban drag → submit → approve → history; Gantt renders; recurring task recreates.
 
-## Phase 8 — Chat & notifications  (`communication`)  ✅
+## Phase 8 — Chat & notifications  (`communication`)  🟡
 **Requirements:** R8.1–R8.15. **Milestone:** 4 chat types + announcements + notes live.
 **Acceptance:**
 - [x] Global/Project/Direct/Group chats over Reverb
@@ -173,7 +173,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Mobile chat UX
 **Verification:** send DM + read receipt; @mention notifies; post announcement → dashboard + bell; create note; offline message queues.
 
-## Phase 9 — Reports & exports  (`reporting`)  ✅
+## Phase 9 — Reports & exports  (`reporting`)  🟡
 **Requirements:** R9.1–R9.8. **Milestone:** reports + exports + Sunday email.
 **Acceptance:**
 - [x] Attendance/project/task/productivity reports (Admin; HR limited)
@@ -182,7 +182,7 @@ monitored (Sentry+Pulse), deployed to production with rollback + backups verifie
 - [x] Saved views; filters; virtualized
 **Verification:** generate each report; export Excel + PDF; trigger Sunday email (scheduler dry-run); verify HR sees limited set.
 
-## Phase 10 — Settings & audit  (`system-settings`)  ✅
+## Phase 10 — Settings & audit  (`system-settings`)  🟡
 **Requirements:** R10.1–R10.5. **Milestone:** M1 freeze-ready.
 **Acceptance:**
 - [x] Company profile, working hours, holiday calendar, password/session policies, notification prefs, reminder times

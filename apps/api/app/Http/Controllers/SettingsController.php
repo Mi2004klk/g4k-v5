@@ -35,6 +35,8 @@ class SettingsController extends Controller
             );
         }
 
+        \App\Services\CapabilityMatrix::clearCache();
+
         return response()->json(['message' => 'Settings updated successfully']);
     }
 }

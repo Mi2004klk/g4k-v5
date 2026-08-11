@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Globe, Plus } from "lucide-react";
+import { MessageSquare, ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { Button } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
 import { ConversationList } from "@/components/chat/conversation-list";
@@ -13,11 +15,20 @@ import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { FeedbackForm } from "@/components/widgets/feedback-form";
 
-export default function ChatPage() {
+function ChatPageContent() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
-  const { subscribe } = useReverb();
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const { subscribe, echo } = useReverb();
+  
+  const initialConvId = searchParams.get("conversation");
+  const [selectedId, setSelectedId] = useState<number | null>(initialConvId ? parseInt(initialConvId) : null);
+
+  useEffect(() => {
+    if (initialConvId) {
+      setSelectedId(parseInt(initialConvId));
+    }
+  }, [initialConvId]);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations"],
@@ -49,9 +60,12 @@ export default function ChatPage() {
 
       return () => {
         channel.stopListening(".message-sent");
+        if (echo) {
+          echo.leave(`conversation.${selectedId}`);
+        }
       };
     }
-  }, [selectedId, queryClient, subscribe]);
+  }, [selectedId, queryClient, subscribe, echo]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (body: string) => {
@@ -80,7 +94,7 @@ export default function ChatPage() {
         {/* Main Chat Interface */}
         <div className="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-neutral-100 dark:border-neutral-800 flex h-[600px] overflow-hidden">
           {/* Conversation sidebar */}
-          <div className="w-1/3 border-r border-neutral-100 dark:border-neutral-800 flex flex-col">
+          <div className={`w-full md:w-1/3 border-r border-neutral-100 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs">
               Chats
             </div>
@@ -94,10 +108,13 @@ export default function ChatPage() {
           </div>
 
           {/* Active conversation panel */}
-          <div className="flex-1 flex flex-col bg-neutral-50/30 dark:bg-neutral-950/20">
+          <div className={`flex-1 flex-col bg-neutral-50/30 dark:bg-neutral-950/20 ${selectedId ? 'flex' : 'hidden md:flex'}`}>
             {selectedId ? (
               <>
-                <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-between">
+                <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSelectedId(null)} aria-label="Back to conversations">
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
                   <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
                     {selectedConv?.name || "Conversation"}
                   </h3>
@@ -127,5 +144,13 @@ export default function ChatPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-neutral-500">Loading chat...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }

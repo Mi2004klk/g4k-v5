@@ -46,10 +46,9 @@ class AdminPasswordResetController extends Controller
             Notification::create([
                 'user_id' => $user->id,
                 'title' => 'Password Reset Approved',
-                'message' => "Your password reset request was approved. You can reset it here: {$resetLink}",
+                'body' => "Your password reset request was approved. You can reset it here: {$resetLink}",
                 'type' => 'security',
                 'priority' => 'urgent',
-                'is_read' => false
             ]);
         }
 
@@ -71,10 +70,9 @@ class AdminPasswordResetController extends Controller
         Notification::create([
             'user_id' => $resetRequest->user_id,
             'title' => 'Password Reset Rejected',
-            'message' => "Your password reset request was rejected by an administrator.",
+            'body' => "Your password reset request was rejected by an administrator.",
             'type' => 'security',
             'priority' => 'normal',
-            'is_read' => false
         ]);
 
         return response()->json(['message' => 'Password reset request rejected']);

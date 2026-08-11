@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Plus,
@@ -15,8 +15,14 @@ import {
   Trash2,
   Activity,
   Download,
+  SaveAll
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { useExport } from "@/hooks/use-export";
 
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -45,17 +51,35 @@ import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
+import { getAuthToken } from "@/lib/auth-store";
 import { EmptyState } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components";
+import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 
 import { DataTable } from "@g4k/ui/components";
+
+const userSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  username: z.string().optional(),
+  phone: z.string().optional(),
+  department_id: z.string().optional(),
+  designation_id: z.string().optional(),
+  team_id: z.string().optional(),
+  employee_id: z.string().optional(),
+  roles: z.array(z.string()).min(1, "At least one role is required"),
+});
+
+type UserFormValues = z.infer<typeof userSchema>;
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
+  const { triggerExport, isExporting } = useExport();
   const [roleFilter, setRoleFilter] = useUrlState("role", "all");
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("department_id", "all");
@@ -71,33 +95,79 @@ export default function UsersPage() {
   const [activityUser, setActivityUser] = useState<any>(null);
 
   // Forms
-  const [formData, setFormData] = useState({
+  const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft<UserFormValues>("create_user", {
     name: "",
     email: "",
     username: "",
     phone: "",
     department_id: "",
     designation_id: "",
+    team_id: "",
+    employee_id: "",
+    roles: ["employee"],
+  });
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, isValid }
+  } = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
+    defaultValues: draftData,
+    mode: "onTouched",
+    delayError: 400,
+  });
+
+  // Watch for drafting
+  const formValues = watch();
+  useEffect(() => {
+    setDraftData(formValues);
+  }, [formValues, setDraftData]);
+
+  // Edit user state (kept simple for now)
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    username: "",
+    phone: "",
+    department_id: "",
+    designation_id: "",
+    team_id: "",
+    employee_id: "",
     roles: ["employee"],
   });
 
   // Queries
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["users", debouncedSearch, roleFilter, statusFilter, deptFilter],
-    queryFn: () => {
+    queryFn: ({ pageParam }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      if (pageParam) params.append("cursor", pageParam);
       return apiFetch(`/users?${params.toString()}`);
     },
+    initialPageParam: "",
+    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
   });
 
   const { data: departments } = useQuery({
     queryKey: ["departments"],
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
   });
+
+  const watchDept = watch("department_id");
+  const selectedDept = departments?.find((d: any) => d.id === Number(watchDept));
+  const availableTeams = selectedDept?.teams || [];
+
+  const selectedEditDept = departments?.find((d: any) => d.id === Number(editFormData.department_id));
+  const availableEditTeams = selectedEditDept?.teams || [];
 
   const { data: designations } = useQuery({
     queryKey: ["designations"],
@@ -111,11 +181,17 @@ export default function UsersPage() {
   });
 
   // Mutations
+  const onSubmitCreate = (data: UserFormValues) => {
+    createMutation.mutate(data);
+  };
+
   const createMutation = useMutation({
     mutationFn: (payload: any) => apiFetch("/users", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("User created successfully!");
       setIsCreateOpen(false);
+      reset();
+      clearDraft();
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (err: any) => toast.error(err.message || "Failed to create user."),
@@ -168,36 +244,16 @@ export default function UsersPage() {
   });
 
   const bulkExport = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (debouncedSearch) params.append("search", debouncedSearch);
-      if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
-      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/users/export?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error("Export failed");
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "users_export.csv";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success("Export downloaded.");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to export");
-    }
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.append("search", debouncedSearch);
+    if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
+    if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+    if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+    
+    await triggerExport(`/users/export?${params.toString()}`, "users_export.csv");
   };
 
-  const usersList = data?.data || [];
+  const usersList = data?.pages?.flatMap((page: any) => page.data || []) || [];
   const selectedCount = Object.keys(rowSelection).length;
 
   const columns: any[] = useMemo<any[]>(() => [
@@ -228,20 +284,25 @@ export default function UsersPage() {
         return (
           <div className="flex items-center gap-3" onClick={() => {
             setEditingUser(user);
-            setFormData({
+            setEditFormData({
               name: user.name,
               email: user.email,
               username: user.username || "",
               phone: user.phone || "",
-              department_id: user.department_id || "",
-              designation_id: user.designation_id || "",
+              department_id: user.department_id?.toString() || "",
+              team_id: user.team_id?.toString() || "",
+              designation_id: user.designation_id?.toString() || "",
+              employee_id: user.employee_id || "",
               roles: user.role_assignments?.map((r: any) => r.role) || ["employee"],
             });
             setIsEditOpen(true);
           }}>
-            <div className="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-950 flex items-center justify-center font-bold text-violet-700 dark:text-violet-300 cursor-pointer">
-              {user.name.charAt(0)}
-            </div>
+            <Avatar className="w-9 h-9 cursor-pointer">
+              {user.avatar_url && <AvatarImage src={user.avatar_url} alt={user.name} />}
+              <AvatarFallback className="font-bold bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+                {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
             <div className="cursor-pointer hover:underline decoration-violet-500">
               <div className="font-semibold text-neutral-900 dark:text-white">
                 {user.name}
@@ -323,7 +384,7 @@ export default function UsersPage() {
           <div className="text-right">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="User actions">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -374,12 +435,12 @@ export default function UsersPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-sm">
-            <Download className="w-4 h-4" />
+          <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm">
+            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             Export
           </Button>
           <Button onClick={() => {
-            setFormData({ name: "", email: "", username: "", phone: "", department_id: "", designation_id: "", roles: ["employee"] });
+            if (!hasDraft) reset({ name: "", email: "", username: "", phone: "", department_id: "", team_id: "", designation_id: "", employee_id: "", roles: ["employee"] });
             setIsCreateOpen(true);
           }} className="gap-2 shadow">
             <Plus className="w-4 h-4" />
@@ -463,84 +524,168 @@ export default function UsersPage() {
               <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." />
             </div>
           ) : (
-            <DataTable 
-              columns={columns} 
-              data={usersList} 
-              onRowSelectionChange={setRowSelection}
-            />
+            <div className="space-y-4">
+              <DataTable 
+                columns={columns} 
+                data={usersList} 
+                onRowSelectionChange={setRowSelection}
+              />
+              {hasNextPage && (
+                <div className="flex justify-center pb-6">
+                  <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                    {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Load More
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Modals for Create/Edit go here (omitted for brevity, assume similar to original but with Combobox updates) */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Employee</DialogTitle>
+            <DialogDescription className="sr-only">Create a new employee record.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2 text-xs max-h-[60vh] overflow-y-auto px-1">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1 font-semibold">Name *</label>
-                <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+          
+          {hasDraft && (
+            <div className="bg-blue-50 border border-blue-100 p-3 rounded-md flex items-center justify-between mt-2">
+              <span className="text-sm text-blue-700">You have an unsaved draft.</span>
+              <Button size="sm" variant="outline" className="h-7 text-xs bg-white text-blue-700 hover:bg-blue-50" onClick={() => {
+                restoreDraft();
+                reset(draftData);
+              }}>
+                Restore
+              </Button>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmitCreate)}>
+            <div className="space-y-4 py-2 text-xs max-h-[60vh] overflow-y-auto px-1 mt-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
+                  <Input {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} />
+                  {errors.name && <p className="text-red-500 text-[10px] mt-1">{errors.name.message}</p>}
+                </div>
+                <div>
+                  <label className="block mb-1 font-semibold">Username</label>
+                  <Input {...register("username")} placeholder="janedoe" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
+                  <Input type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} />
+                  {errors.email && <p className="text-red-500 text-[10px] mt-1">{errors.email.message}</p>}
+                </div>
+                <div>
+                  <label className="block mb-1 font-semibold">Phone</label>
+                  <Input {...register("phone")} placeholder="+91 98765 43210" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 font-semibold">Employee ID</label>
+                  <Input {...register("employee_id")} placeholder="Auto-generated if blank" />
+                </div>
+                <div>
+                  <label className="block mb-1 font-semibold">Department</label>
+                  <Controller
+                    name="department_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={(val) => { field.onChange(val); setValue("team_id", ""); }}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments?.map((d: any) => (
+                            <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 font-semibold">Team</label>
+                  <Controller
+                    name="team_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange} disabled={!watchDept}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Team" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableTeams.map((t: any) => (
+                            <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 font-semibold">Designation</label>
+                  <Controller
+                    name="designation_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Designation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {designations?.map((d: any) => (
+                            <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
               </div>
               <div>
-                <label className="block mb-1 font-semibold">Username</label>
-                <Input value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+                <label className="block mb-2 font-semibold">Roles <span className="text-red-500">*</span></label>
+                <Controller
+                  name="roles"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex gap-4">
+                      {['employee', 'hr', 'super_admin'].map((role) => (
+                        <label key={role} className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={field.value?.includes(role)}
+                            onCheckedChange={(checked: boolean) => {
+                              const newRoles = checked
+                                ? [...(field.value || []), role]
+                                : (field.value || []).filter((r: string) => r !== role);
+                              field.onChange(newRoles);
+                            }}
+                          />
+                          <span className="capitalize">{role.replace('_', ' ')}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                />
+                {errors.roles && <p className="text-red-500 text-[10px] mt-1">{errors.roles.message}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1 font-semibold">Email *</label>
-                <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-              </div>
-              <div>
-                <label className="block mb-1 font-semibold">Phone</label>
-                <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1 font-semibold">Department</label>
-                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
-                  <option value="">Select Department</option>
-                  {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block mb-1 font-semibold">Designation</label>
-                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.designation_id} onChange={e => setFormData({ ...formData, designation_id: e.target.value })}>
-                  <option value="">Select Designation</option>
-                  {designations?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block mb-2 font-semibold">Roles</label>
-              <div className="flex gap-4">
-                {['employee', 'hr', 'super_admin'].map((role) => (
-                  <label key={role} className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={formData.roles.includes(role)}
-                      onCheckedChange={(checked: boolean) => {
-                        const newRoles = checked
-                          ? [...formData.roles, role]
-                          : formData.roles.filter(r => r !== role);
-                        setFormData({ ...formData, roles: newRoles });
-                      }}
-                    />
-                    <span className="capitalize">{role.replace('_', ' ')}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-            <Button onClick={() => createMutation.mutate(formData)} disabled={createMutation.isPending || !formData.name || !formData.email}>
-              {createMutation.isPending ? "Saving..." : "Create User"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={createMutation.isPending || !isValid}>
+                {createMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {createMutation.isPending ? "Saving..." : "Create User"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -552,38 +697,69 @@ export default function UsersPage() {
           <div className="space-y-4 py-2 text-xs max-h-[60vh] overflow-y-auto px-1">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-semibold">Name *</label>
-                <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                <label className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
+                <Input value={editFormData.name} onChange={e => setEditFormData({ ...editFormData, name: e.target.value })} />
               </div>
               <div>
                 <label className="block mb-1 font-semibold">Username</label>
-                <Input value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+                <Input value={editFormData.username} onChange={e => setEditFormData({ ...editFormData, username: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-semibold">Email *</label>
-                <Input value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                <label className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
+                <Input value={editFormData.email} onChange={e => setEditFormData({ ...editFormData, email: e.target.value })} />
               </div>
               <div>
                 <label className="block mb-1 font-semibold">Phone</label>
-                <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                <Input value={editFormData.phone} onChange={e => setEditFormData({ ...editFormData, phone: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="block mb-1 font-semibold">Employee ID</label>
+                <Input value={editFormData.employee_id} onChange={e => setEditFormData({ ...editFormData, employee_id: e.target.value })} />
+              </div>
+              <div>
                 <label className="block mb-1 font-semibold">Department</label>
-                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.department_id} onChange={e => setFormData({ ...formData, department_id: e.target.value })}>
-                  <option value="">Select Department</option>
-                  {departments?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <Select value={editFormData.department_id} onValueChange={(val) => setEditFormData({ ...editFormData, department_id: val, team_id: "" })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments?.map((d: any) => (
+                      <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 font-semibold">Team</label>
+                <Select value={editFormData.team_id} onValueChange={(val) => setEditFormData({ ...editFormData, team_id: val })} disabled={!editFormData.department_id}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableEditTeams.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block mb-1 font-semibold">Designation</label>
-                <select className="w-full h-10 px-3 rounded-md border bg-background" value={formData.designation_id} onChange={e => setFormData({ ...formData, designation_id: e.target.value })}>
-                  <option value="">Select Designation</option>
-                  {designations?.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <Select value={editFormData.designation_id} onValueChange={(val) => setEditFormData({ ...editFormData, designation_id: val })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Designation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {designations?.map((d: any) => (
+                      <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div>
@@ -592,12 +768,12 @@ export default function UsersPage() {
                 {['employee', 'hr', 'super_admin'].map((role) => (
                   <label key={role} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
-                      checked={formData.roles.includes(role)}
+                      checked={editFormData.roles.includes(role)}
                       onCheckedChange={(checked: boolean) => {
                         const newRoles = checked
-                          ? [...formData.roles, role]
-                          : formData.roles.filter(r => r !== role);
-                        setFormData({ ...formData, roles: newRoles });
+                          ? [...editFormData.roles, role]
+                          : editFormData.roles.filter(r => r !== role);
+                        setEditFormData({ ...editFormData, roles: newRoles });
                       }}
                     />
                     <span className="capitalize">{role.replace('_', ' ')}</span>
@@ -608,7 +784,8 @@ export default function UsersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
-            <Button onClick={() => updateMutation.mutate(formData)} disabled={updateMutation.isPending}>
+            <Button onClick={() => updateMutation.mutate(editFormData)} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               {updateMutation.isPending ? "Saving..." : "Update User"}
             </Button>
           </DialogFooter>

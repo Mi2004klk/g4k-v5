@@ -39,13 +39,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 1000 * 60 * 5, // 5 minutes
-            gcTime: 1000 * 60 * 30, // 30 minutes
+            gcTime: 1000 * 60 * 5, // 5 minutes (reduced from 30m to cap memory usage)
             refetchOnWindowFocus: false,
-            retry: 3,
+            retry: 1,
             retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff
           },
           mutations: {
-            retry: 3,
+            retry: 0,
             retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
           },
         },
@@ -64,7 +64,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
-        <Toaster position="top-right" duration={4000} richColors />
+        <Toaster position="bottom-right" duration={4000} richColors />
         <OfflineBanner />
       </PersistQueryClientProvider>
     </NextThemesProvider>

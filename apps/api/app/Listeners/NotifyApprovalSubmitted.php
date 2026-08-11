@@ -8,7 +8,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use App\Models\User;
 use App\Models\Notification;
 
-class NotifyApprovalSubmitted
+class NotifyApprovalSubmitted implements ShouldQueue
 {
     /**
      * Create the event listener.

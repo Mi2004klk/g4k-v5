@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TaskTimeLog;
+use App\Services\CapabilityMatrix;
 use Illuminate\Http\Request;
 
 class TimerController extends Controller
@@ -31,12 +32,17 @@ class TimerController extends Controller
     {
         $query = TaskTimeLog::with(['task', 'project', 'user']);
 
-        if ($request->filled('project_id')) {
-            $query->where('project_id', $request->query('project_id'));
+        $role = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $canViewAll = CapabilityMatrix::hasCapability($role, 'reports.view') || CapabilityMatrix::hasCapability($role, 'settings.manage');
+
+        if (!$canViewAll) {
+            $query->where('user_id', $request->user()->id);
+        } elseif ($request->filled('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
         }
 
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->query('user_id'));
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->query('project_id'));
         }
 
         $query->orderBy('created_at', 'desc');

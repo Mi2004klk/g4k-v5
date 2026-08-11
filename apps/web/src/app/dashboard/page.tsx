@@ -3,7 +3,8 @@
 import { useAuthStore } from "@/lib/auth-store";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { QuickNotes } from "@/components/widgets/quick-notes";
 import { toast } from "sonner";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
@@ -30,6 +31,7 @@ import { EmptyState } from "@g4k/ui/components";
 import { Card } from "@g4k/ui/components";
 
 import { AdminTodayAttendanceWidget } from "@/components/dashboard/admin-today-attendance-widget";
+import { PendingApprovalsWidget } from "@/components/widgets/pending-approvals-widget";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -46,8 +48,8 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  // Widget catalog based on active role
-  const getWidgetsForRole = () => {
+  // Memoized widget catalog based on active role
+  const availableWidgets = useMemo(() => {
     if (activeRole === "super_admin") {
       return [
         {
@@ -63,18 +65,16 @@ export default function DashboardPage() {
           defaultLayout: { x: 3, y: 0, w: 3, h: 2 },
         },
         {
-          id: "pending-approvals",
+          id: "active-projects",
           component: (
-            <MetricWidget title="Pending Approvals" metricKey="pending_approvals" icon={ClipboardList} color="amber" subtitle="Leave requests" />
+            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="blue" subtitle="Ongoing initiatives" />
           ),
           defaultLayout: { x: 6, y: 0, w: 3, h: 2 },
         },
         {
-          id: "active-projects",
-          component: (
-            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="blue" subtitle="Module pending" hasModule={false} />
-          ),
-          defaultLayout: { x: 9, y: 0, w: 3, h: 2 },
+          id: "pending-approvals",
+          component: <PendingApprovalsWidget />,
+          defaultLayout: { x: 9, y: 0, w: 3, h: 3 },
         },
         {
           id: "recent-activity",
@@ -85,10 +85,10 @@ export default function DashboardPage() {
           id: "quick-task",
           component: (
             <Card className="h-full flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm border-none">
-              <EmptyState title="Quick Task Assignment" description="Tasks module is not active yet." icon={<CheckCircle2 className="w-8 h-8 text-neutral-400" />} />
+              <EmptyState title="Quick Task Assignment" description="Tasks module is active." icon={<CheckCircle2 className="w-8 h-8 text-neutral-400" />} />
             </Card>
           ),
-          defaultLayout: { x: 6, y: 2, w: 6, h: 3 },
+          defaultLayout: { x: 6, y: 3, w: 6, h: 3 },
         },
       ];
     }
@@ -102,36 +102,41 @@ export default function DashboardPage() {
         },
         {
           id: "pending-leave",
-          component: (
-            <MetricWidget title="Pending Leave" metricKey="pending_approvals" icon={ClipboardList} color="amber" subtitle="Requires your review" />
-          ),
-          defaultLayout: { x: 4, y: 0, w: 4, h: 2 },
+          component: <PendingApprovalsWidget />,
+          defaultLayout: { x: 4, y: 0, w: 4, h: 3 },
         },
         {
           id: "active-projects",
           component: (
-            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Module pending" hasModule={false} />
+            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Ongoing initiatives" />
           ),
           defaultLayout: { x: 8, y: 0, w: 4, h: 2 },
         },
         {
+          id: "pending-submissions",
+          component: (
+            <MetricWidget title="Pending Submissions" metricKey="pending_submissions" icon={ClipboardList} color="rose" subtitle="Task/project submissions" />
+          ),
+          defaultLayout: { x: 8, y: 2, w: 4, h: 2 },
+        },
+        {
           id: "team-activity",
           component: <HrActivityFeedWidget />,
-          defaultLayout: { x: 0, y: 2, w: 6, h: 3 },
+          defaultLayout: { x: 0, y: 3, w: 6, h: 3 },
         },
         {
           id: "quick-task",
           component: (
             <Card className="h-full flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm border-none">
-              <EmptyState title="Quick Task Assignment" description="Tasks module is not active yet." icon={<CheckCircle2 className="w-8 h-8 text-neutral-400" />} />
+              <EmptyState title="Quick Task Assignment" description="Tasks module is active." icon={<CheckCircle2 className="w-8 h-8 text-neutral-400" />} />
             </Card>
           ),
-          defaultLayout: { x: 6, y: 2, w: 6, h: 3 },
+          defaultLayout: { x: 6, y: 3, w: 6, h: 3 },
         },
       ];
     }
 
-    // Default Employee view (5 widgets)
+    // Default Employee view
     return [
       {
         id: "time-clock",
@@ -141,14 +146,14 @@ export default function DashboardPage() {
       {
         id: "my-projects",
         component: (
-          <MetricWidget title="My Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Active assignments" hasModule={false} />
+          <MetricWidget title="My Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Active assignments" />
         ),
         defaultLayout: { x: 4, y: 0, w: 4, h: 2 },
       },
       {
         id: "my-tasks",
         component: (
-          <MetricWidget title="My Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="emerald" subtitle="Assigned work items" hasModule={false} />
+          <MetricWidget title="My Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="emerald" subtitle="Assigned work items" />
         ),
         defaultLayout: { x: 8, y: 0, w: 4, h: 2 },
       },
@@ -162,16 +167,21 @@ export default function DashboardPage() {
         defaultLayout: { x: 4, y: 2, w: 4, h: 2 },
       },
       {
+        id: "quick-notes",
+        component: <QuickNotes />,
+        defaultLayout: { x: 0, y: 3, w: 4, h: 3 },
+      },
+      {
         id: "approval-status",
         component: (
           <Card className="h-full flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm border-none">
             <EmptyState title="Approval Status" description="Your pending requests." icon={<ClipboardList className="w-8 h-8 text-neutral-400" />} />
           </Card>
         ),
-        defaultLayout: { x: 8, y: 2, w: 4, h: 2 },
+        defaultLayout: { x: 4, y: 3, w: 8, h: 2 },
       },
     ];
-  };
+  }, [activeRole]);
 
   return (
     <div className="space-y-6">
@@ -224,7 +234,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <WidgetEngine availableWidgets={getWidgetsForRole()} />
+      <WidgetEngine availableWidgets={availableWidgets} />
     </div>
   );
 }

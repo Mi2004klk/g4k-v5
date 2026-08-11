@@ -16,17 +16,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('saved_views', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('report_key');
-            $table->string('name');
-            $table->json('configuration');
-            $table->timestamps();
-            
-            $table->index(['user_id', 'report_key']);
-        });
-
         Schema::create('export_jobs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -53,7 +42,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('scheduled_reports');
         Schema::dropIfExists('export_jobs');
-        Schema::dropIfExists('saved_views');
         Schema::dropIfExists('report_definitions');
     }
 };

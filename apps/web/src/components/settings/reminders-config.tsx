@@ -15,7 +15,7 @@ export function RemindersConfig() {
 
   const { data: settingsGrouped, isLoading } = useQuery({
     queryKey: ["settings"],
-    queryFn: () => apiFetch("/settings"),
+    queryFn: () => apiFetch("/settings/grouped"),
   });
 
   useEffect(() => {

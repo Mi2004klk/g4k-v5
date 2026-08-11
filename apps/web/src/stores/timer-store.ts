@@ -5,16 +5,14 @@ interface TimerState {
   isOnBreak: boolean;
   clockInTimestamp: string | null;
   currentBreakStart: string | null;
-  totalSecondsToday: number;
-  activeSeconds: number; // accumulated actively this session
-  tickIntervalId: NodeJS.Timeout | null;
+  baseSeconds: number; // Accumulated seconds BEFORE the current active period
+  lastActiveTimestamp: string | null; // The exact timestamp when we last resumed/clocked in
   
   // Actions
   startTimer: (clockInTime: string, initialTotalSeconds: number) => void;
   stopTimer: () => void;
   startBreak: (breakStartTime: string) => void;
-  endBreak: () => void;
-  tick: () => void;
+  endBreak: (endBreakTime: string) => void;
   syncWithServer: (day: any, events: any[]) => void;
 }
 
@@ -23,66 +21,57 @@ export const useTimerStore = create<TimerState>((set, get) => ({
   isOnBreak: false,
   clockInTimestamp: null,
   currentBreakStart: null,
-  totalSecondsToday: 0,
-  activeSeconds: 0,
-  tickIntervalId: null,
+  baseSeconds: 0,
+  lastActiveTimestamp: null,
 
   startTimer: (clockInTime: string, initialTotalSeconds: number) => {
-    const { tickIntervalId } = get();
-    if (tickIntervalId) clearInterval(tickIntervalId);
-
-    const interval = setInterval(() => {
-      get().tick();
-    }, 1000);
-
     set({
       isActive: true,
       isOnBreak: false,
       clockInTimestamp: clockInTime,
-      totalSecondsToday: initialTotalSeconds,
-      activeSeconds: initialTotalSeconds,
-      tickIntervalId: interval,
+      baseSeconds: initialTotalSeconds,
+      lastActiveTimestamp: clockInTime,
     });
   },
 
   stopTimer: () => {
-    const { tickIntervalId } = get();
-    if (tickIntervalId) clearInterval(tickIntervalId);
-    
     set({
       isActive: false,
       isOnBreak: false,
-      tickIntervalId: null,
+      lastActiveTimestamp: null,
     });
   },
 
   startBreak: (breakStartTime: string) => {
+    // Before going on break, we must accumulate the seconds from the current active period
+    const { lastActiveTimestamp, baseSeconds } = get();
+    let updatedBaseSeconds = baseSeconds;
+    
+    if (lastActiveTimestamp) {
+      const elapsedSinceLastEvent = Math.floor((new Date(breakStartTime).getTime() - new Date(lastActiveTimestamp).getTime()) / 1000);
+      updatedBaseSeconds += Math.max(0, elapsedSinceLastEvent);
+    }
+
     set({
       isOnBreak: true,
       currentBreakStart: breakStartTime,
+      baseSeconds: updatedBaseSeconds,
+      lastActiveTimestamp: null, // Timer should stop visually
     });
   },
 
-  endBreak: () => {
+  endBreak: (endBreakTime: string) => {
     set({
       isOnBreak: false,
       currentBreakStart: null,
+      lastActiveTimestamp: endBreakTime,
     });
-  },
-
-  tick: () => {
-    const state = get();
-    if (!state.isActive || state.isOnBreak) return;
-    
-    set((s) => ({
-      activeSeconds: s.activeSeconds + 1,
-    }));
   },
 
   syncWithServer: (day: any, events: any[]) => {
     if (!day || events.length === 0) {
       get().stopTimer();
-      set({ totalSecondsToday: 0, activeSeconds: 0 });
+      set({ baseSeconds: 0, lastActiveTimestamp: null });
       return;
     }
 
@@ -93,49 +82,40 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     let isOnBreak = false;
     let clockInTimestamp: string | null = null;
     let currentBreakStart: string | null = null;
+    let lastActiveEventTimestamp: string | null = null;
 
     events.forEach(event => {
       if (event.type === 'clock_in') {
         isActive = true;
         clockInTimestamp = event.timestamp;
+        lastActiveEventTimestamp = event.timestamp;
       } else if (event.type === 'clock_out') {
         isActive = false;
         clockInTimestamp = null;
+        lastActiveEventTimestamp = null;
       } else if (event.type === 'break_start') {
         isOnBreak = true;
         currentBreakStart = event.timestamp;
+        lastActiveEventTimestamp = null; // Timer pauses on break
       } else if (event.type === 'break_end') {
         isOnBreak = false;
         currentBreakStart = null;
+        lastActiveEventTimestamp = event.timestamp;
       }
     });
 
     if (isActive) {
-      // Calculate how many seconds have passed since the last active period started
-      // Or rather, we just trust the server's total_seconds and start ticking from there.
-      // If we want exact precision, we would compute `Date.now() - new Date(clockInTimestamp)`
-      // but there could be breaks in between.
-      // The easiest way is to let the server's `total_seconds` be the baseline,
-      // and add the time elapsed since the *latest* relevant event if active.
-      
-      let baseSeconds = initialTotalSeconds;
-      
-      if (!isOnBreak) {
-        // Find the latest event that made us active (clock_in or break_end)
-        const lastActiveEvent = [...events].reverse().find(e => e.type === 'clock_in' || e.type === 'break_end');
-        if (lastActiveEvent) {
-          const elapsedSinceLastEvent = Math.floor((Date.now() - new Date(lastActiveEvent.timestamp).getTime()) / 1000);
-          baseSeconds += Math.max(0, elapsedSinceLastEvent);
-        }
-      }
-
-      get().startTimer(clockInTimestamp!, baseSeconds);
-      if (isOnBreak) {
-        get().startBreak(currentBreakStart!);
-      }
+      set({
+        isActive: true,
+        isOnBreak: isOnBreak,
+        clockInTimestamp: clockInTimestamp,
+        currentBreakStart: currentBreakStart,
+        baseSeconds: initialTotalSeconds,
+        lastActiveTimestamp: lastActiveEventTimestamp,
+      });
     } else {
       get().stopTimer();
-      set({ totalSecondsToday: initialTotalSeconds, activeSeconds: initialTotalSeconds });
+      set({ baseSeconds: initialTotalSeconds });
     }
   },
 }));

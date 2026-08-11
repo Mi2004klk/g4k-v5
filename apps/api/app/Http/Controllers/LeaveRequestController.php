@@ -126,7 +126,7 @@ class LeaveRequestController extends Controller
         
         $user = $request->user();
         $roles = DB::table('role_assignments')->where('user_id', $user->id)->pluck('role')->toArray();
-        $isHrOrAdmin = count(array_intersect(['hr', 'admin', 'super_admin'], $roles)) > 0;
+        $isHrOrAdmin = count(array_intersect(['hr', 'super_admin'], $roles)) > 0;
 
         if ($leave->user_id !== $user->id && !$isHrOrAdmin) {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -164,7 +164,7 @@ class LeaveRequestController extends Controller
 
         $query = LeaveRequest::with(['approval', 'user'])->where('status', 'pending');
 
-        if (in_array('super_admin', $roles) || in_array('admin', $roles)) {
+        if (in_array('super_admin', $roles)) {
             // Can see all pending
         } elseif (in_array('hr', $roles)) {
             $query->whereHas('user', function($q) use ($user) {

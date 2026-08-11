@@ -3,14 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\CapabilityMatrix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
+    private function userHasManage(Request $request): bool
+    {
+        $role = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        return CapabilityMatrix::hasCapability($role, 'projects.manage');
+    }
+
     public function index(Request $request)
     {
         $query = Project::with(['team', 'department', 'creator', 'members']);
+
+        if (!$this->userHasManage($request)) {
+            $userId = $request->user()->id;
+            $query->where(function ($q) use ($userId) {
+                $q->where('created_by', $userId)
+                  ->orWhereHas('members', fn ($m) => $m->where('users.id', $userId));
+            });
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
@@ -52,9 +67,18 @@ class ProjectController extends Controller
         return response()->json($project->load(['team', 'department', 'creator', 'members']));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $project = Project::with(['team', 'department', 'creator', 'members', 'tasks.assignee', 'timeLogs'])->findOrFail($id);
+
+        if (!$this->userHasManage($request)) {
+            $userId = $request->user()->id;
+            $isMember = $project->created_by === $userId || $project->members->contains('id', $userId);
+            if (!$isMember) {
+                return response()->json(['message' => 'Unauthorized access to project'], 403);
+            }
+        }
+
         return response()->json($project);
     }
 

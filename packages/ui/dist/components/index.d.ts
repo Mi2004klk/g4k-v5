@@ -102,6 +102,8 @@ declare const sheetVariants: (props?: ({
     side?: "top" | "bottom" | "left" | "right" | null | undefined;
 } & class_variance_authority_types.ClassProp) | undefined) => string;
 interface SheetContentProps extends React$1.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>, VariantProps<typeof sheetVariants> {
+    children?: React$1.ReactNode;
+    className?: string;
 }
 declare const SheetContent: React$1.ForwardRefExoticComponent<SheetContentProps & React$1.RefAttributes<HTMLDivElement>>;
 declare const SheetHeader: {
@@ -306,11 +308,15 @@ declare const avatarVariants: (props?: ({
     size?: "sm" | "lg" | "xs" | "md" | null | undefined;
 } & class_variance_authority_types.ClassProp) | undefined) => string;
 interface AvatarProps extends React$1.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>, VariantProps<typeof avatarVariants> {
+    children?: React$1.ReactNode;
+    className?: string;
 }
 declare const Avatar: React$1.ForwardRefExoticComponent<AvatarProps & React$1.RefAttributes<HTMLSpanElement>>;
 declare const AvatarImage: React$1.ForwardRefExoticComponent<Omit<AvatarPrimitive.AvatarImageProps & React$1.RefAttributes<HTMLImageElement>, "ref"> & React$1.RefAttributes<HTMLImageElement>>;
 interface AvatarFallbackProps extends React$1.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> {
     name?: string;
+    children?: React$1.ReactNode;
+    className?: string;
 }
 declare const AvatarFallback: React$1.ForwardRefExoticComponent<AvatarFallbackProps & React$1.RefAttributes<HTMLSpanElement>>;
 interface AvatarGroupProps extends React$1.HTMLAttributes<HTMLDivElement> {
@@ -441,13 +447,14 @@ interface DataTableProps<TData, TValue> {
     rowSelection?: RowSelectionState;
     onRowSelectionChange?: (rowSelection: RowSelectionState) => void;
     onInlineEditSave?: (rowId: string, columnId: string, value: any) => void;
+    containerHeight?: string;
 }
-declare function DataTable<TData, TValue>({ columns, data, getRowId, fetchNextPage, hasNextPage, isFetchingNextPage, density, stickyHeader, stickyFirstCol, rowSelection: externalRowSelection, onRowSelectionChange, onInlineEditSave, }: DataTableProps<TData, TValue>): React__default.JSX.Element;
+declare function DataTable<TData, TValue>({ columns, data, getRowId, fetchNextPage, hasNextPage, isFetchingNextPage, density, stickyHeader, stickyFirstCol, rowSelection: externalRowSelection, onRowSelectionChange, onInlineEditSave, containerHeight, }: DataTableProps<TData, TValue>): React__default.JSX.Element;
 
 interface FilterOption {
     key: string;
     label: string;
-    type: "select" | "combobox" | "checkbox-group" | "date-range";
+    type?: "select" | "combobox" | "checkbox-group" | "date-range";
     options?: {
         label: string;
         value: string;

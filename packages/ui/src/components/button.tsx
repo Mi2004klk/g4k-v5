@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils/cn";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -44,14 +44,14 @@ const RainbowBorder = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
       <div
         ref={ref}
         className={cn(
-          "group relative inline-flex rounded-md p-[1px] overflow-hidden",
+          "group relative inline-flex rounded-md p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(138,43,226,0.4)]",
           className
         )}
         {...props}
       >
         <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8A2BE2_0%,#F97316_10%,#EF4444_20%,#FF1493_30%,#D946EF_40%,#3B82F6_50%,#6366F1_60%,#06B6D4_70%,#14B8A6_80%,#22C55E_90%,#8A2BE2_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:hidden" />
         <span className="absolute inset-0 rounded-md ring-1 ring-inset ring-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:opacity-100 hidden motion-reduce:block" />
-        <div className="relative inline-flex h-full w-full rounded-md bg-background">
+        <div className="relative inline-flex h-full w-full rounded-md bg-primary">
           {children}
         </div>
       </div>

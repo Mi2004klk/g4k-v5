@@ -58,6 +58,7 @@ return new class extends Migration
             $table->string('emoji');
             $table->timestamps();
 
+            $table->unique(['user_id', 'reactable_type', 'reactable_id']);
             $table->index(['reactable_type', 'reactable_id']);
         });
 

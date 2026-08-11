@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Clock, Coffee, LogOut, Info, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
+import { LiveTimer } from "@/components/attendance/live-timer";
 
 export function TodaySummaryCard() {
-  const { activeSeconds, isActive, isOnBreak } = useTimerStore();
+  const { isActive, isOnBreak } = useTimerStore();
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-attendance-today-summary"],
@@ -52,7 +53,6 @@ export function TodaySummaryCard() {
 
   const isLate = day?.status === "late";
   const lateMinutes = day?.late_minutes || 0;
-  const isOvertime = activeSeconds > standardSeconds;
 
   return (
     <Card className="border-none shadow-sm h-full flex flex-col">
@@ -116,20 +116,29 @@ export function TodaySummaryCard() {
         </div>
 
         <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
-           <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-neutral-500">Total Worked</span>
-              <span className="text-lg font-bold text-neutral-900 dark:text-white font-mono tabular-nums">
-                {formatTime(activeSeconds)}
-              </span>
-           </div>
-           {isOvertime && (
-             <div className="flex items-center justify-between mt-1">
-               <span className="text-xs font-medium text-amber-600">Overtime</span>
-               <span className="text-xs font-bold text-amber-600 font-mono tabular-nums">
-                 +{formatTime(activeSeconds - standardSeconds)}
-               </span>
-             </div>
-           )}
+          <LiveTimer
+            render={(formattedTime, displaySeconds) => {
+              const isOvertime = displaySeconds > standardSeconds;
+              return (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-neutral-500">Total Worked</span>
+                    <span className="text-lg font-bold text-neutral-900 dark:text-white font-mono tabular-nums">
+                      {formattedTime}
+                    </span>
+                  </div>
+                  {isOvertime && (
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs font-medium text-amber-600">Overtime</span>
+                      <span className="text-xs font-bold text-amber-600 font-mono tabular-nums">
+                        +{formatTime(displaySeconds - standardSeconds)}
+                      </span>
+                    </div>
+                  )}
+                </>
+              );
+            }}
+          />
         </div>
       </CardContent>
     </Card>

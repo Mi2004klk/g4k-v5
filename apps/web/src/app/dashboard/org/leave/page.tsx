@@ -3,31 +3,38 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { ColumnDef } from "@tanstack/react-table";
 import { Download } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { getAuthToken } from "@/lib/auth-store";
 import { Card, Button, DataTable } from "@g4k/ui/components";
 import { FilterBar } from "@/components/data-table/filter-bar";
 import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
 import { useUrlState } from "@/hooks/use-url-state";
+import { toast } from "sonner";
 
 export default function OrgLeaveApprovalsPage() {
   const [statusFilter, setStatusFilter] = useUrlState("status", "pending");
+  const [search, setSearch] = useUrlState("search", "");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["org-leave-requests", statusFilter],
-    queryFn: () => apiFetch(`/leave-requests${statusFilter !== "all" ? `?status=${statusFilter}` : ""}`),
+    queryKey: ["org-leave-requests", statusFilter, search],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (search) params.append("search", search);
+      return apiFetch(`/leave-requests?${params.toString()}`);
+    },
   });
 
   const records = data?.data || [];
   const pendingCount = records.filter((r: any) => r.approval?.status === "pending").length;
 
-  const columns = useMemo<ColumnDef<any>[]>(
+  const columns = useMemo<any[]>(
     () => [
       {
         accessorKey: "employee",
         header: "Employee",
-        cell: ({ row }) => {
+        cell: ({ row }: any) => {
           const startDate = new Date(row.original.start_date);
           const endDate = new Date(row.original.end_date);
           return (
@@ -45,8 +52,8 @@ export default function OrgLeaveApprovalsPage() {
       {
         accessorKey: "type",
         header: "Type",
-        cell: ({ row }) => (
-          <span className="px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-medium capitalize text-[10px]">
+        cell: ({ row }: any) => (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
             {row.original.type}
           </span>
         ),
@@ -54,16 +61,16 @@ export default function OrgLeaveApprovalsPage() {
       {
         accessorKey: "reason",
         header: "Reason",
-        cell: ({ row }) => (
-          <span className="text-neutral-500 truncate max-w-[200px] block" title={row.original.reason}>
+        cell: ({ row }: any) => (
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 max-w-[200px] truncate" title={row.original.reason}>
             {row.original.reason}
-          </span>
+          </div>
         ),
       },
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }) => {
+        cell: ({ row }: any) => {
           const status = row.original.approval?.status || "pending";
           return (
             <span
@@ -83,7 +90,7 @@ export default function OrgLeaveApprovalsPage() {
       {
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
-        cell: ({ row }) => (
+        cell: ({ row }: any) => (
           <div className="flex justify-end">
             <LeaveApprovalActionsCell record={row.original} />
           </div>
@@ -93,8 +100,27 @@ export default function OrgLeaveApprovalsPage() {
     []
   );
 
-  const handleExport = () => {
-    window.location.href = `/api/leave-requests/export?status=${statusFilter}`;
+  const handleExport = async () => {
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/leave-requests/export?status=${statusFilter}`;
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      });
+      if (!response.ok) throw new Error("Export failed");
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `leave_export_${statusFilter}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Failed to export");
+    }
   };
 
   return (
@@ -116,8 +142,8 @@ export default function OrgLeaveApprovalsPage() {
       <Card className="border-none shadow-sm flex flex-col h-[calc(100vh-200px)]">
         <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
           <FilterBar
-            searchQuery=""
-            onSearchChange={() => {}}
+            searchQuery={search || ""}
+            onSearchChange={setSearch}
             filters={[
               {
                 key: "status",

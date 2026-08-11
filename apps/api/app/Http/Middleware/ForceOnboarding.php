@@ -17,9 +17,14 @@ class ForceOnboarding
     {
         $user = $request->user();
         if ($user && is_null($user->onboarded_at)) {
-            // Exclude allowed routes (logout and onboarding itself)
-            // also we shouldn't block change-password because it happens before onboarding
-            $allowedRoutes = ['api/auth/onboarding/complete', 'api/auth/logout', 'api/auth/change-password'];
+            // Exclude allowed routes (logout, onboarding, role-select, sessions, change-password)
+            $allowedRoutes = [
+                'api/auth/onboarding/complete',
+                'api/auth/logout',
+                'api/auth/change-password',
+                'api/auth/role-select',
+                'api/auth/sessions',
+            ];
             
             if (!in_array($request->path(), $allowedRoutes)) {
                 return response()->json([

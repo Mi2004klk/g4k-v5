@@ -7,15 +7,54 @@ import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Save } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const passwordSchema = z.object({
+  min_length: z.coerce.number().min(8, "Minimum 8 characters required").max(32, "Maximum 32 characters allowed"),
+  require_mixed: z.boolean(),
+  require_number: z.boolean(),
+  require_symbol: z.boolean(),
+});
+
+const sessionSchema = z.object({
+  access_token_ttl: z.coerce.number().min(5, "Minimum 5 mins").max(1440, "Maximum 1440 mins"),
+  refresh_token_ttl: z.coerce.number().min(1, "Minimum 1 day").max(90, "Maximum 90 days"),
+});
+
+type PasswordFormValues = z.infer<typeof passwordSchema>;
+type SessionFormValues = z.infer<typeof sessionSchema>;
 
 export function PoliciesConfig() {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<any>({});
 
   const { data: settingsGrouped, isLoading } = useQuery({
     queryKey: ["settings"],
-    queryFn: () => apiFetch("/settings"),
+    queryFn: () => apiFetch("/settings/grouped"),
+  });
+
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema) as any,
+    defaultValues: {
+      min_length: 8,
+      require_mixed: true,
+      require_number: true,
+      require_symbol: true,
+    },
+    mode: "onTouched",
+    delayError: 400,
+  });
+
+  const sessionForm = useForm<SessionFormValues>({
+    resolver: zodResolver(sessionSchema) as any,
+    defaultValues: {
+      access_token_ttl: 15,
+      refresh_token_ttl: 7,
+    },
+    mode: "onTouched",
+    delayError: 400,
   });
 
   useEffect(() => {
@@ -24,9 +63,18 @@ export function PoliciesConfig() {
       settingsGrouped.security.forEach((s: any) => {
         securityMap[s.key] = s.value;
       });
-      setFormData(securityMap);
+      passwordForm.reset({
+        min_length: parseInt(securityMap["password.min_length"]) || 8,
+        require_mixed: securityMap["password.require_mixed"] === "true",
+        require_number: securityMap["password.require_number"] === "true",
+        require_symbol: securityMap["password.require_symbol"] === "true",
+      });
+      sessionForm.reset({
+        access_token_ttl: parseInt(securityMap["session.access_token_ttl"]) || 15,
+        refresh_token_ttl: parseInt(securityMap["session.refresh_token_ttl"]) || 7,
+      });
     }
-  }, [settingsGrouped]);
+  }, [settingsGrouped, passwordForm, sessionForm]);
 
   const updateMutation = useMutation({
     mutationFn: (updates: any[]) =>
@@ -40,15 +88,20 @@ export function PoliciesConfig() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePasswordSubmit = (data: any) => {
     const updates = [
-      { category: "security", key: "password.min_length", value: formData["password.min_length"]?.toString() || "8" },
-      { category: "security", key: "password.require_mixed", value: formData["password.require_mixed"]?.toString() || "true" },
-      { category: "security", key: "password.require_number", value: formData["password.require_number"]?.toString() || "true" },
-      { category: "security", key: "password.require_symbol", value: formData["password.require_symbol"]?.toString() || "true" },
-      { category: "security", key: "session.access_token_ttl", value: formData["session.access_token_ttl"]?.toString() || "15" },
-      { category: "security", key: "session.refresh_token_ttl", value: formData["session.refresh_token_ttl"]?.toString() || "7" },
+      { category: "security", key: "password.min_length", value: data.min_length.toString() },
+      { category: "security", key: "password.require_mixed", value: data.require_mixed.toString() },
+      { category: "security", key: "password.require_number", value: data.require_number.toString() },
+      { category: "security", key: "password.require_symbol", value: data.require_symbol.toString() },
+    ];
+    updateMutation.mutate(updates);
+  };
+
+  const handleSessionSubmit = (data: any) => {
+    const updates = [
+      { category: "security", key: "session.access_token_ttl", value: data.access_token_ttl.toString() },
+      { category: "security", key: "session.refresh_token_ttl", value: data.refresh_token_ttl.toString() },
     ];
     updateMutation.mutate(updates);
   };
@@ -64,25 +117,22 @@ export function PoliciesConfig() {
           <CardTitle className="text-base">Password Policy</CardTitle>
         </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+        <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-4 max-w-md">
           <div>
-            <label className="text-xs font-medium">Minimum Length</label>
+            <label className="text-xs font-medium">Minimum Length <span className="text-red-500">*</span></label>
             <input
               type="number"
-              min={8}
-              max={32}
-              className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
-              value={formData["password.min_length"] || "8"}
-              onChange={(e) => setFormData({ ...formData, "password.min_length": e.target.value })}
+              {...passwordForm.register("min_length")}
+              className={`w-full text-sm rounded-lg border ${passwordForm.formState.errors.min_length ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
             />
+            {passwordForm.formState.errors.min_length && <p className="text-[10px] text-red-500 mt-1">{passwordForm.formState.errors.min_length.message}</p>}
           </div>
           
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
               id="require_mixed"
-              checked={formData["password.require_mixed"] === "true"}
-              onChange={(e) => setFormData({ ...formData, "password.require_mixed": e.target.checked ? "true" : "false" })}
+              {...passwordForm.register("require_mixed")}
             />
             <label htmlFor="require_mixed" className="text-sm">Require uppercase and lowercase letters</label>
           </div>
@@ -91,8 +141,7 @@ export function PoliciesConfig() {
             <input
               type="checkbox"
               id="require_number"
-              checked={formData["password.require_number"] === "true"}
-              onChange={(e) => setFormData({ ...formData, "password.require_number": e.target.checked ? "true" : "false" })}
+              {...passwordForm.register("require_number")}
             />
             <label htmlFor="require_number" className="text-sm">Require at least one number</label>
           </div>
@@ -101,14 +150,13 @@ export function PoliciesConfig() {
             <input
               type="checkbox"
               id="require_symbol"
-              checked={formData["password.require_symbol"] === "true"}
-              onChange={(e) => setFormData({ ...formData, "password.require_symbol": e.target.checked ? "true" : "false" })}
+              {...passwordForm.register("require_symbol")}
             />
             <label htmlFor="require_symbol" className="text-sm">Require at least one symbol</label>
           </div>
 
-          <Button type="submit" disabled={updateMutation.isPending} className="mt-4">
-            <Save className="w-4 h-4 mr-2" />
+          <Button type="submit" disabled={updateMutation.isPending || !passwordForm.formState.isValid} className="mt-4">
+            {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             {updateMutation.isPending ? "Saving..." : "Save Policy"}
           </Button>
         </form>
@@ -120,35 +168,31 @@ export function PoliciesConfig() {
           <CardTitle className="text-base">Session & Device Rules</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+          <form onSubmit={sessionForm.handleSubmit(handleSessionSubmit)} className="space-y-4 max-w-md">
             <div>
-              <label className="text-xs font-medium">Access Token Expiration (Minutes)</label>
+              <label className="text-xs font-medium">Access Token Expiration (Minutes) <span className="text-red-500">*</span></label>
               <input
                 type="number"
-                min={5}
-                max={1440}
-                className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
-                value={formData["session.access_token_ttl"] || "15"}
-                onChange={(e) => setFormData({ ...formData, "session.access_token_ttl": e.target.value })}
+                {...sessionForm.register("access_token_ttl")}
+                className={`w-full text-sm rounded-lg border ${sessionForm.formState.errors.access_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
               />
-              <p className="text-[10px] text-neutral-500 mt-1">Short-lived token for API access.</p>
+              {sessionForm.formState.errors.access_token_ttl && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.access_token_ttl.message}</p>}
+              {!sessionForm.formState.errors.access_token_ttl && <p className="text-[10px] text-neutral-500 mt-1">Short-lived token for API access.</p>}
             </div>
             
             <div>
-              <label className="text-xs font-medium">Refresh Token Expiration (Days)</label>
+              <label className="text-xs font-medium">Refresh Token Expiration (Days) <span className="text-red-500">*</span></label>
               <input
                 type="number"
-                min={1}
-                max={90}
-                className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
-                value={formData["session.refresh_token_ttl"] || "7"}
-                onChange={(e) => setFormData({ ...formData, "session.refresh_token_ttl": e.target.value })}
+                {...sessionForm.register("refresh_token_ttl")}
+                className={`w-full text-sm rounded-lg border ${sessionForm.formState.errors.refresh_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
               />
-              <p className="text-[10px] text-neutral-500 mt-1">Long-lived token used to obtain new access tokens.</p>
+              {sessionForm.formState.errors.refresh_token_ttl && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.refresh_token_ttl.message}</p>}
+              {!sessionForm.formState.errors.refresh_token_ttl && <p className="text-[10px] text-neutral-500 mt-1">Long-lived token used to obtain new access tokens.</p>}
             </div>
 
-            <Button type="submit" disabled={updateMutation.isPending} className="mt-4">
-              <Save className="w-4 h-4 mr-2" />
+            <Button type="submit" disabled={updateMutation.isPending || !sessionForm.formState.isValid} className="mt-4">
+              {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {updateMutation.isPending ? "Saving..." : "Save Rules"}
             </Button>
           </form>

@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Search,
@@ -14,6 +14,7 @@ import {
   Phone,
   Briefcase,
   UserCheck,
+  Loader2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
@@ -22,10 +23,10 @@ import { Input } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
-import { Avatar, AvatarFallback } from "@g4k/ui/components";
+import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
-import { FilterBar } from "@/components/data-table/filter-bar";
+import { FilterBar } from "@g4k/ui/components";
 import {
   Sheet,
   SheetContent,
@@ -41,6 +42,9 @@ export default function DirectoryPage() {
   const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
+  const [deptFilter, setDeptFilter] = useUrlState("department", "all");
+  const [desigFilter, setDesigFilter] = useUrlState("designation", "all");
+  const [visFilter, setVisFilter] = useUrlState("visibility", "all");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   useTrackRecent(
@@ -55,13 +59,29 @@ export default function DirectoryPage() {
       : null
   );
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["directory", debouncedSearch],
-    queryFn: async () => {
+  const { data: deptsData } = useQuery({
+    queryKey: ["departments-list"],
+    queryFn: () => apiFetch("/departments?limit=100"),
+  });
+
+  const { data: desigsData } = useQuery({
+    queryKey: ["designations-list"],
+    queryFn: () => apiFetch("/designations?limit=100"),
+  });
+
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ["directory", debouncedSearch, deptFilter, desigFilter, visFilter],
+    queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
+      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      if (desigFilter && desigFilter !== "all") params.append("designation_id", desigFilter);
+      if (visFilter && visFilter !== "all") params.append("visibility", visFilter);
+      if (pageParam) params.append("cursor", pageParam);
       return apiFetch(`/directory?${params.toString()}`);
     },
+    initialPageParam: "",
+    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
   });
 
   const sendMessageMutation = useMutation({
@@ -77,7 +97,7 @@ export default function DirectoryPage() {
     },
   });
 
-  const users = data?.data || [];
+  const users = data?.pages?.flatMap((page: any) => page.data || []) || [];
 
   const columns: any[] = [
     {
@@ -183,6 +203,33 @@ export default function DirectoryPage() {
             searchQuery={search}
             onSearchChange={setSearch}
             searchPlaceholder="Search by name, email, designation, or department..."
+            filters={[
+              {
+                key: "department",
+                label: "Department",
+                value: deptFilter,
+                onChange: setDeptFilter,
+                options: (deptsData?.data || deptsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
+              },
+              {
+                key: "designation",
+                label: "Designation",
+                value: desigFilter,
+                onChange: setDesigFilter,
+                options: (desigsData?.data || desigsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
+              },
+              {
+                key: "visibility",
+                label: "Visibility",
+                value: visFilter,
+                onChange: setVisFilter,
+                options: [
+                  { label: "Public", value: "public" },
+                  { label: "Internal", value: "internal" },
+                  { label: "Private", value: "private" },
+                ]
+              }
+            ]}
           />
         </CardContent>
       </Card>
@@ -218,6 +265,7 @@ export default function DirectoryPage() {
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-4">
                   <Avatar size="lg">
+                    <AvatarImage src={user.avatar_url || ""} />
                     <AvatarFallback name={user.name} />
                   </Avatar>
                   <div className="min-w-0 flex-1">
@@ -250,21 +298,35 @@ export default function DirectoryPage() {
                   }}
                   variant="outline"
                   size="sm"
-                  className="w-full gap-2 text-xs h-9 mt-2 group-hover:border-violet-500 group-hover:text-violet-600"
+                  className="w-full text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20 shadow-none border-none"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Send Message</span>
+                  <MessageSquare className="w-3.5 h-3.5 mr-2" />
+                  Message
                 </Button>
               </CardContent>
             </Card>
           ))}
+          {hasNextPage && (
+            <div className="col-span-1 sm:col-span-2 lg:col-span-3 flex justify-center pb-6">
+              <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Load More
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
-        <Card className="border-none shadow-sm">
-          <CardContent className="p-0">
-            <DataTable columns={columns} data={users} />
-          </CardContent>
-        </Card>
+        <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-border">
+          <DataTable columns={columns} data={users} />
+          {hasNextPage && (
+            <div className="flex justify-center pb-6 mt-4">
+              <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Load More
+              </Button>
+            </div>
+          )}
+        </div>
       )}
 
       {/* User Detail Sheet */}
@@ -274,6 +336,7 @@ export default function DirectoryPage() {
             <div className="space-y-6 pt-4">
               <SheetHeader className="text-left space-y-2">
                 <Avatar size="lg" className="w-16 h-16 text-2xl">
+                  <AvatarImage src={selectedUser.avatar_url || ""} />
                   <AvatarFallback name={selectedUser.name} />
                 </Avatar>
                 <SheetTitle className="text-xl font-bold font-display">
@@ -309,7 +372,7 @@ export default function DirectoryPage() {
                   <div>
                     <div className="text-neutral-400 font-medium">Employee Code</div>
                     <div className="font-mono font-semibold">
-                      {selectedUser.employee_code || selectedUser.employee_id || "G4K001"}
+                      {selectedUser.employee_code || selectedUser.employee_id || "N/A"}
                     </div>
                   </div>
                 </div>

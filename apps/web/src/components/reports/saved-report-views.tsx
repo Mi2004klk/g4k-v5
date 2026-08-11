@@ -5,13 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, ChevronDown, Check, Trash2, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Button, Input } from "@g4k/ui/components";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@g4k/ui/components/dropdown-menu"; // Assuming a dropdown menu component exists, else using a custom select
 import { toast } from "sonner";
 
 interface SavedReportViewsProps {
@@ -91,7 +84,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
       </div>
 
       {isSaving && (
-        <div className="absolute top-full right-0 mt-2 p-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl rounded-xl w-[300px] z-50 flex gap-2">
+        <div className="absolute top-full mt-2 p-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl rounded-xl w-[calc(100vw-32px)] sm:w-[300px] right-0 z-50 flex gap-2">
           <Input 
             value={saveName}
             onChange={(e) => setSaveName(e.target.value)}

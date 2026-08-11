@@ -7,12 +7,7 @@ import { format, addMonths, subMonths } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 const ReactECharts = dynamic((() => import("echarts-for-react")) as any, { 
@@ -140,10 +135,10 @@ export function AttendanceHistoryCalendar({ days, userId }: { days: AttendanceDa
           {format(currentDate, 'MMMM yyyy')}
         </h3>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevMonth}>
+          <Button variant="outline" size="icon" onClick={prevMonth} aria-label="Previous month">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={nextMonth}>
+          <Button variant="outline" size="icon" onClick={nextMonth} aria-label="Next month">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -167,6 +162,7 @@ export function AttendanceHistoryCalendar({ days, userId }: { days: AttendanceDa
                 </span>
               )}
             </DialogTitle>
+            <DialogDescription className="sr-only">View detailed attendance history for the selected date.</DialogDescription>
           </DialogHeader>
           {selectedDay && (
             <DayDetailContent date={selectedDay.date} summaryDay={selectedDay} userId={userId} />
@@ -254,6 +250,17 @@ function DayDetailContent({ date, summaryDay, userId }: { date: string, summaryD
           <div className="flex flex-wrap gap-2">
             {day.projects.map((p: string, i: number) => (
               <span key={i} className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full">{p}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {day.tasks && day.tasks.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold mb-2">Tasks Completed</h4>
+          <div className="flex flex-wrap gap-2">
+            {day.tasks.map((t: string, i: number) => (
+              <span key={i} className="text-[10px] bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 px-2 py-1 rounded-full">{t}</span>
             ))}
           </div>
         </div>

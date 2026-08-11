@@ -293,10 +293,9 @@ class AuthController extends Controller
                     \App\Models\Notification::create([
                         'user_id' => $adminId,
                         'title' => 'Password Reset Requested',
-                        'message' => "User {$user->name} ({$user->email}) requested a password reset.",
+                        'body' => "User {$user->name} ({$user->email}) requested a password reset.",
                         'type' => 'security',
                         'priority' => 'normal',
-                        'is_read' => false
                     ]);
                 }
             } elseif ($request->channel === 'smtp') {

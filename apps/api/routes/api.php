@@ -61,9 +61,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::put('/auth/preferences', [UserPreferenceController::class, 'update']);
 
     // Admin Password Resets
-    Route::get('/admin/password-resets', [\App\Http\Controllers\AdminPasswordResetController::class, 'index'])->middleware('ability:role:super_admin');
-    Route::post('/admin/password-resets/{id}/approve', [\App\Http\Controllers\AdminPasswordResetController::class, 'approve'])->middleware('ability:role:super_admin');
-    Route::post('/admin/password-resets/{id}/reject', [\App\Http\Controllers\AdminPasswordResetController::class, 'reject'])->middleware('ability:role:super_admin');
+    Route::get('/admin/password-resets', [\App\Http\Controllers\AdminPasswordResetController::class, 'index'])->middleware('capability:settings.manage');
+    Route::post('/admin/password-resets/{id}/approve', [\App\Http\Controllers\AdminPasswordResetController::class, 'approve'])->middleware('capability:settings.manage');
+    Route::post('/admin/password-resets/{id}/reject', [\App\Http\Controllers\AdminPasswordResetController::class, 'reject'])->middleware('capability:settings.manage');
 
     // Pins API
     Route::get('/pins', [PinController::class, 'index']);
@@ -91,7 +91,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::middleware('capability:attendance.clock-self')->group(function () {
         Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
         Route::post('/attendance/start-break', [AttendanceController::class, 'startBreak']);
+        Route::post('/attendance/break-start', [AttendanceController::class, 'startBreak']);
         Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
+        Route::post('/attendance/break-end', [AttendanceController::class, 'endBreak']);
         Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
         Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
         Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);
@@ -109,7 +111,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::get('/attendance/hr/history/{userId}', [AttendanceController::class, 'hrHistory']);
     });
 
-    Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware('capability:admin.correct-attendance|attendance.correct-team');
+    Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware(['capability:admin.correct-attendance|attendance.correct-team']);
     Route::get('/attendance/export', [AttendanceController::class, 'export'])->middleware('capability:admin.view-all-attendance');
 
     // Phase 6 API
@@ -122,6 +124,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     // HR or Admin approve
     Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware('capability:leave.approve-employee');
     Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
+    Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     
     Route::get('/holidays', [HolidayController::class, 'index']);
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -131,30 +134,62 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::post('/notifications/{id}/mark-unread', [NotificationController::class, 'markUnread']);
 
     // Phase 7 API (Projects & Tasks)
-    Route::apiResource('projects', ProjectController::class);
-    Route::apiResource('tasks', TaskController::class);
-    Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);
-    Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
-    
-    Route::get('/qa-forms', [QaController::class, 'index']);
-    Route::post('/qa-forms', [QaController::class, 'store']);
-    Route::get('/qa-forms/{id}', [QaController::class, 'show']);
-    
-    Route::post('/timer/log', [TimerController::class, 'logTime']);
-    Route::get('/timer/logs', [TimerController::class, 'index']);
+    Route::middleware('capability:projects.view|projects.manage')->group(function () {
+        Route::get('/projects', [ProjectController::class, 'index']);
+        Route::get('/projects/{id}', [ProjectController::class, 'show']);
+    });
+    Route::middleware('capability:projects.manage')->group(function () {
+        Route::post('/projects', [ProjectController::class, 'store']);
+        Route::put('/projects/{id}', [ProjectController::class, 'update']);
+        Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+    });
 
-    Route::get('/saved-views', [SavedViewController::class, 'index']);
-    Route::post('/saved-views', [SavedViewController::class, 'store']);
-    Route::delete('/saved-views/{id}', [SavedViewController::class, 'destroy']);
+    Route::middleware('capability:tasks.view|tasks.manage')->group(function () {
+        Route::get('/tasks', [TaskController::class, 'index']);
+        Route::get('/tasks/{id}', [TaskController::class, 'show']);
+    });
+    Route::middleware('capability:tasks.manage')->group(function () {
+        Route::post('/tasks', [TaskController::class, 'store']);
+        Route::put('/tasks/{id}', [TaskController::class, 'update']);
+        Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+        Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);
+        Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
+    });
+
+    Route::middleware('capability:qa.view|qa.manage')->group(function () {
+        Route::get('/qa-forms', [QaController::class, 'index']);
+        Route::get('/qa-forms/{id}', [QaController::class, 'show']);
+    });
+    Route::middleware('capability:qa.manage')->group(function () {
+        Route::post('/qa-forms', [QaController::class, 'store']);
+        Route::put('/qa-forms/{id}', [QaController::class, 'update']);
+        Route::delete('/qa-forms/{id}', [QaController::class, 'destroy']);
+    });
+
+    Route::middleware('capability:timer.track')->group(function () {
+        Route::post('/timer/log', [TimerController::class, 'logTime']);
+        Route::get('/timer/logs', [TimerController::class, 'index']);
+    });
+
+    Route::middleware('capability:settings.manage')->group(function () {
+        Route::get('/saved-views', [SavedViewController::class, 'index']);
+        Route::post('/saved-views', [SavedViewController::class, 'store']);
+        Route::delete('/saved-views/{id}', [SavedViewController::class, 'destroy']);
+    });
 
     // Phase 8 API (Chat & Communication)
-    Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
-    Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
-    Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
-    Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+    Route::middleware('capability:chat.access')->group(function () {
+        Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
+        Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
+        Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
+        Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+    });
 
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
     Route::post('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'store']);
+    Route::put('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'update']);
+    Route::delete('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'destroy']);
+    Route::post('/announcements/{id}/react', [\App\Http\Controllers\AnnouncementController::class, 'react']);
 
     Route::get('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'index']);
     Route::post('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'store']);
@@ -163,11 +198,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store']);
 
     // Phase 9 API (Reports & Exports)
-    Route::get('/reports/data', [\App\Http\Controllers\ReportController::class, 'data']);
-    Route::post('/reports/export', [\App\Http\Controllers\ReportController::class, 'export']);
-    Route::get('/reports/exports', [\App\Http\Controllers\ReportController::class, 'exports']);
-    Route::get('/reports/attendance-summary', [\App\Http\Controllers\ReportController::class, 'attendanceSummary']);
-    Route::get('/reports/leave-summary', [\App\Http\Controllers\ReportController::class, 'leaveSummary']);
+    Route::middleware('capability:reports.view|reports.manage')->group(function () {
+        Route::get('/reports/data', [\App\Http\Controllers\ReportController::class, 'data']);
+        Route::post('/reports/export', [\App\Http\Controllers\ReportController::class, 'export']);
+        Route::get('/reports/exports', [\App\Http\Controllers\ReportController::class, 'exports']);
+        Route::get('/reports/attendance-summary', [\App\Http\Controllers\ReportController::class, 'attendanceSummary']);
+        Route::get('/reports/leave-summary', [\App\Http\Controllers\ReportController::class, 'leaveSummary']);
+    });
     
     // Phase 10 API (Settings & Audit Logs)
     Route::middleware('capability:settings.manage')->group(function () {
@@ -193,23 +230,13 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::apiResource('users', UserController::class);
     });
     Route::apiResource('companies', CompanyController::class)->middleware('capability:settings.manage');
-    Route::apiResource('auto-numberings', AutoNumberingController::class)->middleware('capability:settings.manage');
+    Route::apiResource('auto-numberings', AutoNumberingController::class)->only(['index', 'update'])->middleware('capability:settings.manage');
     
     // Leave Module
-    Route::get('/holidays', [\App\Http\Controllers\HolidayController::class, 'index']);
     Route::middleware('capability:settings.manage')->group(function () {
         Route::post('/holidays', [\App\Http\Controllers\HolidayController::class, 'store']);
         Route::put('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'update']);
         Route::delete('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'destroy']);
-    });
-
-    Route::prefix('leave-requests')->group(function () {
-        Route::get('/', [\App\Http\Controllers\LeaveRequestController::class, 'index']);
-        Route::post('/', [\App\Http\Controllers\LeaveRequestController::class, 'store']);
-        Route::get('/pending', [\App\Http\Controllers\LeaveRequestController::class, 'pending']);
-        Route::get('/history', [\App\Http\Controllers\LeaveRequestController::class, 'history']);
-        Route::get('/{id}', [\App\Http\Controllers\LeaveRequestController::class, 'show']);
-        Route::post('/{id}/decision', [\App\Http\Controllers\LeaveRequestController::class, 'decision']);
     });
 
     // Departments

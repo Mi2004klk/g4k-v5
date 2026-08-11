@@ -1,0 +1,5 @@
+export const STALE_TIME_DIRECTORY = 5 * 60 * 1000;
+export const STALE_TIME_METRICS = 30 * 1000;
+export const STALE_TIME_ATTENDANCE = 30 * 1000;
+export const STALE_TIME_CONFIG = 60 * 60 * 1000;
+export const STALE_TIME_NOTIFICATIONS = 10 * 1000;

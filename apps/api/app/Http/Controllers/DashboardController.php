@@ -53,7 +53,7 @@ class DashboardController extends Controller
                 $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
                 
                 $data['pending_approvals'] = DB::table('leave_requests')->where('status', 'pending')->count();
-                $data['recent_activity'] = DB::table('audit_logs')->orderBy('created_at', 'desc')->limit(10)->get();
+                $data['recent_activity'] = DB::table('audit_logs')->orderBy('at', 'desc')->limit(10)->get();
             }
 
             if ($activeRole === 'hr') {
@@ -95,14 +95,18 @@ class DashboardController extends Controller
                 $data['pending_submissions'] = 0; // Empty state for submissions module
             }
 
-            // Shared safe table checks for projects & tasks
             $data['has_projects_module'] = Schema::hasTable('projects');
             if ($activeRole === 'super_admin' || $activeRole === 'hr') {
                 $data['active_projects'] = $data['has_projects_module']
                     ? DB::table('projects')->where('status', 'active')->count() : 0;
             } elseif ($activeRole === 'employee') {
-                // Future module: just return 0 for now as 'my projects'
-                $data['active_projects'] = 0;
+                $hasProjectMembers = Schema::hasTable('project_members');
+                $data['active_projects'] = ($data['has_projects_module'] && $hasProjectMembers)
+                    ? DB::table('project_members')
+                        ->join('projects', 'project_members.project_id', '=', 'projects.id')
+                        ->where('project_members.user_id', $user->id)
+                        ->where('projects.status', 'active')
+                        ->count() : 0;
             }
 
             $data['has_tasks_module'] = Schema::hasTable('tasks');
@@ -120,6 +124,9 @@ class DashboardController extends Controller
                     ->where('date', $today)
                     ->value('status');
                 $data['my_today_status'] = $todayStatus ?? 'absent';
+                $data['pending_approvals'] = Schema::hasTable('leave_requests')
+                    ? DB::table('leave_requests')->where('user_id', $user->id)->where('status', 'pending')->count()
+                    : 0;
                 
                 // Future Modules (empty states)
                 $data['recent_task_progress'] = [];

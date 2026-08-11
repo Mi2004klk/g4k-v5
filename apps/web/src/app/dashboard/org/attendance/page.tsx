@@ -4,7 +4,8 @@ import { useUrlState } from '@/hooks/use-url-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { HrAttendanceTable } from '@/components/attendance/hr-attendance-table';
 import { HrAttendanceAnalytics } from '@/components/attendance/hr-attendance-analytics';
-import { HrAttendanceGraph } from '@/components/attendance/hr-attendance-graph';
+import dynamic from 'next/dynamic';
+const HrAttendanceGraph = dynamic(() => import('@/components/attendance/hr-attendance-graph').then(mod => mod.HrAttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 import Link from 'next/link';
 import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { Users, BarChart3, Settings } from 'lucide-react';
@@ -26,7 +27,7 @@ export default function HrAttendancePage() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" asChild className="shrink-0 bg-white dark:bg-neutral-900">
+                <Button variant="outline" size="icon" asChild className="shrink-0 bg-white dark:bg-neutral-900" aria-label="Manage Working Hours">
                   <Link href="/dashboard/settings?tab=company">
                     <Settings className="w-4 h-4 text-neutral-500" />
                   </Link>

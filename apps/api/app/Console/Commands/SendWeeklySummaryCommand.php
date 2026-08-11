@@ -17,7 +17,7 @@ class SendWeeklySummaryCommand extends Command
     public function handle(): void
     {
         $recipients = User::whereHas('roleAssignments', function ($q) {
-            $q->whereIn('role', ['hr', 'super_admin', 'admin']);
+            $q->whereIn('role', ['hr', 'super_admin']);
         })->get();
 
         $metrics = [

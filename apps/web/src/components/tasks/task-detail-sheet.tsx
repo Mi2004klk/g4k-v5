@@ -59,12 +59,12 @@ export function TaskDetailSheet({
     },
   });
 
-  if (!task) return null;
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800">
+        {task && (
+          <>
+            <SheetHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
               {task.status.replace("_", " ")}
@@ -191,7 +191,9 @@ export function TaskDetailSheet({
               </div>
             ))}
           </TabsContent>
-        </Tabs>
+            </Tabs>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );

@@ -7,7 +7,6 @@ import { AdminAttendanceAnalytics } from '@/components/attendance/admin-attendan
 import { AdminAttendanceTrendsGraph } from '@/components/attendance/admin-attendance-trends-graph';
 import { AdminOpenShiftsTable } from '@/components/attendance/admin-open-shifts-table';
 import { Users, BarChart3, Activity } from 'lucide-react';
-import { Skeleton } from '@g4k/ui/components';
 
 export default function AdminAttendancePage() {
   const [tab, setTab] = useUrlState('tab', 'today');
@@ -24,16 +23,16 @@ export default function AdminAttendancePage() {
 
         <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
           <TabsList className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-sm">
-            <TabsTrigger value="today" className="rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
-              <Users className="w-4 h-4 mr-2" />
+            <TabsTrigger value="today" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+              <Users className="w-4 h-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
-              <BarChart3 className="w-4 h-4 mr-2" />
+            <TabsTrigger value="analytics" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+              <BarChart3 className="w-4 h-4" />
               Analytics & Trends
             </TabsTrigger>
-            <TabsTrigger value="shifts" className="rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
-              <Activity className="w-4 h-4 mr-2" />
+            <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+              <Activity className="w-4 h-4" />
               Open Shifts
             </TabsTrigger>
           </TabsList>

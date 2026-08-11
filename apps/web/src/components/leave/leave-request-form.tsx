@@ -46,9 +46,9 @@ export function LeaveRequestForm() {
       return;
     }
 
-    // Task 245: Check client-side for overlaps
-    const historyData: any = queryClient.getQueryData(["my-leave-history", "all", "all"]);
-    const existingLeaves = historyData?.data || [];
+    // Task 245: Check client-side for overlaps across any cached my-leave-history queries
+    const queries = queryClient.getQueriesData<any>({ queryKey: ["my-leave-history"] });
+    const existingLeaves = queries.flatMap(([_, data]) => data?.data || []);
     const hasOverlap = existingLeaves.some((leave: any) => {
       if (leave.approval?.status !== "pending") return false;
       const existStart = new Date(leave.start_date);
@@ -113,7 +113,7 @@ export function LeaveRequestForm() {
                   />
                   <Label
                     htmlFor={`type-${item.id}`}
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-violet-600 peer-data-[state=checked]:bg-violet-50 dark:peer-data-[state=checked]:bg-violet-900/20 [&:has([data-state=checked])]:border-primary text-xs cursor-pointer text-center"
+                    className="flex flex-col items-center justify-between rounded-md border-2 border-border bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-violet-600 peer-data-[state=checked]:bg-violet-50 dark:peer-data-[state=checked]:bg-violet-900/20 [&:has([data-state=checked])]:border-primary text-xs cursor-pointer text-center"
                   >
                     {item.label}
                   </Label>

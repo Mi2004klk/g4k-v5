@@ -20,18 +20,23 @@ import {
   AlertDialogTrigger,
 } from "@g4k/ui/components";
 
+import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
+import { LiveTimer } from "@/components/attendance/live-timer";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function TimeClockWidget({ className }: { className?: string }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+
   const [showConfirmOut, setShowConfirmOut] = useState(false);
   const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
 
+  const queryClient = useQueryClient();
+  
   const {
     isActive,
     isOnBreak,
-    activeSeconds,
+    baseSeconds,
+    lastActiveTimestamp,
     syncWithServer,
     startTimer,
     stopTimer,
@@ -39,31 +44,36 @@ export function TimeClockWidget({ className }: { className?: string }) {
     endBreak,
   } = useTimerStore();
 
+  const { data: todayData, isLoading, isError, refetch } = useQuery({
+    queryKey: ["attendance-today"],
+    queryFn: () => apiFetch("/attendance/me/today"),
+  });
+
+  useEffect(() => {
+    if (todayData) {
+      if (todayData.standard_seconds) {
+        setStandardSeconds(todayData.standard_seconds);
+      }
+      syncWithServer(todayData.day, todayData.events || []);
+    }
+  }, [todayData, syncWithServer]);
+
+  useEffect(() => {
+    const handleSyncFail = () => {
+      queryClient.invalidateQueries({ queryKey: ["attendance-today"] });
+    };
+    window.addEventListener("attendance-sync-failed", handleSyncFail);
+    return () => window.removeEventListener("attendance-sync-failed", handleSyncFail);
+  }, [queryClient]);
+
   let activeState: "not_started" | "active" | "on_break" | "completed" = "not_started";
   if (isActive && !isOnBreak) activeState = "active";
   if (isOnBreak) activeState = "on_break";
-  if (!isActive && !isOnBreak && activeSeconds > 0) activeState = "completed";
-  if (!isActive && !isOnBreak && activeSeconds === 0) activeState = "not_started";
-
-  const fetchTodayStatus = async () => {
-    try {
-      setError(false);
-      setLoading(true);
-      const data = await apiFetch("/attendance/me/today");
-      if (data.standard_seconds) {
-        setStandardSeconds(data.standard_seconds);
-      }
-      syncWithServer(data.day, data.events || []);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTodayStatus();
-  }, []);
+  // `activeSeconds` logically means we have some accumulated time or active shift. 
+  const hasWorked = baseSeconds > 0 || isActive;
+  
+  if (!isActive && !isOnBreak && hasWorked) activeState = "completed";
+  if (!isActive && !isOnBreak && !hasWorked) activeState = "not_started";
 
   const handlePunch = async (type: string) => {
     // Optimistic UI state
@@ -72,14 +82,14 @@ export function TimeClockWidget({ className }: { className?: string }) {
     // Check auto-end break on clock out
     if (type === "clock_out" && isOnBreak) {
       await offlineEngine.recordPunch("break_end", timestamp);
-      endBreak();
+      endBreak(timestamp);
     }
 
     if (type === "clock_in") {
       startTimer(timestamp, 0);
     } else if (type === "end_break") {
       // resume ticking
-      startTimer(timestamp, activeSeconds);
+      endBreak(timestamp);
     } else if (type === "start_break") {
       startBreak(timestamp);
     } else if (type === "clock_out") {
@@ -92,31 +102,34 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
       // Re-fetch to ensure exact server state once online
       if (navigator.onLine) {
-        fetchTodayStatus();
+        queryClient.invalidateQueries({ queryKey: ["attendance-today"] });
       }
       toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
     } catch (err: any) {
       // Revert optimistic state on fatal error
       toast.error(err.message || "Failed to record punch. Syncing with server...");
-      fetchTodayStatus(); // Re-sync store state
+      queryClient.invalidateQueries({ queryKey: ["attendance-today"] }); // Re-sync store state
     }
   };
 
-  const formatTime = (secs: number) => {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    const s = secs % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
 
-  const isOvertime = activeSeconds > standardSeconds;
 
   return (
     <div className={cn("relative w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between", className)}>
-      {loading && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 dark:bg-neutral-950/90 backdrop-blur-sm rounded-2xl gap-2">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-          <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Loading schedule...</p>
+      {isLoading && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-2xl p-6 gap-6">
+          <div className="flex justify-between w-full">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+            <Skeleton className="h-16 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div className="w-full flex gap-2">
+            <Skeleton className="h-12 flex-1 rounded-xl" />
+            <Skeleton className="h-12 flex-1 rounded-xl" />
+          </div>
         </div>
       )}
 
@@ -125,10 +138,15 @@ export function TimeClockWidget({ className }: { className?: string }) {
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Time Clock
           </span>
-          {error && (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-rose-500 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
-              <AlertCircle className="w-3 h-3" /> Offline Mode
-            </span>
+          {isError && (
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[10px] font-bold text-rose-500 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
+                <AlertCircle className="w-3 h-3" /> Offline Mode
+              </span>
+              <button onClick={() => refetch()} className="text-[10px] font-bold text-neutral-500 hover:text-neutral-700 underline">
+                Retry
+              </button>
+            </div>
           )}
         </div>
         <span
@@ -145,19 +163,37 @@ export function TimeClockWidget({ className }: { className?: string }) {
       </div>
 
       <div className="my-4 text-center">
-        <div
-          className={cn(
-            "text-4xl sm:text-5xl font-mono font-bold tracking-tight tabular-nums transition-colors",
-            isOvertime ? "text-amber-500" : "text-neutral-900 dark:text-white"
-          )}
-        >
-          {formatTime(activeSeconds)}
-        </div>
-        {isOvertime && (
-          <p className="text-[11px] text-amber-500 font-medium mt-1">
-            Overtime Threshold Exceeded (+{formatTime(activeSeconds - standardSeconds)})
-          </p>
-        )}
+        <LiveTimer
+          render={(formattedTime, displaySeconds) => {
+            const isOvertime = displaySeconds > standardSeconds;
+            
+            // Format time difference nicely
+            const formatTimeDiff = (secs: number) => {
+              const h = Math.floor(secs / 3600);
+              const m = Math.floor((secs % 3600) / 60);
+              const s = secs % 60;
+              return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+            };
+
+            return (
+              <>
+                <div
+                  className={cn(
+                    "text-4xl sm:text-5xl font-mono font-bold tracking-tight tabular-nums transition-colors",
+                    isOvertime ? "text-amber-500" : "text-neutral-900 dark:text-white"
+                  )}
+                >
+                  {formattedTime}
+                </div>
+                {isOvertime && (
+                  <p className="text-[11px] text-amber-500 font-medium mt-1">
+                    Overtime Threshold Exceeded (+{formatTimeDiff(displaySeconds - standardSeconds)})
+                  </p>
+                )}
+              </>
+            );
+          }}
+        />
       </div>
 
       <div className="flex items-center justify-center gap-3">

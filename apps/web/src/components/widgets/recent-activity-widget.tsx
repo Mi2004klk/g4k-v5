@@ -3,15 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { formatDistanceToNow } from "date-fns";
-import { Activity } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Activity, AlertTriangle } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
+import { STALE_TIME_METRICS } from "@/lib/query-keys";
 
 export function RecentActivityWidget() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["dashboard-metrics"],
     queryFn: () => apiFetch("/dashboard/metrics"),
-    staleTime: 30000,
+    staleTime: STALE_TIME_METRICS,
   });
 
   if (isLoading) {
@@ -30,6 +31,26 @@ export function RecentActivityWidget() {
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-none shadow-sm h-full flex flex-col bg-white dark:bg-neutral-900">
+        <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Activity className="w-4 h-4 text-violet-500" />
+            Recent Activity Feed
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col items-center justify-center p-6 bg-rose-50/50 dark:bg-rose-950/10">
+          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <span className="text-[11px] text-rose-500 font-medium mb-2">Failed to load</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            Retry
+          </Button>
         </CardContent>
       </Card>
     );

@@ -9053,7 +9053,7 @@ function cn(...inputs) {
 // src/components/button.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
 var buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -9085,14 +9085,14 @@ var RainbowBorder = React.forwardRef(
       {
         ref,
         className: cn(
-          "group relative inline-flex rounded-md p-[1px] overflow-hidden",
+          "group relative inline-flex rounded-md p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(138,43,226,0.4)]",
           className
         ),
         ...props,
         children: [
           /* @__PURE__ */ jsx("span", { className: "absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8A2BE2_0%,#F97316_10%,#EF4444_20%,#FF1493_30%,#D946EF_40%,#3B82F6_50%,#6366F1_60%,#06B6D4_70%,#14B8A6_80%,#22C55E_90%,#8A2BE2_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:hidden" }),
           /* @__PURE__ */ jsx("span", { className: "absolute inset-0 rounded-md ring-1 ring-inset ring-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:opacity-100 hidden motion-reduce:block" }),
-          /* @__PURE__ */ jsx("div", { className: "relative inline-flex h-full w-full rounded-md bg-background", children })
+          /* @__PURE__ */ jsx("div", { className: "relative inline-flex h-full w-full rounded-md bg-primary", children })
         ]
       }
     );
@@ -9202,6 +9202,7 @@ var PasswordInput = React3.forwardRef(
 PasswordInput.displayName = "PasswordInput";
 
 // src/components/empty-state.tsx
+import { Inbox } from "lucide-react";
 import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 function EmptyState({
   title,
@@ -9231,17 +9232,7 @@ function EmptyState({
             playsInline: true,
             className: "mb-4 h-16 w-16 opacity-75 rounded-full"
           }
-        ) : /* @__PURE__ */ jsx4(
-          "video",
-          {
-            src: "/animated-logo.mp4",
-            autoPlay: true,
-            loop: true,
-            muted: true,
-            playsInline: true,
-            className: "mb-4 h-16 w-16 opacity-75 rounded-full"
-          }
-        ),
+        ) : /* @__PURE__ */ jsx4(Inbox, { className: "mb-4 h-12 w-12 text-muted-foreground opacity-50" }),
         /* @__PURE__ */ jsx4("h3", { className: "text-base font-semibold", children: title }),
         description && /* @__PURE__ */ jsx4("p", { className: "mt-1 max-w-sm text-sm text-muted-foreground", children: description }),
         action && /* @__PURE__ */ jsx4("div", { className: "mt-5", children: action })
@@ -9281,6 +9272,7 @@ var DialogContent = React4.forwardRef(({ className, children, ...props }, ref) =
         "fixed left-[50%] top-[50%] z-50 grid w-full h-[100dvh] sm:h-auto sm:max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-[280ms] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
         className
       ),
+      "aria-describedby": props["aria-describedby"] ?? void 0,
       ...props,
       children: [
         children,
@@ -9372,6 +9364,7 @@ var AlertDialogContent = React5.forwardRef(({ className, ...props }, ref) => /* 
         "fixed left-[50%] top-[50%] z-50 grid w-full h-[100dvh] sm:h-auto sm:max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-[280ms] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg border-border",
         className
       ),
+      "aria-describedby": props["aria-describedby"] ?? void 0,
       ...props
     }
   )
@@ -9491,6 +9484,7 @@ var SheetContent = React6.forwardRef(({ side = "right", className, children, ...
     {
       ref,
       className: cn(sheetVariants({ side }), className),
+      "aria-describedby": props["aria-describedby"] ?? void 0,
       ...props,
       children: [
         children,
@@ -11131,7 +11125,8 @@ function DataTable({
   stickyFirstCol = true,
   rowSelection: externalRowSelection,
   onRowSelectionChange,
-  onInlineEditSave
+  onInlineEditSave,
+  containerHeight
 }) {
   const [sorting, setSorting] = useState4([]);
   const [columnVisibility, setColumnVisibility] = useState4({});
@@ -11206,8 +11201,12 @@ function DataTable({
     (e) => {
       const target = e.target;
       const bottom = target.scrollHeight - target.scrollTop === target.clientHeight;
-      if (bottom && hasNextPage && !isFetchingNextPage && fetchNextPage) {
-        fetchNextPage();
+      if (bottom && hasNextPage && !isFetchingNextPage) {
+        if (fetchNextPage) {
+          fetchNextPage();
+        } else {
+          console.warn("DataTable: hasNextPage is true but fetchNextPage is missing. Infinite scroll is disabled.");
+        }
       }
     },
     [fetchNextPage, hasNextPage, isFetchingNextPage]
@@ -11236,7 +11235,7 @@ function DataTable({
       {
         ref: tableContainerRef,
         onScroll: handleScroll,
-        className: "rounded-md border bg-background relative h-[600px] overflow-auto",
+        className: cn("rounded-md border bg-background relative overflow-auto", containerHeight),
         children: [
           !isMobile ? /* @__PURE__ */ jsxs23("table", { className: "w-full caption-bottom text-sm grid", children: [
             /* @__PURE__ */ jsx34(
@@ -11320,7 +11319,9 @@ function DataTable({
           isFetchingNextPage && /* @__PURE__ */ jsx34("div", { className: "p-4 text-center text-sm text-muted-foreground", children: "Loading more..." })
         ]
       }
-    )
+    ),
+    hasNextPage && !fetchNextPage && /* @__PURE__ */ jsx34("div", { className: "flex justify-center pt-2", children: /* @__PURE__ */ jsx34(Button, { variant: "outline", disabled: true, children: "Load more (missing handler)" }) }),
+    hasNextPage && fetchNextPage && /* @__PURE__ */ jsx34("div", { className: "flex justify-center pt-2 md:hidden", children: /* @__PURE__ */ jsx34(Button, { variant: "outline", onClick: () => fetchNextPage(), disabled: isFetchingNextPage, children: isFetchingNextPage ? "Loading..." : "Load more" }) })
   ] });
 }
 

@@ -199,7 +199,7 @@ class AttendanceController extends Controller
     private function applyHrScoping($query, $user)
     {
         $isAdmin = RoleAssignment::where('user_id', $user->id)
-            ->whereIn('role', ['super_admin', 'admin'])
+            ->where('role', 'super_admin')
             ->exists();
         
         if (!$isAdmin) {
@@ -248,7 +248,7 @@ class AttendanceController extends Controller
         // First verify they have access to this user (same department or admin)
         $targetUser = \App\Models\User::findOrFail($userId);
         $isAdmin = RoleAssignment::where('user_id', $request->user()->id)
-            ->whereIn('role', ['super_admin', 'admin'])
+            ->where('role', 'super_admin')
             ->exists();
             
         if (!$isAdmin && $request->user()->department_id !== $targetUser->department_id) {
@@ -280,7 +280,7 @@ class AttendanceController extends Controller
         // First verify they have access to this user
         $targetUser = \App\Models\User::findOrFail($userId);
         $isAdmin = RoleAssignment::where('user_id', $request->user()->id)
-            ->whereIn('role', ['super_admin', 'admin'])
+            ->where('role', 'super_admin')
             ->exists();
             
         if (!$isAdmin && $request->user()->department_id !== $targetUser->department_id) {
@@ -398,7 +398,7 @@ class AttendanceController extends Controller
 
         // HR-CORRECT: HR may only correct attendance within their own team/department.
         $isAdmin = RoleAssignment::where('user_id', $actor->id)
-            ->whereIn('role', ['super_admin', 'admin'])
+            ->where('role', 'super_admin')
             ->exists();
             
         if (!$isAdmin) {

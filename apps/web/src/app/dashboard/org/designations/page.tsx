@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Award, Users, Edit2, Loader2, Search, MoreVertical, Download, Trash2, Shield, UserX, UserCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
+import { getAuthToken, useAuthStore } from "@/lib/auth-store";
 
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -30,10 +31,9 @@ import {
 import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
-import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@g4k/ui/components";
+import { DataTable, StatusBadge } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
-import { Avatar, AvatarFallback } from "@g4k/ui/components";
+import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 
 export default function DesignationsPage() {
   const queryClient = useQueryClient();
@@ -47,14 +47,17 @@ export default function DesignationsPage() {
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [editingDesig, setEditingDesig] = useState<any>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["designations", debouncedSearch, statusFilter],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (pageParam) params.append("cursor", pageParam);
       return apiFetch(`/designations?${params.toString()}`);
     },
+    initialPageParam: "",
+    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
   });
 
   const createMutation = useMutation({
@@ -107,7 +110,7 @@ export default function DesignationsPage() {
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/designations/export?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
       });
       if (!response.ok) throw new Error("Export failed");
       
@@ -126,13 +129,17 @@ export default function DesignationsPage() {
     }
   };
 
-  const designationsList = data?.data || [];
+  const designationsList = data?.pages?.flatMap((page: any) => page.data || []) || [];
 
-  const columns = useMemo<ColumnDef<any>[]>(() => [
-    {
+  const { activeRole } = useAuthStore();
+  const isAdmin = activeRole === "admin" || activeRole === "super_admin" || activeRole === "founder" || activeRole === "hr";
+
+  const columns = useMemo<any[]>(() => {
+    const baseColumns: any[] = [
+      {
       accessorKey: "name",
       header: "Designation",
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
             <Award className="w-4 h-4" />
@@ -151,12 +158,18 @@ export default function DesignationsPage() {
     {
       accessorKey: "users_count",
       header: "Assigned Employees",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const count = row.original.users_count || 0;
+        const users = row.original.users || [];
         return (
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {[...Array(Math.min(count, 3))].map((_, i) => (
+              {users.length > 0 ? users.slice(0, 3).map((u: any, i: number) => (
+                <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                  <AvatarImage src={u.avatar_url || ""} />
+                  <AvatarFallback className="text-[9px] bg-neutral-200 text-neutral-600 font-bold">{u.name?.charAt(0) || "U"}</AvatarFallback>
+                </Avatar>
+              )) : [...Array(Math.min(count, 3))].map((_, i) => (
                 <Avatar key={i} className="w-6 h-6 border-2 border-background">
                   <AvatarFallback className="text-[9px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
                 </Avatar>
@@ -170,55 +183,61 @@ export default function DesignationsPage() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: any) => {
         const isActive = row.original.is_active;
         return (
-          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+          <StatusBadge status={isActive ? "success" : "danger"} dot className="uppercase">
             {isActive ? "Active" : "Inactive"}
-          </span>
+          </StatusBadge>
         );
       }
     },
-    {
-      id: "actions",
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => {
-        const desig = row.original;
-        const isInactive = !desig.is_active;
-        return (
-          <div className="text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => { setEditingDesig(desig); setFormData({ name: desig.name, description: desig.description || "" }); setIsModalOpen(true); }}>
-                  <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => {
-                  if (isInactive) {
-                    statusMutation.mutate({ id: desig.id, status: 'active' });
-                  } else {
-                    setConfirmState({ isOpen: true, type: "deactivate", payload: desig });
-                  }
-                }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
-                  {isInactive ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
-                  {isInactive ? "Activate" : "Deactivate"}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: desig })}>
-                  <Trash2 className="w-4 h-4 mr-2 text-rose-600" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
-  ], []);
+    ];
+
+    if (isAdmin) {
+      baseColumns.push({
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }: any) => {
+          const desig = row.original;
+          const isInactive = !desig.is_active;
+          return (
+            <div className="text-right">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => { setEditingDesig(desig); setFormData({ name: desig.name, description: desig.description || "" }); setIsModalOpen(true); }}>
+                    <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => {
+                    if (isInactive) {
+                      statusMutation.mutate({ id: desig.id, status: 'active' });
+                    } else {
+                      setConfirmState({ isOpen: true, type: "deactivate", payload: desig });
+                    }
+                  }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
+                    {isInactive ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                    {isInactive ? "Activate" : "Deactivate"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: desig })}>
+                    <Trash2 className="w-4 h-4 mr-2 text-rose-600" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      });
+    }
+
+    return baseColumns;
+  }, [isAdmin]);
 
   return (
     <div className="space-y-6">
@@ -232,12 +251,16 @@ export default function DesignationsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-sm">
-            <Download className="w-4 h-4" /> Export
-          </Button>
-          <Button onClick={() => { setEditingDesig(null); setFormData({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow">
-            <Plus className="w-4 h-4" /> Add Designation
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-sm">
+              <Download className="w-4 h-4" /> Export
+            </Button>
+          )}
+          {isAdmin && (
+            <Button onClick={() => { setEditingDesig(null); setFormData({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow">
+              <Plus className="w-4 h-4" /> Add Designation
+            </Button>
+          )}
         </div>
       </div>
 
@@ -273,12 +296,29 @@ export default function DesignationsPage() {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
+          ) : isError ? (
+            <div className="p-12">
+              <EmptyState title="Failed to load designations" description="There was an error fetching the designation list. Please try again." />
+              <div className="flex justify-center mt-4">
+                <Button onClick={() => refetch()} variant="outline">Retry</Button>
+              </div>
+            </div>
           ) : designationsList.length === 0 ? (
             <div className="p-12">
               <EmptyState title="No designations found" description="Try adjusting your search query or create a new designation." />
             </div>
           ) : (
-            <DataTable columns={columns} data={designationsList} />
+            <div className="space-y-4">
+              <DataTable columns={columns} data={designationsList} />
+              {hasNextPage && (
+                <div className="flex justify-center pb-6">
+                  <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                    {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Load More
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -287,6 +327,7 @@ export default function DesignationsPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingDesig ? "Edit Designation" : "Add Designation"}</DialogTitle>
+            <DialogDescription className="sr-only">Create or edit a designation.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>

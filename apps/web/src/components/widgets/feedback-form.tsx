@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MessageSquarePlus, Send, Loader2 } from "lucide-react";
+import { MessageSquarePlus, Send, Loader2, AlertTriangle } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
@@ -43,6 +43,12 @@ export function FeedbackForm() {
           className="w-full p-2.5 text-xs rounded-xl border border-input bg-background resize-none"
           rows={3}
         />
+        {submitMutation.isError && (
+          <div className="flex items-center gap-2 text-[10px] text-rose-500 bg-rose-50 dark:bg-rose-950/20 p-2 rounded-lg">
+            <AlertTriangle className="w-3 h-3" />
+            <span>Failed to submit. Please try again.</span>
+          </div>
+        )}
         <Button
           onClick={() => submitMutation.mutate()}
           disabled={submitMutation.isPending || !body.trim()}

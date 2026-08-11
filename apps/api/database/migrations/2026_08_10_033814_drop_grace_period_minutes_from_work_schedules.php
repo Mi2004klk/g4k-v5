@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('work_schedules', function (Blueprint $table) {
-            $table->dropColumn('grace_period_minutes');
-        });
+        if (Schema::hasColumn('work_schedules', 'grace_period_minutes')) {
+            Schema::table('work_schedules', function (Blueprint $table) {
+                $table->dropColumn('grace_period_minutes');
+            });
+        }
     }
 
     /**

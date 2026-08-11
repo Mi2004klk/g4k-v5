@@ -150,8 +150,8 @@ export function CommandPalette() {
           {isOnBreak && (
             <CommandItem onSelect={() => runCommand(async () => {
               const ts = new Date().toISOString();
-              const { activeSeconds, startTimer } = useTimerStore.getState();
-              startTimer(ts, activeSeconds);
+              const { endBreak } = useTimerStore.getState();
+              endBreak(ts);
               try { await offlineEngine.recordPunch("break_end", ts); toast.success("Break Ended"); } 
               catch(err: any) { toast.error(err.message); }
             })}>
@@ -165,7 +165,7 @@ export function CommandPalette() {
               const state = useTimerStore.getState();
               if (state.isOnBreak) {
                 await offlineEngine.recordPunch("break_end", ts);
-                state.endBreak();
+                state.endBreak(ts);
               }
               state.stopTimer();
               try { await offlineEngine.recordPunch("clock_out", ts); toast.success("Clocked Out"); } 

@@ -40,7 +40,7 @@ class FlagOpenShifts implements ShouldQueue
 
             // Find HR for this department or global Admins
             $hrUsers = User::whereHas('roles', function($q) {
-                $q->whereIn('role', ['admin', 'super_admin']);
+                $q->where('role', 'super_admin');
             })->orWhere(function($q) use ($user) {
                 $q->where('department_id', $user->department_id)
                   ->whereHas('roles', function($q2) {

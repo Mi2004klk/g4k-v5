@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
+import Image from "next/image"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "../utils/cn"
@@ -44,13 +45,20 @@ Avatar.displayName = AvatarPrimitive.Root.displayName
 
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> & { src?: string; alt?: string }
+>(({ className, src, alt, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
+    asChild
     className={cn("aspect-square h-full w-full object-cover", className)}
     {...props}
-  />
+  >
+    {src ? (
+      <Image src={src} alt={alt || ""} fill sizes="96px" className="object-cover" />
+    ) : (
+      <img src="" alt={alt || ""} />
+    )}
+  </AvatarPrimitive.Image>
 ))
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 

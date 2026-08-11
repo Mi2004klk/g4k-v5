@@ -1,3 +1,5 @@
+> **ARCHIVED:** This file is stale and superseded by context.md and ix-3.md.
+
 # plan-future-modules.md — Games4King Workplace OS: Post-M1 Module Roadmap
 ## (Projects/Tasks · Chat & Notifications · Announcements · Reports & Exports)
 
@@ -140,3 +142,4 @@ perf budgets) → optimise → security-check → deploy to production → archi
 ### End of plan-future-modules.md
 **These modules are planned and ready to execute after M1 ships. They are explicitly NOT part of the
 M1 plan in `plan.md` (ADR-022).**
+

@@ -25,7 +25,7 @@ export function MessageComposer({
 
   return (
     <div className="p-3 border-t border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center gap-2">
-      <Button size="icon" variant="ghost" className="h-9 w-9 text-neutral-400">
+      <Button size="icon" variant="ghost" className="h-9 w-9 text-neutral-400" aria-label="Add attachment">
         <Paperclip className="w-4 h-4" />
       </Button>
 
@@ -48,6 +48,7 @@ export function MessageComposer({
           }
         }}
         className="h-9 w-9 bg-violet-600 hover:bg-violet-700 text-white rounded-xl"
+        aria-label="Send message"
       >
         <Send className="w-4 h-4" />
       </Button>

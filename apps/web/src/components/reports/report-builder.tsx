@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download, FileSpreadsheet, FileText, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, DataTable } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 
 export function ReportBuilder() {
@@ -34,6 +34,14 @@ export function ReportBuilder() {
   });
 
   const items = reportData?.data || [];
+  const columns = items.length > 0 ? Object.keys(items[0]).map((key) => ({
+    accessorKey: key,
+    header: key.replace(/_/g, " ").toUpperCase(),
+    cell: ({ row }: any) => {
+      const val = row.original[key];
+      return typeof val === "object" ? (val?.name || JSON.stringify(val)) : String(val ?? "N/A");
+    }
+  })) : [];
 
   return (
     <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
@@ -90,29 +98,8 @@ export function ReportBuilder() {
         ) : items.length === 0 ? (
           <p className="text-xs text-neutral-400 py-8 text-center">No data found for this report.</p>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-neutral-100 dark:border-neutral-800">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-neutral-50 dark:bg-neutral-800/60 text-neutral-500 font-semibold uppercase text-[10px]">
-                <tr>
-                  {Object.keys(items[0] || {}).map((key) => (
-                    <th key={key} className="px-4 py-2.5">
-                      {key.replace(/_/g, " ")}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                {items.map((row: any, i: number) => (
-                  <tr key={i} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
-                    {Object.values(row).map((val: any, j: number) => (
-                      <td key={j} className="px-4 py-2.5 text-neutral-700 dark:text-neutral-300">
-                        {typeof val === "object" ? val?.name || JSON.stringify(val) : String(val ?? "N/A")}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="overflow-hidden rounded-xl border border-neutral-100 dark:border-neutral-800">
+            <DataTable columns={columns} data={items} />
           </div>
         )}
       </CardContent>

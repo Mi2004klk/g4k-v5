@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Building2, Users, Archive, Edit2, Loader2, Search, MoreVertical, ArchiveRestore, Download, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
+import { getAuthToken, useAuthStore } from "@/lib/auth-store";
 
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -30,7 +31,6 @@ import {
 import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
-import { ColumnDef } from "@tanstack/react-table";
 import { DataTable, StatusBadge } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
@@ -56,14 +56,17 @@ export default function DepartmentsPage() {
     enabled: !!selectedDeptMembers,
   });
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["departments", debouncedSearch, statusFilter],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (pageParam) params.append("cursor", pageParam);
       return apiFetch(`/departments?${params.toString()}`);
     },
+    initialPageParam: "",
+    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
   });
 
   const createDeptMutation = useMutation({
@@ -125,7 +128,7 @@ export default function DepartmentsPage() {
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/departments/export?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
       });
       if (!response.ok) throw new Error("Export failed");
       
@@ -144,10 +147,14 @@ export default function DepartmentsPage() {
     }
   };
 
-  const deptList = data?.data || [];
+  const deptList = data?.pages?.flatMap((page: any) => page.data || []) || [];
 
-  const columns: any[] = useMemo<ColumnDef<any>[]>(() => [
-    {
+  const { activeRole } = useAuthStore();
+  const isAdmin = activeRole === "admin" || activeRole === "super_admin" || activeRole === "founder" || activeRole === "hr";
+
+  const columns: any[] = useMemo<any[]>(() => {
+    const baseColumns: any[] = [
+      {
       accessorKey: "name",
       header: "Department",
       cell: ({ row }: any) => (
@@ -179,6 +186,7 @@ export default function DepartmentsPage() {
             <div className="flex -space-x-2">
               {(row.original.users || []).slice(0, 3).map((u: any, i: number) => (
                 <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                  <AvatarImage src={u.avatar_url || ""} />
                   <AvatarFallback className="text-[9px] bg-violet-100 text-violet-700 font-bold">{u.name?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
               ))}
@@ -219,46 +227,52 @@ export default function DepartmentsPage() {
           </StatusBadge>
         );
       }
-    },
-    {
-      id: "actions",
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }: any) => {
-        const dept = row.original;
-        const isArchived = !!dept.archived_at;
-        return (
-          <div className="text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => { setEditingDept(dept); setFormData({ name: dept.name, description: dept.description || "" }); setIsDeptModalOpen(true); }}>
-                  <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {isArchived ? (
-                  <DropdownMenuItem onClick={() => restoreMutation.mutate(dept.id)}>
-                    <ArchiveRestore className="w-4 h-4 mr-2 text-emerald-600" /> Restore
+    }
+    ];
+
+    if (isAdmin) {
+      baseColumns.push({
+        id: "actions",
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }: any) => {
+          const dept = row.original;
+          const isArchived = !!dept.archived_at;
+          return (
+            <div className="text-right">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => { setEditingDept(dept); setFormData({ name: dept.name, description: dept.description || "" }); setIsDeptModalOpen(true); }}>
+                    <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
                   </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "archive", payload: dept })}>
-                    <Archive className="w-4 h-4 mr-2 text-amber-600" /> Archive
+                  <DropdownMenuSeparator />
+                  {isArchived ? (
+                    <DropdownMenuItem onClick={() => restoreMutation.mutate(dept.id)}>
+                      <ArchiveRestore className="w-4 h-4 mr-2 text-emerald-600" /> Restore
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "archive", payload: dept })}>
+                      <Archive className="w-4 h-4 mr-2 text-amber-600" /> Archive
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: dept })}>
+                    <Trash2 className="w-4 h-4 mr-2 text-rose-600" /> Delete
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: dept })}>
-                  <Trash2 className="w-4 h-4 mr-2 text-rose-600" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
-  ], []);
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      });
+    }
+
+    return baseColumns;
+  }, [isAdmin]);
 
   return (
     <div className="space-y-6">
@@ -272,12 +286,16 @@ export default function DepartmentsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-sm">
-            <Download className="w-4 h-4" /> Export
-          </Button>
-          <Button onClick={() => { setEditingDept(null); setFormData({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow">
-            <Plus className="w-4 h-4" /> Add Department
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-sm">
+              <Download className="w-4 h-4" /> Export
+            </Button>
+          )}
+          {isAdmin && (
+            <Button onClick={() => { setEditingDept(null); setFormData({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow">
+              <Plus className="w-4 h-4" /> Add Department
+            </Button>
+          )}
         </div>
       </div>
 
@@ -325,7 +343,17 @@ export default function DepartmentsPage() {
               <EmptyState title="No departments found" description="Try adjusting your search query or create a new department." />
             </div>
           ) : (
-            <DataTable columns={columns} data={deptList} />
+            <div className="space-y-4">
+              <DataTable columns={columns} data={deptList} />
+              {hasNextPage && (
+                <div className="flex justify-center pb-6">
+                  <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                    {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Load More
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -334,6 +362,7 @@ export default function DepartmentsPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{editingDept ? "Edit Department" : "Add Department"}</DialogTitle>
+            <DialogDescription className="sr-only">Create or edit a department.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>

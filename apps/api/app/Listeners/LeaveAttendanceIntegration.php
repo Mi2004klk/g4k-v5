@@ -5,9 +5,11 @@ namespace App\Listeners;
 use App\Events\ApprovalDecided;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
-class LeaveAttendanceIntegration
+class LeaveAttendanceIntegration implements ShouldQueue
 {
     /**
      * Handle the event.
@@ -30,12 +32,18 @@ class LeaveAttendanceIntegration
             if ($schedule && !empty($schedule->working_days)) {
                 $decoded = is_string($schedule->working_days) ? json_decode($schedule->working_days, true) : $schedule->working_days;
                 if (is_array($decoded)) {
-                    $workingDays = $decoded;
+                    $workingDays = array_map('intval', $decoded);
                 }
             }
 
-            // Fetch holidays
-            $holidays = DB::table('holidays')->get();
+            // Fetch holidays filtered by request span year(s) or recurring
+            $startYear = $startDate->year;
+            $endYear = $endDate->year;
+            $holidays = DB::table('holidays')
+                ->where(function ($q) use ($startYear, $endYear) {
+                    $q->whereBetween(DB::raw('EXTRACT(YEAR FROM date)'), [$startYear, $endYear])
+                      ->orWhere('recurring', true);
+                })->get();
 
             $currentDate = $startDate->copy();
             while ($currentDate->lte($endDate)) {
@@ -43,8 +51,8 @@ class LeaveAttendanceIntegration
                 $dayIso = $currentDate->dayOfWeekIso; // 1 (Mon) to 7 (Sun)
                 $monthDay = $currentDate->format('m-d');
 
-                // Check if working day
-                $isWorkingDay = in_array($dayIso, $workingDays) || in_array($currentDate->dayOfWeek, $workingDays);
+                // Check if working day using strict ISO 1-7 convention
+                $isWorkingDay = in_array($dayIso, $workingDays);
 
                 // Check if holiday (exact date or recurring m-d)
                 $isHoliday = false;
@@ -64,6 +72,10 @@ class LeaveAttendanceIntegration
                         ->first();
 
                     if ($existing) {
+                        if ($existing->status !== 'absent' && $existing->status !== 'leave') {
+                            Log::warning("Leave approval overwriting active attendance day status for user {$userId} on {$dateStr}. Old status: {$existing->status}");
+                        }
+
                         DB::table('attendance_days')
                             ->where('id', $existing->id)
                             ->update([

@@ -60,6 +60,12 @@ export default function LoginPage() {
     if (lockoutSeconds > 0) return;
     setIsLoading(true);
     try {
+      if (typeof window !== "undefined" && !navigator.onLine) {
+        toast.error("You are currently offline. Please connect to the internet to sign in.");
+        setIsLoading(false);
+        return;
+      }
+
       const result = await apiFetch("/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
@@ -68,8 +74,7 @@ export default function LoginPage() {
       setAuth(result.token, result.user, result.active_role);
       toast.success("Login successful!");
 
-      // Disabled reset password on first login
-      if (false && result.must_change_password) {
+      if (result.must_change_password) {
         router.push("/change-password");
       } else if (!result.onboarded) {
         router.push("/onboarding");
@@ -200,7 +205,7 @@ export default function LoginPage() {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs font-sans">Gen2k Conglomerate (2018) • Milestone 1 Baseline</p>
+                  <p className="text-xs font-sans">Gen2k Conglomerate (2018) • Milestone 1</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

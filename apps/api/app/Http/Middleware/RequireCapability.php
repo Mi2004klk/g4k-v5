@@ -14,7 +14,7 @@ class RequireCapability
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $capability): Response
+    public function handle(Request $request, Closure $next, ...$capabilities): Response
     {
         $user = $request->user();
 
@@ -43,14 +43,25 @@ class RequireCapability
             return response()->json(['message' => 'Role not selected.'], 403);
         }
 
-        if ($activeRole !== 'super_admin' && !\App\Services\CapabilityMatrix::hasCapability($activeRole, $capability)) {
-            \Illuminate\Support\Facades\Log::info('Capability check failed', ['role' => $activeRole, 'cap' => $capability]);
-            return response()->json(['message' => 'Lacking capability ' . $capability], 403);
+        if ($activeRole === 'super_admin') {
+            return $next($request);
         }
 
-        $capabilities = explode('|', $capability);
+        $allCaps = [];
+        foreach ($capabilities as $c) {
+            if (is_string($c)) {
+                $parts = preg_split('/[|,]/', $c);
+                foreach ($parts as $p) {
+                    $p = trim($p);
+                    if ($p !== '') {
+                        $allCaps[] = $p;
+                    }
+                }
+            }
+        }
+
         $hasAny = false;
-        foreach ($capabilities as $cap) {
+        foreach ($allCaps as $cap) {
             if (CapabilityMatrix::hasCapability($activeRole, $cap)) {
                 $hasAny = true;
                 break;
@@ -58,7 +69,7 @@ class RequireCapability
         }
 
         if (!$hasAny) {
-            abort(403, 'Unauthorized action. Missing capability: ' . $capability);
+            return response()->json(['message' => 'Unauthorized action. Missing capability: ' . implode('|', $allCaps)], 403);
         }
 
         return $next($request);

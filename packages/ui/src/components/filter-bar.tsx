@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, startTransition } from "react"
 import { Search, X, SlidersHorizontal, Calendar as CalendarIcon } from "lucide-react"
 import { Input } from "./input"
 import {
@@ -20,7 +20,7 @@ import { cn } from "../utils/cn"
 export interface FilterOption {
   key: string
   label: string
-  type: "select" | "combobox" | "checkbox-group" | "date-range"
+  type?: "select" | "combobox" | "checkbox-group" | "date-range"
   options?: { label: string; value: string }[]
   value: any
   onChange: (value: any) => void
@@ -55,7 +55,9 @@ export function FilterBar({
 
   useEffect(() => {
     if (debouncedSearch !== searchQuery) {
-      onSearchChange(debouncedSearch)
+      startTransition(() => {
+        onSearchChange(debouncedSearch)
+      })
     }
   }, [debouncedSearch, onSearchChange, searchQuery])
 

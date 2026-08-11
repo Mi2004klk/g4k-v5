@@ -5,9 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Search, CalendarDays, Loader2, AlertCircle, Download, Building2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
+import { getAuthToken } from "@/lib/auth-store";
 import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
@@ -73,12 +75,9 @@ export function AdminAttendanceTable() {
       params.append("start_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
       params.append("end_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      
-      const token = document.cookie.split('; ').find(row => row.startsWith('g4k_token='))?.split('=')[1];
-      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${getAuthToken()}`
         }
       });
       
@@ -93,9 +92,9 @@ export function AdminAttendanceTable() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Failed to export attendance");
+      toast.error(e?.message || "Failed to export attendance");
     }
   };
 

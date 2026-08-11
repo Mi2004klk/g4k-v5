@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
+import { strongPasswordSchema } from "@/lib/validations";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Button } from "@g4k/ui/components";
@@ -154,9 +155,9 @@ export default function ProfilePage() {
       if (newPassword !== confirmPassword) {
         throw new Error("New passwords do not match.");
       }
-      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-      if (!strongRegex.test(newPassword)) {
-        throw new Error("Password must be at least 8 chars with mixed case, numbers, and symbols.");
+      const valResult = strongPasswordSchema.safeParse(newPassword);
+      if (!valResult.success) {
+        throw new Error(valResult.error.issues[0]?.message || "Invalid password.");
       }
       return apiFetch("/auth/change-password", {
         method: "POST",
@@ -568,6 +569,7 @@ export default function ProfilePage() {
         <DialogContent className="sm:max-w-md font-sans">
           <DialogHeader>
             <DialogTitle className="font-display">Upload Profile Photo</DialogTitle>
+            <DialogDescription className="sr-only">Confirm this action.</DialogDescription>
             <DialogDescription className="text-xs font-sans">
               Select an image file (JPEG, PNG, WEBP, max 2MB).
             </DialogDescription>
@@ -615,6 +617,7 @@ export default function ProfilePage() {
         <DialogContent className="sm:max-w-sm font-sans">
           <DialogHeader>
             <DialogTitle className="font-display text-red-600">Revoke Session</DialogTitle>
+            <DialogDescription className="sr-only">Confirm this action.</DialogDescription>
             <DialogDescription className="text-xs font-sans">
               Are you sure you want to log out this device? Any unsaved work on that device may be lost.
             </DialogDescription>

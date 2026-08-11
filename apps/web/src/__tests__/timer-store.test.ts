@@ -9,18 +9,13 @@ describe('Timer Store', () => {
       isOnBreak: false,
       clockInTimestamp: null,
       currentBreakStart: null,
-      totalSecondsToday: 0,
-      activeSeconds: 0,
-      tickIntervalId: null,
+      baseSeconds: 0,
+      lastActiveTimestamp: null,
     });
     vi.useFakeTimers();
   });
 
   afterEach(() => {
-    const state = useTimerStore.getState();
-    if (state.tickIntervalId) {
-      clearInterval(state.tickIntervalId);
-    }
     vi.useRealTimers();
   });
 
@@ -28,7 +23,7 @@ describe('Timer Store', () => {
     const state = useTimerStore.getState();
     expect(state.isActive).toBe(false);
     expect(state.isOnBreak).toBe(false);
-    expect(state.activeSeconds).toBe(0);
+    expect(state.baseSeconds).toBe(0);
   });
 
   it('starts the timer correctly', () => {
@@ -38,56 +33,44 @@ describe('Timer Store', () => {
     const state = useTimerStore.getState();
     expect(state.isActive).toBe(true);
     expect(state.clockInTimestamp).toBe(now);
-    expect(state.activeSeconds).toBe(10);
-    expect(state.tickIntervalId).not.toBeNull();
+    expect(state.baseSeconds).toBe(10);
+    expect(state.lastActiveTimestamp).toBe(now);
   });
 
-  it('increments activeSeconds on tick', () => {
-    const now = new Date().toISOString();
-    useTimerStore.getState().startTimer(now, 0);
+  it('accumulates baseSeconds when starting a break', () => {
+    const start = new Date('2026-01-01T10:00:00Z').toISOString();
+    const breakStart = new Date('2026-01-01T10:00:10Z').toISOString();
     
-    expect(useTimerStore.getState().activeSeconds).toBe(0);
+    useTimerStore.getState().startTimer(start, 0);
     
-    // Advance time by 3 seconds
-    vi.advanceTimersByTime(3000);
+    expect(useTimerStore.getState().baseSeconds).toBe(0);
     
-    expect(useTimerStore.getState().activeSeconds).toBe(3);
+    // Start break 10 seconds later
+    useTimerStore.getState().startBreak(breakStart);
+    
+    const state = useTimerStore.getState();
+    expect(state.isOnBreak).toBe(true);
+    expect(state.baseSeconds).toBe(10);
+    expect(state.lastActiveTimestamp).toBeNull();
   });
 
-  it('pauses ticking when on break', () => {
-    const now = new Date().toISOString();
-    useTimerStore.getState().startTimer(now, 0);
+  it('resumes properly when break ends', () => {
+    const breakEnd = new Date('2026-01-01T10:05:00Z').toISOString();
     
-    vi.advanceTimersByTime(2000);
-    expect(useTimerStore.getState().activeSeconds).toBe(2);
-    
-    // Start break
-    useTimerStore.getState().startBreak(new Date().toISOString());
-    expect(useTimerStore.getState().isOnBreak).toBe(true);
-    
-    // Advance time by another 2 seconds
-    vi.advanceTimersByTime(2000);
-    
-    // Should still be 2, because break pauses the tick
-    expect(useTimerStore.getState().activeSeconds).toBe(2);
-  });
-
-  it('resumes ticking when break ends', () => {
-    const now = new Date().toISOString();
-    useTimerStore.getState().startTimer(now, 0);
-    
-    useTimerStore.getState().startBreak(new Date().toISOString());
-    vi.advanceTimersByTime(2000);
-    expect(useTimerStore.getState().activeSeconds).toBe(0);
+    // Setup break state
+    useTimerStore.setState({
+      isActive: true,
+      isOnBreak: true,
+      baseSeconds: 10,
+    });
     
     // End break
-    useTimerStore.getState().endBreak();
-    expect(useTimerStore.getState().isOnBreak).toBe(false);
+    useTimerStore.getState().endBreak(breakEnd);
     
-    // Advance time by 2 seconds
-    vi.advanceTimersByTime(2000);
-    
-    expect(useTimerStore.getState().activeSeconds).toBe(2);
+    const state = useTimerStore.getState();
+    expect(state.isOnBreak).toBe(false);
+    expect(state.baseSeconds).toBe(10);
+    expect(state.lastActiveTimestamp).toBe(breakEnd);
   });
 
   it('stops the timer completely', () => {
@@ -98,6 +81,6 @@ describe('Timer Store', () => {
     
     const state = useTimerStore.getState();
     expect(state.isActive).toBe(false);
-    expect(state.tickIntervalId).toBeNull();
+    expect(state.lastActiveTimestamp).toBeNull();
   });
 });

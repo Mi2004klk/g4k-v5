@@ -1,17 +1,31 @@
 "use client";
+import { useEffect } from "react";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
+import { useReverb } from "@/hooks/use-reverb";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 
 export function ExportHistory() {
+  const queryClient = useQueryClient();
+  const { subscribe } = useReverb();
+  
+  useEffect(() => {
+    const channel = subscribe("exports");
+    if (channel) {
+      channel.listen(".ExportCompleted", () => {
+        queryClient.invalidateQueries({ queryKey: ["export-history"] });
+      });
+    }
+  }, [subscribe, queryClient]);
+
   const { data: exports = [], isLoading } = useQuery({
     queryKey: ["export-history"],
     queryFn: () => apiFetch("/reports/exports"),
-    refetchInterval: 5000, // Poll every 5s for job completions
+    refetchInterval: (query: any) => query.state?.data?.some((d: any) => d.status === "processing") ? 5000 : false,
   });
 
   return (

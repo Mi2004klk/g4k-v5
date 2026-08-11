@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  productionBrowserSourceMaps: false,
 };
 
 import { withSentryConfig } from "@sentry/nextjs";

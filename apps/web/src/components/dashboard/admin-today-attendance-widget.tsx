@@ -4,14 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Users, ArrowRight, Loader2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import Link from "next/link";
-import { Card } from "@g4k/ui/components";
+import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 
 export function AdminTodayAttendanceWidget() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-attendance-today", format(new Date(), "yyyy-MM-dd")],
     queryFn: () => apiFetch(`/attendance/admin/overview?date=${format(new Date(), "yyyy-MM-dd")}`),
-    staleTime: 60000,
+    staleTime: STALE_TIME_ATTENDANCE,
   });
 
   const records = data?.data || [];
@@ -44,8 +45,25 @@ export function AdminTodayAttendanceWidget() {
 
       <div className="flex-1 p-4 flex flex-col justify-center">
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
+          <div className="space-y-4 w-full">
+            <div className="flex items-baseline gap-2">
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+            <div className="flex justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800">
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+              <Skeleton className="h-8 w-12" />
+            </div>
+          </div>
+        ) : isError ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
+            <AlertCircle className="w-5 h-5 text-rose-400" />
+            <p className="text-xs font-medium text-rose-500">Failed to load attendance</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+              Retry
+            </Button>
           </div>
         ) : records.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">

@@ -6,7 +6,7 @@ import { Clock, Calendar as CalendarIcon, CheckCircle, AlertTriangle, Coffee } f
 import { apiFetch } from "@/lib/api-client";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { TodaySummaryCard } from "@/components/attendance/today-summary-card";
-import { Card, CardContent, CardHeader, CardTitle, Button } from "@g4k/ui/components";
+import { Button, Card, CardContent, CardHeader, CardTitle, DialogDescription } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
@@ -48,7 +48,8 @@ export default function PersonalAttendancePage() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Request Time Off</DialogTitle>
+              <DialogTitle>Request Leave</DialogTitle>
+              <DialogDescription className="sr-only">Submit a new leave request.</DialogDescription>
             </DialogHeader>
             <div className="mt-4">
               <LeaveRequestForm />

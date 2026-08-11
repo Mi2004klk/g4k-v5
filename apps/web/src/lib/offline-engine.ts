@@ -175,6 +175,14 @@ class OfflineEngine {
         if (err.status && err.status >= 400 && err.status < 500) {
           punch.syncStatus = 'failed';
           await db.put('punches', punch);
+          // Toast UI explicitly for failed syncs
+          toast.error("Offline sync failed. Rolling back...", {
+            id: `sync-fail-${punch.client_id}` // prevent duplicates
+          });
+          // Dispatch event so UI can invalidate and rollback
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new Event("attendance-sync-failed"));
+          }
         }
       }
     }

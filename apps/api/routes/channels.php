@@ -17,3 +17,10 @@ Broadcast::channel('presence-org', function ($user) {
     }
     return false;
 });
+
+Broadcast::channel('conversation.{id}', function ($user, $id) {
+    return \Illuminate\Support\Facades\DB::table('conversation_user')
+        ->where('user_id', $user->id)
+        ->where('conversation_id', $id)
+        ->exists();
+});

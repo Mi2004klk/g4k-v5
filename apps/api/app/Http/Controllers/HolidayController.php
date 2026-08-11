@@ -39,7 +39,7 @@ class HolidayController extends Controller
         ]);
 
         $holiday = Holiday::create($validated);
-        Cache::flush();
+        $this->clearHolidayCache($holiday->date);
 
         return response()->json($holiday, 201);
     }
@@ -54,17 +54,31 @@ class HolidayController extends Controller
         ]);
 
         $holiday = Holiday::findOrFail($id);
+        $oldDate = $holiday->date;
         $holiday->update($validated);
-        Cache::flush();
+        $this->clearHolidayCache($holiday->date);
+        if ($oldDate !== $holiday->date) {
+            $this->clearHolidayCache($oldDate);
+        }
 
         return response()->json($holiday);
     }
 
     public function destroy($id)
     {
-        Holiday::findOrFail($id)->delete();
-        Cache::flush();
+        $holiday = Holiday::findOrFail($id);
+        $date = $holiday->date;
+        $holiday->delete();
+        $this->clearHolidayCache($date);
 
         return response()->json(['message' => 'Deleted successfully']);
+    }
+
+    private function clearHolidayCache($date = null): void
+    {
+        $year = $date ? date('Y', strtotime($date)) : date('Y');
+        Cache::forget("holidays_{$year}");
+        Cache::forget("holidays_" . ($year + 1));
+        Cache::forget("holidays_" . ($year - 1));
     }
 }

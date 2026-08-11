@@ -9,12 +9,26 @@ use Illuminate\Http\Request;
 
 class ChatController extends Controller
 {
+    private function checkAccess(Conversation $conversation, $user): void
+    {
+        if ($conversation->scope === 'global') {
+            return;
+        }
+
+        $isMember = $conversation->users()->where('users.id', $user->id)->exists();
+        if (!$isMember) {
+            abort(403, 'Unauthorized access to conversation');
+        }
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
-        $conversations = Conversation::whereHas('users', function ($q) use ($user) {
-            $q->where('users.id', $user->id);
-        })->orWhere('scope', 'global')
+        $conversations = Conversation::where(function ($query) use ($user) {
+            $query->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })->orWhere('scope', 'global');
+        })
         ->with(['users', 'latestMessage.sender', 'project'])
         ->get();
 
@@ -24,6 +38,8 @@ class ChatController extends Controller
     public function messages(Request $request, $id)
     {
         $conversation = Conversation::findOrFail($id);
+        $this->checkAccess($conversation, $request->user());
+
         $messages = Message::where('conversation_id', $conversation->id)
             ->with(['sender', 'replyTo'])
             ->orderBy('created_at', 'asc')
@@ -35,6 +51,7 @@ class ChatController extends Controller
     public function sendMessage(Request $request, $id)
     {
         $conversation = Conversation::findOrFail($id);
+        $this->checkAccess($conversation, $request->user());
 
         $validated = $request->validate([
             'body' => 'nullable|string',

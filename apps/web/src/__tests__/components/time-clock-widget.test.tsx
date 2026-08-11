@@ -44,9 +44,8 @@ describe('TimeClockWidget', () => {
       isOnBreak: false,
       clockInTimestamp: null,
       currentBreakStart: null,
-      totalSecondsToday: 0,
-      activeSeconds: 0,
-      tickIntervalId: null,
+      baseSeconds: 0,
+      lastActiveTimestamp: null,
     });
 
     (apiFetch as any).mockResolvedValue({
@@ -56,12 +55,7 @@ describe('TimeClockWidget', () => {
     });
   });
 
-  afterEach(() => {
-    const state = useTimerStore.getState();
-    if (state.tickIntervalId) {
-      clearInterval(state.tickIntervalId);
-    }
-  });
+
 
   it('renders initial state and fetches data', async () => {
     renderWithProviders(<TimeClockWidget />);

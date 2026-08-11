@@ -35,26 +35,25 @@ class GenerateReportJob implements ShouldQueue
             $key = $this->exportJob->report_key;
             $format = $this->exportJob->format;
             $filename = "exports/report_{$key}_" . time() . ".{$format}";
-            $fullPath = storage_path("app/public/{$filename}");
-
-            // Ensure directory exists
-            if (!file_exists(storage_path("app/public/exports"))) {
-                mkdir(storage_path("app/public/exports"), 0755, true);
-            }
-
             $rows = $this->fetchData($key);
 
+            $disk = Storage::disk(config('filesystems.default', 'public'));
+
             if ($format === 'xlsx' || $format === 'csv') {
-                $writer = SimpleExcelWriter::create($fullPath);
+                $tempPath = sys_get_temp_dir() . '/' . uniqid('exp_') . ".{$format}";
+                $writer = SimpleExcelWriter::create($tempPath);
                 foreach ($rows as $row) {
                     $writer->addRow($row);
                 }
+                $writer->close();
+                $disk->put($filename, file_get_contents($tempPath));
+                @unlink($tempPath);
             } else if ($format === 'pdf') {
                 $pdf = Pdf::loadView('reports.pdf', ['key' => $key, 'rows' => $rows]);
-                $pdf->save($fullPath);
+                $disk->put($filename, $pdf->output());
             }
 
-            $url = Storage::url($filename);
+            $url = $disk->url($filename);
 
             $this->exportJob->update([
                 'status' => 'completed',
@@ -88,12 +87,12 @@ class GenerateReportJob implements ShouldQueue
                     ])->toArray();
 
             case 'projects':
-                return Project::with('owner')
+                return Project::with('creator')
                     ->get()
                     ->map(fn($p) => [
                         'ID' => $p->id,
                         'Name' => $p->name,
-                        'Owner' => $p->owner?->name ?? 'N/A',
+                        'Owner' => $p->creator?->name ?? 'N/A',
                         'Status' => $p->status,
                         'Budget' => $p->budget,
                     ])->toArray();
@@ -101,12 +100,13 @@ class GenerateReportJob implements ShouldQueue
             case 'users':
             case 'productivity':
             default:
-                return User::get()
+                return User::with(['department', 'roleAssignments'])
+                    ->get()
                     ->map(fn($u) => [
                         'ID' => $u->id,
                         'Name' => $u->name,
                         'Email' => $u->email,
-                        'Role' => $u->role,
+                        'Role' => $u->roleAssignments->pluck('role')->join(', ') ?: 'employee',
                         'Department' => $u->department?->name ?? 'N/A',
                     ])->toArray();
         }

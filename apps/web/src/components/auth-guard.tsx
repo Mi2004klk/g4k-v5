@@ -45,8 +45,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       if (currentToken && currentUser) {
-        // Disabled forced password change on first login
-        if (false && currentUser?.must_change_password && pathname !== "/change-password") {
+        if (currentUser?.must_change_password && pathname !== "/change-password") {
           router.push("/change-password");
           return;
         }
@@ -102,16 +101,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 flex flex-col md:flex-row">
-        {/* Sidebar Skeleton */}
-        <div className="hidden md:flex flex-col w-64 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 p-4">
-          <div className="h-8 w-32 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse mb-8" />
-          <div className="space-y-4 flex-1">
-            <div className="h-4 w-3/4 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
-            <div className="h-4 w-full bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
-            <div className="h-4 w-5/6 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
-            <div className="h-4 w-2/3 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
+        {/* Sidebar Skeleton matching collapsed default layout (72px) */}
+        <div className="hidden md:flex flex-col w-[72px] bg-surface border-r border-border p-3 items-center gap-4 shrink-0">
+          <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-md animate-pulse shrink-0" />
+          <div className="flex-1 space-y-3 w-full flex flex-col items-center pt-4">
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
           </div>
-          <div className="h-10 w-full bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse mt-auto" />
+          <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse mt-auto shrink-0" />
         </div>
         {/* Main Content Skeleton */}
         <div className="flex-1 flex flex-col">

@@ -1283,7 +1283,7 @@ paths:
       responses:
         '200':
           description: Exports list
-  /org/departments:
+  /departments:
     get:
       summary: List departments
       security:
@@ -1319,7 +1319,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Department'
-  /org/departments/{id}:
+  /departments/{id}:
     get:
       summary: Get department
       security:
@@ -1378,7 +1378,7 @@ paths:
       responses:
         '204':
           description: Deleted
-  /org/departments/{departmentId}/teams:
+  /departments/{departmentId}/teams:
     post:
       summary: Create team
       security:
@@ -1407,7 +1407,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Team'
-  /org/departments/{departmentId}/teams/{teamId}:
+  /departments/{departmentId}/teams/{teamId}:
     delete:
       summary: Delete team
       security:
@@ -1426,7 +1426,7 @@ paths:
       responses:
         '204':
           description: Deleted
-  /org/designations:
+  /designations:
     get:
       summary: List designations
       security:
@@ -1462,7 +1462,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Designation'
-  /org/designations/{id}:
+  /designations/{id}:
     put:
       summary: Update designation
       security:
@@ -1504,3 +1504,288 @@ paths:
       responses:
         '204':
           description: Deleted
+  /attendance/sync:
+    post:
+      summary: Sync attendance records
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Attendance synced successfully
+  /attendance/admin/notify-open-shifts:
+    post:
+      summary: Notify users with open shifts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notifications dispatched
+  /attendance/hr/day/{date}/{userId}:
+    get:
+      summary: HR get specific user attendance day
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User day details
+  /attendance/hr/history/{userId}:
+    get:
+      summary: HR get specific user attendance history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User history list
+  /notifications/unread-count:
+    get:
+      summary: Get unread notifications count
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Count returned
+  /notifications/mark-all-read:
+    post:
+      summary: Mark all notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Marked all read
+  /notifications/{id}/mark-unread:
+    post:
+      summary: Mark notification as unread
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Marked unread
+  /admin/password-resets:
+    get:
+      summary: List password reset requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Requests list
+  /admin/password-resets/{id}/approve:
+    post:
+      summary: Approve password reset request
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Approved
+  /admin/password-resets/{id}/reject:
+    post:
+      summary: Reject password reset request
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Rejected
+  /designations/{id}/status:
+    patch:
+      summary: Toggle designation status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Status updated
+  /departments/{id}/archive:
+    patch:
+      summary: Archive department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Department archived
+  /departments/{id}/restore:
+    patch:
+      summary: Restore department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Department restored
+  /departments/export:
+    get:
+      summary: Export departments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: File download
+  /designations/export:
+    get:
+      summary: Export designations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: File download
+  /users/bulk:
+    post:
+      summary: Bulk action on users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Action complete
+  /users/export:
+    get:
+      summary: Export users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: File download
+  /users/{id}/activity:
+    get:
+      summary: Get user activity
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User activity
+  /users/{id}/status:
+    patch:
+      summary: Update user status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Status updated
+  /auto-numberings:
+    get:
+      summary: List auto numberings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Auto numberings list
+  /auto-numberings/{id}:
+    put:
+      summary: Update auto numbering rule
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Rule updated
+  /reports/attendance-summary:
+    get:
+      summary: Get attendance summary report
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Report data
+  /reports/leave-summary:
+    get:
+      summary: Get leave summary report
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Report data
+  /company-profile/logo:
+    post:
+      summary: Upload company logo
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logo uploaded
+  /leave-requests/pending:
+    get:
+      summary: Get pending leave requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Pending list
+  /announcements/{id}/react:
+    post:
+      summary: Toggle reaction on announcement
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Reaction updated

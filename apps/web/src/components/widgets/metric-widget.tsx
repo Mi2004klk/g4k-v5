@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent } from "@g4k/ui/components";
+import { STALE_TIME_METRICS } from "@/lib/query-keys";
+import { Card, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 
@@ -29,10 +30,10 @@ export function MetricWidget({
 }: MetricWidgetProps) {
   const [displayValue, setDisplayValue] = useState(0);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["dashboard-metrics"],
     queryFn: () => apiFetch(endpoint),
-    staleTime: 30000,
+    staleTime: STALE_TIME_METRICS,
   });
 
   const rawValue = data?.metrics?.[metricKey] ?? 0;
@@ -76,6 +77,18 @@ export function MetricWidget({
           <Skeleton className="h-8 w-16" />
           <Skeleton className="h-3 w-32" />
         </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-none shadow-sm h-full flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 p-4">
+        <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+        <span className="text-[11px] text-rose-500 font-medium mb-2">Failed to load</span>
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+          Retry
+        </Button>
       </Card>
     );
   }

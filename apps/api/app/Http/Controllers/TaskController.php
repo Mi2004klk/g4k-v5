@@ -9,13 +9,32 @@ use App\Models\QaSubmission;
 use App\Services\TaskService;
 use App\Services\RecurrenceService;
 use App\Services\ApprovalService;
+use App\Services\CapabilityMatrix;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    private function userHasManage(Request $request): bool
+    {
+        $role = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        return CapabilityMatrix::hasCapability($role, 'tasks.manage');
+    }
+
     public function index(Request $request)
     {
         $query = Task::with(['project', 'assignee', 'reporter', 'blocker', 'qaForm']);
+
+        if (!$this->userHasManage($request)) {
+            $userId = $request->user()->id;
+            $query->where(function ($q) use ($userId) {
+                $q->where('assignee_id', $userId)
+                  ->orWhere('reporter_id', $userId)
+                  ->orWhereHas('project', function ($pq) use ($userId) {
+                      $pq->where('created_by', $userId)
+                        ->orWhereHas('members', fn ($m) => $m->where('users.id', $userId));
+                  });
+            });
+        }
 
         if ($request->filled('project_id')) {
             $query->where('project_id', $request->query('project_id'));
@@ -79,9 +98,23 @@ class TaskController extends Controller
         return response()->json($task->load(['project', 'assignee', 'reporter', 'blocker', 'qaForm']));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $task = Task::with(['project', 'assignee', 'reporter', 'blocker', 'qaForm', 'qaSubmission', 'comments.user', 'activities.user', 'timeLogs.user', 'approval'])->findOrFail($id);
+        $task = Task::with(['project.members', 'assignee', 'reporter', 'blocker', 'qaForm', 'qaSubmission', 'comments.user', 'activities.user', 'timeLogs.user', 'approval'])->findOrFail($id);
+
+        if (!$this->userHasManage($request)) {
+            $userId = $request->user()->id;
+            $isAllowed = $task->assignee_id === $userId || $task->reporter_id === $userId;
+
+            if (!$isAllowed && $task->project) {
+                $isAllowed = $task->project->created_by === $userId || $task->project->members->contains('id', $userId);
+            }
+
+            if (!$isAllowed) {
+                return response()->json(['message' => 'Unauthorized access to task'], 403);
+            }
+        }
+
         return response()->json($task);
     }
 

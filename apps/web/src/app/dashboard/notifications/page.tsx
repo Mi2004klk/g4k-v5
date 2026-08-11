@@ -8,24 +8,28 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { PageContainer } from "@/components/layout/page-container";
-import { DataTable } from "@g4k/ui/components";
+import { DataTable, Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
+import { useUrlState } from "@/hooks/use-url-state";
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useUrlState("search", "");
   const [filter, setFilter] = useState<{ readStatus: string; type: string }>({
     readStatus: "all",
     type: "all"
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["notifications-full", page, filter],
+    queryKey: ["notifications-full", page, filter, search],
     queryFn: () => {
       const params = new URLSearchParams();
       params.set("page", page.toString());
       if (filter.readStatus === "unread") params.set("unreadOnly", "true");
+      if (filter.type !== "all") params.set("type", filter.type);
+      if (search) params.set("search", search);
       return apiFetch(`/notifications?${params.toString()}`);
     }
   });
@@ -69,66 +73,78 @@ export default function NotificationsPage() {
   const columns = [
     {
       header: "Type",
-      cell: (row: any) => (
-        <div className="flex items-center gap-2">
-          {getIcon(row.type)}
-          <span className="capitalize text-xs font-medium">{row.type.replace("_", " ")}</span>
-        </div>
-      )
+      cell: ({ row }: any) => {
+        const item = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            {getIcon(item.type)}
+            <span className="capitalize text-xs font-medium">{item.type ? item.type.replace("_", " ") : "General"}</span>
+          </div>
+        );
+      }
     },
     {
       header: "Notification",
-      cell: (row: any) => (
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            {row.link ? (
-              <Link href={row.link} className={`text-sm hover:underline hover:text-violet-600 dark:hover:text-violet-400 ${!row.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
-                {row.title}
-              </Link>
-            ) : (
-              <span className={`text-sm ${!row.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
-                {row.title}
-              </span>
-            )}
-            {row.priority === 'urgent' && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">Urgent</span>
-            )}
+      cell: ({ row }: any) => {
+        const item = row.original;
+        return (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              {item.link ? (
+                <Link href={item.link} className={`text-sm hover:underline hover:text-violet-600 dark:hover:text-violet-400 ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
+                  {item.title}
+                </Link>
+              ) : (
+                <span className={`text-sm ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
+                  {item.title}
+                </span>
+              )}
+              {item.priority === 'urgent' && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">Urgent</span>
+              )}
+            </div>
+            <span className="text-xs text-neutral-500 mt-1">{item.body}</span>
           </div>
-          <span className="text-xs text-neutral-500 mt-1">{row.body}</span>
-        </div>
-      )
+        );
+      }
     },
     {
       header: "Received",
-      cell: (row: any) => (
-        <div className="flex flex-col text-xs text-neutral-500">
-          <span>{formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}</span>
-          <span className="text-[10px] text-neutral-400">{format(new Date(row.created_at), 'MMM d, yyyy h:mm a')}</span>
-        </div>
-      )
+      cell: ({ row }: any) => {
+        const item = row.original;
+        return (
+          <div className="flex flex-col text-xs text-neutral-500">
+            <span>{item.created_at ? formatDistanceToNow(new Date(item.created_at), { addSuffix: true }) : "—"}</span>
+            <span className="text-[10px] text-neutral-400">{item.created_at ? format(new Date(item.created_at), 'MMM d, yyyy h:mm a') : ""}</span>
+          </div>
+        );
+      }
     },
     {
       header: "Actions",
-      cell: (row: any) => (
-        <div className="flex justify-end">
-          {!row.read_at ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => markReadMutation.mutate(row.id)}
-              disabled={markReadMutation.isPending}
-              className="text-xs"
-            >
-              <Check className="w-4 h-4 mr-1" />
-              Mark Read
-            </Button>
-          ) : (
-            <span className="text-xs text-neutral-400 flex items-center">
-              <MailOpen className="w-4 h-4 mr-1" /> Read
-            </span>
-          )}
-        </div>
-      )
+      cell: ({ row }: any) => {
+        const item = row.original;
+        return (
+          <div className="flex justify-end">
+            {!item.read_at ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markReadMutation.mutate(item.id)}
+                disabled={markReadMutation.isPending}
+                className="text-xs flex items-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Mark Read
+              </Button>
+            ) : (
+              <span className="text-xs text-neutral-400 flex items-center gap-2">
+                <MailOpen className="w-4 h-4" /> Read
+              </span>
+            )}
+          </div>
+        );
+      }
     }
   ];
 
@@ -141,16 +157,17 @@ export default function NotificationsPage() {
           size="sm" 
           onClick={() => markAllReadMutation.mutate()}
           disabled={markAllReadMutation.isPending}
+          className="flex items-center gap-2"
         >
-          <CheckCircle2 className="w-4 h-4 mr-2" />
+          <CheckCircle2 className="w-4 h-4" />
           Mark all as read
         </Button>
       }
     >
       <div className="mb-6">
         <FilterBar
-          searchQuery=""
-          onSearchChange={() => {}}
+          searchQuery={search || ""}
+          onSearchChange={setSearch}
           filters={[
             {
               key: "readStatus",
@@ -168,7 +185,12 @@ export default function NotificationsPage() {
       </div>
       
       {isLoading ? (
-        <div className="flex justify-center p-8 text-neutral-500">Loading...</div>
+        <div className="space-y-3 p-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
       ) : (
         <DataTable
           columns={columns}

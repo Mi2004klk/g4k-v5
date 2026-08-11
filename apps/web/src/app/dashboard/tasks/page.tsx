@@ -1,27 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, LayoutGrid, ListFilter, Kanban, Calendar, CheckSquare, Loader2 } from "lucide-react";
+import { Plus, Kanban, Calendar, CheckSquare, Loader2, List as ListIcon, Trash2, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
-import { TaskKanbanBoard } from "@/components/tasks/task-kanban-board";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
-import { GanttView } from "@/components/projects/gantt-view";
-import { QAFormBuilder } from "@/components/tasks/qa-form-builder";
-import { Button } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@g4k/ui/components";
+import dynamic from "next/dynamic";
+const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div> });
+const GanttView = dynamic(() => import("@/components/projects/gantt-view").then(mod => mod.GanttView), { ssr: false, loading: () => <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div> });
+const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div> });
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge } from "@g4k/ui/components";
 import { toast } from "sonner";
+import { ColumnDef } from "@tanstack/react-table";
 
 export default function TasksPage() {
   const queryClient = useQueryClient();
-  const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa">("kanban");
+  const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa" | "list">("kanban");
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   
@@ -30,6 +25,11 @@ export default function TasksPage() {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [dueDate, setDueDate] = useState("");
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [rowSelection, setRowSelection] = useState({});
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["tasks"],
@@ -66,6 +66,39 @@ export default function TasksPage() {
     },
   });
 
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: number) => {
+      return apiFetch(`/tasks/${taskId}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("Task deleted successfully.");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    }
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (taskIds: number[]) => {
+      // Assuming a bulk endpoint exists, or fallback to Promise.all
+      await Promise.all(taskIds.map(id => apiFetch(`/tasks/${id}`, { method: "DELETE" })));
+    },
+    onSuccess: () => {
+      toast.success("Tasks deleted successfully.");
+      setRowSelection({});
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    }
+  });
+
+  const bulkStatusMutation = useMutation({
+    mutationFn: async ({ taskIds, status }: { taskIds: number[], status: string }) => {
+      await Promise.all(taskIds.map(id => apiFetch(`/tasks/${id}`, { method: "PUT", body: JSON.stringify({ status }) })));
+    },
+    onSuccess: () => {
+      toast.success("Tasks status updated.");
+      setRowSelection({});
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    }
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
       return apiFetch("/tasks", {
@@ -85,6 +118,55 @@ export default function TasksPage() {
 
   const tasks = data?.data || [];
 
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t: any) => {
+      if (statusFilter !== "all" && t.status !== statusFilter) return false;
+      if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      return true;
+    });
+  }, [tasks, statusFilter, searchQuery]);
+
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: "title",
+      header: "Title",
+      cell: ({ row }) => (
+        <div 
+          className="font-medium cursor-pointer hover:underline text-violet-600"
+          onClick={() => {
+            setSelectedTask(row.original);
+            setSheetOpen(true);
+          }}
+        >
+          {row.getValue("title")}
+        </div>
+      )
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const s = row.getValue("status") as string;
+        return <Badge variant="secondary" className="capitalize">{s.replace("_", " ")}</Badge>
+      }
+    },
+    {
+      accessorKey: "priority",
+      header: "Priority",
+      cell: ({ row }) => <span className="capitalize text-xs">{row.getValue("priority")}</span>
+    },
+    {
+      accessorKey: "due_date",
+      header: "Due Date",
+      cell: ({ row }) => {
+        const val = row.getValue("due_date") as string;
+        return <span className="text-xs text-neutral-500">{val ? format(new Date(val), "MMM d, yyyy") : "-"}</span>
+      }
+    }
+  ];
+
+  const selectedTaskIds = Object.keys(rowSelection).filter(k => (rowSelection as any)[k]).map(k => filteredTasks[Number(k)]?.id).filter(Boolean);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -103,6 +185,15 @@ export default function TasksPage() {
               title="Kanban Board"
             >
               <Kanban className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 rounded-md transition-all ${
+                viewMode === "list" ? "bg-white dark:bg-neutral-900 text-violet-600 shadow-sm" : "text-neutral-500"
+              }`}
+              title="List View"
+            >
+              <ListIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode("gantt")}
@@ -132,7 +223,8 @@ export default function TasksPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create Task</DialogTitle>
+                <DialogTitle>Create New Task</DialogTitle>
+                <DialogDescription className="sr-only">Create a new task in this project.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-1">
@@ -191,18 +283,67 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {viewMode === "list" && (
+        <div className="space-y-4">
+          <FilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder="Search tasks..."
+            filters={[
+              {
+                key: "status",
+                label: "Status",
+                type: "select",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { label: "To Do", value: "todo" },
+                  { label: "In Progress", value: "in_progress" },
+                  { label: "In Review", value: "review" },
+                  { label: "Done", value: "done" },
+                ]
+              }
+            ]}
+          />
+          
+          {selectedTaskIds.length > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800 rounded-lg">
+              <span className="text-sm font-medium text-violet-700 dark:text-violet-300">
+                {selectedTaskIds.length} task{selectedTaskIds.length > 1 ? "s" : ""} selected
+              </span>
+              <div className="flex-1" />
+              <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })}>
+                <CheckCircle className="w-4 h-4 mr-2" /> Mark Done
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
+                <Trash2 className="w-4 h-4 mr-2" /> Delete
+              </Button>
+            </div>
+          )}
+
+          <DataTable
+            columns={columns}
+            data={filteredTasks}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
+            density="compact"
+          />
+        </div>
+      )}
+
       {viewMode === "kanban" && (
         <TaskKanbanBoard
-          tasks={tasks}
+          tasks={filteredTasks}
           onTaskMove={(taskId, status) => moveTaskMutation.mutate({ taskId, status })}
           onTaskSelect={(task) => {
             setSelectedTask(task);
             setSheetOpen(true);
           }}
+          onDeleteTask={(taskId) => deleteTaskMutation.mutate(taskId)}
         />
       )}
 
-      {viewMode === "gantt" && <GanttView tasks={tasks} />}
+      {viewMode === "gantt" && <GanttView tasks={filteredTasks} />}
 
       {viewMode === "qa" && <QAFormBuilder />}
 
@@ -210,6 +351,15 @@ export default function TasksPage() {
         task={selectedTask}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
+      />
+
+      <ConfirmDialog
+        open={isBulkDeleteOpen}
+        onOpenChange={setIsBulkDeleteOpen}
+        title={`Delete ${selectedTaskIds.length} Tasks`}
+        description="Are you sure you want to delete the selected tasks? This action cannot be undone."
+        confirmText="Delete All"
+        onConfirm={() => bulkDeleteMutation.mutate(selectedTaskIds)}
       />
     </div>
   );

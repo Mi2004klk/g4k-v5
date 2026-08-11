@@ -60,7 +60,7 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--border);
-  --color-ring: var(--primary);
+  --color-ring: var(--accent-violet);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -73,6 +73,14 @@
   --shadow-e2: var(--shadow-e2);
   --shadow-e3: var(--shadow-e3);
   --shadow-e4: var(--shadow-e4);
+}
+
+@utility bg-gradient-brand {
+  background-image: linear-gradient(135deg, #9400D3 0%, #8A2BE2 50%, #FF1493 100%);
+}
+
+@utility bg-gradient-gold {
+  background-image: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
 }
 
 @utility container {
@@ -96,6 +104,15 @@
 
 @layer base {
   :root {
+    /* Motion Variables (Task 1.2.1) */
+    --duration-tap: 120ms;
+    --duration-hover: 100ms;
+    --duration-popover: 150ms;
+    --duration-sidebar: 220ms;
+    --duration-drawer: 200ms;
+    --ease-modal: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-sidebar: cubic-bezier(.4, 0, .2, 1);
+
     --bg-app: #F7F7FB;
     --bg-surface: #FFFFFF;
     --bg-surface-2: #FCFCFE;
@@ -151,8 +168,8 @@
     --bg-surface-2: #1E1E28;
     --bg-elevated: #20202C;
     
-    --border: #2A2A38;
-    --border-strong: #3A3A4A;
+    --border: #333345;
+    --border-strong: #44445A;
     
     --text-primary: #F4F4F8;
     --text-secondary: #A8A8B8;
@@ -185,5 +202,19 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+  }
+  *:focus-visible {
+    outline: 2px solid var(--color-ring) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-tap: 1ms;
+    --duration-hover: 1ms;
+    --duration-popover: 1ms;
+    --duration-sidebar: 1ms;
+    --duration-drawer: 1ms;
   }
 }
