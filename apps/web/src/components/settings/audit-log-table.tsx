@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Download } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
@@ -31,19 +31,31 @@ export function AuditLogTable() {
     users.map((u: any) => ({ label: u.name, value: String(u.id) }))
   );
   
-  const { data: logsData, isLoading } = useQuery({
+  const {
+    data: logsData,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: ["audit-logs", filters],
-    queryFn: () => {
+    queryFn: ({ pageParam = "" }: { pageParam?: any }) => {
       const params = new URLSearchParams();
       if (filters.action) params.append("action", filters.action);
       if (filters.user_id) params.append("user_id", filters.user_id);
       if (filters.start_date) params.append("start_date", filters.start_date);
       if (filters.end_date) params.append("end_date", filters.end_date);
+      if (pageParam) params.append("cursor", pageParam as string);
       return apiFetch(`/audit-logs?${params.toString()}`);
+    },
+    initialPageParam: "",
+    getNextPageParam: (lastPage: any) => {
+      if (!lastPage?.next_cursor) return undefined;
+      return lastPage.next_cursor;
     },
   });
 
-  const logs = logsData?.data || [];
+  const logs = logsData?.pages.flatMap((page: any) => page.data) || [];
 
   const handleExport = async () => {
     try {
@@ -147,6 +159,9 @@ export function AuditLogTable() {
           <DataTable
             columns={columns}
             data={logs}
+            fetchNextPage={fetchNextPage}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
           />
         )}
       </CardContent>

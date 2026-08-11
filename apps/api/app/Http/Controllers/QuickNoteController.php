@@ -12,6 +12,7 @@ class QuickNoteController extends Controller
         $notes = QuickNote::where('user_id', $request->user()->id)
             ->orderBy('pinned', 'desc')
             ->orderBy('updated_at', 'desc')
+            ->limit(100)
             ->get();
 
         return response()->json($notes);

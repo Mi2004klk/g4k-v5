@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@g4k/ui/components";
 import { hasCapability } from "@/lib/capabilities";
 import { useAuthStore } from "@/lib/auth-store";
 
-export function NavItem({ 
+export const NavItem = memo(function NavItem({ 
   item, 
   isCollapsed, 
   isSheet, 
@@ -16,7 +16,7 @@ export function NavItem({
   getAccent 
 }: any) {
   const pathname = usePathname();
-  const { density } = useAuthStore();
+  const density = useAuthStore((s) => s.density);
   const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
   const accent = getAccent(item.href);
   const currentlyCollapsed = !isSheet && isCollapsed;
@@ -104,9 +104,9 @@ export function NavItem({
     );
   }
   return content;
-}
+});
 
-export function NavGroup({ 
+export const NavGroup = memo(function NavGroup({ 
   group, 
   userCapabilities, 
   isCollapsed, 
@@ -146,4 +146,4 @@ export function NavGroup({
       </div>
     </div>
   );
-}
+});

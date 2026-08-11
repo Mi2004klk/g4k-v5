@@ -42,7 +42,7 @@ class ApprovalService
 
     private static function checkRoleGating(Approval $approval, int $decidedBy)
     {
-        $deciderRoles = DB::table('role_assignments')->where('user_id', $decidedBy)->pluck('role')->toArray();
+        $deciderRoles = \App\Models\RoleAssignment::getRolesForUser($decidedBy);
         if (!in_array($approval->current_approver_role, $deciderRoles) && !in_array('super_admin', $deciderRoles)) {
             $rolesStr = implode(', ', $deciderRoles);
             throw new AuthorizationException("User {$decidedBy} does not have the correct active role ({$approval->current_approver_role}) to decide this approval. Roles found: {$rolesStr}");

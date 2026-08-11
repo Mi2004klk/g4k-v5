@@ -16,17 +16,17 @@
 
 | # | Phase | Capability | Status | Depends on | Live URL | Spec state |
 |---|---|---|---|---|---|---|
-| 0 | Foundation & infra | `foundation` | 🟡 In-revamp | — | `/health` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 1 | Authentication | `authentication` | 🟡 In-revamp | 0 | `/login` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 2 | Users, roles & org | `org-management` | 🟡 In-revamp | 0,1 | `/dashboard/org/users` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 3 | App shell & design | `app-shell` | 🟡 In-revamp | 0,2 | `/dashboard` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 4 | Dashboard framework | `dashboards` | 🟡 In-revamp | 3 | `/dashboard` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 5 | Attendance | `attendance` | 🟡 In-revamp | 2,3,4 | `/dashboard/attendance` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 6 | Leave & approvals | `leave-approvals` | 🟡 In-revamp | 2,3,8-partial | `/dashboard/leave` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 7 | Projects & tasks | `projects-tasks` | 🟡 In-revamp | 2,3,4 | `/dashboard/projects` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 8 | Chat & notifications | `communication` | 🟡 In-revamp | 2,3 | `/dashboard/chat` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 9 | Reports & exports | `reporting` | 🟡 In-revamp | 5,7 | `/dashboard/reports` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
-| 10 | Settings & audit | `system-settings` | 🟡 In-revamp | 2,5,7 | `/dashboard/settings` | Implementation present and wired; performance revamp + polish in progress per `fix-4.md`. |
+| 0 | Foundation & infra | `foundation` | ✅ Done | — | `/health` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 1 | Authentication | `authentication` | ✅ Done | 0 | `/login` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 2 | Users, roles & org | `org-management` | ✅ Done | 0,1 | `/dashboard/org/users` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 3 | App shell & design | `app-shell` | ✅ Done | 0,2 | `/dashboard` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 4 | Dashboard framework | `dashboards` | ✅ Done | 3 | `/dashboard` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 5 | Attendance | `attendance` | ✅ Done | 2,3,4 | `/dashboard/attendance` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 6 | Leave & approvals | `leave-approvals` | ✅ Done | 2,3,8-partial | `/dashboard/leave` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 7 | Projects & tasks | `projects-tasks` | ✅ Done | 2,3,4 | `/dashboard/projects` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 8 | Chat & notifications | `communication` | ✅ Done | 2,3 | `/dashboard/chat` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 9 | Reports & exports | `reporting` | ✅ Done | 5,7 | `/dashboard/reports` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
+| 10 | Settings & audit | `system-settings` | ✅ Done | 2,5,7 | `/dashboard/settings` | Implementation complete. Performance revamp (`fix-4.md`) complete. |
 
 > **Sequencing note (user-confirmed):** build strictly one phase at a time; all 3 role
 > screens together within a phase; ship to production before starting the next. Phase 6 needs
@@ -214,7 +214,8 @@ Standards live in `PERFORMANCE-STANDARDS.md`; ADR-018 makes them constitutional.
 - [x] Wire **monitoring** (Sentry perf + web-vitals + Pulse) for the new flows.
 - [x] Record a **performance-notes** section in the archived spec; log any budget **breach** below with owner + remediation plan.
 
-**Breach log:** _(append date / phase / metric breached / owner / plan / resolved)_ — none yet.
+**Breach log & Resolutions:**
+- **PERF-1/2/4/5 (The "Always Loading" Complaint):** Resolved via `fix-4.md`. Fixed `staleTime` and `gcTime` across widgets; implemented reference counting for Reverb channels to prevent duplicate unmount issues; introduced targeted targeted exact invalidation for dashboard actions; coalesced HR attendance polling; optimized bundle size. All targets now met.
 
 ## Cross-cutting requirements R11 — ownership map
 These span multiple phases (so no single spec owns them); each is addressed where listed:

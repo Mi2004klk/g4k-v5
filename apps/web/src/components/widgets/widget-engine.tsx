@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ResponsiveGridLayout, useContainerWidth } from "react-grid-layout";
+import dynamic from "next/dynamic";
+import { useContainerWidth } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
+import { useShallow } from "zustand/react/shallow";
+
+const ResponsiveGridLayout = dynamic(
+  () => import("react-grid-layout").then((m) => m.ResponsiveGridLayout),
+  { ssr: false }
+);
 
 interface WidgetEngineProps {
   availableWidgets: Array<{
@@ -20,15 +28,20 @@ interface WidgetEngineProps {
 export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const [layouts, setLayouts] = useState<any>({});
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
-  const { widgetStates } = useUIStore();
+  const widgetStates = useUIStore(useShallow((s) => s.widgetStates));
   
   const draggingRef = useRef(false);
   const startPosRef = useRef({ x: 0, y: 0 });
   const layoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { containerRef, width } = useContainerWidth();
+
+  const { data: preferencesData, isLoading } = useQuery({
+    queryKey: ["dashboard-layout"],
+    queryFn: () => apiFetch("/auth/preferences"),
+    staleTime: 5 * 60_000,
+  });
 
   // Dynamically recalculate heights when widgets collapse/expand (UX-11)
   const computedLayouts = useMemo(() => {
@@ -77,42 +90,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   }, []);
 
   useEffect(() => {
-    const fetchPreferences = async () => {
-      try {
-        const data = await apiFetch("/auth/preferences");
-        if (data.preferences?.dashboard_layout && Object.keys(data.preferences.dashboard_layout).length > 0) {
-          const savedLayouts = data.preferences.dashboard_layout;
-          const mergedBreakpoints: any = {};
-          const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'];
-          
-          breakpoints.forEach(bp => {
-            const savedBp = Array.isArray(savedLayouts[bp]) ? savedLayouts[bp] : [];
-            const mergedBp = [...savedBp];
-            
-            // Append missing widgets
-            availableWidgets.forEach(w => {
-              const exists = mergedBp.find((item: any) => item.i === w.id);
-              if (!exists) {
-                mergedBp.push({ ...w.defaultLayout, i: w.id });
-              }
-            });
-            
-            // Filter out old/removed widgets
-            mergedBreakpoints[bp] = mergedBp.filter((item: any) => availableWidgets.find(w => w.id === item.i));
-          });
-          
-          setLayouts(mergedBreakpoints);
-        } else {
-          const defaultBreakpoints = {
-            lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-            md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-            sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-            xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-            xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-          };
-          setLayouts(defaultBreakpoints);
-        }
-      } catch {
+    setMounted(true);
+    if (!preferencesData) {
+      if (!isLoading) {
         const defaultBreakpoints = {
           lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
           md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
@@ -121,13 +101,43 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
           xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
         };
         setLayouts(defaultBreakpoints);
-      } finally {
-        setLoading(false);
-        setMounted(true);
       }
-    };
-    fetchPreferences();
-  }, [availableWidgets]);
+      return;
+    }
+
+    if (preferencesData.preferences?.dashboard_layout && Object.keys(preferencesData.preferences.dashboard_layout).length > 0) {
+      const savedLayouts = preferencesData.preferences.dashboard_layout;
+      const mergedBreakpoints: any = {};
+      const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'];
+      
+      breakpoints.forEach(bp => {
+        const savedBp = Array.isArray(savedLayouts[bp]) ? savedLayouts[bp] : [];
+        const mergedBp = [...savedBp];
+        
+        // Append missing widgets
+        availableWidgets.forEach(w => {
+          const exists = mergedBp.find((item: any) => item.i === w.id);
+          if (!exists) {
+            mergedBp.push({ ...w.defaultLayout, i: w.id });
+          }
+        });
+        
+        // Filter out old/removed widgets
+        mergedBreakpoints[bp] = mergedBp.filter((item: any) => availableWidgets.find(w => w.id === item.i));
+      });
+      
+      setLayouts(mergedBreakpoints);
+    } else {
+      const defaultBreakpoints = {
+        lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+        md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+        sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+        xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+        xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+      };
+      setLayouts(defaultBreakpoints);
+    }
+  }, [preferencesData, isLoading, availableWidgets]);
 
   const handleLayoutChange = (_currentLayout: any, allLayouts: any) => {
     setLayouts(allLayouts);
@@ -162,7 +172,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     }, 150);
   };
 
-  if (loading || !mounted) {
+  if ((isLoading && !preferencesData) || !mounted) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
         <Skeleton className="h-48 w-full" />
@@ -181,28 +191,26 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
           pointer-events: none !important;
         }
       `}</style>
-      {(width ?? 0) > 0 && (
-        <ResponsiveGridLayout
-          className="layout"
-          width={width ?? 1200}
-          layouts={computedLayouts}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-          rowHeight={120}
-          onLayoutChange={handleLayoutChange}
-          onDragStart={handleDragStart}
-          onDragStop={handleDragStop}
-          margin={[16, 16] as [number, number]}
-        >
-          {availableWidgets.map((widget) => (
-            <div key={widget.id} className="h-full">
-              <ErrorBoundary name={`Widget-${widget.id}`}>
-                {widget.component}
-              </ErrorBoundary>
-            </div>
-          ))}
-        </ResponsiveGridLayout>
-      )}
+      <ResponsiveGridLayout
+        className="layout"
+        width={width ?? 1200}
+        layouts={computedLayouts}
+        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+        rowHeight={120}
+        onLayoutChange={handleLayoutChange}
+        onDragStart={handleDragStart}
+        onDragStop={handleDragStop}
+        margin={[16, 16] as [number, number]}
+      >
+        {availableWidgets.map((widget) => (
+          <div key={widget.id} className="h-full">
+            <ErrorBoundary name={`Widget-${widget.id}`}>
+              {widget.component}
+            </ErrorBoundary>
+          </div>
+        ))}
+      </ResponsiveGridLayout>
     </div>
   );
 }

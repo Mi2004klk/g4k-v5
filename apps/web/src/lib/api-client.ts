@@ -12,6 +12,8 @@ async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+let refreshPromise: Promise<string> | null = null;
+
 export async function apiFetch<T = any>(
   endpoint: string,
   options: RequestInit = {},
@@ -63,28 +65,40 @@ export async function apiFetch<T = any>(
         // A 401 on these means "invalid credentials", not "expired session".
         if (response.status === 401 && !isAuthEndpoint) {
           // Session may have expired — attempt ONE silent refresh via the HttpOnly cookie.
+          // Mutex prevents concurrent 401 requests from making redundant refresh calls.
           try {
-            const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
-            const refreshRes = await fetch(refreshUrl, {
-              method: "GET",
+            if (!refreshPromise) {
+              refreshPromise = (async () => {
+                const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
+                const refreshRes = await fetch(refreshUrl, {
+                  method: "GET",
+                  credentials: "include",
+                });
+
+                if (!refreshRes.ok) {
+                  throw new Error("Refresh failed");
+                }
+
+                const data = await refreshRes.json();
+                useAuthStore.getState().setAuth(data.token, data.user, data.active_role);
+                return data.token as string;
+              })().finally(() => {
+                refreshPromise = null;
+              });
+            }
+
+            const newToken = await refreshPromise;
+
+            // Retry the original request with the fresh token.
+            headers.set("Authorization", `Bearer ${newToken}`);
+            const retryRes = await fetch(url, {
+              ...options,
+              headers,
               credentials: "include",
             });
 
-            if (refreshRes.ok) {
-              const data = await refreshRes.json();
-              useAuthStore.getState().setAuth(data.token, data.user, data.active_role);
-
-              // Retry the original request with the fresh token.
-              headers.set("Authorization", `Bearer ${data.token}`);
-              const retryRes = await fetch(url, {
-                ...options,
-                headers,
-                credentials: "include",
-              });
-
-              if (retryRes.ok) {
-                return retryRes.json();
-              }
+            if (retryRes.ok) {
+              return await retryRes.json();
             }
           } catch {
             // refresh failed — fall through to clearing auth
@@ -122,8 +136,9 @@ export async function apiFetch<T = any>(
 
       return await response.json();
     } catch (error: any) {
-      // Intercept offline / network failures for mutations
-      if (!isAuthEndpoint && !isGet && !bypassQueue && (error.message.includes("Failed to fetch") || error.status >= 500)) {
+      // Intercept offline / network failures for mutations (NOT 5xx server errors)
+      const isNetworkError = error?.message?.includes("Failed to fetch") || (typeof navigator !== "undefined" && !navigator.onLine);
+      if (!isAuthEndpoint && !isGet && !bypassQueue && isNetworkError) {
         toast.success("Network error. Action queued for sync.");
         await offlineEngine.queueRequest(endpoint, options);
         return { queued: true } as any;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, Check, X, AlertTriangle, Calendar } from "lucide-react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { ClipboardList, Check, X, AlertTriangle, Calendar, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
@@ -9,12 +9,13 @@ import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k
 export function PendingApprovalsWidget() {
   const queryClient = useQueryClient();
 
-  const { data: requests = [], isLoading, isError, refetch } = useQuery({
+  const { data: requests = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["pending-approvals-list"],
     queryFn: async () => {
       const res = await apiFetch("/approvals/pending");
       return Array.isArray(res) ? res : res?.data || [];
     },
+    placeholderData: keepPreviousData,
   });
 
   const decisionMutation = useMutation({
@@ -25,8 +26,7 @@ export function PendingApprovalsWidget() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending-approvals-list"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-approvals-list"], exact: true });
     },
   });
 
@@ -37,6 +37,7 @@ export function PendingApprovalsWidget() {
           <span className="flex items-center gap-2">
             <ClipboardList className="w-4 h-4 text-amber-500" />
             Pending Approvals
+            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </span>
           <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold">
             {requests.length} Requests

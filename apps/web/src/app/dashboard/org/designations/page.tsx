@@ -1,14 +1,23 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Award, Users, Edit2, Loader2, Search, MoreVertical, Download, Trash2, Shield, UserX, UserCheck } from "lucide-react";
+import { Plus, Award, Edit2, Loader2, MoreVertical, Download, Trash2, UserX, UserCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
-import { getAuthToken, useAuthStore } from "@/lib/auth-store";
+import { getAuthToken } from "@/lib/auth-store";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
+const desigSchema = z.object({
+  name: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+});
+type DesigFormValues = z.infer<typeof desigSchema>;
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
@@ -41,10 +50,16 @@ export default function DesignationsPage() {
   const debouncedSearch = useDebounce(search, 250);
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
 
+  const { data: caps } = useCapabilities();
+  const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
   
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<DesigFormValues>({
+    resolver: zodResolver(desigSchema),
+    defaultValues: { name: "", description: "" }
+  });
   const [editingDesig, setEditingDesig] = useState<any>(null);
 
   const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
@@ -130,10 +145,6 @@ export default function DesignationsPage() {
   };
 
   const designationsList = data?.pages?.flatMap((page: any) => page.data || []) || [];
-
-  const { activeRole } = useAuthStore();
-  const isAdmin = activeRole === "admin" || activeRole === "super_admin" || activeRole === "founder" || activeRole === "hr";
-
   const columns = useMemo<any[]>(() => {
     const baseColumns: any[] = [
       {
@@ -211,7 +222,11 @@ export default function DesignationsPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => { setEditingDesig(desig); setFormData({ name: desig.name, description: desig.description || "" }); setIsModalOpen(true); }}>
+                  <DropdownMenuItem onClick={() => { 
+                    setEditingDesig(desig); 
+                    reset({ name: desig.name, description: desig.description || "" }); 
+                    setIsModalOpen(true); 
+                  }}>
                     <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -257,7 +272,7 @@ export default function DesignationsPage() {
             </Button>
           )}
           {isAdmin && (
-            <Button onClick={() => { setEditingDesig(null); setFormData({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow">
+            <Button onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow">
               <Plus className="w-4 h-4" /> Add Designation
             </Button>
           )}
@@ -329,22 +344,26 @@ export default function DesignationsPage() {
             <DialogTitle>{editingDesig ? "Edit Designation" : "Add Designation"}</DialogTitle>
             <DialogDescription className="sr-only">Create or edit a designation.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <label className="block mb-1 text-sm font-semibold">Title *</label>
-              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Senior Software Engineer" />
+          <form onSubmit={handleSubmit((data) => editingDesig ? updateMutation.mutate(data) : createMutation.mutate(data))}>
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="block mb-1 text-sm font-semibold">Title *</label>
+                <Input {...register("name")} placeholder="e.g. Senior Software Engineer" />
+                {errors.name && <p className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
+              </div>
+              <div>
+                <label className="block mb-1 text-sm font-semibold">Description</label>
+                <Input {...register("description")} placeholder="Optional description..." />
+              </div>
             </div>
-            <div>
-              <label className="block mb-1 text-sm font-semibold">Description</label>
-              <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional description..." />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={() => editingDesig ? updateMutation.mutate(formData) : createMutation.mutate(formData)} disabled={!formData.name}>
-              {editingDesig ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {editingDesig ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

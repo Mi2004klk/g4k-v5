@@ -15,11 +15,12 @@ class CapabilityMatrix
         'hr' => [
             'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
             'users.employee.manage', 'directory.view', 'directory.send-message',
-            'profile.edit', 'attendance.clock-self', 'leave.request-self'
+            'profile.edit', 'attendance.clock-self', 'leave.request-self',
+            'reports.view'
         ],
         'employee' => [
             'attendance.clock-self', 'leave.request-self', 'profile.edit',
-            'directory.view', 'directory.send-message'
+            'directory.view', 'directory.send-message', 'reports.view'
         ]
     ];
 

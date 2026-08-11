@@ -12,6 +12,7 @@ class SavedViewController extends Controller
         $entity = $request->query('entity', 'tasks');
         $views = SavedView::where('user_id', $request->user()->id)
             ->where('entity', $entity)
+            ->limit(100)
             ->get();
         return response()->json($views);
     }

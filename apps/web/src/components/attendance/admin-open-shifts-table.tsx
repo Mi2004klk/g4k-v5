@@ -8,7 +8,9 @@ import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_DIRECTORY, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { Input, Button, Checkbox, DataTable } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 
@@ -34,21 +36,30 @@ export function AdminOpenShiftsTable() {
   const { data: departments = [] } = useQuery({
     queryKey: ["departments"],
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME_DIRECTORY,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-attendance-overview", selectedDate, "all", debouncedSearch, deptFilter],
+    queryKey: ["admin-attendance-overview", selectedDate, deptFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      if (debouncedSearch) params.append("search", debouncedSearch);
-      
       return apiFetch(`/attendance/admin/overview?${params.toString()}`);
     },
-    staleTime: 30000,
-    refetchInterval: 30000,
+    select: (raw: any) => {
+      if (!raw?.data) return raw;
+      let items = raw.data;
+      if (debouncedSearch) {
+        const q = debouncedSearch.toLowerCase();
+        items = items.filter((item: any) =>
+          item.user?.name?.toLowerCase().includes(q) ||
+          item.user?.email?.toLowerCase().includes(q)
+        );
+      }
+      return { ...raw, data: items };
+    },
+    staleTime: STALE_TIME_ATTENDANCE,
   });
 
   const allRecords = data?.data || [];
@@ -118,10 +129,10 @@ export function AdminOpenShiftsTable() {
         return (
           <div className="flex items-center gap-2">
             <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>
-            <span className="flex items-center gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide">
+            <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
               <AlertCircle className="w-3 h-3" />
               OPEN
-            </span>
+            </StatusBadge>
           </div>
         );
       },
@@ -152,8 +163,8 @@ export function AdminOpenShiftsTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-amber-400 dark:bg-amber-500" />
+      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-warning/30 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1 h-full bg-warning" />
         
         {/* Search & Dept */}
         <div className="flex w-full xl:w-auto items-center gap-3">
@@ -162,7 +173,7 @@ export function AdminOpenShiftsTable() {
             <Input 
               type="search"
               placeholder="Search company..." 
-              className="pl-9 h-10 w-full border-amber-100 dark:border-amber-900/30 focus-visible:ring-amber-500"
+              className="pl-9 h-10 w-full border-border focus-visible:ring-warning"
               value={search || ""}
               onChange={(e) => setSearch(e.target.value)}
             />

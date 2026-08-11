@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+"use client";
+
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode, createElement } from 'react';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import { useAuthStore } from '@/lib/auth-store';
@@ -10,6 +12,20 @@ declare global {
     Echo: any;
   }
 }
+
+interface ReverbContextType {
+  subscribe: (channelName: string, isPrivate?: boolean) => any;
+  leaveChannel: (channelName: string) => void;
+  isConnected: boolean;
+  echo: any;
+}
+
+const ReverbContext = createContext<ReverbContextType>({
+  subscribe: () => null,
+  leaveChannel: () => {},
+  isConnected: false,
+  echo: null,
+});
 
 /**
  * Determines whether the Reverb WebSocket server is reachable.
@@ -36,9 +52,13 @@ function isReverbAvailable(): boolean {
   return true;
 }
 
-export function useReverb() {
-  const { user, token } = useAuthStore();
+export function ReverbProvider({ children }: { children: ReactNode }) {
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
   const [echoInstance, setEchoInstance] = useState<any>(null);
+  
+  // Track subscription counts to prevent one component from leaving a channel used by another
+  const [subscriptions] = useState<Map<string, number>>(() => new Map());
 
   useEffect(() => {
     // Only connect if we have a logged in user, token, AND Reverb is reachable
@@ -77,10 +97,34 @@ export function useReverb() {
     };
   }, [user?.id, token]); // Reconnect if user changes
 
-  const subscribe = (channelName: string, isPrivate: boolean = false) => {
+  const subscribe = useCallback((channelName: string, isPrivate: boolean = false) => {
     if (!echoInstance) return null;
+    
+    const count = subscriptions.get(channelName) || 0;
+    subscriptions.set(channelName, count + 1);
+    
     return isPrivate ? echoInstance.private(channelName) : echoInstance.channel(channelName);
-  };
+  }, [echoInstance, subscriptions]);
 
-  return { subscribe, isConnected: !!echoInstance, echo: echoInstance };
+  const leaveChannel = useCallback((channelName: string) => {
+    if (!echoInstance) return;
+    
+    const count = (subscriptions.get(channelName) || 0) - 1;
+    if (count <= 0) {
+      subscriptions.delete(channelName);
+      echoInstance.leave(channelName);
+    } else {
+      subscriptions.set(channelName, count);
+    }
+  }, [echoInstance, subscriptions]);
+
+  return createElement(
+    ReverbContext.Provider,
+    { value: { subscribe, leaveChannel, isConnected: !!echoInstance, echo: echoInstance } },
+    children
+  );
+}
+
+export function useReverb() {
+  return useContext(ReverbContext);
 }

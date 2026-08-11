@@ -15,6 +15,7 @@ import { Skeleton } from "@g4k/ui/components";
 import { AutoNumberingConfig } from "./auto-numbering-config";
 import { PoliciesConfig } from "./policies-config";
 import { RemindersConfig } from "./reminders-config";
+import { SecurityRequestsConfig } from "./security-requests-config";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 
 const profileSchema = z.object({
@@ -36,7 +37,7 @@ type ScheduleFormValues = z.infer<typeof scheduleSchema>;
 
 export function SettingsTabs() {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const isAdmin = user?.active_role === 'super_admin';
   
   const [logoUploadOpen, setLogoUploadOpen] = useState(false);
@@ -186,6 +187,7 @@ export function SettingsTabs() {
             <TabsTrigger value="numbering">Auto-Numbering</TabsTrigger>
             <TabsTrigger value="policies">Policies</TabsTrigger>
             <TabsTrigger value="reminders">Reminders</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
           </>
         )}
       </TabsList>
@@ -364,6 +366,10 @@ export function SettingsTabs() {
 
       <TabsContent value="numbering">
         <AutoNumberingConfig />
+      </TabsContent>
+
+      <TabsContent value="security">
+        <SecurityRequestsConfig />
       </TabsContent>
         </>
       )}

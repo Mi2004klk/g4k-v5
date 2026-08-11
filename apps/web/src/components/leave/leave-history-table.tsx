@@ -141,7 +141,6 @@ export function LeaveHistoryTable({
           <DataTable
             columns={columns}
             data={records}
-            isFetchingNextPage={isLoading}
           />
         ) : !isLoading ? (
           <div className="p-8">

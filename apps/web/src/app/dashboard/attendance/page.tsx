@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { Clock, Calendar as CalendarIcon, CheckCircle, AlertTriangle, Coffee } from "lucide-react";
+import { Plus, Calendar as CalendarIcon } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { TodaySummaryCard } from "@/components/attendance/today-summary-card";
@@ -10,7 +9,6 @@ import { Button, Card, CardContent, CardHeader, CardTitle, DialogDescription } f
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
-import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +39,7 @@ export default function PersonalAttendancePage() {
         </div>
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="gap-2 shrink-0">
+            <Button className="gap-2 shrink-0 h-11 px-4">
               <Plus className="w-4 h-4" />
               Request Leave
             </Button>

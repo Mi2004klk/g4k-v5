@@ -11,15 +11,17 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useUIStore } from "@/lib/ui-store";
 import { useReverb } from "@/hooks/use-reverb";
 import { Button } from "@g4k/ui/components";
+import { useShallow } from "zustand/react/shallow";
 
 export function NotificationsBell() {
-  const { user } = useAuthStore();
-  const { subscribe } = useReverb();
+  const user = useAuthStore((s) => s.user);
+  const { subscribe, leaveChannel } = useReverb();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<"recent" | "unread">("recent");
 
-  const { dismissedNotificationIds, clearPopupNotifications } = useUIStore();
+  const dismissedNotificationIds = useUIStore(useShallow((s) => s.dismissedNotificationIds));
+  const clearPopupNotifications = useUIStore((s) => s.clearPopupNotifications);
 
   const { data: countData } = useQuery({
     queryKey: ["unread-count"],
@@ -62,7 +64,6 @@ export function NotificationsBell() {
       queryClient.setQueryData(["notifications"], context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unread-count"] });
     },
   });
@@ -93,7 +94,6 @@ export function NotificationsBell() {
       toast.error("Failed to mark notifications as read");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unread-count"] });
     },
   });
@@ -102,7 +102,8 @@ export function NotificationsBell() {
   useEffect(() => {
     if (!user) return;
     
-    const channel = subscribe(`private-user.${user.id}`);
+    const channelName = `private-user.${user.id}`;
+    const channel = subscribe(channelName);
     
     const handleNotification = (e: any) => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -129,8 +130,9 @@ export function NotificationsBell() {
         channel.stopListening(".notification-created");
         channel.stopListening(".approval-status-change");
       }
+      leaveChannel(channelName);
     };
-  }, [user, subscribe, queryClient]);
+  }, [user, subscribe, leaveChannel, queryClient]);
 
   const rawNotifications = data?.data || [];
   // Filter out client-side dismissed notification IDs (cleared from popup only)
@@ -172,6 +174,7 @@ export function NotificationsBell() {
         onClick={() => setOpen(true)}
         className="relative p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
         title="Notifications"
+        aria-label="Notifications"
       >
         <Bell className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
         {unreadCount > 0 && (
@@ -221,6 +224,7 @@ export function NotificationsBell() {
                 )}
                 <button
                   onClick={() => setOpen(false)}
+                  aria-label="Close notifications"
                   className="p-1 rounded-lg text-neutral-400 hover:text-primary hover:bg-surface-2 transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -295,6 +299,7 @@ export function NotificationsBell() {
                         onClick={() => markReadMutation.mutate(n.id)}
                         className="shrink-0 p-1 rounded hover:bg-surface-2 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors self-start"
                         title="Mark as read"
+                        aria-label="Mark as read"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>

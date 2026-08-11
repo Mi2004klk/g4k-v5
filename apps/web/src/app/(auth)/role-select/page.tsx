@@ -12,7 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/
 
 export default function RoleSelectPage() {
   const router = useRouter();
-  const { user, setAuth, token } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const token = useAuthStore((s) => s.token);
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const autoSelectedRef = useState({ done: false })[0];

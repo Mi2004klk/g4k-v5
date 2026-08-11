@@ -11,7 +11,9 @@ import { Button } from "@g4k/ui/components";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { user, token, setAuth } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const setAuth = useAuthStore((s) => s.setAuth);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleFinish() {

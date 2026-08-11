@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Megaphone, Pin, AlertTriangle, Trash2, Heart, ThumbsUp, Sparkles } from "lucide-react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { Loader2, Megaphone, Trash2, Pin, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 
 export function AnnouncementBoard() {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const isAdminOrHr = user?.active_role === "super_admin" || user?.active_role === "hr";
 
-  const { data: announcements = [], isLoading, isError, refetch } = useQuery({
+  const { data: announcements = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["announcements"],
     queryFn: () => apiFetch("/announcements"),
+    placeholderData: keepPreviousData,
   });
 
   // Reverb real-time subscription
@@ -61,6 +63,7 @@ export function AnnouncementBoard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      toast.success("Announcement deleted");
     },
   });
 
@@ -73,9 +76,17 @@ export function AnnouncementBoard() {
   return (
     <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-bold flex items-center gap-2">
-          <Megaphone className="w-4 h-4 text-violet-600" />
-          Company Announcements
+        <CardTitle className="text-base font-bold flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Megaphone className="w-4 h-4 text-warning" />
+            Company Announcements
+          </span>
+          {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          {isAdminOrHr && (
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+              Refresh
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 max-h-[350px] overflow-y-auto">
@@ -122,22 +133,26 @@ export function AnnouncementBoard() {
                     </span>
                     {isAdminOrHr && (
                       <div className="flex items-center gap-1">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => pinMutation.mutate({ id: item.id, pinned: !isPinned })}
                           title={isPinned ? "Unpin Announcement" : "Pin Announcement"}
-                          className={`p-1 rounded transition-colors ${
-                            isPinned ? "text-amber-500 hover:text-amber-600" : "text-neutral-400 hover:text-neutral-600"
+                          className={`h-5 w-5 transition-colors ${
+                            isPinned ? "text-warning hover:text-warning/80" : "text-neutral-400 hover:text-neutral-600"
                           }`}
                         >
                           <Pin className="w-3 h-3" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => deleteMutation.mutate(item.id)}
                           title="Delete Announcement"
-                          className="p-1 text-neutral-400 hover:text-rose-600 transition-colors"
+                          className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10 transition-colors"
                         >
                           <Trash2 className="w-3 h-3" />
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -164,8 +179,8 @@ export function AnnouncementBoard() {
                           onClick={() => reactMutation.mutate({ id: item.id, emoji: key })}
                           className={`px-1.5 py-0.5 rounded-full text-[10px] flex items-center gap-1 border transition-colors ${
                             hasReacted
-                              ? "bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 font-bold"
-                              : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100"
+                              ? "bg-secondary border-border-strong font-bold"
+                              : "bg-transparent border-transparent hover:bg-muted"
                           }`}
                         >
                           <span>{label}</span>

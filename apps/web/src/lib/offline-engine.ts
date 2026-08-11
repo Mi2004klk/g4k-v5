@@ -62,12 +62,22 @@ class OfflineEngine {
         },
       });
 
-      window.addEventListener('online', () => this.syncAll());
+      window.addEventListener('online', () => {
+        this.updateQueueCount();
+        this.syncAll();
+      });
+      window.addEventListener('offline', () => {
+        this.updateQueueCount();
+      });
       
-      // Update queue count initially and periodically
+      // Update queue count initially and run smart sync poll only if queue has pending items
       this.dbPromise.then(() => {
         this.updateQueueCount();
-        setInterval(() => this.updateQueueCount(), 5000);
+        setInterval(() => {
+          if (typeof navigator !== 'undefined' && navigator.onLine && useOfflineStore.getState().queueCount > 0) {
+            this.syncAll();
+          }
+        }, 5000);
       });
     }
   }

@@ -46,8 +46,8 @@ export default function ReportsPage() {
         body: JSON.stringify(payload)
       });
       toast.success(`Export queued. You will be notified when your ${format.toUpperCase()} is ready.`);
-    } catch (e) {
-      toast.error("Failed to queue export.");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to queue export.");
     }
   };
 

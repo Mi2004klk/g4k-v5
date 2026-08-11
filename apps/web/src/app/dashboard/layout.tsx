@@ -1,7 +1,10 @@
 "use client";
 
 import { AuthGuard } from "@/components/auth-guard";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+const EMPTY_CAPABILITIES: any[] = [];
+const EMPTY_PINS: any[] = [];
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -17,11 +20,9 @@ import {
   Building2,
   Briefcase,
   UserCircle,
-  Search,
   Sun,
   Moon,
   CalendarDays,
-  Folder,
   FolderKanban,
   CalendarCheck,
   Megaphone,
@@ -52,7 +53,8 @@ import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
 import { TopbarTimer } from "@/components/app-shell/topbar-timer";
 import { NavGroup, NavItem } from "@/components/app-shell/nav-group";
-import { HelpOverlay, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
+import { ReverbProvider } from "@/hooks/use-reverb";
+import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -134,20 +136,25 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { sidebarState, cycleSidebarState, initPreferences } = useUIStore();
+  const sidebarState = useUIStore((s) => s.sidebarState);
+  const cycleSidebarState = useUIStore((s) => s.cycleSidebarState);
+  const initPreferences = useUIStore((s) => s.initPreferences);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { data: userCapabilities = [] } = useCapabilities();
-  const { user: authUser, clearAuth, density, setDensity } = useAuthStore();
+  const { data: userCapabilities = EMPTY_CAPABILITIES } = useCapabilities();
+  const authUser = useAuthStore((s) => s.user);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const density = useAuthStore((s) => s.density);
+  const setDensity = useAuthStore((s) => s.setDensity);
   const { theme, setTheme } = useTheme();
 
-  const { data: pins = [], refetch: refetchPins } = useQuery({
+  const { data: pins = EMPTY_PINS, refetch: refetchPins } = useQuery({
     queryKey: ["pins"],
     queryFn: () => apiFetch("/pins"),
   });
 
-  const handleTogglePin = async (item: any, existingPin: any) => {
+  const handleTogglePin = useCallback(async (item: any, existingPin: any) => {
     try {
       if (existingPin) {
         await apiFetch(`/pins/${existingPin.id}`, { method: "DELETE" });
@@ -177,7 +184,7 @@ export default function DashboardLayout({
       console.error("Failed to toggle pin", error);
       toast.error("Failed to toggle pin");
     }
-  };
+  }, [refetchPins]);
 
   // Close mobile menu on navigate
   useEffect(() => {
@@ -215,7 +222,8 @@ export default function DashboardLayout({
   const isCollapsed = sidebarState === "collapsed";
   return (
     <AuthGuard>
-      <TooltipProvider>
+      <ReverbProvider>
+        <TooltipProvider>
         <HelpOverlay />
         <CommandPalette />
         <div className={cn(
@@ -242,7 +250,7 @@ export default function DashboardLayout({
                 <div className="flex items-center gap-3 w-full">
                   <Tooltip delayDuration={150}>
                     <TooltipTrigger asChild>
-                      <button onClick={cycleSidebarState} className="text-neutral-500 hover:text-primary transition-colors flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-sm">
+                      <button onClick={cycleSidebarState} className="text-neutral-500 hover:text-primary transition-colors flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-sm" aria-label="Toggle sidebar">
                         <ChevronLeft className="w-5 h-5" />
                       </button>
                     </TooltipTrigger>
@@ -418,7 +426,7 @@ export default function DashboardLayout({
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-violet-500">
+                    <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-violet-500" aria-label="User menu">
                       <Avatar size="md">
                         <AvatarFallback name={authUser?.name || "U"} />
                       </Avatar>
@@ -547,6 +555,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </TooltipProvider>
-    </AuthGuard>
+    </ReverbProvider>
+  </AuthGuard>
   );
 }

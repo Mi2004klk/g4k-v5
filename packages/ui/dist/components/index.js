@@ -14053,12 +14053,31 @@ function Combobox({
 }
 
 // src/components/data-table.tsx
-var import_react4 = __toESM(require("react"));
+var import_react5 = __toESM(require("react"));
 var import_react_table = require("@tanstack/react-table");
 var import_react_virtual = require("@tanstack/react-virtual");
 var import_lucide_react16 = require("lucide-react");
+
+// src/hooks/use-mobile.ts
+var import_react4 = require("react");
+var MOBILE_BREAKPOINT = 768;
+function useIsMobile() {
+  const [isMobile, setIsMobile] = (0, import_react4.useState)(void 0);
+  (0, import_react4.useEffect)(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    mql.addEventListener("change", onChange);
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return !!isMobile;
+}
+
+// src/components/data-table.tsx
 var import_jsx_runtime34 = require("react/jsx-runtime");
-var MemoizedCell = import_react4.default.memo(
+var MemoizedCell = import_react5.default.memo(
   ({
     cell,
     density,
@@ -14066,32 +14085,32 @@ var MemoizedCell = import_react4.default.memo(
     isFirstCol,
     onInlineEditSave
   }) => {
-    const [isEditing, setIsEditing] = (0, import_react4.useState)(false);
-    const [editValue, setEditValue] = (0, import_react4.useState)(cell.getValue());
-    const inputRef = (0, import_react4.useRef)(null);
+    const [isEditing, setIsEditing] = (0, import_react5.useState)(false);
+    const [editValue, setEditValue] = (0, import_react5.useState)(cell.getValue());
+    const inputRef = (0, import_react5.useRef)(null);
     const editable = cell.column.columnDef.meta?.editable;
-    const handleEditStart = (0, import_react4.useCallback)(() => {
+    const handleEditStart = (0, import_react5.useCallback)(() => {
       if (!editable) return;
       setIsEditing(true);
     }, [editable]);
-    const handleSave = (0, import_react4.useCallback)(() => {
+    const handleSave = (0, import_react5.useCallback)(() => {
       setIsEditing(false);
       if (onInlineEditSave && editValue !== cell.getValue()) {
         onInlineEditSave(cell.row.id, cell.column.id, editValue);
       }
     }, [editValue, cell.getValue, onInlineEditSave, cell.row.id, cell.column.id]);
-    const handleCancel = (0, import_react4.useCallback)(() => {
+    const handleCancel = (0, import_react5.useCallback)(() => {
       setIsEditing(false);
       setEditValue(cell.getValue());
     }, [cell.getValue]);
-    const handleKeyDown = (0, import_react4.useCallback)(
+    const handleKeyDown = (0, import_react5.useCallback)(
       (e) => {
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") handleCancel();
       },
       [handleSave, handleCancel]
     );
-    (0, import_react4.useEffect)(() => {
+    (0, import_react5.useEffect)(() => {
       if (isEditing && inputRef.current) {
         inputRef.current.focus();
       }
@@ -14136,7 +14155,7 @@ var MemoizedCell = import_react4.default.memo(
   }
 );
 MemoizedCell.displayName = "MemoizedCell";
-var MemoizedRow = import_react4.default.memo(
+var MemoizedRow = import_react5.default.memo(
   ({
     row,
     virtualRow,
@@ -14185,17 +14204,11 @@ function DataTable({
   onRowSelectionChange,
   onInlineEditSave
 }) {
-  const [sorting, setSorting] = (0, import_react4.useState)([]);
-  const [columnVisibility, setColumnVisibility] = (0, import_react4.useState)({});
-  const [internalRowSelection, setInternalRowSelection] = (0, import_react4.useState)({});
-  const [isMobile, setIsMobile] = (0, import_react4.useState)(false);
-  (0, import_react4.useEffect)(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-  const tableColumns = (0, import_react4.useMemo)(() => {
+  const [sorting, setSorting] = (0, import_react5.useState)([]);
+  const [columnVisibility, setColumnVisibility] = (0, import_react5.useState)({});
+  const [internalRowSelection, setInternalRowSelection] = (0, import_react5.useState)({});
+  const isMobile = useIsMobile();
+  const tableColumns = (0, import_react5.useMemo)(() => {
     if (!onRowSelectionChange) return columns;
     const selectColumn = {
       id: "select",
@@ -14220,7 +14233,7 @@ function DataTable({
     };
     return [selectColumn, ...columns];
   }, [columns, onRowSelectionChange]);
-  const defaultGetRowId = (0, import_react4.useCallback)((row, index) => String(index), []);
+  const defaultGetRowId = (0, import_react5.useCallback)((row, index) => String(index), []);
   const table = (0, import_react_table.useReactTable)({
     data,
     columns: tableColumns,
@@ -14240,9 +14253,9 @@ function DataTable({
       rowSelection: externalRowSelection !== void 0 ? externalRowSelection : internalRowSelection
     }
   });
-  (0, import_react4.useEffect)(() => {
+  (0, import_react5.useEffect)(() => {
   }, [internalRowSelection, externalRowSelection, onRowSelectionChange]);
-  const tableContainerRef = (0, import_react4.useRef)(null);
+  const tableContainerRef = (0, import_react5.useRef)(null);
   const { rows } = table.getRowModel();
   const desktopRowHeight = density === "compact" ? 40 : 64;
   const estimatedCardHeight = 200;
@@ -14250,11 +14263,11 @@ function DataTable({
   const rowVirtualizer = (0, import_react_virtual.useVirtualizer)({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: (0, import_react4.useCallback)(() => rowHeight, [rowHeight]),
+    estimateSize: (0, import_react5.useCallback)(() => rowHeight, [rowHeight]),
     overscan: 10
   });
   const virtualRows = rowVirtualizer.getVirtualItems();
-  const handleScroll = (0, import_react4.useCallback)(
+  const handleScroll = (0, import_react5.useCallback)(
     (e) => {
       const target = e.target;
       const bottom = target.scrollHeight - target.scrollTop === target.clientHeight;
@@ -14358,9 +14371,9 @@ function DataTable({
                     "data-index": virtualRow.index,
                     children: row.getVisibleCells().map((cell) => {
                       const headerTitle = cell.column.id === "select" ? "" : cell.column.columnDef.header;
-                      return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)("div", { className: "flex flex-col gap-1 border-b border-border/50 pb-2 last:border-0 last:pb-0", children: [
-                        headerTitle && /* @__PURE__ */ (0, import_jsx_runtime34.jsx)("span", { className: "text-xs font-medium text-muted-foreground", children: typeof headerTitle === "string" ? headerTitle : cell.column.id }),
-                        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)("span", { className: "text-sm", children: (0, import_react_table.flexRender)(cell.column.columnDef.cell, cell.getContext()) })
+                      return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)("div", { className: "flex flex-col gap-1 border-b border-border/50 pb-2 last:border-0 last:pb-0 overflow-hidden", children: [
+                        headerTitle && /* @__PURE__ */ (0, import_jsx_runtime34.jsx)("span", { className: "text-xs font-medium text-muted-foreground truncate", children: typeof headerTitle === "string" ? headerTitle : cell.column.id }),
+                        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)("span", { className: "text-sm break-words", children: (0, import_react_table.flexRender)(cell.column.columnDef.cell, cell.getContext()) })
                       ] }, cell.id);
                     })
                   },
@@ -14377,12 +14390,12 @@ function DataTable({
 }
 
 // src/components/filter-bar.tsx
-var import_react5 = require("react");
+var import_react6 = require("react");
 var import_lucide_react17 = require("lucide-react");
 var import_jsx_runtime35 = require("react/jsx-runtime");
 function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = (0, import_react5.useState)(value);
-  (0, import_react5.useEffect)(() => {
+  const [debouncedValue, setDebouncedValue] = (0, import_react6.useState)(value);
+  (0, import_react6.useEffect)(() => {
     const timer = setTimeout(() => setDebouncedValue(value), delay || 500);
     return () => clearTimeout(timer);
   }, [value, delay]);
@@ -14395,16 +14408,16 @@ function FilterBar({
   filters = [],
   onClearAll
 }) {
-  const [localSearch, setLocalSearch] = (0, import_react5.useState)(searchQuery);
+  const [localSearch, setLocalSearch] = (0, import_react6.useState)(searchQuery);
   const debouncedSearch = useDebounce(localSearch, 250);
-  (0, import_react5.useEffect)(() => {
+  (0, import_react6.useEffect)(() => {
     if (debouncedSearch !== searchQuery) {
-      (0, import_react5.startTransition)(() => {
+      (0, import_react6.startTransition)(() => {
         onSearchChange(debouncedSearch);
       });
     }
   }, [debouncedSearch, onSearchChange, searchQuery]);
-  (0, import_react5.useEffect)(() => {
+  (0, import_react6.useEffect)(() => {
     setLocalSearch(searchQuery);
   }, [searchQuery]);
   const activeFiltersCount = filters.reduce((acc, f) => {
@@ -15148,17 +15161,17 @@ function FileUploadPopup({
 }
 
 // src/components/inline-edit.tsx
-var import_react6 = require("react");
+var import_react7 = require("react");
 var import_lucide_react22 = require("lucide-react");
 var import_jsx_runtime42 = require("react/jsx-runtime");
 function InlineEdit({ value, onSave, className, inputClassName, placeholder = "Enter value..." }) {
-  const [isEditing, setIsEditing] = (0, import_react6.useState)(false);
-  const [currentValue, setCurrentValue] = (0, import_react6.useState)(value);
-  const inputRef = (0, import_react6.useRef)(null);
-  (0, import_react6.useEffect)(() => {
+  const [isEditing, setIsEditing] = (0, import_react7.useState)(false);
+  const [currentValue, setCurrentValue] = (0, import_react7.useState)(value);
+  const inputRef = (0, import_react7.useRef)(null);
+  (0, import_react7.useEffect)(() => {
     setCurrentValue(value);
   }, [value]);
-  (0, import_react6.useEffect)(() => {
+  (0, import_react7.useEffect)(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();

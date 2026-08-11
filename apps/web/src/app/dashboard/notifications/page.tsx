@@ -22,7 +22,7 @@ export default function NotificationsPage() {
     type: "all"
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["notifications-full", page, filter, search],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -179,6 +179,20 @@ export default function NotificationsPage() {
               ],
               value: filter.readStatus,
               onChange: (v) => setFilter(f => ({ ...f, readStatus: v }))
+            },
+            {
+              key: "type",
+              label: "Type",
+              type: "select",
+              options: [
+                { label: "All", value: "all" },
+                { label: "Task", value: "task_assigned" },
+                { label: "Leave", value: "leave_decision" },
+                { label: "Message", value: "message" },
+                { label: "Security", value: "security" }
+              ],
+              value: filter.type,
+              onChange: (v) => setFilter(f => ({ ...f, type: v }))
             }
           ]}
         />
@@ -190,6 +204,15 @@ export default function NotificationsPage() {
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center p-12 text-neutral-400 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-100 dark:border-neutral-800">
+          <CircleAlert className="w-8 h-8 mb-3 text-rose-500" />
+          <p className="text-sm font-medium text-neutral-900 dark:text-white mb-1">Failed to load notifications</p>
+          <p className="text-xs mb-4">Please check your connection and try again.</p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Try Again
+          </Button>
         </div>
       ) : (
         <DataTable

@@ -9,6 +9,7 @@ import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
+import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
 const ReactECharts = dynamic((() => import("echarts-for-react")) as any, { 
   ssr: false,
@@ -201,9 +202,9 @@ function DayDetailContent({ date, summaryDay, userId }: { date: string, summaryD
           <p className="capitalize font-medium flex items-center gap-2">
             {day.status}
             {day.status === "late" && (
-              <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">
+              <StatusBadge status="warning">
                 {day.late_minutes}m Late
-              </span>
+              </StatusBadge>
             )}
           </p>
         </div>

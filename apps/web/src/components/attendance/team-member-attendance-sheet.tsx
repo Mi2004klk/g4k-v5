@@ -14,6 +14,7 @@ import {
 } from "@g4k/ui/components";
 import { Skeleton, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
 import { AttendanceHistoryCalendar } from "./attendance-history-calendar";
 
@@ -116,10 +117,11 @@ export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberA
                                   {event.is_manual && (
                                     <Link 
                                       href={`/dashboard/audit?action=attendance_correction&user_id=${userId}`}
-                                      className="text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-1.5 py-0.5 rounded flex items-center gap-1 hover:bg-blue-200 transition-colors"
                                       title="View in audit log"
                                     >
-                                      Manual
+                                      <StatusBadge status="info" className="uppercase hover:opacity-80 transition-opacity">
+                                        Manual
+                                      </StatusBadge>
                                     </Link>
                                   )}
                                 </div>

@@ -12,6 +12,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { ProjectCard } from "@/components/projects/project-card";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
+import { Textarea } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import {
@@ -22,6 +23,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@g4k/ui/components";
+import { PageContainer } from "@/components/layout/page-container";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -63,58 +65,43 @@ export default function ProjectsPage() {
   const projects = data?.data || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Projects</h1>
-          <p className="text-sm text-neutral-500 mt-1">Manage team projects, track progress and deadlines.</p>
-        </div>
-
-        {hasCapability(caps, "manage_projects") && (
+    <PageContainer
+      title="Projects"
+      actions={
+        hasCapability(caps, "manage_projects") ? (
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button className="bg-violet-600 hover:bg-violet-700 text-white font-semibold gap-2">
                 <Plus className="w-4 h-4" /> New Project
               </Button>
             </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription className="sr-only">Create a new project.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-neutral-500">Project Name *</label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Website Redesign"
-                  className="text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-neutral-500">Description</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Project details..."
-                  className="w-full p-2 text-xs rounded-md border border-input bg-background resize-none"
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-neutral-500">Priority</label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
-                  className="w-full h-9 text-xs border border-input bg-background rounded-md px-3"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription className="sr-only">Provide the name, description, and priority for the new project.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Name</label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Project name" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea value={description} onChange={(e: any) => setDescription(e.target.value)} placeholder="Project description" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Priority</label>
+                  <select
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
               <Button
                 onClick={() => createMutation.mutate()}
                 disabled={createMutation.isPending || !name}
@@ -125,8 +112,8 @@ export default function ProjectsPage() {
             </div>
           </DialogContent>
           </Dialog>
-        )}
-      </div>
+        ) : null}
+    >
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 max-w-sm w-full">
@@ -196,6 +183,6 @@ export default function ProjectsPage() {
           )}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

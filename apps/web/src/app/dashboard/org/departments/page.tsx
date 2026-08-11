@@ -3,12 +3,21 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Building2, Users, Archive, Edit2, Loader2, Search, MoreVertical, ArchiveRestore, Download, Trash2 } from "lucide-react";
+import { Plus, Building2, Users, Archive, Edit2, Loader2, MoreVertical, ArchiveRestore, Download, Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
-import { getAuthToken, useAuthStore } from "@/lib/auth-store";
+import { getAuthToken } from "@/lib/auth-store";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
+const deptSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+});
+type DeptFormValues = z.infer<typeof deptSchema>;
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
@@ -42,10 +51,16 @@ export default function DepartmentsPage() {
   const debouncedSearch = useDebounce(search, 250);
   const [statusFilter, setStatusFilter] = useUrlState("status", "active");
 
+  const { data: caps } = useCapabilities();
+  const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
+
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
   
-  const [formData, setFormData] = useState({ name: "", description: "" });
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<DeptFormValues>({
+    resolver: zodResolver(deptSchema),
+    defaultValues: { name: "", description: "" }
+  });
   const [editingDept, setEditingDept] = useState<any>(null);
 
   const [selectedDeptMembers, setSelectedDeptMembers] = useState<any>(null);
@@ -149,9 +164,6 @@ export default function DepartmentsPage() {
 
   const deptList = data?.pages?.flatMap((page: any) => page.data || []) || [];
 
-  const { activeRole } = useAuthStore();
-  const isAdmin = activeRole === "admin" || activeRole === "super_admin" || activeRole === "founder" || activeRole === "hr";
-
   const columns: any[] = useMemo<any[]>(() => {
     const baseColumns: any[] = [
       {
@@ -247,7 +259,11 @@ export default function DepartmentsPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => { setEditingDept(dept); setFormData({ name: dept.name, description: dept.description || "" }); setIsDeptModalOpen(true); }}>
+                  <DropdownMenuItem onClick={() => { 
+                    setEditingDept(dept); 
+                    reset({ name: dept.name, description: dept.description || "" }); 
+                    setIsDeptModalOpen(true); 
+                  }}>
                     <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -292,7 +308,7 @@ export default function DepartmentsPage() {
             </Button>
           )}
           {isAdmin && (
-            <Button onClick={() => { setEditingDept(null); setFormData({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow">
+            <Button onClick={() => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow">
               <Plus className="w-4 h-4" /> Add Department
             </Button>
           )}
@@ -364,22 +380,26 @@ export default function DepartmentsPage() {
             <DialogTitle>{editingDept ? "Edit Department" : "Add Department"}</DialogTitle>
             <DialogDescription className="sr-only">Create or edit a department.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <label className="block mb-1 text-sm font-semibold">Department Name *</label>
-              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Engineering" />
+          <form onSubmit={handleSubmit((data) => editingDept ? updateDeptMutation.mutate(data) : createDeptMutation.mutate(data))}>
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="block mb-1 text-sm font-semibold">Department Name *</label>
+                <Input {...register("name")} placeholder="e.g. Engineering" />
+                {errors.name && <p className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
+              </div>
+              <div>
+                <label className="block mb-1 text-sm font-semibold">Description</label>
+                <Input {...register("description")} placeholder="Optional description..." />
+              </div>
             </div>
-            <div>
-              <label className="block mb-1 text-sm font-semibold">Description</label>
-              <Input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Optional description..." />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeptModalOpen(false)}>Cancel</Button>
-            <Button onClick={() => editingDept ? updateDeptMutation.mutate(formData) : createDeptMutation.mutate(formData)} disabled={!formData.name}>
-              {editingDept ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={() => setIsDeptModalOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={createDeptMutation.isPending || updateDeptMutation.isPending}>
+                {(createDeptMutation.isPending || updateDeptMutation.isPending) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {editingDept ? "Update" : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

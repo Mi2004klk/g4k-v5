@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow, parseISO } from "date-fns";
+import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { Clock, AlertCircle, FileEdit, Activity } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage, Skeleton, EmptyState } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { useMemo } from "react";
 import Link from "next/link";
 
@@ -26,10 +27,11 @@ interface Member {
 }
 
 export function HrActivityFeedWidget() {
+  const todayDate = format(new Date(), "yyyy-MM-dd");
   const { data, isLoading, error } = useQuery({
-    queryKey: ["hr-attendance-today"],
-    queryFn: () => apiFetch("/attendance/hr/today"),
-    staleTime: 1000 * 60 * 5, // 5 mins
+    queryKey: ["hr-attendance-today", todayDate, "all"],
+    queryFn: () => apiFetch(`/attendance/hr/today?date=${todayDate}`),
+    staleTime: STALE_TIME_ATTENDANCE,
   });
 
   const activities = useMemo(() => {

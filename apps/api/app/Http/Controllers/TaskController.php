@@ -95,6 +95,20 @@ class TaskController extends Controller
             'metadata' => ['title' => $task->title],
         ]);
 
+        if ($request->boolean('notify_global_chat')) {
+            $globalConv = \App\Models\Conversation::where('scope', 'global')->first();
+            if ($globalConv) {
+                $assigneeName = $task->assignee ? $task->assignee->name : 'Unassigned';
+                $msg = \App\Models\Message::create([
+                    'conversation_id' => $globalConv->id,
+                    'sender_id' => $request->user()->id,
+                    'body' => "📋 **Quick Task Assigned**: \"{$task->title}\" to {$assigneeName}",
+                    'type' => 'text',
+                ]);
+                broadcast(new \App\Events\MessageSent($msg))->toOthers();
+            }
+        }
+
         return response()->json($task->load(['project', 'assignee', 'reporter', 'blocker', 'qaForm']));
     }
 

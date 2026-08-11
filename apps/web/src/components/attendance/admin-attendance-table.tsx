@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_DIRECTORY, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
 import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
@@ -49,22 +50,34 @@ export function AdminAttendanceTable() {
   const { data: departments = [] } = useQuery({
     queryKey: ["departments"],
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME_DIRECTORY,
   });
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["admin-attendance-overview", selectedDate, statusFilter, debouncedSearch, deptFilter],
+    queryKey: ["admin-attendance-overview", selectedDate, deptFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      if (debouncedSearch) params.append("search", debouncedSearch);
-      
       return apiFetch(`/attendance/admin/overview?${params.toString()}`);
     },
-    staleTime: 30000,
-    refetchInterval: 30000,
+    select: (raw: any) => {
+      if (!raw?.data) return raw;
+      let items = raw.data;
+      if (statusFilter && statusFilter !== "all") {
+        items = items.filter((item: any) => item.status === statusFilter);
+      }
+      if (debouncedSearch) {
+        const q = debouncedSearch.toLowerCase();
+        items = items.filter((item: any) =>
+          item.user?.name?.toLowerCase().includes(q) ||
+          item.user?.email?.toLowerCase().includes(q)
+        );
+      }
+      return { ...raw, data: items };
+    },
+    staleTime: STALE_TIME_ATTENDANCE,
+    refetchInterval: STALE_TIME_ATTENDANCE,
   });
 
   const records = data?.data || [];

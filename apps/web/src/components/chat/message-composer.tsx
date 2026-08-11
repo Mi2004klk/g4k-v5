@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Send, Paperclip } from "lucide-react";
 import { Button } from "@g4k/ui/components";
 
@@ -12,6 +12,7 @@ export function MessageComposer({
   disabled?: boolean;
 }) {
   const [text, setText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -25,7 +26,25 @@ export function MessageComposer({
 
   return (
     <div className="p-3 border-t border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center gap-2">
-      <Button size="icon" variant="ghost" className="h-9 w-9 text-neutral-400" aria-label="Add attachment">
+      <input 
+        type="file" 
+        className="hidden" 
+        ref={fileInputRef} 
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            // Ideally trigger file upload logic here or append to message
+            // Currently just a mock implementation
+            setText(text + ` [File: ${e.target.files[0].name}]`);
+          }
+        }} 
+      />
+      <Button 
+        size="icon" 
+        variant="ghost" 
+        className="h-9 w-9 text-neutral-400" 
+        aria-label="Add attachment"
+        onClick={() => fileInputRef.current?.click()}
+      >
         <Paperclip className="w-4 h-4" />
       </Button>
 

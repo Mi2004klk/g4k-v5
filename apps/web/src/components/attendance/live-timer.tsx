@@ -9,7 +9,10 @@ interface LiveTimerProps {
 }
 
 export function LiveTimer({ className, render }: LiveTimerProps) {
-  const { isActive, isOnBreak, baseSeconds, lastActiveTimestamp } = useTimerStore();
+  const isActive = useTimerStore((s) => s.isActive);
+  const isOnBreak = useTimerStore((s) => s.isOnBreak);
+  const baseSeconds = useTimerStore((s) => s.baseSeconds);
+  const lastActiveTimestamp = useTimerStore((s) => s.lastActiveTimestamp);
   const [displaySeconds, setDisplaySeconds] = useState(baseSeconds);
 
   useEffect(() => {

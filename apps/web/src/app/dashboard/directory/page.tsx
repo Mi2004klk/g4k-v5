@@ -1,25 +1,22 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Search,
   Grid,
   List as ListIcon,
   MessageSquare,
   Building2,
   Mail,
   Phone,
-  Briefcase,
   UserCheck,
   Loader2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 
 import { Button } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
@@ -36,6 +33,7 @@ import {
 } from "@g4k/ui/components";
 import { DataTable } from "@g4k/ui/components";
 import { useTrackRecent } from "@/hooks/use-track-recent";
+import { PageContainer } from "@/components/layout/page-container";
 
 export default function DirectoryPage() {
   const router = useRouter();
@@ -69,51 +67,50 @@ export default function DirectoryPage() {
     queryFn: () => apiFetch("/designations?limit=100"),
   });
 
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["directory", debouncedSearch, deptFilter, desigFilter, visFilter],
-    queryFn: async ({ pageParam }) => {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } = useInfiniteQuery({
+    queryKey: ["directory-users", debouncedSearch, deptFilter, desigFilter, visFilter],
+    queryFn: ({ pageParam = 1 }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
-      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      if (desigFilter && desigFilter !== "all") params.append("designation_id", desigFilter);
-      if (visFilter && visFilter !== "all") params.append("visibility", visFilter);
-      if (pageParam) params.append("cursor", pageParam);
-      return apiFetch(`/directory?${params.toString()}`);
+      if (deptFilter !== "all") params.append("department_id", deptFilter);
+      if (desigFilter !== "all") params.append("designation_id", desigFilter);
+      if (visFilter !== "all") params.append("visibility", visFilter);
+      params.append("page", String(pageParam));
+      return apiFetch(`/directory/users?${params.toString()}`);
     },
-    initialPageParam: "",
-    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
+    getNextPageParam: (lastPage: any) => {
+      if (lastPage?.meta?.current_page < lastPage?.meta?.last_page) {
+        return lastPage.meta.current_page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: async (userId: number) => {
-      return apiFetch(`/directory/${userId}/send-message`, { method: "POST" });
+    mutationFn: (recipientId: number) => apiFetch("/chat/direct", {
+      method: "POST",
+      body: JSON.stringify({ recipient_id: recipientId }),
+    }),
+    onSuccess: (conversation: any) => {
+      router.push(`/dashboard/chat?c=${conversation.id}`);
     },
-    onSuccess: (res: any) => {
-      toast.success(`Message session started!`);
-      router.push(`/dashboard/chat?conversation=${res.conversation_id}`);
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to start conversation.");
-    },
+    onError: (err: any) => toast.error(err.message || "Failed to start chat."),
   });
 
-  const users = data?.pages?.flatMap((page: any) => page.data || []) || [];
+  const users = data?.pages.flatMap((page) => page.data || []) || [];
 
   const columns: any[] = [
     {
       accessorKey: "name",
-      header: "Employee",
+      header: "Name",
       cell: ({ row }: any) => (
-        <div
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={() => setSelectedUser(row.original)}
-        >
-          <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-950 font-bold text-violet-700 dark:text-violet-300 flex items-center justify-center">
-            {row.original.name.charAt(0)}
-          </div>
-          <span className="font-semibold text-neutral-900 dark:text-white group-hover:text-violet-600 transition-colors">
-            {row.original.name}
-          </span>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
+          <Avatar className="w-8 h-8">
+            <AvatarImage src={row.original.avatar_url} />
+            <AvatarFallback name={row.original.name} />
+          </Avatar>
+          <div className="font-semibold text-neutral-900 dark:text-white">{row.original.name}</div>
         </div>
       ),
     },
@@ -158,7 +155,7 @@ export default function DirectoryPage() {
             size="sm"
             className="text-violet-600 hover:text-violet-700"
           >
-            <MessageSquare className="w-4 h-4" />
+            Message
           </Button>
         </div>
       ),
@@ -166,16 +163,10 @@ export default function DirectoryPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
-            Employee Directory
-          </h1>
-          <p className="text-xs text-neutral-500">
-            Browse corporate team members, roles, contact info, and departments.
-          </p>
-        </div>
+    <PageContainer
+      title="Employee Directory"
+      description="Browse corporate team members, roles, contact info, and departments."
+      actions={
         <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
           <Button
             variant={viewMode === "grid" ? "secondary" : "ghost"}
@@ -194,10 +185,10 @@ export default function DirectoryPage() {
             <ListIcon className="w-4 h-4" />
           </Button>
         </div>
-      </div>
-
+      }
+    >
       {/* Search Bar */}
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-sm mb-6">
         <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
           <FilterBar
             searchQuery={search}
@@ -389,6 +380,6 @@ export default function DirectoryPage() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </PageContainer>
   );
 }

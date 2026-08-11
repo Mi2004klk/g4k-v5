@@ -2,17 +2,18 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, StatusBadge } from "@g4k/ui/components";
 import { Clock, Coffee, LogOut, Info, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
 
 export function TodaySummaryCard() {
-  const { isActive, isOnBreak } = useTimerStore();
+  const isActive = useTimerStore((s) => s.isActive);
+  const isOnBreak = useTimerStore((s) => s.isOnBreak);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["my-attendance-today-summary"],
+    queryKey: ["attendance-today"],
     queryFn: () => apiFetch("/attendance/me/today"),
     // Since offline punch is resilient, the store handles immediate local state updates.
     // The query is to fetch the server's absolute record including grace periods and lates.
@@ -43,12 +44,12 @@ export function TodaySummaryCard() {
   };
 
   const getStatusBadge = () => {
-    if (day?.status === "absent" && !isActive) return <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold">ABSENT</span>;
-    if (isOnBreak) return <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">ON BREAK</span>;
-    if (isActive) return <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">ACTIVE SHIFT</span>;
-    if (day?.status === "present") return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">COMPLETED</span>;
-    if (day?.status === "late") return <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">LATE</span>;
-    return <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 font-bold">OFF</span>;
+    if (day?.status === "absent" && !isActive) return <StatusBadge status="danger" dot className="uppercase">ABSENT</StatusBadge>;
+    if (isOnBreak) return <StatusBadge status="warning" dot className="uppercase">ON BREAK</StatusBadge>;
+    if (isActive) return <StatusBadge status="success" dot className="uppercase">ACTIVE SHIFT</StatusBadge>;
+    if (day?.status === "present") return <StatusBadge status="info" dot className="uppercase">COMPLETED</StatusBadge>;
+    if (day?.status === "late") return <StatusBadge status="warning" dot className="uppercase">LATE</StatusBadge>;
+    return <StatusBadge status="neutral" dot className="uppercase">OFF</StatusBadge>;
   };
 
   const isLate = day?.status === "late";

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Users, Clock, LogIn, CalendarX, Loader2, CalendarDays } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useMemo } from "react";
 
@@ -12,15 +13,14 @@ export function AdminAttendanceAnalytics() {
   const [deptFilter] = useUrlState("dept", "all");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-attendance-overview", selectedDate, "all", "", deptFilter],
+    queryKey: ["admin-attendance-overview", selectedDate, deptFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
       return apiFetch(`/attendance/admin/overview?${params.toString()}`);
     },
-    staleTime: 30000,
-    refetchInterval: 30000,
+    staleTime: STALE_TIME_ATTENDANCE,
   });
 
   const stats = useMemo(() => {
@@ -88,18 +88,18 @@ export function AdminAttendanceAnalytics() {
   }
 
   const cards = [
-    { title: "Present", value: stats.present, icon: Users, color: "text-emerald-600", bg: "bg-emerald-100 dark:bg-emerald-950/30", total: stats.total },
-    { title: "Late", value: stats.late, icon: Clock, color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-950/30", total: stats.total },
-    { title: "Absent", value: stats.absent, icon: CalendarX, color: "text-rose-600", bg: "bg-rose-100 dark:bg-rose-950/30", total: stats.total },
-    { title: "On Leave", value: stats.leave, icon: CalendarDays, color: "text-violet-600", bg: "bg-violet-100 dark:bg-violet-950/30", total: stats.total },
-    { title: "Avg Clock-In", value: stats.avgClockIn, icon: LogIn, color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-950/30" },
-    { title: "Total Overtime", value: stats.totalOvertime, icon: Clock, color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-950/30" },
+    { title: "Present", value: stats.present, icon: Users, color: "text-success", bg: "bg-success/10", total: stats.total },
+    { title: "Late", value: stats.late, icon: Clock, color: "text-warning", bg: "bg-warning/10", total: stats.total },
+    { title: "Absent", value: stats.absent, icon: CalendarX, color: "text-danger", bg: "bg-danger/10", total: stats.total },
+    { title: "On Leave", value: stats.leave, icon: CalendarDays, color: "text-info", bg: "bg-info/10", total: stats.total },
+    { title: "Avg Clock-In", value: stats.avgClockIn, icon: LogIn, color: "text-info", bg: "bg-info/10" },
+    { title: "Total Overtime", value: stats.totalOvertime, icon: Clock, color: "text-warning", bg: "bg-warning/10" },
   ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {cards.map((card, i) => (
-        <div key={i} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 relative overflow-hidden group hover:border-violet-500/50 transition-colors">
+        <div key={i} className="bg-card border border-border rounded-xl p-4 relative overflow-hidden group hover:border-primary/50 transition-colors">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{card.title}</h4>
             <div className={`p-1.5 rounded-md ${card.bg}`}>

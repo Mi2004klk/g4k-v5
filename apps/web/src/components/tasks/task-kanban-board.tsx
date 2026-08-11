@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import {
   DndContext,
   closestCorners,
@@ -25,24 +25,25 @@ import {
   ContextMenuTrigger,
 } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
+import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
 
 const COLUMNS = [
-  { id: "todo", title: "To Do", color: "bg-neutral-500" },
-  { id: "in_progress", title: "In Progress", color: "bg-blue-500" },
-  { id: "review", title: "In Review", color: "bg-amber-500" },
-  { id: "done", title: "Done", color: "bg-emerald-500" },
+  { id: "todo", title: "To Do", color: "bg-neutral-400" },
+  { id: "in_progress", title: "In Progress", color: "bg-info" },
+  { id: "review", title: "In Review", color: "bg-warning" },
+  { id: "done", title: "Done", color: "bg-success" },
 ];
 
-const getPriorityBadge = (priority: string) => {
+const getPriorityStatus = (priority: string): StatusType => {
   switch (priority) {
     case "urgent":
-      return "bg-rose-100 text-rose-700";
+      return "danger";
     case "high":
-      return "bg-amber-100 text-amber-700";
+      return "warning";
     case "medium":
-      return "bg-blue-100 text-blue-700";
+      return "info";
     default:
-      return "bg-neutral-100 text-neutral-600";
+      return "neutral";
   }
 };
 
@@ -59,7 +60,7 @@ function TaskCard({
     <Card
       onClick={() => onTaskSelect?.(task)}
       className={`border-neutral-200/60 dark:border-neutral-800 shadow-sm transition-all bg-white dark:bg-neutral-900 ${
-        isOverlay ? "scale-105 rotate-2 cursor-grabbing shadow-xl ring-2 ring-violet-500" : "hover:shadow cursor-grab"
+        isOverlay ? "scale-105 rotate-2 cursor-grabbing shadow-xl ring-2 ring-ring" : "hover:shadow cursor-grab"
       }`}
     >
       <CardContent className="p-3 space-y-2">
@@ -67,9 +68,9 @@ function TaskCard({
           <h4 className="text-xs font-semibold text-neutral-900 dark:text-white line-clamp-2">
             {task.title}
           </h4>
-          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${getPriorityBadge(task.priority)}`}>
+          <StatusBadge status={getPriorityStatus(task.priority)} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0">
             {task.priority}
-          </span>
+          </StatusBadge>
         </div>
 
         {task.description && (
@@ -86,7 +87,7 @@ function TaskCard({
 
           {task.assignee && (
             <div className="flex items-center gap-1 text-neutral-600 dark:text-neutral-300 font-medium">
-              <div className="w-4 h-4 rounded-full bg-violet-600 text-white font-bold text-[8px] flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full bg-primary text-primary-foreground font-bold text-[8px] flex items-center justify-center">
                 {task.assignee.name.charAt(0)}
               </div>
               <span className="truncate max-w-[80px]">{task.assignee.name}</span>
@@ -110,7 +111,7 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
     return (
       <div
         ref={setNodeRef}
-        className="opacity-40 border-2 border-dashed border-violet-500 rounded-lg h-24"
+        className="opacity-40 border-2 border-dashed border-ring rounded-lg h-24"
       />
     );
   }
@@ -170,7 +171,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove }:
       ref={setNodeRef}
       className={`flex flex-col gap-3 w-full md:min-w-[260px] p-3 rounded-xl border transition-colors ${
         isOver
-          ? "bg-violet-50/50 border-violet-300 dark:bg-violet-900/20 dark:border-violet-700"
+          ? "bg-secondary/50 border-ring/50"
           : "bg-neutral-50/50 border-neutral-100 dark:bg-neutral-900/40 dark:border-neutral-800"
       }`}
     >
@@ -189,7 +190,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove }:
       <div className="flex-1 space-y-2.5 min-h-[300px]">
         {tasks.length === 0 && (
           <div className="flex items-center justify-center h-24 mt-2 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-lg text-xs font-semibold text-neutral-400">
-            Drop tasks here
+            No tasks
           </div>
         )}
         {tasks.map((task: any) => (
@@ -206,7 +207,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove }:
   );
 }
 
-export function TaskKanbanBoard({
+export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   tasks,
   onTaskMove,
   onTaskSelect,
@@ -270,4 +271,4 @@ export function TaskKanbanBoard({
       </DragOverlay>
     </DndContext>
   );
-}
+});

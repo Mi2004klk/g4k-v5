@@ -5,12 +5,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Download, FileSpreadsheet, FileText, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent, DataTable } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, DataTable, FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 
 export function ReportBuilder() {
   const queryClient = useQueryClient();
   const [reportKey, setReportKey] = useState("tasks");
+  const [search, setSearch] = useState("");
 
   const { data: reportData, isLoading, refetch } = useQuery({
     queryKey: ["report-data", reportKey],
@@ -48,15 +49,24 @@ export function ReportBuilder() {
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-base font-bold">Custom Report Builder</CardTitle>
         <div className="flex items-center gap-2">
-          <select
-            value={reportKey}
-            onChange={(e) => setReportKey(e.target.value)}
-            className="text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-1.5 focus:outline-none"
-          >
-            <option value="tasks">Tasks & Deliverables</option>
-            <option value="projects">Projects & Milestones</option>
-            <option value="users">Employee Directory</option>
-          </select>
+          <FilterBar
+            searchQuery={search}
+            onSearchChange={setSearch}
+            filters={[
+              {
+                key: "reportKey",
+                label: "Report Type",
+                type: "select",
+                options: [
+                  { label: "Tasks & Deliverables", value: "tasks" },
+                  { label: "Projects & Milestones", value: "projects" },
+                  { label: "Employee Directory", value: "users" }
+                ],
+                value: reportKey,
+                onChange: setReportKey
+              }
+            ]}
+          />
 
           <Button
             size="sm"

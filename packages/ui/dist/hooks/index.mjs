@@ -1,6 +1,7 @@
 import {
-  useDebouncedValidation
-} from "../chunk-3E6CS2SC.mjs";
+  useDebouncedValidation,
+  useIsMobile
+} from "../chunk-EEUYD32C.mjs";
 import "../chunk-6DZX6EAA.mjs";
 
 // src/hooks/use-form-draft.ts
@@ -72,5 +73,6 @@ function useFormDraft(key, initialValues) {
 }
 export {
   useDebouncedValidation,
-  useFormDraft
+  useFormDraft,
+  useIsMobile
 };

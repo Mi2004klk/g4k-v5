@@ -25,7 +25,7 @@ class AlertMissedClockIn implements ShouldQueue
         }
 
         // Get offset setting
-        $offsetSetting = \App\Models\Setting::where('key', 'missed_clockin_alert_offset')->value('value') ?? 15;
+        $offsetSetting = \App\Models\Setting::where('key', 'reminders.missed_clock_in_offset')->value('value') ?? 15;
         $offsetMinutes = (int) $offsetSetting;
 
         // Default schedule

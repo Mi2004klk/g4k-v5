@@ -24,6 +24,7 @@ export function TaskDetailSheet({
   const [comment, setComment] = useState("");
   const [submissionNote, setSubmissionNote] = useState("");
   const [qaValues, setQaValues] = useState<Record<string, any>>({});
+  const [minutesLogged, setMinutesLogged] = useState("");
 
   const commentMutation = useMutation({
     mutationFn: async (body: string) => {
@@ -35,7 +36,7 @@ export function TaskDetailSheet({
     onSuccess: () => {
       setComment("");
       toast.success("Comment added.");
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
     },
   });
 
@@ -52,11 +53,30 @@ export function TaskDetailSheet({
     onSuccess: () => {
       toast.success("Task submitted for review.");
       onOpenChange(false);
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to submit task.");
     },
+  });
+
+  const timerMutation = useMutation({
+    mutationFn: async (minutes: number) => {
+      return apiFetch("/timer/log", {
+        method: "POST",
+        body: JSON.stringify({
+          task_id: task.id,
+          project_id: task.project_id,
+          minutes_logged: minutes,
+        }),
+      });
+    },
+    onSuccess: () => {
+      setMinutesLogged("");
+      toast.success("Time logged successfully.");
+      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to log time"),
   });
 
   return (
@@ -75,9 +95,10 @@ export function TaskDetailSheet({
         </SheetHeader>
 
         <Tabs defaultValue="overview" className="mt-4">
-          <TabsList className="grid grid-cols-3 w-full text-xs">
+          <TabsList className="w-full grid grid-cols-4 h-9">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="comments">Comments</TabsTrigger>
+            <TabsTrigger value="time">Time</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
 
@@ -171,6 +192,52 @@ export function TaskDetailSheet({
                     </span>
                   </div>
                   <p className="text-neutral-800 dark:text-neutral-200 mt-1">{c.body}</p>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="time" className="space-y-4 py-4 text-xs">
+            <div className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-100 dark:border-neutral-800">
+              <h4 className="font-semibold text-neutral-800 dark:text-neutral-200 mb-2">Log Time</h4>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="Minutes spent..."
+                  value={minutesLogged}
+                  onChange={(e) => setMinutesLogged(e.target.value)}
+                  className="h-8 text-xs flex-1"
+                />
+                <Button 
+                  size="sm" 
+                  className="h-8 shrink-0" 
+                  disabled={timerMutation.isPending || !minutesLogged}
+                  onClick={() => timerMutation.mutate(parseInt(minutesLogged))}
+                >
+                  <Clock className="w-3.5 h-3.5 mr-1" />
+                  Log Time
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-semibold text-neutral-600 dark:text-neutral-400">Time Logs</h4>
+              {!task.timeLogs?.length && (
+                <p className="text-neutral-400 italic">No time logged yet.</p>
+              )}
+              {task.timeLogs?.map((log: any) => (
+                <div key={log.id} className="flex items-center justify-between p-2 border-b border-neutral-100 dark:border-neutral-800 last:border-0">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-neutral-400" />
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                      {log.user?.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-neutral-500">
+                    <span>{log.minutes_logged} min</span>
+                    <span className="text-[10px]">{format(new Date(log.created_at), "MMM d")}</span>
+                  </div>
                 </div>
               ))}
             </div>

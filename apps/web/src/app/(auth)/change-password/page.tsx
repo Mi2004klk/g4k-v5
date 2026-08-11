@@ -37,7 +37,9 @@ type FormValues = z.infer<typeof changeSchema>;
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const { user, setAuth, token } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const token = useAuthStore((s) => s.token);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({

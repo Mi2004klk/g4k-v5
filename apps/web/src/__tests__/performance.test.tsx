@@ -1,5 +1,6 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { Profiler, Suspense } from 'react';
 import { AdminAttendanceTable } from '@/components/attendance/admin-attendance-table';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -122,7 +123,7 @@ describe('Performance - AdminAttendanceTable', () => {
     const initialSiblingRenders = siblingRenderCount;
 
     // Advance by 3 seconds
-    vi.act(() => {
+    act(() => {
       vi.advanceTimersByTime(3000);
     });
 

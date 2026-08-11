@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-table"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { Settings2, Pencil, Check, X as XIcon } from "lucide-react"
+import { useIsMobile } from "../hooks/use-mobile"
 
 import { cn } from "../utils/cn"
 import { Button } from "./button"
@@ -197,14 +198,7 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
+  const isMobile = useIsMobile()
 
   // Include checkbox column automatically if rowSelection is needed
   const tableColumns = useMemo(() => {
@@ -407,13 +401,13 @@ export function DataTable<TData, TValue>({
                       // skip select column header text if it's the checkbox
                       const headerTitle = cell.column.id === "select" ? "" : cell.column.columnDef.header
                       return (
-                        <div key={cell.id} className="flex flex-col gap-1 border-b border-border/50 pb-2 last:border-0 last:pb-0">
+                        <div key={cell.id} className="flex flex-col gap-1 border-b border-border/50 pb-2 last:border-0 last:pb-0 overflow-hidden">
                           {headerTitle && (
-                            <span className="text-xs font-medium text-muted-foreground">
+                            <span className="text-xs font-medium text-muted-foreground truncate">
                               {typeof headerTitle === "string" ? headerTitle : cell.column.id}
                             </span>
                           )}
-                          <span className="text-sm">
+                          <span className="text-sm break-words">
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </span>
                         </div>

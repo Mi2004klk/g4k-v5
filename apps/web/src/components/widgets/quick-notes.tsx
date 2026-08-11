@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { StickyNote, Plus, Trash2, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { StickyNote, Plus, Trash2, AlertTriangle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
+import { useShallow } from "zustand/react/shallow";
 
 export function QuickNotes() {
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
-  const { widgetStates, toggleWidgetCollapse } = useUIStore();
+  const widgetStates = useUIStore(useShallow((s) => s.widgetStates));
+  const toggleWidgetCollapse = useUIStore((s) => s.toggleWidgetCollapse);
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
 
-  const { data: notes = [], isLoading, isError, refetch } = useQuery({
+  const { data: notes = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["quick-notes"],
     queryFn: () => apiFetch("/quick-notes"),
+    placeholderData: keepPreviousData,
   });
 
   const createMutation = useMutation({
@@ -49,6 +52,7 @@ export function QuickNotes() {
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <StickyNote className="w-4 h-4 text-amber-500" />
             Quick Scratchpad
+            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </CardTitle>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">
@@ -69,7 +73,7 @@ export function QuickNotes() {
                 size="sm"
                 onClick={() => createMutation.mutate(text)}
                 disabled={!text.trim()}
-                className="h-8 bg-amber-500 hover:bg-amber-600 text-white"
+                className="h-8"
               >
                 <Plus className="w-3.5 h-3.5" />
               </Button>
@@ -98,15 +102,17 @@ export function QuickNotes() {
                 notes.map((n: any) => (
                   <div
                     key={n.id}
-                    className="p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 text-xs flex items-start justify-between gap-2 border border-amber-100 dark:border-amber-900/50"
+                    className="p-2.5 rounded-lg bg-secondary text-xs flex items-start justify-between gap-2 border border-border"
                   >
-                    <p className="text-neutral-800 dark:text-neutral-200">{n.body}</p>
-                    <button
+                    <p className="text-secondary-foreground">{n.body}</p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => deleteMutation.mutate(n.id)}
-                      className="text-neutral-400 hover:text-rose-600 transition-colors"
+                      className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    </Button>
                   </div>
                 ))
               )}

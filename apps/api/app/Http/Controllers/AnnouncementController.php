@@ -13,6 +13,7 @@ class AnnouncementController extends Controller
         $announcements = Announcement::with(['creator', 'team'])
             ->orderBy('pinned_at', 'desc')
             ->orderBy('created_at', 'desc')
+            ->limit(100)
             ->get();
 
         return response()->json($announcements);

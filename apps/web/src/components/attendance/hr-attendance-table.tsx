@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_DIRECTORY, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
 import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
@@ -31,7 +32,7 @@ export function HrAttendanceTable() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 250);
+    }, 300);
     return () => clearTimeout(handler);
   }, [search]);
 
@@ -49,23 +50,34 @@ export function HrAttendanceTable() {
   const { data: departments = [] } = useQuery({
     queryKey: ["departments"],
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME_DIRECTORY,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["hr-attendance-today", selectedDate, statusFilter, debouncedSearch, deptFilter],
+    queryKey: ["hr-attendance-today", selectedDate, deptFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      if (debouncedSearch) params.append("search", debouncedSearch);
-      
-      // Use the HR today endpoint with query parameters
       return apiFetch(`/attendance/hr/today?${params.toString()}`);
     },
-    staleTime: 30000,
-    refetchInterval: 30000,
+    select: (raw: any) => {
+      if (!raw?.data) return raw;
+      let items = raw.data;
+      if (statusFilter && statusFilter !== "all") {
+        items = items.filter((item: any) => item.status === statusFilter);
+      }
+      if (debouncedSearch) {
+        const q = debouncedSearch.toLowerCase();
+        items = items.filter((item: any) =>
+          item.user?.name?.toLowerCase().includes(q) ||
+          item.user?.email?.toLowerCase().includes(q)
+        );
+      }
+      return { ...raw, data: items };
+    },
+    staleTime: STALE_TIME_ATTENDANCE,
+    refetchInterval: STALE_TIME_ATTENDANCE,
   });
 
   const records = data?.data || [];
@@ -148,11 +160,13 @@ export function HrAttendanceTable() {
                   action: "add_event",
                   type: "clock_out"
                 })}
-                className="flex items-center gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+                className="hover:opacity-80 transition-opacity"
                 title="Open shift - missing clock out"
               >
-                <AlertCircle className="w-3 h-3" />
-                OPEN SHIFT
+                <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
+                  <AlertCircle className="w-3 h-3" />
+                  OPEN SHIFT
+                </StatusBadge>
               </button>
             )}
           </div>

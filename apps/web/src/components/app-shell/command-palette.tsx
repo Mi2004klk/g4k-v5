@@ -179,7 +179,7 @@ export function CommandPalette() {
             <Clock className="w-4 h-4 mr-2" />
             <span>View Attendance History</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/attendance"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/leave"))}>
             <Coffee className="w-4 h-4 mr-2 text-violet-500" />
             <span>Request Leave</span>
           </CommandItem>

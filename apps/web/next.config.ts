@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
     ];
   },
   productionBrowserSourceMaps: false,
+  experimental: {
+    optimizePackageImports: ["lucide-react", "date-fns", "@g4k/ui"],
+  },
 };
 
 import { withSentryConfig } from "@sentry/nextjs";

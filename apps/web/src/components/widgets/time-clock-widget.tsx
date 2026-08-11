@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, Play, Square, Coffee, AlertCircle } from "lucide-react";
+import { Loader2, Play, Square, Coffee, AlertCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { offlineEngine } from "@/lib/offline-engine";
 import {
   AlertDialog,
@@ -23,7 +24,6 @@ import {
 import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
-import { useQueryClient } from "@tanstack/react-query";
 
 export function TimeClockWidget({ className }: { className?: string }) {
 
@@ -32,21 +32,20 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   const queryClient = useQueryClient();
   
-  const {
-    isActive,
-    isOnBreak,
-    baseSeconds,
-    lastActiveTimestamp,
-    syncWithServer,
-    startTimer,
-    stopTimer,
-    startBreak,
-    endBreak,
-  } = useTimerStore();
+  const isActive = useTimerStore((s) => s.isActive);
+  const isOnBreak = useTimerStore((s) => s.isOnBreak);
+  const baseSeconds = useTimerStore((s) => s.baseSeconds);
+  const lastActiveTimestamp = useTimerStore((s) => s.lastActiveTimestamp);
+  const syncWithServer = useTimerStore((s) => s.syncWithServer);
+  const startTimer = useTimerStore((s) => s.startTimer);
+  const stopTimer = useTimerStore((s) => s.stopTimer);
+  const startBreak = useTimerStore((s) => s.startBreak);
+  const endBreak = useTimerStore((s) => s.endBreak);
 
-  const { data: todayData, isLoading, isError, refetch } = useQuery({
+  const { data: todayData, isPending, isFetching, isError, refetch } = useQuery({
     queryKey: ["attendance-today"],
     queryFn: () => apiFetch("/attendance/me/today"),
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
@@ -116,7 +115,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   return (
     <div className={cn("relative w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between", className)}>
-      {isLoading && (
+      {isPending && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-2xl p-6 gap-6">
           <div className="flex justify-between w-full">
             <Skeleton className="h-4 w-24" />
@@ -135,31 +134,31 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             Time Clock
+            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </span>
           {isError && (
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
                 <AlertCircle className="w-3 h-3" /> Offline Mode
               </span>
-              <button onClick={() => refetch()} className="text-[10px] font-bold text-neutral-500 hover:text-neutral-700 underline">
+              <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[10px] font-bold text-neutral-500 hover:text-neutral-700">
                 Retry
-              </button>
+              </Button>
             </div>
           )}
         </div>
-        <span
-          className={cn(
-            "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-            activeState === "active" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400",
-            activeState === "on_break" && "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400",
-            activeState === "completed" && "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400",
-            activeState === "not_started" && "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
-          )}
+        <StatusBadge
+          status={
+            activeState === "active" ? "success" :
+            activeState === "on_break" ? "warning" :
+            activeState === "completed" ? "info" : "neutral"
+          }
+          className="uppercase tracking-wider px-2.5 py-0.5 text-[10px]"
         >
           {activeState.replace("_", " ")}
-        </span>
+        </StatusBadge>
       </div>
 
       <div className="my-4 text-center">
@@ -212,7 +211,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
             <Button
               onClick={() => handlePunch("start_break")}
               variant="outline"
-              className="flex-1 h-12 border-amber-300 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 gap-2"
+              className="flex-1 h-12 border-warning/50 text-warning hover:bg-warning/10 gap-2"
             >
               <Coffee className="w-4 h-4" />
               <span>Break</span>

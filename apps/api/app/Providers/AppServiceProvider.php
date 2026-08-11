@@ -28,5 +28,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ApprovalDecided::class, LeaveAttendanceIntegration::class);
         Event::listen(ApprovalDecided::class, \App\Listeners\ProcessApprovalDecision::class);
         Notification::observe(NotificationObserver::class);
+
+        // Cache invalidation observers
+        \App\Models\Project::observe(\App\Observers\CacheInvalidationObserver::class);
+        \App\Models\Task::observe(\App\Observers\CacheInvalidationObserver::class);
+        \App\Models\AttendanceDay::observe(\App\Observers\CacheInvalidationObserver::class);
+        \App\Models\LeaveRequest::observe(\App\Observers\CacheInvalidationObserver::class);
     }
 }

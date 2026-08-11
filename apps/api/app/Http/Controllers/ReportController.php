@@ -50,7 +50,7 @@ class ReportController extends Controller
             default:
                 $query = User::query();
                 if (!$hasManage) {
-                    $query->where('id', $user->id);
+                    $query->where('department_id', $user->department_id);
                 }
                 $data = $query->latest()->paginate(25);
                 break;
@@ -85,6 +85,7 @@ class ReportController extends Controller
     {
         $exports = ExportJob::where('user_id', $request->user()->id)
             ->latest()
+            ->limit(20)
             ->get();
 
         return response()->json($exports);
@@ -95,23 +96,37 @@ class ReportController extends Controller
         $start = $request->query('start', now()->subDays(30)->toDateString());
         $end = $request->query('end', now()->toDateString());
         $dept = $request->query('dept');
+        $page = $request->query('page', 1);
 
-        $query = User::query()
-            ->with('department')
-            ->withCount([
-                'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
-                'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
-                'attendanceDays as absent_days' => fn($q) => $q->where('status', 'absent')->whereBetween('date', [$start, $end]),
-                'attendanceDays as leave_days' => fn($q) => $q->where('status', 'leave')->whereBetween('date', [$start, $end]),
-            ])
-            ->withSum(['attendanceDays as total_hours' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds')
-            ->withSum(['attendanceDays as overtime_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'overtime_seconds');
+        $hasManage = $this->userHasManage($request);
+        $user = $request->user();
 
-        if ($dept && $dept !== 'all') {
-            $query->where('department_id', $dept);
-        }
+        // Also we need to include hasManage and user ID in the cache key so HR and Admin don't share the same cache!
+        $cacheRole = $hasManage ? 'admin' : "hr_{$user->department_id}";
+        $cacheKey = "report_attendance_summary_{$start}_{$end}_{$dept}_{$page}_{$cacheRole}";
 
-        return response()->json($query->paginate(25));
+        $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user) {
+            $query = User::query()
+                ->with('department')
+                ->withCount([
+                    'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
+                    'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
+                    'attendanceDays as absent_days' => fn($q) => $q->where('status', 'absent')->whereBetween('date', [$start, $end]),
+                    'attendanceDays as leave_days' => fn($q) => $q->where('status', 'leave')->whereBetween('date', [$start, $end]),
+                ])
+                ->withSum(['attendanceDays as total_hours' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds')
+                ->withSum(['attendanceDays as overtime_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'overtime_seconds');
+
+            if ($dept && $dept !== 'all') {
+                $query->where('department_id', $dept);
+            } elseif (!$hasManage) {
+                $query->where('department_id', $user->department_id);
+            }
+
+            return $query->paginate(25);
+        });
+
+        return response()->json($results);
     }
 
     public function leaveSummary(Request $request)
@@ -119,6 +134,9 @@ class ReportController extends Controller
         $start = $request->query('start', now()->subDays(30)->toDateString());
         $end = $request->query('end', now()->toDateString());
         $dept = $request->query('dept');
+
+        $hasManage = $this->userHasManage($request);
+        $user = $request->user();
 
         $query = User::query()
             ->with('department')
@@ -131,6 +149,8 @@ class ReportController extends Controller
 
         if ($dept && $dept !== 'all') {
             $query->where('department_id', $dept);
+        } elseif (!$hasManage) {
+            $query->where('department_id', $user->department_id);
         }
 
         return response()->json($query->paginate(25));

@@ -21,7 +21,8 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var hooks_exports = {};
 __export(hooks_exports, {
   useDebouncedValidation: () => useDebouncedValidation,
-  useFormDraft: () => useFormDraft
+  useFormDraft: () => useFormDraft,
+  useIsMobile: () => useIsMobile
 });
 module.exports = __toCommonJS(hooks_exports);
 
@@ -112,8 +113,26 @@ function useFormDraft(key, initialValues) {
     clearDraft
   };
 }
+
+// src/hooks/use-mobile.ts
+var import_react3 = require("react");
+var MOBILE_BREAKPOINT = 768;
+function useIsMobile() {
+  const [isMobile, setIsMobile] = (0, import_react3.useState)(void 0);
+  (0, import_react3.useEffect)(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    mql.addEventListener("change", onChange);
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return !!isMobile;
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   useDebouncedValidation,
-  useFormDraft
+  useFormDraft,
+  useIsMobile
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Kanban, Calendar, CheckSquare, Loader2, List as ListIcon, Trash2, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -13,6 +13,7 @@ const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder")
 import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
+import { PageContainer } from "@/components/layout/page-container";
 
 export default function TasksPage() {
   const queryClient = useQueryClient();
@@ -62,7 +63,7 @@ export default function TasksPage() {
       queryClient.setQueryData(["tasks"], context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
     },
   });
 
@@ -72,19 +73,18 @@ export default function TasksPage() {
     },
     onSuccess: () => {
       toast.success("Task deleted successfully.");
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
     }
   });
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (taskIds: number[]) => {
-      // Assuming a bulk endpoint exists, or fallback to Promise.all
       await Promise.all(taskIds.map(id => apiFetch(`/tasks/${id}`, { method: "DELETE" })));
     },
     onSuccess: () => {
       toast.success("Tasks deleted successfully.");
       setRowSelection({});
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"], exact: true });
     }
   });
 
@@ -98,6 +98,19 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
+
+  const handleTaskMove = useCallback((taskId: number, status: string) => {
+    moveTaskMutation.mutate({ taskId, status });
+  }, [moveTaskMutation]);
+
+  const handleTaskSelect = useCallback((task: any) => {
+    setSelectedTask(task);
+    setSheetOpen(true);
+  }, []);
+
+  const handleDeleteTask = useCallback((taskId: number) => {
+    deleteTaskMutation.mutate(taskId);
+  }, [deleteTaskMutation]);
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -168,13 +181,10 @@ export default function TasksPage() {
   const selectedTaskIds = Object.keys(rowSelection).filter(k => (rowSelection as any)[k]).map(k => filteredTasks[Number(k)]?.id).filter(Boolean);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Tasks & Workflows</h1>
-          <p className="text-sm text-neutral-500 mt-1">Organize team deliverables using Kanban or Gantt view.</p>
-        </div>
-
+    <PageContainer
+      title="Tasks & Workflows"
+      description="Organize team deliverables using Kanban or Gantt view."
+      actions={
         <div className="flex items-center gap-3">
           <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
             <button
@@ -281,8 +291,7 @@ export default function TasksPage() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
-
+      }>
       {viewMode === "list" && (
         <div className="space-y-4">
           <FilterBar
@@ -334,12 +343,9 @@ export default function TasksPage() {
       {viewMode === "kanban" && (
         <TaskKanbanBoard
           tasks={filteredTasks}
-          onTaskMove={(taskId, status) => moveTaskMutation.mutate({ taskId, status })}
-          onTaskSelect={(task) => {
-            setSelectedTask(task);
-            setSheetOpen(true);
-          }}
-          onDeleteTask={(taskId) => deleteTaskMutation.mutate(taskId)}
+          onTaskMove={handleTaskMove}
+          onTaskSelect={handleTaskSelect}
+          onDeleteTask={handleDeleteTask}
         />
       )}
 
@@ -348,7 +354,7 @@ export default function TasksPage() {
       {viewMode === "qa" && <QAFormBuilder />}
 
       <TaskDetailSheet
-        task={selectedTask}
+        task={filteredTasks.find((t: any) => t.id === selectedTask?.id) || selectedTask}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
@@ -361,6 +367,6 @@ export default function TasksPage() {
         confirmText="Delete All"
         onConfirm={() => bulkDeleteMutation.mutate(selectedTaskIds)}
       />
-    </div>
+    </PageContainer>
   );
 }

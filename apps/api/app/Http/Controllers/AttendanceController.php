@@ -143,11 +143,17 @@ class AttendanceController extends Controller
         $schedule = DB::table('work_schedules')->where('is_default', true)->first();
         $standardSeconds = $schedule ? $schedule->standard_seconds : 31500;
 
-        return response()->json([
+        $lastMod = max($day->updated_at ?? '', $events->max('updated_at') ?? '');
+        $response = response()->json([
             'day' => $day,
             'events' => $events,
             'standard_seconds' => $standardSeconds,
         ]);
+        $response->setEtag(md5($user->id . '_' . $date . '_' . $lastMod));
+        $response->header('Cache-Control', 'private, max-age=30');
+        $response->isNotModified($request);
+
+        return $response;
     }
 
     public function meHistory(Request $request)
@@ -236,7 +242,8 @@ class AttendanceController extends Controller
 
         $results = $query->cursorPaginate(20);
         $response = response()->json($results);
-        $response->setEtag(md5($response->getContent()));
+        $lastModified = collect($results->items())->max('updated_at') ?? '';
+        $response->setEtag(md5($results->count() . $lastModified . $request->fullUrl()));
         $response->header('Cache-Control', 'private, max-age=30');
         $response->isNotModified($request);
 
@@ -348,7 +355,8 @@ class AttendanceController extends Controller
 
         $results = $query->cursorPaginate(20);
         $response = response()->json($results);
-        $response->setEtag(md5($response->getContent()));
+        $lastModified = collect($results->items())->max('updated_at') ?? '';
+        $response->setEtag(md5($results->count() . $lastModified . $request->fullUrl()));
         $response->header('Cache-Control', 'private, max-age=30');
         $response->isNotModified($request);
 

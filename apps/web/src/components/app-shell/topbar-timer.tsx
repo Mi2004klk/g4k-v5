@@ -8,7 +8,8 @@ import { LiveTimer } from "@/components/attendance/live-timer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@g4k/ui/components";
 
 export function TopbarTimer() {
-  const { isActive, isOnBreak } = useTimerStore();
+  const isActive = useTimerStore((s) => s.isActive);
+  const isOnBreak = useTimerStore((s) => s.isOnBreak);
   const router = useRouter();
 
   if (!isActive) {

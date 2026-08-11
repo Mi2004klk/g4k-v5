@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { MessageSquare, ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
@@ -18,8 +18,8 @@ import { FeedbackForm } from "@/components/widgets/feedback-form";
 function ChatPageContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const { user } = useAuthStore();
-  const { subscribe, echo } = useReverb();
+  const user = useAuthStore((s) => s.user);
+  const { subscribe, leaveChannel } = useReverb();
   
   const initialConvId = searchParams.get("conversation");
   const [selectedId, setSelectedId] = useState<number | null>(initialConvId ? parseInt(initialConvId) : null);
@@ -35,23 +35,36 @@ function ChatPageContent() {
     queryFn: () => apiFetch("/conversations"),
   });
 
-  const { data: messageData } = useQuery({
+  const { 
+    data: messageData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
     queryKey: ["messages", selectedId],
-    queryFn: () => apiFetch(`/conversations/${selectedId}/messages`),
+    queryFn: ({ pageParam }) => apiFetch(`/conversations/${selectedId}/messages${pageParam ? `?cursor=${pageParam}` : ''}`),
+    getNextPageParam: (lastPage: any) => lastPage.next_cursor || null,
+    initialPageParam: null as string | null,
     enabled: !!selectedId,
   });
 
   useEffect(() => {
     if (!selectedId) return;
 
-    const channel = subscribe(`conversation.${selectedId}`);
+    const channelName = `conversation.${selectedId}`;
+    const channel = subscribe(channelName);
     if (channel) {
       const handler = (e: any) => {
         queryClient.setQueryData(["messages", selectedId], (old: any) => {
-          if (!old?.data) return old;
+          if (!old?.pages) return old;
+          const firstPage = old.pages[0];
+          const updatedFirstPage = {
+            ...firstPage,
+            data: [...firstPage.data, e.message],
+          };
           return {
             ...old,
-            data: [...old.data, e.message],
+            pages: [updatedFirstPage, ...old.pages.slice(1)],
           };
         });
       };
@@ -60,12 +73,10 @@ function ChatPageContent() {
 
       return () => {
         channel.stopListening(".message-sent");
-        if (echo) {
-          echo.leave(`conversation.${selectedId}`);
-        }
+        leaveChannel(channelName);
       };
     }
-  }, [selectedId, queryClient, subscribe, echo]);
+  }, [selectedId, queryClient, subscribe, leaveChannel]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (body: string) => {
@@ -80,7 +91,7 @@ function ChatPageContent() {
     },
   });
 
-  const messages = messageData?.data || [];
+  const messages = messageData?.pages.flatMap((page: any) => page.data) || [];
   const selectedConv = conversations.find((c: any) => c.id === selectedId);
 
   return (
@@ -92,7 +103,7 @@ function ChatPageContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Chat Interface */}
-        <div className="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-neutral-100 dark:border-neutral-800 flex h-[600px] overflow-hidden">
+        <div className="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-neutral-100 dark:border-neutral-800 flex h-[calc(100vh-200px)] min-h-[500px] overflow-hidden">
           {/* Conversation sidebar */}
           <div className={`w-full md:w-1/3 border-r border-neutral-100 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs">
@@ -107,20 +118,30 @@ function ChatPageContent() {
             </div>
           </div>
 
-          {/* Active conversation panel */}
-          <div className={`flex-1 flex-col bg-neutral-50/30 dark:bg-neutral-950/20 ${selectedId ? 'flex' : 'hidden md:flex'}`}>
+          {/* Active Chat Area */}
+          <div className={`flex-1 flex flex-col bg-neutral-50/50 dark:bg-neutral-900/50 ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
             {selectedId ? (
               <>
-                <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSelectedId(null)} aria-label="Back to conversations">
+                <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center gap-3">
+                  <Button variant="ghost" size="sm" className="md:hidden p-0 h-8 w-8" onClick={() => setSelectedId(null)}>
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
-                  <h3 className="text-xs font-bold text-neutral-900 dark:text-white">
-                    {selectedConv?.name || "Conversation"}
-                  </h3>
+                  <div>
+                    <h3 className="font-bold text-neutral-900 dark:text-white">
+                      {selectedConv?.type === 'direct' 
+                        ? selectedConv?.participants?.find((p: any) => p.id !== user?.id)?.name 
+                        : selectedConv?.name}
+                    </h3>
+                  </div>
                 </div>
 
-                <MessageList messages={messages} currentUserId={user?.id || 0} />
+                <MessageList 
+                  messages={messages} 
+                  currentUserId={user?.id || 0} 
+                  onFetchNextPage={() => fetchNextPage()}
+                  hasNextPage={!!hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                />
 
                 <MessageComposer
                   onSend={(body) => sendMessageMutation.mutate(body)}

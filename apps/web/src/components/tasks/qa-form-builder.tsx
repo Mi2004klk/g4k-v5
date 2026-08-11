@@ -99,6 +99,7 @@ export function QAFormBuilder() {
                 variant="ghost"
                 className="h-8 w-8 text-rose-600 hover:text-rose-700"
                 onClick={() => removeField(index)}
+                aria-label="Remove field"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>

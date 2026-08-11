@@ -20,4 +20,6 @@ declare function useFormDraft<T extends Record<string, any>>(key: string, initia
     clearDraft: () => Promise<void>;
 };
 
-export { useDebouncedValidation, useFormDraft };
+declare function useIsMobile(): boolean;
+
+export { useDebouncedValidation, useFormDraft, useIsMobile };

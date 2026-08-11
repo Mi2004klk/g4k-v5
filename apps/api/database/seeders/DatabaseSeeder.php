@@ -250,15 +250,15 @@ class DatabaseSeeder extends Seeder
 
         // 7. Settings
         $settings = [
-            ['key' => 'password_policy_min_length', 'value' => json_encode(8), 'category' => 'security'],
-            ['key' => 'password_policy_require_numbers', 'value' => json_encode(true), 'category' => 'security'],
-            ['key' => 'password_policy_require_symbols', 'value' => json_encode(false), 'category' => 'security'],
-            ['key' => 'password_policy_require_mixed', 'value' => json_encode(false), 'category' => 'security'],
-            ['key' => 'session_ttl_minutes', 'value' => json_encode(1440), 'category' => 'security'],
-            ['key' => 'attendance_reminder_offset', 'value' => json_encode(15), 'category' => 'attendance'],
-            ['key' => 'attendance_reminder_offset_minutes', 'value' => json_encode(15), 'category' => 'attendance'],
-            ['key' => 'missed_clockin_alert_offset', 'value' => json_encode(30), 'category' => 'attendance'],
-            ['key' => 'shift_reminder_offset', 'value' => json_encode(15), 'category' => 'attendance'],
+            ['key' => 'password.min_length', 'value' => json_encode(8), 'category' => 'security'],
+            ['key' => 'password.require_mixed', 'value' => json_encode(true), 'category' => 'security'],
+            ['key' => 'password.require_number', 'value' => json_encode(false), 'category' => 'security'],
+            ['key' => 'password.require_symbol', 'value' => json_encode(false), 'category' => 'security'],
+            ['key' => 'session.access_token_ttl', 'value' => json_encode(15), 'category' => 'security'],
+            ['key' => 'session.refresh_token_ttl', 'value' => json_encode(7), 'category' => 'security'],
+            ['key' => 'force_password_change', 'value' => json_encode(false), 'category' => 'security'],
+            ['key' => 'reminders.shift_offset', 'value' => json_encode(15), 'category' => 'reminders'],
+            ['key' => 'reminders.missed_clock_in_offset', 'value' => json_encode(30), 'category' => 'reminders'],
         ];
 
         foreach ($settings as $setting) {

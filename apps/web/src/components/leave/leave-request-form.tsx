@@ -47,7 +47,7 @@ export function LeaveRequestForm() {
     }
 
     // Task 245: Check client-side for overlaps across any cached my-leave-history queries
-    const queries = queryClient.getQueriesData<any>({ queryKey: ["my-leave-history"] });
+    const queries = queryClient.getQueriesData<any>({ queryKey: ["my-leave-history"], exact: false });
     const existingLeaves = queries.flatMap(([_, data]) => data?.data || []);
     const hasOverlap = existingLeaves.some((leave: any) => {
       if (leave.approval?.status !== "pending") return false;

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_METRICS } from "@/lib/query-keys";
 import { Card, CardContent, Button } from "@g4k/ui/components";
@@ -29,32 +29,50 @@ export function MetricWidget({
   hasModule = true,
 }: MetricWidgetProps) {
   const [displayValue, setDisplayValue] = useState(0);
+  const isFirstRender = useRef(true);
+  const prevValueRef = useRef<number | null>(null);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["dashboard-metrics"],
     queryFn: () => apiFetch(endpoint),
     staleTime: STALE_TIME_METRICS,
+    placeholderData: keepPreviousData,
   });
 
   const rawValue = data?.metrics?.[metricKey] ?? 0;
   const isModuleAvailable = data?.metrics?.[`has_${metricKey.split('_')[1] || metricKey}_module`] ?? hasModule;
 
-  // Animated 0 -> value counter effect (600ms)
+  // Animated counter effect (600ms on first render / value change)
   useEffect(() => {
     if (isLoading || typeof rawValue !== "number") return;
-    let start = 0;
+
+    if (!isFirstRender.current && prevValueRef.current === rawValue) {
+      setDisplayValue(rawValue);
+      return;
+    }
+
+    const startVal = isFirstRender.current ? 0 : displayValue;
+    isFirstRender.current = false;
+    prevValueRef.current = rawValue;
+
+    if (startVal === rawValue) {
+      setDisplayValue(rawValue);
+      return;
+    }
+
+    let current = startVal;
     const duration = 600;
     const stepTime = 20;
     const totalSteps = duration / stepTime;
-    const increment = (rawValue - start) / totalSteps;
+    const increment = (rawValue - startVal) / totalSteps;
 
     const timer = setInterval(() => {
-      start += increment;
-      if ((increment >= 0 && start >= rawValue) || (increment < 0 && start <= rawValue)) {
+      current += increment;
+      if ((increment >= 0 && current >= rawValue) || (increment < 0 && current <= rawValue)) {
         setDisplayValue(rawValue);
         clearInterval(timer);
       } else {
-        setDisplayValue(Math.floor(start));
+        setDisplayValue(Math.floor(current));
       }
     }, stepTime);
 
@@ -99,6 +117,7 @@ export function MetricWidget({
         <EmptyState
           title={title}
           description="Module pending release in upcoming phase."
+          icon={<Icon className="w-8 h-8 text-neutral-300" />}
         />
       </Card>
     );
@@ -108,8 +127,9 @@ export function MetricWidget({
     <Card className="border-none shadow-sm hover:shadow-md transition-all h-full bg-white dark:bg-neutral-900 group">
       <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             {title}
+            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </span>
           <div className={`p-2 rounded-xl ${colorStyles[color]} transition-transform group-hover:scale-110`}>
             <Icon className="w-4 h-4" />

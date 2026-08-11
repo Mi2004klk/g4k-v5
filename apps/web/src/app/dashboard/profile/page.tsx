@@ -40,7 +40,8 @@ import { DataTable } from "@g4k/ui/components";
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
-  const { user: authUser, setAuth } = useAuthStore();
+  const authUser = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 

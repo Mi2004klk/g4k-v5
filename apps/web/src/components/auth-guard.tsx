@@ -9,81 +9,88 @@ import { useReverb } from "@/hooks/use-reverb";
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { token, user, setAuth, clearAuth } = useAuthStore();
-  const [isInitializing, setIsInitializing] = useState(true);
+  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const [isInitializing, setIsInitializing] = useState(() => {
+    return !(useAuthStore.getState().token && useAuthStore.getState().user);
+  });
 
+  // Initial auth refresh check on mount if session is missing
   useEffect(() => {
     let isMounted = true;
 
     async function initAuth() {
-      const isAuthRoute =
-        pathname.startsWith("/login") ||
-        pathname.startsWith("/forgot-password") ||
-        pathname.startsWith("/reset-password");
-
-      let currentToken = token;
-      let currentUser = user;
-
-      if (!currentToken) {
+      const { token: currentToken, user: currentUser } = useAuthStore.getState();
+      if (!currentToken || !currentUser) {
         try {
-          // Attempt silent refresh via HttpOnly cookie
           const data = await apiFetch("/auth/refresh");
           if (isMounted) {
             setAuth(data.token, data.user, data.active_role);
-            currentToken = data.token;
-            currentUser = data.user;
           }
         } catch {
           if (isMounted) {
             clearAuth();
-            if (!isAuthRoute) {
-              router.push("/login");
-              return;
-            }
           }
         }
       }
-
-      if (currentToken && currentUser) {
-        if (currentUser?.must_change_password && pathname !== "/change-password") {
-          router.push("/change-password");
-          return;
-        }
-        // Enforce onboarding sequence
-        else if (!currentUser.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
-          router.push("/onboarding");
-          return;
-        }
-        // Enforce role selection if multiple roles exist and on auth routes
-        else if (isAuthRoute) {
-          if (currentUser.roles && currentUser.roles.length > 1) {
-            router.push("/role-select");
-            return;
-          } else {
-            router.push("/dashboard");
-            return;
-          }
-        }
-      }
-
       if (isMounted) {
         setIsInitializing(false);
       }
     }
 
-    initAuth();
+    if (isInitializing) {
+      initAuth();
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [pathname, token, user, router, setAuth, clearAuth]);
+  }, [isInitializing, setAuth, clearAuth]);
+
+  // Route protection & redirects effect
+  useEffect(() => {
+    if (isInitializing) return;
+
+    const isAuthRoute =
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/forgot-password") ||
+      pathname.startsWith("/reset-password");
+
+    if (!token || !user) {
+      if (!isAuthRoute) {
+        router.push("/login");
+      }
+      return;
+    }
+
+    if (user.must_change_password && pathname !== "/change-password") {
+      router.push("/change-password");
+      return;
+    }
+    // Enforce onboarding sequence
+    else if (!user.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
+      router.push("/onboarding");
+      return;
+    }
+    // Enforce role selection if multiple roles exist and on auth routes
+    else if (isAuthRoute) {
+      if (user.roles && user.roles.length > 1) {
+        router.push("/role-select");
+      } else {
+        router.push("/dashboard");
+      }
+    }
+  }, [pathname, token, user, isInitializing, router]);
 
   // Listen for SessionRevoked real-time event
-  const { subscribe, isConnected } = useReverb();
+  const { subscribe, leaveChannel } = useReverb();
   useEffect(() => {
     if (!user?.id || !token) return;
 
-    const channel = subscribe(`user.${user.id}`, true);
+    const channelName = `user.${user.id}`;
+    const channel = subscribe(channelName, true);
     if (channel) {
       channel.listen('.session.revoked', (e: any) => {
         clearAuth();
@@ -95,8 +102,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       if (channel) {
         channel.stopListening('.session.revoked');
       }
+      leaveChannel(channelName);
     };
-  }, [user?.id, token, subscribe, clearAuth, router]);
+  }, [user?.id, token, subscribe, leaveChannel, clearAuth, router]);
 
   if (isInitializing) {
     return (

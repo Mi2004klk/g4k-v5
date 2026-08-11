@@ -61,7 +61,7 @@ class ExportAuditLogsJob implements ShouldQueue
                         $this->escapeCsvField($log->action),
                         $this->escapeCsvField($log->user ? $log->user->name : 'System'),
                         $this->escapeCsvField($log->subject_type),
-                        $log->subject_id,
+                        $this->escapeCsvField((string)$log->subject_id),
                         $this->escapeCsvField(json_encode($log->before)),
                         $this->escapeCsvField(json_encode($log->after)),
                         $this->escapeCsvField($log->ip),

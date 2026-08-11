@@ -17,10 +17,12 @@ class UserPreferenceController extends Controller
                 'preferences' => $prefs
             ]);
         } catch (\Throwable $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
+            \Illuminate\Support\Facades\Log::error('User preference fetch failed: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
+            ]);
+            return response()->json([
+                'error' => 'An error occurred while fetching preferences'
             ], 500);
         }
     }

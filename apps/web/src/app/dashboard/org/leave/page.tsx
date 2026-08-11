@@ -168,7 +168,6 @@ export default function OrgLeaveApprovalsPage() {
           <DataTable
             columns={columns}
             data={records}
-            isFetchingNextPage={isLoading}
           />
         </div>
       </Card>

@@ -1,6 +1,7 @@
 import {
-  useDebouncedValidation
-} from "../chunk-3E6CS2SC.mjs";
+  useDebouncedValidation,
+  useIsMobile
+} from "../chunk-EEUYD32C.mjs";
 import {
   __commonJS,
   __require,
@@ -13997,13 +13998,7 @@ function DataTable({
   const [sorting, setSorting] = useState4([]);
   const [columnVisibility, setColumnVisibility] = useState4({});
   const [internalRowSelection, setInternalRowSelection] = useState4({});
-  const [isMobile, setIsMobile] = useState4(false);
-  useEffect2(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
   const tableColumns = useMemo2(() => {
     if (!onRowSelectionChange) return columns;
     const selectColumn = {
@@ -14167,9 +14162,9 @@ function DataTable({
                     "data-index": virtualRow.index,
                     children: row.getVisibleCells().map((cell) => {
                       const headerTitle = cell.column.id === "select" ? "" : cell.column.columnDef.header;
-                      return /* @__PURE__ */ jsxs23("div", { className: "flex flex-col gap-1 border-b border-border/50 pb-2 last:border-0 last:pb-0", children: [
-                        headerTitle && /* @__PURE__ */ jsx34("span", { className: "text-xs font-medium text-muted-foreground", children: typeof headerTitle === "string" ? headerTitle : cell.column.id }),
-                        /* @__PURE__ */ jsx34("span", { className: "text-sm", children: flexRender(cell.column.columnDef.cell, cell.getContext()) })
+                      return /* @__PURE__ */ jsxs23("div", { className: "flex flex-col gap-1 border-b border-border/50 pb-2 last:border-0 last:pb-0 overflow-hidden", children: [
+                        headerTitle && /* @__PURE__ */ jsx34("span", { className: "text-xs font-medium text-muted-foreground truncate", children: typeof headerTitle === "string" ? headerTitle : cell.column.id }),
+                        /* @__PURE__ */ jsx34("span", { className: "text-sm break-words", children: flexRender(cell.column.columnDef.cell, cell.getContext()) })
                       ] }, cell.id);
                     })
                   },

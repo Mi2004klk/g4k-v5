@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 
 export function AdminTodayAttendanceWidget() {
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isPending, isFetching, isError, refetch } = useQuery({
     queryKey: ["admin-attendance-today", format(new Date(), "yyyy-MM-dd")],
     queryFn: () => apiFetch(`/attendance/admin/overview?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
@@ -35,7 +35,10 @@ export function AdminTodayAttendanceWidget() {
             <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight">Today's Attendance</h3>
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight flex items-center gap-2">
+              Today's Attendance
+              {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+            </h3>
             <p className="text-[10px] text-neutral-500 font-medium">Company-wide Snapshot</p>
           </div>
         </div>
@@ -44,7 +47,7 @@ export function AdminTodayAttendanceWidget() {
       </div>
 
       <div className="flex-1 p-4 flex flex-col justify-center">
-        {isLoading ? (
+        {isPending ? (
           <div className="space-y-4 w-full">
             <div className="flex items-baseline gap-2">
               <Skeleton className="h-8 w-16" />

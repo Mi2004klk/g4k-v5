@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { STALE_TIME_CONFIG } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
@@ -17,7 +18,7 @@ export function HolidayCalendar() {
   const { data: holidays, isLoading } = useQuery({
     queryKey: ["holidays", currentYear],
     queryFn: () => apiFetch(`/holidays?year=${currentYear}`),
-    staleTime: 3600000, // 1 hour
+    staleTime: STALE_TIME_CONFIG,
   });
 
   const holidayList = Array.isArray(holidays) ? holidays : (holidays?.data || []);

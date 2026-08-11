@@ -9,7 +9,7 @@ class PinController extends Controller
 {
     public function index(Request $request)
     {
-        $pins = $request->user()->pins()->latest()->get();
+        $pins = $request->user()->pins()->latest()->limit(100)->get();
         return response()->json($pins);
     }
 

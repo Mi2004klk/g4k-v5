@@ -32,9 +32,12 @@ import { Card } from "@g4k/ui/components";
 
 import { AdminTodayAttendanceWidget } from "@/components/dashboard/admin-today-attendance-widget";
 import { PendingApprovalsWidget } from "@/components/widgets/pending-approvals-widget";
+import { EmployeeTaskProgressWidget } from "@/components/dashboard/employee-task-progress-widget";
+import { EmployeeApprovalStatusWidget } from "@/components/dashboard/employee-approval-status-widget";
+import { QuickTaskWidget } from "@/components/dashboard/quick-task-widget";
 
 export default function DashboardPage() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
   const activeRole = user?.active_role || "employee";
   const router = useRouter();
 
@@ -72,9 +75,11 @@ export default function DashboardPage() {
           defaultLayout: { x: 6, y: 0, w: 3, h: 2 },
         },
         {
-          id: "pending-approvals",
-          component: <PendingApprovalsWidget />,
-          defaultLayout: { x: 9, y: 0, w: 3, h: 3 },
+          id: "pending-tasks",
+          component: (
+            <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="amber" subtitle="Global workload" />
+          ),
+          defaultLayout: { x: 9, y: 0, w: 3, h: 2 },
         },
         {
           id: "recent-activity",
@@ -82,13 +87,9 @@ export default function DashboardPage() {
           defaultLayout: { x: 0, y: 2, w: 6, h: 3 },
         },
         {
-          id: "quick-task",
-          component: (
-            <Card className="h-full flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm border-none">
-              <EmptyState title="Quick Task Assignment" description="Tasks module is active." icon={<CheckCircle2 className="w-8 h-8 text-neutral-400" />} />
-            </Card>
-          ),
-          defaultLayout: { x: 6, y: 3, w: 6, h: 3 },
+          id: "quick-notes",
+          component: <QuickNotes />,
+          defaultLayout: { x: 6, y: 2, w: 6, h: 3 },
         },
       ];
     }
@@ -126,11 +127,7 @@ export default function DashboardPage() {
         },
         {
           id: "quick-task",
-          component: (
-            <Card className="h-full flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm border-none">
-              <EmptyState title="Quick Task Assignment" description="Tasks module is active." icon={<CheckCircle2 className="w-8 h-8 text-neutral-400" />} />
-            </Card>
-          ),
+          component: <QuickTaskWidget />,
           defaultLayout: { x: 6, y: 3, w: 6, h: 3 },
         },
       ];
@@ -159,11 +156,7 @@ export default function DashboardPage() {
       },
       {
         id: "task-progress",
-        component: (
-          <Card className="h-full flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm border-none">
-            <EmptyState title="Task Progress" description="Track your sprint progress." icon={<Activity className="w-8 h-8 text-neutral-400" />} />
-          </Card>
-        ),
+        component: <EmployeeTaskProgressWidget />,
         defaultLayout: { x: 4, y: 2, w: 4, h: 2 },
       },
       {
@@ -173,11 +166,7 @@ export default function DashboardPage() {
       },
       {
         id: "approval-status",
-        component: (
-          <Card className="h-full flex items-center justify-center bg-white dark:bg-neutral-900 shadow-sm border-none">
-            <EmptyState title="Approval Status" description="Your pending requests." icon={<ClipboardList className="w-8 h-8 text-neutral-400" />} />
-          </Card>
-        ),
+        component: <EmployeeApprovalStatusWidget />,
         defaultLayout: { x: 4, y: 3, w: 8, h: 2 },
       },
     ];

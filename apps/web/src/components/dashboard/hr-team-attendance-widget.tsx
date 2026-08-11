@@ -5,12 +5,12 @@ import { format } from "date-fns";
 import { Users, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
-import { Card, Skeleton, Button } from "@g4k/ui/components";
+import { Card, Skeleton, Button, StatusBadge } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 
 export function HrTeamAttendanceWidget() {
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isPending, isFetching, isError, refetch } = useQuery({
     queryKey: ["hr-attendance-today", format(new Date(), "yyyy-MM-dd"), "all", ""],
     queryFn: () => apiFetch(`/attendance/hr/today?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
@@ -29,7 +29,10 @@ export function HrTeamAttendanceWidget() {
             <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight">Team Attendance</h3>
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight flex items-center gap-2">
+              Team Attendance
+              {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+            </h3>
             <p className="text-[10px] text-neutral-500 font-medium">Today's snapshot</p>
           </div>
         </div>
@@ -43,7 +46,7 @@ export function HrTeamAttendanceWidget() {
       </div>
 
       <div className="flex-1 p-4 flex flex-col">
-        {isLoading ? (
+        {isPending ? (
           <div className="space-y-4 w-full pt-2">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center justify-between">
@@ -77,14 +80,16 @@ export function HrTeamAttendanceWidget() {
                   </div>
                   <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{r.user_name}</span>
                 </div>
-                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                  r.status === "present" ? "bg-emerald-100 text-emerald-700" :
-                  r.status === "late" ? "bg-amber-100 text-amber-700" :
-                  r.status === "leave" ? "bg-violet-100 text-violet-700" :
-                  "bg-rose-100 text-rose-700"
-                }`}>
+                <StatusBadge 
+                  status={
+                    r.status === "present" ? "success" :
+                    r.status === "late" ? "warning" :
+                    r.status === "leave" ? "info" : "danger"
+                  } 
+                  className="uppercase text-[10px]"
+                >
                   {r.status}
-                </span>
+                </StatusBadge>
               </div>
             ))}
           </div>

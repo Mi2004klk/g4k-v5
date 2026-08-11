@@ -11,6 +11,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 
+import { PageContainer } from "@/components/layout/page-container";
+
 export default function LeavePage() {
   const [tab, setTab] = useUrlState("tab", "my-leave");
   const [typeFilter, setTypeFilter] = useUrlState("type", "all");
@@ -29,11 +31,9 @@ export default function LeavePage() {
   const records = data?.data || [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Time Off & Leaves</h1>
-        <p className="text-sm text-neutral-500 mt-1">Manage your leave requests and view upcoming holidays.</p>
-      </div>
+    <PageContainer
+      title="Time Off & Leaves"
+    >
 
       <ErrorBoundary>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
@@ -77,6 +77,6 @@ export default function LeavePage() {
           </TabsContent>
         </Tabs>
       </ErrorBoundary>
-    </div>
+    </PageContainer>
   );
 }

@@ -4,12 +4,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Clock, Folder, CheckCircle2, AlertCircle, ArrowLeft, Loader2, Play } from "lucide-react";
+import { Clock, Folder, CheckCircle2, AlertCircle, ArrowLeft, Loader2, Play, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
-import { Button } from "@g4k/ui/components";
-import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Button, Input, Textarea } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -18,6 +18,8 @@ export default function ProjectDetailPage() {
   const { data: caps } = useCapabilities();
   const projectId = params.id as string;
   const [submissionNote, setSubmissionNote] = useState("");
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ name: "", description: "", priority: "" });
 
   const { data: projectResponse, isLoading } = useQuery({
     queryKey: ["project", projectId],
@@ -38,6 +40,24 @@ export default function ProjectDetailPage() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to submit project.");
+    },
+  });
+
+  const updateProjectMutation = useMutation({
+    mutationFn: async () => {
+      return apiFetch(`/projects/${projectId}`, {
+        method: "PUT",
+        body: JSON.stringify(editForm),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Project updated successfully.");
+      setIsEditOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update project.");
     },
   });
 
@@ -66,18 +86,81 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/projects")} className="h-8">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back
-        </Button>
-        <div>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <Folder className="w-5 h-5 text-violet-600" />
-            {project.name}
-          </h1>
-          <p className="text-sm text-neutral-500">{project.description || "No description."}</p>
+      <div className="flex items-center gap-3 justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/projects")} className="h-8">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <Folder className="w-5 h-5 text-violet-600" />
+              {project.name}
+            </h1>
+            <p className="text-sm text-neutral-500">{project.description || "No description."}</p>
+          </div>
         </div>
+        
+        {hasCapability(caps, "manage_projects") && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8"
+            onClick={() => {
+              setEditForm({ name: project.name, description: project.description || "", priority: project.priority });
+              setIsEditOpen(true);
+            }}
+          >
+            <Edit className="w-4 h-4 mr-2" /> Edit Project
+          </Button>
+        )}
       </div>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription className="sr-only">Edit project details and settings.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input 
+                value={editForm.name} 
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} 
+                placeholder="Project name" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Textarea 
+                value={editForm.description} 
+                onChange={(e: any) => setEditForm({ ...editForm, description: e.target.value })} 
+                placeholder="Project description" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Priority</label>
+              <select
+                value={editForm.priority}
+                onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <Button
+              onClick={() => updateProjectMutation.mutate()}
+              disabled={updateProjectMutation.isPending || !editForm.name}
+              className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold"
+            >
+              {updateProjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update Project"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">

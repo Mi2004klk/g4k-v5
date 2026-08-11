@@ -11,21 +11,28 @@ import { Button } from "@g4k/ui/components";
 
 export function ExportHistory() {
   const queryClient = useQueryClient();
-  const { subscribe } = useReverb();
+  const { subscribe, leaveChannel } = useReverb();
   
   useEffect(() => {
-    const channel = subscribe("exports");
+    const channelName = "exports";
+    const channel = subscribe(channelName);
     if (channel) {
       channel.listen(".ExportCompleted", () => {
         queryClient.invalidateQueries({ queryKey: ["export-history"] });
       });
     }
-  }, [subscribe, queryClient]);
+
+    return () => {
+      if (channel) {
+        channel.stopListening(".ExportCompleted");
+      }
+      leaveChannel(channelName);
+    };
+  }, [subscribe, leaveChannel, queryClient]);
 
   const { data: exports = [], isLoading } = useQuery({
     queryKey: ["export-history"],
     queryFn: () => apiFetch("/reports/exports"),
-    refetchInterval: (query: any) => query.state?.data?.some((d: any) => d.status === "processing") ? 5000 : false,
   });
 
   return (
@@ -44,7 +51,7 @@ export function ExportHistory() {
         ) : exports.length === 0 ? (
           <p className="text-xs text-neutral-400 py-4 text-center">No export history found.</p>
         ) : (
-          exports.map((item: any) => (
+          exports.slice(0, 3).map((item: any) => (
             <div
               key={item.id}
               className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between gap-3 border border-neutral-100 dark:border-neutral-800"

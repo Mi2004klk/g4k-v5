@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, ChevronDown, Check, Trash2, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Button, Input } from "@g4k/ui/components";
+import { Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { toast } from "sonner";
+import { useIsMobile } from "@g4k/ui/hooks";
 
 interface SavedReportViewsProps {
   module: string;
@@ -18,6 +19,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
   const [isOpen, setIsOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: views = [], isLoading } = useQuery({
     queryKey: ["saved-views", module],
@@ -55,7 +57,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
       <div className="flex items-center gap-2">
         {/* Simple Select implementation for saved views if DropdownMenu is not fully available */}
         <select
-          className="h-10 px-3 py-2 text-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg focus:ring-2 focus:ring-emerald-500 text-neutral-900 dark:text-neutral-100 min-w-[200px]"
+          className="h-10 px-3 py-2 text-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg focus:ring-2 focus:ring-emerald-500 text-neutral-900 dark:text-neutral-100 w-full sm:min-w-[200px]"
           onChange={(e) => {
             const val = e.target.value;
             if (val === "") return;
@@ -73,30 +75,57 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
           ))}
         </select>
 
-        <Button
-          variant="outline"
-          onClick={() => setIsSaving(!isSaving)}
-          className="h-10 shrink-0"
-        >
-          <Save className="w-4 h-4 mr-2" />
-          Save Current
-        </Button>
+        {isMobile ? (
+          <Sheet open={isSaving} onOpenChange={setIsSaving}>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="h-10 shrink-0 whitespace-nowrap">
+                <Save className="w-4 h-4 mr-2" />
+                Save Current
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-2xl">
+              <SheetHeader className="mb-4">
+                <SheetTitle>Save Report View</SheetTitle>
+              </SheetHeader>
+              <div className="flex gap-2">
+                <Input 
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  placeholder="Name this view..."
+                  autoFocus
+                  className="flex-1"
+                />
+                <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
+                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        ) : (
+          <Popover open={isSaving} onOpenChange={setIsSaving}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 shrink-0 whitespace-nowrap">
+                <Save className="w-4 h-4 mr-2" />
+                Save Current
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[300px] p-3">
+              <div className="flex gap-2">
+                <Input 
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  placeholder="Name this view..."
+                  autoFocus
+                  className="flex-1"
+                />
+                <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
+                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
-
-      {isSaving && (
-        <div className="absolute top-full mt-2 p-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl rounded-xl w-[calc(100vw-32px)] sm:w-[300px] right-0 z-50 flex gap-2">
-          <Input 
-            value={saveName}
-            onChange={(e) => setSaveName(e.target.value)}
-            placeholder="Name this view..."
-            autoFocus
-            className="flex-1"
-          />
-          <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
-            {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

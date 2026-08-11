@@ -52,7 +52,10 @@ class AdminPasswordResetController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'Password reset request approved']);
+        return response()->json([
+            'message' => 'Password reset request approved',
+            'reset_link' => $resetLink ?? null
+        ]);
     }
 
     public function reject(Request $request, $id)

@@ -24,7 +24,7 @@ class RemindShiftStart implements ShouldQueue
         }
 
         // Get offset setting (e.g. 10 minutes before shift)
-        $offsetSetting = \App\Models\Setting::where('key', 'shift_reminder_offset')->value('value') ?? 10;
+        $offsetSetting = \App\Models\Setting::where('key', 'reminders.shift_offset')->value('value') ?? 10;
         $offsetMinutes = (int) $offsetSetting;
 
         // Default schedule
