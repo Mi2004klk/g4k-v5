@@ -1,20 +1,19 @@
 *
 !apps/api/
-
-# Exclude heavy/generated dirs
-apps/api/vendor/
-apps/api/node_modules/
-apps/api/storage/
-apps/api/tests/
-apps/api/.phpunit.result.cache
-
-# Exclude env files & junk
+!Dockerfile
+!cloudbuild.yaml
 apps/api/.env
 apps/api/.env.*
+apps/api/vendor/
+apps/api/node_modules/
+apps/api/storage/*
+!apps/api/storage/.gitkeep
+apps/api/tests/
+apps/api/.phpunit.result.cache
+apps/api/phpunit.xml
 apps/api/out.txt
 apps/api/output.txt
 apps/api/error_log.json
 apps/api/routes.txt
 apps/api/tests_output.log
 apps/api/test.php
-apps/api/Dockerfile

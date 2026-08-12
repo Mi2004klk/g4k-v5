@@ -2,18 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async rewrites() {
+    // Production calls the API directly (NEXT_PUBLIC_API_URL set on Vercel).
+    // Dev-only fallback proxies to the local Laravel server.
     if (process.env.NEXT_PUBLIC_API_URL) return [];
-    
-    const backendUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://g4k.fly.dev' 
-      : 'http://127.0.0.1:8000';
-          
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
+    return [{ source: '/api/:path*', destination: 'http://127.0.0.1:8000/api/:path*' }];
   },
   productionBrowserSourceMaps: false,
   experimental: {
