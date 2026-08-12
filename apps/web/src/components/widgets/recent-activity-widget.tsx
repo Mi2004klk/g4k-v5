@@ -19,7 +19,7 @@ export function RecentActivityWidget() {
 
   if (isPending) {
     return (
-      <Card className="border-none shadow-sm h-full flex flex-col bg-white dark:bg-neutral-900">
+      <Card className=" h-full flex flex-col bg-white dark:bg-neutral-900">
         <CardHeader className="pb-2">
           <Skeleton className="h-5 w-32" />
         </CardHeader>
@@ -40,7 +40,7 @@ export function RecentActivityWidget() {
 
   if (isError) {
     return (
-      <Card className="border-none shadow-sm h-full flex flex-col bg-white dark:bg-neutral-900">
+      <Card className=" h-full flex flex-col bg-white dark:bg-neutral-900">
         <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
           <CardTitle className="text-sm font-semibold flex items-center justify-between">
             <span className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function RecentActivityWidget() {
   }
 
   return (
-    <Card className="border-none shadow-sm h-full bg-white dark:bg-neutral-900 flex flex-col">
+    <Card className=" h-full bg-white dark:bg-neutral-900 flex flex-col">
       <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
         <CardTitle className="text-sm font-semibold flex items-center justify-between">
           <span className="flex items-center gap-2">

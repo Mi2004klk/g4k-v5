@@ -22,13 +22,13 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center bg-card text-card-foreground shadow-sm",
+        "flex min-h-[160px] flex-col items-center justify-center rounded-xl border border-dashed p-6 text-center bg-card text-card-foreground shadow-none",
         className
       )}
       {...props}
     >
       {icon ? (
-        <div className="mb-4 text-muted-foreground animate-pulse motion-reduce:animate-none">{icon}</div>
+        <div className="mb-3 text-muted-foreground/60">{icon}</div>
       ) : videoSrc ? (
         <video
           src={videoSrc}
@@ -36,14 +36,14 @@ export function EmptyState({
           loop
           muted
           playsInline
-          className="mb-4 h-16 w-16 opacity-75 rounded-full"
+          className="mb-3 h-12 w-12 opacity-50 rounded-full"
         />
       ) : (
-        <Inbox className="mb-4 h-12 w-12 text-muted-foreground opacity-50 animate-bounce motion-reduce:animate-none" />
+        <Inbox className="mb-3 h-10 w-10 text-muted-foreground/40" />
       )}
-      <h3 className="text-base font-semibold">{title}</h3>
+      <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">{title}</h3>
       {description && (
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+        <p className="mt-1 max-w-[250px] mx-auto text-xs text-neutral-400">
           {description}
         </p>
       )}

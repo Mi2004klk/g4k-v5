@@ -8,6 +8,8 @@ COPY . .
 
 RUN cd apps/api && composer install --no-dev --optimize-autoloader --no-interaction
 
+RUN echo -e "opcache.enable=1\nopcache.memory_consumption=256\nopcache.max_accelerated_files=20000\nopcache.validate_timestamps=0" > /usr/local/etc/php/conf.d/opcache.ini
+
 RUN cd apps/api && \
     php artisan storage:link && \
     php artisan config:cache && \

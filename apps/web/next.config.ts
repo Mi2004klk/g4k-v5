@@ -2,26 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    let backendUrl = process.env.NEXT_PUBLIC_API_URL 
-      ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')
-      : (process.env.NODE_ENV === 'production' 
-          ? 'https://g4k-production.up.railway.app' 
-          : 'http://127.0.0.1:8000');
-      
-    // Ensure it has a protocol (required by Next.js rewrites)
-    if (!backendUrl.startsWith('http://') && !backendUrl.startsWith('https://')) {
-      backendUrl = `https://${backendUrl}`;
-    }
+    if (process.env.NEXT_PUBLIC_API_URL) return [];
     
-    // Ensure the backend URL always includes the /api suffix for the proxy
-    if (!backendUrl.endsWith('/api')) {
-      backendUrl = `${backendUrl}/api`;
-    }
-
+    const backendUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://g4k.fly.dev' 
+      : 'http://127.0.0.1:8000';
+          
     return [
       {
         source: '/api/:path*',
-        destination: `${backendUrl}/:path*`,
+        destination: `${backendUrl}/api/:path*`,
       },
     ];
   },

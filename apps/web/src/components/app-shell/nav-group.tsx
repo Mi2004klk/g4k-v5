@@ -71,8 +71,7 @@ export const NavItem = memo(function NavItem({
         aria-disabled={isDisabled}
         aria-label={item.name}
         className={cn(
-          "flex-1 flex items-center gap-3 px-3 rounded-lg transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
-          itemPy,
+          "flex-1 flex items-center gap-2.5 px-2.5 h-9 rounded-lg transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
           currentlyCollapsed ? "justify-center px-0 text-xs" : "text-sm",
           isDisabled
             ? "opacity-50 cursor-not-allowed text-neutral-400 dark:text-neutral-600"
@@ -84,16 +83,21 @@ export const NavItem = memo(function NavItem({
         {isActive && !isDisabled && (
           <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-r-md", accent.border)} />
         )}
-        <item.icon
-          className={cn(
-            "w-4 h-4 shrink-0 transition-colors",
-            isDisabled
-              ? "text-neutral-400 dark:text-neutral-600"
-              : isActive
-              ? `${accent.text} ${accent.textDark}`
-              : "text-neutral-400 group-hover/nav:text-neutral-700 dark:group-hover/nav:text-neutral-200"
-          )}
-        />
+        <div className={cn(
+          "w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-colors",
+          (isActive && !isDisabled) ? cn(accent.bg, accent.bgDark) : "bg-transparent"
+        )}>
+          <item.icon
+            className={cn(
+              "w-4 h-4 shrink-0 transition-colors",
+              isDisabled
+                ? "text-neutral-400 dark:text-neutral-600"
+                : isActive
+                ? `${accent.text} ${accent.textDark}`
+                : "text-neutral-400 group-hover/nav:text-neutral-700 dark:group-hover/nav:text-neutral-200"
+            )}
+          />
+        </div>
         {showLabels && (
           <span className={cn(
             "whitespace-nowrap transition-opacity duration-[120ms]",

@@ -30,7 +30,7 @@ primary_region = "sin"
 [[services]]
   internal_port = 8080
   protocol = "tcp"
-  auto_stop_machines = false
+  auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 1
 
@@ -50,7 +50,18 @@ primary_region = "sin"
     method = "GET"
     path = "/api/ping"
 
+[[services]]
+  internal_port = 8081
+  protocol = "tcp"
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 8443
+
 [[vm]]
-  memory = "1gb"
+  memory = "2gb"
   cpu_kind = "shared"
-  cpus = 1
+  cpus = 2

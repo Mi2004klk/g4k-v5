@@ -22,12 +22,11 @@ return [
     'allowed_origins' => [],
 
     'allowed_origins_patterns' => [
-        '#^https://g4k-v3-.*\.vercel\.app$#',
-        '#^https://.*-arsathmalik0-3965s-projects\.vercel\.app$#',
-        '#^http://localhost:3000$#'
+        '#^https://.*\.vercel\.app$#',
+        '#^http://localhost:\d+$#'
     ],
 
-    'allowed_headers' => ['Authorization', 'Content-Type', 'X-CSRF-TOKEN', 'Accept', 'X-Requested-With'],
+    'allowed_headers' => ['*'],
 
     'exposed_headers' => [],
 

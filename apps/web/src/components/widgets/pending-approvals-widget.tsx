@@ -34,7 +34,7 @@ export function PendingApprovalsWidget() {
   });
 
   return (
-    <Card className="border-none shadow-sm bg-white dark:bg-neutral-900 h-full flex flex-col">
+    <Card className=" bg-white dark:bg-neutral-900 h-full flex flex-col">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-bold flex items-center justify-between">
           <span className="flex items-center gap-2">

@@ -9,5 +9,10 @@ php artisan migrate --force
 ( while true; do php artisan schedule:run; sleep 60; done ) &
 ( sleep 30; while true; do curl -s http://localhost:${PORT:-8080}/api/ping > /dev/null 2>&1; sleep 300; done ) &
 
+# Reverb WebSocket server
+if [ "$BROADCAST_CONNECTION" = "reverb" ] && [ -n "$REVERB_APP_KEY" ]; then
+  ( php artisan reverb:start --host=0.0.0.0 --port=8081 ) &
+fi
+
 # Start FrankenPHP via Octane (handles concurrent requests)
-exec php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8080} --workers=6 --max-requests=500
+exec php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8080} --workers=4 --max-requests=500

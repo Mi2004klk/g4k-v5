@@ -43,12 +43,12 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
-  const { data: initData, isPending } = useQuery({
+  const { data: preferencesData } = useQuery({
     queryKey: queryKeys.dashboardInit,
     queryFn: () => apiFetch("/dashboard/init"),
-    staleTime: 5 * 60_000,
+    select: (data: any) => data.preferences,
+    staleTime: 60_000,
   });
-  const preferencesData = initData;
 
   // Dynamically recalculate heights when widgets collapse/expand (UX-11)
   const computedLayouts = useMemo(() => {

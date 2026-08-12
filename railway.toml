@@ -1,7 +1,0 @@
-[build]
-builder = "NIXPACKS"
-watchPatterns = ["apps/api/**"]
-
-[deploy]
-startCommand = "bash apps/api/start.sh"
-restartPolicyType = "ON_FAILURE"

@@ -63,7 +63,7 @@ export function MetricWidget({
 
   if (isPending) {
     return (
-      <Card className="border-none shadow-sm h-full flex flex-col justify-between">
+      <Card className="h-full flex flex-col justify-between">
         <CardContent className="p-5 space-y-3">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-8 w-16" />
@@ -75,7 +75,7 @@ export function MetricWidget({
 
   if (isError) {
     return (
-      <Card className="border-none shadow-sm h-full flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 p-4">
+      <Card className=" h-full flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 p-4">
         <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
         <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
         <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
@@ -87,7 +87,7 @@ export function MetricWidget({
 
   if (isModuleAvailable === false) {
     return (
-      <Card className="border-none shadow-sm h-full flex items-center justify-center p-4">
+      <Card className=" h-full flex items-center justify-center p-4">
         <EmptyState
           title={title}
           description="Module pending release in upcoming phase."
@@ -98,7 +98,7 @@ export function MetricWidget({
   }
 
   return (
-    <Card className="border-none shadow-sm hover:shadow-md transition-all h-full bg-white dark:bg-neutral-900 group">
+    <Card className="h-full bg-white dark:bg-neutral-900 group">
       <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">

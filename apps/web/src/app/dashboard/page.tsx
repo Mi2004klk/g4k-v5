@@ -203,14 +203,20 @@ export default function DashboardPage() {
     ];
   }, [activeRole]);
 
+  const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
+  const firstName = user?.name?.split(" ")[0] || "Team Member";
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-primary p-6 rounded-2xl text-primary-foreground shadow-lg">
         <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-primary-foreground/50 mb-1">
+            {greeting}
+          </p>
           <h1 className="text-2xl font-bold font-display">
-            Welcome back, {user?.name || "Team Member"}!
+            Welcome back, {firstName}
           </h1>
-          <p className="text-xs text-primary-foreground/80 mt-1">
+          <p className="text-xs text-primary-foreground/70 mt-1">
             {activeRole === "super_admin"
               ? "Super Admin Command Dashboard"
               : activeRole === "hr"
@@ -226,31 +232,55 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-center gap-3">
         {activeRole === "super_admin" && (
           <>
-            <Link href="/dashboard/org/users" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-              <UserPlus className="w-4 h-4 text-indigo-500" /> Manage Users
+            <Link href="/dashboard/org/users" prefetch={false} className="flex items-center gap-2 px-3.5 py-2 h-9 bg-surface border border-border rounded-lg text-sm font-medium hover:bg-surface-2 hover:border-border-strong transition-all shadow-e1">
+              <div className="w-6 h-6 rounded-md bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center">
+                <UserPlus className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              Manage Users
             </Link>
-            <Link href="/dashboard/org/departments" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-              <Building2 className="w-4 h-4 text-indigo-500" /> Manage Departments
+            <Link href="/dashboard/org/departments" prefetch={false} className="flex items-center gap-2 px-3.5 py-2 h-9 bg-surface border border-border rounded-lg text-sm font-medium hover:bg-surface-2 hover:border-border-strong transition-all shadow-e1">
+              <div className="w-6 h-6 rounded-md bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center">
+                <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              Manage Departments
             </Link>
           </>
         )}
         {activeRole === "hr" && (
           <>
-            <Link href="/dashboard/org/attendance" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-              <Clock className="w-4 h-4 text-emerald-500" /> View Team Attendance
+            <Link href="/dashboard/org/attendance" prefetch={false} className="flex items-center gap-2 px-3.5 py-2 h-9 bg-surface border border-border rounded-lg text-sm font-medium hover:bg-surface-2 hover:border-border-strong transition-all shadow-e1">
+              <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
+                <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              Team Attendance
             </Link>
-            <Link href="/dashboard/org/leave?status=pending" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-              <CalendarCheck className="w-4 h-4 text-amber-500" /> Approve Leave
+            <Link href="/dashboard/org/leave?status=pending" prefetch={false} className="flex items-center gap-2 px-3.5 py-2 h-9 bg-surface border border-border rounded-lg text-sm font-medium hover:bg-surface-2 hover:border-border-strong transition-all shadow-e1">
+              <div className="w-6 h-6 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
+                <CalendarCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              Approve Leave
             </Link>
           </>
         )}
         {activeRole === "employee" && (
-          <Link href="/dashboard/leave" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-            <Send className="w-4 h-4 text-amber-500" /> Request Leave
+          <Link href="/dashboard/leave" prefetch={false} className="flex items-center gap-2 px-3.5 py-2 h-9 bg-surface border border-border rounded-lg text-sm font-medium hover:bg-surface-2 hover:border-border-strong transition-all shadow-e1">
+            <div className="w-6 h-6 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
+              <Send className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            </div>
+            Request Leave
           </Link>
         )}
-        <Link href="/dashboard/directory" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-          <Users className="w-4 h-4 text-pink-500" /> Open Directory
+        <Link href="/dashboard/directory" prefetch={false} className="flex items-center gap-2 px-3.5 py-2 h-9 bg-surface border border-border rounded-lg text-sm font-medium hover:bg-surface-2 hover:border-border-strong transition-all shadow-e1">
+          <div className="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+            <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          </div>
+          Directory
+        </Link>
+        <Link href="/dashboard/profile" prefetch={false} className="flex items-center gap-2 px-3.5 py-2 h-9 bg-surface border border-border rounded-lg text-sm font-medium hover:bg-surface-2 hover:border-border-strong transition-all shadow-e1">
+          <div className="w-6 h-6 rounded-md bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+            <User className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
+          </div>
+          My Profile
         </Link>
       </div>
 

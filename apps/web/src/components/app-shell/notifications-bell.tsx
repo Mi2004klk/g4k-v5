@@ -282,7 +282,7 @@ export function NotificationsBell() {
                 visibleNotifications.map((n: any) => (
                   <div
                     key={n.id}
-                    className={`flex gap-3 p-4 transition-colors ${
+                    className={`flex gap-3 p-4 min-h-[44px] transition-colors ${
                       !n.read_at ? "bg-orange-500/5 dark:bg-orange-500/10" : "hover:bg-surface-2/60"
                     }`}
                   >
