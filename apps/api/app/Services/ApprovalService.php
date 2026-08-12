@@ -101,9 +101,10 @@ class ApprovalService
                     $leave->update(['status' => 'approved']);
                 }
             }
+            
+            // Dispatch synchronously inside the transaction so LeaveAttendanceIntegration can participate in it
+            event(new ApprovalDecided($approval));
         });
-
-        event(new ApprovalDecided($approval));
 
         return $approval;
     }

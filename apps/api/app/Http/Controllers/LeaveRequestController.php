@@ -100,8 +100,11 @@ class LeaveRequestController extends Controller
                 return $leave;
             });
         } catch (\Illuminate\Database\QueryException $e) {
-            // Usually error code 23505 for unique violation in Postgres or similar in MySQL
-            return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);
+            // Error code 23505 for unique violation in Postgres or 23000/1062 in MySQL
+            if (in_array($e->getCode(), ['23505', '23000', '1062'])) {
+                return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);
+            }
+            throw $e;
         }
 
         \App\Services\AuditLogger::log($request, 'leave.request', 'LeaveRequest', $leave->id, null, $validated);
