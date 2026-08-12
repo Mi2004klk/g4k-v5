@@ -112,7 +112,8 @@ export function AdminAttendanceTable() {
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Authorization': `Bearer ${getAuthToken()}`,
+          'Accept': 'application/json'
         }
       });
       

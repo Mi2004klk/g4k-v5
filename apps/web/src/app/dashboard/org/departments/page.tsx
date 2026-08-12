@@ -148,7 +148,10 @@ export default function DepartmentsPage() {
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/departments/export?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`,
+          'Accept': 'application/json'
+        }
       });
       if (!response.ok) throw new Error("Export failed");
       

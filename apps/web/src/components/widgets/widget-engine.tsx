@@ -42,7 +42,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
-  const { data: preferencesData, isLoading } = useQuery({
+  const { data: preferencesData, isPending } = useQuery({
     queryKey: queryKeys.dashboardLayout,
     queryFn: () => apiFetch("/auth/preferences"),
     staleTime: 5 * 60_000,

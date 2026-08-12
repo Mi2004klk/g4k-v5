@@ -118,7 +118,8 @@ export function SettingsTabs() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/company-profile/logo`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${getAuthToken()}`
+          "Authorization": `Bearer ${getAuthToken()}`,
+          "Accept": "application/json"
         },
         body: formData,
       });

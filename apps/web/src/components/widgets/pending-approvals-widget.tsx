@@ -13,7 +13,7 @@ export function PendingApprovalsWidget() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
 
-  const { data: requests = [], isLoading, isFetching, isError, refetch } = useQuery({
+  const { data: requests = [], isPending, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.pendingApprovals,
     queryFn: async () => {
       const res = await apiFetch("/approvals/pending");
@@ -51,7 +51,7 @@ export function PendingApprovalsWidget() {
       </CardHeader>
 
       <CardContent className="flex-1 space-y-2 overflow-y-auto max-h-[260px] pr-1">
-        {isLoading ? (
+        {isPending ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
               <div key={i} className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between">

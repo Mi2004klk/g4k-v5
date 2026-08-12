@@ -109,7 +109,7 @@ export default function OrgLeaveApprovalsPage() {
     try {
       const url = `/api/leave-requests/export?status=${statusFilter}`;
       const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        headers: { 'Authorization': `Bearer ${getAuthToken()}`, 'Accept': 'application/json' }
       });
       if (!response.ok) throw new Error("Export failed");
       

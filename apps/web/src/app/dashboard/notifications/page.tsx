@@ -13,6 +13,7 @@ import { FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys, STALE_TIME_NOTIFICATIONS } from "@/lib/query-keys";
+import { useReverb } from "@/hooks/use-reverb";
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
@@ -22,6 +23,8 @@ export default function NotificationsPage() {
     readStatus: "all",
     type: "all"
   });
+
+  const { isConnected } = useReverb();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.notifications(filter, search, cursor),
@@ -35,6 +38,7 @@ export default function NotificationsPage() {
     },
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_NOTIFICATIONS,
+    refetchInterval: isConnected ? false : 30_000,
   });
 
   const markReadMutation = useMutation({

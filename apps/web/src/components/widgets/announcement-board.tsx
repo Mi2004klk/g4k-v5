@@ -19,7 +19,7 @@ export function AnnouncementBoard() {
   const [showCreate, setShowCreate] = useState(false);
   const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
 
-  const { data: announcements = [], isLoading, isFetching, isError, refetch } = useQuery({
+  const { data: announcements = [], isPending, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.announcements,
     queryFn: () => apiFetch("/announcements"),
     staleTime: 60_000,
@@ -180,7 +180,7 @@ export function AnnouncementBoard() {
         </DialogContent>
       </Dialog>
       <CardContent className="space-y-3 max-h-[350px] overflow-y-auto">
-        {isLoading ? (
+        {isPending ? (
           <div className="space-y-3">
             {[1, 2].map((i) => (
               <div key={i} className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 space-y-2 border border-neutral-100 dark:border-neutral-800">

@@ -9,14 +9,14 @@ import { Skeleton } from "@g4k/ui/components";
 import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 
 export function RecentActivityWidget() {
-  const { data, isLoading, isFetching, isError, refetch } = useQuery({
+  const { data, isPending, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.dashboardMetrics,
     queryFn: () => apiFetch("/dashboard/metrics"),
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,
   });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Card className="border-none shadow-sm h-full flex flex-col bg-white dark:bg-neutral-900">
         <CardHeader className="pb-2">

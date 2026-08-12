@@ -16,7 +16,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 export function NotificationsBell() {
   const user = useAuthStore((s) => s.user);
-  const { subscribe, leaveChannel } = useReverb();
+  const { subscribe, leaveChannel, isConnected } = useReverb();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<"recent" | "unread">("recent");
@@ -28,12 +28,14 @@ export function NotificationsBell() {
     queryKey: queryKeys.unreadCount,
     queryFn: () => apiFetch("/notifications/unread-count"),
     enabled: !!user,
+    refetchInterval: isConnected ? false : 30_000,
   });
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.notifications(filter),
     queryFn: () => apiFetch(`/notifications${filter === "unread" ? "?unreadOnly=true" : ""}`),
     enabled: !!user,
+    refetchInterval: isConnected ? false : 30_000,
   });
 
   const markReadMutation = useMutation({

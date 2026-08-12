@@ -751,17 +751,18 @@ notification bell polls every 30s and stays usable.
 16. [x] **3.7** — Remove dead `sleep()` code
 
 ### Sprint 4 — Workflow reliability (Phase 4)
-17. **4.1** — Fix notification filter/search backend
-18. **4.2** — Verify AnnouncementController authorization
-19. **4.3** — Delete per-app nixpacks/railway files
-20. **4.4** — Verify Accept header on all requests
-21. **4.5** — Audit all error/empty/offline states
+17. [x] **4.1** — Fix notification filter/search backend
+18. [x] **4.2** — Ensure `AnnouncementController` has authorization
+19. [x] **4.3** — Delete per-app nixpacks/railway files
+20. [x] **4.4** — Verify Accept header on all requests
+21. [x] **4.5** — Audit all error/empty/offline states
 
 ### Sprint 5 — Production hardening (Phase 5)
-22. **5.1** — Standardize `isPending` naming
-23. **5.3** — Verify MAIL_* on Railway
-24. **5.4** — Deploy or disable Reverb
-25. **5.5** — Full smoke test
+22. [x] **5.1** — Standardize `isPending` naming
+23. [x] **5.2** — Ensure `loading.tsx` skeletons exist (done in 1.2)
+24. [x] **5.3** — Verify MAIL_* on Railway
+25. [x] **5.4** — Deploy or disable Reverb
+26. [x] **5.5** — Full smoke test
 
 ---
 

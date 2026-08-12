@@ -18,7 +18,7 @@ export function QuickNotes() {
   const toggleWidgetCollapse = useUIStore((s) => s.toggleWidgetCollapse);
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
 
-  const { data: notes = [], isLoading, isFetching, isError, refetch } = useQuery({
+  const { data: notes = [], isPending, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.quickNotes,
     queryFn: () => apiFetch("/quick-notes"),
     placeholderData: keepPreviousData,
@@ -81,7 +81,7 @@ export function QuickNotes() {
             </div>
 
             <div className="space-y-2 max-h-[200px] overflow-y-auto">
-              {isLoading ? (
+              {isPending ? (
                 <div className="space-y-2">
                   {[1, 2].map(i => (
                     <Skeleton key={i} className="h-10 w-full rounded-lg" />
