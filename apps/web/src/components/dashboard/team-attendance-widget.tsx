@@ -24,8 +24,8 @@ export function TeamAttendanceWidget() {
   const employees = data?.employees || [];
 
   return (
-    <Card className="h-full flex flex-col border-none shadow-sm overflow-hidden">
-      <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+    <Card className="h-full flex flex-col border-none shadow-e1 overflow-hidden">
+      <CardHeader className="pb-3 border-b border-border dark:border-neutral-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <Users className="w-4 h-4 text-violet-600" />
@@ -52,7 +52,7 @@ export function TeamAttendanceWidget() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-neutral-100 dark:bg-neutral-800">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-secondary">
             {employees.map((emp: any) => {
               const statusColor = 
                 emp.category === 'present' ? 'bg-emerald-500' :
@@ -62,7 +62,7 @@ export function TeamAttendanceWidget() {
                 'bg-red-500';
 
               return (
-                <div key={emp.user_id} className="flex items-center gap-3 p-3 bg-white dark:bg-neutral-900 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                <div key={emp.user_id} className="flex items-center gap-3 p-3 bg-card transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
                   <div className="relative">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={emp.avatar_url || ''} />
@@ -71,10 +71,10 @@ export function TeamAttendanceWidget() {
                     <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-neutral-900 ${statusColor}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate text-neutral-900 dark:text-white">
+                    <p className="text-sm font-semibold truncate text-foreground">
                       {emp.user_name}
                     </p>
-                    <p className="text-[10px] text-neutral-500 truncate">
+                    <p className="text-[10px] text-muted-foreground truncate">
                       {emp.department_name || 'No Department'}
                     </p>
                   </div>

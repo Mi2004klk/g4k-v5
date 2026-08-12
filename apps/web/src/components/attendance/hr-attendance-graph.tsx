@@ -142,14 +142,14 @@ export function HrAttendanceGraph() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-xl border border-border shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+        <div className="flex items-center gap-2 bg-secondary p-1 rounded-lg">
           <button
             onClick={() => setGroupBy("date")}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               groupBy === "date" 
-                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                ? "bg-card text-foreground shadow-e1" 
+                : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
             Team Overview
@@ -158,21 +158,21 @@ export function HrAttendanceGraph() {
             onClick={() => setGroupBy("employee")}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               groupBy === "employee" 
-                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                ? "bg-card text-foreground shadow-e1" 
+                : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
             Per Employee
           </button>
         </div>
 
-        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
+        <div className="flex items-center gap-2 bg-secondary p-1 rounded-lg">
           <button
             onClick={() => setMode("weekly")}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               mode === "weekly" 
-                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                ? "bg-card text-foreground shadow-e1" 
+                : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
             This Week
@@ -181,8 +181,8 @@ export function HrAttendanceGraph() {
             onClick={() => setMode("monthly")}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               mode === "monthly" 
-                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
-                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                ? "bg-card text-foreground shadow-e1" 
+                : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
             This Month
@@ -190,15 +190,15 @@ export function HrAttendanceGraph() {
         </div>
       </div>
 
-      <div className="w-full bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 relative min-h-[450px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="w-full bg-card rounded-xl p-6 border border-border relative min-h-[450px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm z-10 rounded-xl">
             <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
           </div>
         ) : !data?.stats || data.stats.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-500 z-10">
-            <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
-              <span className="text-2xl text-neutral-400">📊</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground z-10">
+            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
+              <span className="text-2xl text-muted-foreground">📊</span>
             </div>
             <p className="font-medium">No data available for this period</p>
           </div>

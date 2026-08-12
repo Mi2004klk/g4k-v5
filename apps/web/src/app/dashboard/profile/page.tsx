@@ -253,12 +253,12 @@ export default function ProfilePage() {
       header: "Device / Browser",
       cell: ({ row }) => (
         <div className="flex flex-col min-w-[120px]">
-          <div className="flex items-center gap-2 font-semibold text-neutral-900 dark:text-white">
+          <div className="flex items-center gap-2 font-semibold text-foreground">
             <Laptop className="w-4 h-4 text-brand-violet shrink-0" />
             <span className="truncate">{row.original.device_name || "Unknown Device"}</span>
           </div>
           {row.original.user_agent && (
-            <span className="text-[10px] text-neutral-500 mt-0.5 ml-6">
+            <span className="text-[10px] text-muted-foreground mt-0.5 ml-6">
               {parseUserAgent(row.original.user_agent)}
             </span>
           )}
@@ -269,14 +269,14 @@ export default function ProfilePage() {
       accessorKey: "ip_address",
       header: "IP Address",
       cell: ({ row }) => (
-        <span className="text-neutral-500 dark:text-neutral-400 font-mono text-xs">{row.original.ip_address || "Unknown"}</span>
+        <span className="text-muted-foreground font-mono text-xs">{row.original.ip_address || "Unknown"}</span>
       ),
     },
     {
       accessorKey: "last_used_at",
       header: "Last Used",
       cell: ({ row }) => (
-        <span className="text-neutral-500 text-xs">
+        <span className="text-muted-foreground text-xs">
           {row.original.last_used_at ? new Date(row.original.last_used_at).toLocaleString() : "Recently"}
         </span>
       ),
@@ -292,7 +292,7 @@ export default function ProfilePage() {
             </span>
           );
         }
-        return <span className="text-neutral-400 text-[11px] font-medium">Active</span>;
+        return <span className="text-muted-foreground text-[11px] font-medium">Active</span>;
       },
     },
     {
@@ -325,11 +325,11 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto font-sans">
       {/* Header Profile Card */}
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+      <Card className="border border-border shadow-e1 overflow-hidden bg-card rounded-xl relative">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-violet-600" />
         <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-brand-violet/5 dark:bg-brand-violet/10">
           <div className="relative group shrink-0">
-            <div className="w-24 h-24 rounded-full bg-white dark:bg-neutral-800 border-2 border-brand-violet flex items-center justify-center font-bold text-3xl shadow-sm overflow-hidden text-brand-violet">
+            <div className="w-24 h-24 rounded-full bg-card border-2 border-brand-violet flex items-center justify-center font-bold text-3xl shadow-e1 overflow-hidden text-brand-violet">
               {profile?.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
@@ -354,19 +354,19 @@ export default function ProfilePage() {
           <div className="space-y-2 text-center sm:text-left flex-1">
             <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2">
               <div>
-                <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
+                <h1 className="text-2xl font-bold font-display text-foreground">
                   {isLoading && !profile ? <Skeleton className="h-8 w-48 mb-2" /> : (profile?.name || "Your Profile")}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-sm font-sans mt-2">
-                  <div className="flex items-center text-neutral-500 dark:text-neutral-400 bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
                     <Hash className="w-4 h-4 mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-24" /> : (profile?.employee_id || "Employee ID: N/A")}
                   </div>
-                  <div className="flex items-center text-neutral-500 dark:text-neutral-400 bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
                     <Building2 className="w-4 h-4 mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.department?.name || "No Department")}
                   </div>
-                  <div className="flex items-center text-neutral-500 dark:text-neutral-400 bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
                     <Briefcase className="w-4 h-4 mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.designation?.name || "No Designation")}
                   </div>
@@ -374,13 +374,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-3 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
-              <span className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-3 text-xs text-muted-foreground font-medium">
+              <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-md border border-border shadow-e1">
                 <Mail className="w-3.5 h-3.5 text-brand-violet" />
                 {profile?.email}
               </span>
               {profile?.phone && (
-                <span className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-md border border-border shadow-e1">
                   <Phone className="w-3.5 h-3.5 text-brand-violet" />
                   {profile.phone}
                 </span>
@@ -392,14 +392,14 @@ export default function ProfilePage() {
 
       {/* Mini-Cards for EMP-5 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+        <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg shrink-0">
               <Calendar className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">My Attendance (Recent)</h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              <h3 className="text-sm font-semibold text-foreground">My Attendance (Recent)</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">{presentCount} Present</span> •{" "}
                 <span className="font-medium text-amber-600 dark:text-amber-400">{lateCount} Late</span> •{" "}
                 <span className="font-medium text-rose-600 dark:text-rose-400">{absentCount} Absent</span>
@@ -407,28 +407,28 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+        <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg shrink-0">
               <FileText className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">My Leave Summary</h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              <h3 className="text-sm font-semibold text-foreground">My Leave Summary</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">{approvedLeaves} Approved</span> •{" "}
                 <span className="font-medium text-amber-600 dark:text-amber-400">{pendingLeaves} Pending</span>
               </p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+        <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg shrink-0">
               <CheckSquare className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">My Active Tasks</h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              <h3 className="text-sm font-semibold text-foreground">My Active Tasks</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 <span className="font-medium text-violet-600 dark:text-violet-400">{pendingTasks} Active</span> •{" "}
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">{completedTasks} Completed</span>
               </p>
@@ -439,13 +439,13 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Details Form */}
-        <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+        <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardHeader>
-            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
               <User className="w-4 h-4 text-brand-violet" />
               Personal & Contact Information
             </CardTitle>
-            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+            <CardDescription className="text-xs text-muted-foreground font-sans">
               Update your display name and phone number.
             </CardDescription>
           </CardHeader>
@@ -468,7 +468,7 @@ export default function ProfilePage() {
               <select
                 value={designationId}
                 onChange={(e) => setDesignationId(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:placeholder:text-neutral-400 dark:focus-visible:ring-brand-violet font-sans"
+                className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:placeholder:text-muted-foreground dark:focus-visible:ring-brand-violet font-sans"
               >
                 <option value="">Select Designation</option>
                 {designations?.map((d: any) => (
@@ -479,13 +479,13 @@ export default function ProfilePage() {
               </select>
             </div>
             <div>
-              <label className="font-semibold block mb-1 text-neutral-400">Email Address (Read-only)</label>
-              <Input value={profile?.email || ""} disabled className="bg-neutral-50 dark:bg-neutral-800/50 font-sans" />
+              <label className="font-semibold block mb-1 text-muted-foreground">Email Address (Read-only)</label>
+              <Input value={profile?.email || ""} disabled className="bg-muted/50 font-sans" />
             </div>
             <Button
               onClick={() => updateProfileMutation.mutate({ name, phone, designation_id: designationId || null })}
               disabled={updateProfileMutation.isPending}
-              className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm font-sans"
+              className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 font-sans"
             >
               {updateProfileMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -498,13 +498,13 @@ export default function ProfilePage() {
 
         <div className="space-y-6">
            {/* Privacy & Visibility Preferences */}
-           <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+           <Card className="border border-border shadow-e1 bg-card rounded-xl">
              <CardHeader>
-               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
                  <Eye className="w-4 h-4 text-brand-violet" />
                  Privacy & Visibility
                </CardTitle>
-               <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+               <CardDescription className="text-xs text-muted-foreground font-sans">
                  Control who can see your contact information in the company directory.
                </CardDescription>
              </CardHeader>
@@ -513,39 +513,39 @@ export default function ProfilePage() {
                    <button
                      onClick={() => handleVisibilityChange("public")}
                      disabled={updateVisibilityMutation.isPending}
-                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "public" ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "public" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
                    >
-                      <div className="font-semibold text-neutral-900 dark:text-white mb-0.5">Public</div>
-                      <div className="text-neutral-500 text-[11px]">Phone and email visible to all users.</div>
+                      <div className="font-semibold text-foreground mb-0.5">Public</div>
+                      <div className="text-muted-foreground text-[11px]">Phone and email visible to all users.</div>
                    </button>
                    <button
                      onClick={() => handleVisibilityChange("internal")}
                      disabled={updateVisibilityMutation.isPending}
-                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "internal" ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "internal" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
                    >
-                      <div className="font-semibold text-neutral-900 dark:text-white mb-0.5">Internal Only</div>
-                      <div className="text-neutral-500 text-[11px]">Contact info visible only to your department & HR.</div>
+                      <div className="font-semibold text-foreground mb-0.5">Internal Only</div>
+                      <div className="text-muted-foreground text-[11px]">Contact info visible only to your department & HR.</div>
                    </button>
                    <button
                      onClick={() => handleVisibilityChange("private")}
                      disabled={updateVisibilityMutation.isPending}
-                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "private" ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "private" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
                    >
-                      <div className="font-semibold text-neutral-900 dark:text-white mb-0.5">Private</div>
-                      <div className="text-neutral-500 text-[11px]">Contact info completely hidden from directory.</div>
+                      <div className="font-semibold text-foreground mb-0.5">Private</div>
+                      <div className="text-muted-foreground text-[11px]">Contact info completely hidden from directory.</div>
                    </button>
                 </div>
              </CardContent>
            </Card>
 
            {/* Password Security Form */}
-           <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+           <Card className="border border-border shadow-e1 bg-card rounded-xl">
              <CardHeader>
-               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
                  <KeyRound className="w-4 h-4 text-brand-violet" />
                  Security & Password
                </CardTitle>
-               <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+               <CardDescription className="text-xs text-muted-foreground font-sans">
                  Change your password to maintain account security.
                </CardDescription>
              </CardHeader>
@@ -585,7 +585,7 @@ export default function ProfilePage() {
                    !newPassword ||
                    !confirmPassword
                  }
-                 className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm font-sans"
+                 className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 font-sans"
                >
                  {changePasswordMutation.isPending ? (
                    <Loader2 className="w-4 h-4 animate-spin" />
@@ -599,15 +599,15 @@ export default function ProfilePage() {
       </div>
 
       {/* Company Profile (Read-Only) */}
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-neutral-200 dark:bg-neutral-800" />
+      <Card className="border border-border shadow-e1 bg-card rounded-xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
         <CardHeader className="flex flex-row justify-between items-start pt-6">
           <div>
-            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
               <Building2 className="w-4 h-4 text-brand-violet" />
               Company Information
             </CardTitle>
-            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-1">
+            <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
               General details about the organization.
             </CardDescription>
           </div>
@@ -626,37 +626,37 @@ export default function ProfilePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <div className="text-xs font-medium text-neutral-500 mb-1">Company Name</div>
-                <div className="font-semibold text-neutral-900 dark:text-white">
+                <div className="text-xs font-medium text-muted-foreground mb-1">Company Name</div>
+                <div className="font-semibold text-foreground">
                   {companyProfile?.name || "Games4King"}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium text-neutral-500 mb-1">Short Name</div>
-                <div className="font-semibold text-neutral-900 dark:text-white">
+                <div className="text-xs font-medium text-muted-foreground mb-1">Short Name</div>
+                <div className="font-semibold text-foreground">
                   {companyProfile?.short_name || "-"}
                 </div>
               </div>
               <div className="md:col-span-2">
-                <div className="text-xs font-medium text-neutral-500 mb-1">Description</div>
+                <div className="text-xs font-medium text-muted-foreground mb-1">Description</div>
                 <div className="text-neutral-700 dark:text-neutral-300 text-sm">
                   {companyProfile?.description || "-"}
                 </div>
               </div>
               <div className="md:col-span-2">
-                <div className="text-xs font-medium text-neutral-500 mb-1">Address</div>
+                <div className="text-xs font-medium text-muted-foreground mb-1">Address</div>
                 <div className="text-neutral-700 dark:text-neutral-300 text-sm">
                   {companyProfile?.address || "-"}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium text-neutral-500 mb-1">Primary Phone</div>
+                <div className="text-xs font-medium text-muted-foreground mb-1">Primary Phone</div>
                 <div className="text-neutral-700 dark:text-neutral-300">
                   {companyProfile?.primary_phone || "-"}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium text-neutral-500 mb-1">Email</div>
+                <div className="text-xs font-medium text-muted-foreground mb-1">Email</div>
                 <div className="text-neutral-700 dark:text-neutral-300">
                   {companyProfile?.email || "-"}
                 </div>
@@ -667,14 +667,14 @@ export default function ProfilePage() {
       </Card>
 
       {/* Active Device Sessions */}
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
+      <Card className="border border-border shadow-e1 bg-card rounded-xl">
         <CardHeader className="flex flex-row justify-between items-start">
           <div>
-            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
               <Laptop className="w-4 h-4 text-brand-violet" />
               Active Device Sessions
             </CardTitle>
-            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-1">
+            <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
               Devices currently logged into your Games4King Workplace OS account. Revoking a session will immediately log out that device.
             </CardDescription>
           </div>
@@ -695,7 +695,7 @@ export default function ProfilePage() {
             Log Out Current Device
           </Button>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto border-t border-neutral-100 dark:border-neutral-800">
+        <CardContent className="p-0 overflow-x-auto border-t border-border dark:border-neutral-800">
           <DataTable 
              columns={columns} 
              data={sessions || []}
@@ -739,7 +739,7 @@ export default function ProfilePage() {
             <Button
               onClick={() => avatarFile && uploadAvatarMutation.mutate(avatarFile)}
               disabled={uploadAvatarMutation.isPending || !avatarFile}
-              className="bg-neutral-900 hover:bg-neutral-800 text-white font-sans shadow-sm"
+              className="bg-neutral-900 hover:bg-neutral-800 text-white font-sans shadow-e1"
             >
               {uploadAvatarMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

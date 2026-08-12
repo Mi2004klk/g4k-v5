@@ -107,8 +107,8 @@ export function AdminOpenShiftsTable() {
       cell: ({ row }: any) => {
         return (
           <div className="flex flex-col text-left">
-            <span className="font-semibold text-neutral-900 dark:text-white">{row.original.user_name || "Employee"}</span>
-            <span className="text-[11px] text-neutral-400 font-normal">{row.original.user_email}</span>
+            <span className="font-semibold text-foreground">{row.original.user_name || "Employee"}</span>
+            <span className="text-[11px] text-muted-foreground font-normal">{row.original.user_email}</span>
           </div>
         );
       },
@@ -117,7 +117,7 @@ export function AdminOpenShiftsTable() {
       accessorKey: "department",
       header: "Department",
       cell: ({ row }: any) => {
-        return <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">{row.original.department_name || "—"}</span>;
+        return <span className="text-xs font-medium text-muted-foreground">{row.original.department_name || "—"}</span>;
       },
     },
     {
@@ -127,7 +127,7 @@ export function AdminOpenShiftsTable() {
         const val = row.getValue("clock_in") as string;
         return (
           <div className="flex items-center gap-2">
-            <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>
+            <span className="font-mono text-muted-foreground">{val ? format(new Date(val), "hh:mm a") : "—"}</span>
             <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
               <AlertCircle className="w-3 h-3" />
               OPEN
@@ -168,7 +168,7 @@ export function AdminOpenShiftsTable() {
         {/* Search & Dept */}
         <div className="flex w-full xl:w-auto items-center gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               type="search"
               placeholder="Search company..." 
@@ -179,11 +179,11 @@ export function AdminOpenShiftsTable() {
           </div>
 
           <div className="relative shrink-0">
-            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <select
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
-              className="h-10 pl-9 pr-8 py-2 w-[160px] text-sm bg-transparent border border-amber-100 dark:border-amber-900/30 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none text-neutral-900 dark:text-neutral-100"
+              className="h-10 pl-9 pr-8 py-2 w-[160px] text-sm bg-transparent border border-amber-100 dark:border-amber-900/30 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none text-foreground"
             >
               <option value="all">All Departments</option>
               {departments.map((d: any) => (
@@ -209,14 +209,14 @@ export function AdminOpenShiftsTable() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="bg-card rounded-xl border border-border overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {openShifts.length === 0 && !isLoading ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
               <AlertCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-1">No Open Shifts</h3>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <h3 className="text-lg font-medium text-foreground mb-1">No Open Shifts</h3>
+            <p className="text-sm text-muted-foreground">
               All employees have successfully clocked out for this date.
             </p>
           </div>

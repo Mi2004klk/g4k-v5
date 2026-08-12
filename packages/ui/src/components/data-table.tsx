@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu"
 import { Pagination } from "./pagination"
+import { EmptyState } from "./empty-state"
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -382,8 +383,11 @@ export function DataTable<TData, TValue>({
                 })
               ) : (
                 <tr>
-                  <td colSpan={columns.length} className="h-24 text-center align-middle">
-                    No results.
+                  <td colSpan={columns.length} className="h-64 align-middle">
+                    <EmptyState
+                      title="No records found"
+                      description="Try adjusting your filters or search query."
+                    />
                   </td>
                 </tr>
               )}
@@ -431,8 +435,11 @@ export function DataTable<TData, TValue>({
                 )
               })
             ) : (
-              <div className="h-24 flex items-center justify-center text-muted-foreground">
-                No results.
+              <div className="py-12">
+                <EmptyState
+                  title="No records found"
+                  description="Try adjusting your filters or search query."
+                />
               </div>
             )}
           </div>

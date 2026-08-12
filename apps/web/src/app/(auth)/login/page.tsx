@@ -96,8 +96,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
-      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md shadow-e1 border border-border overflow-hidden bg-card rounded-xl relative">
         <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center">
           <Image src="/landscape-logo.png" alt="Games4King" width={220} height={84} priority
                  className="object-contain max-h-[64px] w-auto" />

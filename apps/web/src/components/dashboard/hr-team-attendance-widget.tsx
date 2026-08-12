@@ -23,16 +23,16 @@ export function HrTeamAttendanceWidget() {
   const topRecords = records.slice(0, 3);
 
   return (
-    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
+    <Card className="h-full flex flex-col bg-card border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
             <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             Team Attendance
           </span>
-          {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
         </div>
         
         {totalCount > 0 && (
@@ -66,14 +66,14 @@ export function HrTeamAttendanceWidget() {
           </div>
         ) : records.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <p className="text-sm font-medium text-neutral-400">No team members scheduled</p>
+            <p className="text-sm font-medium text-muted-foreground">No team members scheduled</p>
           </div>
         ) : (
           <div className="space-y-3 flex-1">
             {topRecords.map((r: any) => (
               <div key={r.user_id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-neutral-600 dark:text-neutral-300">
+                  <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-[10px] font-bold text-muted-foreground">
                     {r.user_name?.charAt(0) || "U"}
                   </div>
                   <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{r.user_name}</span>

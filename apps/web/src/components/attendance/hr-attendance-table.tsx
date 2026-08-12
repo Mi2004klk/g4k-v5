@@ -130,15 +130,15 @@ export function HrAttendanceTable() {
               }}
               className="flex flex-col text-left hover:opacity-80 transition-opacity"
             >
-              <span className="font-semibold text-neutral-900 dark:text-white underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
-              <span className="text-[11px] text-neutral-400 font-normal">{row.original.user_email}</span>
+              <span className="font-semibold text-foreground underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
+              <span className="text-[11px] text-muted-foreground font-normal">{row.original.user_email}</span>
             </button>
             <button
               onClick={() => {
                 setSheetTab("trends");
                 setSelectedUser(row.original.user_id);
               }}
-              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-all text-neutral-400 hover:text-violet-500"
+              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-all text-muted-foreground hover:text-violet-500"
               title="View Trends"
             >
               <TrendingUp className="w-4 h-4" />
@@ -195,7 +195,7 @@ export function HrAttendanceTable() {
       header: "Clock In",
       cell: ({ row }: any) => {
         const val = row.getValue("clock_in") as string;
-        return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+        return <span className="font-mono text-muted-foreground">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
       },
     },
     {
@@ -203,7 +203,7 @@ export function HrAttendanceTable() {
       header: "Clock Out",
       cell: ({ row }: any) => {
         const val = row.getValue("clock_out") as string;
-        return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+        return <span className="font-mono text-muted-foreground">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
       },
     },
     {
@@ -267,7 +267,7 @@ export function HrAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-border shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <FilterBar
           searchQuery={search || ""}
           onSearchChange={setSearch}
@@ -306,7 +306,7 @@ export function HrAttendanceTable() {
         />
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="bg-card rounded-xl border border-border overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
             <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
