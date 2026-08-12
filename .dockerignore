@@ -1,6 +1,20 @@
 *
 !apps/api/
+
+# Exclude heavy/generated dirs
 apps/api/vendor/
 apps/api/node_modules/
-apps/api/storage/logs/
-apps/api/.env*
+apps/api/storage/
+apps/api/tests/
+apps/api/.phpunit.result.cache
+
+# Exclude env files & junk
+apps/api/.env
+apps/api/.env.*
+apps/api/out.txt
+apps/api/output.txt
+apps/api/error_log.json
+apps/api/routes.txt
+apps/api/tests_output.log
+apps/api/test.php
+apps/api/Dockerfile

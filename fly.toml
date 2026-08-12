@@ -5,7 +5,7 @@ primary_region = "bom"
   dockerfile = "Dockerfile"
 
 [deploy]
-  release_command = "cd apps/api && php artisan migrate --force"
+  release_command = "cd /var/www/html && php artisan migrate --force"
 
 [env]
   APP_ENV = "production"
@@ -28,7 +28,7 @@ primary_region = "bom"
   AWS_DEFAULT_REGION = "ap-south-1"
   AWS_USE_PATH_STYLE_ENDPOINT = "false"
   BCRYPT_ROUNDS = "12"
-  PHP_INI_SCAN_DIR = "/var/www/html/apps/api"
+  PHP_INI_SCAN_DIR = "/var/www/html"
 
 [[services]]
   internal_port = 8080
