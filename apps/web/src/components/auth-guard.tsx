@@ -65,12 +65,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (user.must_change_password && pathname !== "/change-password") {
-      router.push("/change-password");
-      return;
-    }
+    // DISABLED FOR NOW
+    // if (user.must_change_password && pathname !== "/change-password") {
+    //   router.push("/change-password");
+    //   return;
+    // }
     // Enforce onboarding sequence
-    else if (!user.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
+    if (!user.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
       router.push("/onboarding");
       return;
     }
