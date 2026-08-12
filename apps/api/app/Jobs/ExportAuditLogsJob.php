@@ -17,6 +17,9 @@ class ExportAuditLogsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $tries = 3;
+    public $timeout = 120;
+    
     public $exportJob;
     public $filters;
 
@@ -47,7 +50,7 @@ class ExportAuditLogsJob implements ShouldQueue
                 $query->whereBetween('at', [$this->filters['start_date'], $this->filters['end_date']]);
             }
 
-            $disk = Storage::disk(config('filesystems.default', 'public'));
+            $disk = Storage::disk('s3');
             $filename = "exports/audit_logs_" . time() . ".csv";
             $tempPath = sys_get_temp_dir() . '/' . uniqid('audit_') . ".csv";
 

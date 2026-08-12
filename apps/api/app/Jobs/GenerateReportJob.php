@@ -20,6 +20,9 @@ class GenerateReportJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $tries = 3;
+    public $timeout = 120;
+    
     public $exportJob;
 
     public function __construct(ExportJob $exportJob)
@@ -35,7 +38,7 @@ class GenerateReportJob implements ShouldQueue
             $key = $this->exportJob->report_key;
             $format = $this->exportJob->format;
             $filename = "exports/report_{$key}_" . time() . ".{$format}";
-            $disk = Storage::disk(config('filesystems.default', 'public'));
+            $disk = Storage::disk('s3');
 
             if ($format === 'xlsx' || $format === 'csv') {
                 $tempPath = sys_get_temp_dir() . '/' . uniqid('exp_') . ".{$format}";

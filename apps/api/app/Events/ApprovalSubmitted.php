@@ -32,7 +32,7 @@ class ApprovalSubmitted implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('private-user.' . $this->approval->approver_id),
+            new PrivateChannel('user.' . $this->approval->approver_id),
         ];
     }
 }

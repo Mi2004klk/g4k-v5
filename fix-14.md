@@ -219,7 +219,7 @@ Supabase S3 endpoint) right after the `s3` entry, and make it the default:
     ],
 ],
 ```
-- [ ] **3.1a** Add the `supabase` disk + set `default → s3`.
+- [x] **3.1a** Add the `supabase` disk + set `default → s3`.
 - [ ] **3.1b** On Supabase → Storage, create the `g4k` bucket and enable **public read** for the
       avatar/logo/attachment prefixes the frontend renders via `<img src>` (URLs come back absolute).
       Configure the bucket CORS to allow `GET` from the Vercel origin if you serve them cross-origin.
@@ -230,39 +230,39 @@ Supabase S3 endpoint) right after the `s3` entry, and make it the default:
 `Storage::disk(config('filesystems.default', 'public'))` — on Cloud Run the default `local`/`public` disk
 is ephemeral, so exports vanish and `export_jobs.file_path` 404s.
 
-- [ ] **3.2a** Change both jobs to write to the **`s3`** disk explicitly:
+- [x] **3.2a** Change both jobs to write to the **`s3`** disk explicitly:
   ```php
   $disk = Storage::disk('s3');   // was: Storage::disk(config('filesystems.default', 'public'))
   ```
-- [ ] **3.2b** Keep temp work in `sys_get_temp_dir()` (Cloud Run `/tmp` is the only writable scratch, but
+- [x] **3.2b** Keep temp work in `sys_get_temp_dir()` (Cloud Run `/tmp` is the only writable scratch, but
       it is **memory-backed** — counts against the 2 GiB limit). For very large exports, stream to S3
       directly instead of buffering in `/tmp`.
 
 ### 3.3 Disable hardcoded debug (BLOCKER — security)
 
-- [ ] **3.3** `apps/api/config/app.php:42` — change `'debug' => true,` to `'debug' => env('APP_DEBUG', false),`.
+- [x] **3.3** `apps/api/config/app.php:42` — change `'debug' => true,` to `'debug' => env('APP_DEBUG', false),`.
       Under `config:cache` the hardcoded `true` overrides `APP_DEBUG=false` and leaks stack traces
       cross-origin.
 
 ### 3.4 Fix the double `private-` prefix (BLOCKER for one event)
 
-- [ ] **3.4** `app/Events/ApprovalSubmitted.php:35` — `new PrivateChannel('private-user.' . $id)` resolves
+- [x] **3.4** `app/Events/ApprovalSubmitted.php:35` — `new PrivateChannel('private-user.' . $id)` resolves
       to channel `private-private-user.{id}`, which never matches `routes/channels.php:5`'s
       `private-user.{id}`. Change to `new PrivateChannel('user.' . $id)` (matching every other event).
 
 ### 3.5 Remove orphaned Console commands + harden jobs
 
-- [ ] **3.5a** Delete the orphaned commands that duplicate the Jobs the scheduler already dispatches
+- [x] **3.5a** Delete the orphaned commands that duplicate the Jobs the scheduler already dispatches
       (`routes/console.php:11-13` schedules the **Jobs**, not these commands):
   ```bash
   git rm app/Console/Commands/AlertMissedClockIn.php app/Console/Commands/RemindShiftStart.php
   ```
-- [ ] **3.5b** Make `ProcessAuditLogJob` idempotent (it `DB::table('audit_logs')->insert()` on every run,
+- [x] **3.5b** Make `ProcessAuditLogJob` idempotent (it `DB::table('audit_logs')->insert()` on every run,
       so a retry double-inserts). Wrap in `DB::transaction()` with a uniqueness guard
       (e.g. `->where('correlation_id', $id)->doesntExist()` before insert, or an `INSERT … ON CONFLICT DO NOTHING`).
-- [ ] **3.5c** Add `$tries = 3;` and `$timeout = 120;` to every Job class (they currently rely solely on
+- [x] **3.5c** Add `$tries = 3;` and `$timeout = 120;` to every Job class (they currently rely solely on
       the worker flags, which differ between the old `start.sh` loop and the Cloud Run Job).
-- [ ] **3.5d** `config/queue.php:44` — set `'after_commit' => true` so jobs dispatched inside a DB
+- [x] **3.5d** `config/queue.php:44` — set `'after_commit' => true` so jobs dispatched inside a DB
       transaction aren't picked up before the commit (avoids "model not found" races across instances).
 
 ---
@@ -320,7 +320,7 @@ images:
 ```
 > Replace `g4k-reverb-XXXXXX-as.a.run.app` with the real Reverb service URL from §6.2.
 
-- [ ] **4.1a** Create `cloudbuild.yaml`. In Cloud Build → Triggers, point the GitHub trigger at it (delete
+- [x] **4.1a** Create `cloudbuild.yaml`. In Cloud Build → Triggers, point the GitHub trigger at it (delete
       the old "Cloud Run source deploy" auto-trigger to avoid double builds).
 
 ### 4.2 One-time GCP setup (run once, locally, `gcloud` authed)
@@ -369,7 +369,7 @@ gcloud iam service-accounts add-iam-policy-binding ${RUN_SA} \
 | `APP_MAINTENANCE_DRIVER=cache` + `APP_MAINTENANCE_STORE=database` | already in §4.1 | `php artisan down` writes to the **shared** cache → affects **all** instances |
 | `OCTANE_HTTPS=true` | already in §4.1 | Cloud Run terminates TLS; Octane must emit `https://` URLs / secure cookies |
 
-- [ ] **4.3** Confirm all three are set on the service (they are in the YAML above). TrustProxies uses the
+- [x] **4.3** Confirm all three are set on the service (they are in the YAML above). TrustProxies uses the
       framework default (trusts `*` + forwarded headers) — accidentally Cloud-Run-correct, so no code
       change needed beyond `OCTANE_HTTPS=true`.
 
@@ -381,7 +381,7 @@ gcloud iam service-accounts add-iam-policy-binding ${RUN_SA} \
 | 20 | 8 | Higher throughput, ~1 GiB RAM. |
 | 80 (Cloud Run default) | 4 | ❌ 76 queue → timeouts. Never use with 4 workers. |
 
-- [ ] **4.4** Ship at 10/4. Revisit only if `gcloud run services describe g4k-api` shows latency under load.
+- [x] **4.4** Ship at 10/4. Revisit only if `gcloud run services describe g4k-api` shows latency under load.
 
 ---
 
