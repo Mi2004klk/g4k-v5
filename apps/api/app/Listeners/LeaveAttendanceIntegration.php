@@ -10,8 +10,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
-class LeaveAttendanceIntegration
+class LeaveAttendanceIntegration implements ShouldQueue
 {
+    use InteractsWithQueue;
 
     /**
      * Handle the event.
