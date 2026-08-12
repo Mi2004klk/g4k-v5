@@ -7,7 +7,6 @@ self.addEventListener('install', (event) => {
       return self.skipWaiting();
     })
   );
-  );
 });
 
 // On activate, purge ALL old caches and claim clients

@@ -23,7 +23,6 @@ export const metadata: Metadata = {
     default: "Games4Kings Workplace OS",
   },
   description: "Gen2k Conglomerate Workplace Management System",
-  manifest: "/manifest.json",
   icons: {
     icon: "/icon.png",
     apple: "/apple-icon.png",
@@ -46,6 +45,7 @@ export default function RootLayout({
       className={`${inter.variable} ${sora.variable} h-full antialiased min-h-full flex flex-col`}
     >
       <head>
+        <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
