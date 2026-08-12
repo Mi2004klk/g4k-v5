@@ -153,9 +153,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     }, 150);
   };
 
-  const { containerRef, mounted, width } = useContainerWidth();
+  const { containerRef, mounted: isContainerMounted, width } = useContainerWidth();
 
-  if (!mounted) {
+  if (!isContainerMounted) {
     return (
       <div ref={containerRef as any} className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
         <Skeleton className="h-48 w-full" />
