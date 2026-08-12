@@ -98,7 +98,7 @@ export function QuickNotes() {
                     Retry
                   </Button>
                 </div>
-              ) : notes.length === 0 ? (
+              ) : !notes || notes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-4 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
                   <p className="text-xs font-medium text-neutral-400">No notes yet</p>
                 </div>

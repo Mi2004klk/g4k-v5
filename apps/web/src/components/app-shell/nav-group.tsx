@@ -126,7 +126,7 @@ export const NavItem = memo(function NavItem({
   if (currentlyCollapsed) {
     return (
       <Tooltip delayDuration={150}>
-        <TooltipTrigger asChild>{content}</TooltipTrigger>
+        <TooltipTrigger className="block w-full">{content}</TooltipTrigger>
         <TooltipContent side="right" className="text-xs flex items-center gap-1.5">
           <div className={cn("w-1.5 h-1.5 rounded-full", accent.bg)} />
           {item.name}
