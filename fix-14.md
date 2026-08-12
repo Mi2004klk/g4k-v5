@@ -680,9 +680,9 @@ is accepted via that header, `AuthController.php:182-184`).
 
 ## §11 — CI alignment (`.github/workflows/ci.yml`)
 
-- [ ] **11.1** Unify versions: Node `24` (root + web + CI), pnpm `9.15.4` (matches `pnpm-lock.yaml`, not
+- [x] **11.1** Unify versions: Node `24` (root + web + CI), pnpm `9.15.4` (matches `pnpm-lock.yaml`, not
       CI's `11`). In `ci.yml` set `setup-node node-version: 24` and `pnpm/action-setup@v3 version: 9.15.4`.
-- [ ] **11.2** `api-ci` runs `php artisan test` on sqlite, but migrations contain Postgres raw SQL
+- [x] **11.2** `api-ci` runs `php artisan test` on sqlite, but migrations contain Postgres raw SQL
       (`CREATE INDEX`, `ADD CONSTRAINT … CHECK`, partial unique indexes) → tests can fail. Add a Postgres
       service container:
   ```yaml
@@ -696,8 +696,8 @@ is accepted via that header, `AuthController.php:182-184`).
         --health-timeout 5s --health-retries 5
   ```
   and set `DB_CONNECTION=pgsql DB_HOST=localhost DB_PORT=5432 DB_DATABASE=g4k_test DB_USERNAME=postgres DB_PASSWORD=postgres`.
-- [ ] **11.3** Add `composer audit` (api-ci) and `pnpm audit --prod` (web-ci) steps.
-- [ ] **11.4** Keep CI test-only. Deploys happen via Cloud Build (§4) + Vercel Git integration — do **not**
+- [x] **11.3** Add `composer audit` (api-ci) and `pnpm audit --prod` (web-ci) steps.
+- [x] **11.4** Keep CI test-only. Deploys happen via Cloud Build (§4) + Vercel Git integration — do **not**
       add deploy steps to GitHub Actions.
 
 ---

@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - name: Lint OpenAPI Spec
         run: npx @redocly/cli lint apps/api/openapi/openapi.yaml
 
@@ -23,10 +23,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
         with:
-          version: 11
+          version: 9.15.4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: "pnpm"
       - run: pnpm install
       - name: Lint & Typecheck
@@ -37,9 +37,31 @@ jobs:
         run: pnpm --filter web run test:bundle
       - name: Run Lighthouse & Axe-core CI
         run: pnpm --filter web run test:lhci
+      - name: Audit Dependencies
+        run: pnpm audit --prod
 
   api-ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: g4k_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_DATABASE: g4k_test
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -49,7 +71,9 @@ jobs:
       - name: Install dependencies
         working-directory: ./apps/api
         run: composer install --prefer-dist --no-progress
+      - name: Audit Dependencies
+        working-directory: ./apps/api
+        run: composer audit
       - name: Run Tests
         working-directory: ./apps/api
         run: php artisan test
-
