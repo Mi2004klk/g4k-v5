@@ -24,7 +24,8 @@ return [
     ],
 
     'allowed_origins_patterns' => [
-        '#^http://localhost:\d+$#'
+        '#^http://localhost:\d+$#',
+        '#^https://.*\.vercel\.app$#'
     ],
 
     'allowed_headers' => ['*', 'X-Refresh-Token', 'Authorization', 'Content-Type', 'Accept', 'X-Socket-Id'],
