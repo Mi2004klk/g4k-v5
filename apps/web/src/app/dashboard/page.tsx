@@ -28,7 +28,8 @@ import {
   ClipboardList,
   UserPlus,
   Send,
-  CalendarCheck
+  CalendarCheck,
+  User
 } from "lucide-react";
 import Link from "next/link";
 import { RecentActivityWidget } from "@/components/widgets/recent-activity-widget";
