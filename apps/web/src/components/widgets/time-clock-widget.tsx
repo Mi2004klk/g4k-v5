@@ -143,16 +143,13 @@ export function TimeClockWidget({ className }: { className?: string }) {
             Time Clock
           </span>
           {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-        </div>
           {isError && (
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
-                <AlertCircle className="w-3 h-3" /> Offline Mode
-              </span>
-              <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[10px] font-bold text-neutral-500 hover:text-neutral-700">
+            <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
+              <AlertCircle className="w-3 h-3" /> Offline Mode
+              <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[10px] font-bold text-rose-600 hover:text-rose-700 ml-1">
                 Retry
               </Button>
-            </div>
+            </span>
           )}
         </div>
         <StatusBadge
