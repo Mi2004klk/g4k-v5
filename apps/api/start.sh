@@ -14,5 +14,10 @@ if [ "$BROADCAST_CONNECTION" = "reverb" ] && [ -n "$REVERB_APP_KEY" ]; then
   ( php artisan reverb:start --host=0.0.0.0 --port=8081 ) &
 fi
 
+# Ensure FrankenPHP binary is available in base_path so Octane doesn't prompt to download it
+if [ ! -f "frankenphp" ] && [ -f "/usr/local/bin/frankenphp" ]; then
+  ln -s /usr/local/bin/frankenphp frankenphp
+fi
+
 # Start FrankenPHP via Octane (handles concurrent requests)
 exec php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=${PORT:-8080} --workers=4 --max-requests=500
