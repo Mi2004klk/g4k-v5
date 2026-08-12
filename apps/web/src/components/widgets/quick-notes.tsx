@@ -56,10 +56,8 @@ export function QuickNotes() {
             Quick Scratchpad
             {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </CardTitle>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">
-              {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-            </Button>
+          <CollapsibleTrigger className="h-7 w-7 p-0 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+            {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </CollapsibleTrigger>
         </CardHeader>
         <CollapsibleContent>

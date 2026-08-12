@@ -22,7 +22,7 @@ cmds = ["cd apps/api && composer install --no-dev --optimize-autoloader --no-int
 [phases.build]
 cmds = [
   "cd apps/api && php artisan storage:link",
-  "cd apps/api && php artisan octane:install --server=frankenphp",
+  "cd apps/api && php artisan octane:install --server=frankenphp --force --no-interaction",
   "cd apps/api && php artisan config:cache",
   "cd apps/api && php artisan route:cache",
   "cd apps/api && php artisan view:cache"

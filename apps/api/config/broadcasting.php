@@ -15,7 +15,9 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'null'),
+    'default' => env('BROADCAST_CONNECTION', 'null') === 'reverb' && empty(env('REVERB_APP_KEY')) 
+                 ? 'log' 
+                 : env('BROADCAST_CONNECTION', 'null'),
 
     /*
     |--------------------------------------------------------------------------
