@@ -69,7 +69,7 @@ export default function DashboardPage() {
         {
           id: "total-employees",
           component: (
-            <MetricWidget title="Total Employees" metricKey="total_employees" icon={Users} color="violet" subtitle="Active directory" />
+            <MetricWidget title="Total Employees" metricKey="total_employees" icon={Users} color="indigo" subtitle="Active directory" />
           ),
           defaultLayout: { x: 0, y: 3, w: 3, h: 2 },
         },
@@ -81,14 +81,14 @@ export default function DashboardPage() {
         {
           id: "active-projects",
           component: (
-            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="blue" subtitle="Ongoing initiatives" />
+            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="indigo" subtitle="Ongoing initiatives" />
           ),
           defaultLayout: { x: 6, y: 3, w: 3, h: 2 },
         },
         {
           id: "pending-tasks",
           component: (
-            <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="amber" subtitle="Global workload" />
+            <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="blue" subtitle="Global workload" />
           ),
           defaultLayout: { x: 9, y: 3, w: 3, h: 2 },
         },
@@ -130,14 +130,14 @@ export default function DashboardPage() {
         {
           id: "active-projects",
           component: (
-            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Ongoing initiatives" />
+            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="indigo" subtitle="Ongoing initiatives" />
           ),
           defaultLayout: { x: 8, y: 3, w: 4, h: 2 },
         },
         {
           id: "pending-submissions",
           component: (
-            <MetricWidget title="Pending Submissions" metricKey="pending_submissions" icon={ClipboardList} color="rose" subtitle="Task/project submissions" />
+            <MetricWidget title="Pending Submissions" metricKey="pending_submissions" icon={ClipboardList} color="amber" subtitle="Task/project submissions" />
           ),
           defaultLayout: { x: 8, y: 5, w: 4, h: 2 },
         },
@@ -174,14 +174,14 @@ export default function DashboardPage() {
       {
         id: "my-projects",
         component: (
-          <MetricWidget title="My Projects" metricKey="active_projects" icon={FolderKanban} color="violet" subtitle="Active assignments" />
+          <MetricWidget title="My Projects" metricKey="active_projects" icon={FolderKanban} color="indigo" subtitle="Active assignments" />
         ),
         defaultLayout: { x: 4, y: 3, w: 4, h: 2 },
       },
       {
         id: "my-tasks",
         component: (
-          <MetricWidget title="My Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="emerald" subtitle="Assigned work items" />
+          <MetricWidget title="My Pending Tasks" metricKey="pending_tasks" icon={CheckCircle2} color="blue" subtitle="Assigned work items" />
         ),
         defaultLayout: { x: 8, y: 3, w: 4, h: 2 },
       },
@@ -226,31 +226,31 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-center gap-3">
         {activeRole === "super_admin" && (
           <>
-            <Link href="/dashboard/org/users" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-              <UserPlus className="w-4 h-4 text-violet-500" /> Manage Users
+            <Link href="/dashboard/org/users" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+              <UserPlus className="w-4 h-4 text-indigo-500" /> Manage Users
             </Link>
-            <Link href="/dashboard/org/departments" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-              <Building2 className="w-4 h-4 text-blue-500" /> Manage Departments
+            <Link href="/dashboard/org/departments" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+              <Building2 className="w-4 h-4 text-indigo-500" /> Manage Departments
             </Link>
           </>
         )}
         {activeRole === "hr" && (
           <>
-            <Link href="/dashboard/org/attendance" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+            <Link href="/dashboard/org/attendance" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
               <Clock className="w-4 h-4 text-emerald-500" /> View Team Attendance
             </Link>
-            <Link href="/dashboard/org/leave?status=pending" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+            <Link href="/dashboard/org/leave?status=pending" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
               <CalendarCheck className="w-4 h-4 text-amber-500" /> Approve Leave
             </Link>
           </>
         )}
         {activeRole === "employee" && (
-          <Link href="/dashboard/leave" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-            <Send className="w-4 h-4 text-emerald-500" /> Request Leave
+          <Link href="/dashboard/leave" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+            <Send className="w-4 h-4 text-amber-500" /> Request Leave
           </Link>
         )}
-        <Link href="/dashboard/directory" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
-          <Users className="w-4 h-4 text-neutral-500" /> Open Directory
+        <Link href="/dashboard/directory" prefetch={false} className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm">
+          <Users className="w-4 h-4 text-pink-500" /> Open Directory
         </Link>
       </div>
 

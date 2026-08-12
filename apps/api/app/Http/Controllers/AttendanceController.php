@@ -163,7 +163,7 @@ class AttendanceController extends Controller
             ->first();
 
         $events = AttendanceEvent::where('user_id', $user->id)
-            ->whereDate('timestamp', $date)
+            ->whereBetween('timestamp', [$date . ' 00:00:00', $date . ' 23:59:59'])
             ->orderBy('timestamp', 'asc')
             ->get();
 

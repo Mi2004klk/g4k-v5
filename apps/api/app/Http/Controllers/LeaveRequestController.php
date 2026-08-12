@@ -74,18 +74,21 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);
         }
 
-        $leave = LeaveRequest::create([
-            'user_id' => $userId,
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'reason' => $validated['reason'],
-            'type' => $validated['type'],
-            'status' => 'pending',
-        ]);
+        $leave = DB::transaction(function() use ($userId, $validated) {
+            $leave = LeaveRequest::create([
+                'user_id' => $userId,
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+                'reason' => $validated['reason'],
+                'type' => $validated['type'],
+                'status' => 'pending',
+            ]);
 
-        $approval = ApprovalService::submit($leave, $userId, $validated);
+            $approval = ApprovalService::submit($leave, $userId, $validated);
+            $leave->update(['approval_id' => $approval->id]);
 
-        $leave->update(['approval_id' => $approval->id]);
+            return $leave;
+        });
 
         \App\Services\AuditLogger::log($request, 'leave.request', 'LeaveRequest', $leave->id, null, $validated);
 

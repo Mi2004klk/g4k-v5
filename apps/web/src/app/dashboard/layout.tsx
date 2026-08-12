@@ -139,6 +139,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const sidebarState = useUIStore((s) => s.sidebarState);
+  const isInitialized = useUIStore((s) => s.isInitialized);
   const cycleSidebarState = useUIStore((s) => s.cycleSidebarState);
   const setSidebarStateSilent = useUIStore((s) => s.setSidebarStateSilent);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -166,26 +167,17 @@ export default function DashboardLayout({
   });
 
   useEffect(() => {
-    // Prefetch all widget data in parallel on cold load
+    // Prefetch consolidated dashboard init data on cold load
     if (!authUser) return;
-    const today = format(new Date(), "yyyy-MM-dd");
-    const activeRole = authUser.active_role || "employee";
-    // We use a single endpoint to fetch most dashboard initial data.
-    // The widget components themselves will use this single 'dashboardInit' query and select their slices.
     queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init") });
-
-    if (activeRole === "super_admin") {
-      queryClient.prefetchQuery({ queryKey: queryKeys.adminAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/admin/overview?date=${today}`) });
-    } else if (activeRole === "hr") {
-      queryClient.prefetchQuery({ queryKey: queryKeys.hrAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/hr/today?date=${today}`) });
-    }
   }, [authUser, queryClient]);
 
   useEffect(() => {
-    if (preferencesData?.preferences?.sidebar_state) {
+    if (preferencesData?.preferences?.sidebar_state && !isInitialized) {
       setSidebarStateSilent(preferencesData.preferences.sidebar_state);
+      useUIStore.setState({ isInitialized: true });
     }
-  }, [preferencesData, setSidebarStateSilent]);
+  }, [preferencesData, setSidebarStateSilent, isInitialized]);
 
   const handleTogglePin = useCallback(async (item: any, existingPin: any) => {
     try {
@@ -473,13 +465,13 @@ export default function DashboardLayout({
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard/profile" className="cursor-pointer gap-2">
+                      <Link href="/dashboard/profile" prefetch={false} className="cursor-pointer gap-2">
                         <UserCircle className="w-4 h-4 text-muted-foreground" />
                         My Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard/settings" className="cursor-pointer gap-2">
+                      <Link href="/dashboard/settings" prefetch={false} className="cursor-pointer gap-2">
                         <Settings className="w-4 h-4 text-muted-foreground" />
                         Settings
                       </Link>
@@ -534,6 +526,7 @@ export default function DashboardLayout({
             <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-md border-t border-border flex items-center justify-around z-40 px-2 pb-safe">
               <Link
                 href="/dashboard"
+                prefetch={false}
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
                   pathname === "/dashboard" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -545,6 +538,7 @@ export default function DashboardLayout({
 
               <Link
                 href="/dashboard/projects"
+                prefetch={false}
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
                   pathname.startsWith("/dashboard/projects") ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -556,14 +550,16 @@ export default function DashboardLayout({
 
               <Link
                 href="/dashboard/attendance"
+                prefetch={false}
                 title="My Attendance"
-                className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-emerald-600 text-white shadow-lg -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               >
                 <Clock className="w-6 h-6 shrink-0" />
               </Link>
 
               <Link
                 href="/dashboard/chat"
+                prefetch={false}
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
                   pathname.startsWith("/dashboard/chat") ? "text-pink-600 dark:text-pink-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -575,6 +571,7 @@ export default function DashboardLayout({
 
               <Link
                 href="/dashboard/profile"
+                prefetch={false}
                 className={cn(
                   "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
                   pathname === "/dashboard/profile" ? "text-cyan-600 dark:text-cyan-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"

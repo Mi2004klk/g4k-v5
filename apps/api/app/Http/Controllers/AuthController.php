@@ -473,4 +473,20 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Logged out.'])->withCookie($forgetCookie);
     }
+
+    public function profile(Request $request)
+    {
+        $user = $request->user()->load(['department', 'designation', 'company', 'roleAssignments']);
+        $activeRole = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
+        $user->active_role = str_replace('role:', '', $activeRole);
+        return response()->json($user);
+    }
+
+    public function capabilities(Request $request)
+    {
+        $activeRole = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
+        $activeRole = str_replace('role:', '', $activeRole);
+        $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($activeRole);
+        return response()->json(['capabilities' => $capabilities]);
+    }
 }

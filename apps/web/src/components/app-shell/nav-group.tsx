@@ -63,6 +63,7 @@ export const NavItem = memo(function NavItem({
     <div className="relative group/nav flex items-center">
       <Link
         href={isDisabled ? "#" : item.href}
+        prefetch={false}
         onMouseEnter={handleMouseEnter}
         onClick={(e) => {
           if (isDisabled) e.preventDefault();
@@ -76,12 +77,12 @@ export const NavItem = memo(function NavItem({
           isDisabled
             ? "opacity-50 cursor-not-allowed text-neutral-400 dark:text-neutral-600"
             : isActive
-            ? "bg-violet-500/10 dark:bg-violet-500/20 text-primary dark:text-white font-semibold shadow-sm"
+            ? cn(accent.bg, accent.bgDark, "text-primary dark:text-white font-semibold shadow-sm")
             : "text-neutral-600 dark:text-neutral-400 hover:bg-surface-2 hover:text-primary font-medium"
         )}
       >
         {isActive && !isDisabled && (
-          <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-violet-500 to-indigo-600 rounded-r-md" />
+          <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-r-md", accent.border)} />
         )}
         <item.icon
           className={cn(

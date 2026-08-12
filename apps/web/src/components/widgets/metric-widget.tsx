@@ -13,7 +13,7 @@ interface MetricWidgetProps {
   title: string;
   metricKey: string;
   icon: LucideIcon;
-  color?: "violet" | "emerald" | "amber" | "rose" | "blue";
+  color?: "violet" | "emerald" | "amber" | "rose" | "blue" | "indigo" | "pink" | "cyan" | "teal";
   endpoint?: string;
   subtitle?: string;
   hasModule?: boolean;
@@ -55,6 +55,10 @@ export function MetricWidget({
     amber: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300",
     rose: "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300",
     blue: "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300",
+    indigo: "bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300",
+    pink: "bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300",
+    cyan: "bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300",
+    teal: "bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300",
   };
 
   if (isPending) {

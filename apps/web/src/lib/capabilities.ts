@@ -18,6 +18,7 @@ export function useCapabilities() {
     },
     enabled: !!token,
     staleTime: 1000 * 60 * 30, // 30 minutes
+    placeholderData: ["*"], // Optimistic: show all items until real capabilities load
   });
 }
 

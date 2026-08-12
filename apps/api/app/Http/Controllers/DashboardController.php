@@ -26,16 +26,24 @@ class DashboardController extends Controller
             }
         }
 
-        // Call the internal helper for metrics, this also needs us to extract metrics logic
-        // We will just fetch the various endpoints internally
+        $safeCall = function($controller, $method, $fallback = null) use ($request) {
+            try {
+                $res = app($controller)->$method($request);
+                return method_exists($res, 'getData') ? $res->getData(true) : $res;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("init() failed for {$controller}::{$method}: " . $e->getMessage());
+                return $fallback;
+            }
+        };
+
         return response()->json([
-            'metrics' => app(DashboardController::class)->metrics($request)->getData(true)['metrics'] ?? null,
-            'attendance_today' => app(AttendanceController::class)->meToday($request)->getData(true),
-            'preferences' => app(UserPreferenceController::class)->show($request)->getData(true),
-            'pending_approvals' => app(LeaveRequestController::class)->pending($request)->getData(true),
-            'pins' => app(PinController::class)->index($request)->getData(true),
-            'announcements' => app(\App\Http\Controllers\AnnouncementController::class)->index($request)->getData(true),
-            'quick_notes' => app(\App\Http\Controllers\QuickNoteController::class)->index($request)->getData(true),
+            'metrics' => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null,
+            'attendance_today' => $safeCall(AttendanceController::class, 'meToday'),
+            'preferences' => $safeCall(UserPreferenceController::class, 'show'),
+            'pending_approvals' => $safeCall(LeaveRequestController::class, 'pending'),
+            'pins' => $safeCall(PinController::class, 'index', []),
+            'announcements' => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', []),
+            'quick_notes' => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', []),
             'role' => $activeRole
         ]);
     }

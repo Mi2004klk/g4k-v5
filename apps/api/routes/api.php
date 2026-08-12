@@ -35,19 +35,8 @@ Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])-
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
-    Route::get('/auth/profile', function (Request $request) {
-        $user = $request->user()->load(['department', 'designation', 'company', 'roleAssignments']);
-        $user->active_role = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
-        $user->active_role = str_replace('role:', '', $user->active_role);
-        return $user;
-    });
-
-    Route::get('/me/capabilities', function (Request $request) {
-        $activeRole = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
-        $activeRole = str_replace('role:', '', $activeRole);
-        $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($activeRole);
-        return response()->json(['capabilities' => $capabilities]);
-    });
+    Route::get('/auth/profile', [AuthController::class, 'profile']);
+    Route::get('/me/capabilities', [AuthController::class, 'capabilities']);
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);

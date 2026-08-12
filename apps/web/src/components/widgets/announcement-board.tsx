@@ -129,7 +129,7 @@ export function AnnouncementBoard() {
                 id="title"
                 value={createData.title}
                 onChange={(e) => setCreateData({ ...createData, title: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-violet-400 dark:focus:ring-offset-neutral-900"
+                className="flex h-10 w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
                 placeholder="Announcement title"
               />
             </div>
@@ -139,7 +139,7 @@ export function AnnouncementBoard() {
                 id="body"
                 value={createData.body}
                 onChange={(e) => setCreateData({ ...createData, body: e.target.value })}
-                className="flex min-h-[80px] w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-violet-400 dark:focus:ring-offset-neutral-900"
+                className="flex min-h-[80px] w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
                 placeholder="Announcement body"
               />
             </div>
@@ -150,7 +150,7 @@ export function AnnouncementBoard() {
                   id="scope"
                   checked={createData.scope === "company"}
                   onChange={(e) => setCreateData({ ...createData, scope: e.target.checked ? "company" : "team" })}
-                  className="rounded border-neutral-300 text-violet-600 focus:ring-violet-500"
+                  className="rounded border-neutral-300 text-orange-600 focus:ring-orange-500"
                 />
                 <label htmlFor="scope" className="text-sm font-medium">Company-wide (vs Team-only)</label>
               </div>
@@ -161,7 +161,7 @@ export function AnnouncementBoard() {
                 id="pinned"
                 checked={createData.pinned}
                 onChange={(e) => setCreateData({ ...createData, pinned: e.target.checked })}
-                className="rounded border-neutral-300 text-violet-600 focus:ring-violet-500"
+                className="rounded border-neutral-300 text-orange-600 focus:ring-orange-500"
               />
               <label htmlFor="pinned" className="text-sm font-medium">Pin to top</label>
             </div>

@@ -192,7 +192,7 @@ export function NotificationsBell() {
             onClick={() => setOpen(false)} 
             aria-hidden="true" 
           />
-          <div className="relative w-full max-w-md bg-surface border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden z-10 animate-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-md bg-surface border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden z-10 animate-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-border bg-surface-2/50">
               <div className="flex items-center gap-2">
@@ -241,7 +241,7 @@ export function NotificationsBell() {
                 onClick={() => setFilter("recent")} 
                 className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
                   filter === "recent" 
-                    ? "bg-violet-500/10 text-violet-600 dark:text-violet-400" 
+                    ? "bg-orange-500/10 text-orange-600 dark:text-orange-400" 
                     : "text-neutral-500 hover:bg-surface-2"
                 }`}
               >
@@ -251,7 +251,7 @@ export function NotificationsBell() {
                 onClick={() => setFilter("unread")} 
                 className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
                   filter === "unread" 
-                    ? "bg-violet-500/10 text-violet-600 dark:text-violet-400" 
+                    ? "bg-orange-500/10 text-orange-600 dark:text-orange-400" 
                     : "text-neutral-500 hover:bg-surface-2"
                 }`}
               >
@@ -262,7 +262,17 @@ export function NotificationsBell() {
             {/* Scrollable Notifications List */}
             <div className="max-h-[360px] overflow-y-auto divide-y divide-border thin-scrollbar">
               {isLoading ? (
-                <div className="p-8 text-center text-xs text-neutral-500">Loading notifications...</div>
+                <div className="p-4 space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-3 items-center">
+                      <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 w-3/4 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
+                        <div className="h-2.5 w-1/2 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : visibleNotifications.length === 0 ? (
                 <div className="p-10 text-center text-xs text-neutral-500">
                   <Bell className="w-8 h-8 mx-auto mb-2 text-neutral-300 dark:text-neutral-700" />
@@ -273,14 +283,14 @@ export function NotificationsBell() {
                   <div
                     key={n.id}
                     className={`flex gap-3 p-4 transition-colors ${
-                      !n.read_at ? "bg-violet-500/5 dark:bg-violet-500/10" : "hover:bg-surface-2/60"
+                      !n.read_at ? "bg-orange-500/5 dark:bg-orange-500/10" : "hover:bg-surface-2/60"
                     }`}
                   >
                     <div className="mt-0.5 shrink-0">{getIcon(n.type)}</div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-primary truncate flex items-center gap-1.5">
                         {n.link ? (
-                          <Link href={n.link} className="hover:underline hover:text-violet-600 dark:hover:text-violet-400" onClick={() => setOpen(false)}>
+                          <Link href={n.link} prefetch={false} className="hover:underline hover:text-orange-600 dark:hover:text-orange-400" onClick={() => setOpen(false)}>
                             {n.title}
                           </Link>
                         ) : (
@@ -319,7 +329,7 @@ export function NotificationsBell() {
                 asChild 
                 className="w-full h-8 text-xs text-neutral-600 dark:text-neutral-400 hover:text-primary font-medium"
               >
-                <Link href="/dashboard/notifications" onClick={() => setOpen(false)}>
+                <Link href="/dashboard/notifications" prefetch={false} onClick={() => setOpen(false)}>
                   View all in Notification Center
                 </Link>
               </Button>
