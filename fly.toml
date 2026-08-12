@@ -2,7 +2,7 @@ app = "g4k"
 primary_region = "sin"
 
 [build]
-  dockerfile = "apps/api/Dockerfile"
+  dockerfile = "Dockerfile"
 
 [env]
   APP_ENV = "production"
