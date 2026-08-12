@@ -73,11 +73,13 @@ class OfflineEngine {
       // Update queue count initially and run smart sync poll only if queue has pending items
       this.dbPromise.then(() => {
         this.updateQueueCount();
-        setInterval(() => {
-          if (typeof navigator !== 'undefined' && navigator.onLine && useOfflineStore.getState().queueCount > 0) {
-            this.syncAll();
-          }
-        }, 5000);
+        if (typeof document !== 'undefined') {
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && navigator.onLine && useOfflineStore.getState().queueCount > 0) {
+              this.syncAll();
+            }
+          });
+        }
       });
     }
   }

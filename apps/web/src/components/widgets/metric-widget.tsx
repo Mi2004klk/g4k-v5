@@ -42,33 +42,10 @@ export function MetricWidget({
   const rawValue = data?.metrics?.[metricKey] ?? 0;
   const isModuleAvailable = data?.metrics?.[`has_${metricKey.split('_')[1] || metricKey}_module`] ?? hasModule;
 
-  // Animated counter effect
+  // Update value instantly
   useEffect(() => {
     if (isPending || typeof rawValue !== "number") return;
-    
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      
-      let current = 0;
-      const duration = 600;
-      const stepTime = 20;
-      const totalSteps = duration / stepTime;
-      const increment = rawValue / totalSteps;
-
-      const timer = setInterval(() => {
-        current += increment;
-        if ((increment >= 0 && current >= rawValue) || (increment < 0 && current <= rawValue)) {
-          setDisplayValue(rawValue);
-          clearInterval(timer);
-        } else {
-          setDisplayValue(Math.floor(current));
-        }
-      }, stepTime);
-
-      return () => clearInterval(timer);
-    } else {
-      setDisplayValue(rawValue); // instant update, no animation
-    }
+    setDisplayValue(rawValue);
   }, [rawValue, isPending]);
 
   const colorStyles = {

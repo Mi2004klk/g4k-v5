@@ -7,6 +7,7 @@ const EMPTY_CAPABILITIES: any[] = [];
 const EMPTY_PINS: any[] = [];
 import Link from "next/link";
 import Image from "next/image";
+import { format } from "date-fns";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -160,6 +161,25 @@ export default function DashboardLayout({
     queryFn: () => apiFetch("/auth/preferences"),
     staleTime: 5 * 60_000,
   });
+
+  useEffect(() => {
+    // Prefetch all widget data in parallel on cold load
+    if (!authUser) return;
+    const today = format(new Date(), "yyyy-MM-dd");
+    const activeRole = authUser.active_role || "employee";
+    
+    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardMetrics, queryFn: () => apiFetch("/dashboard/metrics") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.attendanceToday, queryFn: () => apiFetch("/attendance/me/today") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.pendingApprovals, queryFn: () => apiFetch("/approvals/pending") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.announcements, queryFn: () => apiFetch("/announcements") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.quickNotes, queryFn: () => apiFetch("/quick-notes") });
+
+    if (activeRole === "super_admin") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.adminAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/admin/overview?date=${today}`) });
+    } else if (activeRole === "hr") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.hrAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/hr/today?date=${today}`) });
+    }
+  }, [authUser, queryClient]);
 
   useEffect(() => {
     if (preferencesData?.preferences?.sidebar_state) {

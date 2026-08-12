@@ -742,13 +742,13 @@ notification bell polls every 30s and stays usable.
 9. [x] **2.6** — Drop redundant indexes
 
 ### Sprint 3 — Frontend speed (Phase 3)
-10. **3.1** — Fix NotificationsBell cache key mismatch (instant bell clicks)
-11. **3.2** — Remove duplicate attendance polling
-12. **3.3** — Fix MetricWidget animation (rAF or remove)
-13. **3.4** — Move prefetch to layout/hover
-14. **3.5** — Fix orphan `["users"]` query key
-15. **3.6** — Clean up offline engine interval
-16. **3.7** — Remove dead `sleep()` code
+10. [x] **3.1** — Fix NotificationsBell cache key mismatch (instant bell clicks)
+11. [x] **3.2** — Remove duplicate attendance polling
+12. [x] **3.3** — Fix MetricWidget animation (rAF or remove)
+13. [x] **3.4** — Move prefetch to layout/hover
+14. [x] **3.5** — Fix orphan `["users"]` query key
+15. [x] **3.6** — Clean up offline engine interval
+16. [x] **3.7** — Remove dead `sleep()` code
 
 ### Sprint 4 — Workflow reliability (Phase 4)
 17. **4.1** — Fix notification filter/search backend

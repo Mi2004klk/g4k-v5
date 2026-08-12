@@ -38,9 +38,9 @@ export default function TasksPage() {
   const [recurrencePattern, setRecurrencePattern] = useState("daily");
   const [recurrenceInterval, setRecurrenceInterval] = useState("1");
   
-  const { data: usersData } = useQuery({ queryKey: ["users"], queryFn: () => apiFetch<any>("/users") });
+  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<any>("/users") });
   const { data: projectsData } = useQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch<any>("/projects") });
-  const { data: qaFormsData } = useQuery({ queryKey: ["qa-forms"], queryFn: () => apiFetch("/qa-forms") });
+  const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
   
   const searchParams = useSearchParams();
   const isMe = searchParams.get("me") === "1";

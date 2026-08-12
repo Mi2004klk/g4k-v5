@@ -42,9 +42,9 @@ export function NotificationsBell() {
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
-      const previous = queryClient.getQueryData(["notifications"]);
+      const previous = queryClient.getQueryData(queryKeys.notifications(filter));
       
-      queryClient.setQueryData(["notifications"], (old: any) => {
+      queryClient.setQueryData(queryKeys.notifications(filter), (old: any) => {
         if (!old?.data) return old;
         return {
           ...old,
@@ -62,7 +62,7 @@ export function NotificationsBell() {
       });
     },
     onError: (err, id, context: any) => {
-      queryClient.setQueryData(["notifications"], context.previous);
+      queryClient.setQueryData(queryKeys.notifications(filter), context.previous);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
@@ -75,9 +75,9 @@ export function NotificationsBell() {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
-      const previous = queryClient.getQueryData(["notifications"]);
+      const previous = queryClient.getQueryData(queryKeys.notifications(filter));
 
-      queryClient.setQueryData(["notifications"], (old: any) => {
+      queryClient.setQueryData(queryKeys.notifications(filter), (old: any) => {
         if (!old?.data) return old;
         return {
           ...old,
@@ -91,7 +91,7 @@ export function NotificationsBell() {
       toast.success("All notifications marked as read");
     },
     onError: (err, variables, context: any) => {
-      queryClient.setQueryData(["notifications"], context.previous);
+      queryClient.setQueryData(queryKeys.notifications(filter), context.previous);
       toast.error("Failed to mark notifications as read");
     },
     onSettled: () => {

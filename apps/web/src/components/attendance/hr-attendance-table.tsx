@@ -19,7 +19,7 @@ import { HrCorrectionDialog } from "./hr-correction-dialog";
 
 export function HrAttendanceTable() {
   const queryClient = useQueryClient();
-  const { subscribe } = useReverb();
+  const { subscribe, isConnected } = useReverb();
   const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
@@ -89,7 +89,7 @@ export function HrAttendanceTable() {
       return { ...raw, data: items };
     },
     staleTime: STALE_TIME_ATTENDANCE,
-    refetchInterval: STALE_TIME_ATTENDANCE,
+    refetchInterval: isConnected ? false : 60_000,
   });
 
   const records = data?.data || [];

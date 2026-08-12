@@ -48,23 +48,6 @@ export default function DashboardPage() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Prefetch all widget data in parallel
-    const today = format(new Date(), "yyyy-MM-dd");
-    
-    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardMetrics, queryFn: () => apiFetch("/dashboard/metrics") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.attendanceToday, queryFn: () => apiFetch("/attendance/me/today") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.pendingApprovals, queryFn: () => apiFetch("/approvals/pending") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.announcements, queryFn: () => apiFetch("/announcements") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.quickNotes, queryFn: () => apiFetch("/quick-notes") });
-
-    if (activeRole === "super_admin") {
-      queryClient.prefetchQuery({ queryKey: queryKeys.adminAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/admin/overview?date=${today}`) });
-    } else if (activeRole === "hr") {
-      queryClient.prefetchQuery({ queryKey: queryKeys.hrAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/hr/today?date=${today}`) });
-    }
-  }, [activeRole, queryClient]);
-
-  useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("error") === "unauthorized") {
