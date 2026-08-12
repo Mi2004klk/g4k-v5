@@ -12,7 +12,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Lightweight unauthenticated health check for uptime monitoring / Railway probes.
+// Lightweight unauthenticated health check for Cloud Run / uptime probe.
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 });
