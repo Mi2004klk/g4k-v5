@@ -65,11 +65,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // DISABLED FOR NOW
-    // if (user.must_change_password && pathname !== "/change-password") {
-    //   router.push("/change-password");
-    //   return;
-    // }
     // Enforce onboarding sequence
     if (!user.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
       router.push("/onboarding");

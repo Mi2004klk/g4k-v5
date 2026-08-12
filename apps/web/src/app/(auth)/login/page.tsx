@@ -74,10 +74,6 @@ export default function LoginPage() {
       setAuth(result.token, result.user, result.active_role, result.refresh_token);
       toast.success("Login successful!");
 
-      // DISABLED FOR NOW
-      // if (result.must_change_password) {
-      //   router.push("/change-password");
-      // } else if (!result.onboarded) {
       if (!result.onboarded) {
         router.push("/onboarding");
       } else if (result.user?.roles?.length > 1) {

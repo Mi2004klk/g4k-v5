@@ -115,12 +115,6 @@ export async function apiFetch<T = any>(
         const errorData = await response.json().catch(() => ({}));
 
         if (response.status === 403) {
-          // DISABLED FOR NOW
-          // if (errorData.must_change_password) {
-          //   if (typeof window !== "undefined" && window.location.pathname !== "/change-password") {
-          //     window.location.href = "/change-password";
-          //   }
-          // } else if (errorData.needs_onboarding) {
           if (errorData.needs_onboarding) {
             if (typeof window !== "undefined" && window.location.pathname !== "/onboarding") {
               window.location.href = "/onboarding";

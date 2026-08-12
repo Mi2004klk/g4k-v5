@@ -200,10 +200,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'User not found'], 401);
         }
 
-        // AUTH-8: Explicitly run the force-password and onboarding checks inside refresh
-        if ($user->must_change_password) {
-            return response()->json(['message' => 'You must change your password before continuing.', 'must_change_password' => true], 403);
-        }
+        // AUTH-8: Explicitly run the onboarding checks inside refresh
         if (is_null($user->onboarded_at)) {
             return response()->json(['message' => 'You must complete onboarding before continuing.', 'onboarding_required' => true], 403);
         }
@@ -413,7 +410,6 @@ class AuthController extends Controller
         $request->validate([
             'phone' => 'nullable|string|max:20',
             'emergency_contact' => 'nullable|string|max:20',
-            'password' => ['nullable', 'string', 'confirmed', $this->getPasswordPolicyRule()],
         ]);
 
         $user = $request->user();
@@ -423,10 +419,6 @@ class AuthController extends Controller
         }
         if ($request->filled('emergency_contact')) {
             $user->emergency_contact = $request->emergency_contact;
-        }
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-            $user->must_change_password = false;
         }
 
         $user->onboarded_at = now();

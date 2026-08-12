@@ -9,7 +9,6 @@ import { useAuthStore } from "@/lib/auth-store";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
-import { PasswordInput } from "@g4k/ui/components";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -18,18 +17,9 @@ export default function OnboardingPage() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const [phone, setPhone] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleFinish() {
-    if (user?.must_change_password) {
-      if (!password || password !== passwordConfirmation) {
-        toast.error("Passwords do not match.");
-        return;
-      }
-    }
-
     setIsLoading(true);
     try {
       await apiFetch("/auth/onboarding/complete", {
@@ -37,8 +27,6 @@ export default function OnboardingPage() {
         body: JSON.stringify({
           phone: phone || undefined,
           emergency_contact: emergencyContact || undefined,
-          password: password || undefined,
-          password_confirmation: passwordConfirmation || undefined,
         }),
       });
 
@@ -137,19 +125,6 @@ export default function OnboardingPage() {
                 <Input placeholder="Name & Number" value={emergencyContact} onChange={(e) => setEmergencyContact(e.target.value)} />
               </div>
 
-              {user.must_change_password && (
-                <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg space-y-4 mt-2">
-                  <p className="text-xs text-amber-800 dark:text-amber-400 font-medium">Your account requires a password change before continuing.</p>
-                  <div>
-                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 block">New Password</label>
-                    <PasswordInput placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1 block">Confirm Password</label>
-                    <PasswordInput placeholder="••••••••" value={passwordConfirmation} onChange={(e) => setPasswordConfirmation(e.target.value)} />
-                  </div>
-                </div>
-              )}
             </div>
 
             <Button
