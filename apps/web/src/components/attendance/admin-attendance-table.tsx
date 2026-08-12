@@ -110,7 +110,7 @@ export function AdminAttendanceTable() {
         toast.info(`Exporting ${selectedIds.length} selected records...`);
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/attendance/export?${params.toString()}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/attendance/export?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`,
           'Accept': 'application/json'

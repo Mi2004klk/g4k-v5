@@ -67,6 +67,7 @@ if (fs.existsSync(chunksDir)) {
   // Note: strict check for 200KB might be hard depending on UI libraries, we'll flag it.
   if (baseFirstLoad > MAX_FIRST_LOAD_GZ_KB) {
      console.error(`❌ [BUDGET BREACH] Base First-Load JS is ${baseFirstLoad.toFixed(2)} KB gz (Limit: ${MAX_FIRST_LOAD_GZ_KB} KB)`);
+     hasError = true;
   }
 }
 

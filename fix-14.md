@@ -570,7 +570,7 @@ third-party site; Safari/Chrome block it). The silent session-restore in `auth-g
 The **load-bearing** path is the `X-Refresh-Token` header (the refresh token is also in localStorage and
 is accepted via that header, `AuthController.php:182-184`).
 
-- [ ] **9.1** Fix the silent restore to send the header. In `apps/web/src/components/auth-guard.tsx`
+- [x] **9.1** Fix the silent restore to send the header. In `apps/web/src/components/auth-guard.tsx`
       (the mount-time restore), make the `/auth/refresh` call send the stored refresh token:
   ```ts
   const rt = useAuthStore.getState().refreshToken;
@@ -581,14 +581,14 @@ is accepted via that header, `AuthController.php:182-184`).
   ```
   (`apiFetch` already adds `credentials: "include"`; with the header present the cross-origin cookie is
   irrelevant.)
-- [ ] **9.2** Keep the refresh-token header in the CORS allow-list + preflight: `X-Refresh-Token` must be
+- [x] **9.2** Keep the refresh-token header in the CORS allow-list + preflight: `X-Refresh-Token` must be
   in `Access-Control-Allow-Headers` (it is — `allowed_headers = ['*']`), and every such request triggers
   an `OPTIONS` preflight which FrankenPHP must answer (it does via Laravel's CORS middleware).
-- [ ] **9.3** Document the cookie as a **fallback only**. Optionally, to make the cookie usable when the
+- [x] **9.3** Document the cookie as a **fallback only**. Optionally, to make the cookie usable when the
   frontend and API share a registrable domain later, set `SameSite=None; Secure` on
   `g4k_refresh_token` (`AuthController.php:38-41`) and configure `SANCTUM_STATEFUL_DOMAINS` +
   `SESSION_DOMAIN`. Not required for `vercel.app` → `a.run.app` (different eTLD+1).
-- [ ] **9.4** Stop the 401 storm from the cookie/max-age skew: `auth-store.ts:47` sets `g4k_token` cookie
+- [x] **9.4** Stop the 401 storm from the cookie/max-age skew: `auth-store.ts:47` sets `g4k_token` cookie
   `max-age=86400` (24 h) but the access token TTL is ~15 min. Either drop the `g4k_token` cookie to the
   same TTL as the access token, or accept that the middleware gate is advisory and the client refreshes
   on first 401 (current behavior).
@@ -610,27 +610,27 @@ is accepted via that header, `AuthController.php:182-184`).
 | `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_AUTH_TOKEN` | (Sentry) | build-time; AUTH_TOKEN required for source-map upload |
 | `PUPPETEER_SKIP_DOWNLOAD` | `true` | prevents Chromium download on Vercel (see 10.4) |
 
-- [ ] **10.1a** Set all of the above. **`NEXT_PUBLIC_REVERB_HOST` + `_PORT=443` + `_SCHEME=https` must be
+- [x] **10.1a** Set all of the above. **`NEXT_PUBLIC_REVERB_HOST` + `_PORT=443` + `_SCHEME=https` must be
       set together** — partial config silently disables realtime.
 
 ### 10.2 Remove stale `fly.dev` + fix Node version
-- [ ] **10.2a** Already done in §2.5 (`next.config.ts` rewrite).
-- [ ] **10.2b** `apps/web/package.json:84-86` — change `"engines": { "node": "20.x" }` → `"24.x"` to match
+- [x] **10.2a** Already done in §2.5 (`next.config.ts` rewrite).
+- [x] **10.2b** `apps/web/package.json:84-86` — change `"engines": { "node": "20.x" }` → `"24.x"` to match
       the Vercel project (`nodeVersion "24.x"`) and root `package.json` (`24.x`). Also bump `@types/node`
       to `^24`.
 
 ### 10.3 Bundle / imports
-- [ ] **10.3a** `next.config.ts:19-21` — extend `optimizePackageImports` to the heavy deps:
+- [x] **10.3a** `next.config.ts:19-21` — extend `optimizePackageImports` to the heavy deps:
   ```ts
   experimental: {
     optimizePackageImports: ["lucide-react", "date-fns", "@g4k/ui", "echarts", "echarts-for-react", "framer-motion", "@tiptap/react", "@tiptap/starter-kit", "@dnd-kit/core", "@dnd-kit/sortable", "@tanstack/react-table", "react-grid-layout"],
   },
   ```
-- [ ] **10.3b** Tree-shake `echarts`: replace `import ReactECharts from "echarts-for-react"` (pulls the
+- [x] **10.3b** Tree-shake `echarts`: replace `import ReactECharts from "echarts-for-react"` (pulls the
   full ~1 MB bundle) with a `core`-based build — import only the chart types used (e.g.
   `echarts/charts/BarChart`, `LineChart`, `PieChart`, plus `echarts/components/*`, `echarts/renderers`),
   pass them to `EChartsReactCore`. This is the single biggest bundle win.
-- [ ] **10.3c** Enforce the budget on every Vercel build: wire `test:bundle` into `build`. In
+- [x] **10.3c** Enforce the budget on every Vercel build: wire `test:bundle` into `build`. In
       `apps/web/package.json`:
   ```json
   "build": "next build && npm run test:bundle"
@@ -639,24 +639,24 @@ is accepted via that header, `AuthController.php:182-184`).
   first-load ceiling (currently advisory only).
 
 ### 10.4 Stop Chromium download on Vercel
-- [ ] **10.4** `puppeteer` (`apps/web/package.json:79`, devDep) downloads ~170 MB Chromium on
+- [x] **10.4** `puppeteer` (`apps/web/package.json:79`, devDep) downloads ~170 MB Chromium on
       `pnpm install`. It's only used by `scripts/lh-auth.js` (local Lighthouse). Either set
       `PUPPETEER_SKIP_DOWNLOAD=true` on Vercel (§10.1), or move `puppeteer` + `@lhci/cli` to an
       `optionalDependencies`/dev-only group Vercel skips. This measurably shortens Vercel install time
       and avoids build timeouts.
 
 ### 10.5 Remove dead deps + fix service worker
-- [ ] **10.5a** Remove the unused React Query persistence packages (`providers.tsx:10-13` confirms
+- [x] **10.5a** Remove the unused React Query persistence packages (`providers.tsx:10-13` confirms
   standard in-memory `QueryClientProvider`, not persist): `@tanstack/query-async-storage-persister`,
   `@tanstack/react-query-persist-client`.
-- [ ] **10.5b** `apps/web/public/sw.js:7-10` — `cache.addAll(['/','/login'])` at install can reject on
+- [x] **10.5b** `apps/web/public/sw.js:7-10` — `cache.addAll(['/','/login'])` at install can reject on
   Vercel (those are dynamic RSC routes). Remove the `addAll` precache; let the runtime strategies
   populate the cache.
-- [ ] **10.5c** `apps/web/src/app/layout.tsx:49-66` registers the SW inline; `dashboard/layout.tsx:217-220`
+- [x] **10.5c** `apps/web/src/app/layout.tsx:49-66` registers the SW inline; `dashboard/layout.tsx:217-220`
   registers it **again** → double registration. Register once (root layout only).
 
 ### 10.6 Images + CSP
-- [ ] **10.6a** Add `images.remotePatterns` to `next.config.ts` so `<Image>` from the API/Supabase works:
+- [x] **10.6a** Add `images.remotePatterns` to `next.config.ts` so `<Image>` from the API/Supabase works:
   ```ts
   images: {
     remotePatterns: [
@@ -665,12 +665,12 @@ is accepted via that header, `AuthController.php:182-184`).
     ],
   },
   ```
-- [ ] **10.6b** (Optional, hardening) Add a `headers()` block with a CSP that whitelists `*.a.run.app`
+- [x] **10.6b** (Optional, hardening) Add a `headers()` block with a CSP that whitelists `*.a.run.app`
   (API + WSS) and `*.sentry.io` in `connect-src`; this is the frontend's CSP (the API's
   `SecurityHeaders.php` CSP only governs its own HTML responses).
 
 ### 10.7 Inconsistent `NEXT_PUBLIC_API_URL` fallbacks
-- [ ] **10.7** Four ad-hoc `fetch` calls hardcode a different fallback (`http://localhost:8000/api`) than
+- [x] **10.7** Four ad-hoc `fetch` calls hardcode a different fallback (`http://localhost:8000/api`) than
   `api-client.ts` (`/api`): `dashboard/org/departments/page.tsx:150`,
   `dashboard/org/designations/page.tsx:133`, `components/attendance/admin-attendance-table.tsx:113`,
   `components/settings/settings-tabs.tsx:118`. Route these through `apiFetch` (or at least use the same

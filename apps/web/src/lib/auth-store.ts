@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
       density: "comfortable",
       setAuth: (token, user, activeRole, refreshToken) => {
         if (typeof window !== "undefined") {
-          document.cookie = `g4k_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+          document.cookie = `g4k_token=${token}; path=/; max-age=900; SameSite=Lax`;
         }
         return set((state) => ({
           token,

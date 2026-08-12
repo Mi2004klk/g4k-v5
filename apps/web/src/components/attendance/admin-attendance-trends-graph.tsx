@@ -9,7 +9,19 @@ import { queryKeys } from "@/lib/query-keys";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
-const ReactECharts = dynamic(() => import("echarts-for-react").then((mod) => mod.default || mod as any) as any, { 
+import * as echarts from 'echarts/core';
+import { BarChart, LineChart } from 'echarts/charts';
+import { TooltipComponent, LegendComponent, GridComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+
+echarts.use([BarChart, LineChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]);
+
+const ReactECharts = dynamic(() => import("echarts-for-react/lib/core").then((mod) => {
+  const Core = mod.default || (mod as any);
+  return function EChartsWrapper(props: any) {
+    return <Core echarts={echarts} {...props} />;
+  };
+}), { 
   ssr: false,
   loading: () => <Skeleton className="w-full h-[400px]" />
 }) as any;

@@ -25,7 +25,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       const { token: currentToken, user: currentUser } = useAuthStore.getState();
       if (!currentToken || !currentUser) {
         try {
-          const data = await apiFetch("/auth/refresh");
+          const rt = useAuthStore.getState().refreshToken;
+          const data = await apiFetch("/auth/refresh", {
+            method: "GET",
+            headers: rt ? { "X-Refresh-Token": rt } : {},
+          });
           if (isMounted) {
             setAuth(data.token, data.user, data.active_role);
           }

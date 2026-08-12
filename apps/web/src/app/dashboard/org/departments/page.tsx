@@ -147,7 +147,7 @@ export default function DepartmentsPage() {
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/departments/export?${params.toString()}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/departments/export?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${getAuthToken()}`,
           'Accept': 'application/json'

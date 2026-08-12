@@ -9,7 +9,13 @@ const nextConfig: NextConfig = {
   },
   productionBrowserSourceMaps: false,
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns", "@g4k/ui"],
+    optimizePackageImports: ["lucide-react", "date-fns", "@g4k/ui", "echarts", "echarts-for-react", "framer-motion", "@tiptap/react", "@tiptap/starter-kit", "@dnd-kit/core", "@dnd-kit/sortable", "@tanstack/react-table", "react-grid-layout"],
+  },
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.a.run.app" },
+      { protocol: "https", hostname: "*.supabase.co" },
+    ],
   },
 };
 

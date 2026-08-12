@@ -4,11 +4,9 @@ const CACHE_NAME = 'g4k-workplace-v3';
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-        '/login'
-      ]);
-    }).then(() => self.skipWaiting())
+      return self.skipWaiting();
+    })
+  );
   );
 });
 
