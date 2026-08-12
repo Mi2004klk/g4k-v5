@@ -1,0 +1,56 @@
+name: Sync OpenAPI to Frontend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/api/openapi/openapi.yaml'
+
+jobs:
+  sync-openapi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Backend Repo
+        uses: actions/checkout@v4
+        with:
+          path: backend-repo
+
+      - name: Checkout Frontend Repo
+        uses: actions/checkout@v4
+        with:
+          repository: arsathmalik2003-cloud/g4k
+          path: frontend-repo
+          token: ${{ secrets.FRONTEND_PAT }} # Needs a PAT with write access to the frontend repo
+
+      - name: Copy OpenAPI spec
+        run: |
+          cp backend-repo/apps/api/openapi/openapi.yaml frontend-repo/packages/ui/openapi.yaml
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+          run_install: false
+
+      - name: Generate API Client
+        run: |
+          cd frontend-repo/packages/ui
+          pnpm install
+          pnpm api:generate
+
+      - name: Create Pull Request in Frontend Repo
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.FRONTEND_PAT }}
+          path: frontend-repo
+          commit-message: "chore: sync OpenAPI client from backend"
+          title: "chore: Sync OpenAPI client from backend"
+          body: "Automated PR to sync the OpenAPI client based on the latest backend changes."
+          branch: "sync-openapi-client"
+          base: "main"
