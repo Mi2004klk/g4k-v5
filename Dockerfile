@@ -10,7 +10,7 @@ RUN apk add --no-cache --virtual .build-deps \
         libzip-dev \
         linux-headers \
     && apk add --no-cache \
-        postgresql-libs \
+        libpq \
         libpng \
         libjpeg-turbo \
         freetype \
@@ -23,6 +23,9 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk del .build-deps
 
 WORKDIR /var/www/html
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy composer files first for layer caching
 COPY apps/api/composer.json apps/api/composer.lock ./
