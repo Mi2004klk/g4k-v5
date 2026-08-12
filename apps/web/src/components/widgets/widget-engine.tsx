@@ -10,10 +10,8 @@ import { Skeleton } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
 
-import RGL from "react-grid-layout";
-const { WidthProvider, Responsive } = RGL as any;
-const ResponsiveGridLayout = WidthProvider(Responsive);
-const GridLayout = dynamic(() => Promise.resolve(ResponsiveGridLayout), { ssr: false }) as any;
+import { ResponsiveGridLayout, useContainerWidth } from "react-grid-layout";
+const GridLayout = dynamic(() => Promise.resolve({ default: ResponsiveGridLayout }), { ssr: false }) as any;
 
 interface WidgetEngineProps {
   availableWidgets: Array<{
@@ -155,9 +153,11 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     }, 150);
   };
 
+  const { containerRef, mounted, width } = useContainerWidth();
+
   if (!mounted) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+      <div ref={containerRef as any} className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-48 w-full" />
@@ -165,10 +165,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     );
   }
 
-
-
   return (
-    <div className={`w-full min-h-[500px] ${isDragging ? "is-dragging-widget" : ""}`}>
+    <div ref={containerRef as any} className={`w-full min-h-[500px] ${isDragging ? "is-dragging-widget" : ""}`}>
       <style>{`
         .is-dragging-widget a,
         .is-dragging-widget button,
@@ -178,6 +176,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
       `}</style>
       <GridLayout
         className="layout"
+        width={width}
         layouts={computedLayouts}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
