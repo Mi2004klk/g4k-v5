@@ -1,5 +1,5 @@
 app = "g4k"
-primary_region = "bom"
+primary_region = "sin"
 
 [build]
   dockerfile = "apps/api/Dockerfile"

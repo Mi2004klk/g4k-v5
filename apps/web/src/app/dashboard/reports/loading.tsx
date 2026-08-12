@@ -1,4 +1,4 @@
-import { Skeleton } from ""@g4k/ui/components"";
+import { Skeleton } from "@g4k/ui/components";
 
 export default function Loading() {
   return (

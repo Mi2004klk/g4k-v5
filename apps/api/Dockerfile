@@ -16,4 +16,4 @@ RUN cd apps/api && \
 
 EXPOSE 8080
 
-CMD ["bash", "apps/api/start.sh"]
+CMD ["sh", "apps/api/start.sh"]
