@@ -112,19 +112,7 @@ export default function TokensPage() {
         </div>
       </section>
       
-      <section className="space-y-4">
-        <h2 className="text-2xl font-semibold border-b pb-2">Gradients (Tailwind v4)</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {gradients.map((token) => (
-            <div key={token.name} className="flex flex-col gap-2">
-              <div className={`h-24 w-full rounded-md shadow-sm flex items-center justify-center ${token.var} text-white`}>
-                <span className="text-sm font-medium">{token.name}</span>
-              </div>
-              <span className="text-xs text-secondary-foreground">{token.var}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+
     </div>
   );
 }
