@@ -132,9 +132,7 @@ export default function OnboardingPage() {
               disabled={isLoading}
               className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
             >
-              <div className="absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-[2px] bg-gradient-brand mask-border z-0" style={{ WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }} />
-              
-              <span className="relative z-10 flex items-center justify-center">
+<span className="relative z-10 flex items-center justify-center">
                 {isLoading ? (
                   <div className="flex space-x-1.5 items-center justify-center h-full">
                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

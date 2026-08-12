@@ -92,7 +92,7 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
       <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
-        <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center pt-2 pb-2">
+        <div className="w-full h-28 bg-primary relative flex items-center justify-center pt-2 pb-2">
            <Image
               src="/landscape-logo.png"
               alt="Games4King Logo"
@@ -176,9 +176,7 @@ export default function ChangePasswordPage() {
                 className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
                 disabled={isLoading}
               >
-                <div className="absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none p-[2px] bg-gradient-brand mask-border z-0" style={{ WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }} />
-                
-                <span className="relative z-10 flex items-center justify-center">
+<span className="relative z-10 flex items-center justify-center">
                   {isLoading ? (
                     <div className="flex space-x-1.5 items-center justify-center h-full">
                       <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

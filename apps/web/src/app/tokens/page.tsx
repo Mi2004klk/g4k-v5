@@ -49,11 +49,6 @@ export default function TokensPage() {
     { name: "Ring", var: "border-ring" },
   ];
 
-  const gradients = [
-    { name: "Brand Gradient", var: "bg-gradient-brand" },
-    { name: "Gold Gradient", var: "bg-gradient-gold" },
-  ];
-
   return (
     <div className="container py-10 space-y-12">
       <div>

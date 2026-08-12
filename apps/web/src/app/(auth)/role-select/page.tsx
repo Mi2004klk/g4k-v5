@@ -108,7 +108,7 @@ export default function RoleSelectPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
       <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
-        <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center pt-2 pb-2">
+        <div className="w-full h-28 bg-primary relative flex items-center justify-center pt-2 pb-2">
            <Image
               src="/landscape-logo.png"
               alt="Games4King Logo"

@@ -157,7 +157,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
 
                 <div>
                   <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-4 uppercase tracking-wider">Timeline</h3>
-                  <div className="relative pl-4 space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-neutral-200 dark:before:via-neutral-800 before:to-transparent">
+                  <div className="relative pl-4 space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-border">
                     {events.map((event: any, i: number) => {
                       const isClockIn = event.type === 'clock_in';
                       const isClockOut = event.type === 'clock_out';

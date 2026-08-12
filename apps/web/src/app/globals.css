@@ -60,7 +60,7 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--border);
-  --color-ring: var(--accent-violet);
+  --color-ring: var(--text-primary);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -75,12 +75,8 @@
   --shadow-e4: 0 16px 48px rgba(20,20,28,0.18);
 }
 
-@utility bg-gradient-brand {
+@utility bg-primary {
   background-image: linear-gradient(135deg, #9400D3 0%, #8A2BE2 50%, #FF1493 100%);
-}
-
-@utility bg-gradient-gold {
-  background-image: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
 }
 
 @utility container {
@@ -226,8 +222,14 @@
     font-family: var(--font-display);
   }
   *:focus-visible {
-    outline: 2px solid var(--color-ring) !important;
-    outline-offset: 2px !important;
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+  /* inputs: a thin neutral ring + soft offset, no violet */
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none;
+    border-color: var(--text-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-primary) 12%, transparent);
   }
   svg.lucide {
     stroke-width: 1.75;
