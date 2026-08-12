@@ -96,31 +96,31 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
       <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
-        <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center">
+        <div className="w-full h-20 bg-gradient-brand relative flex items-center justify-center">
            <Image
               src="/landscape-logo.png"
               alt="Games4King Logo"
               width={200}
               height={80}
               priority
-              className="object-contain max-h-[80px]"
+              className="object-contain max-h-[50px]"
             />
         </div>
 
-        <CardHeader className="space-y-2 pb-6 pt-6 text-center">
+        <CardHeader className="space-y-1.5 pb-5 pt-5 text-center">
           <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
             Workplace OS
           </CardTitle>
-          <CardDescription className="text-sm font-sans text-neutral-500 dark:text-neutral-400">
+          <CardDescription className="text-sm text-neutral-500 dark:text-neutral-400">
             Sign in to your corporate account
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {form.formState.errors.root && (
                 <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-md text-sm font-medium text-center">
                   {form.formState.errors.root.message}
@@ -132,13 +132,13 @@ export default function LoginPage() {
                 name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
+                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                       Email, Username, or Employee ID
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. karthik or dev@games4king.in" {...field} disabled={lockoutSeconds > 0} className="font-sans" autoComplete="username" />
+                      <Input placeholder="e.g. karthik or dev@games4king.in" {...field} disabled={lockoutSeconds > 0} autoComplete="username" />
                     </FormControl>
-                    <FormMessage className="font-sans" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -149,27 +149,27 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
+                      <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                         Password
                       </FormLabel>
                       <Link
                         href="/forgot-password"
-                        className="text-xs font-medium font-sans text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                        className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
                       >
                         Forgot password?
                       </Link>
                     </div>
                     <FormControl>
-                      <PasswordInput placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} className="font-sans" autoComplete="current-password" />
+                      <PasswordInput placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} autoComplete="current-password" />
                     </FormControl>
-                    <FormMessage className="font-sans" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
 
               <Button
                 type="submit"
-                className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                className="w-full h-10 mt-2 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed border-none"
                 disabled={isLoading || lockoutSeconds > 0}
               >
                 {/* Rainbow Hover Border Effect */}
@@ -192,7 +192,7 @@ export default function LoginPage() {
             </form>
           </Form>
 
-          <div className="flex items-center justify-between pt-4 border-t border-neutral-100 dark:border-neutral-800 text-xs text-neutral-400 font-sans">
+          <div className="flex items-center justify-between pt-4 border-t border-neutral-100 dark:border-neutral-800 text-xs text-neutral-400">
             <span>© Games4King Workplace OS</span>
             <TooltipProvider>
               <Tooltip>
@@ -203,7 +203,7 @@ export default function LoginPage() {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-xs font-sans">Gen2k Conglomerate (2018) • Milestone 1</p>
+                  <p className="text-xs">Gen2k Conglomerate (2018) • Milestone 1</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

@@ -116,7 +116,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
 
   return (
-    <div className={cn("relative w-full h-full p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between", className)}>
+    <div className={cn("relative w-full h-full p-5 bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl transition-shadow duration-150 flex flex-col justify-between", className)}>
       {isPending && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-2xl p-6 gap-6">
           <div className="flex justify-between w-full">
@@ -134,12 +134,16 @@ export function TimeClockWidget({ className }: { className?: string }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
+            <Clock className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Time Clock
-            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </span>
+          {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+        </div>
           {isError && (
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">

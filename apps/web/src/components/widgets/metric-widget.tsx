@@ -63,31 +63,45 @@ export function MetricWidget({
 
   if (isPending) {
     return (
-      <Card className="h-full flex flex-col justify-between">
-        <CardContent className="p-5 space-y-3">
+      <Card className="h-full border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+        <div className="flex items-center gap-2 pb-3">
+          <Skeleton className="w-7 h-7 rounded-md" />
           <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-8 w-16" />
-          <Skeleton className="h-3 w-32" />
-        </CardContent>
+        </div>
+        <Skeleton className="h-8 w-16 mb-2 mt-2" />
+        <Skeleton className="h-3 w-32" />
       </Card>
     );
   }
 
   if (isError) {
     return (
-      <Card className=" h-full flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 p-4">
-        <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
-        <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
-          Retry
-        </Button>
+      <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <div className={`w-7 h-7 rounded-md ${colorStyles[color]} flex items-center justify-center`}>
+              <Icon className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              {title}
+            </span>
+            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-2 mt-2">
+          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            Retry
+          </Button>
+        </div>
       </Card>
     );
   }
 
   if (isModuleAvailable === false) {
     return (
-      <Card className=" h-full flex items-center justify-center p-4">
+      <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
         <EmptyState
           title={title}
           description="Module pending release in upcoming phase."
@@ -98,19 +112,21 @@ export function MetricWidget({
   }
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 group">
-      <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
-            {title}
+    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 group">
+      <div>
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <div className={`w-7 h-7 rounded-md ${colorStyles[color]} flex items-center justify-center transition-transform group-hover:scale-110`}>
+              <Icon className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              {title}
+            </span>
             {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-          </span>
-          <div className={`p-2 rounded-xl ${colorStyles[color]} transition-transform group-hover:scale-110`}>
-            <Icon className="w-4 h-4" />
           </div>
         </div>
 
-        <div>
+        <div className="mt-2">
           <div className="text-3xl font-bold font-mono tracking-tight text-neutral-900 dark:text-white">
             {displayValue.toLocaleString()}
           </div>
@@ -118,7 +134,7 @@ export function MetricWidget({
             <p className="text-[11px] text-neutral-400 mt-1">{subtitle}</p>
           )}
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

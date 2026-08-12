@@ -175,7 +175,7 @@ export function NotificationsBell() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="relative p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
+        className="relative h-9 w-9 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
         title="Notifications"
         aria-label="Notifications"
       >

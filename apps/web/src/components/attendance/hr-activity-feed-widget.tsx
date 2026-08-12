@@ -73,13 +73,17 @@ export function HrActivityFeedWidget() {
   }, [data]);
 
   return (
-    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden flex flex-col h-[400px]">
-      <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-        <h3 className="font-semibold text-neutral-900 dark:text-neutral-50 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-violet-500" />
-          Team Activity Feed
-        </h3>
-        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full">
+    <div className="h-[400px] bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden flex flex-col transition-shadow duration-150">
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
+            <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            Team Activity Feed
+          </span>
+        </div>
+        <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 rounded-full">
           Live
         </span>
       </div>
@@ -142,9 +146,10 @@ export function HrActivityFeedWidget() {
         ))}
       </div>
       
-      <div className="p-3 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
-        <Link href="/dashboard/org/attendance" className="text-sm font-medium text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 flex items-center justify-center w-full">
-          View all attendance records
+      <div className="pt-3 mt-auto">
+        <Link href="/dashboard/org/attendance" className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 flex items-center justify-between w-full group transition-colors">
+          View All Activity
+          <Activity className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
     </div>

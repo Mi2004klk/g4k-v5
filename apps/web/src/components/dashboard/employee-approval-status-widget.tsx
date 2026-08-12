@@ -17,8 +17,13 @@ export function EmployeeApprovalStatusWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm p-4">
-        <Skeleton className="h-5 w-32 mb-4" />
+      <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-7 h-7 rounded-md" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
         <Skeleton className="h-10 w-full mb-2" />
         <Skeleton className="h-10 w-full" />
       </Card>
@@ -28,13 +33,17 @@ export function EmployeeApprovalStatusWidget() {
   const requests = data?.data?.slice(0, 3) || [];
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm p-4 flex flex-col justify-between">
+    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <CardTitle className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-blue-500" />
-            Approval Status
-          </CardTitle>
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+              <ClipboardList className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              Approval Status
+            </span>
+          </div>
           <Link href="/dashboard/leave" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
             View All <ArrowRight className="w-3 h-3" />
           </Link>

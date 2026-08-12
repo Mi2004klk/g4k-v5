@@ -25,29 +25,26 @@ export function AdminTodayAttendanceWidget() {
   const presentPct = totalCount ? ((presentCount + lateCount) / totalCount) * 100 : 0;
 
   return (
-    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden p-0 relative hover:border-emerald-300 dark:hover:border-emerald-800 transition-colors group">
+    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden relative transition-shadow duration-150 group">
       <Link href="/dashboard/admin/attendance" className="absolute inset-0 z-10">
         <span className="sr-only">View Full Company Attendance</span>
       </Link>
       
-      <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-emerald-50/50 dark:bg-emerald-950/20">
+      <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
             <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight flex items-center gap-2">
-              Today's Attendance
-              {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-            </h3>
-            <p className="text-[10px] text-neutral-500 font-medium">Company-wide Snapshot</p>
-          </div>
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            Today's Attendance
+          </span>
+          {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
         </div>
         
-        <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-emerald-500 transition-colors group-hover:translate-x-1" />
+        <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-emerald-500 transition-colors relative z-20 group-hover:translate-x-1" />
       </div>
 
-      <div className="flex-1 p-4 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center">
         {isPending ? (
           <div className="space-y-4 w-full">
             <div className="flex items-baseline gap-2">

@@ -34,21 +34,23 @@ export function PendingApprovalsWidget() {
   });
 
   return (
-    <Card className=" bg-white dark:bg-neutral-900 h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-bold flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-amber-500" />
+    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
+            <ClipboardList className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Pending Approvals
-            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold">
-            {requests.length} Requests
-          </span>
-        </CardTitle>
-      </CardHeader>
+          {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+        </div>
+        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold">
+          {requests.length}
+        </span>
+      </div>
 
-      <CardContent className="flex-1 space-y-2 overflow-y-auto max-h-[260px] pr-1">
+      <div className="flex-1 space-y-2 overflow-y-auto max-h-[260px] thin-scrollbar">
         {isPending ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
@@ -131,7 +133,7 @@ export function PendingApprovalsWidget() {
             );
           })
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

@@ -60,7 +60,7 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--border);
-  --color-ring: var(--border-strong);
+  --color-ring: var(--accent-violet);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -69,10 +69,10 @@
   --radius-full: 9999px;
   --radius: var(--radius-md);
 
-  --shadow-e1: var(--shadow-e1);
-  --shadow-e2: var(--shadow-e2);
-  --shadow-e3: var(--shadow-e3);
-  --shadow-e4: var(--shadow-e4);
+  --shadow-e1: 0 1px 2px rgba(20,20,28,0.06);
+  --shadow-e2: 0 4px 12px rgba(20,20,28,0.08);
+  --shadow-e3: 0 8px 24px rgba(20,20,28,0.12);
+  --shadow-e4: 0 16px 48px rgba(20,20,28,0.18);
 }
 
 @utility bg-gradient-brand {
@@ -228,6 +228,9 @@
   *:focus-visible {
     outline: 2px solid var(--color-ring) !important;
     outline-offset: 2px !important;
+  }
+  svg.lucide {
+    stroke-width: 1.75;
   }
 }
 

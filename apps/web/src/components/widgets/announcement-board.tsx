@@ -96,26 +96,28 @@ export function AnnouncementBoard() {
   });
 
   return (
-    <Card className=" bg-white dark:bg-neutral-900">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-bold flex items-center justify-between">
-          <span className="flex items-center gap-2">
+    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-warning/20 flex items-center justify-center">
             <Megaphone className="w-4 h-4 text-warning" />
+          </div>
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Company Announcements
           </span>
           {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-          {isAdminOrHr && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
-                Refresh
-              </Button>
-              <Button variant="primary" size="sm" onClick={() => setShowCreate(true)} className="h-6 text-[10px] px-2">
-                Post
-              </Button>
-            </div>
-          )}
-        </CardTitle>
-      </CardHeader>
+        </div>
+        {isAdminOrHr && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+              Refresh
+            </Button>
+            <Button variant="primary" size="sm" onClick={() => setShowCreate(true)} className="h-6 text-[10px] px-2">
+              Post
+            </Button>
+          </div>
+        )}
+      </div>
       
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="sm:max-w-[425px]">
@@ -180,7 +182,7 @@ export function AnnouncementBoard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <CardContent className="space-y-3 max-h-[350px] overflow-y-auto">
+      <div className="flex-1 space-y-3 max-h-[350px] overflow-y-auto thin-scrollbar">
         {isPending ? (
           <div className="space-y-3">
             {[1, 2].map((i) => (
@@ -285,7 +287,7 @@ export function AnnouncementBoard() {
             );
           })
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

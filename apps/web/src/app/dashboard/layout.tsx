@@ -348,7 +348,7 @@ export default function DashboardLayout({
 
           {/* Main Content Area */}
           <div className="flex flex-col min-w-0 h-full overflow-hidden">
-            <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface/80 border-b border-border z-20 sticky top-0 backdrop-blur-md">
+            <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface border-b border-border z-20 sticky top-0">
               <div className="flex items-center gap-2 md:gap-4">
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
@@ -433,7 +433,7 @@ export default function DashboardLayout({
                   variant="ghost"
                   size="icon"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="h-9 w-9 rounded-full text-neutral-500 hover:text-neutral-900 dark:hover:text-white shrink-0 focus-visible:ring-2 focus-visible:ring-violet-500"
+                  className="h-9 w-9 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-white shrink-0 focus-visible:ring-2 focus-visible:ring-violet-500"
                   title="Toggle theme"
                   aria-label="Toggle theme"
                 >

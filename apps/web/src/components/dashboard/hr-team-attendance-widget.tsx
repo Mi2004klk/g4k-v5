@@ -23,19 +23,16 @@ export function HrTeamAttendanceWidget() {
   const topRecords = records.slice(0, 3);
 
   return (
-    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden p-0 relative">
-      <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
+      <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
             <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-neutral-900 dark:text-white leading-tight flex items-center gap-2">
-              Team Attendance
-              {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-            </h3>
-            <p className="text-[10px] text-neutral-500 font-medium">Today's snapshot</p>
-          </div>
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            Team Attendance
+          </span>
+          {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
         </div>
         
         {totalCount > 0 && (
@@ -46,7 +43,7 @@ export function HrTeamAttendanceWidget() {
         )}
       </div>
 
-      <div className="flex-1 p-4 flex flex-col">
+      <div className="flex-1 flex flex-col">
         {isPending ? (
           <div className="space-y-4 w-full pt-2">
             {[1, 2, 3].map((i) => (
@@ -97,7 +94,7 @@ export function HrTeamAttendanceWidget() {
         )}
       </div>
 
-      <div className="p-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+      <div className="pt-3 mt-auto">
         <Link 
           href="/dashboard/org/attendance"
           className="flex items-center justify-between w-full text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group transition-colors"

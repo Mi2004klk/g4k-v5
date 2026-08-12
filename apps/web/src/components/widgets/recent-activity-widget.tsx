@@ -19,11 +19,12 @@ export function RecentActivityWidget() {
 
   if (isPending) {
     return (
-      <Card className=" h-full flex flex-col bg-white dark:bg-neutral-900">
-        <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-32" />
-        </CardHeader>
-        <CardContent className="space-y-4 pt-4">
+      <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
+        <div className="flex items-center gap-2 pb-3">
+          <Skeleton className="w-7 h-7 rounded-md" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="space-y-4 pt-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex gap-3">
               <Skeleton className="h-8 w-8 rounded-full shrink-0" />
@@ -33,30 +34,32 @@ export function RecentActivityWidget() {
               </div>
             </div>
           ))}
-        </CardContent>
+        </div>
       </Card>
     );
   }
 
   if (isError) {
     return (
-      <Card className=" h-full flex flex-col bg-white dark:bg-neutral-900">
-        <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
-          <CardTitle className="text-sm font-semibold flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-violet-500" />
+      <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            </div>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
               Recent Activity Feed
             </span>
             {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col items-center justify-center p-6 bg-rose-50/50 dark:bg-rose-950/10">
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-rose-50/50 dark:bg-rose-950/10 rounded-lg">
           <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
             Retry
           </Button>
-        </CardContent>
+        </div>
       </Card>
     );
   }
@@ -71,25 +74,29 @@ export function RecentActivityWidget() {
   }
 
   return (
-    <Card className=" h-full bg-white dark:bg-neutral-900 flex flex-col">
-      <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
-        <CardTitle className="text-sm font-semibold flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-violet-500" />
+    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
+            <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Recent Activity Feed
           </span>
           {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 overflow-y-auto flex-1">
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto thin-scrollbar">
         {activities.length === 0 ? (
-          <div className="p-6 text-center text-xs text-neutral-500">
-            No recent activity found.
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <Activity className="w-8 h-8 text-neutral-300 dark:text-neutral-700 mb-2" />
+            <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">No recent activity</h4>
+            <p className="text-xs text-neutral-400 mt-1">Activity will appear here once actions are taken.</p>
           </div>
         ) : (
-          <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+          <div className="divide-y divide-neutral-100 dark:divide-neutral-800 -mx-5 px-5">
             {activities.map((activity: any) => (
-              <div key={activity.id} className="p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+              <div key={activity.id} className="py-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
                 <p className="text-xs text-neutral-700 dark:text-neutral-300">
                   <span className="font-medium text-neutral-900 dark:text-white">
                     {activity.user_name || 'System'}
@@ -104,7 +111,7 @@ export function RecentActivityWidget() {
             ))}
           </div>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

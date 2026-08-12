@@ -76,7 +76,7 @@ export const NavItem = memo(function NavItem({
           isDisabled
             ? "opacity-50 cursor-not-allowed text-neutral-400 dark:text-neutral-600"
             : isActive
-            ? cn(accent.bg, accent.bgDark, "text-primary dark:text-white font-semibold shadow-sm")
+            ? "bg-surface-2 text-primary dark:text-white font-semibold shadow-sm"
             : "text-neutral-600 dark:text-neutral-400 hover:bg-surface-2 hover:text-primary font-medium"
         )}
       >
@@ -85,7 +85,7 @@ export const NavItem = memo(function NavItem({
         )}
         <div className={cn(
           "w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-colors",
-          (isActive && !isDisabled) ? cn(accent.bg, accent.bgDark) : "bg-transparent"
+          (isActive && !isDisabled) ? cn(accent.bg, accent.bgDark) : "bg-transparent group-hover/nav:bg-surface-2"
         )}>
           <item.icon
             className={cn(
@@ -94,7 +94,7 @@ export const NavItem = memo(function NavItem({
                 ? "text-neutral-400 dark:text-neutral-600"
                 : isActive
                 ? `${accent.text} ${accent.textDark}`
-                : "text-neutral-400 group-hover/nav:text-neutral-700 dark:group-hover/nav:text-neutral-200"
+                : "text-neutral-400 group-hover/nav:text-neutral-600 dark:group-hover/nav:text-neutral-300"
             )}
           />
         </div>
@@ -127,7 +127,10 @@ export const NavItem = memo(function NavItem({
     return (
       <Tooltip delayDuration={150}>
         <TooltipTrigger asChild>{content}</TooltipTrigger>
-        <TooltipContent side="right" className="text-xs">{item.name}</TooltipContent>
+        <TooltipContent side="right" className="text-xs flex items-center gap-1.5">
+          <div className={cn("w-1.5 h-1.5 rounded-full", accent.bg)} />
+          {item.name}
+        </TooltipContent>
       </Tooltip>
     );
   }

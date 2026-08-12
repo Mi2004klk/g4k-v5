@@ -49,19 +49,23 @@ export function QuickNotes() {
 
   return (
     <Collapsible open={!isCollapsed} onOpenChange={() => toggleWidgetCollapse("quick-notes")}>
-      <Card className=" bg-white dark:bg-neutral-900">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <StickyNote className="w-4 h-4 text-amber-500" />
-            Quick Scratchpad
+      <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
+              <StickyNote className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              Quick Scratchpad
+            </span>
             {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-          </CardTitle>
+          </div>
           <CollapsibleTrigger className="h-7 w-7 p-0 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
             {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </CollapsibleTrigger>
-        </CardHeader>
+        </div>
         <CollapsibleContent>
-          <CardContent className="space-y-3">
+          <div className="space-y-3 pt-2">
             <div className="flex gap-2">
               <Input
                 placeholder="Type a personal note..."
@@ -117,7 +121,7 @@ export function QuickNotes() {
                 ))
               )}
             </div>
-          </CardContent>
+          </div>
         </CollapsibleContent>
       </Card>
     </Collapsible>

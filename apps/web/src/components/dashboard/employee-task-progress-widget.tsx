@@ -17,9 +17,12 @@ export function EmployeeTaskProgressWidget() {
 
   if (isPending) {
     return (
-      <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm p-4">
-        <Skeleton className="h-5 w-32 mb-4" />
-        <Skeleton className="h-8 w-full mb-2" />
+      <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
+        <div className="flex items-center gap-2 pb-3">
+          <Skeleton className="w-7 h-7 rounded-md" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-2.5 w-full mb-3 mt-4" />
         <Skeleton className="h-4 w-1/2" />
       </Card>
     );
@@ -32,13 +35,17 @@ export function EmployeeTaskProgressWidget() {
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm p-4 flex flex-col justify-between">
+    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <CardTitle className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-            <Activity className="w-4 h-4 text-violet-500" />
-            Task Progress
-          </CardTitle>
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            </div>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              Task Progress
+            </span>
+          </div>
           <span className="text-xs font-bold text-violet-600 dark:text-violet-400 font-mono">
             {percentage}%
           </span>

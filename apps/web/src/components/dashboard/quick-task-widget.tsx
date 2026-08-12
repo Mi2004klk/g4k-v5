@@ -46,12 +46,19 @@ export function QuickTaskWidget() {
   };
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm p-4 flex flex-col justify-between">
+    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 overflow-hidden">
       <div>
-        <CardTitle className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2 mb-1">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          Quick Task Assignment
-        </CardTitle>
+        <div className="flex items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              Quick Task
+            </span>
+            {usersLoading && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          </div>
+        </div>
         <p className="text-[11px] text-neutral-500 mb-3">
           Instantly dispatch a work item to any employee
         </p>
