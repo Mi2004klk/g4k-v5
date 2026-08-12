@@ -1,26 +1,26 @@
 FROM dunglas/frankenphp:php8.4-alpine
 
-# System deps + PHP extensions (cached layer)
-RUN apk add --no-cache \
-    postgresql-dev \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    libzip-dev \
-    libgd \
-    linux-headers \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_pgsql pgsql zip pcntl posix opcache bcmath \
-    && apk del \
+# System deps + PHP extensions
+RUN apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
         postgresql-dev \
         libpng-dev \
         libjpeg-turbo-dev \
         freetype-dev \
         libzip-dev \
-        linux-headers
-
-# Redis via PECL
-RUN pecl install redis && docker-php-ext-enable redis
+        linux-headers \
+    && apk add --no-cache \
+        postgresql-libs \
+        libpng \
+        libjpeg-turbo \
+        freetype \
+        libzip \
+        libgd \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_pgsql pgsql zip pcntl posix opcache bcmath \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
 
 WORKDIR /var/www/html
 
