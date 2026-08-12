@@ -188,9 +188,6 @@ function DayDetailContent({ date, summaryDay, userId }: { date: string, summaryD
     return `${h}h ${m}m`;
   };
 
-  if (isLoading) {
-    return <div className="p-4"><Skeleton className="h-20 w-full" /></div>;
-  }
 
   const events = data?.events || [];
   const day = data?.day || summaryDay;
@@ -223,7 +220,12 @@ function DayDetailContent({ date, summaryDay, userId }: { date: string, summaryD
 
       <div>
         <h4 className="text-sm font-bold mb-2">Punch Timeline</h4>
-        {events.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+          </div>
+        ) : events.length === 0 ? (
           <p className="text-xs text-neutral-500 italic">No punches recorded for this day.</p>
         ) : (
           <div className="space-y-2 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-neutral-200 dark:before:via-neutral-700 before:to-transparent">

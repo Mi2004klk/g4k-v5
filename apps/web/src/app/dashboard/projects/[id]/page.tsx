@@ -78,12 +78,10 @@ export default function ProjectDetailPage() {
     },
   });
 
-  if (isLoading) {
-    return <div className="p-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>;
-  }
+
 
   const project = projectResponse?.data;
-  if (!project) return <div>Project not found</div>;
+  if (!isLoading && !project) return <div>Project not found</div>;
 
   return (
     <div className="space-y-6">
@@ -95,9 +93,11 @@ export default function ProjectDetailPage() {
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
               <Folder className="w-5 h-5 text-violet-600" />
-              {project.name}
+              {project ? project.name : <Skeleton className="h-6 w-48" />}
             </h1>
-            <p className="text-sm text-neutral-500">{project.description || "No description."}</p>
+            <p className="text-sm text-neutral-500">
+              {project ? (project.description || "No description.") : <Skeleton className="h-4 w-64" />}
+            </p>
           </div>
         </div>
         
@@ -174,25 +174,34 @@ export default function ProjectDetailPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Time Spent</span>
-                    <span className="font-semibold">{project.total_time_hours || 0} hrs</span>
+                    <span className="font-semibold">{project?.total_time_hours || 0} hrs</span>
                   </div>
                   <div>
                     <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Tasks Done</span>
-                    <span className="font-semibold">{project.completed_tasks_count || 0} / {project.total_tasks_count || 0}</span>
+                    <span className="font-semibold">{project ? `${project.completed_tasks_count || 0} / ${project.total_tasks_count || 0}` : <Skeleton className="h-4 w-12" />}</span>
                   </div>
                   <div>
                     <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Team</span>
-                    <span className="font-semibold">{project.members?.length || 0} members</span>
+                    <span className="font-semibold">{project?.members?.length || 0} members</span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Status</span>
-                    <span className="font-semibold capitalize text-violet-600">{project.status || "In Progress"}</span>
+                    <span className="text-xs uppercase font-semibold text-neutral-500">Status</span>
+                    {project ? (
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        project.status === 'completed' ? 'bg-green-100 text-green-700' :
+                        project.status === 'active' ? 'bg-blue-100 text-blue-700' :
+                        project.status === 'on_hold' ? 'bg-amber-100 text-amber-700' :
+                        'bg-neutral-100 text-neutral-700'
+                      }`}>
+                        {project.status || "In Progress"}
+                      </span>
+                    ) : <Skeleton className="h-6 w-16 rounded-full" />}
                   </div>
                 </div>
 
                 <div className="space-y-2 mt-4">
                   <h3 className="font-semibold text-sm">Activity Log</h3>
-                  {project.history?.length > 0 ? project.history.map((h: any, i: number) => (
+                  {project?.history?.length > 0 ? project.history.map((h: any, i: number) => (
                     <div key={i} className="flex gap-3 text-xs p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-lg">
                       <Clock className="w-4 h-4 text-neutral-400 shrink-0" />
                       <div>

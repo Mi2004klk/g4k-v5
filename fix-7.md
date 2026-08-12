@@ -729,9 +729,9 @@ notification bell polls every 30s and stays usable.
 ## IMPLEMENTATION ORDER (dependency-aware)
 
 ### Sprint 1 — Stop the bleeding (Phase 1)
-1. **1.1** — Fix WidgetEngine `useContainerWidth` crash (dashboard is currently broken)
-2. **1.2** — Add `loading.tsx` route skeletons (every navigation feels instant)
-3. **1.3** — Remove full-page blocking returns on Profile + Project Detail
+1. [x] 1.1 — Fix WidgetEngine `useContainerWidth` crash (dashboard is currently broken)
+2. [x] **1.2** — Add `loading.tsx` route skeletons (every navigation feels instant)
+3. [x] **1.3** — Remove full-page blocking returns on Profile + Project Detail
 
 ### Sprint 2 — Backend speed (Phase 2)
 4. **2.1** — Wire the dashboard metrics cache (`Cache::remember`) — the biggest backend win

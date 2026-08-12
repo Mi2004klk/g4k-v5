@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useContainerWidth } from "react-grid-layout";
+import { WidthProvider, Responsive } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { useQuery } from "@tanstack/react-query";
@@ -13,10 +13,8 @@ import { Skeleton } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
 
-const ResponsiveGridLayout = dynamic(
-  () => import("react-grid-layout").then((m) => m.ResponsiveGridLayout),
-  { ssr: false }
-);
+const ResponsiveGridLayout = WidthProvider(Responsive);
+const GridLayout = dynamic(() => Promise.resolve(ResponsiveGridLayout), { ssr: false });
 
 interface WidgetEngineProps {
   availableWidgets: Array<{
@@ -42,7 +40,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const startPosRef = useRef({ x: 0, y: 0 });
   const layoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const { containerRef, width } = useContainerWidth();
+
 
   const { data: preferencesData, isLoading } = useQuery({
     queryKey: queryKeys.dashboardLayout,
@@ -171,7 +169,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
 
 
   return (
-    <div ref={containerRef} className={`w-full min-h-[500px] ${isDragging ? "is-dragging-widget" : ""}`}>
+    <div className={`w-full min-h-[500px] ${isDragging ? "is-dragging-widget" : ""}`}>
       <style>{`
         .is-dragging-widget a,
         .is-dragging-widget button,
@@ -179,9 +177,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
           pointer-events: none !important;
         }
       `}</style>
-      <ResponsiveGridLayout
+      <GridLayout
         className="layout"
-        width={width ?? 1200}
         layouts={computedLayouts}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
@@ -198,7 +195,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
             </ErrorBoundary>
           </div>
         ))}
-      </ResponsiveGridLayout>
+      </GridLayout>
     </div>
   );
 }

@@ -295,17 +295,7 @@ export default function ProfilePage() {
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Skeleton className="h-64 w-full rounded-xl" />
-          <Skeleton className="h-64 w-full rounded-xl" />
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto font-sans">
@@ -318,13 +308,13 @@ export default function ProfilePage() {
               {profile?.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
-                  alt={profile.name}
+                  alt={profile.name || "User"}
                   width={96}
                   height={96}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                profile?.name?.charAt(0) || "U"
+                <span className="opacity-50">{profile?.name ? profile.name.charAt(0) : <Skeleton className="w-8 h-8 rounded-full" />}</span>
               )}
             </div>
             <button
@@ -339,15 +329,20 @@ export default function ProfilePage() {
           <div className="space-y-2 text-center sm:text-left flex-1">
             <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2">
               <div>
-                <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">{profile?.name}</h1>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-semibold">
-                  {profile?.designation?.name || "Corporate Team Member"} •{" "}
-                  {profile?.department?.name || "Games4King"}
-                </p>
+                <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
+                  {isLoading && !profile ? <Skeleton className="h-8 w-48 mb-2" /> : (profile?.name || "Your Profile")}
+                </h1>
+                <div className="flex flex-wrap items-center gap-4 text-sm font-sans mt-2">
+                  <div className="flex items-center text-neutral-500 dark:text-neutral-400 bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-700">
+                    <Hash className="w-4 h-4 mr-2 text-brand-violet/70" />
+                    {isLoading && !profile ? <Skeleton className="h-4 w-24" /> : (profile?.employee_id || "Employee ID: N/A")}
+                  </div>
+                  <div className="flex items-center text-neutral-500 dark:text-neutral-400 bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-700">
+                    <Building className="w-4 h-4 mr-2 text-brand-violet/70" />
+                    {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.department?.name || "No Department")}
+                  </div>
+                </div>
               </div>
-              <span className="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 shadow-sm">
-                ID: {profile?.employee_code || profile?.employee_id || "N/A"}
-              </span>
             </div>
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-3 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
