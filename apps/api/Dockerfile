@@ -6,7 +6,8 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN cd apps/api && composer install --no-dev --optimize-autoloader --no-interaction
+RUN cd apps/api && composer install --no-dev --optimize-autoloader --no-interaction && \
+    sed -i 's/return \[SIGINT, SIGTERM, SIGHUP\];/return \[2, 15, 1\];/' vendor/laravel/octane/src/Commands/Concerns/InteractsWithServers.php
 
 RUN printf "opcache.enable=1\nopcache.memory_consumption=256\nopcache.max_accelerated_files=20000\nopcache.validate_timestamps=0\n" > /usr/local/etc/php/conf.d/opcache.ini
 
