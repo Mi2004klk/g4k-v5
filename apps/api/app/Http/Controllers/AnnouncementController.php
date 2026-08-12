@@ -39,6 +39,8 @@ class AnnouncementController extends Controller
         ]);
 
         broadcast(new AnnouncementCreated($announcement))->toOthers();
+        
+        \Illuminate\Support\Facades\Cache::forget("announcements_all");
 
         return response()->json($announcement->load(['creator', 'team']));
     }
@@ -66,6 +68,8 @@ class AnnouncementController extends Controller
         }
 
         $announcement->update($validated);
+        
+        \Illuminate\Support\Facades\Cache::forget("announcements_all");
 
         return response()->json($announcement->load(['creator', 'team']));
     }
@@ -80,6 +84,8 @@ class AnnouncementController extends Controller
         }
 
         $announcement->delete();
+        
+        \Illuminate\Support\Facades\Cache::forget("announcements_all");
 
         return response()->json(['message' => 'Announcement deleted successfully']);
     }

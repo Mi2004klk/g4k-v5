@@ -15,6 +15,7 @@ class DashboardController extends Controller
     public function init(Request $request)
     {
         $user = $request->user();
+        $today = Carbon::now()->toDateString();
         
         $activeRole = 'employee';
         if ($user->currentAccessToken()) {
@@ -36,16 +37,24 @@ class DashboardController extends Controller
             }
         };
 
-        return response()->json([
-            'metrics' => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null,
-            'attendance_today' => $safeCall(AttendanceController::class, 'meToday'),
-            'preferences' => $safeCall(UserPreferenceController::class, 'show'),
-            'pending_approvals' => $safeCall(LeaveRequestController::class, 'pending'),
-            'pins' => $safeCall(PinController::class, 'index', []),
-            'announcements' => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', []),
-            'quick_notes' => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', []),
-            'role' => $activeRole
-        ]);
+        $cacheKey = "dashboard_init_{$user->id}_{$activeRole}_{$today}";
+        
+        $data = Cache::remember($cacheKey, 120, function() use ($user, $activeRole, $safeCall) {
+            return [
+                'metrics' => Cache::remember("user_metrics_{$user->id}_{$activeRole}", 300, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
+                'preferences' => Cache::remember("user_prefs_{$user->id}", 300, fn() => $safeCall(UserPreferenceController::class, 'show')),
+                'pending_approvals' => Cache::remember("pending_approvals_{$user->id}_{$activeRole}", 60, fn() => $safeCall(LeaveRequestController::class, 'pending')),
+                'pins' => Cache::remember("user_pins_{$user->id}", 300, fn() => $safeCall(PinController::class, 'index', [])),
+                'announcements' => Cache::remember("announcements_all", 120, fn() => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', [])),
+                'quick_notes' => Cache::remember("quick_notes_{$user->id}", 120, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
+                'role' => $activeRole
+            ];
+        });
+
+        // Exclude attendance_today from the outer cache due to volatility
+        $data['attendance_today'] = $safeCall(AttendanceController::class, 'meToday');
+
+        return response()->json($data);
     }
 
     public function metrics(Request $request)

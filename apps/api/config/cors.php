@@ -27,11 +27,11 @@ return [
         '#^http://localhost:3000$#'
     ],
 
-    'allowed_headers' => ['Authorization', 'Content-Type', 'X-CSRF-TOKEN'],
+    'allowed_headers' => ['Authorization', 'Content-Type', 'X-CSRF-TOKEN', 'Accept', 'X-Requested-With'],
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 3600,
 
     'supports_credentials' => true,
 

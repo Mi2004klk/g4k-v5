@@ -71,7 +71,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
       pongTimeout: 30000,
       maxReconnectionAttempts: 5,
       maxReconnectGap: 10000,
-      authEndpoint: '/api/broadcasting/auth',
+      authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
       auth: {
         headers: {
           Authorization: `Bearer ${getToken()}`,

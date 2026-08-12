@@ -37,9 +37,7 @@ export default function EmployeeDetailPage() {
     queryFn: () => apiFetch(`/users/${userId}/activity`),
   });
 
-  if (isPending) {
-    return <div className="p-8"><Skeleton className="h-48 w-full mb-8" /><Skeleton className="h-64 w-full" /></div>;
-  }
+  // Removed blocking isPending return to allow layout to handle loading
 
   if (!user) {
     return <div className="p-8">User not found</div>;

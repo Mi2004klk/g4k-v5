@@ -1,0 +1,6 @@
+*
+!apps/api/
+apps/api/vendor/
+apps/api/node_modules/
+apps/api/storage/logs/
+apps/api/.env*

@@ -81,6 +81,18 @@ class AttendanceController extends Controller
             ->orderBy('timestamp', 'asc')
             ->get();
 
+        $activeRole = 'employee';
+        if ($user->currentAccessToken()) {
+            foreach ($user->currentAccessToken()->abilities as $ability) {
+                if (str_starts_with($ability, 'role:')) {
+                    $activeRole = substr($ability, 5);
+                    break;
+                }
+            }
+        }
+        $today = Carbon::now()->toDateString();
+        \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
+
         return response()->json([
             'day' => $dayRecord,
             'events' => $events,

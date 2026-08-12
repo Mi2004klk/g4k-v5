@@ -152,19 +152,13 @@ export default function DashboardLayout({
   const setDensity = useAuthStore((s) => s.setDensity);
   const { theme, setTheme } = useTheme();
 
-  const { data: pinsData = EMPTY_PINS, refetch: refetchPins } = useQuery({
+  const { data: initData, refetch: refetchPins } = useQuery({
     queryKey: queryKeys.dashboardInit,
     queryFn: () => apiFetch("/dashboard/init"),
-    select: (data: any) => data.pins,
-  });
-  const pins = pinsData || EMPTY_PINS;
-
-  const { data: preferencesData } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
-    select: (data: any) => data.preferences,
     staleTime: 5 * 60_000,
   });
+  const pins = initData?.pins || EMPTY_PINS;
+  const preferencesData = initData?.preferences ? { preferences: initData.preferences } : null;
 
   useEffect(() => {
     // Prefetch consolidated dashboard init data on cold load

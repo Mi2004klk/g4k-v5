@@ -31,6 +31,12 @@ class QuickNoteController extends Controller
             'pinned' => $validated['pinned'] ?? false,
         ]);
 
+        $user = $request->user();
+        $activeRole = str_replace('role:', '', $user->currentAccessToken()->abilities[0] ?? 'employee');
+        $today = \Carbon\Carbon::now()->toDateString();
+        \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("quick_notes_{$user->id}");
+
         return response()->json($note);
     }
 
@@ -38,6 +44,12 @@ class QuickNoteController extends Controller
     {
         $note = QuickNote::where('user_id', $request->user()->id)->findOrFail($id);
         $note->delete();
+        $user = $request->user();
+        $activeRole = str_replace('role:', '', $user->currentAccessToken()->abilities[0] ?? 'employee');
+        $today = \Carbon\Carbon::now()->toDateString();
+        \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("quick_notes_{$user->id}");
+
         return response()->json(['message' => 'Note deleted']);
     }
 }

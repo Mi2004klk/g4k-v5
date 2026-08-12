@@ -114,6 +114,18 @@ class LeaveRequestController extends Controller
             $approval = ApprovalService::reject($approval, $user->id, $validated['reason']);
         }
 
+        $leaveRequest = LeaveRequest::find($id);
+        if ($leaveRequest) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$user->id}_hr");
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$user->id}_super_admin");
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leaveRequest->user_id}_employee");
+            
+            $today = \Carbon\Carbon::now()->toDateString();
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_hr_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_super_admin_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leaveRequest->user_id}_employee_{$today}");
+        }
+
         return response()->json($approval);
     }
 
