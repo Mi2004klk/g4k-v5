@@ -1,6 +1,6 @@
 FROM dunglas/frankenphp:php8.4-alpine
 
-RUN install-php-extensions pdo pdo_pgsql mbstring bcmath gd redis opcache zip @composer
+RUN install-php-extensions pdo pdo_pgsql mbstring bcmath gd redis opcache pcntl posix zip @composer
 
 WORKDIR /var/www/html
 
