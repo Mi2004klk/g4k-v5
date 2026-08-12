@@ -22,7 +22,7 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
   return (
     <Card
       onClick={onClick}
-      className="border-none shadow-sm hover:shadow-md transition-all cursor-pointer bg-white dark:bg-neutral-900 group"
+      className="hover:shadow-md transition-all cursor-pointer bg-white dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">

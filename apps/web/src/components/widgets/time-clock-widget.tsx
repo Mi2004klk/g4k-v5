@@ -118,7 +118,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   return (
     <div className={cn("relative w-full h-full p-5 bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl transition-shadow duration-150 flex flex-col justify-between", className)}>
       {isPending && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-2xl p-6 gap-6">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-xl p-6 gap-6">
           <div className="flex justify-between w-full">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-6 w-20 rounded-full" />

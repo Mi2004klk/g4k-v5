@@ -52,7 +52,7 @@ export function QAFormBuilder() {
   });
 
   return (
-    <Card className="border-none shadow-sm">
+    <Card className=" border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader>
         <CardTitle className="text-base font-bold flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-violet-600" />

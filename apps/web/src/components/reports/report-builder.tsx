@@ -46,7 +46,7 @@ export function ReportBuilder() {
   })) : [];
 
   return (
-    <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+    <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-base font-bold">Custom Report Builder</CardTitle>
         <div className="flex items-center gap-2">

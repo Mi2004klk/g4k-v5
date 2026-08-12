@@ -113,7 +113,7 @@ export function AuditLogTable() {
   ];
 
   return (
-    <Card className="border-none shadow-sm">
+    <Card className=" border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex justify-between gap-4 bg-neutral-50/50 dark:bg-neutral-800/30">
         <div className="flex-1 max-w-xl">
           <FilterBar

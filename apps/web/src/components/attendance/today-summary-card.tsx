@@ -23,7 +23,7 @@ export function TodaySummaryCard() {
 
   if (isPending) {
     return (
-      <Card className="border-none shadow-sm h-full">
+      <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
         <CardHeader>
           <Skeleton className="h-6 w-32" />
         </CardHeader>
@@ -58,7 +58,7 @@ export function TodaySummaryCard() {
   const lateMinutes = day?.late_minutes || 0;
 
   return (
-    <Card className="border-none shadow-sm h-full flex flex-col">
+    <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800 flex flex-row items-center justify-between">
         <CardTitle className="text-base font-bold flex items-center gap-2">
           <Info className="w-4 h-4 text-emerald-600" />

@@ -1,8 +1,11 @@
 app = "g4k"
-primary_region = "sin"
+primary_region = "bom"
 
 [build]
   dockerfile = "Dockerfile"
+
+[deploy]
+  release_command = "cd apps/api && php artisan migrate --force"
 
 [env]
   APP_ENV = "production"
@@ -14,7 +17,7 @@ primary_region = "sin"
   DB_PORT = "6543"
   DB_SSLMODE = "require"
   SESSION_DRIVER = "database"
-  CACHE_STORE = "database"
+  CACHE_STORE = "file"
   QUEUE_CONNECTION = "database"
   BROADCAST_CONNECTION = "reverb"
   FILESYSTEM_DISK = "local"
@@ -30,7 +33,7 @@ primary_region = "sin"
 [[services]]
   internal_port = 8080
   protocol = "tcp"
-  auto_stop_machines = true
+  auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
 
@@ -53,7 +56,7 @@ primary_region = "sin"
 [[services]]
   internal_port = 8081
   protocol = "tcp"
-  auto_stop_machines = true
+  auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
 

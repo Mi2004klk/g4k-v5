@@ -34,7 +34,7 @@ export function GanttView({ tasks }: { tasks: any[] }) {
   }, [tasks]);
 
   return (
-    <Card className="border-none shadow-sm overflow-hidden">
+    <Card className="overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader>
         <CardTitle className="text-base font-bold">Project Timeline (Gantt)</CardTitle>
       </CardHeader>
@@ -75,7 +75,7 @@ export function GanttView({ tasks }: { tasks: any[] }) {
                   </div>
                   <div className="col-span-12 relative h-full flex items-center px-2">
                     <div
-                      className="h-6 rounded-md bg-violet-600/20 border border-violet-500 text-violet-700 dark:text-violet-300 font-bold text-[10px] flex items-center px-2 shadow-sm"
+                      className="h-6 rounded-md bg-violet-600/20 border border-violet-500 text-violet-700 dark:text-violet-300 font-bold text-[10px] flex items-center px-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150"
                       style={{
                         marginLeft: `${(dayOffset / 14) * 100}%`,
                         width: "15%",

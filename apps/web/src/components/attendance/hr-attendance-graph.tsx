@@ -102,7 +102,7 @@ export function HrAttendanceGraph() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
           <button
             onClick={() => setGroupBy("date")}
@@ -150,7 +150,7 @@ export function HrAttendanceGraph() {
         </div>
       </div>
 
-      <div className="w-full bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 shadow-sm relative min-h-[450px]">
+      <div className="w-full bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 relative min-h-[450px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm z-10 rounded-xl">
             <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />

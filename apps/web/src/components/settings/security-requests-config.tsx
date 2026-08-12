@@ -140,7 +140,7 @@ export function SecurityRequestsConfig() {
 
   return (
     <div className="space-y-6">
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl">
+      <Card className="border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <CardHeader>
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-brand-violet" />

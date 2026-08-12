@@ -19,7 +19,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [],
+    'allowed_origins' => [
+        'https://g4k-8g9abkok4-naval-treasure-group.vercel.app',
+    ],
 
     'allowed_origins_patterns' => [
         '#^https://.*\.vercel\.app$#',

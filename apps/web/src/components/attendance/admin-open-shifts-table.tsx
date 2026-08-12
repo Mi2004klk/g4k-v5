@@ -163,7 +163,7 @@ export function AdminOpenShiftsTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-warning/30 shadow-sm relative overflow-hidden">
+      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-warning/30 relative overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <div className="absolute top-0 left-0 w-1 h-full bg-warning" />
         
         {/* Search & Dept */}
@@ -210,7 +210,7 @@ export function AdminOpenShiftsTable() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {openShifts.length === 0 && !isLoading ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">

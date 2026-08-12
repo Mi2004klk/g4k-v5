@@ -278,7 +278,7 @@ export function AdminAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
+      <div className="flex flex-col xl:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         
         {/* Search & Dept */}
         <div className="flex w-full xl:w-auto items-center gap-3">
@@ -351,7 +351,7 @@ export function AdminAttendanceTable() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden relative min-h-[400px]">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
             <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />

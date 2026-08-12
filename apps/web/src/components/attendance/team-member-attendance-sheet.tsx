@@ -109,7 +109,7 @@ export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberA
                           </div>
                           
                           <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] px-4">
-                            <div className="flex flex-col bg-white dark:bg-neutral-900 p-3 rounded-xl border border-neutral-100 dark:border-neutral-800 shadow-sm">
+                            <div className="flex flex-col bg-white dark:bg-neutral-900 p-3 rounded-xl border border-neutral-100 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-sm text-neutral-900 dark:text-white capitalize">

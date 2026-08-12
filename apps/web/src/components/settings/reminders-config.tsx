@@ -52,11 +52,11 @@ export function RemindersConfig() {
   };
 
   if (isLoading) {
-    return <Skeleton className="h-64 w-full rounded-2xl" />;
+    return <Skeleton className="h-64 w-full rounded-xl" />;
   }
 
   return (
-    <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+    <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader>
         <CardTitle className="text-base">Shift & Attendance Reminders</CardTitle>
       </CardHeader>

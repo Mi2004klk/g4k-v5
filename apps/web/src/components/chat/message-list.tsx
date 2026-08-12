@@ -23,7 +23,7 @@ const MessageItem = memo(function MessageItem({
       </div>
 
       <div
-        className={`max-w-[75%] p-3 rounded-2xl text-xs space-y-1 ${
+        className={`max-w-[75%] p-3 rounded-xl text-xs space-y-1 ${
           isMe
             ? "bg-violet-600 text-white rounded-tr-none"
             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none"

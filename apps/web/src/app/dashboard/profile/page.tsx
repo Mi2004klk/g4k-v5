@@ -311,7 +311,7 @@ export default function ProfilePage() {
     <div className="space-y-6 max-w-5xl mx-auto font-sans">
       {/* Header Profile Card */}
       <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-brand" />
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-violet-600" />
         <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-brand-violet/5 dark:bg-brand-violet/10">
           <div className="relative group shrink-0">
             <div className="w-24 h-24 rounded-full bg-white dark:bg-neutral-800 border-2 border-brand-violet flex items-center justify-center font-bold text-3xl shadow-sm overflow-hidden text-brand-violet">

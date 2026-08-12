@@ -129,7 +129,7 @@ export function MessageComposer({
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Type a message... (use @ to mention)"
-        className="flex-1 text-xs bg-neutral-50 dark:bg-neutral-800 p-2.5 rounded-xl border-none resize-none focus:outline-none focus:ring-1 focus:ring-violet-500"
+        className="flex-1 text-xs bg-neutral-50 dark:bg-neutral-800 p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
         rows={1}
       />
 
