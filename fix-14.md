@@ -517,12 +517,12 @@ gcloud scheduler jobs create http g4k-queue-cron --schedule="*/3 * * * *" --loca
   --uri="https://run.googleapis.com/v2/projects/$(gcloud config get-value project)/locations/asia-south1/jobs/g4k-queue:run" \
   --http-method=POST --oauth-service-account-email=${RUN_SA}
 ```
-- [ ] **7.1** Create both Jobs + both Scheduler crons. Verify:
+- [x] **7.1** Create both Jobs + both Scheduler crons. Verify:
   ```bash
   gcloud run jobs execute g4k-schedule --region asia-south1 --wait   # should print "No scheduled commands are ready to run" or run one
   gcloud run jobs execute g4k-queue    --region asia-south1 --wait   # should process any pending jobs then exit 0
   ```
-- [ ] **7.2** Confirm the five `routes/console.php` schedule entries (3 every-5-min jobs + weekly summary
+- [x] **7.2** Confirm the five `routes/console.php` schedule entries (3 every-5-min jobs + weekly summary
       + daily sanctum prune) now fire via the per-minute `g4k-schedule` Job.
 
 > **Simplest alternative** if traffic is very low: set `QUEUE_CONNECTION=sync` on the API (jobs run inline
@@ -533,27 +533,27 @@ gcloud scheduler jobs create http g4k-queue-cron --schedule="*/3 * * * *" --loca
 
 ## §8 — Database & Supabase hardening
 
-- [ ] **8.1** Pin the pooler port in `apps/api/.env.example`: `DB_PORT=6543` (was `5432`). Port `6543` is
+- [x] **8.1** Pin the pooler port in `apps/api/.env.example`: `DB_PORT=6543` (was `5432`). Port `6543` is
       Supabase's **transaction pooler** — it multiplexes Cloud Run's per-instance connections. The direct
       `5432` exhausts Supabase's connection budget under scale.
-- [ ] **8.2** Connection budget check: `min-instances=1` × 4 Octane workers ≈ 4 long-lived PG
+- [x] **8.2** Connection budget check: `min-instances=1` × 4 Octane workers ≈ 4 long-lived PG
       connections; Reverb + Queue + Schedule Jobs add a few more each. Supabase pooler handles this
       comfortably. `config/octane.php:108` leaves `DisconnectFromDatabases` commented (connections held
       across requests for latency) — fine with the pooler. Do **not** enable persistent DB conns.
-- [ ] **8.3** Transaction-pooler caveats: prepared statements / `LISTEN/NOTIFY` / advisory locks don't
+- [x] **8.3** Transaction-pooler caveats: prepared statements / `LISTEN/NOTIFY` / advisory locks don't
       work on `6543`. The app uses none of these (realtime is Reverb, not PG LISTEN), and
       `PDO::ATTR_EMULATE_PREPARES=true` (`config/database.php:100`) sidesteps prepared-statement issues.
-- [ ] **8.4** Migrations: 47 files, several use raw non-concurrent `CREATE INDEX` / `DROP INDEX` / `ADD
+- [x] **8.4** Migrations: 47 files, several use raw non-concurrent `CREATE INDEX` / `DROP INDEX` / `ADD 
       CONSTRAINT … CHECK`. These take locks (`SHARE` / `ACCESS EXCLUSIVE`) on busy tables. Safe because
       only one instance runs `migrate` (the `migrations` table serializes), but on large tables an index
       build can block writes briefly. For future big tables, use `CREATE INDEX CONCURRENTLY` in a raw
       migration (note: cannot run inside a transaction — wrap in `DB::statement` outside `Schema`).
-- [ ] **8.5** Several migrations have empty `down()` (e.g. `2026_08_12_024445`). Rollbacks will be
+- [x] **8.5** Several migrations have empty `down()` (e.g. `2026_08_12_024445`). Rollbacks will be
       incomplete — avoid `migrate:rollback` in prod; rely on forward-only + PITR (Supabase daily backups).
-- [ ] **8.6** Dashboard init cache stays on `CACHE_STORE=database` (`DashboardController.php:42` et al.)
+- [x] **8.6** Dashboard init cache stays on `CACHE_STORE=database` (`DashboardController.php:42` et al.)
       — correct and shared across instances. Do **not** switch to `file` (per-instance, stale) or the
       `octane` store (per-worker, not shared).
-- [ ] **8.7** Remove dead Supabase-auth config: `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`,
+- [x] **8.7** Remove dead Supabase-auth config: `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`,
       `SUPABASE_URL` are declared in `.env.example:49-51` but **never read** (Auth is 100% Sanctum; no
       JWT verification, no `supabase/*` package). Delete them from `.env.example` and any deploy env. (The
       `SERVICE_ROLE_KEY` bypasses Supabase RLS — carrying it unused is a liability.)
