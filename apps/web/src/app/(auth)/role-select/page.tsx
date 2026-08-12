@@ -14,6 +14,7 @@ export default function RoleSelectPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const token = useAuthStore((s) => s.token);
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
@@ -93,7 +94,7 @@ export default function RoleSelectPage() {
               Your account currently has no roles assigned. Please contact your administrator.
             </p>
             <button 
-              onClick={() => { setAuth(null, null, null, null); router.push('/login'); }} 
+              onClick={() => { clearAuth(); router.push('/login'); }} 
               className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg shadow-sm transition-all font-sans"
             >
               Sign out

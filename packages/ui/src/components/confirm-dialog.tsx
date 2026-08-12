@@ -22,6 +22,7 @@ export interface ConfirmDialogProps {
   cancelText?: string
   onConfirm: () => void | Promise<void>
   isLoading?: boolean
+  isDestructive?: boolean
 }
 
 export function ConfirmDialog({
@@ -34,6 +35,7 @@ export function ConfirmDialog({
   cancelText = "Cancel",
   onConfirm,
   isLoading = false,
+  isDestructive = false,
 }: ConfirmDialogProps) {
   const handleConfirm = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -53,7 +55,7 @@ export function ConfirmDialog({
           <AlertDialogCancel disabled={isLoading}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className={isDestructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
             disabled={isLoading}
           >
             {isLoading ? "Processing..." : confirmText}

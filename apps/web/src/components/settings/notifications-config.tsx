@@ -10,16 +10,16 @@ import { Card, CardHeader, CardTitle, CardContent, Button, Switch } from "@g4k/u
 
 export function NotificationsConfig() {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<Record<string, Record<string, any>>>({});
+  const [formData, setFormData] = useState<Record<string, string[]>>({});
 
   const { data: settings = [], isLoading } = useQuery({
-    queryKey: queryKeys.settings("notifications"),
+    queryKey: [...queryKeys.settings, "notifications"],
     queryFn: () => apiFetch("/settings?category=notifications"),
   });
 
   useEffect(() => {
     if (settings) {
-      const initial: Record<string, any> = {};
+      const initial: Record<string, string[]> = {};
       settings.forEach((s: any) => {
         try {
           initial[s.key] = JSON.parse(s.value);
@@ -37,7 +37,7 @@ export function NotificationsConfig() {
       body: JSON.stringify({ settings }),
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.settings("notifications") });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.settings, "notifications"] });
       toast.success("Notification preferences updated");
     },
     onError: (e: any) => toast.error(e.message || "Update failed"),

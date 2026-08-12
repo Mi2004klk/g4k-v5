@@ -82,7 +82,6 @@ export function AdminAttendanceTable() {
     { label: "All Employees", value: "all" },
     ...users.map((u: any) => ({ label: u.name, value: u.id.toString() }))
   ];
-  const [userFilter, setUserFilter] = useUrlState("user", "all");
 
   const { data, isLoading, error } = useQuery({
     queryKey: [...queryKeys.adminAttendance(dateFrom, deptFilter), dateTo, userFilter, statusFilter, debouncedSearch, page, perPage],

@@ -71,6 +71,7 @@ skills-lock.json
 # ---- Internal planning / scratch docs (client repo stays clean) ----
 # README.md is intentionally NOT ignored.
 fix-*.md
+fix_*.md
 final-fix-*.md
 build-summary.md
 context.md
@@ -79,10 +80,19 @@ patch*.js
 patch*.mjs
 fix-imports.mjs
 fix-cards.js
+fix_*.js
+add_*.js
+migrate_*.js
+inspect_*.js
+replace_*.js
+refactor_*.js
+generate_*.js
+scrub.js
 remove_padding.py
 update-openapi.js
 docs/
 openspec/
+data/
 
 # ---- Vercel local project metadata ----
 .vercel/

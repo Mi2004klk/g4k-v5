@@ -124,9 +124,5 @@ export const useTimerStore = create<TimerState>()(
       get().stopTimer();
       set({ baseSeconds: initialTotalSeconds, standardSeconds: standardSeconds });
     }
-  }),
-  {
-    name: 'g4k-timer',
-  }
-  )
-);
+  },
+}), { name: 'g4k-timer' }));
