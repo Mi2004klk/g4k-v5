@@ -6,7 +6,7 @@ import { Loader2, Megaphone, Trash2, Pin, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
@@ -18,6 +18,7 @@ export function AnnouncementBoard() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   const { data: announcements = [], isPending, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.dashboardInit,
@@ -226,26 +227,40 @@ export function AnnouncementBoard() {
                     </span>
                     {isAdminOrHr && (
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => pinMutation.mutate({ id: item.id, pinned: !isPinned })}
-                          title={isPinned ? "Unpin Announcement" : "Pin Announcement"}
-                          className={`h-5 w-5 transition-colors ${
-                            isPinned ? "text-warning hover:text-warning/80" : "text-neutral-400 hover:text-neutral-600"
-                          }`}
-                        >
-                          <Pin className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteMutation.mutate(item.id)}
-                          title="Delete Announcement"
-                          className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                        <TooltipProvider delayDuration={150}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => pinMutation.mutate({ id: item.id, pinned: !isPinned })}
+                                aria-label={isPinned ? "Unpin Announcement" : "Pin Announcement"}
+                                className={`h-5 w-5 transition-colors ${
+                                  isPinned ? "text-warning hover:text-warning/80" : "text-neutral-400 hover:text-neutral-600"
+                                }`}
+                              >
+                                <Pin className="w-3 h-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-xs">{isPinned ? "Unpin Announcement" : "Pin Announcement"}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider delayDuration={150}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setConfirmState({ isOpen: true, id: item.id })}
+                                aria-label="Delete Announcement"
+                                className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-xs">Delete Announcement</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     )}
                   </div>
@@ -288,6 +303,20 @@ export function AnnouncementBoard() {
           })
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmState.isOpen}
+        onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, id: null }) }}
+        onConfirm={() => {
+          if (confirmState.id) {
+            deleteMutation.mutate(confirmState.id);
+            setConfirmState({ isOpen: false, id: null });
+          }
+        }}
+        title="Delete Announcement"
+        description="Are you sure you want to delete this announcement?"
+        isLoading={deleteMutation.isPending}
+      />
     </Card>
   );
 }

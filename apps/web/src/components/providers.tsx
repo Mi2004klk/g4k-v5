@@ -77,7 +77,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
-        <Toaster position="top-right" duration={4000} richColors />
+        <Toaster position="top-right" duration={4000} richColors closeButton />
         <OfflineBanner />
       </QueryClientProvider>
     </NextThemesProvider>

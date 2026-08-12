@@ -34,13 +34,27 @@ class ProcessApprovalDecision
 
         if (!$submitter) return;
 
+        $typeLabel = str_replace('App\\Models\\', '', $approval->approvable_type);
+        
+        $body = "Your {$typeLabel} request has been {$approval->decision}.";
+        if ($approval->decision === 'redo') {
+            $body = "Your {$typeLabel} requires changes. Reason: {$approval->decision_reason}";
+        }
+
+        $link = '/dashboard';
+        if ($approval->approvable_type === \App\Models\LeaveRequest::class) {
+            $link = '/dashboard/leave';
+        } elseif ($approval->approvable_type === \App\Models\Task::class) {
+            $link = '/dashboard/tasks';
+        }
+
         // Notify submitter of decision
         Notification::create([
             'user_id' => $submitter->id,
             'type' => 'approval_decided',
             'title' => 'Approval Decision',
-            'body' => "Your {$approval->approvable_type} request has been {$approval->decision}.",
-            'link' => '/dashboard/attendance', // or /dashboard/leave
+            'body' => $body,
+            'link' => $link,
         ]);
     }
 }

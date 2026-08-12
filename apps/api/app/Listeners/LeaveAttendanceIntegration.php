@@ -7,9 +7,13 @@ use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
 
-class LeaveAttendanceIntegration
+class LeaveAttendanceIntegration implements ShouldQueue
 {
+    use InteractsWithQueue;
+
     /**
      * Handle the event.
      */
@@ -47,11 +51,12 @@ class LeaveAttendanceIntegration
                       ->orWhere('recurring', true);
                 })->get();
 
-            $currentDate = $startDate->copy();
-            while ($currentDate->lte($endDate)) {
-                $dateStr = $currentDate->toDateString();
-                $dayIso = $currentDate->dayOfWeekIso; // 1 (Mon) to 7 (Sun)
-                $monthDay = $currentDate->format('m-d');
+            DB::transaction(function () use ($startDate, $endDate, $workingDays, $holidays, $userId) {
+                $currentDate = $startDate->copy();
+                while ($currentDate->lte($endDate)) {
+                    $dateStr = $currentDate->toDateString();
+                    $dayIso = $currentDate->dayOfWeekIso; // 1 (Mon) to 7 (Sun)
+                    $monthDay = $currentDate->format('m-d');
 
                 // Check if working day using strict ISO 1-7 convention
                 $isWorkingDay = in_array($dayIso, $workingDays);
@@ -101,6 +106,7 @@ class LeaveAttendanceIntegration
 
                 $currentDate->addDay();
             }
+            });
         }
     }
 }

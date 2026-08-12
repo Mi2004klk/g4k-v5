@@ -11,15 +11,11 @@ import { queryKeys } from "@/lib/query-keys";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { offlineEngine } from "@/lib/offline-engine";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  ConfirmDialog,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from "@g4k/ui/components";
 
 import { Skeleton } from "@g4k/ui/components";
@@ -29,6 +25,7 @@ import { LiveTimer } from "@/components/attendance/live-timer";
 export function TimeClockWidget({ className }: { className?: string }) {
 
   const [showConfirmOut, setShowConfirmOut] = useState(false);
+  const [showConfirmContinue, setShowConfirmContinue] = useState(false);
   const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
 
   const queryClient = useQueryClient();
@@ -108,7 +105,12 @@ export function TimeClockWidget({ className }: { className?: string }) {
       toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
     } catch (err: any) {
       // Revert optimistic state on fatal error
-      toast.error(err.message || "Failed to record punch. Syncing with server...");
+      const msg = err.message || "Failed to record punch. Syncing with server...";
+      if (msg.toLowerCase().includes("already")) {
+        toast.warning(msg);
+      } else {
+        toast.error(msg);
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit }); // Re-sync store state
     }
   };
@@ -205,20 +207,28 @@ export function TimeClockWidget({ className }: { className?: string }) {
             className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
           >
             <Play className="w-4 h-4" />
-            <span>Clock In</span>
+            <span>Start Shift</span>
           </Button>
         )}
 
         {activeState === "active" && (
           <>
-            <Button
-              onClick={() => handlePunch("start_break")}
-              variant="outline"
-              className="flex-1 h-12 border-warning/50 text-warning hover:bg-warning/10 gap-2"
-            >
-              <Coffee className="w-4 h-4" />
-              <span>Break</span>
-            </Button>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handlePunch("start_break")}
+                    variant="outline"
+                    className="flex-1 h-12 border-warning/50 text-warning hover:bg-warning/10 gap-2"
+                    aria-label="Pause Work Session"
+                  >
+                    <Coffee className="w-4 h-4" />
+                    <span>Pause for Break</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="text-xs">Pause Work Session</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             <Button
               onClick={() => setShowConfirmOut(true)}
@@ -226,54 +236,71 @@ export function TimeClockWidget({ className }: { className?: string }) {
               className="flex-1 h-12 gap-2"
             >
               <Square className="w-4 h-4" />
-              <span>Clock Out</span>
+              <span>End Shift</span>
             </Button>
           </>
         )}
 
         {activeState === "on_break" && (
-          <Button
-            onClick={() => handlePunch("end_break")}
-            className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
-          >
-            <Play className="w-4 h-4" />
-            <span>Resume Work</span>
-          </Button>
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => handlePunch("end_break")}
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
+                  aria-label="Resume Work Session"
+                >
+                  <Play className="w-4 h-4" />
+                  <span>Resume Work</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">Resume Work Session</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
         {activeState === "completed" && (
-          <div className="text-xs text-neutral-400 font-medium">
-            Shift completed for today.
-          </div>
+          <Button
+            onClick={() => setShowConfirmContinue(true)}
+            variant="outline"
+            className="w-full h-12 border-emerald-600/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 font-semibold gap-2 shadow-sm"
+          >
+            <Play className="w-4 h-4" />
+            <span>Continue Shift</span>
+          </Button>
         )}
       </div>
 
+      <ConfirmDialog
+        open={showConfirmContinue}
+        onOpenChange={setShowConfirmContinue}
+        onConfirm={() => {
+          setShowConfirmContinue(false);
+          handlePunch("clock_in");
+        }}
+        title="Continue Shift?"
+        description="You have already clocked out for today. Continuing your shift will resume your work session and add to your total hours."
+        confirmText="Yes, Continue Shift"
+      />
+
       {/* Clock Out Confirmation Dialog */}
-      <AlertDialog open={showConfirmOut} onOpenChange={setShowConfirmOut}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-rose-600">
-              <AlertCircle className="w-5 h-5" />
-              Confirm End Shift
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              Are you sure you want to clock out for today? Total worked time will be submitted to HR.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setShowConfirmOut(false);
-                handlePunch("clock_out");
-              }}
-              className="bg-rose-600 hover:bg-rose-700 text-white"
-            >
-              Confirm Clock Out
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Clock Out Confirmation Dialog */}
+      <ConfirmDialog
+        open={showConfirmOut}
+        onOpenChange={setShowConfirmOut}
+        onConfirm={() => {
+          setShowConfirmOut(false);
+          handlePunch("clock_out");
+        }}
+        title="Confirm End Shift"
+        description="Are you sure you want to clock out for today? Total worked time will be submitted to HR."
+        confirmText="Confirm Clock Out"
+      >
+        <div className="flex items-center gap-2 text-rose-600 mb-2">
+          <AlertCircle className="w-5 h-5" />
+          <span className="font-semibold text-sm">Action cannot be reversed</span>
+        </div>
+      </ConfirmDialog>
     </div>
   );
 }

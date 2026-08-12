@@ -151,12 +151,15 @@ class ProjectController extends Controller
         }
 
         $request->validate([
-            'decision' => 'required|in:approved,rejected',
+            'decision' => 'required|in:approved,rejected,redo',
             'reason' => 'nullable|string',
         ]);
 
         if ($request->input('decision') === 'approved') {
             \App\Services\ApprovalService::approve($approval, $request->user()->id, $request->input('reason'));
+        } elseif ($request->input('decision') === 'redo') {
+            \App\Services\ApprovalService::redo($approval, $request->user()->id, $request->input('reason') ?? 'Redo requested');
+            $project->update(['status' => 'active']); // Revert to active if redo requested
         } else {
             \App\Services\ApprovalService::reject($approval, $request->user()->id, $request->input('reason'));
             $project->update(['status' => 'active']); // Revert to active if rejected

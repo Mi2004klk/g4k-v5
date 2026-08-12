@@ -81,6 +81,13 @@ function getHashColor(name: string) {
   return accentColors[Math.abs(hash) % accentColors.length];
 }
 
+export function getInitials(name: string): string {
+  if (!name) return "UI";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export interface AvatarFallbackProps extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> {
   name?: string;
   children?: React.ReactNode;
@@ -103,7 +110,7 @@ const AvatarFallback = React.forwardRef<
       )}
       {...props}
     >
-      {children || (name ? name.substring(0, 2) : "UI")}
+      {children || (name ? getInitials(name) : "UI")}
     </AvatarPrimitive.Fallback>
   )
 })

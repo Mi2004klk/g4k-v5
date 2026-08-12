@@ -34,12 +34,13 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { strongPasswordSchema } from "@/lib/validations";
+import { parseUserAgent } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { PasswordInput } from "@g4k/ui/components";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, ConfirmDialog } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ export default function ProfilePage() {
   // Form fields for profile update
   const [name, setName] = useState(authUser?.name || "");
   const [phone, setPhone] = useState("");
+  const [designationId, setDesignationId] = useState("");
 
   // Change password fields
   const [currentPassword, setCurrentPassword] = useState("");
@@ -89,8 +91,14 @@ export default function ProfilePage() {
       const data = await apiFetch("/profile");
       setName(data.name || "");
       setPhone(data.phone || "");
+      setDesignationId(data.designation_id?.toString() || "");
       return data;
     },
+  });
+
+  const { data: designations } = useQuery({
+    queryKey: ["designations"],
+    queryFn: () => apiFetch("/designations"),
   });
 
   const { data: sessions } = useQuery({
@@ -242,11 +250,18 @@ export default function ProfilePage() {
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: "device_name",
-      header: "Device / Name",
+      header: "Device / Browser",
       cell: ({ row }) => (
-        <div className="flex items-center gap-2 font-semibold text-neutral-900 dark:text-white min-w-[120px]">
-          <Laptop className="w-4 h-4 text-brand-violet shrink-0" />
-          <span className="truncate">{row.original.device_name || "Web Browser"}</span>
+        <div className="flex flex-col min-w-[120px]">
+          <div className="flex items-center gap-2 font-semibold text-neutral-900 dark:text-white">
+            <Laptop className="w-4 h-4 text-brand-violet shrink-0" />
+            <span className="truncate">{row.original.device_name || "Unknown Device"}</span>
+          </div>
+          {row.original.user_agent && (
+            <span className="text-[10px] text-neutral-500 mt-0.5 ml-6">
+              {parseUserAgent(row.original.user_agent)}
+            </span>
+          )}
         </div>
       ),
     },
@@ -351,6 +366,10 @@ export default function ProfilePage() {
                     <Building2 className="w-4 h-4 mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.department?.name || "No Department")}
                   </div>
+                  <div className="flex items-center text-neutral-500 dark:text-neutral-400 bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-700">
+                    <Briefcase className="w-4 h-4 mr-2 text-brand-violet/70" />
+                    {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.designation?.name || "No Designation")}
+                  </div>
                 </div>
               </div>
             </div>
@@ -445,11 +464,26 @@ export default function ProfilePage() {
               />
             </div>
             <div>
+              <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Designation</label>
+              <select
+                value={designationId}
+                onChange={(e) => setDesignationId(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:placeholder:text-neutral-400 dark:focus-visible:ring-brand-violet font-sans"
+              >
+                <option value="">Select Designation</option>
+                {designations?.map((d: any) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
               <label className="font-semibold block mb-1 text-neutral-400">Email Address (Read-only)</label>
               <Input value={profile?.email || ""} disabled className="bg-neutral-50 dark:bg-neutral-800/50 font-sans" />
             </div>
             <Button
-              onClick={() => updateProfileMutation.mutate({ name, phone })}
+              onClick={() => updateProfileMutation.mutate({ name, phone, designation_id: designationId || null })}
               disabled={updateProfileMutation.isPending}
               className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm font-sans"
             >
@@ -634,14 +668,32 @@ export default function ProfilePage() {
 
       {/* Active Device Sessions */}
       <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
-            <Laptop className="w-4 h-4 text-brand-violet" />
-            Active Device Sessions
-          </CardTitle>
-          <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-            Devices currently logged into your Games4King Workplace OS account. Revoking a session will immediately log out that device.
-          </CardDescription>
+        <CardHeader className="flex flex-row justify-between items-start">
+          <div>
+            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-neutral-900 dark:text-white">
+              <Laptop className="w-4 h-4 text-brand-violet" />
+              Active Device Sessions
+            </CardTitle>
+            <CardDescription className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-1">
+              Devices currently logged into your Games4King Workplace OS account. Revoking a session will immediately log out that device.
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                await apiFetch("/auth/logout", { method: "POST" });
+                toast.success("Logged out successfully");
+                window.location.href = "/login";
+              } catch (e: any) {
+                toast.error(e.message || "Logout failed");
+              }
+            }}
+            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
+          >
+            Log Out Current Device
+          </Button>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto border-t border-neutral-100 dark:border-neutral-800">
           <DataTable 
@@ -699,34 +751,24 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Revoke Session Confirm Dialog */}
-      <Dialog open={isRevokeOpen} onOpenChange={setIsRevokeOpen}>
-        <DialogContent className="sm:max-w-sm font-sans">
-          <DialogHeader>
-            <DialogTitle className="font-display text-red-600">Revoke Session</DialogTitle>
-            <DialogDescription className="sr-only">Confirm this action.</DialogDescription>
-            <DialogDescription className="text-xs font-sans">
-              Are you sure you want to log out this device? Any unsaved work on that device may be lost.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => { setIsRevokeOpen(false); setRevokeId(null); }} className="font-sans">
-              Cancel
-            </Button>
-            <Button
-              onClick={() => revokeId && revokeSessionMutation.mutate(revokeId)}
-              disabled={revokeSessionMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 text-white font-sans shadow-sm"
-            >
-              {revokeSessionMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Revoke Device"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={isRevokeOpen}
+        onOpenChange={(open) => { 
+          if (!open) {
+            setIsRevokeOpen(false); 
+            setRevokeId(null); 
+          }
+        }}
+        onConfirm={() => {
+          if (revokeId) {
+            revokeSessionMutation.mutate(revokeId);
+          }
+        }}
+        title="Revoke Session"
+        description="Are you sure you want to log out this device? Any unsaved work on that device may be lost."
+        confirmText="Revoke Device"
+        isLoading={revokeSessionMutation.isPending}
+      />
     </div>
   );
 }

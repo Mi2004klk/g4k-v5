@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
 import { Check, X, Plane } from "lucide-react";
 import { DataTable, EmptyState } from "@g4k/ui/components";
-import { FilterBar } from "@/components/data-table/filter-bar";
+import { FilterBar } from "@g4k/ui/components";
 
 interface LeaveHistoryTableProps {
   records: any[];
@@ -14,6 +14,12 @@ interface LeaveHistoryTableProps {
   setTypeFilter?: (val: string) => void;
   statusFilter?: string;
   setStatusFilter?: (val: string) => void;
+  showEmployee?: boolean;
+  page?: number;
+  perPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPerPageChange?: (perPage: number) => void;
 }
 
 export function LeaveHistoryTable({ 
@@ -22,10 +28,32 @@ export function LeaveHistoryTable({
   typeFilter = "all",
   setTypeFilter = () => {},
   statusFilter = "all",
-  setStatusFilter = () => {}
+  setStatusFilter = () => {},
+  showEmployee = false,
+  page,
+  perPage,
+  totalPages,
+  onPageChange,
+  onPerPageChange
 }: LeaveHistoryTableProps) {
-  const columns = useMemo<ColumnDef<any>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<any>[]>(() => {
+    const cols: ColumnDef<any>[] = [];
+    
+    if (showEmployee) {
+      cols.push({
+        accessorKey: "employee",
+        header: "Employee",
+        cell: ({ row }) => (
+          <div>
+            <div className="font-semibold text-neutral-900 dark:text-white">
+              {row.original.user?.name || "Unknown"}
+            </div>
+          </div>
+        ),
+      });
+    }
+
+    cols.push(
       {
         accessorKey: "start_date",
         header: "Dates",
@@ -38,7 +66,11 @@ export function LeaveHistoryTable({
             </div>
           );
         },
-      },
+      }
+    );
+    
+    return [
+      ...cols,
       {
         accessorKey: "type",
         header: "Type",
@@ -97,9 +129,8 @@ export function LeaveHistoryTable({
           );
         },
       },
-    ],
-    []
-  );
+    ];
+  }, [showEmployee]);
 
   const [search, setSearch] = useState("");
 
@@ -118,43 +149,50 @@ export function LeaveHistoryTable({
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
-        <FilterBar
-          searchQuery={search}
-          onSearchChange={setSearch}
-          filters={[
-            {
-              key: "type",
-              label: "Type",
-              value: typeFilter,
-              onChange: setTypeFilter,
-              options: [
-                { label: "All Types", value: "all" },
-                { label: "Casual", value: "casual" },
-                { label: "Sick", value: "sick" },
-                { label: "Earned", value: "earned" },
-                { label: "Unpaid", value: "unpaid" },
-              ],
-            },
-            {
-              key: "status",
-              label: "Status",
-              value: statusFilter,
-              onChange: setStatusFilter,
-              options: [
-                { label: "All Statuses", value: "all" },
-                { label: "Pending", value: "pending" },
-                { label: "Approved", value: "approved" },
-                { label: "Rejected", value: "rejected" },
-              ],
-            },
-          ]}
-        />
+          <FilterBar 
+            searchQuery={search} 
+            onSearchChange={setSearch} 
+            filters={[
+              {
+                key: "type",
+                label: "Type",
+                type: "select",
+                value: typeFilter,
+                onChange: setTypeFilter,
+                options: [
+                  { label: "All Types", value: "all" },
+                  { label: "Casual", value: "casual" },
+                  { label: "Sick", value: "sick" },
+                  { label: "Earned", value: "earned" },
+                  { label: "Unpaid", value: "unpaid" },
+                ]
+              },
+              {
+                key: "status",
+                label: "Status",
+                type: "select",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { label: "All Statuses", value: "all" },
+                  { label: "Pending", value: "pending" },
+                  { label: "Approved", value: "approved" },
+                  { label: "Rejected", value: "rejected" }
+                ]
+              }
+            ]}
+          />
       </div>
       <div className="flex-1 min-h-[300px]">
         {filteredRecords && filteredRecords.length > 0 ? (
           <DataTable
             columns={columns}
             data={filteredRecords}
+            page={page}
+            perPage={perPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            onPerPageChange={onPerPageChange}
           />
         ) : !isLoading ? (
           <div className="p-8">

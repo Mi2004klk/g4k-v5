@@ -54,7 +54,7 @@ export default function TasksPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.tasks,
-    queryFn: () => apiFetch("/tasks"),
+    queryFn: () => apiFetch("/tasks?per_page=100"),
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_TASKS,
   });
@@ -161,7 +161,7 @@ export default function TasksPage() {
     },
   });
 
-  const tasks = data?.data || [];
+  const tasks = data?.data?.data || [];
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((t: any) => {

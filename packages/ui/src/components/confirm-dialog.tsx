@@ -17,6 +17,7 @@ export interface ConfirmDialogProps {
   onOpenChange: (open: boolean) => void
   title?: string
   description?: React.ReactNode
+  children?: React.ReactNode
   confirmText?: string
   cancelText?: string
   onConfirm: () => void | Promise<void>
@@ -28,6 +29,7 @@ export function ConfirmDialog({
   onOpenChange,
   title = "Are you sure?",
   description = "This action cannot be undone.",
+  children,
   confirmText = "Confirm",
   cancelText = "Cancel",
   onConfirm,
@@ -44,8 +46,9 @@ export function ConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
         </AlertDialogHeader>
+        {children && <div className="py-2">{children}</div>}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction

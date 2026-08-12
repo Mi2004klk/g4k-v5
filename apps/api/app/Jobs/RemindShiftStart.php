@@ -23,8 +23,8 @@ class RemindShiftStart implements ShouldQueue
             return;
         }
 
-        // Get offset setting (e.g. 10 minutes before shift)
-        $offsetSetting = \App\Models\Setting::where('key', 'reminders.shift_offset')->value('value') ?? 10;
+        // Get offset setting (e.g. 15 minutes before shift)
+        $offsetSetting = \App\Models\Setting::where('key', 'reminders.shift_offset')->value('value') ?? 15;
         $offsetMinutes = (int) $offsetSetting;
 
         // Prefetch all work schedules to avoid N+1 queries
@@ -68,7 +68,7 @@ class RemindShiftStart implements ShouldQueue
                     $notifications[] = [
                         'user_id' => $user->id,
                         'title' => 'Shift Starting Soon',
-                        'body' => "Friendly reminder: Your shift starts at " . $shiftStart->format('H:i') . ". Don't forget to clock in!",
+                        'body' => "Your shift starts in {$offsetMinutes} minutes. Don't forget to clock in!",
                         'type' => 'info',
                         'created_at' => now(),
                         'updated_at' => now(),

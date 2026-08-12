@@ -24,7 +24,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/
 
 const forgotSchema = z.object({
   identifier: z.string().min(1, "Identifier is required"),
-  channel: z.enum(["smtp", "admin"]),
 });
 
 type FormValues = z.infer<typeof forgotSchema>;
@@ -37,20 +36,28 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotSchema),
     defaultValues: {
       identifier: "",
-      channel: "smtp",
     },
   });
 
   async function onSubmit(data: FormValues) {
     setIsLoading(true);
     try {
-      await apiFetch("/auth/forgot-password", {
+      const res = await apiFetch("/auth/forgot-password", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ identifier: data.identifier }),
       });
 
+      if (res.email_not_configured) {
+        toast.error("Email not configured yet. Setup email from Admin Settings.");
+        return;
+      }
+
+      if (res.email_send_failed) {
+        toast.error("We could not send the email right now. Please try again later.");
+        return;
+      }
+
       setIsSubmitted(true);
-      toast.success("Recovery request submitted.");
     } catch (error: any) {
       if (error.status === 429) {
         form.setError("root", { type: "manual", message: "Too many requests. Please try again later." });
@@ -89,7 +96,7 @@ export default function ForgotPasswordPage() {
           {isSubmitted ? (
             <div className="text-center space-y-4 py-4 font-sans">
               <div className="p-4 rounded-xl bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20 text-sm font-medium">
-                If an account matching your identifier exists, instructions have been sent via your chosen recovery method.
+                If an account matching your identifier exists, a password-reset link has been sent.
               </div>
               <Link href="/login" className="block w-full">
                 <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
@@ -124,44 +131,7 @@ export default function ForgotPasswordPage() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="channel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
-                        Recovery Channel
-                      </FormLabel>
-                      <div className="grid grid-cols-2 gap-3 pt-1">
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => field.onChange("smtp")}
-                          className={`p-3 text-sm font-medium rounded-lg border text-center transition-all font-sans ${
-                            field.value === "smtp"
-                              ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900 shadow-sm"
-                              : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                          Email (SMTP)
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => field.onChange("admin")}
-                          className={`p-3 text-sm font-medium rounded-lg border text-center transition-all font-sans ${
-                            field.value === "admin"
-                              ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900 shadow-sm"
-                              : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                          Admin Approval
-                        </button>
-                      </div>
-                      <FormMessage className="font-sans" />
-                    </FormItem>
-                  )}
-                />
+
 
                 <Button
                   type="submit"

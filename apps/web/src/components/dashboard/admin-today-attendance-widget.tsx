@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
+import { WidgetInfo } from "../widgets/widget-info";
 
 export function AdminTodayAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
@@ -35,8 +36,9 @@ export function AdminTodayAttendanceWidget() {
           <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
             <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             Today's Attendance
+            <WidgetInfo summary={`${presentCount + lateCount} clocked in out of ${totalCount}`} />
           </span>
           {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
         </div>

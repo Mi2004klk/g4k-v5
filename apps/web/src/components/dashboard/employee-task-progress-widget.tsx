@@ -2,69 +2,87 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
-import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton } from "@g4k/ui/components";
-import { Activity, CheckCircle2 } from "lucide-react";
+import { Card, Skeleton } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
+import { CheckCircle2, ListTodo } from "lucide-react";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 
 export function EmployeeTaskProgressWidget() {
-  const { data, isPending } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: queryKeys.dashboardInit,
     queryFn: () => apiFetch("/dashboard/init"),
-    select: (data: any) => data.metrics,
-    staleTime: STALE_TIME_METRICS,
+    select: (data: any) => data.metrics?.recent_task_progress,
     placeholderData: keepPreviousData,
   });
 
-  if (isPending) {
+  if (isLoading) {
     return (
       <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
         <div className="flex items-center gap-2 pb-3">
           <Skeleton className="w-7 h-7 rounded-md" />
-          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-32" />
         </div>
-        <Skeleton className="h-2.5 w-full mb-3 mt-4" />
-        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-14 w-full" />
       </Card>
     );
   }
 
-  const metrics = data?.metrics || {};
-  const completed = metrics.completed_tasks || 0;
-  const pending = metrics.pending_tasks || 0;
-  const total = completed + pending;
-  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const tasks = data || [];
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
-      <div>
+      <div className="flex flex-col h-full">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            <div className="w-7 h-7 rounded-md bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-              Task Progress
+              Recent Task Progress
             </span>
           </div>
-          <span className="text-xs font-bold text-violet-600 dark:text-violet-400 font-mono">
-            {percentage}%
-          </span>
         </div>
-        <p className="text-[11px] text-neutral-500 mb-4">
-          Current sprint completion breakdown
-        </p>
 
-        <Progress value={percentage} className="h-2.5 bg-neutral-100 dark:bg-neutral-800" />
-      </div>
-
-      <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800 text-xs mt-3">
-        <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-          <span>{completed} Done</span>
-        </div>
-        <div className="text-neutral-500 font-medium">
-          {pending} Pending
-        </div>
+        {tasks.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center text-xs text-neutral-400">
+            No recent tasks
+          </div>
+        ) : (
+          <div className="space-y-3 overflow-y-auto thin-scrollbar">
+            {tasks.map((task: any) => (
+              <Link 
+                key={task.id} 
+                href={`/dashboard/tasks/${task.id}`}
+                className="block group p-3 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800/50 dark:hover:bg-neutral-800 transition-colors border border-neutral-100 dark:border-neutral-800"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2 max-w-[70%]">
+                    <ListTodo className="w-4 h-4 text-neutral-400 shrink-0" />
+                    <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 truncate">
+                      {task.title}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-medium text-neutral-500 shrink-0">
+                    {task.progress}%
+                  </span>
+                </div>
+                
+                <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5 mb-2 overflow-hidden">
+                  <div 
+                    className="bg-purple-500 h-1.5 rounded-full transition-all duration-500" 
+                    style={{ width: `${task.progress}%` }} 
+                  />
+                </div>
+                
+                <p className="text-[10px] text-neutral-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-600 inline-block"></span>
+                  Updated {task.updated_at ? formatDistanceToNow(new Date(task.updated_at), { addSuffix: true }) : 'recently'}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );

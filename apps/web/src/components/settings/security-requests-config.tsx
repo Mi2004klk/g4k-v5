@@ -12,13 +12,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@g4k/
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { DataTable } from "@g4k/ui/components/data-table";
-import { StatusBadge } from "@g4k/ui/components";
+import { StatusBadge, ConfirmDialog } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 
 export function SecurityRequestsConfig() {
   const queryClient = useQueryClient();
   const [resetLink, setResetLink] = useState<string | null>(null);
+  const [rejectState, setRejectState] = useState<{ isOpen: boolean; id: number | string | null }>({ isOpen: false, id: null });
 
   const { data = [], isLoading } = useQuery({
     queryKey: queryKeys.passwordResets("pending"),
@@ -112,7 +113,7 @@ export function SecurityRequestsConfig() {
               size="sm"
               className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
               disabled={isApproving || isRejecting}
-              onClick={() => rejectMutation.mutate(id)}
+              onClick={() => setRejectState({ isOpen: true, id })}
             >
               <X className="w-3.5 h-3.5 mr-1" /> Reject
             </Button>
@@ -183,7 +184,6 @@ export function SecurityRequestsConfig() {
               Please copy this link and securely share it with the employee.
             </DialogDescription>
           </DialogHeader>
-
           <div className="py-4">
             <label className="text-xs font-semibold text-neutral-700 mb-1.5 block">Secure Reset Link</label>
             <div className="flex items-center gap-2">
@@ -205,6 +205,21 @@ export function SecurityRequestsConfig() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <ConfirmDialog
+        open={rejectState.isOpen}
+        onOpenChange={(open) => { if (!open) setRejectState({ isOpen: false, id: null }) }}
+        onConfirm={() => {
+          if (rejectState.id) {
+            rejectMutation.mutate(rejectState.id);
+            setRejectState({ isOpen: false, id: null });
+          }
+        }}
+        title="Reject Request"
+        description="Are you sure you want to reject this password reset request?"
+        confirmText="Reject"
+        isLoading={rejectMutation.isPending}
+      />
     </div>
   );
 }

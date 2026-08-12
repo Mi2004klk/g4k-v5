@@ -25,7 +25,7 @@ class AlertMissedClockIn implements ShouldQueue
         }
 
         // Get offset setting
-        $offsetSetting = \App\Models\Setting::where('key', 'reminders.missed_clock_in_offset')->value('value') ?? 15;
+        $offsetSetting = \App\Models\Setting::where('key', 'reminders.missed_clock_in_offset')->value('value') ?? 30;
         $offsetMinutes = (int) $offsetSetting;
 
         // Prefetch all work schedules to avoid N+1 queries
@@ -61,7 +61,7 @@ class AlertMissedClockIn implements ShouldQueue
             $graceMinutes = $schedule->grace_minutes ?? 10;
             
             $shiftStart = Carbon::parse($today . ' ' . $startTimeStr);
-            $targetTime = $shiftStart->copy()->addMinutes($graceMinutes)->addMinutes($offsetMinutes);
+            $targetTime = $shiftStart->copy()->addMinutes($offsetMinutes);
             
             // Check if current time is within a 5-minute window of the target
             if ($now->between($targetTime->copy()->subMinutes(1), $targetTime->copy()->addMinutes(4))) {
@@ -74,7 +74,7 @@ class AlertMissedClockIn implements ShouldQueue
                         $notifications[] = [
                             'user_id' => $hr->id,
                             'title' => 'Missed Clock-In Alert',
-                            'body' => "{$user->name} has missed their clock-in today (overdue by {$offsetMinutes}m).",
+                            'body' => "{$user->name} hasn't clocked in ({$offsetMinutes}m after shift start).",
                             'type' => 'alert',
                             'priority' => 'high',
                             'created_at' => now(),

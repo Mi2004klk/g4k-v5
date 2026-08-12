@@ -57,6 +57,30 @@ export function TodaySummaryCard() {
   const isLate = day?.status === "late";
   const lateMinutes = day?.late_minutes || 0;
 
+  // Process breaks from events
+  const breaks = [];
+  if (data?.events) {
+    let currentBreakStart = null;
+    for (const event of data.events) {
+      if (event.type === "break_start") {
+        currentBreakStart = event;
+      } else if (event.type === "break_end" && currentBreakStart) {
+        const start = new Date(currentBreakStart.time);
+        const end = new Date(event.time);
+        const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
+        breaks.push({ start, end, duration: durationSecs });
+        currentBreakStart = null;
+      }
+    }
+    // Handle ongoing break
+    if (currentBreakStart) {
+      const start = new Date(currentBreakStart.time);
+      const end = new Date();
+      const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
+      breaks.push({ start, end: null, duration: durationSecs, isOngoing: true });
+    }
+  }
+
   return (
     <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800 flex flex-row items-center justify-between">
@@ -78,14 +102,30 @@ export function TodaySummaryCard() {
             </span>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-neutral-500">
-              <Coffee className="w-4 h-4" />
-              <span className="text-sm font-medium">Break Duration</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-neutral-500">
+                <Coffee className="w-4 h-4" />
+                <span className="text-sm font-medium">Break Duration</span>
+              </div>
+              <span className="text-sm font-bold text-neutral-900 dark:text-white">
+                {day?.break_seconds ? formatTime(day.break_seconds) : "0h 0m"}
+                {breaks.length > 0 && <span className="text-xs text-neutral-400 font-normal ml-1">({breaks.length})</span>}
+              </span>
             </div>
-            <span className="text-sm font-bold text-neutral-900 dark:text-white">
-              {day?.break_seconds ? formatTime(day.break_seconds) : "0h 0m"}
-            </span>
+            
+            {breaks.length > 0 && (
+              <div className="pl-6 space-y-1 mt-1 border-l-2 border-neutral-100 dark:border-neutral-800 ml-1.5">
+                {breaks.map((b, i) => (
+                  <div key={i} className="flex justify-between items-center text-xs text-neutral-500">
+                    <span>
+                      {b.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {b.isOngoing ? "Now" : b.end?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <span className="font-mono">{Math.floor(b.duration / 60)}m</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between">

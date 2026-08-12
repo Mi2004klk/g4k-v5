@@ -52,6 +52,11 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class);
     }
 
+    public function managedDepartments()
+    {
+        return $this->belongsToMany(Department::class, 'department_hr');
+    }
+
     public function designation()
     {
         return $this->belongsTo(Designation::class);

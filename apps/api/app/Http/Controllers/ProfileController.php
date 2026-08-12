@@ -30,13 +30,19 @@ class ProfileController extends Controller
             'phone' => 'nullable|string|max:20',
             'avatar_url' => 'nullable|string',
             'preferences' => 'nullable|array',
+            'designation_id' => 'nullable|exists:designations,id',
         ]);
 
         $user->update($validated);
+        $after = $user->fresh()->toArray();
 
-        AuditLogger::log($request, 'update', 'user', $user->id, $before, $user->fresh()->toArray());
+        AuditLogger::log($request, 'update', 'user', $user->id, $before, $after);
 
-        return response()->json($user);
+        if (array_key_exists('designation_id', $validated) && $before['designation_id'] !== $validated['designation_id']) {
+            AuditLogger::log($request, 'profile.designation_change', 'user', $user->id, ['designation_id' => $before['designation_id']], ['designation_id' => $validated['designation_id']]);
+        }
+
+        return response()->json($user->load(['department', 'designation', 'roleAssignments']));
     }
 
     public function uploadAvatar(Request $request)
@@ -60,26 +66,4 @@ class ProfileController extends Controller
         return response()->json(['avatar_url' => $avatarUrl, 'user' => $user]);
     }
 
-    public function changePassword(Request $request)
-    {
-        $user = $request->user();
-
-        $validated = $request->validate([
-            'current_password' => 'required|string',
-            'new_password' => ['required', 'string', 'confirmed', $this->getPasswordPolicyRule()],
-        ]);
-
-        if (!Hash::check($validated['current_password'], $user->password)) {
-            return response()->json(['message' => 'Current password is incorrect'], 422);
-        }
-
-        $user->update([
-            'password' => Hash::make($validated['new_password']),
-            'must_change_password' => false,
-        ]);
-
-        AuditLogger::log($request, 'change_password', 'user', $user->id, null, null);
-
-        return response()->json(['message' => 'Password changed successfully']);
-    }
 }

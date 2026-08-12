@@ -17,12 +17,21 @@ class FlagOpenShifts implements ShouldQueue
     {
         $today = now()->toDateString();
         
-        // Find open shifts from previous days that haven't been flagged yet
-        $openDays = AttendanceDay::where('has_open_shift', true)
-            ->where('date', '<', $today)
+        $now = now();
+        $flagTimeSetting = \App\Models\Setting::where('key', 'reminders.open_shift_flag_time')->value('value') ?? '20:00';
+        $flagTime = \Carbon\Carbon::parse($today . ' ' . $flagTimeSetting);
+
+        $query = AttendanceDay::where('has_open_shift', true)
             ->where('is_flagged', false)
-            ->with('user')
-            ->get();
+            ->with('user');
+
+        if ($now->greaterThanOrEqualTo($flagTime)) {
+            $query->where('date', '<=', $today);
+        } else {
+            $query->where('date', '<', $today);
+        }
+
+        $openDays = $query->get();
 
         $superAdmins = User::whereHas('roleAssignments', fn($q) => $q->where('role', 'super_admin'))->get();
         $hrByDept = User::whereHas('roleAssignments', fn($q) => $q->where('role', 'hr'))->get()->groupBy('department_id');

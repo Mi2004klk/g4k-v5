@@ -52,12 +52,18 @@ function ResetPasswordForm() {
     mode: "onChange"
   });
 
+  const [missingDetails, setMissingDetails] = useState(false);
+
   useEffect(() => {
     const token = searchParams.get("token");
     const email = searchParams.get("email");
     
-    if (token) form.setValue("token", token);
-    if (email) form.setValue("identifier", email);
+    if (!token || !email) {
+      setMissingDetails(true);
+    } else {
+      form.setValue("token", token);
+      form.setValue("identifier", email);
+    }
   }, [searchParams, form]);
 
   async function onSubmit(data: FormValues) {
@@ -71,7 +77,13 @@ function ResetPasswordForm() {
       toast.success("Password reset successfully! Please sign in with your new password.");
       router.push("/login");
     } catch (error: any) {
-      form.setError("root", { type: "manual", message: error.message || "Failed to reset password." });
+      if (error.errors) {
+        if (error.errors.identifier) form.setError("identifier", { message: error.errors.identifier[0] });
+        if (error.errors.password) form.setError("password", { message: error.errors.password[0] });
+        if (error.errors.token) form.setError("root", { message: error.errors.token[0] });
+      } else {
+        form.setError("root", { type: "manual", message: error.message || "Failed to reset password." });
+      }
       toast.error(error.message || "Failed to reset password.");
     } finally {
       setIsLoading(false);
@@ -102,6 +114,18 @@ function ResetPasswordForm() {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {missingDetails ? (
+            <div className="text-center space-y-4 font-sans">
+              <div className="p-4 rounded-xl bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20 text-sm font-medium">
+                Invalid or missing reset link. Please request a new password reset.
+              </div>
+              <Link href="/forgot-password" className="block w-full">
+                <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                  Request Password Reset
+                </Button>
+              </Link>
+            </div>
+          ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               {form.formState.errors.root && (
@@ -195,6 +219,7 @@ function ResetPasswordForm() {
               </Button>
             </form>
           </Form>
+          )}
         </CardContent>
       </Card>
     </div>

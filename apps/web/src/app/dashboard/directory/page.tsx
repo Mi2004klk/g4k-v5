@@ -4,16 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  Grid,
-  List as ListIcon,
-  MessageSquare,
-  Building2,
-  Mail,
-  Phone,
-  UserCheck,
-  Loader2,
-} from "lucide-react";
+import { Search, Mail, Phone, Building2, UserCircle, Download, FileText, CheckCircle2, ChevronRight, MessageSquare, Loader2, ListIcon, LayoutGrid, Grid, UserCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
 
@@ -203,6 +194,7 @@ export default function DirectoryPage() {
               {
                 key: "department",
                 label: "Department",
+                type: "select",
                 value: deptFilter,
                 onChange: setDeptFilter,
                 options: (deptsData?.data || deptsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
@@ -210,20 +202,10 @@ export default function DirectoryPage() {
               {
                 key: "designation",
                 label: "Designation",
+                type: "select",
                 value: desigFilter,
                 onChange: setDesigFilter,
                 options: (desigsData?.data || desigsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
-              },
-              {
-                key: "visibility",
-                label: "Visibility",
-                value: visFilter,
-                onChange: setVisFilter,
-                options: [
-                  { label: "Public", value: "public" },
-                  { label: "Internal", value: "internal" },
-                  { label: "Private", value: "private" },
-                ]
               }
             ]}
           />
@@ -283,7 +265,19 @@ export default function DirectoryPage() {
                   )}
                   <div className="flex items-center gap-2 truncate">
                     <Mail className="w-3.5 h-3.5 text-neutral-400" />
-                    <span>{user.email}</span>
+                    {user.email ? (
+                      <span>{user.email}</span>
+                    ) : (
+                      <span className="text-neutral-400 italic">Hidden by user</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 truncate">
+                    <Phone className="w-3.5 h-3.5 text-neutral-400" />
+                    {user.phone ? (
+                      <span>{user.phone}</span>
+                    ) : (
+                      <span className="text-neutral-400 italic">Hidden by user</span>
+                    )}
                   </div>
                 </div>
 

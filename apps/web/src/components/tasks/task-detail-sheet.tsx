@@ -10,8 +10,6 @@ import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
-import { ConfirmDialog } from "@g4k/ui/components";
-
 import { queryKeys } from "@/lib/query-keys";
 
 export function TaskDetailSheet({

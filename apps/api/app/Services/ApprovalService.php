@@ -72,7 +72,16 @@ class ApprovalService
         }
 
         if ($approval->submitted_by === $decidedBy) {
-            throw new Exception("You cannot approve your own request.");
+            $deciderRoles = \App\Models\RoleAssignment::getRolesForUser($decidedBy);
+            if (in_array('super_admin', $deciderRoles)) {
+                $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
+                if ($superAdminCount > 1) {
+                    throw new Exception("You cannot approve your own request. Another Super Admin must approve it.");
+                }
+                // Allowed because they are the sole super_admin
+            } else {
+                throw new Exception("You cannot approve your own request.");
+            }
         }
 
         self::checkRoleGating($approval, $decidedBy);
@@ -99,9 +108,6 @@ class ApprovalService
         return $approval;
     }
 
-    /**
-     * Reject an existing pending approval.
-     */
     public static function reject(Approval $approval, int $decidedBy, string $reason): Approval
     {
         if ($approval->status !== 'pending') {
@@ -109,7 +115,16 @@ class ApprovalService
         }
 
         if ($approval->submitted_by === $decidedBy) {
-            throw new Exception("You cannot reject your own request.");
+            $deciderRoles = \App\Models\RoleAssignment::getRolesForUser($decidedBy);
+            if (in_array('super_admin', $deciderRoles)) {
+                $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
+                if ($superAdminCount > 1) {
+                    throw new Exception("You cannot reject your own request. Another Super Admin must review it.");
+                }
+                // Allowed because they are the sole super_admin
+            } else {
+                throw new Exception("You cannot reject your own request.");
+            }
         }
 
         self::checkRoleGating($approval, $decidedBy);
@@ -129,6 +144,40 @@ class ApprovalService
                     $leave->update(['status' => 'rejected']);
                 }
             }
+        });
+
+        event(new ApprovalDecided($approval));
+
+        return $approval;
+    }
+
+    /**
+     * Mark an existing pending approval as redo required.
+     */
+    public static function redo(Approval $approval, int $decidedBy, string $reason): Approval
+    {
+        if ($approval->status !== 'pending') {
+            throw new Exception("Approval is not in a pending state.");
+        }
+
+        if ($approval->submitted_by === $decidedBy) {
+            throw new Exception("You cannot request a redo on your own request.");
+        }
+
+        self::checkRoleGating($approval, $decidedBy);
+
+        DB::transaction(function () use ($approval, $decidedBy, $reason) {
+            $approval->update([
+                'status' => 'rejected', // Conceptually a rejection of the current submission
+                'decision' => 'redo',
+                'decided_by' => $decidedBy,
+                'decided_at' => now(),
+                'decision_reason' => $reason,
+                'feedback' => $reason,
+            ]);
+            
+            // Approvable specific logic should be handled by listeners or controller, 
+            // but we can handle Task here if we want or leave it to TaskController
         });
 
         event(new ApprovalDecided($approval));

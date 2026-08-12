@@ -34,7 +34,8 @@ class UpdateUserRequest extends FormRequest
             'team_id' => 'nullable|exists:teams,id',
             'designation_id' => 'nullable|exists:designations,id',
             'roles' => 'sometimes|array|min:1',
-            'roles.*' => 'string',
+            'roles.*' => 'string|in:employee,hr,super_admin',
+            'work_schedule_id' => 'nullable|exists:work_schedules,id',
         ];
     }
 }

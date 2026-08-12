@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase, AlertCircle, Clock, FileEdit, X, Trash2, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -10,7 +9,8 @@ import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { useUIStore } from "@/lib/ui-store";
 import { useReverb } from "@/hooks/use-reverb";
-import { Button } from "@g4k/ui/components";
+import { safeFromNow } from "@/lib/format";
+import { Button, ErrorBoundary, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { useShallow } from "zustand/react/shallow";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -173,17 +173,25 @@ export function NotificationsBell() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="relative h-9 w-9 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
-        title="Notifications"
-        aria-label="Notifications"
-      >
-        <Bell className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-surface" />
-        )}
-      </button>
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => setOpen(true)}
+              className="relative h-9 w-9 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-surface" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="text-xs">
+            Notifications ({unreadCount} unread)
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       {open && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
@@ -261,6 +269,7 @@ export function NotificationsBell() {
             
             {/* Scrollable Notifications List */}
             <div className="max-h-[360px] overflow-y-auto divide-y divide-border thin-scrollbar">
+              <ErrorBoundary name="NotificationsList" fallbackTitle="Could not load notifications">
               {isLoading ? (
                 <div className="p-4 space-y-3">
                   {[1, 2, 3].map((i) => (
@@ -291,20 +300,20 @@ export function NotificationsBell() {
                       <p className="text-xs font-semibold text-primary truncate flex items-center gap-1.5">
                         {n.link ? (
                           <Link href={n.link} prefetch={false} className="hover:underline hover:text-orange-600 dark:hover:text-orange-400" onClick={() => setOpen(false)}>
-                            {n.title}
+                            {n.title || "Notification"}
                           </Link>
                         ) : (
-                          <span>{n.title}</span>
+                          <span>{n.title || "Notification"}</span>
                         )}
                         {n.priority === 'urgent' && (
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" title="Urgent" />
                         )}
                       </p>
                       <p className="text-[11px] text-neutral-500 line-clamp-2 mt-0.5">
-                        {n.body}
+                        {n.body || ""}
                       </p>
                       <p className="text-[10px] text-neutral-400 mt-1">
-                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        {safeFromNow(n.created_at)}
                       </p>
                     </div>
                     {!n.read_at && (
@@ -320,6 +329,7 @@ export function NotificationsBell() {
                   </div>
                 ))
               )}
+              </ErrorBoundary>
             </div>
             
             {/* Modal Footer */}

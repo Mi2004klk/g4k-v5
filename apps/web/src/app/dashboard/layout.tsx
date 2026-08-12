@@ -4,7 +4,6 @@ import { AuthGuard } from "@/components/auth-guard";
 import { useState, useEffect, useCallback } from "react";
 
 const EMPTY_CAPABILITIES: any[] = [];
-const EMPTY_PINS: any[] = [];
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -45,6 +44,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { useTheme } from "next-themes";
+import { useTimerStore } from "@/stores/timer-store";
 import { queryKeys } from "@/lib/query-keys";
 import { useShortcuts } from "@/hooks/use-shortcuts";
 import { useUIStore } from "@/lib/ui-store";
@@ -88,6 +88,7 @@ export const navGroups = [
     { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.manage" },
   ]},
   { label: "Administration", items: [
+    { name: "Admin Attendance", href: "/dashboard/admin/attendance", icon: Clock, capability: "admin.view-all-attendance" },
     { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
     { name: "Audit Log", href: "/dashboard/audit", icon: ShieldAlert, capability: "audit.view" },
   ]},
@@ -96,19 +97,19 @@ export const navGroups = [
   ]},
 ];
 
-const accentClasses: Record<string, { bg: string; text: string; bgDark: string; textDark: string; border: string }> = {
-  emerald: { bg: "bg-emerald-100", text: "text-emerald-700", bgDark: "dark:bg-emerald-950", textDark: "dark:text-emerald-300", border: "bg-emerald-600" },
-  amber: { bg: "bg-amber-100", text: "text-amber-700", bgDark: "dark:bg-amber-950", textDark: "dark:text-amber-300", border: "bg-amber-600" },
-  pink: { bg: "bg-pink-100", text: "text-pink-700", bgDark: "dark:bg-pink-950", textDark: "dark:text-pink-300", border: "bg-pink-600" },
-  blue: { bg: "bg-blue-100", text: "text-blue-700", bgDark: "dark:bg-blue-950", textDark: "dark:text-blue-300", border: "bg-blue-600" },
-  slate: { bg: "bg-slate-100", text: "text-slate-700", bgDark: "dark:bg-slate-900", textDark: "dark:text-slate-300", border: "bg-slate-600" },
-  rose: { bg: "bg-rose-100", text: "text-rose-700", bgDark: "dark:bg-rose-950", textDark: "dark:text-rose-300", border: "bg-rose-600" },
-  violet: { bg: "bg-violet-100", text: "text-violet-700", bgDark: "dark:bg-violet-950", textDark: "dark:text-violet-300", border: "bg-violet-600" },
-  indigo: { bg: "bg-indigo-100", text: "text-indigo-700", bgDark: "dark:bg-indigo-950", textDark: "dark:text-indigo-300", border: "bg-indigo-600" },
-  teal: { bg: "bg-teal-100", text: "text-teal-700", bgDark: "dark:bg-teal-950", textDark: "dark:text-teal-300", border: "bg-teal-600" },
-  cyan: { bg: "bg-cyan-100", text: "text-cyan-700", bgDark: "dark:bg-cyan-950", textDark: "dark:text-cyan-300", border: "bg-cyan-600" },
-  orange: { bg: "bg-orange-100", text: "text-orange-700", bgDark: "dark:bg-orange-950", textDark: "dark:text-orange-300", border: "bg-orange-600" },
-  green: { bg: "bg-green-100", text: "text-green-700", bgDark: "dark:bg-green-950", textDark: "dark:text-green-300", border: "bg-green-600" },
+const accentClasses: Record<string, { bg: string; hoverBg: string; text: string; hoverText: string; bgDark: string; textDark: string; border: string; ring: string }> = {
+  emerald: { bg: "bg-emerald-100", hoverBg: "hover:bg-emerald-100 dark:hover:bg-emerald-950", text: "text-emerald-700", hoverText: "hover:text-emerald-700 dark:hover:text-emerald-300", bgDark: "dark:bg-emerald-950", textDark: "dark:text-emerald-300", border: "bg-emerald-600", ring: "ring-1 ring-inset ring-emerald-500/50" },
+  amber: { bg: "bg-amber-100", hoverBg: "hover:bg-amber-100 dark:hover:bg-amber-950", text: "text-amber-700", hoverText: "hover:text-amber-700 dark:hover:text-amber-300", bgDark: "dark:bg-amber-950", textDark: "dark:text-amber-300", border: "bg-amber-600", ring: "ring-1 ring-inset ring-amber-500/50" },
+  pink: { bg: "bg-pink-100", hoverBg: "hover:bg-pink-100 dark:hover:bg-pink-950", text: "text-pink-700", hoverText: "hover:text-pink-700 dark:hover:text-pink-300", bgDark: "dark:bg-pink-950", textDark: "dark:text-pink-300", border: "bg-pink-600", ring: "ring-1 ring-inset ring-pink-500/50" },
+  blue: { bg: "bg-blue-100", hoverBg: "hover:bg-blue-100 dark:hover:bg-blue-950", text: "text-blue-700", hoverText: "hover:text-blue-700 dark:hover:text-blue-300", bgDark: "dark:bg-blue-950", textDark: "dark:text-blue-300", border: "bg-blue-600", ring: "ring-1 ring-inset ring-blue-500/50" },
+  slate: { bg: "bg-slate-100", hoverBg: "hover:bg-slate-100 dark:hover:bg-slate-900", text: "text-slate-700", hoverText: "hover:text-slate-700 dark:hover:text-slate-300", bgDark: "dark:bg-slate-900", textDark: "dark:text-slate-300", border: "bg-slate-600", ring: "ring-1 ring-inset ring-slate-500/50" },
+  rose: { bg: "bg-rose-100", hoverBg: "hover:bg-rose-100 dark:hover:bg-rose-950", text: "text-rose-700", hoverText: "hover:text-rose-700 dark:hover:text-rose-300", bgDark: "dark:bg-rose-950", textDark: "dark:text-rose-300", border: "bg-rose-600", ring: "ring-1 ring-inset ring-rose-500/50" },
+  violet: { bg: "bg-violet-100", hoverBg: "hover:bg-violet-100 dark:hover:bg-violet-950", text: "text-violet-700", hoverText: "hover:text-violet-700 dark:hover:text-violet-300", bgDark: "dark:bg-violet-950", textDark: "dark:text-violet-300", border: "bg-violet-600", ring: "ring-1 ring-inset ring-violet-500/50" },
+  indigo: { bg: "bg-indigo-100", hoverBg: "hover:bg-indigo-100 dark:hover:bg-indigo-950", text: "text-indigo-700", hoverText: "hover:text-indigo-700 dark:hover:text-indigo-300", bgDark: "dark:bg-indigo-950", textDark: "dark:text-indigo-300", border: "bg-indigo-600", ring: "ring-1 ring-inset ring-indigo-500/50" },
+  teal: { bg: "bg-teal-100", hoverBg: "hover:bg-teal-100 dark:hover:bg-teal-950", text: "text-teal-700", hoverText: "hover:text-teal-700 dark:hover:text-teal-300", bgDark: "dark:bg-teal-950", textDark: "dark:text-teal-300", border: "bg-teal-600", ring: "ring-1 ring-inset ring-teal-500/50" },
+  cyan: { bg: "bg-cyan-100", hoverBg: "hover:bg-cyan-100 dark:hover:bg-cyan-950", text: "text-cyan-700", hoverText: "hover:text-cyan-700 dark:hover:text-cyan-300", bgDark: "dark:bg-cyan-950", textDark: "dark:text-cyan-300", border: "bg-cyan-600", ring: "ring-1 ring-inset ring-cyan-500/50" },
+  orange: { bg: "bg-orange-100", hoverBg: "hover:bg-orange-100 dark:hover:bg-orange-950", text: "text-orange-700", hoverText: "hover:text-orange-700 dark:hover:text-orange-300", bgDark: "dark:bg-orange-950", textDark: "dark:text-orange-300", border: "bg-orange-600", ring: "ring-1 ring-inset ring-orange-500/50" },
+  green: { bg: "bg-green-100", hoverBg: "hover:bg-green-100 dark:hover:bg-green-950", text: "text-green-700", hoverText: "hover:text-green-700 dark:hover:text-green-300", bgDark: "dark:bg-green-950", textDark: "dark:text-green-300", border: "bg-green-600", ring: "ring-1 ring-inset ring-green-500/50" },
 };
 
 function getAccent(href: string) {
@@ -124,6 +125,7 @@ function getAccent(href: string) {
   else if (href.startsWith("/dashboard/directory")) color = "pink";
   else if (href.startsWith("/dashboard/org/users")) color = "indigo";
   else if (href.startsWith("/dashboard/org/attendance")) color = "green";
+  else if (href.startsWith("/dashboard/admin/attendance")) color = "green";
   else if (href.startsWith("/dashboard/org/leave")) color = "amber";
   else if (href.startsWith("/dashboard/org/departments")) color = "indigo";
   else if (href.startsWith("/dashboard/org/designations")) color = "indigo";
@@ -142,6 +144,7 @@ export default function DashboardLayout({
   const isInitialized = useUIStore((s) => s.isInitialized);
   const cycleSidebarState = useUIStore((s) => s.cycleSidebarState);
   const setSidebarStateSilent = useUIStore((s) => s.setSidebarStateSilent);
+  const syncWithServer = useTimerStore((s) => s.syncWithServer);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -157,8 +160,13 @@ export default function DashboardLayout({
     queryFn: () => apiFetch("/dashboard/init"),
     staleTime: 5 * 60_000,
   });
-  const pins = initData?.pins || EMPTY_PINS;
   const preferencesData = initData?.preferences ? { preferences: initData.preferences } : null;
+
+  useEffect(() => {
+    if (initData?.attendance_today) {
+      syncWithServer(initData.attendance_today.day, initData.attendance_today.events || []);
+    }
+  }, [initData, syncWithServer]);
 
   useEffect(() => {
     // Prefetch consolidated dashboard init data on cold load
@@ -173,37 +181,7 @@ export default function DashboardLayout({
     }
   }, [preferencesData, setSidebarStateSilent, isInitialized]);
 
-  const handleTogglePin = useCallback(async (item: any, existingPin: any) => {
-    try {
-      if (existingPin) {
-        await apiFetch(`/pins/${existingPin.id}`, { method: "DELETE" });
-        refetchPins();
-        toast("Unpinned from sidebar", {
-          action: { label: "Undo", onClick: () => handleTogglePin(item, null) },
-          duration: 5000,
-        });
-      } else {
-        const res = await apiFetch("/pins", {
-          method: "POST",
-          body: JSON.stringify({
-            type: "nav",
-            target_id: item.name,
-            label: item.name,
-            href: item.href,
-            icon: item.name,
-          }),
-        });
-        refetchPins();
-        toast("Pinned to sidebar", {
-          action: { label: "Undo", onClick: () => handleTogglePin(item, res) },
-          duration: 5000,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to toggle pin", error);
-      toast.error("Failed to toggle pin");
-    }
-  }, [refetchPins]);
+  // Pins removed
 
   // Close mobile menu on navigate
   useEffect(() => {
@@ -240,8 +218,8 @@ export default function DashboardLayout({
         <HelpOverlay />
         <CommandPalette />
         <div className={cn(
-          "grid h-screen w-full bg-app overflow-hidden transition-[grid-template-columns] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]",
-          sidebarState === "expanded" ? "md:grid-cols-[264px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[72px_1fr]" : "grid-cols-1"
+          "grid h-[100dvh] w-full bg-app overflow-hidden transition-[grid-template-columns] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]",
+          sidebarState === "expanded" ? "md:grid-cols-[240px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[64px_1fr]" : "grid-cols-1"
         )}>
           {/* Desktop Sidebar */}
           <aside className={cn(
@@ -250,15 +228,10 @@ export default function DashboardLayout({
           )}>
             <div className="flex items-center h-16 shrink-0 px-4 gap-3 border-b border-border">
               {isCollapsed ? (
-                <Tooltip delayDuration={150}>
-                  <TooltipTrigger asChild>
-                    <div className="relative group w-8 h-8 flex items-center justify-center cursor-pointer ml-1" onClick={cycleSidebarState}>
-                      <Image src="/icon.png" alt="Logo" width={32} height={32} className="rounded-md absolute inset-0 transition-opacity duration-[220ms] group-hover:opacity-0" priority />
-                      <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-primary absolute opacity-0 group-hover:opacity-100 transition-opacity duration-[220ms]" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="text-xs">Expand sidebar (Ctrl+B)</TooltipContent>
-                </Tooltip>
+                <div className="relative group w-8 h-8 flex items-center justify-center cursor-pointer ml-1" onClick={cycleSidebarState}>
+                  <Image src="/icon.png" alt="Logo" width={32} height={32} className="rounded-md absolute inset-0 transition-opacity duration-[220ms] group-hover:opacity-0" priority />
+                  <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-primary absolute opacity-0 group-hover:opacity-100 transition-opacity duration-[220ms]" />
+                </div>
               ) : (
                 <div className="flex items-center gap-3 w-full">
                   <Tooltip delayDuration={150}>
@@ -269,12 +242,12 @@ export default function DashboardLayout({
                     </TooltipTrigger>
                     <TooltipContent side="right" className="text-xs">Collapse sidebar (Ctrl+B)</TooltipContent>
                   </Tooltip>
-                  <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={140} height={32} className="object-contain h-8 w-auto transition-opacity duration-[220ms]" priority />
+                  <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={176} height={40} className="object-contain h-10 w-auto transition-opacity duration-[220ms]" priority />
                 </div>
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1 thin-scrollbar">
+            <div className="flex-1 overflow-y-auto py-3 px-2.5 flex flex-col gap-1 thin-scrollbar">
               {navGroups.map(group => (
                 <NavGroup
                   key={group.label}
@@ -282,44 +255,9 @@ export default function DashboardLayout({
                   userCapabilities={userCapabilities}
                   isCollapsed={isCollapsed}
                   isSheet={false}
-                  pins={pins}
-                  handleTogglePin={handleTogglePin}
                   getAccent={getAccent}
                 />
               ))}
-              
-              {pins.length > 0 && (
-                <div className="mt-4">
-                  {!isCollapsed && <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-neutral-400 dark:text-neutral-500 uppercase transition-opacity duration-[120ms]">Pinned</div>}
-                  {isCollapsed && <div className="h-px bg-border mx-2 my-3 transition-opacity duration-[120ms]" />}
-                  <div className="flex flex-col gap-1">
-                    {pins.map((pin: any) => {
-                      let navItem: any = null;
-                      navGroups.forEach(g => {
-                        const found = g.items.find((i: any) => i.name === pin.target_id);
-                        if (found) navItem = found;
-                      });
-                      
-                      if (navItem?.capability && !hasCapability(userCapabilities, navItem.capability)) {
-                        return null;
-                      }
-
-                      const item = navItem || { name: pin.label, href: pin.href, icon: Star, capability: "" };
-                      return (
-                        <NavItem
-                          key={item.name}
-                          item={item}
-                          isCollapsed={isCollapsed}
-                          isSheet={false}
-                          pins={pins}
-                          handleTogglePin={handleTogglePin}
-                          getAccent={getAccent}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="mt-auto p-4 border-t border-border flex flex-col gap-2">
@@ -343,8 +281,8 @@ export default function DashboardLayout({
           </aside>
 
           {/* Main Content Area */}
-          <div className="flex flex-col min-w-0 h-full overflow-hidden">
-            <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface border-b border-border z-20 sticky top-0">
+          <div className="flex flex-col min-w-0 min-h-0 h-full overflow-hidden">
+            <header className="flex items-center justify-between h-16 px-4 md:px-6 bg-surface border-b border-border z-20">
               <div className="flex items-center gap-2 md:gap-4">
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
@@ -371,43 +309,9 @@ export default function DashboardLayout({
                             userCapabilities={userCapabilities}
                             isCollapsed={false}
                             isSheet={true}
-                            pins={pins}
-                            handleTogglePin={handleTogglePin}
                             getAccent={getAccent}
                           />
                         ))}
-                        
-                        {pins.length > 0 && (
-                          <div className="mt-4">
-                            <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-neutral-400 dark:text-neutral-500 uppercase">Pinned</div>
-                            <div className="flex flex-col gap-1">
-                              {pins.map((pin: any) => {
-                                let navItem: any = null;
-                                navGroups.forEach(g => {
-                                  const found = g.items.find((i: any) => i.name === pin.target_id);
-                                  if (found) navItem = found;
-                                });
-
-                                if (navItem?.capability && !hasCapability(userCapabilities, navItem.capability)) {
-                                  return null;
-                                }
-
-                                const item = navItem || { name: pin.label, href: pin.href, icon: Star, capability: "" };
-                                return (
-                                  <NavItem
-                                    key={item.name}
-                                    item={item}
-                                    isCollapsed={false}
-                                    isSheet={true}
-                                    pins={pins}
-                                    handleTogglePin={handleTogglePin}
-                                    getAccent={getAccent}
-                                  />
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
                       </div>
                       <div className="mt-auto p-4 border-t border-border">
                         <Button
@@ -425,27 +329,44 @@ export default function DashboardLayout({
 
               <div className="flex items-center gap-2 md:gap-3 shrink-0">
                 <TopbarTimer />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="h-9 w-9 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-white shrink-0 focus-visible:ring-2 focus-visible:ring-violet-500"
-                  title="Toggle theme"
-                  aria-label="Toggle theme"
-                >
-                  {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                </Button>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                        className="h-9 w-9 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-white shrink-0 focus-visible:ring-2 focus-visible:ring-violet-500"
+                        aria-label="Toggle theme"
+                      >
+                        {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                      Toggle theme
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
                 <NotificationsBell />
 
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-violet-500" aria-label="User menu">
-                      <Avatar size="md">
-                        <AvatarFallback name={authUser?.name || "U"} />
-                      </Avatar>
-                    </button>
-                  </DropdownMenuTrigger>
+                  <TooltipProvider delayDuration={150}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-violet-500" aria-label="User menu">
+                            <Avatar size="md">
+                              <AvatarFallback name={authUser?.name || "U"} />
+                            </Avatar>
+                          </button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs">
+                        User menu
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <DropdownMenuContent align="end" className="w-56 text-xs">
                     <DropdownMenuLabel className="flex flex-col gap-1">
                       <span className="font-bold truncate text-sm">{authUser?.name}</span>

@@ -32,11 +32,11 @@ Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'g
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
-Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 
 Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate'])
     ->middleware(['auth:sanctum']);
-Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
     Route::get('/auth/profile', [AuthController::class, 'profile']);
     Route::get('/me/capabilities', [AuthController::class, 'capabilities']);
 
@@ -77,8 +77,6 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::get('/directory', [DirectoryController::class, 'index']);
         Route::get('/directory/{id}', [DirectoryController::class, 'show']);
     });
-    Route::post('/directory/{id}/send-message', [DirectoryController::class, 'sendMessage'])->middleware('capability:directory.send-message');
-
     // Attendance API
     Route::middleware('capability:attendance.clock-self')->group(function () {
         Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
@@ -98,6 +96,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:admin.view-all-attendance');
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
+        Route::get('/attendance/team-today', [AttendanceController::class, 'teamToday']);
         Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
         Route::get('/attendance/hr/graph', [AttendanceController::class, 'hrGraph']);
         Route::get('/attendance/hr/day/{date}/{userId}', [AttendanceController::class, 'hrDay']);
@@ -118,6 +117,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware('capability:leave.approve-employee');
     Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
+    Route::get('/leave-requests/admin/history', [LeaveRequestController::class, 'adminHistory'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/export', [LeaveRequestController::class, 'export'])->middleware('capability:leave.approve-employee|settings.manage');
     
     Route::get('/holidays', [HolidayController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag');
@@ -142,6 +142,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
 
     Route::middleware('capability:tasks.view|tasks.manage')->group(function () {
         Route::get('/tasks', [TaskController::class, 'index']);
+        Route::get('/tasks/submitted', [TaskController::class, 'submitted']);
         Route::get('/tasks/{id}', [TaskController::class, 'show']);
     });
     Route::middleware('capability:tasks.manage')->group(function () {
@@ -149,6 +150,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
         Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);
+        Route::post('/tasks/{id}/approve', [TaskController::class, 'approve']);
+        Route::post('/tasks/{id}/redo', [TaskController::class, 'redo']);
         Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
     });
 
@@ -210,6 +213,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::middleware('capability:settings.manage')->group(function () {
         Route::get('/settings/grouped', [\App\Http\Controllers\SettingsController::class, 'index']);
         Route::post('/settings/bulk', [\App\Http\Controllers\SettingsController::class, 'bulkUpdate']);
+        Route::post('/settings/mail/test', [\App\Http\Controllers\SettingsController::class, 'testMail']);
         Route::get('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'show']);
         Route::post('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'update']);
         Route::post('/company-profile/logo', [\App\Http\Controllers\CompanyProfileController::class, 'uploadLogo']);
@@ -252,6 +256,12 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
         Route::patch('/departments/{id}/restore', [DepartmentController::class, 'restore']);
         Route::post('/departments/{department}/teams', [DepartmentController::class, 'storeTeam']);
         Route::delete('/departments/{department}/teams/{team}', [DepartmentController::class, 'destroyTeam']);
+        
+        Route::put('/departments/{id}/hrs', [DepartmentController::class, 'syncHrs']);
+        Route::post('/departments/{id}/hrs/{userId}', [DepartmentController::class, 'addHr']);
+        Route::delete('/departments/{id}/hrs/{userId}', [DepartmentController::class, 'removeHr']);
+        Route::put('/departments/{id}/employees', [DepartmentController::class, 'syncEmployees']);
+        
         Route::apiResource('departments', DepartmentController::class);
     });
 

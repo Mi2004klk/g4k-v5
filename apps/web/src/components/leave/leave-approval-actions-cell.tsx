@@ -7,16 +7,7 @@ import { Check, X, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@g4k/ui/components";
+import { ConfirmDialog } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
 import { useAuthStore } from "@/lib/auth-store";
@@ -123,34 +114,29 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
         </Button>
       </div>
 
-      <AlertDialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reject Leave Request</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              Please provide a reason for rejecting this leave request. This will be visible to the employee.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Reason for rejection..."
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              className="text-xs"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleReject}
-              disabled={!rejectReason || decisionMutation.isPending}
-              className="bg-rose-600 hover:bg-rose-700 text-white"
-            >
-              Confirm Rejection
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={isRejectOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsRejectOpen(false);
+            setRejectReason("");
+          }
+        }}
+        onConfirm={handleReject}
+        title="Reject Leave Request"
+        description="Please provide a reason for rejecting this leave request. This will be visible to the employee."
+        confirmText="Confirm Rejection"
+        isLoading={decisionMutation.isPending}
+      >
+        <div className="py-2">
+          <Input
+            placeholder="Reason for rejection..."
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            className="text-xs"
+          />
+        </div>
+      </ConfirmDialog>
     </>
   );
 }

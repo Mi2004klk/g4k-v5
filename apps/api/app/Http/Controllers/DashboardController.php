@@ -43,7 +43,66 @@ class DashboardController extends Controller
             return [
                 'metrics' => Cache::remember("user_metrics_{$user->id}_{$activeRole}", 300, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
                 'preferences' => Cache::remember("user_prefs_{$user->id}", 300, fn() => $safeCall(UserPreferenceController::class, 'show')),
-                'pending_approvals' => Cache::remember("pending_approvals_{$user->id}_{$activeRole}", 60, fn() => $safeCall(LeaveRequestController::class, 'pending')),
+                'pending_approvals' => Cache::remember("pending_approvals_{$user->id}_{$activeRole}", 60, function() use ($activeRole) {
+                    $approvals = [];
+                    // Leaves
+                    $leaves = DB::table('leave_requests')
+                        ->join('users', 'leave_requests.user_id', '=', 'users.id')
+                        ->where('leave_requests.status', 'pending')
+                        ->select('leave_requests.id', 'leave_requests.created_at', 'users.name as user_name', 'leave_requests.reason as title')
+                        ->get();
+                    foreach ($leaves as $l) {
+                        $approvals[] = [
+                            'id' => $l->id,
+                            'type' => 'leave',
+                            'title' => $l->title ?? 'Leave Request',
+                            'user_name' => $l->user_name,
+                            'created_at' => $l->created_at,
+                            'route' => '/attendance/leave/admin'
+                        ];
+                    }
+
+                    // Tasks
+                    if (Schema::hasTable('tasks')) {
+                        $tasks = DB::table('tasks')
+                            ->leftJoin('users', 'tasks.assignee_id', '=', 'users.id')
+                            ->where('tasks.status', 'review')
+                            ->select('tasks.id', 'tasks.created_at', 'users.name as user_name', 'tasks.title')
+                            ->get();
+                        foreach ($tasks as $t) {
+                            $approvals[] = [
+                                'id' => $t->id,
+                                'type' => 'task',
+                                'title' => $t->title,
+                                'user_name' => $t->user_name ?? 'Unassigned',
+                                'created_at' => $t->created_at,
+                                'route' => '/tasks/' . $t->id
+                            ];
+                        }
+                    }
+
+                    // Projects
+                    if (Schema::hasTable('projects')) {
+                        $projects = DB::table('projects')
+                            ->leftJoin('users', 'projects.owner_id', '=', 'users.id')
+                            ->where('projects.status', 'pending_approval')
+                            ->select('projects.id', 'projects.created_at', 'users.name as user_name', 'projects.name as title')
+                            ->get();
+                        foreach ($projects as $p) {
+                            $approvals[] = [
+                                'id' => $p->id,
+                                'type' => 'project',
+                                'title' => $p->title,
+                                'user_name' => $p->user_name ?? 'Unassigned',
+                                'created_at' => $p->created_at,
+                                'route' => '/projects/' . $p->id
+                            ];
+                        }
+                    }
+
+                    usort($approvals, fn($a, $b) => strtotime($b['created_at']) - strtotime($a['created_at']));
+                    return array_slice($approvals, 0, 10); // Return top 10 recent approvals
+                }),
                 'pins' => Cache::remember("user_pins_{$user->id}", 300, fn() => $safeCall(PinController::class, 'index', [])),
                 'announcements' => Cache::remember("announcements_all", 120, fn() => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', [])),
                 'quick_notes' => Cache::remember("quick_notes_{$user->id}", 120, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
@@ -98,6 +157,7 @@ class DashboardController extends Controller
                 });
                 $data['total_employees'] = $globalStats['total_employees'];
                 $data['active_employees'] = $globalStats['active_employees'];
+                $data['inactive_employees'] = $globalStats['total_employees'] - $globalStats['active_employees'];
                 $data['departments'] = $globalStats['departments'];
 
                 $attendance = DB::table('attendance_days')
@@ -119,50 +179,61 @@ class DashboardController extends Controller
                 
                 // Shared admin recent activity cache
                 $data['recent_activity'] = Cache::remember('dashboard_recent_activity', 300, function () {
-                    return DB::table('audit_logs')
+                    $raw = DB::table('audit_logs')
                         ->leftJoin('users', 'audit_logs.user_id', '=', 'users.id')
                         ->select('audit_logs.id', 'audit_logs.action', 'audit_logs.subject_type',
-                                 'audit_logs.subject_id', 'audit_logs.at', 'users.name as user_name', 'audit_logs.meta')
+                                 'audit_logs.subject_id', 'audit_logs.at', 'audit_logs.ip', 'users.name as user_name', 'audit_logs.after')
+                        ->whereNotIn('audit_logs.action', ['login', 'logout', 'viewed'])
                         ->orderBy('audit_logs.at', 'desc')
-                        ->limit(10)
+                        ->limit(15)
                         ->get();
+
+                    return $raw->map(function ($log) {
+                        return [
+                            'id' => $log->id,
+                            'action' => $log->action,
+                            'subject_type' => class_basename($log->subject_type ?? ''),
+                            'subject_id' => $log->subject_id,
+                            'at' => $log->at,
+                            'user_name' => $log->user_name,
+                            'after' => $log->after
+                        ];
+                    });
                 });
             }
 
             if ($activeRole === 'hr') {
-                $deptId = $user->department_id;
+                $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
                 
-                if ($deptId) {
-                    $deptUserIds = User::select('id')->where('department_id', $deptId);
-                    $data['total_employees'] = $deptUserIds->count();
-                    $data['active_employees'] = User::where('department_id', $deptId)->where('status', 'active')->count();
-                    
-                    $attendance = DB::table('attendance_days')
-                        ->whereIn('user_id', $deptUserIds)
-                        ->where('date', $today)
-                        ->selectRaw('
-                            SUM(CASE WHEN status = \'present\' THEN 1 ELSE 0 END) as present,
-                            SUM(CASE WHEN status = \'absent\' THEN 1 ELSE 0 END) as absent,
-                            SUM(CASE WHEN status = \'late\' THEN 1 ELSE 0 END) as late,
-                            SUM(CASE WHEN status = \'leave\' THEN 1 ELSE 0 END) as on_leave
-                        ')
-                        ->first();
-                        
-                    $data['present_today'] = (int) ($attendance->present ?? 0);
-                    $data['absent_today'] = (int) ($attendance->absent ?? 0);
-                    $data['late_today'] = (int) ($attendance->late ?? 0);
-                    $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
-                    
-                    $data['pending_approvals'] = $hasLeaveRequests ? DB::table('leave_requests')->whereIn('user_id', $deptUserIds)->where('status', 'pending')->count() : 0;
-                } else {
-                    $data['total_employees'] = 0;
-                    $data['active_employees'] = 0;
-                    $data['present_today'] = 0;
-                    $data['absent_today'] = 0;
-                    $data['late_today'] = 0;
-                    $data['leave_today'] = 0;
-                    $data['pending_approvals'] = 0;
+                $deptUserIds = empty($deptIds) 
+                    ? User::select('id') 
+                    : User::select('id')->whereIn('department_id', $deptIds);
+
+                $data['total_employees'] = $deptUserIds->count();
+                
+                $activeQuery = User::where('status', 'active');
+                if (!empty($deptIds)) {
+                    $activeQuery->whereIn('department_id', $deptIds);
                 }
+                $data['active_employees'] = $activeQuery->count();
+                
+                $attendance = DB::table('attendance_days')
+                    ->whereIn('user_id', $deptUserIds)
+                    ->where('date', $today)
+                    ->selectRaw('
+                        SUM(CASE WHEN status = \'present\' THEN 1 ELSE 0 END) as present,
+                        SUM(CASE WHEN status = \'absent\' THEN 1 ELSE 0 END) as absent,
+                        SUM(CASE WHEN status = \'late\' THEN 1 ELSE 0 END) as late,
+                        SUM(CASE WHEN status = \'leave\' THEN 1 ELSE 0 END) as on_leave
+                    ')
+                    ->first();
+                    
+                $data['present_today'] = (int) ($attendance->present ?? 0);
+                $data['absent_today'] = (int) ($attendance->absent ?? 0);
+                $data['late_today'] = (int) ($attendance->late ?? 0);
+                $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
+                
+                $data['pending_approvals'] = $hasLeaveRequests ? DB::table('leave_requests')->whereIn('user_id', $deptUserIds)->where('status', 'pending')->count() : 0;
                 
                 $data['pending_submissions'] = $hasTasks 
                     ? DB::table('tasks')->whereIn('assignee_id', $deptUserIds)->where('status', 'review')->count() 
@@ -174,7 +245,7 @@ class DashboardController extends Controller
                     return [
                         'total_employees' => User::count(),
                         'active_employees' => User::where('status', 'active')->count(),
-                        'departments' => Department::count(),
+                        'departments' => \App\Models\Department::count(),
                         'active_projects' => DB::table('projects')->where('status', 'active')->count(),
                     ];
                 })['active_projects'];
@@ -203,8 +274,30 @@ class DashboardController extends Controller
                     ? DB::table('leave_requests')->where('user_id', $user->id)->where('status', 'pending')->count()
                     : 0;
                 
-                $data['recent_task_progress'] = [];
-                $data['approval_status'] = [];
+                $recentTask = null;
+                if ($hasTasks) {
+                    $recentTask = DB::table('tasks')
+                        ->where('assignee_id', $user->id)
+                        ->orderBy('updated_at', 'desc')
+                        ->first();
+                }
+                
+                $recentTaskProgress = [];
+                if ($recentTask) {
+                    $progress = $recentTask->progress ?? 0;
+                    $recentTaskProgress = [
+                        [
+                            'id' => $recentTask->id,
+                            'title' => $recentTask->title,
+                            'progress' => $progress,
+                            'status' => $recentTask->status,
+                            'updated_at' => $recentTask->updated_at,
+                        ]
+                    ];
+                }
+                
+                $data['recent_task_progress'] = $recentTaskProgress;
+                $data['approval_status'] = []; // Handled separately via /tasks/submitted endpoint in frontend
             }
 
             return $data;

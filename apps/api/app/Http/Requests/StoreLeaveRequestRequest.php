@@ -23,10 +23,17 @@ class StoreLeaveRequestRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'start_date' => 'required|date',
+            'start_date' => 'required|date|after:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string|max:1000',
             'type' => 'required|in:casual,sick,earned,unpaid',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'start_date.after' => 'The start date must be a future date.',
         ];
     }
 }

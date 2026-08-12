@@ -28,7 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 
 const loginSchema = z.object({
-  identifier: z.string().min(1, "Username, Email, or Employee ID is required"),
+  identifier: z.string().min(1, "Email or Employee ID is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -98,23 +98,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
       <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
-        <div className="w-full h-20 bg-gradient-brand relative flex items-center justify-center">
-           <Image
-              src="/landscape-logo.png"
-              alt="Games4King Logo"
-              width={200}
-              height={80}
-              priority
-              className="object-contain max-h-[50px]"
-            />
+        <div className="w-full h-28 bg-gradient-brand relative flex items-center justify-center">
+          <Image src="/landscape-logo.png" alt="Games4King" width={220} height={84} priority
+                 className="object-contain max-h-[64px] w-auto" />
         </div>
 
-        <CardHeader className="space-y-1.5 pb-5 pt-5 text-center">
-          <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
-            Workplace OS
-          </CardTitle>
-          <CardDescription className="text-sm text-neutral-500 dark:text-neutral-400">
-            Sign in to your corporate account
+        <CardHeader className="space-y-1.5 text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight">Welcome back</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Sign in to your Workplace OS account to continue.
           </CardDescription>
         </CardHeader>
 
@@ -133,10 +125,10 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                      Email, Username, or Employee ID
+                      Email or Employee ID
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. karthik or dev@games4king.in" {...field} disabled={lockoutSeconds > 0} autoComplete="username" />
+                      <Input placeholder="e.g. you@games4king.in or EMP-1042" {...field} disabled={lockoutSeconds > 0} autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -148,17 +140,9 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                        Password
-                      </FormLabel>
-                      <Link
-                        href="/forgot-password"
-                        className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
+                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                      Password
+                    </FormLabel>
                     <FormControl>
                       <PasswordInput placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} autoComplete="current-password" />
                     </FormControl>
@@ -189,21 +173,29 @@ export default function LoginPage() {
                   )}
                 </span>
               </Button>
+              <div className="text-center mt-4">
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors block"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </form>
           </Form>
 
-          <div className="flex items-center justify-between pt-4 border-t border-neutral-100 dark:border-neutral-800 text-xs text-neutral-400">
-            <span>© Games4King Workplace OS</span>
-            <TooltipProvider>
+          <div className="flex items-center justify-center gap-1.5 pt-4 border-t border-border text-xs text-muted-foreground">
+            <span>Games4king Workplace OS</span>
+            <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button className="flex items-center gap-1 hover:text-neutral-500 transition-colors focus:outline-none">
+                  <button type="button" aria-label="System info"
+                          className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors">
                     <Info className="w-3.5 h-3.5" />
-                    <span>System info</span>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">Gen2k Conglomerate (2018) • Milestone 1</p>
+                <TooltipContent side="top" className="text-xs">
+                  Gen2k Conglomerate (2018) • Milestone 1
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

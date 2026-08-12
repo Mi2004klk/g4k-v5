@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Download } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
@@ -22,6 +22,9 @@ export function AuditLogTable() {
   const [endDate, setEndDate] = useUrlState("end_date", "");
   const filters = { action, user_id: userId, start_date: startDate, end_date: endDate };
   const [isExporting, setIsExporting] = useState(false);
+  
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
 
   const { data: usersResponse } = useQuery({
     queryKey: queryKeys.usersList,
@@ -32,31 +35,22 @@ export function AuditLogTable() {
     users.map((u: any) => ({ label: u.name, value: String(u.id) }))
   );
   
-  const {
-    data: logsData,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage
-  } = useInfiniteQuery({
-    queryKey: queryKeys.auditLogs(filters),
-    queryFn: ({ pageParam = "" }: { pageParam?: any }) => {
+  const { data: logsData, isLoading } = useQuery({
+    queryKey: [...queryKeys.auditLogs(filters), page, perPage],
+    queryFn: () => {
       const params = new URLSearchParams();
       if (filters.action) params.append("action", filters.action);
       if (filters.user_id) params.append("user_id", filters.user_id);
       if (filters.start_date) params.append("start_date", filters.start_date);
       if (filters.end_date) params.append("end_date", filters.end_date);
-      if (pageParam) params.append("cursor", pageParam as string);
+      params.append("page", page.toString());
+      params.append("per_page", perPage.toString());
       return apiFetch(`/audit-logs?${params.toString()}`);
-    },
-    initialPageParam: "",
-    getNextPageParam: (lastPage: any) => {
-      if (!lastPage?.next_cursor) return undefined;
-      return lastPage.next_cursor;
-    },
+    }
   });
 
-  const logs = logsData?.pages.flatMap((page: any) => page.data) || [];
+  const logs = logsData?.data?.data || [];
+  const totalPages = logsData?.data?.last_page || 1;
 
   const handleExport = async () => {
     try {
@@ -160,9 +154,11 @@ export function AuditLogTable() {
           <DataTable
             columns={columns}
             data={logs}
-            fetchNextPage={fetchNextPage}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
+            page={page}
+            perPage={perPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
           />
         )}
       </CardContent>

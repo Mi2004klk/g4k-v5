@@ -260,6 +260,8 @@ class DatabaseSeeder extends Seeder
             ['key' => 'force_password_change', 'value' => json_encode(false), 'category' => 'security'],
             ['key' => 'reminders.shift_offset', 'value' => json_encode(15), 'category' => 'reminders'],
             ['key' => 'reminders.missed_clock_in_offset', 'value' => json_encode(30), 'category' => 'reminders'],
+            ['key' => 'reminders.holiday_offset', 'value' => json_encode(10), 'category' => 'reminders'],
+            ['key' => 'reminders.open_shift_flag_time', 'value' => json_encode('20:00'), 'category' => 'reminders'],
         ];
 
         foreach ($settings as $setting) {

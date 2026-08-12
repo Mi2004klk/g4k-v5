@@ -27,11 +27,11 @@ interface WidgetEngineProps {
 
 export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const [layouts, setLayouts] = useState<any>(() => ({
-    lg: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-    md: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-    sm: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-    xs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
-    xxs: availableWidgets.map((w) => ({ ...w.defaultLayout, i: w.id })),
+    lg: availableWidgets.map((w) => ({ ...(w.defaultLayout?.lg || w.defaultLayout), i: w.id })),
+    md: availableWidgets.map((w) => ({ ...(w.defaultLayout?.md || w.defaultLayout), i: w.id })),
+    sm: availableWidgets.map((w) => ({ ...(w.defaultLayout?.sm || w.defaultLayout), i: w.id })),
+    xs: availableWidgets.map((w) => ({ ...(w.defaultLayout?.xs || w.defaultLayout), i: w.id })),
+    xxs: availableWidgets.map((w) => ({ ...(w.defaultLayout?.xxs || w.defaultLayout), i: w.id })),
   }));
   const [mounted, setMounted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -109,11 +109,10 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         const savedBp = Array.isArray(savedLayouts[bp]) ? savedLayouts[bp] : [];
         const mergedBp = [...savedBp];
         
-        // Append missing widgets
         availableWidgets.forEach(w => {
           const exists = mergedBp.find((item: any) => item.i === w.id);
           if (!exists) {
-            mergedBp.push({ ...w.defaultLayout, i: w.id });
+            mergedBp.push({ ...(w.defaultLayout?.[bp] || w.defaultLayout), i: w.id });
           }
         });
         
@@ -165,6 +164,13 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         .is-dragging-widget button,
         .is-dragging-widget [role="button"] {
           pointer-events: none !important;
+        }
+        .react-resizable-handle {
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .react-grid-item:hover .react-resizable-handle {
+          opacity: 1;
         }
       `}</style>
       <GridLayout

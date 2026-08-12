@@ -25,6 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "./dropdown-menu"
+import { Pagination } from "./pagination"
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -39,6 +40,11 @@ export interface DataTableProps<TData, TValue> {
   rowSelection?: RowSelectionState
   onRowSelectionChange?: (rowSelection: RowSelectionState) => void
   onInlineEditSave?: (rowId: string, columnId: string, value: any) => void
+  page?: number
+  perPage?: number
+  totalPages?: number
+  onPageChange?: (page: number) => void
+  onPerPageChange?: (perPage: number) => void
 }
 
 // Memoized individual cell to prevent re-rendering all cells when one changes or during scroll
@@ -194,6 +200,11 @@ export function DataTable<TData, TValue>({
   rowSelection: externalRowSelection,
   onRowSelectionChange,
   onInlineEditSave,
+  page,
+  perPage,
+  totalPages,
+  onPageChange,
+  onPerPageChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -272,13 +283,16 @@ export function DataTable<TData, TValue>({
   // Infinite Scroll / Cursor Pagination
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
+      // Skip infinite scroll if page-number pagination is used
+      if (page !== undefined) return;
+      
       const target = e.target as HTMLDivElement
       const bottom = target.scrollHeight - target.scrollTop === target.clientHeight
       if (bottom && hasNextPage && !isFetchingNextPage && fetchNextPage) {
         fetchNextPage()
       }
     },
-    [fetchNextPage, hasNextPage, isFetchingNextPage]
+    [fetchNextPage, hasNextPage, isFetchingNextPage, page]
   )
 
   return (
@@ -427,6 +441,20 @@ export function DataTable<TData, TValue>({
           <div className="p-4 text-center text-sm text-muted-foreground">Loading more...</div>
         )}
       </div>
+
+      {page !== undefined && totalPages !== undefined && (
+        <Pagination
+          variant="standard"
+          currentPage={page}
+          totalPages={totalPages}
+          pageSize={perPage}
+          hasNextPage={page < totalPages}
+          hasPreviousPage={page > 1}
+          onNextPage={() => onPageChange?.(page + 1)}
+          onPreviousPage={() => onPageChange?.(page - 1)}
+          onPageSizeChange={onPerPageChange}
+        />
+      )}
     </div>
   )
 }

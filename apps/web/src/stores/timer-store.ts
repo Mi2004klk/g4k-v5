@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface TimerState {
   isActive: boolean;
@@ -7,6 +8,7 @@ interface TimerState {
   currentBreakStart: string | null;
   baseSeconds: number; // Accumulated seconds BEFORE the current active period
   lastActiveTimestamp: string | null; // The exact timestamp when we last resumed/clocked in
+  standardSeconds: number; // Standard working hours in seconds for the day
   
   // Actions
   startTimer: (clockInTime: string, initialTotalSeconds: number) => void;
@@ -16,13 +18,16 @@ interface TimerState {
   syncWithServer: (day: any, events: any[]) => void;
 }
 
-export const useTimerStore = create<TimerState>((set, get) => ({
+export const useTimerStore = create<TimerState>()(
+  persist(
+    (set, get) => ({
   isActive: false,
   isOnBreak: false,
   clockInTimestamp: null,
   currentBreakStart: null,
   baseSeconds: 0,
   lastActiveTimestamp: null,
+  standardSeconds: 28800, // Default to 8 hours
 
   startTimer: (clockInTime: string, initialTotalSeconds: number) => {
     set({
@@ -76,6 +81,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     }
 
     const initialTotalSeconds = day.total_seconds || 0;
+    const standardSeconds = day.standard_seconds || 28800;
     
     // Determine active state based on events
     let isActive = false;
@@ -112,10 +118,15 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         currentBreakStart: currentBreakStart,
         baseSeconds: initialTotalSeconds,
         lastActiveTimestamp: lastActiveEventTimestamp,
+        standardSeconds: standardSeconds,
       });
     } else {
       get().stopTimer();
-      set({ baseSeconds: initialTotalSeconds });
+      set({ baseSeconds: initialTotalSeconds, standardSeconds: standardSeconds });
     }
-  },
-}));
+  }),
+  {
+    name: 'g4k-timer',
+  }
+  )
+);

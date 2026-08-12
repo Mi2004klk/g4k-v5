@@ -12,13 +12,15 @@ import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
 import { Label } from "@g4k/ui/components";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
-import { format } from "date-fns";
+import { Calendar } from "@g4k/ui/components";
+import { format, startOfTomorrow } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { queryKeys } from "@/lib/query-keys";
 
 export function LeaveRequestForm() {
   const queryClient = useQueryClient();
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [type, setType] = useState("casual");
   const [reason, setReason] = useState("");
 
@@ -31,8 +33,8 @@ export function LeaveRequestForm() {
     },
     onSuccess: () => {
       toast.success("Leave request submitted successfully.");
-      setStartDate("");
-      setEndDate("");
+      setStartDate(undefined);
+      setEndDate(undefined);
       setReason("");
       setType("casual");
       queryClient.invalidateQueries({ queryKey: [queryKeys.myLeaveHistory()[0]] });
@@ -45,8 +47,17 @@ export function LeaveRequestForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (new Date(endDate) < new Date(startDate)) {
+    if (!startDate || !endDate) return;
+
+    if (endDate < startDate) {
       toast.error("End date must be on or after start date.");
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (startDate <= today) {
+      toast.error("Start date must be a future date.");
       return;
     }
 
@@ -57,9 +68,7 @@ export function LeaveRequestForm() {
       if (leave.approval?.status !== "pending") return false;
       const existStart = new Date(leave.start_date);
       const existEnd = new Date(leave.end_date);
-      const newStart = new Date(startDate);
-      const newEnd = new Date(endDate);
-      return newStart <= existEnd && newEnd >= existStart;
+      return startDate <= existEnd && endDate >= existStart;
     });
 
     if (hasOverlap) {
@@ -67,8 +76,15 @@ export function LeaveRequestForm() {
       return;
     }
 
-    submitMutation.mutate({ start_date: startDate, end_date: endDate, type, reason });
+    submitMutation.mutate({ 
+      start_date: format(startDate, "yyyy-MM-dd"), 
+      end_date: format(endDate, "yyyy-MM-dd"), 
+      type, 
+      reason 
+    });
   };
+
+  const tomorrow = startOfTomorrow();
 
   return (
     <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
@@ -80,23 +96,37 @@ export function LeaveRequestForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-semibold text-neutral-500">Start Date *</label>
-              <Input
-                type="date"
-                required
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="h-9 text-xs"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button type="button"
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-xs">
+                    {startDate ? format(startDate, "dd-MM-yyyy") : <span className="text-muted tracking-wide uppercase">DD-MM-YYYY</span>}
+                    <CalendarIcon className="h-4 w-4 text-muted" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={startDate} onSelect={setStartDate}
+                    disabled={{ before: tomorrow }}
+                    initialFocus />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-neutral-500">End Date *</label>
-              <Input
-                type="date"
-                required
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="h-9 text-xs"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button type="button"
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-xs">
+                    {endDate ? format(endDate, "dd-MM-yyyy") : <span className="text-muted tracking-wide uppercase">DD-MM-YYYY</span>}
+                    <CalendarIcon className="h-4 w-4 text-muted" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={endDate} onSelect={setEndDate}
+                    disabled={{ before: startDate ?? tomorrow }}
+                    initialFocus />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           

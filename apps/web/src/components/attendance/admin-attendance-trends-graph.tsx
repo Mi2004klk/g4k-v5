@@ -38,15 +38,17 @@ export function AdminAttendanceTrendsGraph() {
   });
 
   const chartData = useMemo(() => {
-    if (!data?.stats) return { labels: [], present: [], absent: [], late: [] };
+    if (!data?.stats) return { labels: [], present: [], absent: [], late: [], hours: [], overtime: [] };
     
     const stats = data.stats;
     const labels = stats.map((d: any) => groupBy === "date" ? format(new Date(d.date), "MMM d") : d.name);
     const present = stats.map((d: any) => d.present || 0);
     const absent = stats.map((d: any) => d.absent || 0);
     const late = stats.map((d: any) => d.late || 0);
+    const hours = stats.map((d: any) => Number(((d.total_seconds || 0) / 3600).toFixed(1)));
+    const overtime = stats.map((d: any) => Number(((d.overtime_seconds || 0) / 3600).toFixed(1)));
 
-    return { labels, present, absent, late };
+    return { labels, present, absent, late, hours, overtime };
   }, [data, groupBy]);
 
   const option = {
@@ -55,7 +57,7 @@ export function AdminAttendanceTrendsGraph() {
       axisPointer: { type: 'shadow' }
     },
     legend: {
-      data: ['Present', 'Late', 'Absent'],
+      data: ['Present', 'Late', 'Absent', 'Total Hours', 'Overtime (hrs)'],
       bottom: 0,
       textStyle: {
         color: '#6b7280'
@@ -82,10 +84,18 @@ export function AdminAttendanceTrendsGraph() {
     yAxis: [
       {
         type: 'value',
+        name: 'Days/Count',
         minInterval: 1,
         axisLabel: {
           color: '#6b7280'
         }
+      },
+      {
+        type: 'value',
+        name: 'Hours',
+        position: 'right',
+        axisLabel: { color: '#6b7280' },
+        splitLine: { show: false }
       }
     ],
     series: [
@@ -109,6 +119,24 @@ export function AdminAttendanceTrendsGraph() {
         stack: 'Total',
         itemStyle: { color: '#f87171', borderRadius: [4, 4, 0, 0] }, // red-400
         data: chartData.absent
+      },
+      {
+        name: 'Total Hours',
+        type: 'line',
+        yAxisIndex: 1,
+        itemStyle: { color: '#6366f1' }, // indigo-500
+        lineStyle: { width: 3 },
+        smooth: true,
+        data: chartData.hours
+      },
+      {
+        name: 'Overtime (hrs)',
+        type: 'line',
+        yAxisIndex: 1,
+        itemStyle: { color: '#f59e0b' }, // amber-500
+        lineStyle: { width: 2, type: 'dashed' },
+        smooth: true,
+        data: chartData.overtime
       }
     ]
   };

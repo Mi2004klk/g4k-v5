@@ -30,7 +30,9 @@ class NotificationController extends Controller
             });
         }
 
-        return response()->json($query->cursorPaginate(50));
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 50);
+        return response()->json($query->paginate($perPage));
     }
 
     public function markRead(Request $request, $id)

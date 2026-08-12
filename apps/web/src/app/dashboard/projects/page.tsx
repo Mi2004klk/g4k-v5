@@ -11,18 +11,10 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 import { ProjectCard } from "@/components/projects/project-card";
-import { Button } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
+import { Button, Input, Skeleton, EmptyState, Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Label, FilterBar } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
-import { EmptyState } from "@g4k/ui/components";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from "@g4k/ui/components";
 import { PageContainer } from "@/components/layout/page-container";
 
@@ -30,8 +22,10 @@ export default function ProjectsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: caps } = useCapabilities();
-  const [search, setSearch] = useUrlState("search", "");
-  const [sort, setSort] = useUrlState("sort", "created_at");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [status, setStatus] = useState("all");
   const [page, setPage] = useUrlState("page", "1");
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
@@ -119,24 +113,42 @@ export default function ProjectsPage() {
     >
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <div className="relative flex-1 max-w-sm w-full">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-neutral-400" />
-          <Input
-            placeholder="Search projects..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 text-xs"
-          />
-        </div>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="h-9 text-xs border border-input bg-background rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-violet-500"
-        >
-          <option value="created_at">Sort by Created</option>
-          <option value="deadline">Sort by Deadline</option>
-          <option value="priority">Sort by Priority</option>
-        </select>
+        <FilterBar
+          searchQuery={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search projects..."
+          sortBy={sort}
+          sortDirection={sortDirection}
+          onSortChange={(val, dir) => {
+            setSort(val);
+            setSortDirection(dir);
+          }}
+          sortOptions={[
+            { label: "Created Date", value: "created_at" },
+            { label: "Deadline", value: "deadline" },
+            { label: "Priority", value: "priority" }
+          ]}
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              value: status,
+              onChange: setStatus,
+              options: [
+                { label: "Active", value: "active" },
+                { label: "Completed", value: "completed" },
+                { label: "On Hold", value: "on_hold" },
+              ]
+            }
+          ]}
+          onClearAll={() => {
+            setSearch("");
+            setSort("created_at");
+            setSortDirection("desc");
+            setStatus("all");
+          }}
+        />
       </div>
 
       {isPending ? (

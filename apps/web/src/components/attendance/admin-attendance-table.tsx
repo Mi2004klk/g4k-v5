@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Search, CalendarDays, Loader2, AlertCircle, Download, Building2 } from "lucide-react";
 import Link from "next/link";
+import { TrendingUp, AlertCircle, CalendarDays, Search, Building2, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
@@ -12,21 +12,25 @@ import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
-import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
-import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
+import { Input, Button, Checkbox, DataTable, StatusBadge, Combobox, FilterBar } from "@g4k/ui/components";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
+import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 
 export function AdminAttendanceTable() {
   const queryClient = useQueryClient();
   const { subscribe, isConnected } = useReverb();
-  const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
+  const [dateFrom, setDateFrom] = useUrlState("from", format(new Date(), "yyyy-MM-dd"));
+  const [dateTo, setDateTo] = useUrlState("to", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
+  const [userFilter, setUserFilter] = useUrlState("user", "all");
   const [search, setSearch] = useUrlState("search", "");
-  
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   const [rowSelection, setRowSelection] = useState({});
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [sheetTab, setSheetTab] = useState<"day" | "history" | "trends">("day");
   
   // Dialog & selection state
   const [correctionData, setCorrectionData] = useState<{ dayId: number, userId: number, date: string, action: string, type: string } | null>(null);
@@ -37,6 +41,10 @@ export function AdminAttendanceTable() {
     }, 250);
     return () => clearTimeout(handler);
   }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [dateFrom, dateTo, deptFilter, userFilter, statusFilter, debouncedSearch]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,10 +61,10 @@ export function AdminAttendanceTable() {
     const channel = subscribe("presence-org");
     if (channel) {
       channel.listen(".attendance.updated", () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.adminAttendance(selectedDate, deptFilter) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.adminAttendance(dateFrom, deptFilter) });
       });
     }
-  }, [subscribe, selectedDate, deptFilter, queryClient]);
+  }, [subscribe, dateFrom, deptFilter, queryClient]);
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
@@ -64,41 +72,44 @@ export function AdminAttendanceTable() {
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
+  const { data: usersData } = useQuery({
+    queryKey: ["users", deptFilter],
+    queryFn: () => apiFetch(deptFilter && deptFilter !== "all" ? `/users?department_id=${deptFilter}` : "/users"),
+    staleTime: 60000,
+  });
+  const users = usersData?.data || [];
+  const userOptions = [
+    { label: "All Employees", value: "all" },
+    ...users.map((u: any) => ({ label: u.name, value: u.id.toString() }))
+  ];
+  const [userFilter, setUserFilter] = useUrlState("user", "all");
+
   const { data, isLoading, error } = useQuery({
-    queryKey: queryKeys.adminAttendance(selectedDate, deptFilter),
+    queryKey: [...queryKeys.adminAttendance(dateFrom, deptFilter), dateTo, userFilter, statusFilter, debouncedSearch, page, perPage],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedDate) params.append("date", selectedDate);
+      if (dateFrom) params.append("from", dateFrom);
+      if (dateTo) params.append("to", dateTo);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      if (userFilter && userFilter !== "all") params.append("user_id", userFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      params.append("page", page.toString());
+      params.append("per_page", perPage.toString());
       return apiFetch(`/attendance/admin/overview?${params.toString()}`);
-    },
-    select: (raw: any) => {
-      if (!raw?.data) return raw;
-      let items = raw.data;
-      if (statusFilter && statusFilter !== "all") {
-        items = items.filter((item: any) => item.status === statusFilter);
-      }
-      if (debouncedSearch) {
-        const q = debouncedSearch.toLowerCase();
-        items = items.filter((item: any) =>
-          item.user_name?.toLowerCase().includes(q) ||
-          item.user_email?.toLowerCase().includes(q)
-        );
-      }
-      return { ...raw, data: items };
     },
     staleTime: STALE_TIME_ATTENDANCE,
     refetchInterval: isConnected ? false : 120_000,
   });
 
-  const records = data?.data || [];
+  const records = data?.data?.data || [];
+  const totalPages = data?.data?.last_page || 1;
 
   const handleExport = async (all: boolean = true) => {
     try {
       const params = new URLSearchParams();
-      params.append("start_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
-      params.append("end_date", selectedDate || format(new Date(), "yyyy-MM-dd"));
-      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      params.append("start_date", dateFrom || format(new Date(), "yyyy-MM-dd"));
+      params.append("end_date", dateTo || format(new Date(), "yyyy-MM-dd"));
       
       if (!all) {
         const selectedIds = Object.keys(rowSelection);
@@ -108,6 +119,10 @@ export function AdminAttendanceTable() {
         }
         params.append("ids", selectedIds.join(","));
         toast.info(`Exporting ${selectedIds.length} selected records...`);
+      } else {
+        if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+        if (userFilter && userFilter !== "all") params.append("user_id", userFilter);
+        if (debouncedSearch) params.append("search", debouncedSearch);
       }
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/attendance/export?${params.toString()}`, {
@@ -123,7 +138,7 @@ export function AdminAttendanceTable() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `attendance_export_admin_${selectedDate}.xlsx`;
+      a.download = `attendance_export_admin_${dateFrom}_to_${dateTo}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -165,13 +180,26 @@ export function AdminAttendanceTable() {
         const isOpenShift = row.original.clock_in && !row.original.clock_out;
         
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 group">
             <button 
-              onClick={() => setSelectedUser(row.original.user_id)}
+              onClick={() => {
+                setSheetTab("day");
+                setSelectedUser(row.original.user_id);
+              }}
               className="flex flex-col text-left hover:opacity-80 transition-opacity"
             >
               <span className="font-semibold text-neutral-900 dark:text-white underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
               <span className="text-[11px] text-neutral-400 font-normal">{row.original.user_email}</span>
+            </button>
+            <button
+              onClick={() => {
+                setSheetTab("trends");
+                setSelectedUser(row.original.user_id);
+              }}
+              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-all text-neutral-400 hover:text-violet-500"
+              title="View Trends"
+            >
+              <TrendingUp className="w-4 h-4" />
             </button>
             {isOpenShift && (
               <button 
@@ -216,6 +244,11 @@ export function AdminAttendanceTable() {
             >
               {status}
             </StatusBadge>
+            {row.original.late_minutes > 0 && (
+              <StatusBadge status="warning" className="font-mono">
+                LATE · {row.original.late_minutes}m
+              </StatusBadge>
+            )}
             {isLeave && (
               <Link 
                 href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
@@ -265,6 +298,29 @@ export function AdminAttendanceTable() {
         const mins = Math.floor((secs % 3600) / 60);
         return <span className="font-mono text-amber-600">{hours}h {mins}m</span>;
       },
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }: any) => {
+        return (
+          <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 ml-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedUser(row.original.user_id);
+                setSheetTab("trends");
+              }}
+            >
+              <TrendingUp className="w-4 h-4 mr-1" />
+              Trends
+            </Button>
+          </div>
+        );
+      },
     }
   ];
 
@@ -280,74 +336,74 @@ export function AdminAttendanceTable() {
     <div className="space-y-4">
       <div className="flex flex-col xl:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         
-        {/* Search & Dept */}
-        <div className="flex w-full xl:w-auto items-center gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-            <Input 
-              type="search"
-              placeholder="Search company (Press / to focus)" 
-              className="pl-9 h-10 w-full"
-              value={search || ""}
-              onChange={(e) => setSearch(e.target.value)}
-              aria-label="Search team members"
-              id="admin-team-search"
-            />
-          </div>
+        <FilterBar
+          searchQuery={search || ""}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search company (Press / to focus)"
+          filters={[
+            {
+              key: "date",
+              label: "Date Range",
+              type: "date-range",
+              value: {
+                from: dateFrom ? new Date(dateFrom) : undefined,
+                to: dateTo ? new Date(dateTo) : undefined
+              },
+              onChange: (range: any) => {
+                if (range?.from) setDateFrom(format(range.from, "yyyy-MM-dd"));
+                if (range?.to) setDateTo(format(range.to, "yyyy-MM-dd"));
+              },
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "checkbox-group",
+              value: statusFilter === "all" ? [] : [statusFilter],
+              onChange: (vals: string[]) => setStatusFilter(vals.length > 0 ? vals[0] : "all"),
+              options: statusOptions.filter(o => o.value !== "all"),
+            },
+            {
+              key: "department",
+              label: "Department",
+              type: "select",
+              value: deptFilter,
+              onChange: (val) => {
+                setDeptFilter(val);
+                setUserFilter("all");
+              },
+              options: departments.map((d: any) => ({ label: d.name, value: d.id.toString() }))
+            },
+            {
+              key: "user",
+              label: "Employee",
+              type: "combobox",
+              value: userFilter,
+              onChange: setUserFilter,
+              options: userOptions
+            }
+          ]}
+          onClearAll={() => {
+            setSearch("");
+            setDateFrom(format(new Date(), "yyyy-MM-dd"));
+            setDateTo(format(new Date(), "yyyy-MM-dd"));
+            setStatusFilter("all");
+            setDeptFilter("all");
+            setUserFilter("all");
+          }}
+        />
 
-          <div className="relative shrink-0">
-            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-            <select
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="h-10 pl-9 pr-8 py-2 w-[160px] text-sm bg-transparent border border-neutral-200 dark:border-neutral-800 rounded-lg focus:ring-2 focus:ring-violet-500 appearance-none text-neutral-900 dark:text-neutral-100"
-              aria-label="Filter by department"
-            >
-              <option value="all">All Departments</option>
-              {departments.map((d: any) => (
-                <option key={d.id} value={d.id.toString()}>{d.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Status Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 xl:pb-0 w-full xl:w-auto" role="group" aria-label="Filter by status">
-          {statusOptions.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setStatusFilter(opt.value)}
-              aria-pressed={statusFilter === opt.value}
-              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border focus-visible:ring-2 focus-visible:ring-violet-500 focus:outline-none ${
-                statusFilter === opt.value
-                  ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900 dark:border-white"
-                  : "bg-transparent text-neutral-600 border-neutral-200 hover:bg-neutral-100 dark:text-neutral-400 dark:border-neutral-700 dark:hover:bg-neutral-800"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Actions & Date */}
-        <div className="flex-1 flex justify-start xl:justify-end items-center gap-2 w-full xl:w-auto overflow-x-auto">
+        {/* Export Actions */}
+        <div className="flex justify-end items-center gap-2 overflow-x-auto w-full xl:w-auto mt-4 xl:mt-0">
           {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-10 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
+            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-9 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
               <Download className="w-4 h-4 mr-2" aria-hidden="true" />
-              Export Selected ({Object.keys(rowSelection).length})
+              Export Selected
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-10 whitespace-nowrap shrink-0" aria-label="Export company report for selected date">
+          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-9 whitespace-nowrap shrink-0" aria-label="Export company report for selected date">
             <Download className="w-4 h-4 mr-2" aria-hidden="true" />
-            Export Company
+            Export Full List
           </Button>
-          <Input 
-            type="date" 
-            value={selectedDate || ""} 
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-auto min-w-[140px] h-10 shrink-0"
-            aria-label="Filter by date"
-          />
         </div>
       </div>
 
@@ -373,13 +429,19 @@ export function AdminAttendanceTable() {
             onRowSelectionChange={setRowSelection}
             rowSelection={rowSelection}
             getRowId={(row: any) => String(row.id)}
+            page={page}
+            perPage={perPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
           />
         )}
       </div>
 
       <TeamMemberAttendanceSheet 
         userId={selectedUser} 
-        date={selectedDate || format(new Date(), "yyyy-MM-dd")}
+        date={dateFrom}
+        initialTab={sheetTab}
         onClose={() => setSelectedUser(null)} 
       />
 

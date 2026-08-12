@@ -1,9 +1,98 @@
+# ============================================================
+# Games4King Workplace OS — root .gitignore
+# Only real source, config, and deployment files belong in the repo.
+# ============================================================
+
+# ---- Secrets / environment ----
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+
+# ---- Dependencies ----
+node_modules/
+vendor/
+
+# ---- Build output / caches ----
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+packages/ui/dist/
+packages/ui/src/**/*.js
+packages/ui/src/**/*.js.map
+packages/ui/src/**/*.d.ts.map
+apps/web/.lighthouseci/
+.trace
+.next/trace
+.next/trace-build
+
+# ---- Logs / scratch / dumps ----
+*.log
+out.txt
+output.txt
+routes.txt
+error_log.json
+remote.log
+tests_output.log
+test_sigint.php
+**/test.php
+
+# ---- Binaries / archives / large assets ----
 *.exe
 *.zip
+*.tar
 *.tar.gz
-node_modules/
+*.rar
+*.mp4
+Images, SVG, PDF/
 
+# ---- AI / agent / IDE tooling (internal, not for GitHub) ----
+.zcode/
+.agents/
+.cursor/
 .jetro/
+.vscode/
+.idea/
+.windsurfrules
 .mcp.json
-.vercel
-.env*
+AGENT.md
+CLAUDE.md
+AGENTS.md
+**/AGENT.md
+**/CLAUDE.md
+**/AGENTS.md
+.github/copilot-instructions.md
+skills-lock.json
+
+# ---- Internal planning / scratch docs (client repo stays clean) ----
+# README.md is intentionally NOT ignored.
+fix-*.md
+final-fix-*.md
+build-summary.md
+context.md
+access.md
+patch*.js
+patch*.mjs
+fix-imports.mjs
+fix-cards.js
+remove_padding.py
+update-openapi.js
+docs/
+openspec/
+
+# ---- Vercel local project metadata ----
+.vercel/
+
+# ---- OS files ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Laravel runtime (defensive; also in apps/api/.gitignore) ----
+apps/api/storage/logs/
+apps/api/storage/framework/cache/data/
+apps/api/.phpunit.result.cache

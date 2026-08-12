@@ -7,6 +7,7 @@ import { Activity, AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
+import { WidgetInfo } from "./widget-info";
 
 export function RecentActivityWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
@@ -64,7 +65,7 @@ export function RecentActivityWidget() {
     );
   }
 
-  const activities = data?.metrics?.recent_activity || [];
+  const activities = data?.recent_activity || [];
 
   function safeFormatDistance(dateString: string | undefined | null) {
     if (!dateString) return "—";
@@ -80,8 +81,9 @@ export function RecentActivityWidget() {
           <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
             <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             Recent Activity Feed
+            <WidgetInfo summary="Relevant user activity across the system" />
           </span>
           {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
         </div>
@@ -96,17 +98,25 @@ export function RecentActivityWidget() {
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-800 -mx-5 px-5">
             {activities.map((activity: any) => (
-              <div key={activity.id} className="py-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                <p className="text-xs text-neutral-700 dark:text-neutral-300">
-                  <span className="font-medium text-neutral-900 dark:text-white">
-                    {activity.user_name || 'System'}
-                  </span>{" "}
-                  {activity.action} {activity.subject_type} 
-                  {activity.meta ? ` (${activity.meta})` : ''}
-                </p>
-                <p className="text-[10px] text-neutral-500 mt-1">
-                  {safeFormatDistance(activity.at)}
-                </p>
+              <div key={activity.id} className="py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                <div className="flex justify-between items-start gap-2">
+                  <p className="text-[11px] text-neutral-700 dark:text-neutral-300 leading-tight">
+                    <span className="font-semibold text-neutral-900 dark:text-white">
+                      {activity.user_name || 'System'}
+                    </span>{" "}
+                    <span className="text-neutral-500">
+                      {activity.action} · {activity.subject_type}
+                    </span>
+                    {activity.after && (
+                      <span className="block mt-0.5 text-[10px] text-neutral-400 truncate max-w-[280px]">
+                        {typeof activity.after === 'string' ? activity.after : JSON.stringify(activity.after)}
+                      </span>
+                    )}
+                  </p>
+                  <span className="text-[10px] text-neutral-400 whitespace-nowrap mt-0.5">
+                    {safeFormatDistance(activity.at)}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

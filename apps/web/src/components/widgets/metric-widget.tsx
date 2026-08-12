@@ -8,6 +8,7 @@ import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
+import { WidgetInfo } from "./widget-info";
 
 interface MetricWidgetProps {
   title: string;
@@ -17,6 +18,8 @@ interface MetricWidgetProps {
   endpoint?: string;
   subtitle?: string;
   hasModule?: boolean;
+  info?: React.ReactNode;
+  breakdown?: boolean;
 }
 
 export function MetricWidget({
@@ -27,6 +30,8 @@ export function MetricWidget({
   endpoint = "/dashboard/init",
   subtitle,
   hasModule = true,
+  info,
+  breakdown = false,
 }: MetricWidgetProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const isFirstRender = useRef(true);
@@ -40,8 +45,18 @@ export function MetricWidget({
     placeholderData: keepPreviousData,
   });
 
-  const rawValue = data?.metrics?.[metricKey] ?? 0;
-  const isModuleAvailable = data?.metrics?.[`has_${metricKey.split('_')[1] || metricKey}_module`] ?? hasModule;
+  const rawValue = data?.[metricKey] ?? 0;
+  const isModuleAvailable = data?.[`has_${metricKey.split('_')[1] || metricKey}_module`] ?? hasModule;
+
+  // breakdown logic
+  const activeCount = data?.active_employees ?? 0;
+  const inactiveCount = data?.inactive_employees ?? 0;
+  const departmentsCount = data?.departments ?? 0;
+
+  let dynamicInfo = info;
+  if (breakdown && metricKey === "total_employees") {
+    dynamicInfo = `${activeCount} active · ${inactiveCount} inactive across ${departmentsCount} departments`;
+  }
 
   // Update value instantly
   useEffect(() => {
@@ -119,8 +134,9 @@ export function MetricWidget({
             <div className={`w-7 h-7 rounded-md ${colorStyles[color]} flex items-center justify-center transition-transform group-hover:scale-110`}>
               <Icon className="w-4 h-4" />
             </div>
-            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
               {title}
+              {dynamicInfo && <WidgetInfo summary={dynamicInfo} />}
             </span>
             {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </div>
@@ -130,9 +146,13 @@ export function MetricWidget({
           <div className="text-3xl font-bold font-mono tracking-tight text-neutral-900 dark:text-white">
             {displayValue.toLocaleString()}
           </div>
-          {subtitle && (
+          {breakdown && metricKey === "total_employees" ? (
+            <p className="text-[11px] text-neutral-400 mt-1 font-medium">
+              <span className="text-emerald-600 dark:text-emerald-400">{activeCount} active</span> <span className="mx-1 opacity-50">·</span> <span className="text-neutral-500">{inactiveCount} inactive</span>
+            </p>
+          ) : subtitle ? (
             <p className="text-[11px] text-neutral-400 mt-1">{subtitle}</p>
-          )}
+          ) : null}
         </div>
       </div>
     </Card>

@@ -2,15 +2,15 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardTitle, Skeleton, StatusBadge } from "@g4k/ui/components";
-import { ClipboardList, Calendar, ArrowRight } from "lucide-react";
+import { Card, Skeleton, StatusBadge } from "@g4k/ui/components";
+import { ClipboardList, ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { queryKeys } from "@/lib/query-keys";
+import { formatDistanceToNow } from "date-fns";
 
 export function EmployeeApprovalStatusWidget() {
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.myLeaveHistory("all", "all"),
-    queryFn: () => apiFetch("/leave-requests/history"),
+    queryKey: ["tasks-submitted"],
+    queryFn: () => apiFetch("/tasks/submitted"),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -30,11 +30,11 @@ export function EmployeeApprovalStatusWidget() {
     );
   }
 
-  const requests = data?.data?.slice(0, 3) || [];
+  const tasks = data?.data?.slice(0, 3) || [];
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
-      <div>
+      <div className="flex flex-col h-full">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
@@ -44,39 +44,46 @@ export function EmployeeApprovalStatusWidget() {
               Approval Status
             </span>
           </div>
-          <Link href="/dashboard/leave" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
+          <Link href="/dashboard/tasks" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
             View All <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
-        {requests.length === 0 ? (
-          <div className="py-6 text-center text-xs text-neutral-400">
-            No recent approval requests
+        {tasks.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center text-xs text-neutral-400">
+            No recent task submissions
           </div>
         ) : (
-          <div className="space-y-2">
-            {requests.map((req: any) => (
-              <div key={req.id} className="flex items-center justify-between p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-neutral-400" />
-                  <div>
-                    <p className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 capitalize">
-                      {req.type} Leave
-                    </p>
-                    <p className="text-[10px] text-neutral-400">
-                      {req.start_date}
-                    </p>
+          <div className="space-y-2 overflow-y-auto thin-scrollbar">
+            {tasks.map((task: any) => (
+              <div key={task.id} className="flex flex-col p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 gap-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 truncate">
+                        {task.title}
+                      </p>
+                      <p className="text-[10px] text-neutral-400">
+                        {task.submitted_at ? formatDistanceToNow(new Date(task.submitted_at), { addSuffix: true }) : 'Unknown'}
+                      </p>
+                    </div>
                   </div>
+                  <StatusBadge 
+                    status={
+                      task.approval_state === "approved" ? "success" :
+                      task.approval_state === "pending_approval" ? "warning" : "danger"
+                    }
+                    className="uppercase text-[10px] shrink-0"
+                  >
+                    {task.approval_state.replace('_', ' ')}
+                  </StatusBadge>
                 </div>
-                <StatusBadge 
-                  status={
-                    req.status === "approved" ? "success" :
-                    req.status === "pending" ? "warning" : "danger"
-                  }
-                  className="uppercase text-[10px]"
-                >
-                  {req.status}
-                </StatusBadge>
+                {task.approval_state === 'redo_required' && task.feedback && (
+                  <div className="text-[10px] text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 p-1.5 rounded border border-rose-100 dark:border-rose-900/50">
+                    <span className="font-semibold">Feedback:</span> {task.feedback}
+                  </div>
+                )}
               </div>
             ))}
           </div>

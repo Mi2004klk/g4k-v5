@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useState, useMemo, useEffect } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Award, Edit2, Loader2, MoreVertical, Download, Trash2, UserX, UserCheck } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
@@ -52,8 +52,22 @@ import {
 export default function DesignationsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useUrlState("search", "");
-  const debouncedSearch = useDebounce(search, 250);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
 
   const { data: caps } = useCapabilities();
   const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
@@ -67,17 +81,16 @@ export default function DesignationsPage() {
   });
   const [editingDesig, setEditingDesig] = useState<any>(null);
 
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: queryKeys.designationsPaginated(debouncedSearch, statusFilter),
-    queryFn: async ({ pageParam }) => {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: [...queryKeys.designationsPaginated(debouncedSearch, statusFilter), page, perPage],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
-      if (pageParam) params.append("cursor", pageParam);
+      params.append("page", page.toString());
+      params.append("per_page", perPage.toString());
       return apiFetch(`/designations?${params.toString()}`);
     },
-    initialPageParam: "",
-    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
     staleTime: STALE_TIME_DESIGNATIONS,
   });
 
@@ -153,7 +166,8 @@ export default function DesignationsPage() {
     }
   };
 
-  const designationsList = data?.pages?.flatMap((page: any) => page.data || []) || [];
+  const designationsList = data?.data?.data || [];
+  const totalPages = data?.data?.last_page || 1;
   const columns = useMemo<any[]>(() => {
     const baseColumns: any[] = [
       {
@@ -333,15 +347,15 @@ export default function DesignationsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <DataTable columns={columns} data={designationsList} />
-              {hasNextPage && (
-                <div className="flex justify-center pb-6">
-                  <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-                    {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Load More
-                  </Button>
-                </div>
-              )}
+              <DataTable 
+                columns={columns} 
+                data={designationsList} 
+                page={page}
+                perPage={perPage}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                onPerPageChange={setPerPage}
+              />
             </div>
           )}
         </CardContent>

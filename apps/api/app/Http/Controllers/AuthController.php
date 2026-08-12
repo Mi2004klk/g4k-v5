@@ -149,19 +149,47 @@ class AuthController extends Controller
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
         $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
 
+        // Password Expiry Check
+        $passwordExpired = false;
+        $expiryDays = $settings['password.expiry_days'] ?? null;
+        if ($expiryDays !== null && $expiryDays !== 'null' && $expiryDays !== '') {
+            $changedAt = $user->password_changed_at ?: $user->updated_at;
+            if (\Carbon\Carbon::parse($changedAt)->addDays((int)$expiryDays)->isPast()) {
+                $passwordExpired = true;
+                if (!$user->must_change_password) {
+                    $user->must_change_password = true;
+                    $user->save();
+                }
+            }
+        }
+
         // Issue Access Token
         $accessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole], now()->addMinutes($accessTtl));
         $accessTokenObj->accessToken->forceFill([
-            'ip_address' => $request->ip()
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent')
         ])->saveQuietly();
         $accessToken = $accessTokenObj->plainTextToken;
 
         // Issue Refresh Token
         $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl));
         $refreshTokenObj->accessToken->forceFill([
-            'ip_address' => $request->ip()
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent')
         ])->saveQuietly();
         $refreshToken = $refreshTokenObj->plainTextToken;
+
+        // Enforce max concurrent sessions
+        $maxConcurrent = $settings['session.max_concurrent'] ?? null;
+        if ($maxConcurrent !== null && $maxConcurrent !== 'null' && $maxConcurrent !== '') {
+            // Because each "session" creates 2 tokens (access + refresh), max tokens = maxConcurrent * 2
+            $maxTokens = (int)$maxConcurrent * 2;
+            $tokens = $user->tokens()->orderBy('created_at', 'desc')->get();
+            if ($tokens->count() > $maxTokens) {
+                $tokensToKeep = $tokens->take($maxTokens)->pluck('id');
+                $user->tokens()->whereNotIn('id', $tokensToKeep)->delete();
+            }
+        }
 
         $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
 
@@ -173,6 +201,7 @@ class AuthController extends Controller
             'user' => $user,
             'active_role' => $primaryRole,
             'must_change_password' => (bool)$user->must_change_password,
+            'password_expired' => $passwordExpired,
             'onboarded' => !is_null($user->onboarded_at),
         ])->withCookie($cookie);
     }
@@ -212,22 +241,57 @@ class AuthController extends Controller
         $user->roles = $rolesCollection->toArray();
         $primaryRole = $user->active_role ?? $rolesCollection->first() ?? 'employee';
 
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            return \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key')
+                ->toArray();
+        });
+            
+        $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
+        $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
+
+        // Password Expiry Check
+        $passwordExpired = false;
+        $expiryDays = $settings['password.expiry_days'] ?? null;
+        if ($expiryDays !== null && $expiryDays !== 'null' && $expiryDays !== '') {
+            $changedAt = $user->password_changed_at ?: $user->updated_at;
+            if (\Carbon\Carbon::parse($changedAt)->addDays((int)$expiryDays)->isPast()) {
+                $passwordExpired = true;
+                if (!$user->must_change_password) {
+                    $user->must_change_password = true;
+                    $user->save();
+                }
+            }
+        }
+
         // Issue new pair
-        $newAccessTokenObj = $user->createToken('Refreshed Session', ['role:' . $primaryRole]);
+        $newAccessTokenObj = $user->createToken('Refreshed Session', ['role:' . $primaryRole], now()->addMinutes($accessTtl));
         $newAccessTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
-            'expires_at' => now()->addMinutes(15)
-        ])->save();
+            'user_agent' => $request->header('User-Agent')
+        ])->saveQuietly();
         $newAccessToken = $newAccessTokenObj->plainTextToken;
 
-        $newRefreshTokenObj = $user->createToken('Refreshed Session_refresh', ['refresh']);
+        $newRefreshTokenObj = $user->createToken('Refreshed Session_refresh', ['refresh'], now()->addDays($refreshTtl));
         $newRefreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
-            'expires_at' => now()->addDays(7)
-        ])->save();
+            'user_agent' => $request->header('User-Agent')
+        ])->saveQuietly();
         $newRefreshToken = $newRefreshTokenObj->plainTextToken;
 
-        $cookie = $this->createAuthCookies($newRefreshToken);
+        // Enforce max concurrent sessions
+        $maxConcurrent = $settings['session.max_concurrent'] ?? null;
+        if ($maxConcurrent !== null && $maxConcurrent !== 'null' && $maxConcurrent !== '') {
+            $maxTokens = (int)$maxConcurrent * 2;
+            $tokens = $user->tokens()->orderBy('created_at', 'desc')->get();
+            if ($tokens->count() > $maxTokens) {
+                $tokensToKeep = $tokens->take($maxTokens)->pluck('id');
+                $user->tokens()->whereNotIn('id', $tokensToKeep)->delete();
+            }
+        }
+
+        $cookie = $this->createAuthCookies($newRefreshToken, $refreshTtl);
 
         return response()->json([
             'token' => $newAccessToken,
@@ -235,6 +299,7 @@ class AuthController extends Controller
             'user' => $user,
             'active_role' => $primaryRole,
             'must_change_password' => (bool)$user->must_change_password,
+            'password_expired' => $passwordExpired,
             'onboarded' => !is_null($user->onboarded_at),
         ])->withCookie($cookie);
     }
@@ -255,7 +320,13 @@ class AuthController extends Controller
         $deviceName = $user->currentAccessToken()->name;
         $user->currentAccessToken()->delete();
 
-        $token = $user->createToken($deviceName, ['role:' . $request->role])->plainTextToken;
+        $tokenObj = $user->createToken($deviceName, ['role:' . $request->role]);
+        $tokenObj->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent')
+        ])->saveQuietly();
+        $token = $tokenObj->plainTextToken;
+
         $user->roles = $roles;
         $user->active_role = $request->role;
         $user->save();
@@ -271,7 +342,6 @@ class AuthController extends Controller
     {
         $request->validate([
             'identifier' => 'required|string',
-            'channel' => 'required|in:smtp,admin',
         ]);
 
         $user = User::where('email', $request->identifier)
@@ -279,41 +349,38 @@ class AuthController extends Controller
             ->orWhere('employee_id', $request->identifier)
             ->first();
 
-        if ($user) {
-            Log::info("Password reset request for User ID {$user->id} via channel {$request->channel}");
-            
-            if ($request->channel === 'admin') {
-                \App\Models\PasswordResetRequest::create([
-                    'user_id' => $user->id,
-                    'status' => 'pending'
-                ]);
+        if (! \App\Support\SmtpSettings::isConfigured()) {
+            return response()->json([
+                'message' => 'Email is not configured yet.',
+                'email_not_configured' => true,
+            ], 200);
+        }
 
-                $adminIds = RoleAssignment::where('role', 'super_admin')->pluck('user_id')->unique();
-                foreach ($adminIds as $adminId) {
-                    \App\Models\Notification::create([
-                        'user_id' => $adminId,
-                        'title' => 'Password Reset Requested',
-                        'body' => "User {$user->name} ({$user->email}) requested a password reset.",
-                        'type' => 'security',
-                        'priority' => 'normal',
-                    ]);
-                }
-            } elseif ($request->channel === 'smtp') {
-                $token = \Illuminate\Support\Str::random(60);
-                \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
-                    ['email' => $user->email],
-                    ['token' => \Illuminate\Support\Facades\Hash::make($token), 'created_at' => now()]
-                );
-                
-                try {
-                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($token, $user->email));
-                } catch (\Exception $e) {
-                    Log::error("Failed to send password reset email to {$user->email}: " . $e->getMessage());
-                }
+        if ($user) {
+            Log::info("Password reset request for User ID {$user->id}");
+            
+            \App\Support\SmtpSettings::apply();
+
+            $token = \Illuminate\Support\Str::random(60);
+            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                ['token' => \Illuminate\Support\Facades\Hash::make($token), 'created_at' => now()]
+            );
+            
+            try {
+                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($token, $user->email));
+            } catch (\Throwable $e) {
+                Log::error("Failed to send password reset email to {$user->email}: " . $e->getMessage());
+                return response()->json([
+                    'message' => 'We could not send the email right now. Please try again later.',
+                    'email_send_failed' => true,
+                ], 200);
             }
         }
 
-        return response()->json(['message' => 'If the account exists, password recovery instructions have been sent.'], 202);
+        return response()->json([
+            'message' => 'If the account exists, password recovery instructions have been sent.'
+        ], 202);
     }
 
     public function resetPassword(Request $request)
@@ -330,28 +397,32 @@ class AuthController extends Controller
             ->first();
 
         if (!$user) {
-            throw ValidationException::withMessages([
-                'identifier' => ['User not found.'],
-            ]);
+            return response()->json([
+                'message' => 'Invalid or expired password reset token.',
+                'errors' => ['token' => ['Invalid or expired password reset token.']]
+            ], 422);
         }
 
         $resetRecord = \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->first();
         
         if (!$resetRecord || !\Illuminate\Support\Facades\Hash::check($request->token, $resetRecord->token)) {
-            throw ValidationException::withMessages([
-                'token' => ['Invalid or expired password reset token.'],
-            ]);
+            return response()->json([
+                'message' => 'Invalid or expired password reset token.',
+                'errors' => ['token' => ['Invalid or expired password reset token.']]
+            ], 422);
         }
         
         if (\Carbon\Carbon::parse($resetRecord->created_at)->addMinutes(60)->isPast()) {
             \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-            throw ValidationException::withMessages([
-                'token' => ['Invalid or expired password reset token.'],
-            ]);
+            return response()->json([
+                'message' => 'Invalid or expired password reset token.',
+                'errors' => ['token' => ['Invalid or expired password reset token.']]
+            ], 422);
         }
 
         $user->password = Hash::make($request->password);
         $user->must_change_password = false;
+        $user->password_changed_at = now();
         $user->save();
 
         // Revoke all existing tokens to kick out attackers/old sessions (AUTH-2)
@@ -379,6 +450,7 @@ class AuthController extends Controller
 
         $user->password = Hash::make($request->password);
         $user->must_change_password = false;
+        $user->password_changed_at = now();
         $user->save();
 
         $deviceName = $user->currentAccessToken()->name ?? 'Unknown Device';
@@ -434,6 +506,7 @@ class AuthController extends Controller
                 'id' => $t->id,
                 'device_name' => $t->name,
                 'ip_address' => $t->ip_address,
+                'user_agent' => $t->user_agent,
                 'last_used_at' => $t->last_used_at,
                 'is_current' => $t->id === $request->user()->currentAccessToken()->id
             ];

@@ -80,10 +80,9 @@ function getStatus(days: AttendanceDay[], dateStr: string): DayStatus {
   const day = days.find((d) => d.date === dateStr);
   if (!day) return "nodata";
   if (day.status === "leave") return "leave";
-  if ((day.status === "present" || day.status === "late") && day.overtime_seconds > 0)
-    return "overtime";
-  if (day.status === "present") return "present";
   if (day.status === "late") return "late";
+  if (day.status === "present" && day.overtime_seconds > 0) return "overtime";
+  if (day.status === "present") return "present";
   return "absent";
 }
 
@@ -96,7 +95,7 @@ const STATUS_STYLES: Record<DayStatus, string> = {
   absent:   "bg-neutral-200 dark:bg-neutral-700",
   late:     "bg-amber-300 dark:bg-amber-500",
   present:  "bg-emerald-300 dark:bg-emerald-500",
-  overtime: "bg-emerald-600 dark:bg-emerald-400",
+  overtime: "bg-indigo-400 dark:bg-indigo-500",
   leave:    "bg-violet-300 dark:bg-violet-500",
 };
 
@@ -239,8 +238,10 @@ function MonthCalendarGrid({
                     <span
                       className={[
                         "text-[11px] font-semibold leading-none",
-                        isKnownDay && (status === "present" || status === "overtime")
+                        isKnownDay && status === "present"
                           ? "text-emerald-900 dark:text-emerald-100"
+                          : isKnownDay && status === "overtime"
+                          ? "text-indigo-900 dark:text-indigo-100"
                           : isKnownDay && status === "late"
                           ? "text-amber-900 dark:text-amber-100"
                           : isKnownDay && status === "leave"
@@ -250,6 +251,11 @@ function MonthCalendarGrid({
                     >
                       {format(date, "d")}
                     </span>
+                    
+                    {/* Tiny overtime indicator if day is late but also has overtime */}
+                    {record && record.overtime_seconds > 0 && status === "late" && (
+                      <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-sm" aria-label="Has overtime" />
+                    )}
                     {/* Subtle clock-in indicator dot */}
                     {record?.clock_in && (
                       <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white/60 dark:bg-black/30" />
@@ -540,9 +546,9 @@ function DayDetailContent({
             Total Worked
           </p>
           <p className="font-mono font-bold text-violet-600">{formatSecs(day.total_seconds)}</p>
-          {day.total_seconds > standardSeconds && (
-            <p className="text-[10px] font-bold text-amber-600 font-mono">
-              +{formatSecs(day.total_seconds - standardSeconds)} OT
+          {day.overtime_seconds > 0 && (
+            <p className="text-[10px] font-bold text-indigo-600 font-mono">
+              +{formatSecs(day.overtime_seconds)} OT
             </p>
           )}
         </div>
@@ -586,11 +592,11 @@ function DayDetailContent({
       </div>
 
       {/* Projects */}
-      {day.projects && day.projects.length > 0 && (
+      {data?.projects && data.projects.length > 0 && (
         <div>
           <h4 className="text-sm font-bold mb-2">Projects Worked</h4>
           <div className="flex flex-wrap gap-2">
-            {day.projects.map((p: string, i: number) => (
+            {data.projects.map((p: string, i: number) => (
               <span
                 key={i}
                 className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full"
@@ -603,11 +609,11 @@ function DayDetailContent({
       )}
 
       {/* Tasks */}
-      {day.tasks && day.tasks.length > 0 && (
+      {data?.tasks && data.tasks.length > 0 && (
         <div>
           <h4 className="text-sm font-bold mb-2">Tasks Completed</h4>
           <div className="flex flex-wrap gap-2">
-            {day.tasks.map((t: string, i: number) => (
+            {data.tasks.map((t: string, i: number) => (
               <span
                 key={i}
                 className="text-[10px] bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 px-2 py-1 rounded-full"

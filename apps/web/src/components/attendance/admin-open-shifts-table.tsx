@@ -21,6 +21,8 @@ export function AdminOpenShiftsTable() {
   const [search, setSearch] = useUrlState("search", "");
   
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   
   // Dialog & selection state
   const [correctionData, setCorrectionData] = useState<{ dayId: number, userId: number, date: string, action: string, type: string } | null>(null);
@@ -29,9 +31,14 @@ export function AdminOpenShiftsTable() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
+      setPage(1);
     }, 250);
     return () => clearTimeout(handler);
   }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedDate, deptFilter]);
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
@@ -40,30 +47,22 @@ export function AdminOpenShiftsTable() {
   });
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: queryKeys.adminAttendance(selectedDate, deptFilter),
+    queryKey: [...queryKeys.adminAttendance(selectedDate, deptFilter), "open", debouncedSearch, page, perPage],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      params.append("status", "open");
+      params.append("page", page.toString());
+      params.append("per_page", perPage.toString());
       return apiFetch(`/attendance/admin/overview?${params.toString()}`);
-    },
-    select: (raw: any) => {
-      if (!raw?.data) return raw;
-      let items = raw.data;
-      if (debouncedSearch) {
-        const q = debouncedSearch.toLowerCase();
-        items = items.filter((item: any) =>
-          item.user?.name?.toLowerCase().includes(q) ||
-          item.user?.email?.toLowerCase().includes(q)
-        );
-      }
-      return { ...raw, data: items };
     },
     staleTime: STALE_TIME_ATTENDANCE,
   });
 
-  const allRecords = data?.data || [];
-  const openShifts = allRecords.filter((r: any) => r.clock_in && !r.clock_out);
+  const openShifts = data?.data?.data || [];
+  const totalPages = data?.data?.last_page || 1;
 
   const notifyMutation = useMutation({
     mutationFn: (ids: string[]) => apiFetch('/attendance/admin/notify-open-shifts', { method: 'POST', body: JSON.stringify({ ids }) }),
@@ -226,7 +225,13 @@ export function AdminOpenShiftsTable() {
             columns={columns} 
             data={openShifts}
             onRowSelectionChange={setRowSelection}
-            getRowId={(row: any) => String(row.id)}
+            rowSelection={rowSelection}
+            getRowId={(row: any) => String(row.user_id || row.id)}
+            page={page}
+            perPage={perPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
           />
         )}
       </div>

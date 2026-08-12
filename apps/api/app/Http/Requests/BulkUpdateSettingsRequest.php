@@ -24,9 +24,30 @@ class BulkUpdateSettingsRequest extends FormRequest
     {
         return [
             'settings' => 'required|array',
-            'settings.*.category' => 'required|string',
-            'settings.*.key' => 'required|string',
-            'settings.*.value' => 'required|string|max:500',
+            'settings.*.category' => 'required|string|in:company,auto_numbering,policies,reminders,security,mail,notifications',
+            'settings.*.key' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $index = explode('.', $attribute)[1];
+                    $category = $this->input("settings.$index.category");
+
+                    $allowedKeys = [
+                        'company' => ['name', 'timezone', 'logo_url'],
+                        'auto_numbering' => ['format', 'next_number'],
+                        'policies' => ['leave_policy', 'attendance_policy'],
+                        'reminders' => ['daily_reminder_time', 'weekly_report_day'],
+                        'security' => ['password.expiry_days', 'session.max_concurrent', 'session.access_token_ttl', 'session.refresh_token_ttl', 'password_history_limit', 'force_password_change'],
+                        'mail' => ['host', 'port', 'username', 'password', 'encryption', 'from_address', 'from_name'],
+                        'notifications' => ['leave_request.channels', 'attendance_reminder.channels', 'weekly_summary.channels']
+                    ];
+
+                    if (!isset($allowedKeys[$category]) || !in_array($value, $allowedKeys[$category])) {
+                        $fail("The key {$value} is not allowed for category {$category}.");
+                    }
+                }
+            ],
+            'settings.*.value' => 'nullable|string|max:2000',
         ];
     }
 }

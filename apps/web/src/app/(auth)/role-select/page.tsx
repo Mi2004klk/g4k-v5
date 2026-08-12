@@ -69,7 +69,7 @@ export default function RoleSelectPage() {
     }
   };
 
-  if (!user || !user.roles || user.roles.length <= 1) {
+  if (!user || !user.roles || user.roles.length === 1) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
         <div className="flex space-x-1.5 items-center justify-center">
@@ -77,6 +77,29 @@ export default function RoleSelectPage() {
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
+      </div>
+    );
+  }
+
+  if (user.roles.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
+        <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 p-6 text-center bg-white dark:bg-neutral-900 rounded-xl">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">No Workspace Assigned</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm font-sans text-neutral-500 dark:text-neutral-400 mb-6 mt-2">
+              Your account currently has no roles assigned. Please contact your administrator.
+            </p>
+            <button 
+              onClick={() => { setAuth(null, null, null, null); router.push('/login'); }} 
+              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg shadow-sm transition-all font-sans"
+            >
+              Sign out
+            </button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Loader2, Clock, CheckCircle2, MonitorSmartphone } from "lucide-react";
+import { Loader2, Clock, CheckCircle2, MonitorSmartphone, Coffee, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import {
   Sheet,
@@ -17,16 +17,26 @@ import { EmptyState } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
 import { AttendanceHistoryCalendar } from "./attendance-history-calendar";
+import { TeamMemberTrendsGraph } from "./team-member-trends-graph";
 
 interface TeamMemberAttendanceSheetProps {
   userId: number | null;
   date: string;
+  initialTab?: "day" | "history" | "trends";
   onClose: () => void;
 }
 import { queryKeys } from "@/lib/query-keys";
 
-export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberAttendanceSheetProps) {
-  const [tab, setTab] = useState("day");
+import { useEffect } from "react";
+
+export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", onClose }: TeamMemberAttendanceSheetProps) {
+  const [tab, setTab] = useState(initialTab);
+
+  useEffect(() => {
+    if (userId) {
+      setTab(initialTab);
+    }
+  }, [userId, initialTab]);
 
   const { data: dayData, isLoading: isLoadingDay } = useQuery({
     queryKey: userId !== null ? queryKeys.memberAttendanceDay(userId, date) : [],
@@ -44,6 +54,29 @@ export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberA
   const events = dayData?.events || [];
   const user = dayData?.user;
 
+  // Process breaks from events
+  const breaks = [];
+  if (events) {
+    let currentBreakStart = null;
+    for (const event of events) {
+      if (event.type === "break_start") {
+        currentBreakStart = event;
+      } else if (event.type === "break_end" && currentBreakStart) {
+        const start = new Date(currentBreakStart.time);
+        const end = new Date(event.time);
+        const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
+        breaks.push({ start, end, duration: durationSecs });
+        currentBreakStart = null;
+      }
+    }
+    if (currentBreakStart) {
+      const start = new Date(currentBreakStart.time);
+      const end = new Date();
+      const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
+      breaks.push({ start, end: null, duration: durationSecs, isOngoing: true });
+    }
+  }
+
   return (
     <Sheet open={!!userId} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl overflow-y-auto">
@@ -54,10 +87,11 @@ export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberA
           </SheetDescription>
         </SheetHeader>
 
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <Tabs value={tab} onValueChange={(value) => setTab(value as "day" | "history" | "trends")} className="w-full">
           <TabsList className="w-full mb-6">
             <TabsTrigger value="day" className="flex-1">Day Timeline</TabsTrigger>
             <TabsTrigger value="history" className="flex-1">Full History</TabsTrigger>
+            <TabsTrigger value="trends" className="flex-1">Trends</TabsTrigger>
           </TabsList>
 
           <TabsContent value="day" className="mt-0">
@@ -88,6 +122,38 @@ export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberA
                     </div>
                   </div>
                 </div>
+
+                {/* Breaks Summary */}
+                <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-neutral-500">
+                      <Coffee className="w-4 h-4" />
+                      <span className="text-sm font-medium">Break Duration</span>
+                    </div>
+                    <span className="text-sm font-bold text-neutral-900 dark:text-white">
+                      {day?.break_seconds ? `${Math.floor(day.break_seconds / 3600)}h ${Math.floor((day.break_seconds % 3600) / 60)}m` : "0h 0m"}
+                      {breaks.length > 0 && <span className="text-xs text-neutral-400 font-normal ml-1">({breaks.length})</span>}
+                    </span>
+                  </div>
+                  {breaks.length > 0 && (
+                    <div className="pl-6 space-y-1 mt-1 border-l-2 border-neutral-100 dark:border-neutral-800 ml-1.5">
+                      {breaks.map((b, i) => (
+                        <div key={i} className="flex justify-between items-center text-xs text-neutral-500">
+                          <span>
+                            {b.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {b.isOngoing ? "Now" : b.end?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span className="font-mono">{Math.floor(b.duration / 60)}m</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {day?.late_minutes > 0 && (
+                  <div className="bg-amber-100/50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-3 rounded-lg border border-amber-200 dark:border-amber-800/50 text-sm font-medium flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    Late by {day.late_minutes}m
+                  </div>
+                )}
 
                 <div>
                   <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-4 uppercase tracking-wider">Timeline</h3>
@@ -159,6 +225,10 @@ export function TeamMemberAttendanceSheet({ userId, date, onClose }: TeamMemberA
                 userId={userId || undefined}
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="trends" className="mt-0">
+            {userId && <TeamMemberTrendsGraph userId={userId} />}
           </TabsContent>
         </Tabs>
       </SheetContent>

@@ -31,4 +31,9 @@ class Department extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function hrs()
+    {
+        return $this->belongsToMany(User::class, 'department_hr');
+    }
 }

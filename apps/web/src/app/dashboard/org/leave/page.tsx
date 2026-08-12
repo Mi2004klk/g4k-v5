@@ -2,37 +2,69 @@
 
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Download, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { getAuthToken } from "@/lib/auth-store";
-import { Card, Button, DataTable } from "@g4k/ui/components";
-import { FilterBar } from "@/components/data-table/filter-bar";
+import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
+import { FilterBar } from "@g4k/ui/components";
 import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
+import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 
 export default function OrgLeaveApprovalsPage() {
+  const [tab, setTab] = useUrlState("tab", "approvals");
   const [statusFilter, setStatusFilter] = useUrlState("status", "pending");
+  const [historyStatusFilter, setHistoryStatusFilter] = useUrlState("h_status", "all");
+  const [historyTypeFilter, setHistoryTypeFilter] = useUrlState("h_type", "all");
   const [search, setSearch] = useUrlState("search", "");
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: queryKeys.orgLeaveRequestsPaginated(statusFilter, search),
-    queryFn: ({ pageParam }) => {
+  const [userIdFilter] = useUrlState("user_id", "");
+
+  // Approvals pagination
+  const [approvalsPage, setApprovalsPage] = useState(1);
+  const [approvalsPerPage, setApprovalsPerPage] = useState(20);
+
+  // History pagination
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPerPage, setHistoryPerPage] = useState(20);
+
+  const { data, isLoading } = useQuery({
+    queryKey: [...queryKeys.orgLeaveRequestsPaginated(statusFilter, search), userIdFilter, approvalsPage, approvalsPerPage],
+    queryFn: () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (search) params.append("search", search);
-      if (pageParam) params.append("cursor", pageParam as string);
+      if (userIdFilter) params.append("user_id", userIdFilter);
+      params.append("page", approvalsPage.toString());
+      params.append("per_page", approvalsPerPage.toString());
       return apiFetch(`/leave-requests?${params.toString()}`);
+    }
+  });
+
+  const { data: historyData, isLoading: isLoadingHistory } = useQuery({
+    queryKey: ['admin_leave_history', historyStatusFilter, historyTypeFilter, search, userIdFilter, historyPage, historyPerPage],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (historyStatusFilter !== "all") params.append("status", historyStatusFilter);
+      if (historyTypeFilter !== "all") params.append("type", historyTypeFilter);
+      if (search) params.append("search", search);
+      if (userIdFilter) params.append("user_id", userIdFilter);
+      params.append("page", historyPage.toString());
+      params.append("per_page", historyPerPage.toString());
+      return apiFetch(`/leave-requests/admin/history?${params.toString()}`);
     },
-    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
-    initialPageParam: undefined,
+    enabled: tab === "history"
   });
 
   const records = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) || [];
+    return data?.data?.data || [];
   }, [data]);
+  
+  const approvalsTotalPages = data?.data?.last_page || 1;
 
   const pendingCount = records.filter((r: any) => r.approval?.status === "pending").length;
 
@@ -128,6 +160,12 @@ export default function OrgLeaveApprovalsPage() {
     }
   };
 
+  const historyRecords = useMemo(() => {
+    return historyData?.data?.data || [];
+  }, [historyData]);
+  
+  const historyTotalPages = historyData?.data?.last_page || 1;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -140,61 +178,130 @@ export default function OrgLeaveApprovalsPage() {
               </span>
             )}
           </h1>
-          <p className="text-sm text-neutral-500 mt-1">Review and manage team time off requests.</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-sm text-neutral-500">Review and manage team time off requests.</p>
+            {userIdFilter && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs text-rose-600 hover:text-rose-700 bg-rose-50"
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('user_id');
+                  window.history.replaceState({}, '', url.toString());
+                  window.location.reload();
+                }}
+              >
+                Clear User Filter
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      <Card className="border-none shadow-sm flex flex-col h-[calc(100vh-200px)]">
-        <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
-          <FilterBar
-            searchQuery={search || ""}
-            onSearchChange={setSearch}
-            filters={[
-              {
-                key: "status",
-                label: "Status",
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: [
-                  { label: "All Statuses", value: "all" },
-                  { label: "Pending", value: "pending" },
-                  { label: "Approved", value: "approved" },
-                  { label: "Rejected", value: "rejected" },
-                ],
-              },
-            ]}
-          />
-          <Button variant="outline" size="sm" onClick={handleExport} className="h-8 text-xs font-semibold">
-            <Download className="w-3.5 h-3.5 mr-1.5" />
-            Export
-          </Button>
-        </div>
-        <div className="flex-1 min-h-[300px] flex flex-col">
-          <DataTable
-            columns={columns}
-            data={records}
-          />
-          {hasNextPage && (
-            <div className="flex justify-center p-4 border-t border-neutral-100 dark:border-neutral-800">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => fetchNextPage()} 
-                disabled={isFetchingNextPage}
-              >
-                {isFetchingNextPage ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load More"
-                )}
+      <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
+        <TabsList>
+          <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
+          <TabsTrigger value="history">All Leave History</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="approvals" className="mt-0">
+          <Card className="border-none shadow-sm flex flex-col h-[calc(100vh-250px)]">
+            <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
+              <FilterBar
+                searchQuery={search || ""}
+                onSearchChange={setSearch}
+                filters={[
+                  {
+                    key: "status",
+                    label: "Status",
+                    type: "select",
+                    value: statusFilter,
+                    onChange: setStatusFilter,
+                    options: [
+                      { label: "All Statuses", value: "all" },
+                      { label: "Pending", value: "pending" },
+                      { label: "Approved", value: "approved" },
+                      { label: "Rejected", value: "rejected" },
+                    ],
+                  },
+                ]}
+              />
+              <Button variant="outline" size="sm" onClick={handleExport} className="h-8 text-xs font-semibold">
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Export
               </Button>
             </div>
-          )}
-        </div>
-      </Card>
+            <div className="flex-1 min-h-[300px] flex flex-col">
+              <DataTable
+                columns={columns}
+                data={records}
+                page={approvalsPage}
+                perPage={approvalsPerPage}
+                totalPages={approvalsTotalPages}
+                onPageChange={setApprovalsPage}
+                onPerPageChange={setApprovalsPerPage}
+              />
+            </div>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="history" className="mt-0">
+          <Card className="border-none shadow-sm flex flex-col h-[calc(100vh-250px)]">
+            <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
+              <FilterBar
+                searchQuery={search || ""}
+                onSearchChange={setSearch}
+                filters={[
+                  {
+                    key: "status",
+                    label: "Status",
+                    type: "select",
+                    value: historyStatusFilter,
+                    onChange: setHistoryStatusFilter,
+                    options: [
+                      { label: "All Statuses", value: "all" },
+                      { label: "Pending", value: "pending" },
+                      { label: "Approved", value: "approved" },
+                      { label: "Rejected", value: "rejected" },
+                    ],
+                  },
+                  {
+                    key: "type",
+                    label: "Type",
+                    type: "select",
+                    value: historyTypeFilter,
+                    onChange: setHistoryTypeFilter,
+                    options: [
+                      { label: "All Types", value: "all" },
+                      { label: "Annual", value: "annual" },
+                      { label: "Sick", value: "sick" },
+                      { label: "Casual", value: "casual" },
+                      { label: "Unpaid", value: "unpaid" },
+                    ],
+                  },
+                ]}
+              />
+            </div>
+            <div className="flex-1 min-h-[300px] flex flex-col p-4 overflow-y-auto">
+              <LeaveHistoryTable
+                records={historyRecords}
+                isLoading={isLoadingHistory}
+                typeFilter={historyTypeFilter}
+                setTypeFilter={setHistoryTypeFilter}
+                statusFilter={historyStatusFilter}
+                setStatusFilter={setHistoryStatusFilter}
+                showEmployee={true}
+                page={historyPage}
+                perPage={historyPerPage}
+                totalPages={historyTotalPages}
+                onPageChange={setHistoryPage}
+                onPerPageChange={setHistoryPerPage}
+              />
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

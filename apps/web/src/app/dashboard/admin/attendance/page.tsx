@@ -6,7 +6,8 @@ import { AdminAttendanceTable } from '@/components/attendance/admin-attendance-t
 import { AdminAttendanceAnalytics } from '@/components/attendance/admin-attendance-analytics';
 import { AdminAttendanceTrendsGraph } from '@/components/attendance/admin-attendance-trends-graph';
 import { AdminOpenShiftsTable } from '@/components/attendance/admin-open-shifts-table';
-import { Users, BarChart3, Activity } from 'lucide-react';
+import { AdminAttendanceCalendar } from '@/components/attendance/admin-attendance-calendar';
+import { Users, BarChart3, Activity, CalendarDays } from 'lucide-react';
 
 export default function AdminAttendancePage() {
   const [tab, setTab] = useUrlState('tab', 'today');
@@ -23,6 +24,10 @@ export default function AdminAttendancePage() {
 
         <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
           <TabsList className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-sm">
+            <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+              <CalendarDays className="w-4 h-4" />
+              Calendar Heatmap
+            </TabsTrigger>
             <TabsTrigger value="today" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
               <Users className="w-4 h-4" />
               Overview
@@ -37,6 +42,10 @@ export default function AdminAttendancePage() {
             </TabsTrigger>
           </TabsList>
           
+          <TabsContent value="calendar" className="outline-none m-0 focus-visible:ring-0">
+            <AdminAttendanceCalendar />
+          </TabsContent>
+
           <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0">
             <AdminAttendanceTable />
           </TabsContent>

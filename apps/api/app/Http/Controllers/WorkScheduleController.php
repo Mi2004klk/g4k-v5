@@ -36,4 +36,26 @@ class WorkScheduleController extends Controller
 
         return response()->json(['message' => 'Work schedule updated successfully']);
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'start_time' => 'required|string',
+            'end_time' => 'required|string',
+            'break_minutes' => 'required|integer',
+            'standard_seconds' => 'required|integer',
+            'grace_minutes' => 'required|integer|min:0|max:120',
+            'working_days' => 'required|array',
+        ]);
+
+        $validated['working_days'] = json_encode($validated['working_days']);
+
+        $id = DB::table('work_schedules')->insertGetId(array_merge($validated, [
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]));
+
+        return response()->json(['message' => 'Work schedule created successfully', 'id' => $id], 201);
+    }
 }

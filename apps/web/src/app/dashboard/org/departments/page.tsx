@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Building2, Users, Archive, Edit2, Loader2, MoreVertical, ArchiveRestore, Download, Trash2 } from "lucide-react";
+import { Plus, Building2, Users, Archive, Edit2, Loader2, MoreVertical, ArchiveRestore, Download, Trash2, ShieldCheck, User as UserIcon } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -41,6 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@g4k/ui/components";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
@@ -48,12 +49,27 @@ import { DataTable, StatusBadge } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
+import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox } from "@g4k/ui/components";
 
 export default function DepartmentsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useUrlState("search", "");
-  const debouncedSearch = useDebounce(search, 250);
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   const [statusFilter, setStatusFilter] = useUrlState("status", "active");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
 
   const { data: caps } = useCapabilities();
   const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
@@ -68,6 +84,8 @@ export default function DepartmentsPage() {
   const [editingDept, setEditingDept] = useState<any>(null);
 
   const [selectedDeptMembers, setSelectedDeptMembers] = useState<any>(null);
+  const [selectedNewHr, setSelectedNewHr] = useState<string>("");
+  const [selectedNewEmployee, setSelectedNewEmployee] = useState<string>("");
 
   const { data: deptDetails, isLoading: isDeptLoading } = useQuery({
     queryKey: queryKeys.department(selectedDeptMembers?.id),
@@ -75,17 +93,22 @@ export default function DepartmentsPage() {
     enabled: !!selectedDeptMembers,
   });
 
-  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: queryKeys.departmentsPaginated(debouncedSearch, statusFilter),
-    queryFn: async ({ pageParam }) => {
+  const { data: allUsersRes } = useQuery({
+    queryKey: ["all-users"],
+    queryFn: () => apiFetch(`/users`),
+  });
+  const allUsers = allUsersRes?.data || [];
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: [...queryKeys.departmentsPaginated(debouncedSearch, statusFilter), page, perPage],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
-      if (pageParam) params.append("cursor", pageParam);
+      params.append("page", page.toString());
+      params.append("per_page", perPage.toString());
       return apiFetch(`/departments?${params.toString()}`);
     },
-    initialPageParam: "",
-    getNextPageParam: (lastPage: any) => lastPage.next_cursor || undefined,
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
@@ -141,6 +164,33 @@ export default function DepartmentsPage() {
     }
   });
 
+  const addHrMutation = useMutation({
+    mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/hrs/${userId}`, { method: "POST" }),
+    onSuccess: () => {
+      toast.success("HR assigned successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to assign HR."),
+  });
+
+  const removeHrMutation = useMutation({
+    mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/hrs/${userId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success("HR removed successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to remove HR."),
+  });
+
+  const assignEmployeeMutation = useMutation({
+    mutationFn: ({ deptId, userIds }: { deptId: number, userIds: number[] }) => apiFetch(`/departments/${deptId}/employees`, { method: "PUT", body: JSON.stringify({ user_ids: userIds }) }),
+    onSuccess: () => {
+      toast.success("Employees assigned successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to assign employees."),
+  });
+
   const bulkExport = async () => {
     try {
       const params = new URLSearchParams();
@@ -170,7 +220,8 @@ export default function DepartmentsPage() {
     }
   };
 
-  const deptList = data?.pages?.flatMap((page: any) => page.data || []) || [];
+  const deptList = data?.data?.data || [];
+  const totalPages = data?.data?.last_page || 1;
 
   const columns: any[] = useMemo<any[]>(() => {
     const baseColumns: any[] = [
@@ -260,11 +311,20 @@ export default function DepartmentsPage() {
           return (
             <div className="text-right">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Department actions">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                      Department actions
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => { 
@@ -368,15 +428,15 @@ export default function DepartmentsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <DataTable columns={columns} data={deptList} />
-              {hasNextPage && (
-                <div className="flex justify-center pb-6">
-                  <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-                    {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Load More
-                  </Button>
-                </div>
-              )}
+              <DataTable 
+                columns={columns} 
+                data={deptList} 
+                page={page}
+                perPage={perPage}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                onPerPageChange={setPerPage}
+              />
             </div>
           )}
         </CardContent>
@@ -423,36 +483,141 @@ export default function DepartmentsPage() {
         isLoading={archiveMutation.isPending || deleteMutation.isPending}
       />
 
-      <Sheet open={!!selectedDeptMembers} onOpenChange={(open: boolean) => !open && setSelectedDeptMembers(null)}>
-        <SheetContent className="w-[400px] sm:w-[540px]">
+      <Sheet open={!!selectedDeptMembers} onOpenChange={(open: boolean) => { if (!open) { setSelectedDeptMembers(null); setSelectedNewHr(""); setSelectedNewEmployee(""); } }}>
+        <SheetContent className="w-[400px] sm:w-[540px] flex flex-col h-full">
           <SheetHeader>
             <SheetTitle>{selectedDeptMembers?.name} Members</SheetTitle>
-            <SheetDescription>View employees assigned to this department.</SheetDescription>
+            <SheetDescription>Manage HRs and employees assigned to this department.</SheetDescription>
           </SheetHeader>
-          <div className="mt-6 space-y-4">
+          <div className="mt-6 flex-1 overflow-hidden flex flex-col">
             {isDeptLoading ? (
               <div className="space-y-2"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
-            ) : !deptDetails?.users?.length ? (
-              <EmptyState title="No members" description="This department has no employees yet." />
             ) : (
-              <div className="space-y-3">
-                {deptDetails.users.map((user: any) => (
-                  <div key={user.id} className="p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-900 flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={user.avatar_url || ""} />
-                      <AvatarFallback className="bg-violet-100 text-violet-700 font-bold">{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold text-sm text-neutral-900 dark:text-white">{user.name}</p>
-                      <p className="text-xs text-neutral-500">{user.designation?.name || "Employee"} • {user.employee_id || "N/A"}</p>
+              <Tabs defaultValue="employees" className="w-full flex-1 flex flex-col">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="employees" className="gap-2"><UserIcon className="w-4 h-4" /> Employees</TabsTrigger>
+                  <TabsTrigger value="hrs" className="gap-2"><ShieldCheck className="w-4 h-4" /> HRs</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="employees" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
+                  {isAdmin && (
+                    <div className="flex items-center gap-2 mb-4 p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+                      <Combobox
+                        options={allUsers.map((u: any) => ({ label: u.name, value: u.id.toString() }))}
+                        value={selectedNewEmployee}
+                        onChange={setSelectedNewEmployee}
+                        placeholder="Select an employee..."
+                      />
+                      <Button
+                        disabled={!selectedNewEmployee || assignEmployeeMutation.isPending}
+                        onClick={() => {
+                          if (selectedNewEmployee) {
+                            assignEmployeeMutation.mutate({ deptId: selectedDeptMembers.id, userIds: [Number(selectedNewEmployee)] }, {
+                              onSuccess: () => setSelectedNewEmployee("")
+                            });
+                          }
+                        }}
+                      >
+                        {assignEmployeeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Assign"}
+                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+
+                  {!deptDetails?.users?.length ? (
+                    <EmptyState title="No employees" description="This department has no employees yet." />
+                  ) : (
+                    <div className="space-y-3">
+                      {deptDetails.users.map((user: any) => (
+                        <div key={user.id} className="p-3 border rounded-lg bg-white dark:bg-neutral-950 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src={user.avatar_url || ""} />
+                              <AvatarFallback className="bg-violet-100 text-violet-700 font-bold">{user.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-sm text-neutral-900 dark:text-white">{user.name}</p>
+                              <p className="text-xs text-neutral-500">{user.designation?.name || "Employee"} • {user.employee_id || "N/A"}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="hrs" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
+                  {isAdmin && (
+                    <div className="flex items-center gap-2 mb-4 p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+                      <Combobox
+                        options={allUsers.filter((u: any) => u.roles?.includes('hr') || u.roles?.includes('super_admin')).map((u: any) => ({ label: u.name, value: u.id.toString() }))}
+                        value={selectedNewHr}
+                        onChange={setSelectedNewHr}
+                        placeholder="Select an HR..."
+                      />
+                      <Button
+                        disabled={!selectedNewHr || addHrMutation.isPending}
+                        onClick={() => {
+                          if (selectedNewHr) {
+                            addHrMutation.mutate({ deptId: selectedDeptMembers.id, userId: Number(selectedNewHr) }, {
+                              onSuccess: () => setSelectedNewHr("")
+                            });
+                          }
+                        }}
+                      >
+                        {addHrMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add HR"}
+                      </Button>
+                    </div>
+                  )}
+
+                  {!deptDetails?.hrs?.length ? (
+                    <EmptyState title="No HRs assigned" description="Assign HRs to manage this department." />
+                  ) : (
+                    <div className="space-y-3">
+                      {deptDetails.hrs.map((hr: any) => (
+                        <div key={hr.id} className="p-3 border rounded-lg bg-white dark:bg-neutral-950 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src={hr.avatar_url || ""} />
+                              <AvatarFallback className="bg-violet-100 text-violet-700 font-bold">{hr.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-sm text-neutral-900 dark:text-white">{hr.name}</p>
+                              <p className="text-xs text-neutral-500">HR Manager</p>
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+                              onClick={() => removeHrMutation.mutate({ deptId: selectedDeptMembers.id, userId: hr.id })}
+                              disabled={removeHrMutation.isPending}
+                            >
+                              {removeHrMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             )}
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={confirmState.isOpen}
+        onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, type: "", payload: null }) }}
+        onConfirm={() => {
+          if (confirmState.type === "archive") archiveMutation.mutate(confirmState.payload.id);
+          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
+        }}
+        title={confirmState.type === "delete" ? "Delete Department" : "Archive Department"}
+        description={confirmState.type === "delete" ? "Are you sure? This action cannot be undone." : "Archiving will hide this department."}
+        isLoading={archiveMutation.isPending || deleteMutation.isPending}
+      />
     </div>
   );
 }

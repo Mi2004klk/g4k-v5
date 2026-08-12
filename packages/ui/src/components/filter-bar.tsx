@@ -15,12 +15,16 @@ import { Badge } from "./badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./sheet"
 import { Checkbox } from "./checkbox"
 import { Combobox } from "./combobox"
+import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import { Calendar } from "./calendar"
+import { format } from "date-fns"
 import { cn } from "../utils/cn"
+import { ArrowDownAZ, ArrowUpAZ, ArrowDown, ArrowUp } from "lucide-react"
 
 export interface FilterOption {
   key: string
   label: string
-  type?: "select" | "combobox" | "checkbox-group" | "date-range"
+  type?: "select" | "combobox" | "checkbox-group" | "date-range" | "date"
   options?: { label: string; value: string }[]
   value: any
   onChange: (value: any) => void
@@ -32,6 +36,10 @@ export interface FilterBarProps {
   searchPlaceholder?: string
   filters?: FilterOption[]
   onClearAll?: () => void
+  sortBy?: string
+  sortDirection?: "asc" | "desc"
+  onSortChange?: (sortBy: string, direction: "asc" | "desc") => void
+  sortOptions?: { label: string; value: string }[]
 }
 
 function useDebounce<T>(value: T, delay?: number): T {
@@ -49,6 +57,10 @@ export function FilterBar({
   searchPlaceholder = "Search...",
   filters = [],
   onClearAll,
+  sortBy,
+  sortDirection = "asc",
+  onSortChange,
+  sortOptions = [],
 }: FilterBarProps) {
   const [localSearch, setLocalSearch] = useState(searchQuery)
   const debouncedSearch = useDebounce(localSearch, 250)
@@ -111,18 +123,24 @@ export function FilterBar({
           />
         )
       case "checkbox-group":
-        // For simplicity in a bar, a dropdown containing checkboxes is best
         return (
-          <Select>
-            <SelectTrigger className="w-full sm:w-[150px] h-9">
-              <SelectValue placeholder={`${filter.label} (${Array.isArray(filter.value) ? filter.value.length : 0})`} />
-            </SelectTrigger>
-            <SelectContent>
-              <div className="p-2 space-y-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full sm:w-[150px] justify-between h-9 text-muted-foreground font-normal">
+                <span className="truncate">
+                  {filter.value?.length > 0
+                    ? `${filter.label} (${filter.value.length})`
+                    : `All ${filter.label}s`}
+                </span>
+                <span className="opacity-50 text-[10px]">▼</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-2" align="start">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {filter.options?.map((opt) => {
                   const isChecked = Array.isArray(filter.value) && filter.value.includes(opt.value)
                   return (
-                    <label key={opt.value} className="flex items-center gap-2 text-sm">
+                    <label key={opt.value} className="flex items-center gap-2 text-sm p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded cursor-pointer">
                       <Checkbox
                         checked={isChecked}
                         onCheckedChange={(checked) => {
@@ -131,32 +149,70 @@ export function FilterBar({
                           else filter.onChange(current.filter((v: string) => v !== opt.value))
                         }}
                       />
-                      {opt.label}
+                      <span className="truncate">{opt.label}</span>
                     </label>
                   )
                 })}
               </div>
-            </SelectContent>
-          </Select>
+              {filter.value?.length > 0 && (
+                <div className="pt-2 mt-2 border-t border-neutral-100 dark:border-neutral-800">
+                  <Button variant="ghost" size="sm" className="w-full text-xs h-7" onClick={() => filter.onChange([])}>
+                    Clear selections
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         )
       case "date-range":
-        // Fallback simple date inputs if no complex DatePicker is available yet
         return (
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              className="h-9 w-full sm:w-[130px]"
-              value={filter.value?.start || ""}
-              onChange={(e) => filter.onChange({ ...filter.value, start: e.target.value })}
-            />
-            <span className="text-muted-foreground">-</span>
-            <Input
-              type="date"
-              className="h-9 w-full sm:w-[130px]"
-              value={filter.value?.end || ""}
-              onChange={(e) => filter.onChange({ ...filter.value, end: e.target.value })}
-            />
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full sm:w-[260px] justify-start text-left font-normal h-9",
+                  !filter.value?.from && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {filter.value?.from ? (
+                  filter.value.to ? (
+                    <>
+                      {format(filter.value.from, "LLL dd, y")} -{" "}
+                      {format(filter.value.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(filter.value.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Pick a date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={filter.value?.from}
+                selected={filter.value}
+                onSelect={(range: { from?: Date, to?: Date } | undefined) => {
+                  if (!range) return;
+                  filter.onChange({ from: range.from, to: range.to });
+                }}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+        )
+      case "date":
+        return (
+          <Input
+            type="date"
+            className="h-9 w-full sm:w-[150px] shrink-0"
+            value={filter.value || ""}
+            onChange={(e) => filter.onChange(e.target.value)}
+          />
         )
       default:
         return null
@@ -189,6 +245,31 @@ export function FilterBar({
           {filters.map((filter) => (
             <div key={filter.key}>{renderFilterControl(filter)}</div>
           ))}
+          {sortOptions.length > 0 && onSortChange && (
+            <div className="flex items-center gap-1">
+              <Select value={sortBy} onValueChange={(val) => onSortChange(val, sortDirection)}>
+                <SelectTrigger className="w-full sm:w-[140px] h-9">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-9 w-9 text-muted-foreground"
+                onClick={() => onSortChange(sortBy || sortOptions[0].value, sortDirection === "asc" ? "desc" : "asc")}
+                title={`Sort ${sortDirection === "asc" ? "Descending" : "Ascending"}`}
+              >
+                {sortDirection === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+              </Button>
+            </div>
+          )}
           {hasActiveFilters && (
             <Button
               variant="ghost"

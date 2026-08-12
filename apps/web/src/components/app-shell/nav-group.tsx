@@ -14,8 +14,6 @@ export const NavItem = memo(function NavItem({
   item, 
   isCollapsed, 
   isSheet, 
-  pins, 
-  handleTogglePin, 
   getAccent 
 }: any) {
   const pathname = usePathname();
@@ -23,8 +21,6 @@ export const NavItem = memo(function NavItem({
   const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
   const accent = getAccent(item.href);
   const currentlyCollapsed = !isSheet && isCollapsed;
-  const existingPin = pins.find((p: any) => p.target_id === item.name);
-  const isPinned = !!existingPin;
   const isDisabled = !!item.disabled;
   
   // Phased Label fade
@@ -57,7 +53,7 @@ export const NavItem = memo(function NavItem({
     }
   };
 
-  const itemPy = density === "compact" ? "py-1.5" : "py-2.5";
+  const itemPy = density === "compact" ? "py-1" : "py-1.5";
   
   const content = (
     <div className="relative group/nav flex items-center">
@@ -71,21 +67,18 @@ export const NavItem = memo(function NavItem({
         aria-disabled={isDisabled}
         aria-label={item.name}
         className={cn(
-          "flex-1 flex items-center gap-2.5 px-2.5 h-9 rounded-lg transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+          "flex-1 flex items-center gap-2.5 px-2.5 transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-lg",
+          itemPy,
           currentlyCollapsed ? "justify-center px-0 text-xs" : "text-sm",
           isDisabled
             ? "opacity-50 cursor-not-allowed text-neutral-400 dark:text-neutral-600"
             : isActive
-            ? "bg-surface-2 text-primary dark:text-white font-semibold shadow-sm"
-            : "text-neutral-600 dark:text-neutral-400 hover:bg-surface-2 hover:text-primary font-medium"
+            ? cn("font-semibold shadow-sm ring-1 ring-inset", accent.bg, accent.bgDark, accent.ring, accent.text, accent.textDark)
+            : cn("text-neutral-600 dark:text-neutral-400 font-medium group-hover/nav:bg-opacity-50", accent.hoverBg, accent.hoverText)
         )}
       >
-        {isActive && !isDisabled && (
-          <div className={cn("absolute left-0 top-0 bottom-0 w-[3px] rounded-r-md", accent.border)} />
-        )}
         <div className={cn(
-          "w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-colors",
-          (isActive && !isDisabled) ? cn(accent.bg, accent.bgDark) : "bg-transparent group-hover/nav:bg-surface-2"
+          "w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-colors bg-transparent"
         )}>
           <item.icon
             className={cn(
@@ -93,8 +86,8 @@ export const NavItem = memo(function NavItem({
               isDisabled
                 ? "text-neutral-400 dark:text-neutral-600"
                 : isActive
-                ? `${accent.text} ${accent.textDark}`
-                : "text-neutral-400 group-hover/nav:text-neutral-600 dark:group-hover/nav:text-neutral-300"
+                ? "text-inherit"
+                : "text-neutral-400 group-hover/nav:text-inherit"
             )}
           />
         </div>
@@ -107,19 +100,6 @@ export const NavItem = memo(function NavItem({
           </span>
         )}
       </Link>
-      {!currentlyCollapsed && !isDisabled && (
-        <button 
-          onClick={(e) => { e.preventDefault(); handleTogglePin(item, existingPin); }}
-          title={isPinned ? "Unpin item" : "Pin item"}
-          aria-label={isPinned ? `Unpin ${item.name}` : `Pin ${item.name}`}
-          className={cn(
-            "absolute right-2 p-1.5 rounded-md transition-opacity",
-            isPinned ? "opacity-100 text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40" : "opacity-0 group-hover/nav:opacity-100 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
-          )}
-        >
-          <Star className={cn("w-3.5 h-3.5", isPinned && "fill-current")} />
-        </button>
-      )}
     </div>
   );
 
@@ -142,8 +122,6 @@ export const NavGroup = memo(function NavGroup({
   userCapabilities, 
   isCollapsed, 
   isSheet, 
-  pins, 
-  handleTogglePin, 
   getAccent 
 }: any) {
   // Filter items by capability
@@ -169,8 +147,6 @@ export const NavGroup = memo(function NavGroup({
             item={item} 
             isCollapsed={isCollapsed} 
             isSheet={isSheet} 
-            pins={pins} 
-            handleTogglePin={handleTogglePin} 
             getAccent={getAccent} 
           />
         ))}

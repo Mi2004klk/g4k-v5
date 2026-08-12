@@ -57,11 +57,15 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'per_page' => 'nullable|integer|in:20,50,100'
+        ]);
+
         $query = $this->buildIndexQuery($request);
-        $limit = min($request->integer('limit', 20), 200);
-        $users = $query->orderBy('id', 'desc')->cursorPaginate($limit);
+        $perPage = $request->input('per_page', 20);
+        $users = $query->orderBy('id', 'desc')->paginate($perPage);
         
-        $users->through(function ($user) {
+        $users->getCollection()->transform(function ($user) {
             return $user->makeHidden(['blood_group', 'emergency_contact', 'alternate_mobile', 'preferences']);
         });
 
@@ -129,7 +133,8 @@ class UserController extends Controller
             'team_id' => $validated['team_id'] ?? null,
             'designation_id' => $validated['designation_id'] ?? null,
             'password' => Hash::make(\Illuminate\Support\Str::random(16)),
-            'must_change_password' => true,
+            'must_change_password' => $mustChange,
+            'password_changed_at' => now(),
             'status' => 'active',
         ]);
 
@@ -180,6 +185,7 @@ class UserController extends Controller
             'department_id' => $validated['department_id'] ?? null,
             'team_id' => $validated['team_id'] ?? null,
             'designation_id' => $validated['designation_id'] ?? null,
+            'work_schedule_id' => $validated['work_schedule_id'] ?? null,
         ]);
 
         if (isset($validated['roles']) && count($validated['roles']) > 0) {
@@ -304,6 +310,7 @@ class UserController extends Controller
         // We fetch logs WHERE user_id = $id (actions performed by this user) OR where target = user and target_id = $id (actions affecting this user)
         // Usually, activity logs for a user means what they did.
         $logs = \Illuminate\Support\Facades\DB::table('audit_logs')
+            ->select('audit_logs.*', 'audit_logs.ip as ip_address')
             ->where('user_id', $user->id)
             ->orderBy('at', 'desc')
             ->cursorPaginate(30);
@@ -325,11 +332,11 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
         }
 
+        if (!\App\Support\SmtpSettings::isConfigured()) {
+            return response()->json(['message' => 'Email not configured yet. Cannot reset password.'], 422);
+        }
+
         $tempPassword = \Illuminate\Support\Str::random(16);
-        $user->password = Hash::make($tempPassword);
-        $user->must_change_password = true;
-        $user->save();
-        $user->tokens()->delete();
 
         try {
             \Illuminate\Support\Facades\Mail::raw("Your password has been reset by an administrator. Your temporary password is: {$tempPassword}\nPlease login and change it immediately.", function ($message) use ($user) {
@@ -337,7 +344,14 @@ class UserController extends Controller
             });
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Failed to email temp password to {$user->email}: " . $e->getMessage());
+            return response()->json(['message' => 'Could not send the reset email; no changes were made.'], 422);
         }
+
+        $user->password = Hash::make($tempPassword);
+        $user->must_change_password = true;
+        $user->password_changed_at = now();
+        $user->save();
+        $user->tokens()->delete();
 
         AuditLogger::log($request, 'reset_password', 'user', $user->id, null, ['status' => 'password_reset']);
 
@@ -409,7 +423,7 @@ class UserController extends Controller
         $isHR = $request->user()->roleAssignments->pluck('role')->contains('hr');
         $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
         
-        if ($isHR && !$isSuperAdmin && $request->user()->department_id !== $user->department_id) {
+        if ($isHR && !$isSuperAdmin && !in_array($user->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
             return response()->json(['message' => 'Unauthorized to view this user.'], 403);
         }
 
@@ -435,7 +449,7 @@ class UserController extends Controller
         $isHR = $request->user()->roleAssignments->pluck('role')->contains('hr');
         $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
         
-        if ($isHR && !$isSuperAdmin && $request->user()->department_id !== $user->department_id) {
+        if ($isHR && !$isSuperAdmin && !in_array($user->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
             return response()->json(['message' => 'Unauthorized to view this user.'], 403);
         }
 

@@ -46,7 +46,7 @@ export function RemindersConfig() {
     const updates = [
       { category: "reminders", key: "reminders.shift_offset", value: formData["reminders.shift_offset"]?.toString() || "15" },
       { category: "reminders", key: "reminders.missed_clock_in_offset", value: formData["reminders.missed_clock_in_offset"]?.toString() || "30" },
-      { category: "reminders", key: "reminders.open_shift_flag_time", value: formData["reminders.open_shift_flag_time"]?.toString() || "10" },
+      { category: "reminders", key: "reminders.open_shift_flag_time", value: formData["reminders.open_shift_flag_time"]?.toString() || "20:00" },
     ];
     updateMutation.mutate(updates);
   };
@@ -87,15 +87,14 @@ export function RemindersConfig() {
           </div>
 
           <div>
-            <label className="text-xs font-medium">Open Shift Flag Time (Minutes After End + Grace)</label>
+            <label className="text-xs font-medium">Open Shift Flag Time</label>
             <input
-              type="number"
-              min={0}
+              type="time"
               className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
-              value={formData["reminders.open_shift_flag_time"] || "10"}
+              value={formData["reminders.open_shift_flag_time"] || "20:00"}
               onChange={(e) => setFormData({ ...formData, "reminders.open_shift_flag_time": e.target.value })}
             />
-            <p className="text-[10px] text-neutral-500 mt-1">When to flag a shift as abandoned if no clock-out.</p>
+            <p className="text-[10px] text-neutral-500 mt-1">Time of day to flag shifts as abandoned if no clock-out.</p>
           </div>
 
           <Button type="submit" disabled={updateMutation.isPending} className="mt-4">

@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
+import { safeFromNow } from "@/lib/format";
 import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase, MailOpen } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { PageContainer } from "@/components/layout/page-container";
-import { DataTable, Skeleton } from "@g4k/ui/components";
+import { DataTable, Skeleton, ErrorBoundary } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -17,7 +18,8 @@ import { useReverb } from "@/hooks/use-reverb";
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
-  const [cursor, setCursor] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
   const [search, setSearch] = useUrlState("search", "");
   const [filter, setFilter] = useState<{ readStatus: string; type: string }>({
     readStatus: "all",
@@ -27,19 +29,23 @@ export default function NotificationsPage() {
   const { isConnected } = useReverb();
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: queryKeys.notifications(filter, search, cursor),
+    queryKey: [...queryKeys.notifications(filter, search), page, perPage],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (cursor) params.set("cursor", cursor);
       if (filter.readStatus === "unread") params.set("unreadOnly", "true");
       if (filter.type !== "all") params.set("type", filter.type);
       if (search) params.set("search", search);
+      params.set("page", page.toString());
+      params.set("per_page", perPage.toString());
       return apiFetch(`/notifications?${params.toString()}`);
     },
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_NOTIFICATIONS,
     refetchInterval: isConnected ? false : 30_000,
   });
+
+  const notificationsData = data?.data?.data || [];
+  const totalPages = data?.data?.last_page || 1;
 
   const markReadMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -99,18 +105,18 @@ export default function NotificationsPage() {
             <div className="flex items-center gap-2">
               {item.link ? (
                 <Link href={item.link} className={`text-sm hover:underline hover:text-violet-600 dark:hover:text-violet-400 ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
-                  {item.title}
+                  {item.title || "Notification"}
                 </Link>
               ) : (
                 <span className={`text-sm ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
-                  {item.title}
+                  {item.title || "Notification"}
                 </span>
               )}
               {item.priority === 'urgent' && (
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">Urgent</span>
               )}
             </div>
-            <span className="text-xs text-neutral-500 mt-1">{item.body}</span>
+            <span className="text-xs text-neutral-500 mt-1">{item.body || ""}</span>
           </div>
         );
       }
@@ -121,7 +127,7 @@ export default function NotificationsPage() {
         const item = row.original;
         return (
           <div className="flex flex-col text-xs text-neutral-500">
-            <span>{item.created_at ? formatDistanceToNow(new Date(item.created_at), { addSuffix: true }) : "—"}</span>
+            <span>{safeFromNow(item.created_at)}</span>
             <span className="text-[10px] text-neutral-400">{item.created_at ? format(new Date(item.created_at), 'MMM d, yyyy h:mm a') : ""}</span>
           </div>
         );
@@ -222,35 +228,17 @@ export default function NotificationsPage() {
           </Button>
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={data?.data || []}
-        />
-      )}
-      
-      {/* Basic Pagination (cursor-based) */}
-      {(data?.next_cursor || data?.prev_cursor) && (
-        <div className="flex items-center justify-between mt-4 bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm border border-neutral-100 dark:border-neutral-800">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCursor(data.prev_cursor)}
-            disabled={!data.prev_cursor}
-          >
-            Previous
-          </Button>
-          <span className="text-xs text-neutral-500">
-            Navigation
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCursor(data.next_cursor)}
-            disabled={!data.next_cursor}
-          >
-            Next
-          </Button>
-        </div>
+        <ErrorBoundary name="NotificationsDataTable" fallbackTitle="Could not load notifications table">
+          <DataTable
+            columns={columns}
+            data={notificationsData}
+            page={page}
+            perPage={perPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
+          />
+        </ErrorBoundary>
       )}
     </PageContainer>
   );

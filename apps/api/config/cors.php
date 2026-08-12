@@ -20,11 +20,10 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://g4k-8g9abkok4-naval-treasure-group.vercel.app',
+        env('FRONTEND_URL', 'http://localhost:3000'),
     ],
 
     'allowed_origins_patterns' => [
-        '#^https://.*\.vercel\.app$#',
         '#^http://localhost:\d+$#'
     ],
 

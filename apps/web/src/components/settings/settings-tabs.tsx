@@ -17,6 +17,9 @@ import { AutoNumberingConfig } from "./auto-numbering-config";
 import { PoliciesConfig } from "./policies-config";
 import { RemindersConfig } from "./reminders-config";
 import { SecurityRequestsConfig } from "./security-requests-config";
+import { MailSmtpConfig } from "./mail-smtp-config";
+import { NotificationsConfig } from "./notifications-config";
+import { HolidayCalendar } from "@/components/leave/holiday-calendar";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 
 const profileSchema = z.object({
@@ -189,7 +192,10 @@ export function SettingsTabs() {
             <TabsTrigger value="numbering">Auto-Numbering</TabsTrigger>
             <TabsTrigger value="policies">Policies</TabsTrigger>
             <TabsTrigger value="reminders">Reminders</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="security">Password Reset Requests</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="holidays">Holidays</TabsTrigger>
+            <TabsTrigger value="mail">Mail / SMTP</TabsTrigger>
           </>
         )}
       </TabsList>
@@ -235,12 +241,19 @@ export function SettingsTabs() {
                   <label className="text-xs font-medium">Timezone</label>
                   <select
                     {...profileForm.register("timezone")}
-                    className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 px-3 py-2 mt-1 opacity-70 cursor-not-allowed"
-                    disabled
+                    className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
                   >
-                    <option value="Asia/Kolkata">India (IST - UTC+5:30)</option>
+                    <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                    <option value="America/New_York">Eastern Time (US & Canada)</option>
+                    <option value="Europe/London">London</option>
+                    <option value="Europe/Paris">Paris</option>
+                    <option value="Asia/Dubai">Dubai</option>
+                    <option value="Asia/Kolkata">India (IST)</option>
+                    <option value="Asia/Singapore">Singapore</option>
+                    <option value="Asia/Tokyo">Tokyo</option>
+                    <option value="Australia/Sydney">Sydney</option>
                   </select>
-                  <p className="text-[10px] text-neutral-500 mt-1">Timezone is locked to Asia/Kolkata.</p>
+                  <p className="text-[10px] text-neutral-500 mt-1">Select the primary timezone for the company.</p>
                 </div>
               </div>
 
@@ -372,6 +385,20 @@ export function SettingsTabs() {
 
       <TabsContent value="security">
         <SecurityRequestsConfig />
+      </TabsContent>
+
+      <TabsContent value="notifications">
+        <NotificationsConfig />
+      </TabsContent>
+
+      <TabsContent value="holidays">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-sm h-[calc(100vh-200px)]">
+          <HolidayCalendar />
+        </div>
+      </TabsContent>
+
+      <TabsContent value="mail">
+        <MailSmtpConfig />
       </TabsContent>
         </>
       )}

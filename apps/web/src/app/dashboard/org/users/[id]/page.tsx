@@ -1,16 +1,22 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageContainer } from "@/components/layout/page-container";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
-import { Building2, Mail, Phone, UserCheck, ArrowLeft, Calendar, FileText, CheckSquare, Activity } from "lucide-react";
-import { Button } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@g4k/ui/components";
+import { Skeleton, ConfirmDialog } from "@g4k/ui/components";
+import { Pen, KeyRound, ShieldAlert, Trash2, MoreVertical, MessageSquare, ArrowLeft, Mail, Phone, UserCheck, Calendar, FileText, CheckSquare, Activity } from "lucide-react";
+import { useUserActions } from "@/hooks/use-user-actions";
+import { UserEditDialog } from "@/components/users/user-edit-dialog";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import Link from "next/link";
+import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
 
 export default function EmployeeDetailPage() {
   const params = useParams();
@@ -37,20 +43,93 @@ export default function EmployeeDetailPage() {
     queryFn: () => apiFetch(`/users/${userId}/activity`),
   });
 
+  const sendMessageMutation = useMutation({
+    mutationFn: (recipientId: number) => apiFetch("/conversations/dm", {
+      method: "POST",
+      body: JSON.stringify({ recipient_id: recipientId }),
+    }),
+    onSuccess: (conversation: any) => {
+      router.push(`/dashboard/chat?conversation=${conversation.conversation_id || conversation.id}`);
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to start chat."),
+  });
+
   // Removed blocking isPending return to allow layout to handle loading
+
+  const { data: departments = [] } = useQuery({
+    queryKey: queryKeys.departments,
+    queryFn: () => apiFetch("/departments").then(res => res.data || []),
+  });
+
+  const { data: designations = [] } = useQuery({
+    queryKey: queryKeys.designations,
+    queryFn: () => apiFetch("/designations").then(res => res.data || []),
+  });
+
+  const { data: workSchedules = [] } = useQuery({
+    queryKey: queryKeys.workSchedules,
+    queryFn: () => apiFetch("/work-schedules").then(res => res.data || []),
+  });
+
+  const {
+    confirmState, setConfirmState,
+    isEditOpen, setIsEditOpen,
+    editingUser, setEditingUser,
+    updateMutation, statusMutation, deleteMutation, resetPasswordMutation
+  } = useUserActions();
+
+  const { data: capabilities } = useCapabilities();
+  const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
 
   if (!user) {
     return <div className="p-8">User not found</div>;
   }
+
+  const onSubmitEdit = (data: any) => {
+    updateMutation.mutate({ id: editingUser.id, payload: data });
+  };
 
   return (
     <PageContainer
       title="Employee Profile"
       description="View detailed information, attendance, and activity history."
       actions={
-        <Button variant="outline" onClick={() => router.back()} className="gap-2">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.back()} className="gap-2">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </Button>
+          <Button 
+            onClick={() => sendMessageMutation.mutate(Number(userId))}
+            variant="outline" 
+            className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            disabled={sendMessageMutation.isPending}
+          >
+            <MessageSquare className="w-4 h-4" /> Send Message
+          </Button>
+          {canManageUsers && (
+            <>
+              <Button onClick={() => { setEditingUser(user); setIsEditOpen(true); }} className="gap-2 bg-neutral-900 text-white">
+                <Pen className="w-4 h-4" /> Edit
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2">
+                    <KeyRound className="w-4 h-4" /> Reset Password
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "status", payload: user })} className="gap-2">
+                    <ShieldAlert className="w-4 h-4" /> {user.status === "active" ? "Deactivate" : "Activate"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
+                    <Trash2 className="w-4 h-4" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+        </div>
       }
     >
       <div className="space-y-6">
@@ -96,7 +175,19 @@ export default function EmployeeDetailPage() {
 
           <TabsContent value="attendance" className="mt-0">
             <Card className="border-none shadow-sm"><CardHeader><CardTitle>Attendance</CardTitle></CardHeader><CardContent>
-                <p className="text-sm text-neutral-500 mb-4">Detailed attendance tracking is available on the main Attendance dashboard.</p>
+                <div className="flex justify-between items-center bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-lg border mb-4">
+                  <div>
+                    <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">Attendance Record</h4>
+                    <p className="text-sm text-neutral-500">View detailed attendance history, timesheets, and daily logs for this user.</p>
+                  </div>
+                  <Link href={`/dashboard/admin/attendance?search=${user.name}`}>
+                    <Button variant="outline" className="gap-2">
+                      <Calendar className="w-4 h-4" /> Go to Admin Attendance
+                    </Button>
+                  </Link>
+                </div>
+                
+                <UserAttendanceView userId={Number(userId)} />
             </CardContent></Card>
           </TabsContent>
 
@@ -149,7 +240,7 @@ export default function EmployeeDetailPage() {
                    {activity.data.map((log: any) => (
                       <div key={log.id} className="p-3 border rounded-lg text-sm bg-neutral-50 dark:bg-neutral-900/50">
                         <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type || log.entity_type}</span>
-                        <span className="text-xs text-neutral-500 block mt-1">{new Date(log.at || log.created_at).toLocaleString()} - IP: {log.ip_address}</span>
+                        <span className="text-xs text-neutral-500 block mt-1">{new Date(log.at || log.created_at).toLocaleString()} - IP: {log.ip || 'N/A'}</span>
                       </div>
                    ))}
                  </div>
@@ -159,6 +250,59 @@ export default function EmployeeDetailPage() {
 
         </Tabs>
       </div>
+
+      {isEditOpen && editingUser && (
+        <UserEditDialog
+          isOpen={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          user={editingUser}
+          departments={departments}
+          designations={designations}
+          work_schedules={workSchedules}
+          onSubmit={onSubmitEdit}
+          isPending={updateMutation.isPending}
+        />
+      )}
+
+      <ConfirmDialog
+        open={confirmState.isOpen}
+        onOpenChange={(open) => setConfirmState(prev => ({ ...prev, isOpen: open }))}
+        title={confirmState.type === "delete" ? "Delete User" : confirmState.type === "status" ? "Change Status" : "Reset Password"}
+        description={
+          confirmState.type === "delete"
+            ? `Are you sure you want to delete ${confirmState.payload?.name}? This action cannot be undone.`
+            : confirmState.type === "status"
+            ? `Are you sure you want to ${confirmState.payload?.status === 'active' ? 'deactivate' : 'activate'} ${confirmState.payload?.name}?`
+            : `Are you sure you want to reset the password for ${confirmState.payload?.name} to the system default?`
+        }
+        confirmText={confirmState.type === "delete" ? "Delete" : "Confirm"}
+        onConfirm={() => {
+          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
+          else if (confirmState.type === "status") statusMutation.mutate({ id: confirmState.payload.id, status: confirmState.payload.status === "active" ? "inactive" : "active" });
+          else if (confirmState.type === "reset-password") resetPasswordMutation.mutate(confirmState.payload.id);
+        }}
+        isDestructive={confirmState.type === "delete"}
+      />
     </PageContainer>
+  );
+}
+
+function UserAttendanceView({ userId }: { userId: number }) {
+  const { data: historyData, isLoading } = useQuery({
+    queryKey: queryKeys.memberHistory(userId),
+    queryFn: () => apiFetch(`/attendance/hr/history/${userId}`),
+    enabled: !!userId,
+  });
+
+  if (isLoading) {
+    return <div className="p-4 flex justify-center"><Skeleton className="w-full h-64" /></div>;
+  }
+
+  const days = historyData?.days || [];
+
+  return (
+    <div className="mt-4">
+      <AttendanceHistoryCalendar days={days} userId={userId} />
+    </div>
   );
 }

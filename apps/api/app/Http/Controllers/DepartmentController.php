@@ -36,7 +36,9 @@ class DepartmentController extends Controller
     public function index(Request $request)
     {
         $query = $this->buildIndexQuery($request);
-        $departments = $query->orderBy('id', 'desc')->cursorPaginate(20);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 20);
+        $departments = $query->orderBy('id', 'desc')->paginate($perPage);
         return response()->json($departments);
     }
 
@@ -78,7 +80,7 @@ class DepartmentController extends Controller
 
     public function show(string $id)
     {
-        $department = Department::with(['teams', 'users', 'users.designation'])->findOrFail($id);
+        $department = Department::with(['teams', 'users', 'users.designation', 'hrs'])->findOrFail($id);
         return response()->json($department);
     }
 
@@ -174,5 +176,49 @@ class DepartmentController extends Controller
         AuditLogger::log($request, 'delete', 'team', $team->id, $before, null);
         
         return response()->json(null, 204);
+    }
+
+    public function syncHrs(Request $request, string $id)
+    {
+        $department = Department::findOrFail($id);
+        $validated = $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+        
+        $department->hrs()->sync($validated['user_ids']);
+        AuditLogger::log($request, 'update', 'department_hrs', $department->id, null, ['user_ids' => $validated['user_ids']]);
+        
+        return response()->json(['message' => 'HR roster updated successfully.']);
+    }
+
+    public function addHr(Request $request, string $id, string $userId)
+    {
+        $department = Department::findOrFail($id);
+        $department->hrs()->syncWithoutDetaching([$userId]);
+        AuditLogger::log($request, 'create', 'department_hr', $department->id, null, ['user_id' => $userId]);
+        return response()->json(['message' => 'HR added successfully.']);
+    }
+
+    public function removeHr(Request $request, string $id, string $userId)
+    {
+        $department = Department::findOrFail($id);
+        $department->hrs()->detach($userId);
+        AuditLogger::log($request, 'delete', 'department_hr', $department->id, ['user_id' => $userId], null);
+        return response()->json(['message' => 'HR removed successfully.']);
+    }
+
+    public function syncEmployees(Request $request, string $id)
+    {
+        $department = Department::findOrFail($id);
+        $validated = $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+        ]);
+
+        \App\Models\User::whereIn('id', $validated['user_ids'])->update(['department_id' => $department->id]);
+        AuditLogger::log($request, 'update', 'department_employees', $department->id, null, ['user_ids' => $validated['user_ids']]);
+
+        return response()->json(['message' => 'Employees assigned successfully.']);
     }
 }

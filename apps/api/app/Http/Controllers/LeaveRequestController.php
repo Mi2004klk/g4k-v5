@@ -29,7 +29,7 @@ class LeaveRequestController extends Controller
                 $q->whereHas('approval', function($q2) {
                     $q2->where('current_approver_role', 'hr');
                 })->whereHas('user', function($q3) use ($user) {
-                    $q3->where('department_id', $user->department_id);
+                    $q3->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
                 })->orWhere('user_id', $user->id);
             });
         } else {
@@ -46,9 +46,18 @@ class LeaveRequestController extends Controller
             $query->where('type', $request->query('type'));
         }
 
+        if ($request->filled('user_id')) {
+            // Additional check to ensure they have permission to see this user's leave
+            if (in_array('super_admin', $roles) || in_array('hr', $roles)) {
+                $query->where('user_id', $request->query('user_id'));
+            }
+        }
+
         $query->orderBy('created_at', 'desc');
 
-        return response()->json($query->cursorPaginate(20));
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 20);
+        return response()->json($query->paginate($perPage));
     }
 
     public function store(StoreLeaveRequestRequest $request)
@@ -74,21 +83,26 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);
         }
 
-        $leave = DB::transaction(function() use ($userId, $validated) {
-            $leave = LeaveRequest::create([
-                'user_id' => $userId,
-                'start_date' => $validated['start_date'],
-                'end_date' => $validated['end_date'],
-                'reason' => $validated['reason'],
-                'type' => $validated['type'],
-                'status' => 'pending',
-            ]);
+        try {
+            $leave = DB::transaction(function() use ($userId, $validated) {
+                $leave = LeaveRequest::create([
+                    'user_id' => $userId,
+                    'start_date' => $validated['start_date'],
+                    'end_date' => $validated['end_date'],
+                    'reason' => $validated['reason'],
+                    'type' => $validated['type'],
+                    'status' => 'pending',
+                ]);
 
-            $approval = ApprovalService::submit($leave, $userId, $validated);
-            $leave->update(['approval_id' => $approval->id]);
+                $approval = ApprovalService::submit($leave, $userId, $validated);
+                $leave->update(['approval_id' => $approval->id]);
 
-            return $leave;
-        });
+                return $leave;
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Usually error code 23505 for unique violation in Postgres or similar in MySQL
+            return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);
+        }
 
         \App\Services\AuditLogger::log($request, 'leave.request', 'LeaveRequest', $leave->id, null, $validated);
 
@@ -166,7 +180,58 @@ class LeaveRequestController extends Controller
 
         $query->orderBy('start_date', 'desc');
 
-        return response()->json($query->cursorPaginate(20));
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 20);
+        return response()->json($query->paginate($perPage));
+    }
+
+    public function adminHistory(Request $request)
+    {
+        $user = $request->user();
+        $roles = $user->getCachedRoles();
+        
+        if (!in_array('hr', $roles) && !in_array('super_admin', $roles)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $query = LeaveRequest::with(['approval', 'user']);
+
+        if (!in_array('super_admin', $roles)) {
+            $query->whereHas('user', function($q) use ($user) {
+                $q->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
+            });
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->query('status');
+            if ($status !== 'all') {
+                $query->whereHas('approval', function($q) use ($status) {
+                    $q->where('status', $status);
+                });
+            }
+        }
+        
+        if ($request->filled('type') && $request->query('type') !== 'all') {
+            $query->where('type', $request->query('type'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('email', 'ilike', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
+        }
+
+        $query->orderBy('start_date', 'desc');
+
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 20);
+        return response()->json($query->paginate($perPage));
     }
 
     public function pending(Request $request)
@@ -180,7 +245,7 @@ class LeaveRequestController extends Controller
             // Can see all pending
         } elseif (in_array('hr', $roles)) {
             $query->whereHas('user', function($q) use ($user) {
-                $q->where('department_id', $user->department_id);
+                $q->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
             });
         } else {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -188,7 +253,9 @@ class LeaveRequestController extends Controller
 
         $query->orderBy('created_at', 'asc');
 
-        return response()->json($query->cursorPaginate(20));
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 20);
+        return response()->json($query->paginate($perPage));
     }
 
     public function export(Request $request)
@@ -202,7 +269,7 @@ class LeaveRequestController extends Controller
             // Admin sees all
         } elseif (in_array('hr', $roles)) {
             $query->whereHas('user', function($q) use ($user) {
-                $q->where('department_id', $user->department_id);
+                $q->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
             });
         } else {
             return response()->json(['message' => 'Unauthorized'], 403);

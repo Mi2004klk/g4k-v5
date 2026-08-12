@@ -24,7 +24,9 @@ class AuditLogController extends Controller
         }
 
         // Use cursor pagination for large datasets
-        $logs = $query->cursorPaginate(50);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 50);
+        $logs = $query->paginate($perPage);
         
         return response()->json($logs);
     }

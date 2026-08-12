@@ -58,7 +58,9 @@ class TaskController extends Controller
 
         $query->orderBy('created_at', 'desc');
 
-        return response()->json($query->cursorPaginate(30));
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $perPage = $request->input('per_page', 20);
+        return response()->json($query->paginate($perPage));
     }
 
     public function store(Request $request)
@@ -147,6 +149,7 @@ class TaskController extends Controller
             'blocked_by' => 'nullable|exists:tasks,id',
             'qa_form_id' => 'nullable|exists:qa_forms,id',
             'recurrence' => 'nullable|array',
+            'notify_global_chat' => 'sometimes|boolean',
         ]);
 
         if (isset($validated['blocked_by']) && $validated['blocked_by'] !== null) {
@@ -159,6 +162,11 @@ class TaskController extends Controller
             TaskService::updateStatus($task, $validated['status'], $request->user()->id);
             if ($validated['status'] === 'done') {
                 RecurrenceService::handleCompletion($task);
+                
+                $shouldNotify = $request->input('notify_global_chat', true);
+                if ($shouldNotify) {
+                    event(new \App\Events\TaskCompleted($task, $request->user()));
+                }
             }
         }
 
@@ -237,5 +245,89 @@ class TaskController extends Controller
         $task = Task::findOrFail($id);
         $task->delete();
         return response()->json(['message' => 'Task deleted successfully']);
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $task = Task::with('approval')->findOrFail($id);
+        
+        if (!$task->approval) {
+            return response()->json(['message' => 'Task has no pending approval.'], 422);
+        }
+
+        ApprovalService::approve($task->approval, $request->user()->id);
+
+        TaskService::updateStatus($task, 'done', $request->user()->id);
+        $task->update(['status' => 'done']);
+
+        TaskActivity::create([
+            'task_id' => $task->id,
+            'user_id' => $request->user()->id,
+            'event' => 'approved',
+            'metadata' => [],
+        ]);
+
+        return response()->json($task->fresh(['approval']));
+    }
+
+    public function redo(Request $request, $id)
+    {
+        $task = Task::with('approval')->findOrFail($id);
+
+        $validated = $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        if (!$task->approval) {
+            return response()->json(['message' => 'Task has no pending approval.'], 422);
+        }
+
+        ApprovalService::redo($task->approval, $request->user()->id, $validated['reason']);
+
+        TaskService::updateStatus($task, 'in_progress', $request->user()->id);
+        $task->update(['status' => 'in_progress']);
+
+        TaskActivity::create([
+            'task_id' => $task->id,
+            'user_id' => $request->user()->id,
+            'event' => 'redo',
+            'metadata' => ['reason' => $validated['reason']],
+        ]);
+
+        return response()->json($task->fresh(['approval']));
+    }
+
+    public function submitted(Request $request)
+    {
+        $query = Task::with(['project', 'approval'])
+            ->where('assignee_id', $request->user()->id)
+            ->where(function ($q) {
+                $q->where('status', 'review')
+                  ->orWhereHas('approval');
+            })
+            ->orderBy('submitted_at', 'desc');
+
+        $tasks = $query->get()->map(function ($task) {
+            $approvalState = 'pending_approval';
+            $feedback = null;
+            if ($task->approval) {
+                if ($task->approval->decision === 'approved') {
+                    $approvalState = 'approved';
+                } elseif ($task->approval->decision === 'redo') {
+                    $approvalState = 'redo_required';
+                    $feedback = $task->approval->feedback;
+                }
+            }
+
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'submitted_at' => $task->submitted_at,
+                'approval_state' => $approvalState,
+                'feedback' => $feedback,
+            ];
+        });
+
+        return response()->json(['data' => $tasks]);
     }
 }

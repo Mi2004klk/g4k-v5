@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Search, CalendarDays, Loader2, AlertCircle, Download } from "lucide-react";
 import Link from "next/link";
+import { TrendingUp, CalendarDays, AlertCircle, Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
@@ -12,10 +12,9 @@ import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
-import { Input, Button, Checkbox, DataTable, StatusBadge } from "@g4k/ui/components";
+import { Input, Button, Checkbox, DataTable, StatusBadge, FilterBar } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
-
 
 export function HrAttendanceTable() {
   const queryClient = useQueryClient();
@@ -26,7 +25,10 @@ export function HrAttendanceTable() {
   const [search, setSearch] = useUrlState("search", "");
   
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(20);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [sheetTab, setSheetTab] = useState<"day" | "history" | "trends">("day");
   
   // Dialog & selection state
   const [correctionData, setCorrectionData] = useState<{ dayId: number, userId: number, date: string, action: string, type: string } | null>(null);
@@ -35,9 +37,14 @@ export function HrAttendanceTable() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
+      setPage(1);
     }, 300);
     return () => clearTimeout(handler);
   }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedDate, deptFilter, statusFilter]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -66,33 +73,23 @@ export function HrAttendanceTable() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.hrAttendance(selectedDate, deptFilter),
+    queryKey: [...queryKeys.hrAttendance(selectedDate, deptFilter), statusFilter, debouncedSearch, page, perPage],
     queryFn: () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      params.append("page", page.toString());
+      params.append("per_page", perPage.toString());
       return apiFetch(`/attendance/hr/today?${params.toString()}`);
-    },
-    select: (raw: any) => {
-      if (!raw?.data) return raw;
-      let items = raw.data;
-      if (statusFilter && statusFilter !== "all") {
-        items = items.filter((item: any) => item.status === statusFilter);
-      }
-      if (debouncedSearch) {
-        const q = debouncedSearch.toLowerCase();
-        items = items.filter((item: any) =>
-          item.user_name?.toLowerCase().includes(q) ||
-          item.user_email?.toLowerCase().includes(q)
-        );
-      }
-      return { ...raw, data: items };
     },
     staleTime: STALE_TIME_ATTENDANCE,
     refetchInterval: isConnected ? false : 60_000,
   });
 
-  const records = data?.data || [];
+  const records = data?.data?.data || [];
+  const totalPages = data?.data?.last_page || 1;
 
 
 
@@ -125,13 +122,26 @@ export function HrAttendanceTable() {
         const isOpenShift = row.original.clock_in && !row.original.clock_out;
         
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 group">
             <button 
-              onClick={() => setSelectedUser(row.original.user_id)}
+              onClick={() => {
+                setSheetTab("day");
+                setSelectedUser(row.original.user_id);
+              }}
               className="flex flex-col text-left hover:opacity-80 transition-opacity"
             >
               <span className="font-semibold text-neutral-900 dark:text-white underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
               <span className="text-[11px] text-neutral-400 font-normal">{row.original.user_email}</span>
+            </button>
+            <button
+              onClick={() => {
+                setSheetTab("trends");
+                setSelectedUser(row.original.user_id);
+              }}
+              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-all text-neutral-400 hover:text-violet-500"
+              title="View Trends"
+            >
+              <TrendingUp className="w-4 h-4" />
             </button>
             {isOpenShift && (
               <button 
@@ -171,16 +181,10 @@ export function HrAttendanceTable() {
             >
               {status}
             </StatusBadge>
-            {isLeave && (
-              <div onClick={(e) => e.stopPropagation()}>
-                <Link 
-                  href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
-                  className="text-xs text-violet-600 hover:underline flex items-center gap-1"
-                >
-                  <CalendarDays className="w-3 h-3" />
-                  View Leave
-                </Link>
-              </div>
+            {row.original.late_minutes > 0 && (
+              <StatusBadge status="warning" className="font-mono">
+                LATE · {row.original.late_minutes}m
+              </StatusBadge>
             )}
           </div>
         );
@@ -221,6 +225,35 @@ export function HrAttendanceTable() {
         const mins = Math.floor((secs % 3600) / 60);
         return <span className="font-mono text-amber-600">{hours}h {mins}m</span>;
       },
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }: any) => {
+        return (
+          <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-50">
+              <Link href={`/dashboard/org/leave?user_id=${row.original.user_id}`}>
+                <CalendarDays className="w-4 h-4 mr-1" />
+                Leave History
+              </Link>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 ml-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedUser(row.original.user_id);
+                setSheetTab("trends");
+              }}
+            >
+              <TrendingUp className="w-4 h-4 mr-1" />
+              Trends
+            </Button>
+          </div>
+        );
+      },
     }
   ];
 
@@ -234,60 +267,46 @@ export function HrAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <div className="relative flex-1 w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-          <Input 
-            type="search"
-            placeholder="Search team members (Press / to focus)" 
-            className="pl-9 h-10 w-full"
-            value={search || ""}
-            onChange={(e) => setSearch(e.target.value)}
-            id="hr-team-search"
-          />
-        </div>
-        
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <Input 
-            type="date"
-            value={selectedDate || ""}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-[150px] shrink-0 h-10"
-            aria-label="Filter by date"
-          />
-
-          <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg shrink-0">
-            {statusOptions.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setStatusFilter(opt.value)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  statusFilter === opt.value
-                    ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          <select 
-            value={deptFilter || "all"}
-            onChange={(e) => setDeptFilter(e.target.value)}
-            className="h-10 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
-          >
-            <option value="all">All Departments</option>
-            {departments.map((d: any) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-
-
-        </div>
+      <div className="flex flex-col xl:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+        <FilterBar
+          searchQuery={search || ""}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search team members..."
+          filters={[
+            {
+              key: "date",
+              label: "Date",
+              type: "date",
+              value: selectedDate,
+              onChange: setSelectedDate,
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "checkbox-group",
+              value: statusFilter === "all" ? [] : [statusFilter],
+              onChange: (vals: string[]) => setStatusFilter(vals.length > 0 ? vals[0] : "all"),
+              options: statusOptions.filter(o => o.value !== "all"),
+            },
+            {
+              key: "department",
+              label: "Department",
+              type: "select",
+              value: deptFilter,
+              onChange: setDeptFilter,
+              options: departments.map((d: any) => ({ label: d.name, value: d.id.toString() }))
+            }
+          ]}
+          onClearAll={() => {
+            setSearch("");
+            setSelectedDate(format(new Date(), "yyyy-MM-dd"));
+            setStatusFilter("all");
+            setDeptFilter("all");
+          }}
+        />
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[200px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
             <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
@@ -298,13 +317,19 @@ export function HrAttendanceTable() {
           data={records}
           onRowSelectionChange={setRowSelection}
           rowSelection={rowSelection}
-          getRowId={(row: any) => String(row.id)}
+          getRowId={(row: any) => String(row.user_id || row.id)}
+          page={page}
+          perPage={perPage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
         />
       </div>
 
       <TeamMemberAttendanceSheet 
         userId={selectedUser} 
         date={selectedDate || format(new Date(), "yyyy-MM-dd")}
+        initialTab={sheetTab}
         onClose={() => setSelectedUser(null)} 
       />
 

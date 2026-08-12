@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { StickyNote, Plus, Trash2, AlertTriangle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
@@ -17,6 +17,7 @@ export function QuickNotes() {
   const widgetStates = useUIStore(useShallow((s) => s.widgetStates));
   const toggleWidgetCollapse = useUIStore((s) => s.toggleWidgetCollapse);
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   const { data: notes = [], isPending, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.dashboardInit,
@@ -108,15 +109,23 @@ export function QuickNotes() {
                     key={n.id}
                     className="p-2.5 rounded-lg bg-secondary text-xs flex items-start justify-between gap-2 border border-border"
                   >
-                    <p className="text-secondary-foreground">{n.body}</p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteMutation.mutate(n.id)}
-                      className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    <Truncate text={n.body} className="text-secondary-foreground" />
+                    <TooltipProvider delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setConfirmState({ isOpen: true, id: n.id })}
+                            className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
+                            aria-label="Delete note"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="text-xs">Delete note</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 ))
               )}
@@ -124,6 +133,20 @@ export function QuickNotes() {
           </div>
         </CollapsibleContent>
       </Card>
+      
+      <ConfirmDialog
+        open={confirmState.isOpen}
+        onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, id: null }) }}
+        onConfirm={() => {
+          if (confirmState.id) {
+            deleteMutation.mutate(confirmState.id);
+            setConfirmState({ isOpen: false, id: null });
+          }
+        }}
+        title="Delete Note"
+        description="Are you sure you want to delete this note?"
+        isLoading={deleteMutation.isPending}
+      />
     </Collapsible>
   );
 }

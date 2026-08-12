@@ -18,6 +18,7 @@ class DirectoryController extends Controller
         $data = [
             'id' => $user->id,
             'name' => $user->name,
+            'employee_id' => $user->employee_id,
             'avatar_url' => $user->avatar_url,
             'department' => $user->department,
             'designation' => $user->designation,
@@ -54,7 +55,13 @@ class DirectoryController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('username', 'like', "%{$search}%")
-                  ->orWhere('employee_id', 'like', "%{$search}%");
+                  ->orWhere('employee_id', 'like', "%{$search}%")
+                  ->orWhereHas('department', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('designation', function ($q3) use ($search) {
+                      $q3->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -82,65 +89,5 @@ class DirectoryController extends Controller
             ->findOrFail($id);
             
         return response()->json($this->applyVisibilityRules($user));
-    }
-
-    public function sendMessage(Request $request, $id)
-    {
-        $targetUser = User::findOrFail($id);
-        $currentUser = $request->user();
-
-        if ($currentUser->id === $targetUser->id) {
-            return response()->json(['message' => 'Cannot message yourself'], 422);
-        }
-
-        $conversation = DB::transaction(function () use ($currentUser, $targetUser) {
-            // Find existing direct conversation
-            $existingConvId = DB::table('conversation_user')
-                ->select('conversation_id')
-                ->whereIn('user_id', [$currentUser->id, $targetUser->id])
-                ->groupBy('conversation_id')
-                ->havingRaw('COUNT(DISTINCT user_id) = 2')
-                ->whereIn('conversation_id', function ($query) {
-                    $query->select('id')->from('conversations')->where('scope', 'direct');
-                })
-                ->first();
-
-            if ($existingConvId) {
-                return $existingConvId->conversation_id;
-            }
-
-            // Create new conversation
-            $convId = DB::table('conversations')->insertGetId([
-                'scope' => 'direct',
-                'name' => null,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            DB::table('conversation_user')->insert([
-                [
-                    'conversation_id' => $convId,
-                    'user_id' => $currentUser->id,
-                    'last_read_at' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'conversation_id' => $convId,
-                    'user_id' => $targetUser->id,
-                    'last_read_at' => null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            ]);
-
-            return $convId;
-        });
-
-        return response()->json([
-            'message' => 'Direct conversation initialized',
-            'conversation_id' => $conversation,
-            'target_user' => $targetUser->only(['id', 'name', 'avatar_url']),
-        ]);
     }
 }

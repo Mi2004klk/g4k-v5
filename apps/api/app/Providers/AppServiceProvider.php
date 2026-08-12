@@ -24,9 +24,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                \App\Support\SmtpSettings::apply();
+            }
+        } catch (\Exception $e) {
+            // Ignore during migrations
+        }
+
         Event::listen(\App\Events\ApprovalSubmitted::class, \App\Listeners\NotifyApprovalSubmitted::class);
         Event::listen(ApprovalDecided::class, LeaveAttendanceIntegration::class);
         Event::listen(ApprovalDecided::class, \App\Listeners\ProcessApprovalDecision::class);
+        Event::listen(\App\Events\TaskCompleted::class, \App\Listeners\PostTaskCompletionToGlobalChat::class);
         Notification::observe(NotificationObserver::class);
 
         // Cache invalidation observers

@@ -8,6 +8,8 @@ import { Card, CardTitle, Button, Input, Select, SelectTrigger, SelectValue, Sel
 import { CheckCircle2, Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { WidgetInfo } from "../widgets/widget-info";
+
 export function QuickTaskWidget() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
@@ -53,15 +55,13 @@ export function QuickTaskWidget() {
             <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
               Quick Task
+              <WidgetInfo summary="Instantly dispatch a work item to any employee" />
             </span>
             {usersLoading && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
           </div>
         </div>
-        <p className="text-[11px] text-neutral-500 mb-3">
-          Instantly dispatch a work item to any employee
-        </p>
 
         <form onSubmit={handleSubmit} className="space-y-2.5">
           <Input 
