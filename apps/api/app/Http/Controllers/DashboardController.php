@@ -31,7 +31,7 @@ class DashboardController extends Controller
         $today = Carbon::now()->toDateString();
         $cacheKey = "dashboard_metrics_{$user->id}_{$activeRole}_{$today}";
 
-        $metrics = (function () use ($user, $activeRole, $today) {
+        $metrics = Cache::remember($cacheKey, 300, function () use ($user, $activeRole, $today) {
             $data = [];
 
             // Modules are confirmed to exist in production
@@ -45,14 +45,14 @@ class DashboardController extends Controller
 
             if ($activeRole === 'super_admin') {
                 // Shared role-agnostic global stats
-                $globalStats = (function () {
+                $globalStats = Cache::remember('dashboard_global', 300, function () {
                     return [
                         'total_employees' => User::count(),
                         'active_employees' => User::where('status', 'active')->count(),
                         'departments' => Department::count(),
                         'active_projects' => DB::table('projects')->where('status', 'active')->count(),
                     ];
-                })();
+                });
                 $data['total_employees'] = $globalStats['total_employees'];
                 $data['active_employees'] = $globalStats['active_employees'];
                 $data['departments'] = $globalStats['departments'];
@@ -75,7 +75,7 @@ class DashboardController extends Controller
                 $data['pending_approvals'] = $hasLeaveRequests ? DB::table('leave_requests')->where('status', 'pending')->count() : 0;
                 
                 // Shared admin recent activity cache
-                $data['recent_activity'] = (function () {
+                $data['recent_activity'] = Cache::remember('dashboard_recent_activity', 300, function () {
                     return DB::table('audit_logs')
                         ->leftJoin('users', 'audit_logs.user_id', '=', 'users.id')
                         ->select('audit_logs.id', 'audit_logs.action', 'audit_logs.subject_type',
@@ -83,7 +83,7 @@ class DashboardController extends Controller
                         ->orderBy('audit_logs.at', 'desc')
                         ->limit(10)
                         ->get();
-                })();
+                });
             }
 
             if ($activeRole === 'hr') {
@@ -127,14 +127,14 @@ class DashboardController extends Controller
             }
 
             if ($activeRole === 'super_admin' || $activeRole === 'hr') {
-                $data['active_projects'] = (function () {
+                $data['active_projects'] = Cache::remember('dashboard_global', 300, function () {
                     return [
                         'total_employees' => User::count(),
                         'active_employees' => User::where('status', 'active')->count(),
                         'departments' => Department::count(),
                         'active_projects' => DB::table('projects')->where('status', 'active')->count(),
                     ];
-                })()['active_projects'];
+                })['active_projects'];
                 $data['pending_tasks'] = $hasTasks
                     ? DB::table('tasks')->whereIn('status', ['todo', 'in_progress', 'review'])->count() : 0;
             } elseif ($activeRole === 'employee') {
@@ -165,7 +165,7 @@ class DashboardController extends Controller
             }
 
             return $data;
-        })();
+        });
 
         return response()->json([
             'metrics' => $metrics,

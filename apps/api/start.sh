@@ -8,7 +8,7 @@ php artisan view:cache
 php artisan migrate --force
 
 # Start background processes
-php artisan queue:work --tries=3 --backoff=60 --sleep=3 &
+( while true; do php artisan queue:work --tries=3 --backoff=60 --sleep=3 --max-jobs=100 --max-time=3600; done ) &
 ( while true; do php artisan schedule:run; sleep 60; done ) &
 
 # Enable concurrent requests for PHP built-in server

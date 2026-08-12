@@ -734,12 +734,12 @@ notification bell polls every 30s and stays usable.
 3. [x] **1.3** — Remove full-page blocking returns on Profile + Project Detail
 
 ### Sprint 2 — Backend speed (Phase 2)
-4. **2.1** — Wire the dashboard metrics cache (`Cache::remember`) — the biggest backend win
-5. **2.2** — Supervise the queue worker (auto-restart loop)
-6. **2.3** — Fix scheduled-job N+1 storms
-7. **2.4** — Chunk attendance/user exports
-8. **2.5** — Add missing composite indexes
-9. **2.6** — Drop redundant indexes
+4. [x] **2.1** — Wire the dashboard metrics cache (`Cache::remember`) — the biggest backend win
+5. [x] **2.2** — Supervise the queue worker (auto-restart loop)
+6. [x] **2.3** — Fix scheduled-job N+1 storms
+7. [x] **2.4** — Chunk attendance/user exports
+8. [x] **2.5** — Add missing composite indexes
+9. [x] **2.6** — Drop redundant indexes
 
 ### Sprint 3 — Frontend speed (Phase 3)
 10. **3.1** — Fix NotificationsBell cache key mismatch (instant bell clicks)
