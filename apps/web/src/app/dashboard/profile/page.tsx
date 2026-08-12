@@ -19,7 +19,16 @@ import {
   Calendar,
   FileText,
   CheckSquare,
-  Hash
+  Hash,
+  CalendarDays,
+  MapPin,
+  Briefcase,
+  AlertCircle,
+  CheckCircle2,
+  Shield,
+  EyeOff,
+  LayoutDashboard,
+  Settings
 } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
@@ -40,7 +49,7 @@ import {
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { CalendarDays, MapPin, Briefcase, Building, AlertCircle, Hash, CheckCircle2, Shield, EyeOff, LayoutDashboard, Settings } from "lucide-react";
+
 import { queryKeys } from "@/lib/query-keys";
 import { DataTable } from "@g4k/ui/components";
 
