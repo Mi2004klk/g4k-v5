@@ -8,7 +8,7 @@ import { Clock, Folder, CheckCircle2, AlertCircle, ArrowLeft, Loader2, Play, Edi
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
-import { Button, Input, Textarea } from "@g4k/ui/components";
+import { Button, Input, Textarea, Skeleton } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 

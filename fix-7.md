@@ -729,40 +729,40 @@ notification bell polls every 30s and stays usable.
 ## IMPLEMENTATION ORDER (dependency-aware)
 
 ### Sprint 1 — Stop the bleeding (Phase 1)
-1. [x] 1.1 — Fix WidgetEngine `useContainerWidth` crash (dashboard is currently broken)
-2. [x] **1.2** — Add `loading.tsx` route skeletons (every navigation feels instant)
-3. [x] **1.3** — Remove full-page blocking returns on Profile + Project Detail
+1. ✅ 1.1 — Fix WidgetEngine `useContainerWidth` crash (dashboard is currently broken)
+2. ✅ **1.2** — Add `loading.tsx` route skeletons (every navigation feels instant)
+3. ✅ **1.3** — Remove full-page blocking returns on Profile + Project Detail
 
 ### Sprint 2 — Backend speed (Phase 2)
-4. [x] **2.1** — Wire the dashboard metrics cache (`Cache::remember`) — the biggest backend win
-5. [x] **2.2** — Supervise the queue worker (auto-restart loop)
-6. [x] **2.3** — Fix scheduled-job N+1 storms
-7. [x] **2.4** — Chunk attendance/user exports
-8. [x] **2.5** — Add missing composite indexes
-9. [x] **2.6** — Drop redundant indexes
+4. ✅ **2.1** — Wire the dashboard metrics cache (`Cache::remember`) — the biggest backend win
+5. ✅ **2.2** — Supervise the queue worker (auto-restart loop)
+6. ✅ **2.3** — Fix scheduled-job N+1 storms
+7. ✅ **2.4** — Chunk attendance/user exports
+8. ✅ **2.5** — Add missing composite indexes
+9. ✅ **2.6** — Drop redundant indexes
 
 ### Sprint 3 — Frontend speed (Phase 3)
-10. [x] **3.1** — Fix NotificationsBell cache key mismatch (instant bell clicks)
-11. [x] **3.2** — Remove duplicate attendance polling
-12. [x] **3.3** — Fix MetricWidget animation (rAF or remove)
-13. [x] **3.4** — Move prefetch to layout/hover
-14. [x] **3.5** — Fix orphan `["users"]` query key
-15. [x] **3.6** — Clean up offline engine interval
-16. [x] **3.7** — Remove dead `sleep()` code
+10. ✅ **3.1** — Fix NotificationsBell cache key mismatch (instant bell clicks)
+11. ✅ **3.2** — Remove duplicate attendance polling
+12. ✅ **3.3** — Fix MetricWidget animation (rAF or remove)
+13. ✅ **3.4** — Move prefetch to layout/hover
+14. ✅ **3.5** — Fix orphan `["users"]` query key
+15. ✅ **3.6** — Clean up offline engine interval
+16. ✅ **3.7** — Remove dead `sleep()` code
 
 ### Sprint 4 — Workflow reliability (Phase 4)
-17. [x] **4.1** — Fix notification filter/search backend
-18. [x] **4.2** — Ensure `AnnouncementController` has authorization
-19. [x] **4.3** — Delete per-app nixpacks/railway files
-20. [x] **4.4** — Verify Accept header on all requests
-21. [x] **4.5** — Audit all error/empty/offline states
+17. ✅ **4.1** — Fix notification filter/search backend
+18. ✅ **4.2** — Ensure `AnnouncementController` has authorization
+19. ✅ **4.3** — Delete per-app nixpacks/railway files
+20. ✅ **4.4** — Verify Accept header on all requests
+21. ✅ **4.5** — Audit all error/empty/offline states
 
 ### Sprint 5 — Production hardening (Phase 5)
-22. [x] **5.1** — Standardize `isPending` naming
-23. [x] **5.2** — Ensure `loading.tsx` skeletons exist (done in 1.2)
-24. [x] **5.3** — Verify MAIL_* on Railway
-25. [x] **5.4** — Deploy or disable Reverb
-26. [x] **5.5** — Full smoke test
+22. ✅ **5.1** — Standardize `isPending` naming
+23. ✅ **5.2** — Ensure `loading.tsx` skeletons exist (done in 1.2)
+24. ✅ **5.3** — Verify MAIL_* on Railway
+25. ✅ **5.4** — Deploy or disable Reverb
+26. ✅ **5.5** — Full smoke test
 
 ---
 

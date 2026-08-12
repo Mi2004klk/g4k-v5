@@ -18,7 +18,8 @@ import {
   ExternalLink,
   Calendar,
   FileText,
-  CheckSquare
+  CheckSquare,
+  Hash
 } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
@@ -39,7 +40,7 @@ import {
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { CheckCircle2, Shield, EyeOff, LayoutDashboard, Settings } from "lucide-react";
+import { CalendarDays, MapPin, Briefcase, Building, AlertCircle, Hash, CheckCircle2, Shield, EyeOff, LayoutDashboard, Settings } from "lucide-react";
 import { queryKeys } from "@/lib/query-keys";
 import { DataTable } from "@g4k/ui/components";
 
@@ -338,7 +339,7 @@ export default function ProfilePage() {
                     {isLoading && !profile ? <Skeleton className="h-4 w-24" /> : (profile?.employee_id || "Employee ID: N/A")}
                   </div>
                   <div className="flex items-center text-neutral-500 dark:text-neutral-400 bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-700">
-                    <Building className="w-4 h-4 mr-2 text-brand-violet/70" />
+                    <Building2 className="w-4 h-4 mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.department?.name || "No Department")}
                   </div>
                 </div>

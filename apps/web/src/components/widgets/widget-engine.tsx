@@ -2,10 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import RGL from "react-grid-layout";
-const { WidthProvider, Responsive } = RGL;
-import "react-grid-layout/css/styles.css";
-import "react-resizable/css/styles.css";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -14,8 +10,10 @@ import { Skeleton } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
 
+import RGL from "react-grid-layout";
+const { WidthProvider, Responsive } = RGL as any;
 const ResponsiveGridLayout = WidthProvider(Responsive);
-const GridLayout = dynamic(() => Promise.resolve(ResponsiveGridLayout), { ssr: false });
+const GridLayout = dynamic(() => Promise.resolve(ResponsiveGridLayout), { ssr: false }) as any;
 
 interface WidgetEngineProps {
   availableWidgets: Array<{
