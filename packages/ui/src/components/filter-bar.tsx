@@ -61,7 +61,7 @@ export function FilterBar({
   sortDirection = "asc",
   onSortChange,
   sortOptions = [],
-}: FilterBarProps) {
+}: FilterBarProps): React.JSX.Element | null {
   const [localSearch, setLocalSearch] = useState(searchQuery)
   const debouncedSearch = useDebounce(localSearch, 250)
 
