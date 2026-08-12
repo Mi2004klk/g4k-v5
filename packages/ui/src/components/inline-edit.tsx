@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from "react";
 import { Pencil } from "lucide-react";
 import { Input } from "./input";

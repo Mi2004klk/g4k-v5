@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { WidthProvider, Responsive } from "react-grid-layout";
+import RGL from "react-grid-layout";
+const { WidthProvider, Responsive } = RGL;
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { useQuery } from "@tanstack/react-query";
