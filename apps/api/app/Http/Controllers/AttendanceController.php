@@ -133,12 +133,12 @@ class AttendanceController extends Controller
         
         $schedule = null;
         if ($user->work_schedule_id) {
-            $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$user->work_schedule_id}", 300, function() use ($user) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$user->work_schedule_id}", 86400, function() use ($user) {
                 return \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
             });
         }
         if (!$schedule) {
-            $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 3600, function() {
+            $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
                 return \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
             });
         }
@@ -168,7 +168,7 @@ class AttendanceController extends Controller
             ->get();
 
         // Pass work_schedules standard_seconds to frontend
-        $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 3600, function() {
+        $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
             return DB::table('work_schedules')->where('is_default', true)->first();
         });
         $standardSeconds = $schedule ? $schedule->standard_seconds : 31500;

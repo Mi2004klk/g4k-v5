@@ -14,11 +14,9 @@ export function PendingApprovalsWidget() {
   const user = useAuthStore((s) => s.user);
 
   const { data: requests = [], isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.pendingApprovals,
-    queryFn: async () => {
-      const res = await apiFetch("/approvals/pending");
-      return Array.isArray(res) ? res : res?.data || [];
-    },
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.pending_approvals,
     placeholderData: keepPreviousData,
   });
 
@@ -31,7 +29,7 @@ export function PendingApprovalsWidget() {
     },
     onSuccess: () => {
       toast.success("Action recorded successfully!");
-      queryClient.invalidateQueries({ queryKey: queryKeys.pendingApprovals, exact: true });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit, exact: true });
     },
   });
 

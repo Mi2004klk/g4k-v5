@@ -151,14 +151,17 @@ export default function DashboardLayout({
   const setDensity = useAuthStore((s) => s.setDensity);
   const { theme, setTheme } = useTheme();
 
-  const { data: pins = EMPTY_PINS, refetch: refetchPins } = useQuery({
-    queryKey: queryKeys.pins,
-    queryFn: () => apiFetch("/pins"),
+  const { data: pinsData = EMPTY_PINS, refetch: refetchPins } = useQuery({
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.pins,
   });
+  const pins = pinsData || EMPTY_PINS;
 
   const { data: preferencesData } = useQuery({
-    queryKey: queryKeys.dashboardLayout,
-    queryFn: () => apiFetch("/auth/preferences"),
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.preferences,
     staleTime: 5 * 60_000,
   });
 
@@ -167,12 +170,9 @@ export default function DashboardLayout({
     if (!authUser) return;
     const today = format(new Date(), "yyyy-MM-dd");
     const activeRole = authUser.active_role || "employee";
-    
-    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardMetrics, queryFn: () => apiFetch("/dashboard/metrics") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.attendanceToday, queryFn: () => apiFetch("/attendance/me/today") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.pendingApprovals, queryFn: () => apiFetch("/approvals/pending") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.announcements, queryFn: () => apiFetch("/announcements") });
-    queryClient.prefetchQuery({ queryKey: queryKeys.quickNotes, queryFn: () => apiFetch("/quick-notes") });
+    // We use a single endpoint to fetch most dashboard initial data.
+    // The widget components themselves will use this single 'dashboardInit' query and select their slices.
+    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init") });
 
     if (activeRole === "super_admin") {
       queryClient.prefetchQuery({ queryKey: queryKeys.adminAttendance(today, "all"), queryFn: () => apiFetch(`/attendance/admin/overview?date=${today}`) });

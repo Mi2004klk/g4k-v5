@@ -24,7 +24,7 @@ export function MetricWidget({
   metricKey,
   icon: Icon,
   color = "violet",
-  endpoint = "/dashboard/metrics",
+  endpoint = "/dashboard/init",
   subtitle,
   hasModule = true,
 }: MetricWidgetProps) {
@@ -33,8 +33,9 @@ export function MetricWidget({
   const prevValueRef = useRef<number | null>(null);
 
   const { data, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboardMetrics,
+    queryKey: queryKeys.dashboardInit,
     queryFn: () => apiFetch(endpoint),
+    select: (data: any) => data.metrics,
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,
   });

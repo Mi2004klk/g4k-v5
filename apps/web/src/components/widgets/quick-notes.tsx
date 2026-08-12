@@ -19,8 +19,9 @@ export function QuickNotes() {
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
 
   const { data: notes = [], isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.quickNotes,
-    queryFn: () => apiFetch("/quick-notes"),
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.quick_notes,
     placeholderData: keepPreviousData,
   });
 
@@ -33,7 +34,7 @@ export function QuickNotes() {
     },
     onSuccess: () => {
       setText("");
-      queryClient.invalidateQueries({ queryKey: queryKeys.quickNotes });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
 
@@ -42,7 +43,7 @@ export function QuickNotes() {
       return apiFetch(`/quick-notes/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.quickNotes });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
 

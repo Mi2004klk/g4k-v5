@@ -43,7 +43,7 @@ export function NotificationsBell() {
       return apiFetch(`/notifications/${id}/mark-read`, { method: "POST" });
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
       const previous = queryClient.getQueryData(queryKeys.notifications(filter));
       
       queryClient.setQueryData(queryKeys.notifications(filter), (old: any) => {
@@ -76,7 +76,7 @@ export function NotificationsBell() {
       return apiFetch("/notifications/mark-all-read", { method: "POST" });
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.notifications() });
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
       const previous = queryClient.getQueryData(queryKeys.notifications(filter));
 
       queryClient.setQueryData(queryKeys.notifications(filter), (old: any) => {
@@ -109,7 +109,7 @@ export function NotificationsBell() {
     const channel = subscribe(channelName);
     
     const handleNotification = (e: any) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
       if (e.title) {
         toast.info(e.title, { description: e.body || "You have a new notification." });

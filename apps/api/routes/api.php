@@ -71,6 +71,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::cla
     Route::delete('/pins/{id}', [PinController::class, 'destroy']);
 
     // Dashboard API
+    Route::get('/dashboard/init', [DashboardController::class, 'init']);
     Route::get('/dashboard/metrics', [DashboardController::class, 'metrics']);
 
     // Profile API

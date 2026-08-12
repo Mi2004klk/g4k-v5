@@ -8,8 +8,9 @@ import { Activity, CheckCircle2 } from "lucide-react";
 
 export function EmployeeTaskProgressWidget() {
   const { data, isPending } = useQuery({
-    queryKey: queryKeys.dashboardMetrics,
-    queryFn: () => apiFetch("/dashboard/metrics"),
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.metrics,
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,
   });

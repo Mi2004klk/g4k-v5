@@ -10,8 +10,9 @@ import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 
 export function RecentActivityWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboardMetrics,
-    queryFn: () => apiFetch("/dashboard/metrics"),
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.metrics,
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,
   });

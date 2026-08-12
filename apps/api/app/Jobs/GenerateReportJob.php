@@ -35,20 +35,26 @@ class GenerateReportJob implements ShouldQueue
             $key = $this->exportJob->report_key;
             $format = $this->exportJob->format;
             $filename = "exports/report_{$key}_" . time() . ".{$format}";
-            $rows = $this->fetchData($key);
-
             $disk = Storage::disk(config('filesystems.default', 'public'));
 
             if ($format === 'xlsx' || $format === 'csv') {
                 $tempPath = sys_get_temp_dir() . '/' . uniqid('exp_') . ".{$format}";
                 $writer = SimpleExcelWriter::create($tempPath);
-                foreach ($rows as $row) {
-                    $writer->addRow($row);
-                }
+                
+                $this->fetchData($key, function($chunk) use ($writer) {
+                    foreach ($chunk as $row) {
+                        $writer->addRow($row);
+                    }
+                });
+
                 $writer->close();
                 $disk->put($filename, file_get_contents($tempPath));
                 @unlink($tempPath);
             } else if ($format === 'pdf') {
+                $rows = [];
+                $this->fetchData($key, function($chunk) use (&$rows) {
+                    $rows = array_merge($rows, $chunk);
+                });
                 $pdf = Pdf::loadView('reports.pdf', ['key' => $key, 'rows' => $rows]);
                 $disk->put($filename, $pdf->output());
             }
@@ -70,7 +76,7 @@ class GenerateReportJob implements ShouldQueue
         }
     }
 
-    private function fetchData(string $key): array
+    private function fetchData(string $key, callable $chunkCallback): void
     {
         $filters = $this->exportJob->filters ?? [];
         $hasManage = $filters['_has_manage'] ?? false;
@@ -90,15 +96,18 @@ class GenerateReportJob implements ShouldQueue
                           ->orWhere('reporter_id', $userId);
                     });
                 }
-                return $query->get()->map(fn($t) => [
-                    'ID' => $t->id,
-                    'Title' => $t->title,
-                    'Project' => $t->project?->name ?? 'N/A',
-                    'Assignee' => $t->assignee?->name ?? 'Unassigned',
-                    'Status' => $t->status,
-                    'Priority' => $t->priority,
-                    'Due Date' => $t->due_date ? $t->due_date->format('Y-m-d') : 'None',
-                ])->toArray();
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(fn($t) => [
+                        'ID' => $t->id,
+                        'Title' => $t->title,
+                        'Project' => $t->project?->name ?? 'N/A',
+                        'Assignee' => $t->assignee?->name ?? 'Unassigned',
+                        'Status' => $t->status,
+                        'Priority' => $t->priority,
+                        'Due Date' => $t->due_date ? $t->due_date->format('Y-m-d') : 'None',
+                    ])->toArray());
+                });
+                break;
 
             case 'projects':
                 $query = Project::with(['creator', 'members']);
@@ -111,13 +120,16 @@ class GenerateReportJob implements ShouldQueue
                           ->orWhereHas('members', fn ($m) => $m->where('users.id', $userId));
                     });
                 }
-                return $query->get()->map(fn($p) => [
-                    'ID' => $p->id,
-                    'Name' => $p->name,
-                    'Owner' => $p->creator?->name ?? 'N/A',
-                    'Status' => $p->status,
-                    'Budget' => $p->budget,
-                ])->toArray();
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(fn($p) => [
+                        'ID' => $p->id,
+                        'Name' => $p->name,
+                        'Owner' => $p->creator?->name ?? 'N/A',
+                        'Status' => $p->status,
+                        'Budget' => $p->budget,
+                    ])->toArray());
+                });
+                break;
 
             case 'attendance-summary':
                 $start = $filters['start'] ?? now()->subDays(30)->toDateString();
@@ -139,15 +151,18 @@ class GenerateReportJob implements ShouldQueue
                     $query->where('department_id', $dept);
                 }
 
-                return $query->get()->map(fn($u) => [
-                    'Name' => $u->name,
-                    'Department' => $u->department?->name ?? 'N/A',
-                    'Present Days' => $u->present_days,
-                    'Late Days' => $u->late_days,
-                    'Absent Days' => $u->absent_days,
-                    'Leave Days' => $u->leave_days,
-                    'Total Hours' => round(($u->total_seconds ?? 0) / 3600, 2),
-                ])->toArray();
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(fn($u) => [
+                        'Name' => $u->name,
+                        'Department' => $u->department?->name ?? 'N/A',
+                        'Present Days' => $u->present_days,
+                        'Late Days' => $u->late_days,
+                        'Absent Days' => $u->absent_days,
+                        'Leave Days' => $u->leave_days,
+                        'Total Hours' => round(($u->total_seconds ?? 0) / 3600, 2),
+                    ])->toArray());
+                });
+                break;
 
             case 'leave-summary':
                 $start = $filters['start'] ?? now()->subDays(30)->toDateString();
@@ -168,14 +183,17 @@ class GenerateReportJob implements ShouldQueue
                     $query->where('department_id', $dept);
                 }
 
-                return $query->get()->map(fn($u) => [
-                    'Name' => $u->name,
-                    'Department' => $u->department?->name ?? 'N/A',
-                    'Total Requests' => $u->total_requests,
-                    'Approved' => $u->approved_requests,
-                    'Pending' => $u->pending_requests,
-                    'Rejected' => $u->rejected_requests,
-                ])->toArray();
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(fn($u) => [
+                        'Name' => $u->name,
+                        'Department' => $u->department?->name ?? 'N/A',
+                        'Total Requests' => $u->total_requests,
+                        'Approved' => $u->approved_requests,
+                        'Pending' => $u->pending_requests,
+                        'Rejected' => $u->rejected_requests,
+                    ])->toArray());
+                });
+                break;
 
             case 'users':
             case 'productivity':
@@ -194,25 +212,26 @@ class GenerateReportJob implements ShouldQueue
                     ])->withSum('taskTimeLogs as total_seconds', 'duration_seconds');
                 }
                 
-                $data = $query->get();
-                
-                if ($key === 'productivity') {
-                    $data->transform(function($u) {
-                        $rate = $u->total_tasks > 0 ? ($u->completed_tasks / $u->total_tasks) : 0;
-                        $hours = ($u->total_seconds ?? 0) / 3600;
-                        $u->productivity_score = round($rate * $hours, 2);
-                        return $u;
-                    });
-                }
+                $query->chunk(1000, function($chunk) use ($chunkCallback, $key) {
+                    if ($key === 'productivity') {
+                        $chunk->transform(function($u) {
+                            $rate = $u->total_tasks > 0 ? ($u->completed_tasks / $u->total_tasks) : 0;
+                            $hours = ($u->total_seconds ?? 0) / 3600;
+                            $u->productivity_score = round($rate * $hours, 2);
+                            return $u;
+                        });
+                    }
 
-                return $data->map(fn($u) => [
-                    'ID' => $u->id,
-                    'Name' => $u->name,
-                    'Email' => $u->email,
-                    'Role' => $u->roleAssignments->pluck('role')->join(', ') ?: 'employee',
-                    'Department' => $u->department?->name ?? 'N/A',
-                    'Productivity Score' => $key === 'productivity' ? $u->productivity_score : 'N/A',
-                ])->toArray();
+                    $chunkCallback($chunk->map(fn($u) => [
+                        'ID' => $u->id,
+                        'Name' => $u->name,
+                        'Email' => $u->email,
+                        'Role' => $u->roleAssignments->pluck('role')->join(', ') ?: 'employee',
+                        'Department' => $u->department?->name ?? 'N/A',
+                        'Productivity Score' => $key === 'productivity' ? $u->productivity_score : 'N/A',
+                    ])->toArray());
+                });
+                break;
 
             default:
                 throw new \Exception("Invalid report key: {$key}");

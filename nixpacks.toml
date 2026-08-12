@@ -1,6 +1,9 @@
 [build]
 builder = "nixpacks"
 
+[variables]
+PHP_INI_SCAN_DIR = "/app/apps/api"
+
 [phases.setup]
 nixPkgs = [
   "php84",
@@ -17,7 +20,13 @@ nixPkgs = [
 cmds = ["cd apps/api && composer install --no-dev --optimize-autoloader --no-interaction"]
 
 [phases.build]
-cmds = ["cd apps/api && php artisan storage:link"]
+cmds = [
+  "cd apps/api && php artisan storage:link",
+  "cd apps/api && php artisan octane:install --server=frankenphp",
+  "cd apps/api && php artisan config:cache",
+  "cd apps/api && php artisan route:cache",
+  "cd apps/api && php artisan view:cache"
+]
 
 [start]
 cmd = "bash apps/api/start.sh"

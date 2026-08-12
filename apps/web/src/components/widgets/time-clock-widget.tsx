@@ -44,8 +44,9 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const endBreak = useTimerStore((s) => s.endBreak);
 
   const { data: todayData, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.attendanceToday,
-    queryFn: () => apiFetch("/attendance/me/today"),
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.attendance_today,
     placeholderData: keepPreviousData,
   });
 
@@ -60,7 +61,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   useEffect(() => {
     const handleSyncFail = () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     };
     window.addEventListener("attendance-sync-failed", handleSyncFail);
     return () => window.removeEventListener("attendance-sync-failed", handleSyncFail);
@@ -102,13 +103,13 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
       // Re-fetch to ensure exact server state once online
       if (navigator.onLine) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       }
       toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
     } catch (err: any) {
       // Revert optimistic state on fatal error
       toast.error(err.message || "Failed to record punch. Syncing with server...");
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday }); // Re-sync store state
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit }); // Re-sync store state
     }
   };
 

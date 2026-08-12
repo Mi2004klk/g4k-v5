@@ -12,7 +12,33 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    public function init(Request $request)
+    {
+        $user = $request->user();
+        
+        $activeRole = 'employee';
+        if ($user->currentAccessToken()) {
+            foreach ($user->currentAccessToken()->abilities as $ability) {
+                if (str_starts_with($ability, 'role:')) {
+                    $activeRole = substr($ability, 5);
+                    break;
+                }
+            }
+        }
 
+        // Call the internal helper for metrics, this also needs us to extract metrics logic
+        // We will just fetch the various endpoints internally
+        return response()->json([
+            'metrics' => app(DashboardController::class)->metrics($request)->getData(true)['metrics'] ?? null,
+            'attendance_today' => app(AttendanceController::class)->meToday($request)->getData(true),
+            'preferences' => app(UserPreferenceController::class)->show($request)->getData(true),
+            'pending_approvals' => app(LeaveRequestController::class)->pending($request)->getData(true),
+            'pins' => app(PinController::class)->index($request)->getData(true),
+            'announcements' => app(\App\Http\Controllers\AnnouncementController::class)->index($request)->getData(true),
+            'quick_notes' => app(\App\Http\Controllers\QuickNoteController::class)->index($request)->getData(true),
+            'role' => $activeRole
+        ]);
+    }
 
     public function metrics(Request $request)
     {

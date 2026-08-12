@@ -54,7 +54,7 @@ class ExportAuditLogsJob implements ShouldQueue
             $writer = SimpleExcelWriter::create($tempPath);
             $writer->addHeader(['ID', 'Action', 'User', 'Subject Type', 'Subject ID', 'Before', 'After', 'IP', 'Meta', 'Timestamp']);
 
-            $query->chunk(500, function ($logs) use ($writer) {
+            $query->chunk(1000, function ($logs) use ($writer) {
                 foreach ($logs as $log) {
                     $writer->addRow([
                         $log->id,

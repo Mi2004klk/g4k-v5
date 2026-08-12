@@ -28,8 +28,9 @@ class AlertMissedClockIn implements ShouldQueue
         $offsetSetting = \App\Models\Setting::where('key', 'reminders.missed_clock_in_offset')->value('value') ?? 15;
         $offsetMinutes = (int) $offsetSetting;
 
-        // Default schedule
-        $defaultSchedule = DB::table('work_schedules')->where('is_default', true)->first();
+        // Prefetch all work schedules to avoid N+1 queries
+        $workSchedules = \Illuminate\Support\Facades\DB::table('work_schedules')->get()->keyBy('id');
+        $defaultSchedule = $workSchedules->firstWhere('is_default', true);
 
         // Get all active employees who haven't clocked in
         $users = User::where('status', 'active')
@@ -52,7 +53,10 @@ class AlertMissedClockIn implements ShouldQueue
         $notifications = [];
 
         foreach ($users as $user) {
-            $schedule = $defaultSchedule; 
+            $schedule = ($user->work_schedule_id && $workSchedules->has($user->work_schedule_id))
+                ? $workSchedules->get($user->work_schedule_id)
+                : $defaultSchedule;
+            
             $startTimeStr = $schedule->start_time ?? '09:00:00';
             $graceMinutes = $schedule->grace_minutes ?? 10;
             

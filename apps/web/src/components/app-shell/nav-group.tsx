@@ -6,6 +6,9 @@ import { Star } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@g4k/ui/components";
 import { hasCapability } from "@/lib/capabilities";
 import { useAuthStore } from "@/lib/auth-store";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { apiFetch } from "@/lib/api-client";
 
 export const NavItem = memo(function NavItem({ 
   item, 
@@ -35,12 +38,32 @@ export const NavItem = memo(function NavItem({
     setShowLabels(true);
   }, [currentlyCollapsed]);
 
+  const queryClient = useQueryClient();
+
+  const handleMouseEnter = () => {
+    if (isDisabled) return;
+    if (item.href === "/dashboard/leave") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.myLeaveHistory(), queryFn: () => apiFetch("/leave-requests/history") });
+    } else if (item.href === "/dashboard/directory") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.directory(), queryFn: () => apiFetch("/directory") });
+    } else if (item.href === "/dashboard/projects") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch("/projects") });
+    } else if (item.href === "/dashboard/tasks") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.tasks, queryFn: () => apiFetch("/tasks") });
+    } else if (item.href === "/dashboard/announcements") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.announcements, queryFn: () => apiFetch("/announcements") });
+    } else if (item.href === "/dashboard/org/leave") {
+      queryClient.prefetchQuery({ queryKey: queryKeys.orgLeaveRequestsPaginated(), queryFn: () => apiFetch("/leave-requests/pending") });
+    }
+  };
+
   const itemPy = density === "compact" ? "py-1.5" : "py-2.5";
   
   const content = (
     <div className="relative group/nav flex items-center">
       <Link
         href={isDisabled ? "#" : item.href}
+        onMouseEnter={handleMouseEnter}
         onClick={(e) => {
           if (isDisabled) e.preventDefault();
         }}

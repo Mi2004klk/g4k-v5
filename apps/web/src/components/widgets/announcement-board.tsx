@@ -20,8 +20,9 @@ export function AnnouncementBoard() {
   const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
 
   const { data: announcements = [], isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.announcements,
-    queryFn: () => apiFetch("/announcements"),
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init"),
+    select: (data: any) => data.announcements,
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });

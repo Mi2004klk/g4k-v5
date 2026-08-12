@@ -27,8 +27,9 @@ class RemindShiftStart implements ShouldQueue
         $offsetSetting = \App\Models\Setting::where('key', 'reminders.shift_offset')->value('value') ?? 10;
         $offsetMinutes = (int) $offsetSetting;
 
-        // Default schedule
-        $defaultSchedule = DB::table('work_schedules')->where('is_default', true)->first();
+        // Prefetch all work schedules to avoid N+1 queries
+        $workSchedules = \Illuminate\Support\Facades\DB::table('work_schedules')->get()->keyBy('id');
+        $defaultSchedule = $workSchedules->firstWhere('is_default', true);
 
         // Get users who haven't clocked in yet today
         $users = User::where('status', 'active')
@@ -48,7 +49,10 @@ class RemindShiftStart implements ShouldQueue
         $notifications = [];
 
         foreach ($users as $user) {
-            $schedule = $defaultSchedule; // Assuming default for now, could be loaded per user if relationships exist
+            $schedule = ($user->work_schedule_id && $workSchedules->has($user->work_schedule_id))
+                ? $workSchedules->get($user->work_schedule_id)
+                : $defaultSchedule;
+                
             $startTimeStr = $schedule->start_time ?? '09:00:00';
             $shiftStart = Carbon::parse($today . ' ' . $startTimeStr);
             
