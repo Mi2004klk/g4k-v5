@@ -28,7 +28,7 @@ return [
         '#^http://localhost:\d+$#'
     ],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['*', 'X-Refresh-Token', 'Authorization', 'Content-Type', 'Accept', 'X-Socket-Id'],
 
     'exposed_headers' => [],
 

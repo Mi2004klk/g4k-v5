@@ -34,6 +34,8 @@ Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('thr
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
+Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate'])
+    ->middleware(['auth:sanctum']);
 Route::middleware(['auth:sanctum', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
     Route::get('/auth/profile', [AuthController::class, 'profile']);
     Route::get('/me/capabilities', [AuthController::class, 'capabilities']);

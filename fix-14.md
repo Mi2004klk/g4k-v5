@@ -415,8 +415,8 @@ exec php artisan octane:start \
   --workers="${OCTANE_WORKERS:-4}" \
   --max-requests="${OCTANE_MAX_REQUESTS:-500}"
 ```
-- [ ] **5.1** Replace `apps/api/start.sh`; `chmod +x`.
-- [ ] **5.2** Confirm `0.0.0.0` binding (binding `127.0.0.1` = health check fails = deploy rolled back).
+- [x] **5.1** Replace `apps/api/start.sh`; `chmod +x`.
+- [x] **5.2** Confirm `0.0.0.0` binding (binding `127.0.0.1` = health check fails = deploy rolled back).
 
 ---
 
@@ -431,7 +431,7 @@ Private/presence channels authorize via `POST /broadcasting/auth`, which is **se
 default. The Vercel frontend sends `Authorization: Bearer <sanctum-token>` there (no session cookie
 cross-origin), so auth fails and **no private/presence channel ever subscribes**.
 
-- [ ] **6.1a** Register an API broadcasting-auth route guarded by Sanctum. In `routes/api.php` (inside the
+- [x] **6.1a** Register an API broadcasting-auth route guarded by Sanctum. In `routes/api.php` (inside the
       existing `auth:sanctum` group, or with its own middleware):
   ```php
   use Illuminate\Broadcasting\BroadcastController;
@@ -440,7 +440,7 @@ cross-origin), so auth fails and **no private/presence channel ever subscribes**
   ```
   The frontend already calls `authEndpoint = ${NEXT_PUBLIC_API_URL}/broadcasting/auth`
   (`use-reverb.ts:74`) → resolves to `/api/broadcasting/auth`. ✓
-- [ ] **6.1b** Ensure CORS allows it: `config/cors.php:18` paths already include `broadcasting/auth`. Add
+- [x] **6.1b** Ensure CORS allows it: `config/cors.php:18` paths already include `broadcasting/auth`. Add
       `X-Refresh-Token`, `Authorization`, `Content-Type`, `Accept` to `allowed_headers` (they're `['*']`
       today — fine) and keep `supports_credentials => true`.
 
@@ -459,9 +459,9 @@ gcloud run deploy g4k-reverb \
   --set-env-vars=APP_NAME=Games4King,APP_ENV=production,APP_DEBUG=false,APP_KEY=,BROADCAST_CONNECTION=reverb,REVERB_HOST=g4k-reverb-XXXXXX-as.a.run.app,REVERB_PORT=443,REVERB_SCHEME=https,REVERB_SERVER_HOST=0.0.0.0,REVERB_SERVER_PORT=8080,REVERB_ALLOWED_ORIGINS=https://g4-k-web.vercel.app,DB_CONNECTION=pgsql,DB_HOST=aws-0-ap-south-1.pooler.supabase.com,DB_PORT=6543,DB_DATABASE=postgres,DB_USERNAME=postgres.jtcgtjrqijdnecwtuspv,DB_SSLMODE=require,SESSION_DRIVER=database,CACHE_STORE=database,QUEUE_CONNECTION=database,FILESYSTEM_DISK=s3,LOG_CHANNEL=stderr,LOG_LEVEL=error,OCTANE_HTTPS=true \
   --update-secrets=APP_KEY=g4k-app-key:latest,DB_PASSWORD=g4k-db-password:latest,REVERB_APP_ID=g4k-reverb-app-id:latest,REVERB_APP_KEY=g4k-reverb-app-key:latest,REVERB_APP_SECRET=g4k-reverb-app-secret:latest,AWS_ACCESS_KEY_ID=g4k-s3-key:latest,AWS_SECRET_ACCESS_KEY=g4k-s3-secret:latest
 ```
-- [ ] **6.2** Deploy `g4k-reverb`. Capture its URL (`gcloud run services describe g4k-reverb --format="value(status.url)"`)
+- [x] **6.2** Deploy `g4k-reverb`. Capture its URL (`gcloud run services describe g4k-reverb --format="value(status.url)"`)
       and paste it back into the API's `REVERB_HOST` (§4.1) and Vercel's `NEXT_PUBLIC_REVERB_HOST` (§10.1).
-- [ ] **6.3** In `config/reverb.php`, set `REVERB_ALLOWED_ORIGINS=https://g4-k-web.vercel.app` (the WS
+- [x] **6.3** In `config/reverb.php`, set `REVERB_ALLOWED_ORIGINS=https://g4-k-web.vercel.app` (the WS
       origin allowlist). Confirm `config/reverb.php` `options.host/port/scheme/useTLS` resolve from env.
       Cloud Run's HTTPS load balancer presents 443/TLS, so `REVERB_PORT=443` + `REVERB_SCHEME=https`.
 
