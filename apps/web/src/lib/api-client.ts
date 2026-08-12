@@ -2,7 +2,10 @@ import { useAuthStore, getAuthToken } from "./auth-store";
 import { offlineEngine } from "./offline-engine";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+if (API_BASE_URL.startsWith("http") && !API_BASE_URL.endsWith("/api")) {
+  API_BASE_URL = `${API_BASE_URL.replace(/\/$/, "")}/api`;
+}
 
 export function getToken(): string | null {
   return getAuthToken();
