@@ -79,13 +79,15 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     });
     // Attendance API
     Route::middleware('capability:attendance.clock-self')->group(function () {
-        Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
-        Route::post('/attendance/start-break', [AttendanceController::class, 'startBreak']);
-        Route::post('/attendance/break-start', [AttendanceController::class, 'startBreak']);
-        Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
-        Route::post('/attendance/break-end', [AttendanceController::class, 'endBreak']);
-        Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
-        Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
+        Route::middleware('throttle:15,1')->group(function () {
+            Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
+            Route::post('/attendance/start-break', [AttendanceController::class, 'startBreak']);
+            Route::post('/attendance/break-start', [AttendanceController::class, 'startBreak']);
+            Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
+            Route::post('/attendance/break-end', [AttendanceController::class, 'endBreak']);
+            Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+            Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
+        });
         Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);
         Route::get('/attendance/me/history', [AttendanceController::class, 'meHistory']);
         Route::get('/attendance/me/day/{date}', [AttendanceController::class, 'meDay']);
@@ -114,7 +116,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
     });
     // HR or Admin approve
-    Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware('capability:leave.approve-employee');
+    Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware(['capability:leave.approve-employee', 'throttle:15,1']);
     Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/admin/history', [LeaveRequestController::class, 'adminHistory'])->middleware('capability:leave.approve-employee');
@@ -145,7 +147,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/tasks/submitted', [TaskController::class, 'submitted']);
         Route::get('/tasks/{id}', [TaskController::class, 'show']);
     });
-    Route::middleware('capability:tasks.manage')->group(function () {
+    Route::middleware(['capability:tasks.manage', 'throttle:30,1'])->group(function () {
         Route::post('/tasks', [TaskController::class, 'store']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
@@ -179,9 +181,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Phase 8 API (Chat & Communication)
     Route::middleware('capability:chat.access')->group(function () {
         Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
-        Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
+        Route::middleware('throttle:30,1')->group(function () {
+            Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
+            Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+        });
         Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
-        Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
         Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
     });
 
@@ -212,13 +216,15 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Phase 10 API (Settings & Audit Logs)
     Route::middleware('capability:settings.manage')->group(function () {
         Route::get('/settings/grouped', [\App\Http\Controllers\SettingsController::class, 'index']);
-        Route::post('/settings/bulk', [\App\Http\Controllers\SettingsController::class, 'bulkUpdate']);
+        Route::middleware('throttle:15,1')->group(function () {
+            Route::post('/settings/bulk', [\App\Http\Controllers\SettingsController::class, 'bulkUpdate']);
+            Route::post('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'update']);
+            Route::post('/company-profile/logo', [\App\Http\Controllers\CompanyProfileController::class, 'uploadLogo']);
+            Route::put('/work-schedules/{id}', [\App\Http\Controllers\WorkScheduleController::class, 'update']);
+        });
         Route::post('/settings/mail/test', [\App\Http\Controllers\SettingsController::class, 'testMail']);
         Route::get('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'show']);
-        Route::post('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'update']);
-        Route::post('/company-profile/logo', [\App\Http\Controllers\CompanyProfileController::class, 'uploadLogo']);
         Route::get('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'index']);
-        Route::put('/work-schedules/{id}', [\App\Http\Controllers\WorkScheduleController::class, 'update']);
     });
     
     Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->middleware('capability:audit.view');
