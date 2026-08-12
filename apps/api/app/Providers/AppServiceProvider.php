@@ -8,6 +8,9 @@ use App\Events\ApprovalDecided;
 use App\Listeners\LeaveAttendanceIntegration;
 use App\Models\Notification;
 use App\Observers\NotificationObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ApprovalDecided::class, \App\Listeners\ProcessApprovalDecision::class);
         Event::listen(\App\Events\TaskCompleted::class, \App\Listeners\PostTaskCompletionToGlobalChat::class);
         Notification::observe(NotificationObserver::class);
+
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
 
         // Cache invalidation observers
         \App\Models\Project::observe(\App\Observers\CacheInvalidationObserver::class);
