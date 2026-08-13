@@ -5,11 +5,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme {
+  @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Sora', var(--font-sans);
+  --font-display: 'Nunito', var(--font-sans);
 
-  --color-primary: #1A1A2E;
+  --color-primary: #F97316;
   --color-primary-foreground: #FFFFFF;
 
   --color-accent-violet: var(--accent-violet);
@@ -62,21 +62,17 @@
   --color-input: var(--border);
   --color-ring: var(--text-primary);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
   --radius: var(--radius-md);
 
-  --shadow-e1: 0 1px 2px rgba(20,20,28,0.06);
-  --shadow-e2: 0 4px 12px rgba(20,20,28,0.08);
-  --shadow-e3: 0 8px 24px rgba(20,20,28,0.12);
-  --shadow-e4: 0 16px 48px rgba(20,20,28,0.18);
-}
-
-@utility bg-primary {
-  background-image: linear-gradient(135deg, #9400D3 0%, #8A2BE2 50%, #FF1493 100%);
+  --shadow-e1: 0 1px 2px rgba(15,16,26,0.04), inset 0 1px 0 rgba(255,255,255,0.1);
+  --shadow-e2: 0 4px 12px rgba(15,16,26,0.06), inset 0 1px 0 rgba(255,255,255,0.1);
+  --shadow-e3: 0 8px 24px rgba(15,16,26,0.08), inset 0 1px 0 rgba(255,255,255,0.1);
+  --shadow-e4: 0 16px 48px rgba(15,16,26,0.12), inset 0 1px 0 rgba(255,255,255,0.1);
 }
 
 @utility container {
@@ -131,17 +127,17 @@
     --ease-modal: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-sidebar: cubic-bezier(.4, 0, .2, 1);
 
-    --bg-app: #F7F7FB;
+    --bg-app: #f1f5f9; /* cloud-gray */
     --bg-surface: #FFFFFF;
-    --bg-surface-2: #FCFCFE;
+    --bg-surface-2: #f8fafc;
     --bg-elevated: #FFFFFF;
     
-    --border: #E6E6EF;
-    --border-strong: #D1D1DE;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
     
-    --text-primary: #14141C;
-    --text-secondary: #4B4B5C;
-    --text-muted: #8A8A9A;
+    --text-primary: #0f101a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
 
     --success: #16A34A;
     --info: #2563EB;

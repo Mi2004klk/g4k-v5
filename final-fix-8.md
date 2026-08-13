@@ -231,28 +231,28 @@ gaps to close (consolidated):
 Per final-fix-7 (Rainbow visual reskin, **no functional changes**) + the specific complaints:
 
 ### 5.1 Dashboard banner + role badge (explicit ask)
-- [ ] **5.1a** Remove the dummy gradient banner entirely; replace with a **clean, purposeful section, black
+- [✅] **5.1a** Remove the dummy gradient banner entirely; replace with a **clean, purposeful section, black
       text only** (Nunito heading + a one-line subtitle on white/cloud surface — no gradient, no colored fill).
-- [ ] **5.1b** **Remove the "Role: Employee" badge** completely (also fixes the wrong-role display).
+- [✅] **5.1b** **Remove the "Role: Employee" badge** completely (also fixes the wrong-role display).
 
 ### 5.2 Fix overlapping/broken layouts (root cause = mixed token use + Slot-crash fallbacks)
-- [ ] **5.2a** After RC-2 (Button fix), re-test every dashboard — most "overlapping/missing spacing" is the
+- [✅] **5.2a** After RC-2 (Button fix), re-test every dashboard — most "overlapping/missing spacing" is the
       ErrorBoundary fallback rendering half-broken widget frames.
-- [ ] **5.2b** Standardize spacing via the 4px scale + `PageContainer` on all 23 pages (final-fix-5 §B1).
-- [ ] **5.2c** Standardize radii (cards `rounded-2xl`, controls `rounded-xl`, CTAs pill) and surfaces
+- [✅] **5.2b** Standardize spacing via the 4px scale + `PageContainer` on all 23 pages (final-fix-5 §B1).
+- [✅] **5.2c** Standardize radii (cards `rounded-2xl`, controls `rounded-xl`, CTAs pill) and surfaces
       (`bg-surface`/`bg-card`, not raw `bg-white`) — kills the inconsistent alignment.
-- [ ] **5.2d** Responsive sweep at 360/414/768/1024/1280/1536 px; fix overflow + cramped columns; collapse
+- [✅] **5.2d** Responsive sweep at 360/414/768/1024/1280/1536 px; fix overflow + cramped columns; collapse
       filters to a sheet on mobile.
 
 ### 5.3 Component states (loading / empty / error)
-- [ ] **5.3a** Every widget/list: proper `Skeleton` while loading, `EmptyState` (illustration + CTA) when
+- [✅] **5.3a** Every widget/list: proper `Skeleton` while loading, `EmptyState` (illustration + CTA) when
       empty, and a **per-widget error + Retry** when its own endpoint fails (must not blank the page).
-- [ ] **5.3b** Add `error.tsx` to the ~22 dashboard routes missing one.
+- [✅] **5.3b** Add `error.tsx` to the ~22 dashboard routes missing one.
 
 ### 5.4 Design system (final-fix-7)
-- [ ] **5.4a** Token-first reskin: ink `#0f101a` on white + cloud-gray, **tangerine/hot-pink CTAs**, **Nunito**
+- [✅] **5.4a** Token-first reskin: ink `#0f101a` on white + cloud-gray, **tangerine/hot-pink CTAs**, **Nunito**
       display, pebble radii, inset-highlight elevation; keep semantic status colors + neutral focus ring.
-- [ ] **5.4b** Remove every random/decorative gradient except the primary-button hover animated border; remove
+- [✅] **5.4b** Remove every random/decorative gradient except the primary-button hover animated border; remove
       all `bg-gradient-brand` usages + the utility once auth heroes are switched to the Rainbow wash (auth only).
 
 ---

@@ -18,6 +18,7 @@ import {
 } from "@g4k/ui/components";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { PageContainer } from "@/components/layout/page-container";
 import { format } from "date-fns";
 import { StatusBadge } from "@g4k/ui/components/badge";
 
@@ -41,16 +42,10 @@ export default function PersonalAttendancePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
-            My Attendance & Timesheet
-          </h1>
-          <p className="text-xs text-neutral-500">
-            Track daily shift punches, total worked hours, overtime, and monthly attendance log.
-          </p>
-        </div>
+    <PageContainer
+      title="My Attendance & Timesheet"
+      description="Track daily shift punches, total worked hours, overtime, and monthly attendance log."
+      actions={
         <Dialog>
           <DialogTrigger asChild>
             <Button className="gap-2 shrink-0 h-11 px-4">
@@ -68,8 +63,9 @@ export default function PersonalAttendancePage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
+      }
+    >
+      <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-4 min-h-[300px]">
           <TimeClockWidget />
@@ -147,6 +143,6 @@ export default function PersonalAttendancePage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

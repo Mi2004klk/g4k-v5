@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils/cn";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -19,8 +19,8 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
+        sm: "h-9 rounded-full px-3",
+        lg: "h-11 rounded-full px-8",
         icon: "h-10 w-10",
       },
     },
@@ -44,7 +44,7 @@ const RainbowBorder = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
       <div
         ref={ref}
         className={cn(
-          "group relative inline-flex rounded-md p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(20,20,28,0.18)]",
+          "group relative inline-flex rounded-full p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(20,20,28,0.18)]",
           className
         )}
         {...props}
