@@ -49,23 +49,23 @@
 ## MODULE 1 — AUTHENTICATION & SESSION
 
 ### 1.1 Login flow
-- [ ] Login accepts email **or** employee ID + password.
-- [ ] Password show/hide toggle works.
-- [ ] Loading state on the Sign In button while submitting.
-- [ ] Invalid credentials → clear inline error, form retains values.
-- [ ] **Successful login → automatic redirect** to the correct dashboard/role-select/onboarding (fix 0.4).
-- [ ] No stuck loading after "Login successful".
+- [x] Login accepts email **or** employee ID + password.
+- [x] Password show/hide toggle works.
+- [x] Loading state on the Sign In button while submitting.
+- [x] Invalid credentials → clear inline error, form retains values.
+- [x] **Successful login → automatic redirect** to the correct dashboard/role-select/onboarding (fix 0.4).
+- [x] No stuck loading after "Login successful".
 
 ### 1.2 Session persistence
-- [ ] Token stored in Zustand `persist` (localStorage `g4k-auth`).
-- [ ] On refresh, `auth-guard.tsx` silently restores session via `/auth/refresh` (sends `X-Refresh-Token` header).
-- [ ] If refresh fails → redirect to `/login`.
-- [ ] If refresh succeeds → stay on the current page (no redirect loop).
+- [x] Token stored in Zustand `persist` (localStorage `g4k-auth`).
+- [x] On refresh, `auth-guard.tsx` silently restores session via `/auth/refresh` (sends `X-Refresh-Token` header).
+- [x] If refresh fails → redirect to `/login`.
+- [x] If refresh succeeds → stay on the current page (no redirect loop).
 
 ### 1.3 Role selection
-- [ ] Multi-role users see role-select screen after login.
-- [ ] Selecting a role calls `/auth/role-select` → new scoped token → redirect to dashboard.
-- [ ] Single-role users go straight to dashboard.
+- [x] Multi-role users see role-select screen after login.
+- [x] Selecting a role calls `/auth/role-select` → new scoped token → redirect to dashboard.
+- [x] Single-role users go straight to dashboard.
 
 ### 1.4 Logout
 - [ ] Clears token, refresh token, cookies.
