@@ -534,7 +534,7 @@ export default function UsersPage() {
             </div>
           ) : usersList.length === 0 ? (
             <div className="p-12">
-              <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." icon={<UsersIcon className="w-8 h-8 text-neutral-400" />} />
+              <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." icon={<AppIcon name="users" className="w-8 h-8 text-neutral-400" />} />
             </div>
           ) : (
             <div className="space-y-4">

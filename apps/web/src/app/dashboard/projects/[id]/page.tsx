@@ -92,7 +92,7 @@ export default function ProjectDetailPage() {
           </Button>
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
-              <Folder className="w-5 h-5 text-violet-600" />
+              <AppIcon name="archive" className=" w-5 h-5 text-violet-600" />
               {project ? project.name : <Skeleton className="h-6 w-48" />}
             </h1>
             <p className="text-sm text-neutral-500">
