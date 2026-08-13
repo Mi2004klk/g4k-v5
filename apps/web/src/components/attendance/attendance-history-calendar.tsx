@@ -17,7 +17,7 @@ import {
   isSameDay,
   parseISO,
 } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import {
   Button,
   Skeleton,
@@ -427,7 +427,7 @@ export function AttendanceHistoryCalendar({
               onClick={prevMonth}
               aria-label="Previous month"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <AppIcon name="chevronLeft" size="sm" />
             </Button>
             <Button
               variant="outline"
@@ -436,7 +436,7 @@ export function AttendanceHistoryCalendar({
               onClick={nextMonth}
               aria-label="Next month"
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <AppIcon name="chevronRight" size="sm" />
             </Button>
           </div>
         )}
@@ -522,7 +522,7 @@ function DayDetailContent({
   if (summaryDay.id === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 space-y-2 text-center">
-        <span className="text-3xl">🗓</span>
+        <AppIcon name="calendar" size="2xl" />
         <p className="text-sm font-medium text-neutral-500">No attendance record for this day.</p>
       </div>
     );

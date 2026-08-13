@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 
 import * as echarts from 'echarts/core';
@@ -124,7 +124,7 @@ export function TeamMemberTrendsGraph({ userId }: { userId: number }) {
       <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl">
-            <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+            <AppIcon name="loading" size="xl" className=" animate-spin text-violet-500" />
           </div>
         )}
         

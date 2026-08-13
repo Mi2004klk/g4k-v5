@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Download } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@g4k/ui/components";
@@ -142,7 +142,7 @@ export function AuditLogTable() {
           />
         </div>
         <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap">
-          <Download className="w-4 h-4 mr-2" />
+          <AppIcon name="download" className=" mr-2" />
           {isExporting ? "Queuing..." : "Export CSV"}
         </Button>
       </div>

@@ -4,7 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Button, Input, Checkbox, Combobox } from "@g4k/ui/components";
-import { Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 
 export const userSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -193,7 +193,7 @@ export function UserEditDialog({ isOpen, onOpenChange, user, departments, design
           <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isPending || !isValid}>
-              {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
               {isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>

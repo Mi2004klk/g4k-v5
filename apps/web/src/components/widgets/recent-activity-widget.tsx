@@ -4,7 +4,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
 import { formatDistanceToNow } from "date-fns";
-import { Activity, AlertTriangle, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
@@ -45,16 +45,16 @@ export function RecentActivityWidget() {
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              <AppIcon name="activity" className=" text-violet-600 dark:text-violet-400" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
               Recent Activity Feed
             </span>
-            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+            {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-6 bg-rose-50/50 dark:bg-rose-950/10 rounded-lg">
-          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
             Retry
@@ -78,19 +78,19 @@ export function RecentActivityWidget() {
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-            <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            <AppIcon name="activity" className=" text-violet-600 dark:text-violet-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             Recent Activity Feed
             <WidgetInfo summary="Relevant user activity across the system" />
           </span>
-          {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
       </div>
       <div className="flex-1 overflow-y-auto thin-scrollbar">
         {activities.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-            <Activity className="w-8 h-8 text-neutral-300 dark:text-neutral-700 mb-2" />
+            <AppIcon name="activity" size="2xl" className=" text-neutral-300 dark:text-neutral-700 mb-2" />
             <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">No recent activity</h4>
             <p className="text-xs text-neutral-400 mt-1">Activity will appear here once actions are taken.</p>
           </div>

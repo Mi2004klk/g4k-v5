@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Award, Edit2, Loader2, MoreVertical, Download, Trash2, UserX, UserCheck } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -168,7 +168,7 @@ export function DesignationsTab() {
       cell: ({ row }: any) => (
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
-            <Award className="w-4 h-4" />
+            <AppIcon name="award" />
           </div>
           <div>
             <span className="font-semibold text-neutral-900 dark:text-white block">
@@ -232,7 +232,7 @@ export function DesignationsTab() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
+                    <AppIcon name="more" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -242,7 +242,7 @@ export function DesignationsTab() {
                     reset({ name: desig.name, description: desig.description || "" }); 
                     setIsModalOpen(true); 
                   }}>
-                    <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
+                    <AppIcon name="edit" className=" mr-2 text-violet-600" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => {
@@ -252,11 +252,11 @@ export function DesignationsTab() {
                       setConfirmState({ isOpen: true, type: "deactivate", payload: desig });
                     }
                   }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
-                    {isInactive ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                    {isInactive ? <AppIcon name="userCheck" /> : <AppIcon name="userX" />}
                     {isInactive ? "Activate" : "Deactivate"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: desig })}>
-                    <Trash2 className="w-4 h-4 mr-2 text-rose-600" /> Delete
+                    <AppIcon name="trash" className=" mr-2 text-rose-600" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -274,12 +274,12 @@ export function DesignationsTab() {
       <div className="flex justify-end gap-2 mb-4">
         {isAdmin && (
           <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-            <Download className="w-4 h-4" /> Export
+            <AppIcon name="download" /> Export
           </Button>
         )}
         {isAdmin && (
           <Button onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow">
-            <Plus className="w-4 h-4" /> Add Designation
+            <AppIcon name="plus" /> Add Designation
           </Button>
         )}
       </div>
@@ -363,7 +363,7 @@ export function DesignationsTab() {
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {(createMutation.isPending || updateMutation.isPending) ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
                 {editingDesig ? "Update" : "Create"}
               </Button>
             </DialogFooter>

@@ -9,33 +9,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Users,
-  Clock,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  Building2,
-  Briefcase,
-  UserCircle,
-  CalendarDays,
-  FolderKanban,
-  CalendarCheck,
-  Megaphone,
-  BarChart3,
-  CheckSquare,
-  MessageSquare,
-  ShieldAlert,
-  Menu,
-  Star,
-  Rows3,
-  Rows2,
-  Check,
-  Command,
-  Monitor,
-} from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { SheetDescription, Button } from "@g4k/ui/components";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -68,18 +42,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/u
 
 export const navGroups = [
   { label: "Overview", items: [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Attendance & Time", href: "/dashboard/attendance", icon: CalendarCheck, capability: "attendance.clock-self" },
-    { name: "Projects & Tasks", href: "/dashboard/projects", icon: FolderKanban, capability: "projects.view" },
-    { name: "Communications", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
+    { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
+    { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance", capability: "attendance.clock-self" },
+    { name: "Projects & Tasks", href: "/dashboard/projects", icon: "projects", capability: "projects.view" },
+    { name: "Communications", href: "/dashboard/chat", icon: "chat", capability: "directory.send-message" },
   ]},
   { label: "Organization", items: [
-    { name: "Directory", href: "/dashboard/directory", icon: Users, capability: "directory.view" },
-    { name: "Employee Management", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
-    { name: "Team Attendance", href: "/dashboard/org/attendance", icon: Clock, capability: "hr.view-team-attendance" },
+    { name: "Directory", href: "/dashboard/directory", icon: "directory", capability: "directory.view" },
+    { name: "Employee Management", href: "/dashboard/org/users", icon: "directory", capability: "users.employee.manage" },
+    { name: "Team Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
   ]},
   { label: "Account", items: [
-    { name: "Settings & Profile", href: "/dashboard/profile", icon: Settings },
+    { name: "Settings & Profile", href: "/dashboard/profile", icon: "settings" },
   ]},
 ];
 
@@ -190,7 +164,7 @@ export default function DashboardLayout({
   if (isErrorCapabilities) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
-        <ShieldAlert className="w-12 h-12 text-rose-500" />
+        <AppIcon name="audit" size="hero" className=" text-rose-500" />
         <div className="text-center space-y-1">
           <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Session could not load</h2>
           <p className="text-sm text-neutral-500">We couldn't verify your permissions.</p>
@@ -254,12 +228,12 @@ export default function DashboardLayout({
               >
                 {sidebarState === "collapsed" ? (
                   <>
-                    <ChevronRight className="w-5 h-5 shrink-0" />
+                    <AppIcon name="chevronRight" size="lg" className=" shrink-0" />
                     {isHoverExpanded && <span className="ml-2 font-medium whitespace-nowrap">Expand</span>}
                   </>
                 ) : (
                   <>
-                    <ChevronLeft className="w-5 h-5 shrink-0" />
+                    <AppIcon name="chevronLeft" size="lg" className=" shrink-0" />
                     <span className="ml-2 font-medium whitespace-nowrap">Collapse</span>
                   </>
                 )}
@@ -272,7 +246,7 @@ export default function DashboardLayout({
                 )}
                 onClick={handleLogout}
               >
-                <LogOut className="w-4 h-4 text-rose-600 shrink-0" />
+                <AppIcon name="logout" className=" text-rose-600 shrink-0" />
                 {!isCollapsed && <span className="ml-2 font-medium whitespace-nowrap">Log out</span>}
               </Button>
             </div>
@@ -285,7 +259,7 @@ export default function DashboardLayout({
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="md:hidden shrink-0" aria-label="Toggle Menu">
-                      <Menu className="w-5 h-5" />
+                      <AppIcon name="menu" size="lg" />
                     </Button>
                   </SheetTrigger>
                     <SheetContent side="left" className="w-full sm:max-w-full h-full max-h-full p-0 flex flex-col bg-surface border-none transition-transform duration-[280ms] cubic-bezier(0.4,0,0.2,1)">
@@ -317,7 +291,7 @@ export default function DashboardLayout({
                           className="w-full justify-start text-xs text-neutral-600 dark:text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                           onClick={handleLogout}
                         >
-                          <LogOut className="w-4 h-4 text-rose-600" />
+                          <AppIcon name="logout" className=" text-rose-600" />
                           <span className="ml-2 font-medium">Log out</span>
                         </Button>
                       </div>
@@ -355,40 +329,40 @@ export default function DashboardLayout({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard/profile" prefetch={false} className="cursor-pointer gap-2">
-                        <UserCircle className="w-4 h-4 text-muted-foreground" />
+                        <AppIcon name="profile" className=" text-muted-foreground" />
                         My Profile
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/dashboard/settings" prefetch={false} className="cursor-pointer gap-2">
-                        <Settings className="w-4 h-4 text-muted-foreground" />
+                        <AppIcon name="settings" className=" text-muted-foreground" />
                         Settings
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Theme</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer gap-2">
-                      <Monitor className="w-4 h-4 text-muted-foreground" />
+                      <AppIcon name="computer" className=" text-muted-foreground" />
                       System Theme
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Density</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => setDensity("comfortable")} className="cursor-pointer gap-2">
-                      <Rows3 className="w-4 h-4 text-muted-foreground" />
+                      <AppIcon name="density" className=" text-muted-foreground" />
                       <span>Comfortable</span>
-                      {density === "comfortable" && <Check className="w-3 h-3 ml-auto text-primary" />}
+                      {density === "comfortable" && <AppIcon name="check" size="xs" className=" ml-auto text-primary" />}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setDensity("compact")} className="cursor-pointer gap-2">
-                      <Rows2 className="w-4 h-4 text-muted-foreground" />
+                      <AppIcon name="density" className=" text-muted-foreground" />
                       <span>Compact</span>
-                      {density === "compact" && <Check className="w-3 h-3 ml-auto text-primary" />}
+                      {density === "compact" && <AppIcon name="check" size="xs" className=" ml-auto text-primary" />}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => {
                         const event = new KeyboardEvent("keydown", { key: "/", ctrlKey: true });
                         document.dispatchEvent(event);
                       }} className="cursor-pointer gap-2">
-                      <Command className="w-4 h-4 text-muted-foreground" />
+                      <AppIcon name="command" className=" text-muted-foreground" />
                       Keyboard Shortcuts
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -396,7 +370,7 @@ export default function DashboardLayout({
                       onClick={handleLogout}
                       className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 dark:focus:bg-rose-950/40 cursor-pointer gap-2"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <AppIcon name="logout" />
                       Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -421,7 +395,7 @@ export default function DashboardLayout({
                   pathname === "/dashboard" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
-                <LayoutDashboard className="w-5 h-5 shrink-0" />
+                <AppIcon name="dashboard" size="lg" className=" shrink-0" />
                 <span>Dashboard</span>
               </Link>
 
@@ -434,7 +408,7 @@ export default function DashboardLayout({
                     pathname.startsWith("/dashboard/projects") ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                   )}
                 >
-                  <FolderKanban className="w-5 h-5 shrink-0" />
+                  <AppIcon name="projects" size="lg" className=" shrink-0" />
                   <span>Projects</span>
                 </Link>
               )}
@@ -446,7 +420,7 @@ export default function DashboardLayout({
                   title="My Attendance"
                   className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-emerald-600 text-white shadow-lg -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                 >
-                  <Clock className="w-6 h-6 shrink-0" />
+                  <AppIcon name="teamAttendance" size="xl" className=" shrink-0" />
                 </Link>
               )}
 
@@ -458,7 +432,7 @@ export default function DashboardLayout({
                   pathname.startsWith("/dashboard/chat") ? "text-pink-600 dark:text-pink-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
-                <MessageSquare className="w-5 h-5 shrink-0" />
+                <AppIcon name="chat" size="lg" className=" shrink-0" />
                 <span>Chat</span>
               </Link>
 
@@ -470,7 +444,7 @@ export default function DashboardLayout({
                   pathname === "/dashboard/profile" ? "text-cyan-600 dark:text-cyan-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
-                <UserCircle className="w-5 h-5 shrink-0" />
+                <AppIcon name="profile" size="lg" className=" shrink-0" />
                 <span>Profile</span>
               </Link>
             </nav>

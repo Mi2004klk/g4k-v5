@@ -2,7 +2,7 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Users, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 
 import { Card, Skeleton, Button, StatusBadge, Avatar, AvatarFallback } from "@g4k/ui/components";
@@ -27,12 +27,12 @@ export function HrTeamAttendanceWidget() {
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
-            <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <AppIcon name="directory" className=" text-emerald-600 dark:text-emerald-400" />
           </div>
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             Team Attendance
           </span>
-          {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+          {isFetching && !isPending && <AppIcon name="loading" size="xs" className=" animate-spin text-muted-foreground" />}
         </div>
         
         {totalCount > 0 && (
@@ -58,7 +58,7 @@ export function HrTeamAttendanceWidget() {
           </div>
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
-            <AlertCircle className="w-5 h-5 text-rose-400" />
+            <AppIcon name="error" size="lg" className=" text-rose-400" />
             <p className="text-xs font-medium text-rose-600">Failed to load team</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
@@ -100,7 +100,7 @@ export function HrTeamAttendanceWidget() {
           className="flex items-center justify-between w-full text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group transition-colors"
         >
           View Full Report
-          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          <AppIcon name="arrowRight" size="xs" className=" group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
     </Card>

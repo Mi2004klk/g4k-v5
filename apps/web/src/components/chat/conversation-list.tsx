@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { MessageSquare, Users, Globe, Hash } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
@@ -28,13 +28,13 @@ export function ConversationList({
   const getIcon = (scope: string) => {
     switch (scope) {
       case "global":
-        return <Globe className="w-4 h-4 text-violet-500" />;
+        return <AppIcon name="globe" className=" text-violet-500" />;
       case "project":
-        return <Hash className="w-4 h-4 text-blue-500" />;
+        return <AppIcon name="hash" className=" text-blue-500" />;
       case "group":
-        return <Users className="w-4 h-4 text-amber-500" />;
+        return <AppIcon name="directory" className=" text-amber-500" />;
       default:
-        return <MessageSquare className="w-4 h-4 text-emerald-500" />;
+        return <AppIcon name="chat" className=" text-emerald-500" />;
     }
   };
 

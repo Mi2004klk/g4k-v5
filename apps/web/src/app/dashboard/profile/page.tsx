@@ -4,32 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  User,
-  Phone,
-  Mail,
-  KeyRound,
-  Laptop,
-  Trash2,
-  Upload,
-  Loader2,
-  Eye,
-  Building2,
-  ExternalLink,
-  Calendar,
-  FileText,
-  CheckSquare,
-  Hash,
-  CalendarDays,
-  MapPin,
-  Briefcase,
-  AlertCircle,
-  CheckCircle2,
-  Shield,
-  EyeOff,
-  LayoutDashboard,
-  Settings
-} from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
@@ -254,7 +229,7 @@ export default function ProfilePage() {
       cell: ({ row }) => (
         <div className="flex flex-col min-w-[120px]">
           <div className="flex items-center gap-2 font-semibold text-foreground">
-            <Laptop className="w-4 h-4 text-brand-violet shrink-0" />
+            <AppIcon name="laptop" className=" text-brand-violet shrink-0" />
             <span className="truncate">{row.original.device_name || "Unknown Device"}</span>
           </div>
           {row.original.user_agent && (
@@ -311,7 +286,7 @@ export default function ProfilePage() {
               }}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium"
             >
-              <Trash2 className="w-4 h-4 mr-1" />
+              <AppIcon name="trash" className=" mr-1" />
               <span>Revoke</span>
             </Button>
           </div>
@@ -348,7 +323,7 @@ export default function ProfilePage() {
               onClick={() => setIsAvatarOpen(true)}
               className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-semibold gap-1 backdrop-blur-sm"
             >
-              <Upload className="w-4 h-4" />
+              <AppIcon name="upload" />
               <span>Upload</span>
             </button>
           </div>
@@ -361,15 +336,15 @@ export default function ProfilePage() {
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-sm font-sans mt-2">
                   <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
-                    <Hash className="w-4 h-4 mr-2 text-brand-violet/70" />
+                    <AppIcon name="hash" className=" mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-24" /> : (profile?.employee_id || "Employee ID: N/A")}
                   </div>
                   <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
-                    <Building2 className="w-4 h-4 mr-2 text-brand-violet/70" />
+                    <AppIcon name="building" className=" mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.department?.name || "No Department")}
                   </div>
                   <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
-                    <Briefcase className="w-4 h-4 mr-2 text-brand-violet/70" />
+                    <AppIcon name="briefcase" className=" mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.designation?.name || "No Designation")}
                   </div>
                 </div>
@@ -378,12 +353,12 @@ export default function ProfilePage() {
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-3 text-xs text-muted-foreground font-medium">
               <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-md border border-border shadow-e1">
-                <Mail className="w-3.5 h-3.5 text-brand-violet" />
+                <AppIcon name="mail" className=" .5 .5 text-brand-violet" />
                 {profile?.email}
               </span>
               {profile?.phone && (
                 <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-md border border-border shadow-e1">
-                  <Phone className="w-3.5 h-3.5 text-brand-violet" />
+                  <AppIcon name="phone" className=" .5 .5 text-brand-violet" />
                   {profile.phone}
                 </span>
               )}
@@ -397,7 +372,7 @@ export default function ProfilePage() {
         <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg shrink-0">
-              <Calendar className="w-6 h-6" />
+              <AppIcon name="calendar" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground">My Attendance (Recent)</h3>
@@ -412,7 +387,7 @@ export default function ProfilePage() {
         <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg shrink-0">
-              <FileText className="w-6 h-6" />
+              <AppIcon name="fileText" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground">My Leave Summary</h3>
@@ -426,7 +401,7 @@ export default function ProfilePage() {
         <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
             <div className="p-3 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg shrink-0">
-              <CheckSquare className="w-6 h-6" />
+              <AppIcon name="tasks" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground">My Active Tasks</h3>
@@ -444,7 +419,7 @@ export default function ProfilePage() {
         <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardHeader>
             <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-              <User className="w-4 h-4 text-brand-violet" />
+              <AppIcon name="profile" className=" text-brand-violet" />
               Personal & Contact Information
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground font-sans">
@@ -467,7 +442,7 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Designation</label>
-              <Select value={designationId} onValueChange={(v) => { setDesignationId(e.target.value)(v as any); }}>
+              <Select value={designationId} onValueChange={(v) => { setDesignationId(v); }}>
 <SelectTrigger className="w-full h-9">
 <SelectValue placeholder="Select Designation" />
 </SelectTrigger>
@@ -492,7 +467,7 @@ export default function ProfilePage() {
               className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 font-sans"
             >
               {updateProfileMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <AppIcon name="loading" className=" animate-spin animate-spin" />
               ) : (
                 "Save Personal Info"
               )}
@@ -505,7 +480,7 @@ export default function ProfilePage() {
            <Card className="border border-border shadow-e1 bg-card rounded-xl">
              <CardHeader>
                <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-                 <Eye className="w-4 h-4 text-brand-violet" />
+                 <AppIcon name="eye" className=" text-brand-violet" />
                  Privacy & Visibility
                </CardTitle>
                <CardDescription className="text-xs text-muted-foreground font-sans">
@@ -546,15 +521,24 @@ export default function ProfilePage() {
            <Card className="border border-border shadow-e1 bg-card rounded-xl">
              <CardHeader>
                <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-                 <KeyRound className="w-4 h-4 text-brand-violet" />
+                 <AppIcon name="key" className=" text-brand-violet" />
                  Security & Password
                </CardTitle>
                <CardDescription className="text-xs text-muted-foreground font-sans">
                  Change your password to maintain account security.
                </CardDescription>
              </CardHeader>
-             <CardContent className="space-y-4 text-xs font-sans">
-               <div>
+             <CardContent className="text-xs font-sans">
+               <form 
+                 className="space-y-4" 
+                 onSubmit={(e) => { 
+                   e.preventDefault(); 
+                   if (!changePasswordMutation.isPending && currentPassword && newPassword && confirmPassword) {
+                     changePasswordMutation.mutate(); 
+                   }
+                 }}
+               >
+                 <div>
                  <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Current Password</label>
                  <PasswordInput
                    placeholder="Current password"
@@ -592,11 +576,12 @@ export default function ProfilePage() {
                  className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 font-sans"
                >
                  {changePasswordMutation.isPending ? (
-                   <Loader2 className="w-4 h-4 animate-spin" />
+                   <AppIcon name="loading" className=" animate-spin animate-spin" />
                  ) : (
                    "Update Password"
                  )}
                </Button>
+               </form>
              </CardContent>
            </Card>
         </div>
@@ -608,7 +593,7 @@ export default function ProfilePage() {
         <CardHeader className="flex flex-row justify-between items-start pt-6">
           <div>
             <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-              <Building2 className="w-4 h-4 text-brand-violet" />
+              <AppIcon name="building" className=" text-brand-violet" />
               Company Information
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
@@ -617,7 +602,7 @@ export default function ProfilePage() {
           </div>
           {authUser?.active_role === 'super_admin' && (
             <Link href="/dashboard/settings" className="text-xs font-semibold text-brand-violet flex items-center gap-1 hover:underline">
-              Edit in Settings <ExternalLink className="w-3 h-3" />
+              Edit in Settings <AppIcon name="externalLink" />
             </Link>
           )}
         </CardHeader>
@@ -675,7 +660,7 @@ export default function ProfilePage() {
         <CardHeader className="flex flex-row justify-between items-start">
           <div>
             <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-              <Laptop className="w-4 h-4 text-brand-violet" />
+              <AppIcon name="laptop" className=" text-brand-violet" />
               Active Device Sessions
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
@@ -746,7 +731,7 @@ export default function ProfilePage() {
               className="bg-neutral-900 hover:bg-neutral-800 text-white font-sans shadow-e1"
             >
               {uploadAvatarMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <AppIcon name="loading" className=" animate-spin animate-spin" />
               ) : (
                 "Upload Photo"
               )}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import Link from "next/link";
-import { TrendingUp, CalendarDays, AlertCircle, Search, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
@@ -143,7 +143,7 @@ export function HrAttendanceTable() {
               className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all text-muted-foreground hover:text-violet-500"
               title="View Trends"
             >
-              <TrendingUp className="w-4 h-4" />
+              <AppIcon name="trendingUp" />
             </button>
             {isOpenShift && (
               <button 
@@ -158,7 +158,7 @@ export function HrAttendanceTable() {
                 title="Open shift - missing clock out"
               >
                 <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
-                  <AlertCircle className="w-3 h-3" />
+                  <AppIcon name="error" size="xs" />
                   OPEN SHIFT
                 </StatusBadge>
               </button>
@@ -236,7 +236,7 @@ export function HrAttendanceTable() {
           <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
             <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-50">
               <Link href={`/dashboard/org/leave?user_id=${row.original.user_id}`}>
-                <CalendarDays className="w-4 h-4 mr-1" />
+                <AppIcon name="calendar" className=" mr-1" />
                 Leave History
               </Link>
             </Button>
@@ -250,7 +250,7 @@ export function HrAttendanceTable() {
                 setSheetTab("trends");
               }}
             >
-              <TrendingUp className="w-4 h-4 mr-1" />
+              <AppIcon name="trendingUp" className=" mr-1" />
               Trends
             </Button>
           </div>
@@ -310,7 +310,7 @@ export function HrAttendanceTable() {
       <div className="bg-card rounded-xl border border-border overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
-            <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+            <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />
           </div>
         )}
         <DataTable 

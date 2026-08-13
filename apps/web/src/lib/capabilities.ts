@@ -20,7 +20,7 @@ export function useCapabilities() {
         }
         return res.capabilities;
       } catch (err) {
-        return [];
+        throw err;
       }
     },
     enabled: !!token,

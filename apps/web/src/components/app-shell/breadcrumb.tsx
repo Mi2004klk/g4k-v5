@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Home } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { cn } from "@/lib/utils";
 
 export function Breadcrumb() {
@@ -17,7 +17,7 @@ export function Breadcrumb() {
         href="/dashboard"
         className="hover:text-neutral-900 dark:hover:text-white flex items-center gap-1 font-medium shrink-0"
       >
-        <Home className="w-3.5 h-3.5 shrink-0" />
+        <AppIcon name="home" size="sm" className=" shrink-0" />
         <span>Dashboard</span>
       </Link>
 
@@ -29,7 +29,7 @@ export function Breadcrumb() {
 
         return (
           <div key={url} className="flex items-center gap-1 capitalize min-w-0">
-            <ChevronRight className="w-3 h-3 text-neutral-400 shrink-0" />
+            <AppIcon name="chevronRight" size="xs" className=" text-neutral-400 shrink-0" />
             <Link
               href={url}
               className={cn(

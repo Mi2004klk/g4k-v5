@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
-import { Clock, FileEdit, Activity } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage, Skeleton, EmptyState } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
@@ -48,7 +48,7 @@ export function HrActivityFeedWidget() {
           type: "late",
           message: "Clocked in late",
           timestamp: member.clock_in,
-          icon: Clock,
+          icon: "teamAttendance",
           color: "text-amber-500",
           bg: "bg-amber-100 dark:bg-amber-950/30",
         });
@@ -62,7 +62,7 @@ export function HrActivityFeedWidget() {
           type: "open_shift",
           message: "Shift currently open",
           timestamp: member.clock_in,
-          icon: Activity,
+          icon: "activity",
           color: "text-emerald-500",
           bg: "bg-emerald-100 dark:bg-emerald-950/30",
         });
@@ -78,7 +78,7 @@ export function HrActivityFeedWidget() {
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-            <Activity className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            <AppIcon name="activity" className=" text-violet-600 dark:text-violet-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Team Activity Feed
@@ -112,7 +112,7 @@ export function HrActivityFeedWidget() {
 
         {!isLoading && !error && activities.length === 0 && (
           <EmptyState 
-            icon={<Activity className="w-6 h-6" />} 
+            icon={<AppIcon name="activity" size="xl" />} 
             title="No recent anomalies"
             description="All attendance activities are looking normal."
           />
@@ -148,7 +148,7 @@ export function HrActivityFeedWidget() {
       <div className="pt-3 mt-auto">
         <Link href="/dashboard/org/attendance" className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 flex items-center justify-between w-full group transition-colors">
           View All Activity
-          <Activity className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          <AppIcon name="activity" size="xs" className=" group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Skeleton, StatusBadge, Button } from "@g4k/ui/components";
-import {  ClipboardList, ArrowRight, CheckCircle2 , AlertTriangle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import { safeFromNow } from "@/lib/format";
 
@@ -39,7 +39,7 @@ export function EmployeeApprovalStatusWidget() {
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
-          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load status</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
             Retry
@@ -49,7 +49,7 @@ export function EmployeeApprovalStatusWidget() {
     );
   }
 
-  const tasks = data?.data?.slice(0, 3) || [];
+  const tasks = (Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : [])).slice(0, 3);
 
   return (
     <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
@@ -57,14 +57,14 @@ export function EmployeeApprovalStatusWidget() {
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
-              <ClipboardList className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <AppIcon name="clipboard" className=" text-blue-600 dark:text-blue-400" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
               Approval Status
             </span>
           </div>
           <Link href="/dashboard/tasks" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
-            View All <ArrowRight className="w-3 h-3" />
+            View All <AppIcon name="arrowRight" size="xs" />
           </Link>
         </div>
 
@@ -78,7 +78,7 @@ export function EmployeeApprovalStatusWidget() {
               <div key={task.id} className="flex flex-col p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 gap-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                    <AppIcon name="success" size="sm" className=" text-neutral-400 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 truncate">
                         {task.title}

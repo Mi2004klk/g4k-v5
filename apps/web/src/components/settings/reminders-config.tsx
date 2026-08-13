@@ -7,7 +7,7 @@ import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Save } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
 export function RemindersConfig() {
@@ -98,7 +98,7 @@ export function RemindersConfig() {
           </div>
 
           <Button type="submit" disabled={updateMutation.isPending} className="mt-4">
-            <Save className="w-4 h-4 mr-2" />
+            <AppIcon name="save" className=" mr-2" />
             {updateMutation.isPending ? "Saving..." : "Save Settings"}
           </Button>
         </form>

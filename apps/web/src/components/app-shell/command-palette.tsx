@@ -3,24 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import {
-  LayoutDashboard,
-  Users,
-  Clock,
-  Settings,
-  FolderKanban,
-  UserCircle,
-  Building2,
-  Briefcase,
-  Moon,
-  Sun,
-  Laptop,
-  Play,
-  Coffee,
-  Square,
-  FileEdit,
-  Download
-} from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useTimerStore } from "@/stores/timer-store";
 import { offlineEngine } from "@/lib/offline-engine";
@@ -93,7 +76,7 @@ export function CommandPalette() {
               <CommandItem key={`${item.type}-${item.id}`} onSelect={() => runCommand(() => router.push(item.url))}>
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center">
-                    <UserCircle className="w-4 h-4 mr-2 opacity-70" />
+                    <AppIcon name="profile" className=" mr-2 opacity-70" />
                     <div className="flex flex-col">
                       <span className="text-sm">{item.title}</span>
                       {item.subtitle && <span className="text-xs text-muted-foreground">{item.subtitle}</span>}
@@ -109,17 +92,17 @@ export function CommandPalette() {
         {isHrOrAdmin && (
           <CommandGroup heading="HR Actions">
             <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/attendance"))}>
-              <Users className="w-4 h-4 mr-2" />
+              <AppIcon name="directory" className=" mr-2" />
               <span>View Team Attendance</span>
             </CommandItem>
             {canCorrect && (
               <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/attendance?correction=true"))}>
-                <FileEdit className="w-4 h-4 mr-2" />
+                <AppIcon name="edit" className=" mr-2" />
                 <span>Correct Attendance</span>
               </CommandItem>
             )}
             <CommandItem onSelect={() => runCommand(handleExport)}>
-              <Download className="w-4 h-4 mr-2" />
+              <AppIcon name="download" className=" mr-2" />
               <span>Export Team Report</span>
             </CommandItem>
           </CommandGroup>
@@ -133,7 +116,7 @@ export function CommandPalette() {
               try { await offlineEngine.recordPunch("clock_in", ts); toast.success("Clocked In"); } 
               catch(err: any) { toast.error(err.message); }
             })}>
-              <Play className="w-4 h-4 mr-2 text-emerald-500" />
+              <AppIcon name="play" className=" mr-2 text-emerald-500" />
               <span>Clock In</span>
             </CommandItem>
           )}
@@ -144,7 +127,7 @@ export function CommandPalette() {
               try { await offlineEngine.recordPunch("break_start", ts); toast.success("Break Started"); } 
               catch(err: any) { toast.error(err.message); }
             })}>
-              <Coffee className="w-4 h-4 mr-2 text-amber-500" />
+              <AppIcon name="break" className=" mr-2 text-amber-500" />
               <span>Start Break</span>
             </CommandItem>
           )}
@@ -156,7 +139,7 @@ export function CommandPalette() {
               try { await offlineEngine.recordPunch("break_end", ts); toast.success("Break Ended"); } 
               catch(err: any) { toast.error(err.message); }
             })}>
-              <Play className="w-4 h-4 mr-2 text-emerald-500" />
+              <AppIcon name="play" className=" mr-2 text-emerald-500" />
               <span>End Break & Resume Work</span>
             </CommandItem>
           )}
@@ -172,16 +155,16 @@ export function CommandPalette() {
               try { await offlineEngine.recordPunch("clock_out", ts); toast.success("Clocked Out"); } 
               catch(err: any) { toast.error(err.message); }
             })}>
-              <Square className="w-4 h-4 mr-2 text-rose-600" />
+              <AppIcon name="stop" className=" mr-2 text-rose-600" />
               <span>Clock Out</span>
             </CommandItem>
           )}
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/attendance"))}>
-            <Clock className="w-4 h-4 mr-2" />
+            <AppIcon name="teamAttendance" className=" mr-2" />
             <span>View Attendance History</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/attendance?tab=leave"))}>
-            <Coffee className="w-4 h-4 mr-2 text-violet-500" />
+            <AppIcon name="break" className=" mr-2 text-violet-500" />
             <span>Request Leave</span>
           </CommandItem>
         </CommandGroup>
@@ -189,7 +172,7 @@ export function CommandPalette() {
         {isHrOrAdmin && (
           <CommandGroup heading="Admin Actions">
             <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/attendance?tab=all"))}>
-              <Users className="w-4 h-4 mr-2 text-emerald-500" />
+              <AppIcon name="directory" className=" mr-2 text-emerald-500" />
               <span>View Company Attendance</span>
             </CommandItem>
           </CommandGroup>
@@ -197,47 +180,47 @@ export function CommandPalette() {
 
         <CommandGroup heading="Navigation">
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard"))}>
-            <LayoutDashboard className="w-4 h-4 mr-2" />
+            <AppIcon name="dashboard" className=" mr-2" />
             <span>Dashboard</span>
             <CommandShortcut>⌘D</CommandShortcut>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/directory"))}>
-            <Users className="w-4 h-4 mr-2" />
+            <AppIcon name="directory" className=" mr-2" />
             <span>Employee Directory</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users"))}>
-            <Users className="w-4 h-4 mr-2" />
+            <AppIcon name="directory" className=" mr-2" />
             <span>User Accounts Management</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users?tab=departments"))}>
-            <Building2 className="w-4 h-4 mr-2" />
+            <AppIcon name="building" className=" mr-2" />
             <span>Departments & Teams</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users?tab=designations"))}>
-            <Briefcase className="w-4 h-4 mr-2" />
+            <AppIcon name="briefcase" className=" mr-2" />
             <span>Designations Master</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/profile"))}>
-            <UserCircle className="w-4 h-4 mr-2" />
+            <AppIcon name="profile" className=" mr-2" />
             <span>My Profile</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/profile?tab=settings"))}>
-            <Settings className="w-4 h-4 mr-2" />
+            <AppIcon name="settings" className=" mr-2" />
             <span>Admin Settings</span>
           </CommandItem>
         </CommandGroup>
 
         <CommandGroup heading="Theme Controls">
           <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
-            <Sun className="w-4 h-4 mr-2" />
+            <AppIcon name="sun" className=" mr-2" />
             <span>Switch to Light Theme</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>
-            <Moon className="w-4 h-4 mr-2" />
+            <AppIcon name="moon" className=" mr-2" />
             <span>Switch to Dark Theme</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => setTheme("system"))}>
-            <Laptop className="w-4 h-4 mr-2" />
+            <AppIcon name="laptop" className=" mr-2" />
             <span>Use System Theme</span>
           </CommandItem>
         </CommandGroup>

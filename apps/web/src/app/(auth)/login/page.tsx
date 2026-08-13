@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Info } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 
@@ -189,7 +189,7 @@ export default function LoginPage() {
                 <TooltipTrigger asChild>
                   <button type="button" aria-label="System info"
                           className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors">
-                    <Info className="w-3.5 h-3.5" />
+                    <AppIcon name="info" size="sm" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">

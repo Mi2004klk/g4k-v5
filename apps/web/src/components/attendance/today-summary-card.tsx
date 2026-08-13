@@ -3,7 +3,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, StatusBadge } from "@g4k/ui/components";
-import { Clock, Coffee, LogOut, Info, AlertTriangle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
@@ -85,7 +85,7 @@ export function TodaySummaryCard() {
     <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800 flex flex-row items-center justify-between">
         <CardTitle className="text-base font-bold flex items-center gap-2">
-          <Info className="w-4 h-4 text-emerald-600" />
+          <AppIcon name="info" className=" text-emerald-600" />
           Today's Summary
         </CardTitle>
         {getStatusBadge()}
@@ -94,7 +94,7 @@ export function TodaySummaryCard() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-neutral-500">
-              <Clock className="w-4 h-4" />
+              <AppIcon name="teamAttendance" />
               <span className="text-sm font-medium">Clock In</span>
             </div>
             <span className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -105,7 +105,7 @@ export function TodaySummaryCard() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-neutral-500">
-                <Coffee className="w-4 h-4" />
+                <AppIcon name="break" />
                 <span className="text-sm font-medium">Break Duration</span>
               </div>
               <span className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -130,7 +130,7 @@ export function TodaySummaryCard() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-neutral-500">
-              <LogOut className="w-4 h-4" />
+              <AppIcon name="logout" />
               <span className="text-sm font-medium">Clock Out</span>
             </div>
             <span className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -140,7 +140,7 @@ export function TodaySummaryCard() {
           
           {isLate && (
             <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
+              <AppIcon name="warning" className=" text-amber-600 mt-0.5" />
               <div>
                 <p className="text-xs font-bold text-amber-700 dark:text-amber-500">Late Arrival</p>
                 <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
@@ -152,7 +152,7 @@ export function TodaySummaryCard() {
           
           {day?.clock_in && !isLate && (
              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center">
-                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-500">On Time Arrival ✓</span>
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-1">On Time Arrival <AppIcon name="check" size="xs" /></span>
              </div>
           )}
 

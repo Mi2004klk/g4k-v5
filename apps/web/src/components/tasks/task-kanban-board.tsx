@@ -15,7 +15,7 @@ import {
   DragStartEvent,
 } from "@dnd-kit/core";
 import { format } from "date-fns";
-import { Clock, Trash2, Edit } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
 import {
   ContextMenu,
@@ -83,7 +83,7 @@ function TaskCard({
 
         <div className="flex items-center justify-between pt-2 text-[10px] text-neutral-400 border-t border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
+            <AppIcon name="teamAttendance" size="xs" />
             <span>{task.due_date ? format(new Date(task.due_date), "MMM d") : "No due date"}</span>
           </div>
 
@@ -127,7 +127,7 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
           </ContextMenuTrigger>
           <ContextMenuContent className="w-48">
             <ContextMenuItem onClick={() => onTaskSelect(task)}>
-              <Edit className="w-4 h-4 mr-2" /> View / Edit
+              <AppIcon name="edit" className=" mr-2" /> View / Edit
             </ContextMenuItem>
             <ContextMenuSeparator />
             <div className="px-2 py-1.5 text-xs font-semibold text-neutral-500">Change Status</div>
@@ -145,7 +145,7 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
               className="text-destructive focus:bg-destructive/10 focus:text-destructive"
               onClick={() => setIsDeleteOpen(true)}
             >
-              <Trash2 className="w-4 h-4 mr-2" /> Delete Task
+              <AppIcon name="trash" className=" mr-2" /> Delete Task
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>

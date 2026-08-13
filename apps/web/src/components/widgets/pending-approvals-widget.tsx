@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { ClipboardList, Check, X, AlertTriangle, Calendar, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, ConfirmDialog, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
@@ -42,13 +42,13 @@ export function PendingApprovalsWidget() {
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
-            <ClipboardList className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <AppIcon name="clipboard" className=" text-amber-600 dark:text-amber-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             Pending Approvals
             <WidgetInfo summary="Leaves, Tasks, and Projects awaiting your review" />
           </span>
-          {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
         <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold">
           {requests.length}
@@ -73,7 +73,7 @@ export function PendingApprovalsWidget() {
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30 min-h-[150px]">
-            <AlertTriangle className="w-6 h-6 text-rose-400" />
+            <AppIcon name="warning" size="xl" className=" text-rose-400" />
             <p className="text-xs font-medium text-rose-600">Failed to load requests</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
@@ -118,7 +118,7 @@ export function PendingApprovalsWidget() {
                                 aria-label="Approve Request"
                                 className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-colors"
                               >
-                                <Check className="w-3.5 h-3.5" />
+                                <AppIcon name="check" size="sm" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent className="text-xs">Approve Request</TooltipContent>
@@ -133,7 +133,7 @@ export function PendingApprovalsWidget() {
                                 aria-label="Reject Request"
                                 className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900 transition-colors"
                               >
-                                <X className="w-3.5 h-3.5" />
+                                <AppIcon name="close" size="sm" />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent className="text-xs">Reject Request</TooltipContent>

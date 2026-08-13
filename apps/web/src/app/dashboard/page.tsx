@@ -13,19 +13,13 @@ import { format } from "date-fns";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { getGreeting } from "@/lib/greeting";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { HrTeamAttendanceWidget } from "@/components/dashboard/hr-team-attendance-widget";
 import { HrActivityFeedWidget } from "@/components/attendance/hr-activity-feed-widget";
-import {
-  Users,
-  FolderKanban,
-  CheckCircle2,
-  Clock,
-  ClipboardList
-} from "lucide-react";
+
 import Link from "next/link";
 import { RecentActivityWidget } from "@/components/widgets/recent-activity-widget";
 import { EmptyState } from "@g4k/ui/components";
@@ -85,14 +79,14 @@ export default function DashboardPage() {
         {
           id: "total-employees",
           component: (
-            <MetricWidget title="Total Employees" metricKey="total_employees" icon={Users} color="indigo" breakdown={true} />
+            <MetricWidget title="Total Employees" metricKey="total_employees" icon={"directory"} color="indigo" breakdown={true} />
           ),
           defaultLayout: responsiveLayout({ x: 0, y: 3, w: 3, h: 2 }),
         },
         {
           id: "active-projects",
           component: (
-            <MetricWidget title="Active Projects" metricKey="active_projects" icon={FolderKanban} color="emerald" subtitle="In progress" />
+            <MetricWidget title="Active Projects" metricKey="active_projects" icon={"projects"} color="emerald" subtitle="In progress" />
           ),
           defaultLayout: responsiveLayout({ x: 3, y: 3, w: 3, h: 2 }),
         },
@@ -148,7 +142,7 @@ export default function DashboardPage() {
         },
         {
           id: "active-projects",
-          component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={ClipboardList} color="blue" subtitle="Ongoing projects" />,
+          component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={"clipboard"} color="blue" subtitle="Ongoing projects" />,
           defaultLayout: responsiveLayout({ x: 8, y: 3, w: 4, h: 2 }),
         },
         {
@@ -183,12 +177,12 @@ export default function DashboardPage() {
       },
       {
         id: "active-projects",
-        component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={ClipboardList} color="blue" subtitle="Projects you're in" />,
+        component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={"clipboard"} color="blue" subtitle="Projects you're in" />,
         defaultLayout: responsiveLayout({ x: 0, y: 3, w: 2, h: 2 }),
       },
       {
         id: "pending-tasks",
-        component: <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={ClipboardList} color="amber" subtitle="Tasks assigned to you" />,
+        component: <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={"clipboard"} color="amber" subtitle="Tasks assigned to you" />,
         defaultLayout: responsiveLayout({ x: 2, y: 3, w: 2, h: 2 }),
       },
       {
@@ -230,7 +224,7 @@ export default function DashboardPage() {
   if (!activeRole) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+        <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
       </div>
     );
   }

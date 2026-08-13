@@ -7,7 +7,7 @@ import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Save, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -173,7 +173,7 @@ export function PoliciesConfig() {
           </div>
 
           <Button type="submit" disabled={updateMutation.isPending || !passwordForm.formState.isValid} className="mt-4">
-            {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
             {updateMutation.isPending ? "Saving..." : "Save Policy"}
           </Button>
         </form>
@@ -209,7 +209,7 @@ export function PoliciesConfig() {
             </div>
 
             <Button type="submit" disabled={updateMutation.isPending || !sessionForm.formState.isValid} className="mt-4">
-              {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
               {updateMutation.isPending ? "Saving..." : "Save Rules"}
             </Button>
           </form>

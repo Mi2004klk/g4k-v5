@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -258,7 +258,7 @@ export function SettingsTabs() {
               </div>
 
               <Button type="submit" disabled={updateProfileMutation.isPending || !profileForm.formState.isValid}>
-                {updateProfileMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                {updateProfileMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
                 {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
               </Button>
             </form>
@@ -363,7 +363,7 @@ export function SettingsTabs() {
               </div>
 
               <Button type="submit" disabled={updateScheduleMutation.isPending || !scheduleForm.formState.isValid} size="sm" className="gap-2 mt-2">
-                {updateScheduleMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4" />}
+                {updateScheduleMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" />}
                 {updateScheduleMutation.isPending ? "Saving..." : "Save Schedule Rules"}
               </Button>
             </form>

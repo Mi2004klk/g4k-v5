@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Loader2, Clock, CheckCircle2, MonitorSmartphone, Coffee, AlertCircle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import {
   Sheet,
@@ -104,7 +104,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
               <EmptyState
                 title="No Attendance Data"
                 description="There are no punch records for this employee on this date."
-                icon={<Clock className="w-8 h-8 text-neutral-300" />}
+                icon={<AppIcon name="teamAttendance" size="2xl" className=" text-neutral-300" />}
               />
             ) : (
               <div className="space-y-8">
@@ -127,7 +127,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                 <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-neutral-500">
-                      <Coffee className="w-4 h-4" />
+                      <AppIcon name="break" />
                       <span className="text-sm font-medium">Break Duration</span>
                     </div>
                     <span className="text-sm font-bold text-neutral-900 dark:text-white">
@@ -150,7 +150,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                 </div>
                 {day?.late_minutes > 0 && (
                   <div className="bg-amber-100/50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-3 rounded-lg border border-amber-200 dark:border-amber-800/50 text-sm font-medium flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
+                    <AppIcon name="error" />
                     Late by {day.late_minutes}m
                   </div>
                 )}
@@ -169,9 +169,9 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                           <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 bg-card dark:bg-neutral-950 shrink-0 md:order-1 shadow-e1 hover:shadow-e2 transition-shadow duration-150 z-10 ${
                             isClockIn ? 'border-emerald-500' : isClockOut ? 'border-rose-500' : 'border-amber-400'
                           }`}>
-                            {isClockIn && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                            {isClockIn && <AppIcon name="success" size="xs" className=" text-emerald-500" />}
                             {isClockOut && <div className="w-2 h-2 bg-rose-500 rounded-sm" />}
-                            {(isBreakStart || isBreakEnd) && <Clock className="w-3 h-3 text-amber-500" />}
+                            {(isBreakStart || isBreakEnd) && <AppIcon name="teamAttendance" size="xs" className=" text-amber-500" />}
                           </div>
                           
                           <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] px-4">
@@ -199,7 +199,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                               
                               {event.device_meta && (
                                 <div className="flex items-center gap-1.5 mt-2 text-[10px] text-neutral-400 font-medium bg-neutral-50 dark:bg-neutral-950 px-2 py-1 rounded-md w-fit">
-                                  <MonitorSmartphone className="w-3 h-3" />
+                                  <AppIcon name="devices" size="xs" />
                                   {event.device_meta.platform} • {event.device_meta.ip}
                                 </div>
                               )}
@@ -217,7 +217,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
           <TabsContent value="history" className="mt-0 h-[400px]">
             {isLoadingHistory ? (
               <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+                <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
               </div>
             ) : (
               <AttendanceHistoryCalendar 

@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  CircleCheck,
-  Info,
-  LoaderCircle,
-  OctagonX,
-  TriangleAlert,
-} from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 import { useTheme } from "next-themes"
 import { Toaster as Sonner } from "sonner"
 
@@ -23,11 +17,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
       duration={4000}
       richColors
       icons={{
-        success: <CircleCheck className="h-4 w-4" />,
-        info: <Info className="h-4 w-4" />,
-        warning: <TriangleAlert className="h-4 w-4" />,
-        error: <OctagonX className="h-4 w-4" />,
-        loading: <LoaderCircle className="h-4 w-4 animate-spin" />,
+        success: <AppIcon name="success" />,
+        info: <AppIcon name="info" />,
+        warning: <AppIcon name="warning" />,
+        error: <AppIcon name="error" />,
+        loading: <AppIcon name="loading" className=" animate-spin" />,
       }}
       toastOptions={{
         classNames: {

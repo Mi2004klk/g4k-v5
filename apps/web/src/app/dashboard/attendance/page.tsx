@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Plus, Calendar as CalendarIcon } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { TodaySummaryCard } from "@/components/attendance/today-summary-card";
@@ -57,7 +57,7 @@ export default function PersonalAttendancePage() {
         <Dialog>
           <DialogTrigger asChild>
             <Button className="gap-2 shrink-0 h-11 px-4">
-              <Plus className="w-4 h-4" />
+              <AppIcon name="plus" />
               Request Leave
             </Button>
           </DialogTrigger>
@@ -94,7 +94,7 @@ export default function PersonalAttendancePage() {
             <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-violet-600" />
+                  <AppIcon name="calendar" className=" text-violet-600" />
                   Recent Shift Log
                 </CardTitle>
                 <Dialog>

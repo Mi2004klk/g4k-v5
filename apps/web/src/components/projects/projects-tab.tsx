@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { FolderPlus, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
@@ -79,7 +79,7 @@ export function ProjectsTab() {
         </div>
       ) : projects.length === 0 ? (
         <EmptyState
-          icon={<FolderPlus className="w-12 h-12 text-neutral-300" />}
+          icon={<AppIcon name="plus" />}
           title="No projects found"
           description="Get started by creating your first project."
         />

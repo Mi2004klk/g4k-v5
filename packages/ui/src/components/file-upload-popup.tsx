@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { UploadCloud, X, File as FileIcon, Loader2 } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 
 import { cn } from "../utils/cn"
 import { Button } from "./button"
@@ -151,7 +151,7 @@ export function FileUploadPopup({
                 }
               }}
             >
-              <UploadCloud className="h-8 w-8 text-muted-foreground" />
+              <AppIcon name="upload" size="2xl" className=" text-muted-foreground" />
               <p className="text-sm font-medium text-center">
                 Click to upload or drag and drop
               </p>
@@ -178,7 +178,7 @@ export function FileUploadPopup({
                   setPreviewUrl(null)
                 }}
               >
-                <X className="h-4 w-4" />
+                <AppIcon name="close" />
               </Button>
 
               {previewUrl ? (
@@ -190,7 +190,7 @@ export function FileUploadPopup({
                 />
               ) : (
                 <div className="flex aspect-video w-full flex-col items-center justify-center gap-2">
-                  <FileIcon className="h-10 w-10 text-muted-foreground" />
+                  <AppIcon name="file" className=" text-muted-foreground" />
                   <p className="text-sm font-medium">{file.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
@@ -208,7 +208,7 @@ export function FileUploadPopup({
             Cancel
           </Button>
           <Button onClick={handleConfirm} disabled={!file || isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && <AppIcon name="loading" className="mr-2 animate-spin" />}
             {isLoading ? "Uploading..." : "Upload"}
           </Button>
         </DialogFooter>

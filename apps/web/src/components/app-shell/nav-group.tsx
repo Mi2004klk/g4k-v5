@@ -2,7 +2,7 @@ import { useState, useEffect, memo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Star } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { hasCapability } from "@/lib/capabilities";
 import { useAuthStore } from "@/lib/auth-store";
 import { useQueryClient } from "@tanstack/react-query";
@@ -79,9 +79,11 @@ export const NavItem = memo(function NavItem({
         <div className={cn(
           "w-8 h-8 rounded-md flex items-center justify-center shrink-0 transition-colors bg-transparent"
         )}>
-          <item.icon
+          <AppIcon
+            name={item.icon}
+            size="md"
             className={cn(
-              "w-5 h-5 shrink-0 transition-colors stroke-[2.5px]",
+              "shrink-0 transition-colors",
               isDisabled
                 ? "text-neutral-400 dark:text-neutral-600"
                 : isActive

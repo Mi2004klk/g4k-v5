@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase, AlertCircle, Clock, FileEdit, X, Trash2, CheckCheck } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
@@ -145,19 +145,19 @@ export function NotificationsBell() {
   const getIcon = (type: string) => {
     switch (type) {
       case "leave_decision":
-        return <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />;
+        return <AppIcon name="success" className=" text-emerald-500 shrink-0" />;
       case "task_assigned":
-        return <Briefcase className="w-4 h-4 text-violet-500 shrink-0" />;
+        return <AppIcon name="briefcase" className=" text-violet-500 shrink-0" />;
       case "message":
-        return <MessageSquare className="w-4 h-4 text-blue-500 shrink-0" />;
+        return <AppIcon name="chat" className=" text-blue-500 shrink-0" />;
       case "missed_clock_in":
-        return <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />;
+        return <AppIcon name="error" className=" text-rose-600 shrink-0" />;
       case "shift_reminder":
-        return <Clock className="w-4 h-4 text-amber-500 shrink-0" />;
+        return <AppIcon name="teamAttendance" className=" text-amber-500 shrink-0" />;
       case "attendance_correction":
-        return <FileEdit className="w-4 h-4 text-blue-500 shrink-0" />;
+        return <AppIcon name="edit" className=" text-blue-500 shrink-0" />;
       default:
-        return <CircleAlert className="w-4 h-4 text-amber-500 shrink-0" />;
+        return <AppIcon name="error" className=" text-amber-500 shrink-0" />;
     }
   };
 
@@ -179,7 +179,7 @@ export function NotificationsBell() {
               className="relative h-9 w-9 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
               aria-label="Notifications"
             >
-              <Bell className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+              <AppIcon name="bell" size="lg" className=" text-neutral-600 dark:text-neutral-400" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-surface" />
               )}
@@ -212,7 +212,7 @@ export function NotificationsBell() {
                     title="Mark as Read"
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors"
                   >
-                    <CheckCheck className="w-3.5 h-3.5" />
+                    <AppIcon name="read" size="sm" />
                     <span className="hidden sm:inline">Mark read</span>
                   </button>
                   <button
@@ -220,7 +220,7 @@ export function NotificationsBell() {
                     title="Clear All"
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <AppIcon name="trash" size="sm" />
                     <span className="hidden sm:inline">Clear</span>
                   </button>
                 </>
@@ -269,7 +269,7 @@ export function NotificationsBell() {
               </div>
             ) : visibleNotifications.length === 0 ? (
               <div className="p-10 text-center text-xs text-neutral-500">
-                <Bell className="w-8 h-8 mx-auto mb-2 text-neutral-300 dark:text-neutral-700" />
+                <AppIcon name="bell" size="2xl" className=" mx-auto mb-2 text-neutral-300 dark:text-neutral-700" />
                 No {filter === "unread" ? "unread " : ""}notifications.
               </div>
             ) : (
@@ -308,7 +308,7 @@ export function NotificationsBell() {
                       title="Mark as read"
                       aria-label="Mark as read"
                     >
-                      <Check className="w-3.5 h-3.5" />
+                      <AppIcon name="check" size="sm" />
                     </button>
                   )}
                 </div>

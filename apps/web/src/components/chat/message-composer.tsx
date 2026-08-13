@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, User } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { FileUploadPopup } from "@g4k/ui/components";
 
@@ -90,7 +90,7 @@ export function MessageComposer({
               onClick={() => handleMentionSelect(u)}
               className="w-full text-left px-3 py-2 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center gap-2"
             >
-              <User className="w-3 h-3 text-neutral-400" />
+              <AppIcon name="profile" size="xs" className=" text-neutral-400" />
               {u.name}
             </button>
           ))}
@@ -120,7 +120,7 @@ export function MessageComposer({
         aria-label="Add attachment"
         onClick={() => setShowUploadPopup(true)}
       >
-        <Paperclip className="w-4 h-4" />
+        <AppIcon name="paperclip" />
       </Button>
 
       <textarea
@@ -140,7 +140,7 @@ export function MessageComposer({
         className="h-9 w-9 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shrink-0"
         aria-label="Send message"
       >
-        <Send className="w-4 h-4" />
+        <AppIcon name="send" />
       </Button>
     </div>
   );

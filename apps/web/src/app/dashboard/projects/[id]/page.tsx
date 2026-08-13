@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Clock, Folder, CheckCircle2, AlertCircle, ArrowLeft, Loader2, Play, Edit } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -88,7 +88,7 @@ export default function ProjectDetailPage() {
       <div className="flex items-center gap-3 justify-between">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/projects")} className="h-8">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+            <AppIcon name="arrowLeft" className=" mr-1" /> Back
           </Button>
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2">
@@ -111,7 +111,7 @@ export default function ProjectDetailPage() {
               setIsEditOpen(true);
             }}
           >
-            <Edit className="w-4 h-4 mr-2" /> Edit Project
+            <AppIcon name="edit" className=" mr-2" /> Edit Project
           </Button>
         )}
       </div>
@@ -157,7 +157,7 @@ export default function ProjectDetailPage() {
               disabled={updateProjectMutation.isPending || !editForm.name}
               className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold"
             >
-              {updateProjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update Project"}
+              {updateProjectMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Update Project"}
             </Button>
           </div>
         </DialogContent>
@@ -203,7 +203,7 @@ export default function ProjectDetailPage() {
                   <h3 className="font-semibold text-sm">Activity Log</h3>
                   {project?.history?.length > 0 ? project.history.map((h: any, i: number) => (
                     <div key={i} className="flex gap-3 text-xs p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-lg">
-                      <Clock className="w-4 h-4 text-neutral-400 shrink-0" />
+                      <AppIcon name="teamAttendance" className=" text-neutral-400 shrink-0" />
                       <div>
                         <p><span className="font-semibold">{h.user?.name}</span> {h.action}</p>
                         <span className="text-neutral-400 text-[10px]">{format(new Date(h.created_at), "MMM d, yyyy h:mm a")}</span>
@@ -237,7 +237,7 @@ export default function ProjectDetailPage() {
                     onClick={() => submitProjectMutation.mutate()}
                     disabled={submitProjectMutation.isPending || !submissionNote}
                   >
-                    {submitProjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Report"}
+                    {submitProjectMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Submit Report"}
                   </Button>
                 </div>
               )}
@@ -245,7 +245,7 @@ export default function ProjectDetailPage() {
               {project.status === "review" && hasCapability(caps, "manage_projects") && (
                 <div className="space-y-3 p-4 bg-white dark:bg-neutral-900 rounded-lg border border-amber-200 dark:border-amber-900">
                   <div className="flex items-center gap-2 text-amber-600 font-bold text-sm">
-                    <AlertCircle className="w-4 h-4" /> Pending HR Review
+                    <AppIcon name="error" /> Pending HR Review
                   </div>
                   <p className="text-xs text-neutral-600 dark:text-neutral-400">"{project.submission_note}"</p>
                   <div className="flex gap-2 pt-2">
@@ -270,7 +270,7 @@ export default function ProjectDetailPage() {
 
               {project.status === "completed" && (
                 <div className="flex flex-col items-center justify-center p-6 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 rounded-xl">
-                  <CheckCircle2 className="w-8 h-8 mb-2" />
+                  <AppIcon name="success" size="2xl" className=" mb-2" />
                   <span className="font-bold">Project Completed</span>
                   <span className="text-[10px] text-emerald-700/70 mt-1">
                     Approved on {format(new Date(project.completed_at || new Date()), "MMM d, yyyy")}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Loader2, Send } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -116,7 +116,7 @@ export function MailSmtpConfig() {
           <CardDescription className="text-xs mt-1">Configure email delivery for the system.</CardDescription>
         </div>
         <Button type="button" variant="outline" size="sm" onClick={handleTestEmail} disabled={isTesting}>
-          {isTesting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+          {isTesting ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="send" className=" mr-2" />}
           Send Test Email
         </Button>
       </CardHeader>
@@ -182,7 +182,7 @@ export function MailSmtpConfig() {
           </div>
           
           <Button type="submit" disabled={updateMutation.isPending} size="sm" className="gap-2 mt-4">
-            {updateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4" />}
+            {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" />}
             {updateMutation.isPending ? "Saving..." : "Save Settings"}
           </Button>
         </form>

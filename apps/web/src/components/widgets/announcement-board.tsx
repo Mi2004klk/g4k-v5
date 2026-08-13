@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { Loader2, Megaphone, Trash2, Pin, AlertTriangle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
@@ -100,12 +100,12 @@ export function AnnouncementBoard() {
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-warning/20 flex items-center justify-center">
-            <Megaphone className="w-4 h-4 text-warning" />
+            <AppIcon name="announcement" className=" text-warning" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Company Announcements
           </span>
-          {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
         {isAdminOrHr && (
           <div className="flex items-center gap-2">
@@ -176,7 +176,7 @@ export function AnnouncementBoard() {
               onClick={() => createMutation.mutate(createData)} 
               disabled={createMutation.isPending || !createData.title || !createData.body}
             >
-              {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {createMutation.isPending && <AppIcon name="loading" className="mr-2 animate-spin" />}
               Post
             </Button>
           </DialogFooter>
@@ -195,7 +195,7 @@ export function AnnouncementBoard() {
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
-            <AlertTriangle className="w-6 h-6 text-rose-400" />
+            <AppIcon name="warning" size="xl" className=" text-rose-400" />
             <p className="text-xs font-medium text-rose-600">Failed to load announcements</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
@@ -217,7 +217,7 @@ export function AnnouncementBoard() {
               >
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
-                    {isPinned && <Pin className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />}
+                    {isPinned && <AppIcon name="pin" size="sm" className=" text-amber-500 fill-amber-500" />}
                     {item.title}
                   </h4>
                   <div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ export function AnnouncementBoard() {
                                   isPinned ? "text-warning hover:text-warning/80" : "text-neutral-400 hover:text-neutral-600"
                                 }`}
                               >
-                                <Pin className="w-3 h-3" />
+                                <AppIcon name="pin" size="xs" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="text-xs">{isPinned ? "Unpin Announcement" : "Pin Announcement"}</TooltipContent>
@@ -254,7 +254,7 @@ export function AnnouncementBoard() {
                                 aria-label="Delete Announcement"
                                 className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10 transition-colors"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <AppIcon name="trash" size="xs" />
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent className="text-xs">Delete Announcement</TooltipContent>

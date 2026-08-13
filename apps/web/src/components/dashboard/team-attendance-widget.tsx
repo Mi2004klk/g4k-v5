@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, Avatar, AvatarFallback, AvatarImage, Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
-import {  Users , AlertTriangle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 
 export function TeamAttendanceWidget() {
   const date = format(new Date(), "yyyy-MM-dd");
@@ -21,12 +21,12 @@ export function TeamAttendanceWidget() {
       <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
         <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-violet-600" />
+            <AppIcon name="directory" className=" text-violet-600" />
             <span className="text-sm font-bold">Team Attendance</span>
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
-          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load attendance</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
             Retry
@@ -45,14 +45,14 @@ export function TeamAttendanceWidget() {
   }
 
   const counts = data?.counts || { present: 0, late: 0, leave: 0, absent: 0, leave_pending: 0 };
-  const employees = data?.employees || [];
+  const employees = Array.isArray(data?.employees) ? data.employees : [];
 
   return (
     <Card className="h-full flex flex-col border-none shadow-e1 overflow-hidden">
       <CardHeader className="pb-3 border-b border-border dark:border-neutral-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Users className="w-4 h-4 text-violet-600" />
+            <AppIcon name="directory" className=" text-violet-600" />
             Today's Team Attendance
           </CardTitle>
           {isLoading ? (

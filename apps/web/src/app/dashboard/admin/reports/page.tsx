@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
-import { Download, FileText, Filter, Calendar as CalendarIcon, Building2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Button, Input, DataTable, Card } from "@g4k/ui/components";
 import { SavedReportViews } from "@/components/reports/saved-report-views";
@@ -84,7 +84,7 @@ export default function ReportsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-            <FileText className="w-6 h-6 text-emerald-500" />
+            <AppIcon name="fileText" size="xl" className=" text-emerald-500" />
             Report Builder
           </h1>
           <p className="text-sm text-neutral-500">Generate, save, and export company reports.</p>
@@ -92,10 +92,10 @@ export default function ReportsPage() {
         
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => handleExport("csv")}>
-            <Download className="w-4 h-4 mr-2" /> CSV
+            <AppIcon name="download" className=" mr-2" /> CSV
           </Button>
           <Button variant="outline" onClick={() => handleExport("xlsx")}>
-            <Download className="w-4 h-4 mr-2" /> Excel
+            <AppIcon name="download" className=" mr-2" /> Excel
           </Button>
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="start-date" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><CalendarIcon className="w-3 h-3"/> Start Date</label>
+            <label htmlFor="start-date" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> Start Date</label>
             <Input
               id="start-date"
               type="date"
@@ -126,7 +126,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="end-date" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><CalendarIcon className="w-3 h-3"/> End Date</label>
+            <label htmlFor="end-date" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> End Date</label>
             <Input
               id="end-date"
               type="date"
@@ -136,7 +136,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="dept-filter" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><Building2 className="w-3 h-3"/> Department</label>
+            <label htmlFor="dept-filter" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="building" size="xs" /> Department</label>
             <select
               id="dept-filter"
               value={filters.dept}

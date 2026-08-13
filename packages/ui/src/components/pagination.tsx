@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight, MoreHorizontal, Loader2 } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 
 import { cn } from "../utils/cn"
 import { Button, buttonVariants } from "./button"
@@ -60,7 +60,7 @@ export function Pagination({
           disabled={isLoading}
           className="w-full sm:w-auto"
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading && <AppIcon name="loading" className="mr-2 animate-spin" />}
           {isLoading ? "Loading..." : "Load more"}
         </Button>
       </div>
@@ -103,7 +103,7 @@ export function Pagination({
           disabled={!hasPreviousPage}
           aria-label="Go to previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <AppIcon name="chevronLeft" />
         </Button>
 
         <div className="flex items-center justify-center text-sm font-medium px-2">
@@ -118,7 +118,7 @@ export function Pagination({
           disabled={!hasNextPage}
           aria-label="Go to next page"
         >
-          <ChevronRight className="h-4 w-4" />
+          <AppIcon name="chevronRight" />
         </Button>
       </div>
     </nav>

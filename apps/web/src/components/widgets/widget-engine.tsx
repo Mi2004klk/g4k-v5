@@ -118,15 +118,15 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         mergedBreakpoints[bp] = mergedBp.filter((item: any) => availableWidgets.find(w => w.id === item.i));
       });
       
-      setLayouts(mergedBreakpoints);
+      setLayouts((prev: any) => JSON.stringify(prev) === JSON.stringify(mergedBreakpoints) ? prev : mergedBreakpoints);
     }
-  }, [preferencesData, availableWidgets]);
+  }, [preferencesData]);
 
   const handleLayoutChange = (_currentLayout: any, allLayouts: any) => {
     const isDifferent = JSON.stringify(layouts) !== JSON.stringify(allLayouts);
     if (!isDifferent) return; // Prevent unnecessary re-renders (Fix for #2)
 
-    setLayouts(allLayouts);
+    setLayouts((prev: any) => (JSON.stringify(prev) === JSON.stringify(allLayouts) ? prev : allLayouts));
     if (layoutTimeoutRef.current) {
       clearTimeout(layoutTimeoutRef.current);
     }

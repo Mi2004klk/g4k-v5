@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, differenceInSeconds } from "date-fns";
-import { AlertCircle, Clock, Save, Loader2, ArrowRight } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -181,7 +181,7 @@ export function HrCorrectionDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <DialogDescription className="sr-only">Review and process this attendance correction request.</DialogDescription>
-              <Clock className="w-5 h-5 text-violet-500" />
+              <AppIcon name="teamAttendance" size="lg" className=" text-violet-500" />
               Manual Correction
             </DialogTitle>
             <DialogDescription>
@@ -191,7 +191,7 @@ export function HrCorrectionDialog({
 
           {isLoading ? (
             <div className="py-12 flex justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+              <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
             </div>
           ) : (
             <div className="space-y-4 py-4">
@@ -270,12 +270,12 @@ export function HrCorrectionDialog({
               {predictedTotals && predictedTotals.current !== predictedTotals.predicted && (
                 <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-200 dark:border-amber-800 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                    <AlertCircle className="w-4 h-4" />
+                    <AppIcon name="error" />
                     <span className="text-xs font-semibold uppercase tracking-wide">Reconciled Preview</span>
                   </div>
                   <div className="flex items-center gap-2 font-mono font-bold text-sm">
                     <span className="text-neutral-500 line-through">{formatHours(predictedTotals.current)}</span>
-                    <ArrowRight className="w-3 h-3 text-amber-500" />
+                    <AppIcon name="arrowRight" size="xs" className=" text-amber-500" />
                     <span className="text-amber-700 dark:text-amber-400">{formatHours(predictedTotals.predicted)}</span>
                   </div>
                 </div>
@@ -292,8 +292,8 @@ export function HrCorrectionDialog({
               disabled={correctMutation.isPending || isLoading || (!reason.trim())}
               className="bg-violet-600 hover:bg-violet-700 text-white"
             >
-              {correctMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Save className="w-4 h-4 mr-2" />
+              {correctMutation.isPending && <AppIcon name="loading" className=" mr-2 animate-spin" />}
+              <AppIcon name="save" className=" mr-2" />
               Save Correction
             </Button>
           </DialogFooter>

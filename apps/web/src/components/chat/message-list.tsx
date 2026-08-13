@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, memo, useCallback } from "react";
 import { format } from "date-fns";
-import { Paperclip, CheckCheck } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 const MessageItem = memo(function MessageItem({
@@ -45,14 +45,14 @@ const MessageItem = memo(function MessageItem({
             rel="noreferrer"
             className={`flex items-center gap-1.5 mt-1 underline text-[10px] ${isMe ? "text-violet-200" : "text-violet-600"}`}
           >
-            <Paperclip className="w-3 h-3" /> Attachment
+            <AppIcon name="paperclip" size="xs" /> Attachment
           </a>
         )}
       </div>
 
       {isMe && msg.reads && msg.reads.length > 0 && (
         <div className="mt-0.5 text-[10px] text-neutral-400 mr-1 flex items-center justify-end gap-1">
-          <CheckCheck className="w-3 h-3 text-violet-500" />
+          <AppIcon name="read" size="xs" className=" text-violet-500" />
           <span>Read by {msg.reads.length}</span>
         </div>
       )}

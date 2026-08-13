@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Search, AlertCircle, Building2, Bell } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
@@ -129,7 +129,7 @@ export function AdminOpenShiftsTable() {
           <div className="flex items-center gap-2">
             <span className="font-mono text-muted-foreground">{val ? format(new Date(val), "hh:mm a") : "—"}</span>
             <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
-              <AlertCircle className="w-3 h-3" />
+              <AppIcon name="error" size="xs" />
               OPEN
             </StatusBadge>
           </div>
@@ -168,7 +168,7 @@ export function AdminOpenShiftsTable() {
         {/* Search & Dept */}
         <div className="flex w-full xl:w-auto items-center gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <AppIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input 
               type="search"
               placeholder="Search company..." 
@@ -179,7 +179,7 @@ export function AdminOpenShiftsTable() {
           </div>
 
           <div className="relative shrink-0">
-            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <AppIcon name="building" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Select value={deptFilter} onValueChange={setDeptFilter}>
 <SelectTrigger className="w-full h-9">
 <SelectValue placeholder="Select..." />
@@ -198,7 +198,7 @@ export function AdminOpenShiftsTable() {
         <div className="flex-1 flex justify-start xl:justify-end items-center gap-2 w-full xl:w-auto overflow-x-auto">
           {Object.keys(rowSelection).length > 0 && (
             <Button variant="outline" size="sm" onClick={handleBulkNotify} className="h-10 text-amber-600 border-amber-200 hover:bg-amber-50 dark:hover:bg-amber-900/20 whitespace-nowrap shrink-0">
-              <Bell className="w-4 h-4 mr-2" />
+              <AppIcon name="bell" className=" mr-2" />
               Notify HR ({Object.keys(rowSelection).length})
             </Button>
           )}
@@ -215,7 +215,7 @@ export function AdminOpenShiftsTable() {
         {openShifts.length === 0 && !isLoading ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
-              <AlertCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <AppIcon name="error" size="xl" className=" text-emerald-600 dark:text-emerald-400" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-1">No Open Shifts</h3>
             <p className="text-sm text-muted-foreground">

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
-import { MessageSquare, ArrowLeft } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
@@ -152,7 +152,7 @@ export function ChatTab() {
               <>
                 <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-3">
                   <Button variant="ghost" size="sm" className="md:hidden p-0 h-8 w-8" onClick={() => setSelectedId(null)}>
-                    <ArrowLeft className="w-4 h-4" />
+                    <AppIcon name="arrowLeft" />
                   </Button>
                   <div>
                     <h3 className="font-bold text-neutral-900 dark:text-white">
@@ -179,7 +179,7 @@ export function ChatTab() {
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-neutral-400">
-                <MessageSquare className="w-10 h-10 text-neutral-300 mb-2" />
+                <AppIcon name="chat" className=" text-neutral-300 mb-2" />
                 <p className="text-xs font-medium">Select a conversation to start chatting.</p>
               </div>
             )}

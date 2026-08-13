@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { safeFromNow } from "@/lib/format";
-import { Bell, Check, CircleAlert, CheckCircle2, MessageSquare, Briefcase, MailOpen } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
@@ -70,15 +70,15 @@ export function NotificationsTab() {
   const getIcon = (type: string) => {
     switch (type) {
       case "leave_decision":
-        return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+        return <AppIcon name="success" className=" text-emerald-500" />;
       case "task_assigned":
-        return <Briefcase className="w-4 h-4 text-violet-500" />;
+        return <AppIcon name="briefcase" className=" text-violet-500" />;
       case "message":
-        return <MessageSquare className="w-4 h-4 text-blue-500" />;
+        return <AppIcon name="chat" className=" text-blue-500" />;
       case "security":
-        return <CircleAlert className="w-4 h-4 text-rose-600" />;
+        return <AppIcon name="error" className=" text-rose-600" />;
       default:
-        return <CircleAlert className="w-4 h-4 text-amber-500" />;
+        return <AppIcon name="error" className=" text-amber-500" />;
     }
   };
 
@@ -146,12 +146,12 @@ export function NotificationsTab() {
                 disabled={markReadMutation.isPending}
                 className="text-xs flex items-center gap-2"
               >
-                <Check className="w-4 h-4" />
+                <AppIcon name="check" />
                 Mark Read
               </Button>
             ) : (
               <span className="text-xs text-neutral-400 flex items-center gap-2">
-                <MailOpen className="w-4 h-4" /> Read
+                <AppIcon name="mailOpen" /> Read
               </span>
             )}
           </div>
@@ -171,7 +171,7 @@ export function NotificationsTab() {
           disabled={markAllReadMutation.isPending}
           className="flex items-center gap-2"
         >
-          <CheckCircle2 className="w-4 h-4" />
+          <AppIcon name="success" />
           Mark all as read
         </Button>
       </div>
@@ -214,7 +214,7 @@ export function NotificationsTab() {
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center p-12 text-neutral-400 bg-card dark:bg-neutral-900 rounded-xl border border-neutral-100 dark:border-neutral-800">
-          <CircleAlert className="w-8 h-8 mb-3 text-rose-500" />
+          <AppIcon name="error" size="2xl" className=" mb-3 text-rose-500" />
           <p className="text-sm font-medium text-neutral-900 dark:text-white mb-1">Failed to load notifications</p>
           <p className="text-xs mb-4">Please check your connection and try again.</p>
           <Button variant="outline" size="sm" onClick={() => refetch()}>

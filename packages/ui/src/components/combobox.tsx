@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 
 import { cn } from "../utils/cn"
 import { Button } from "./button"
@@ -70,7 +70,7 @@ export function Combobox({
           {value
             ? options.find((option) => option.value === value)?.label
             : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <AppIcon name="chevronsUpDown" className="ml-2 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
@@ -92,12 +92,7 @@ export function Combobox({
                     setOpen(false)
                   }}
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
+                  <AppIcon name="check" className={cn( "mr-2 ", value === option.value ? "opacity-100" : "opacity-0" )} />
                   {option.label}
                 </CommandItem>
               ))}

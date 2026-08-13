@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format, isAfter, startOfDay } from "date-fns";
-import {  Calendar, ChevronRight, Clock, MapPin , AlertTriangle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
@@ -29,12 +29,12 @@ export function UpcomingHolidaysWidget() {
     <Card className="h-full bg-card dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 flex flex-col">
       <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-violet-600" />
+          <AppIcon name="calendar" className=" text-violet-600" />
           Upcoming Holidays & Events
         </CardTitle>
         <Button variant="ghost" size="sm" asChild className="h-8 text-xs font-semibold text-violet-600 dark:text-violet-400">
           <Link href="/dashboard/org/leave">
-            View All <ChevronRight className="w-3 h-3 ml-1" />
+            View All <AppIcon name="chevronRight" size="xs" className=" ml-1" />
           </Link>
         </Button>
       </CardHeader>
@@ -47,7 +47,7 @@ export function UpcomingHolidaysWidget() {
           </div>
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 m-4">
-            <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+            <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
             <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load holidays</span>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
@@ -79,10 +79,10 @@ export function UpcomingHolidaysWidget() {
                   {isEvent && (holiday.start_time || holiday.location) && (
                     <div className="flex items-center gap-3 mt-1.5 text-[11px] text-neutral-500">
                       {holiday.start_time && (
-                        <div className="flex items-center gap-1"><Clock className="w-3 h-3" /> {holiday.start_time}</div>
+                        <div className="flex items-center gap-1"><AppIcon name="teamAttendance" size="xs" /> {holiday.start_time}</div>
                       )}
                       {holiday.location && (
-                        <div className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {holiday.location}</div>
+                        <div className="flex items-center gap-1"><AppIcon name="location" size="xs" /> {holiday.location}</div>
                       )}
                     </div>
                   )}

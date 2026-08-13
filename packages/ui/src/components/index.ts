@@ -43,3 +43,5 @@ export * from "./file-upload-popup";
 export * from "./inline-edit";
 export * from "./calendar";
 export * from "./truncate";
+export * from './icon/AppIcon';
+export type { IconName } from './icon/registry';

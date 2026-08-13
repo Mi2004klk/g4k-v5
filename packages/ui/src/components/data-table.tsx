@@ -12,7 +12,7 @@ import {
   RowSelectionState,
 } from "@tanstack/react-table"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { Settings2, Pencil, Check, X as XIcon } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 import { useIsMobile } from "../hooks/use-mobile"
 
 import { cn } from "../utils/cn"
@@ -119,10 +119,10 @@ const MemoizedCell = React.memo(
               className="h-7 text-xs"
             />
             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave}>
-              <Check className="h-3 w-3 text-green-600" />
+              <AppIcon name="check" size="xs" className=" text-green-600" />
             </Button>
             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel}>
-              <XIcon className="h-3 w-3 text-destructive" />
+              <AppIcon name="close" size="xs" className=" text-destructive" />
             </Button>
           </div>
         ) : (
@@ -135,7 +135,7 @@ const MemoizedCell = React.memo(
                 className="h-6 w-6 opacity-0 group-hover/cell:opacity-100 transition-opacity"
                 onClick={handleEditStart}
               >
-                <Pencil className="h-3 w-3" />
+                <AppIcon name="edit" size="xs" />
               </Button>
             )}
           </div>
@@ -303,7 +303,7 @@ export function DataTable<TData, TValue>({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="ml-auto flex items-center gap-2">
-              <Settings2 className="h-4 w-4" />
+              <AppIcon name="sliders" />
               View
             </Button>
           </DropdownMenuTrigger>

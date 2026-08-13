@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Download } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { getAuthToken } from "@/lib/auth-store";
 import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
@@ -215,7 +215,7 @@ export function ApprovalsTab() {
                 ]}
               />
               <Button variant="outline" size="sm" onClick={handleExport} className="h-8 text-xs font-semibold">
-                <Download className="w-3.5 h-3.5 mr-1.5" />
+                <AppIcon name="download" size="sm" className=" mr-1.5" />
                 Export
               </Button>
             </div>

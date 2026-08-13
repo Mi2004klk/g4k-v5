@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Search, Mail, Phone, Building2, UserCircle, Download, FileText, CheckCircle2, ChevronRight, MessageSquare, Loader2, ListIcon, LayoutGrid, Grid, UserCheck } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
 
@@ -234,12 +234,12 @@ export function DirectoryTab() {
                   <div className="space-y-2 mt-4 mb-4 text-xs text-neutral-500 w-full flex-1">
                     {user.department && (
                       <div className="flex justify-center items-center gap-1.5 truncate text-neutral-600 dark:text-neutral-400 font-medium">
-                        <Building2 className="w-3.5 h-3.5" />
+                        <AppIcon name="building" size="sm" />
                         <span>{user.department.name}</span>
                       </div>
                     )}
                     <div className="flex justify-center items-center gap-1.5 truncate">
-                      <Mail className="w-3.5 h-3.5 text-neutral-400" />
+                      <AppIcon name="mail" size="sm" className=" text-neutral-400" />
                       {user.email ? (
                         <span>{user.email}</span>
                       ) : (
@@ -261,7 +261,7 @@ export function DirectoryTab() {
                       size="icon"
                       className="h-7 w-7 text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20 rounded-full"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" />
+                      <AppIcon name="chat" size="sm" />
                     </Button>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ export function DirectoryTab() {
           {hasNextPage && (
             <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 flex justify-center pb-6">
               <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-                {isFetchingNextPage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {isFetchingNextPage ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
                 Load More
               </Button>
             </div>
@@ -300,7 +300,7 @@ export function DirectoryTab() {
 
               <div className="space-y-4 text-xs border-t border-b border-neutral-100 dark:border-neutral-800 py-4">
                 <div className="flex items-center gap-3">
-                  <Mail className="w-4 h-4 text-neutral-400" />
+                  <AppIcon name="mail" className=" text-neutral-400" />
                   <div>
                     <div className="text-neutral-400 font-medium">Email</div>
                     <div className="font-semibold">{selectedUser.email}</div>
@@ -309,7 +309,7 @@ export function DirectoryTab() {
 
                 {selectedUser.phone && (
                   <div className="flex items-center gap-3">
-                    <Phone className="w-4 h-4 text-neutral-400" />
+                    <AppIcon name="phone" className=" text-neutral-400" />
                     <div>
                       <div className="text-neutral-400 font-medium">Phone</div>
                       <div className="font-semibold">{selectedUser.phone}</div>
@@ -318,7 +318,7 @@ export function DirectoryTab() {
                 )}
 
                 <div className="flex items-center gap-3">
-                  <UserCheck className="w-4 h-4 text-neutral-400" />
+                  <AppIcon name="userCheck" className=" text-neutral-400" />
                   <div>
                     <div className="text-neutral-400 font-medium">Employee Code</div>
                     <div className="font-mono font-semibold">
@@ -333,7 +333,7 @@ export function DirectoryTab() {
                   onClick={() => sendMessageMutation.mutate(selectedUser.id)}
                   className="flex-1 bg-violet-600 hover:bg-violet-700 text-white gap-2"
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <AppIcon name="chat" />
                   <span>Message</span>
                 </Button>
                 <Button
@@ -341,7 +341,7 @@ export function DirectoryTab() {
                   onClick={() => router.push(`/dashboard/org/users/${selectedUser.id}`)}
                   className="flex-1 gap-2"
                 >
-                  <UserCheck className="w-4 h-4" />
+                  <AppIcon name="userCheck" />
                   <span>View Profile</span>
                 </Button>
               </div>

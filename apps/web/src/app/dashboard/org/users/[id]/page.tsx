@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@g4k/ui/components";
 import { Skeleton, ConfirmDialog } from "@g4k/ui/components";
-import { Pen, KeyRound, ShieldAlert, Trash2, MoreVertical, MessageSquare, ArrowLeft, Mail, Phone, UserCheck, Calendar, FileText, CheckSquare, Activity } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -100,7 +100,7 @@ export default function EmployeeDetailPage() {
     return (
       <PageContainer title="Employee Profile" description="Failed to load profile.">
         <div className="p-8 text-center bg-card dark:bg-neutral-900 border rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-          <ShieldAlert className="w-8 h-8 text-rose-500 mx-auto mb-3" />
+          <AppIcon name="audit" size="2xl" className=" text-rose-500 mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Failed to load user</h3>
           <p className="text-xs text-neutral-500 mb-4">The user could not be found or you don't have permission.</p>
           <div className="flex justify-center gap-3">
@@ -127,7 +127,7 @@ export default function EmployeeDetailPage() {
       actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => router.back()} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Back
+            <AppIcon name="arrowLeft" /> Back
           </Button>
           <Button 
             onClick={() => sendMessageMutation.mutate(Number(userId))}
@@ -135,26 +135,26 @@ export default function EmployeeDetailPage() {
             className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20"
             disabled={sendMessageMutation.isPending}
           >
-            <MessageSquare className="w-4 h-4" /> Send Message
+            <AppIcon name="chat" /> Send Message
           </Button>
           {canManageUsers && (
             <>
               <Button onClick={() => { setEditingUser(user); setIsEditOpen(true); }} className="gap-2 bg-neutral-900 text-white">
-                <Pen className="w-4 h-4" /> Edit
+                <AppIcon name="edit" /> Edit
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon"><MoreVertical className="w-4 h-4" /></Button>
+                  <Button variant="outline" size="icon"><AppIcon name="more" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2">
-                    <KeyRound className="w-4 h-4" /> Reset Password
+                    <AppIcon name="key" /> Reset Password
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "status", payload: user })} className="gap-2">
-                    <ShieldAlert className="w-4 h-4" /> {user.status === "active" ? "Deactivate" : "Activate"}
+                    <AppIcon name="audit" /> {user.status === "active" ? "Deactivate" : "Activate"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
-                    <Trash2 className="w-4 h-4" /> Delete
+                    <AppIcon name="trash" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -175,9 +175,9 @@ export default function EmployeeDetailPage() {
                 <h2 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">{user.name}</h2>
                 <p className="text-violet-600 font-medium mb-4">{user.designation?.name || "Employee"} • {user.department?.name || "No Department"}</p>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-neutral-500">
-                  <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {user.email}</div>
-                  {user.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {user.phone}</div>}
-                  <div className="flex items-center gap-2"><UserCheck className="w-4 h-4" /> Code: {user.employee_code || user.employee_id || "N/A"}</div>
+                  <div className="flex items-center gap-2"><AppIcon name="mail" /> {user.email}</div>
+                  {user.phone && <div className="flex items-center gap-2"><AppIcon name="phone" /> {user.phone}</div>}
+                  <div className="flex items-center gap-2"><AppIcon name="userCheck" /> Code: {user.employee_code || user.employee_id || "N/A"}</div>
                 </div>
               </div>
             </div>
@@ -186,11 +186,11 @@ export default function EmployeeDetailPage() {
 
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="bg-neutral-100/50 dark:bg-neutral-900 overflow-x-auto flex-nowrap justify-start h-auto p-1 mb-6">
-            <TabsTrigger value="profile" className="gap-2 py-2.5"><UserCheck className="w-4 h-4" /> Personal Info</TabsTrigger>
-            <TabsTrigger value="attendance" className="gap-2 py-2.5"><Calendar className="w-4 h-4" /> Attendance</TabsTrigger>
-            <TabsTrigger value="leave" className="gap-2 py-2.5"><FileText className="w-4 h-4" /> Leave History</TabsTrigger>
-            <TabsTrigger value="projects" className="gap-2 py-2.5"><CheckSquare className="w-4 h-4" /> Projects & Tasks</TabsTrigger>
-            <TabsTrigger value="activity" className="gap-2 py-2.5"><Activity className="w-4 h-4" /> Activity Log</TabsTrigger>
+            <TabsTrigger value="profile" className="gap-2 py-2.5"><AppIcon name="userCheck" /> Personal Info</TabsTrigger>
+            <TabsTrigger value="attendance" className="gap-2 py-2.5"><AppIcon name="calendar" /> Attendance</TabsTrigger>
+            <TabsTrigger value="leave" className="gap-2 py-2.5"><AppIcon name="fileText" /> Leave History</TabsTrigger>
+            <TabsTrigger value="projects" className="gap-2 py-2.5"><AppIcon name="tasks" /> Projects & Tasks</TabsTrigger>
+            <TabsTrigger value="activity" className="gap-2 py-2.5"><AppIcon name="activity" /> Activity Log</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="mt-0">
@@ -213,7 +213,7 @@ export default function EmployeeDetailPage() {
                   </div>
                   <Link href={`/dashboard/admin/attendance?search=${user.name}`}>
                     <Button variant="outline" className="gap-2">
-                      <Calendar className="w-4 h-4" /> Go to Admin Attendance
+                      <AppIcon name="calendar" /> Go to Admin Attendance
                     </Button>
                   </Link>
                 </div>

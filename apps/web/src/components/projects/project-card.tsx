@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Folder, Calendar, CheckCircle2, Clock, MoreVertical, Flag } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Avatar, AvatarFallback } from "@g4k/ui/components";
 import { Badge } from "@g4k/ui/components";
 
@@ -28,7 +28,7 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400">
-              <Folder className="w-4 h-4" />
+              <AppIcon name="projects" />
             </div>
             <div>
               <CardTitle className="text-sm font-bold group-hover:text-violet-600 transition-colors">
@@ -62,7 +62,7 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
         {/* Footer meta */}
         <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-400">
           <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
+            <AppIcon name="calendar" size="xs" />
             <span>{project.deadline ? format(new Date(project.deadline), "MMM d") : "No due date"}</span>
           </div>
           <div className="flex -space-x-1.5 overflow-hidden">

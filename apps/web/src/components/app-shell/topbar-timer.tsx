@@ -1,7 +1,7 @@
 "use client";
 
 import { useTimerStore } from "@/stores/timer-store";
-import { Clock, Play } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LiveTimer } from "@/components/attendance/live-timer";
@@ -22,7 +22,7 @@ export function TopbarTimer() {
             aria-label="Start Shift"
             className="flex items-center justify-center h-9 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-medium text-xs gap-2 transition-colors border border-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 shrink-0"
           >
-            <Play className="w-3.5 h-3.5 fill-current shrink-0" />
+            <AppIcon name="play" size="sm" className=" fill-current shrink-0" />
             <span className="hidden sm:inline font-semibold">Start Shift</span>
           </button>
         </TooltipTrigger>
@@ -51,7 +51,7 @@ export function TopbarTimer() {
                       : "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-900/50 hover:bg-emerald-100 focus-visible:ring-emerald-500"
                 )}
               >
-                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <AppIcon name="teamAttendance" size="sm" className=" shrink-0" />
                 <span className="font-bold">{formattedTime}</span>
                 {isOnBreak && <span className="text-[10px] uppercase font-bold tracking-wider opacity-80 -ml-1">On Break</span>}
               </button>

@@ -6,7 +6,7 @@ import { Skeleton } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 
 import * as echarts from 'echarts/core';
@@ -193,12 +193,12 @@ export function HrAttendanceGraph() {
       <div className="w-full bg-card rounded-xl p-6 border border-border relative min-h-[450px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm z-10 rounded-xl">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <AppIcon name="loading" size="2xl" className=" animate-spin text-emerald-500" />
           </div>
         ) : !data?.stats || data.stats.length === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground z-10">
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-              <span className="text-2xl text-muted-foreground">📊</span>
+              <AppIcon name="chart" size="2xl" className="text-muted-foreground" />
             </div>
             <p className="font-medium">No data available for this period</p>
           </div>

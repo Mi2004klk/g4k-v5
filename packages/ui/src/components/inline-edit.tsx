@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Pencil } from "lucide-react";
+import { AppIcon } from "./icon/AppIcon";
 import { Input } from "./input";
 import { cn } from "../utils/cn";
 
@@ -72,7 +72,7 @@ export function InlineEdit({ value, onSave, className, inputClassName, placehold
       <span className={cn("truncate", !value && "text-muted-foreground italic")}>
         {value || placeholder}
       </span>
-      <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+      <AppIcon name="edit" size="xs" className=" opacity-0 group-hover:opacity-50 transition-opacity" />
     </div>
   );
 }

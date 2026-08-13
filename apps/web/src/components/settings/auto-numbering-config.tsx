@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
@@ -120,7 +120,7 @@ function NumberingRow({ record, onSave, isPending }: { record: any; onSave: (dat
               Preview: <strong className="text-neutral-900 dark:text-white font-mono">{preview}</strong>
             </div>
             <Button onClick={handleSave} disabled={isPending} size="sm" className="gap-2">
-              <Save className="w-4 h-4" /> Save
+              <AppIcon name="save" /> Save
             </Button>
           </div>
         </div>

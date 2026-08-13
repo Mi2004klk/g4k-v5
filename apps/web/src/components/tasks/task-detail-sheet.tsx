@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { CheckCircle2, Clock, Send, Loader2, AlertCircle, Play, Square } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
@@ -179,7 +179,7 @@ export function TaskDetailSheet({
             {task.qaForm && (
               <div className="p-3 bg-violet-50/50 dark:bg-violet-950/30 rounded-lg border border-violet-100 dark:border-violet-900 space-y-2">
                 <h4 className="font-bold text-violet-700 dark:text-violet-300 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <AppIcon name="success" size="sm" />
                   QA Form Required: {task.qaForm.title}
                 </h4>
                 {task.qaForm.fields?.map((field: any) => (
@@ -213,7 +213,7 @@ export function TaskDetailSheet({
                   disabled={submitReviewMutation.isPending || !submissionNote}
                   className="w-full bg-violet-600 hover:bg-violet-700 text-white"
                 >
-                  {submitReviewMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Submit for Approval"}
+                  {submitReviewMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : "Submit for Approval"}
                 </Button>
               </div>
             )}
@@ -232,7 +232,7 @@ export function TaskDetailSheet({
                 onClick={() => commentMutation.mutate(comment)}
                 disabled={commentMutation.isPending || !comment}
               >
-                <Send className="w-3.5 h-3.5" />
+                <AppIcon name="send" size="sm" />
               </Button>
             </div>
 
@@ -267,7 +267,7 @@ export function TaskDetailSheet({
                     className="h-7 px-2"
                     onClick={() => isTimerRunning ? handleStopTimer() : setIsTimerRunning(true)}
                   >
-                    {isTimerRunning ? <Square className="w-3.5 h-3.5 mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                    {isTimerRunning ? <AppIcon name="stop" size="sm" className=" mr-1" /> : <AppIcon name="play" size="sm" className=" mr-1" />}
                     {isTimerRunning ? "Stop Timer" : "Start Timer"}
                   </Button>
                 </div>
@@ -288,7 +288,7 @@ export function TaskDetailSheet({
                   disabled={timerMutation.isPending || !minutesLogged}
                   onClick={() => timerMutation.mutate(parseInt(minutesLogged))}
                 >
-                  <Clock className="w-3.5 h-3.5 mr-1" />
+                  <AppIcon name="teamAttendance" size="sm" className=" mr-1" />
                   Log Time
                 </Button>
               </div>
@@ -302,7 +302,7 @@ export function TaskDetailSheet({
               {task.timeLogs?.map((log: any) => (
                 <div key={log.id} className="flex items-center justify-between p-2 border-b border-neutral-100 dark:border-neutral-800 last:border-0">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-neutral-400" />
+                    <AppIcon name="teamAttendance" size="sm" className=" text-neutral-400" />
                     <span className="font-medium text-neutral-700 dark:text-neutral-300">
                       {log.user?.name}
                     </span>

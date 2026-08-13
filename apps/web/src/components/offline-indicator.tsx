@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WifiOff } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { cn } from "@/lib/utils";
 
 export function OfflineIndicator() {
@@ -33,7 +33,7 @@ export function OfflineIndicator() {
       "bg-amber-500 text-amber-950 font-medium text-sm text-center shadow-lg",
       "flex items-center justify-center gap-2 animate-in slide-in-from-bottom"
     )}>
-      <WifiOff className="w-4 h-4" />
+      <AppIcon name="wifiOff" />
       <span>You're offline. Changes will be saved locally and synced when you reconnect.</span>
     </div>
   );

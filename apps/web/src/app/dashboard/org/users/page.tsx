@@ -4,23 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  Plus,
-  MoreVertical,
-  KeyRound,
-  UserX,
-  UserCheck,
-  Building2,
-  Loader2,
-  Edit2,
-  Trash2,
-  Activity,
-  Download,
-  SaveAll,
-  AlertCircle,
-  Users as UsersIcon,
-  History
-} from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { 
   queryKeys, 
@@ -345,7 +329,7 @@ export default function UsersPage() {
           <div className="flex flex-col gap-1">
             {dept ? (
               <span className="inline-flex items-center gap-1 text-neutral-700 dark:text-neutral-300 text-xs font-medium">
-                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                <AppIcon name="building" size="sm" className=" text-neutral-400" />
                 {dept.name}
               </span>
             ) : <span className="text-neutral-400">—</span>}
@@ -401,7 +385,7 @@ export default function UsersPage() {
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="User actions">
-                        <MoreVertical className="h-4 w-4" />
+                        <AppIcon name="more" />
                       </Button>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
@@ -413,16 +397,16 @@ export default function UsersPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => router.push(`/dashboard/org/users/${user.id}`)} className="gap-2 font-medium text-violet-600">
-                  <UserCheck className="w-4 h-4" /> View Details
+                  <AppIcon name="userCheck" /> View Details
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                   setActivityUser(user);
                   setIsActivityOpen(true);
                 }} className="gap-2 text-blue-600">
-                  <Activity className="w-4 h-4" /> View Activity
+                  <AppIcon name="activity" /> View Activity
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2 text-amber-600">
-                  <KeyRound className="w-4 h-4" /> Reset Password
+                  <AppIcon name="key" /> Reset Password
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => {
@@ -432,14 +416,14 @@ export default function UsersPage() {
                     setConfirmState({ isOpen: true, type: "deactivate", payload: user });
                   }
                 }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
-                  {isInactive ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                  {isInactive ? <AppIcon name="userCheck" /> : <AppIcon name="userX" />}
                   {isInactive ? "Activate" : "Deactivate"}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
-                  <Trash2 className="w-4 h-4" /> Delete
+                  <AppIcon name="trash" /> Delete
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => { setEditingUser(row.original); setIsEditOpen(true); }} className="gap-2">
-                  <Edit2 className="w-4 h-4" /> Edit
+                  <AppIcon name="edit" /> Edit
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -464,7 +448,7 @@ export default function UsersPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
             Export
           </Button>
           {canManageUsers && (
@@ -472,7 +456,7 @@ export default function UsersPage() {
               if (!hasDraft) reset({ name: "", email: "", username: "", phone: "", department_id: "", team_id: "", designation_id: "", employee_id: "", roles: ["employee"] });
               setIsCreateOpen(true);
             }} className="gap-2 shadow">
-              <Plus className="w-4 h-4" />
+              <AppIcon name="plus" />
               Add Employee
             </Button>
           )}
@@ -543,7 +527,7 @@ export default function UsersPage() {
             </div>
           ) : isError ? (
             <div className="p-12">
-              <EmptyState title="Failed to load employees" description="There was an error fetching the user list. Please try again." icon={<AlertCircle className="w-8 h-8 text-rose-400" />} />
+              <EmptyState title="Failed to load employees" description="There was an error fetching the user list. Please try again." icon={<AppIcon name="error" size="2xl" className=" text-rose-400" />} />
               <div className="flex justify-center mt-4">
                 <Button onClick={() => refetch()} variant="outline">Retry</Button>
               </div>
@@ -714,7 +698,7 @@ export default function UsersPage() {
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending || !isValid}>
-                {createMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {createMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
                 {createMutation.isPending ? "Saving..." : "Create User"}
               </Button>
             </DialogFooter>
@@ -745,7 +729,7 @@ export default function UsersPage() {
             {isLoadingActivity ? (
               <div className="space-y-2"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
             ) : activityData?.data?.length === 0 ? (
-              <EmptyState title="No activity" description="No recent actions recorded." icon={<History className="w-8 h-8 text-neutral-400" />} />
+              <EmptyState title="No activity" description="No recent actions recorded." icon={<AppIcon name="history" size="2xl" className=" text-neutral-400" />} />
             ) : (
               activityData?.data?.map((log: any) => (
                 <div key={log.id} className="p-3 border rounded-lg text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">

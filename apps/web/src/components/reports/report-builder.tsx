@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, FileSpreadsheet, FileText, Loader2, RefreshCw } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, DataTable, FilterBar } from "@g4k/ui/components";
@@ -76,7 +76,7 @@ export function ReportBuilder() {
             onClick={() => refetch()}
             className="h-8 text-xs gap-1.5"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <AppIcon name="refresh" size="sm" />
             Refresh
           </Button>
 
@@ -86,7 +86,7 @@ export function ReportBuilder() {
             disabled={exportMutation.isPending}
             className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
           >
-            {exportMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
+            {exportMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="spreadsheet" size="sm" />}
             Excel
           </Button>
 
@@ -96,7 +96,7 @@ export function ReportBuilder() {
             disabled={exportMutation.isPending}
             className="h-8 text-xs bg-rose-600 hover:bg-rose-700 text-white gap-1.5"
           >
-            {exportMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+            {exportMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="fileText" size="sm" />}
             PDF
           </Button>
         </div>
@@ -105,7 +105,7 @@ export function ReportBuilder() {
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center p-12 text-neutral-400">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading report data...
+            <AppIcon name="loading" size="xl" className=" animate-spin mr-2" /> Loading report data...
           </div>
         ) : items.length === 0 ? (
           <p className="text-xs text-neutral-400 py-8 text-center">No data found for this report.</p>

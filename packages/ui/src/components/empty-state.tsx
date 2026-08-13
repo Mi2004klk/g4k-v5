@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Inbox } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 import { cn } from "../utils/cn"
 
 export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -39,7 +39,7 @@ export function EmptyState({
           className="mb-3 h-12 w-12 opacity-50 rounded-full"
         />
       ) : (
-        <Inbox className="mb-3 h-10 w-10 text-muted-foreground/40" />
+        <AppIcon name="inbox" className="mb-3 text-muted-foreground/40" />
       )}
       <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">{title}</h3>
       {description && (

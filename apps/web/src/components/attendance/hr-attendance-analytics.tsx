@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Users, Clock, LogIn, CalendarX, Loader2, CalendarDays } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -88,10 +88,10 @@ export function HrAttendanceAnalytics() {
   }
 
   const cards = [
-    { title: "Present", value: stats.present, icon: Users, color: "text-success", bg: "bg-success/10", total: stats.total },
-    { title: "Late", value: stats.late, icon: Clock, color: "text-warning", bg: "bg-warning/10", total: stats.total },
-    { title: "Absent", value: stats.absent, icon: CalendarX, color: "text-danger", bg: "bg-danger/10", total: stats.total },
-    { title: "On Leave", value: stats.leave, icon: CalendarDays, color: "text-info", bg: "bg-info/10", total: stats.total },
+    { title: "Present", value: stats.present, icon: "directory", color: "text-success", bg: "bg-success/10", total: stats.total },
+    { title: "Late", value: stats.late, icon: "teamAttendance", color: "text-warning", bg: "bg-warning/10", total: stats.total },
+    { title: "Absent", value: stats.absent, icon: "calendarX", color: "text-danger", bg: "bg-danger/10", total: stats.total },
+    { title: "On Leave", value: stats.leave, icon: "calendar", color: "text-info", bg: "bg-info/10", total: stats.total },
   ];
 
   return (

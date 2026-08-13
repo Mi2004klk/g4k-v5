@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ShieldAlert, Check, X, Copy, ExternalLink } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -115,7 +115,7 @@ export function SecurityRequestsConfig() {
               disabled={isApproving || isRejecting}
               onClick={() => setRejectState({ isOpen: true, id })}
             >
-              <X className="w-3.5 h-3.5 mr-1" /> Reject
+              <AppIcon name="close" size="sm" className=" mr-1" /> Reject
             </Button>
             <Button
               variant="primary"
@@ -124,7 +124,7 @@ export function SecurityRequestsConfig() {
               disabled={isApproving || isRejecting}
               onClick={() => approveMutation.mutate(id)}
             >
-              <Check className="w-3.5 h-3.5 mr-1" /> Approve
+              <AppIcon name="check" size="sm" className=" mr-1" /> Approve
             </Button>
           </div>
         );
@@ -144,7 +144,7 @@ export function SecurityRequestsConfig() {
       <Card className="border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-brand-violet" />
+            <AppIcon name="audit" size="lg" className=" text-brand-violet" />
             <CardTitle className="text-lg font-display">Password Reset Requests</CardTitle>
           </div>
           <CardDescription className="font-sans">
@@ -161,7 +161,7 @@ export function SecurityRequestsConfig() {
             </div>
           ) : data?.length === 0 ? (
             <div className="p-12 flex flex-col items-center justify-center text-center space-y-3 bg-neutral-50/50 dark:bg-neutral-900/20">
-              <Check className="w-10 h-10 text-green-500 mb-2" />
+              <AppIcon name="check" className=" text-green-500 mb-2" />
               <p className="text-sm font-medium text-neutral-500">No pending password reset requests.</p>
             </div>
           ) : (
@@ -177,7 +177,7 @@ export function SecurityRequestsConfig() {
         <DialogContent className="sm:max-w-md font-sans">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2 text-green-600">
-              <Check className="w-5 h-5" /> Request Approved
+              <AppIcon name="check" size="lg" /> Request Approved
             </DialogTitle>
             <DialogDescription className="text-sm">
               The password reset request has been approved. A unique reset link has been generated. 
@@ -193,7 +193,7 @@ export function SecurityRequestsConfig() {
                 className="font-mono text-xs bg-neutral-50 text-neutral-500" 
               />
               <Button onClick={handleCopyLink} variant="outline" className="shrink-0 gap-1.5 h-9">
-                <Copy className="w-3.5 h-3.5" /> Copy
+                <AppIcon name="copy" size="sm" /> Copy
               </Button>
             </div>
           </div>

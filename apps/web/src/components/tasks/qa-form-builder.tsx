@@ -7,7 +7,7 @@ import { apiFetch } from "@/lib/api-client";
 import {  Button , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
-import { Plus, X, Trash2, ArrowUp, ArrowDown, CheckCircle, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
 export function QAFormBuilder() {
@@ -55,7 +55,7 @@ export function QAFormBuilder() {
     <Card className=" border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader>
         <CardTitle className="text-base font-bold flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-violet-600" />
+          <AppIcon name="success" className=" text-violet-600" />
           Create QA Form Template
         </CardTitle>
       </CardHeader>
@@ -104,7 +104,7 @@ export function QAFormBuilder() {
                 onClick={() => removeField(index)}
                 aria-label="Remove field"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <AppIcon name="trash" size="sm" />
               </Button>
             </div>
           ))}
@@ -116,7 +116,7 @@ export function QAFormBuilder() {
             onClick={addField}
             className="w-full h-8 text-xs gap-1"
           >
-            <Plus className="w-3.5 h-3.5" /> Add Field
+            <AppIcon name="plus" size="sm" /> Add Field
           </Button>
         </div>
 
@@ -125,7 +125,7 @@ export function QAFormBuilder() {
           disabled={createFormMutation.isPending || !title || fields.length === 0}
           className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold h-9 text-xs"
         >
-          {createFormMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save QA Form"}
+          {createFormMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : "Save QA Form"}
         </Button>
       </CardContent>
     </Card>

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
-import { Check, X, Plane } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { DataTable, EmptyState } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 
@@ -122,9 +122,9 @@ export function LeaveHistoryTable({
           return (
             <div className="flex items-center gap-2">
               {approval.status === "approved" ? (
-                <Check className="w-4 h-4 text-emerald-500" />
+                <AppIcon name="check" className=" text-emerald-500" />
               ) : (
-                <X className="w-4 h-4 text-rose-600" />
+                <AppIcon name="close" className=" text-rose-600" />
               )}
               {approval.decision_reason && (
                 <span className="text-neutral-500 text-xs truncate max-w-[150px] block" title={approval.decision_reason}>
@@ -154,7 +154,7 @@ export function LeaveHistoryTable({
         ) : !isLoading ? (
           <div className="p-8">
             <EmptyState
-              icon={<Plane className="w-12 h-12 text-neutral-300" />}
+              icon={<AppIcon name="plane" size="hero" className=" text-neutral-300" />}
               title="No leave requests yet."
               description="You haven't requested any time off, or no requests match your current filters."
             />

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { Component, ErrorInfo, ReactNode } from "react"
-import { AlertTriangle, RefreshCw } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 import { Button } from "./button"
 
 interface Props {
@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex min-h-[160px] flex-col items-center justify-center rounded-xl border border-destructive/20 bg-destructive/10 p-6 text-center">
-          <AlertTriangle className="mb-2 h-8 w-8 text-destructive" />
+          <AppIcon name="warning" size="2xl" className="mb-2 text-destructive" />
           <h4 className="text-sm font-semibold text-destructive">
             {this.props.fallbackTitle || "Something went wrong in this section"}
           </h4>
@@ -57,7 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
             onClick={this.handleReset}
             className="mt-4 gap-1.5 text-xs text-destructive hover:bg-destructive/20"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <AppIcon name="refresh" size="sm" />
             Try again
           </Button>
         </div>

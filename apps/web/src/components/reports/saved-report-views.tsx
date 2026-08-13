@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, ChevronDown, Check, Trash2, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { SheetDescription, Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { toast } from "sonner";
@@ -81,7 +81,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
           <Sheet open={isSaving} onOpenChange={setIsSaving}>
             <SheetTrigger asChild>
               <Button variant="outline" className="h-10 shrink-0 whitespace-nowrap">
-                <Save className="w-4 h-4 mr-2" />
+                <AppIcon name="save" className=" mr-2" />
                 Save Current
               </Button>
             </SheetTrigger>
@@ -98,7 +98,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                   className="flex-1"
                 />
                 <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
-                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                  {saveMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Save"}
                 </Button>
               </div>
             </SheetContent>
@@ -107,7 +107,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
           <Popover open={isSaving} onOpenChange={setIsSaving}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-10 shrink-0 whitespace-nowrap">
-                <Save className="w-4 h-4 mr-2" />
+                <AppIcon name="save" className=" mr-2" />
                 Save Current
               </Button>
             </PopoverTrigger>
@@ -121,7 +121,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                   className="flex-1"
                 />
                 <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
-                  {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                  {saveMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Save"}
                 </Button>
               </div>
             </PopoverContent>

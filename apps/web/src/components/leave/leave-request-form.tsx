@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
@@ -14,7 +14,7 @@ import { Label } from "@g4k/ui/components";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { Calendar } from "@g4k/ui/components";
 import { format, startOfTomorrow } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+
 import { queryKeys } from "@/lib/query-keys";
 
 export function LeaveRequestForm() {
@@ -101,7 +101,7 @@ export function LeaveRequestForm() {
                   <button type="button"
                     className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-xs">
                     {startDate ? format(startDate, "dd-MM-yyyy") : <span className="text-muted tracking-wide uppercase">DD-MM-YYYY</span>}
-                    <CalendarIcon className="h-4 w-4 text-muted" />
+                    <AppIcon name="calendar" className=" text-muted" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -118,7 +118,7 @@ export function LeaveRequestForm() {
                   <button type="button"
                     className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-xs">
                     {endDate ? format(endDate, "dd-MM-yyyy") : <span className="text-muted tracking-wide uppercase">DD-MM-YYYY</span>}
-                    <CalendarIcon className="h-4 w-4 text-muted" />
+                    <AppIcon name="calendar" className=" text-muted" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -173,7 +173,7 @@ export function LeaveRequestForm() {
             disabled={submitMutation.isPending || !startDate || !endDate || !reason}
             className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold h-10"
           >
-            {submitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Request"}
+            {submitMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Submit Request"}
           </Button>
         </form>
       </CardContent>

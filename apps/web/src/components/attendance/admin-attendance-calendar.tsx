@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, isFuture } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@g4k/ui/components";
@@ -59,17 +59,17 @@ export function AdminAttendanceCalendar() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={prevMonth} className="h-8 w-8">
-            <ChevronLeft className="w-4 h-4" />
+            <AppIcon name="chevronLeft" />
           </Button>
           <Button variant="outline" size="icon" onClick={nextMonth} className="h-8 w-8">
-            <ChevronRight className="w-4 h-4" />
+            <AppIcon name="chevronRight" />
           </Button>
         </div>
       </div>
 
       {isLoading ? (
         <div className="h-64 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+          <AppIcon name="loading" size="xl" className=" animate-spin text-violet-500" />
         </div>
       ) : (
         <TooltipProvider delayDuration={100}>

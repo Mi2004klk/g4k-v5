@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { LucideIcon, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
@@ -14,7 +14,7 @@ import { WidgetInfo } from "./widget-info";
 interface MetricWidgetProps {
   title: string;
   metricKey: string;
-  icon: LucideIcon;
+  icon: IconName;
   color?: "violet" | "emerald" | "amber" | "rose" | "blue" | "indigo" | "pink" | "cyan" | "teal";
   endpoint?: string;
   subtitle?: string;
@@ -26,7 +26,7 @@ interface MetricWidgetProps {
 export function MetricWidget({
   title,
   metricKey,
-  icon: Icon,
+  icon,
   color = "violet",
   endpoint = "/dashboard/init",
   subtitle,
@@ -93,16 +93,16 @@ export function MetricWidget({
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-md ${colorStyles[color]} flex items-center justify-center`}>
-              <Icon className="w-4 h-4" />
+              <AppIcon name={icon} size="md" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
               {title}
             </span>
-            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+            {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-2 mt-2">
-          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
             Retry
@@ -118,7 +118,7 @@ export function MetricWidget({
         <EmptyState
           title={title}
           description="Module pending release in upcoming phase."
-          icon={<Icon className="w-8 h-8 text-neutral-300" />}
+          icon={<AppIcon name={icon} size="2xl" className="text-neutral-300" />}
         />
       </Card>
     );
@@ -130,13 +130,13 @@ export function MetricWidget({
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-md ${colorStyles[color]} flex items-center justify-center transition-transform group-hover:scale-110`}>
-              <Icon className="w-4 h-4" />
+              <AppIcon name={icon} size="md" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
               {title}
               {dynamicInfo && <WidgetInfo summary={dynamicInfo} />}
             </span>
-            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+            {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
         </div>
 

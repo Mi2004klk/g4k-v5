@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { StickyNote, Plus, Trash2, AlertTriangle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -53,15 +53,15 @@ export function QuickNotes() {
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
-              <StickyNote className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <AppIcon name="fileText" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
               Quick Scratchpad
             </span>
-            {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+            {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
           <CollapsibleTrigger className="h-7 w-7 p-0 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-            {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            {isCollapsed ? <AppIcon name="chevronDown" /> : <AppIcon name="chevronUp" />}
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
@@ -79,7 +79,7 @@ export function QuickNotes() {
                 disabled={!text.trim()}
                 className="h-8"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <AppIcon name="plus" size="sm" />
               </Button>
             </div>
 
@@ -92,7 +92,7 @@ export function QuickNotes() {
                 </div>
               ) : isError ? (
                 <div className="flex flex-col items-center justify-center p-4 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
-                  <AlertTriangle className="w-5 h-5 text-rose-400" />
+                  <AppIcon name="warning" size="lg" className=" text-rose-400" />
                   <p className="text-[10px] font-medium text-rose-600">Failed to load notes</p>
                   <Button variant="outline" size="sm" onClick={() => refetch()} className="h-5 text-[10px] px-2">
                     Retry
@@ -119,7 +119,7 @@ export function QuickNotes() {
                             className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
                             aria-label="Delete note"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <AppIcon name="trash" size="sm" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent className="text-xs">Delete note</TooltipContent>

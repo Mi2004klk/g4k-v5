@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import Link from "next/link";
-import { TrendingUp, AlertCircle, CalendarDays, Search, Building2, Download, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
@@ -190,7 +190,7 @@ export function AdminAttendanceTable() {
               className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all text-neutral-400 hover:text-violet-500"
               title="View Trends"
             >
-              <TrendingUp className="w-4 h-4" />
+              <AppIcon name="trendingUp" />
             </button>
             {isOpenShift && (
               <button 
@@ -204,7 +204,7 @@ export function AdminAttendanceTable() {
                 className="flex items-center gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
                 title="Open shift - missing clock out"
               >
-                <AlertCircle className="w-3 h-3" />
+                <AppIcon name="error" size="xs" />
                 OPEN SHIFT
               </button>
             )}
@@ -246,7 +246,7 @@ export function AdminAttendanceTable() {
                 className="text-xs text-violet-600 hover:underline flex items-center gap-1"
                 onClick={(e) => e.stopPropagation()}
               >
-                <CalendarDays className="w-3 h-3" />
+                <AppIcon name="calendar" size="xs" />
                 View Leave
               </Link>
             )}
@@ -306,7 +306,7 @@ export function AdminAttendanceTable() {
                 setSheetTab("trends");
               }}
             >
-              <TrendingUp className="w-4 h-4 mr-1" />
+              <AppIcon name="trendingUp" className=" mr-1" />
               Trends
             </Button>
           </div>
@@ -386,12 +386,12 @@ export function AdminAttendanceTable() {
         <div className="flex justify-end items-center gap-2 overflow-x-auto w-full xl:w-auto mt-4 xl:mt-0">
           {Object.keys(rowSelection).length > 0 && (
             <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-9 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
-              <Download className="w-4 h-4 mr-2" aria-hidden="true" />
+              <AppIcon name="download" className=" mr-2" aria-hidden="true" />
               Export Selected
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-9 whitespace-nowrap shrink-0" aria-label="Export company report for selected date">
-            <Download className="w-4 h-4 mr-2" aria-hidden="true" />
+            <AppIcon name="download" className=" mr-2" aria-hidden="true" />
             Export Full List
           </Button>
         </div>
@@ -400,7 +400,7 @@ export function AdminAttendanceTable() {
       <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
-            <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+            <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />
           </div>
         )}
         

@@ -5,7 +5,7 @@ import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
-import {  CheckCircle2, ListTodo , AlertTriangle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import { safeFromNow } from "@/lib/format";
 
@@ -36,7 +36,7 @@ export function EmployeeTaskProgressWidget() {
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
-          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load tasks</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
             Retry
@@ -54,7 +54,7 @@ export function EmployeeTaskProgressWidget() {
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <AppIcon name="success" className=" text-purple-600 dark:text-purple-400" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
               Recent Task Progress
@@ -76,7 +76,7 @@ export function EmployeeTaskProgressWidget() {
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2 max-w-[70%]">
-                    <ListTodo className="w-4 h-4 text-neutral-400 shrink-0" />
+                    <AppIcon name="tasks" className=" text-neutral-400 shrink-0" />
                     <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 truncate">
                       {task.title}
                     </p>

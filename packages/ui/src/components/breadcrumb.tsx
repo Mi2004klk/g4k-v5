@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, MoreHorizontal } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 
 import { cn } from "../utils/cn"
 import { Button } from "./button"
@@ -72,7 +72,7 @@ export function Breadcrumb({
             {item.label}
           </Link>
         )}
-        {!item.isLast && <ChevronRight className="h-4 w-4 mx-2 text-muted-foreground" />}
+        {!item.isLast && <AppIcon name="chevronRight" className=" mx-2 text-muted-foreground" />}
       </div>
     )
   }
@@ -96,9 +96,9 @@ export function Breadcrumb({
                 className="h-6 w-6 pointer-events-none"
                 aria-label="More items"
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <AppIcon name="moreH" />
               </Button>
-              <ChevronRight className="h-4 w-4 mx-2 text-muted-foreground" />
+              <AppIcon name="chevronRight" className=" mx-2 text-muted-foreground" />
             </div>
             {renderBreadcrumbItem(breadcrumbs[breadcrumbs.length - 2])}
             {renderBreadcrumbItem(breadcrumbs[breadcrumbs.length - 1])}

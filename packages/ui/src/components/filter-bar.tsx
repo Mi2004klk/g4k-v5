@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, startTransition } from "react"
-import { Search, X, SlidersHorizontal, Calendar as CalendarIcon } from "lucide-react"
+import { AppIcon } from "./icon/AppIcon";
 import { Input } from "./input"
 import {
   Select,
@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Calendar } from "./calendar"
 import { format } from "date-fns"
 import { cn } from "../utils/cn"
-import { ArrowDownAZ, ArrowUpAZ, ArrowDown, ArrowUp } from "lucide-react"
+
 
 export interface FilterOption {
   key: string
@@ -175,7 +175,7 @@ export function FilterBar({
                   !filter.value?.from && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <AppIcon name="calendar" className="mr-2 " />
                 {filter.value?.from ? (
                   filter.value.to ? (
                     <>
@@ -223,7 +223,7 @@ export function FilterBar({
     <div className="space-y-3 w-full">
       <div className="flex items-center gap-3 w-full">
         <div className="relative flex-1 w-full sm:max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <AppIcon name="search" className="absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
             value={localSearch}
@@ -235,7 +235,7 @@ export function FilterBar({
               onClick={() => setLocalSearch("")}
               className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
             >
-              <X className="h-3 w-3" />
+              <AppIcon name="close" size="xs" />
             </button>
           )}
         </div>
@@ -266,7 +266,7 @@ export function FilterBar({
                 onClick={() => onSortChange(sortBy || sortOptions[0].value, sortDirection === "asc" ? "desc" : "asc")}
                 title={`Sort ${sortDirection === "asc" ? "Descending" : "Ascending"}`}
               >
-                {sortDirection === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                {sortDirection === "asc" ? <AppIcon name="arrowUp" /> : <AppIcon name="arrowDown" />}
               </Button>
             </div>
           )}
@@ -286,7 +286,7 @@ export function FilterBar({
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4" />
+                <AppIcon name="sliders" />
                 Filters
                 {activeFiltersCount > 0 && (
                   <Badge variant="secondary" className="ml-1 px-1.5 h-5 rounded-full text-xs">
@@ -329,7 +329,7 @@ export function FilterBar({
                 className="h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
                 onClick={() => setLocalSearch("")}
               >
-                <X className="h-3 w-3" />
+                <AppIcon name="close" size="xs" />
               </div>
             </Badge>
           )}
@@ -345,7 +345,7 @@ export function FilterBar({
                       className="h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
                       onClick={() => filter.onChange(filter.value.filter((val: string) => val !== v))}
                     >
-                      <X className="h-3 w-3" />
+                      <AppIcon name="close" size="xs" />
                     </div>
                   </Badge>
                 )
@@ -363,7 +363,7 @@ export function FilterBar({
                       className="h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
                       onClick={() => filter.onChange({ from: undefined, to: undefined })}
                     >
-                      <X className="h-3 w-3" />
+                      <AppIcon name="close" size="xs" />
                     </div>
                   </Badge>
                 )
@@ -377,7 +377,7 @@ export function FilterBar({
                     className="h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
                     onClick={() => filter.onChange("all")}
                   >
-                    <X className="h-3 w-3" />
+                    <AppIcon name="close" size="xs" />
                   </div>
                 </Badge>
               )

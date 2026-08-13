@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { useReverb } from "@/hooks/use-reverb";
@@ -40,14 +40,14 @@ export function ExportHistory() {
     <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-bold flex items-center gap-2">
-          <Clock className="w-4 h-4 text-violet-600" />
+          <AppIcon name="teamAttendance" className=" text-violet-600" />
           Export Job Queue
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
           <div className="flex items-center justify-center py-6 text-neutral-400">
-            <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading exports...
+            <AppIcon name="loading" className=" animate-spin mr-2" /> Loading exports...
           </div>
         ) : exports.length === 0 ? (
           <p className="text-xs text-neutral-400 py-4 text-center">No export history found.</p>
@@ -64,17 +64,17 @@ export function ExportHistory() {
                   </span>
                   {item.status === "completed" && (
                     <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold">
-                      <CheckCircle2 className="w-3 h-3" /> Ready
+                      <AppIcon name="success" size="xs" /> Ready
                     </span>
                   )}
                   {item.status === "processing" && (
                     <span className="flex items-center gap-1 text-[10px] text-amber-600 font-semibold">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Processing
+                      <AppIcon name="loading" size="xs" className=" animate-spin" /> Processing
                     </span>
                   )}
                   {item.status === "failed" && (
                     <span className="flex items-center gap-1 text-[10px] text-rose-600 font-semibold">
-                      <AlertCircle className="w-3 h-3" /> Failed
+                      <AppIcon name="error" size="xs" /> Failed
                     </span>
                   )}
                 </div>
@@ -91,7 +91,7 @@ export function ExportHistory() {
                   className="h-7 text-[11px] gap-1"
                 >
                   <a href={item.file_path} target="_blank" rel="noreferrer">
-                    <Download className="w-3 h-3" /> Download
+                    <AppIcon name="download" size="xs" /> Download
                   </a>
                 </Button>
               )}

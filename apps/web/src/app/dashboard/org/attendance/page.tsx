@@ -7,7 +7,7 @@ import { HrAttendanceAnalytics } from '@/components/attendance/hr-attendance-ana
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, PageContainer } from "@g4k/ui/components";
-import { Users, BarChart3, Settings, Activity, CalendarDays } from 'lucide-react';
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from '@/lib/capabilities';
 
 // Admin Components
@@ -46,7 +46,7 @@ export default function CombinedTeamAttendancePage() {
                 <TooltipTrigger asChild>
                   <Button variant="outline" size="icon" className="shrink-0 bg-card dark:bg-neutral-900" aria-label="Manage Working Hours">
                     <Link href="/dashboard/settings?tab=company">
-                      <Settings className="w-4 h-4 text-neutral-500" />
+                      <AppIcon name="settings" className=" text-neutral-500" />
                     </Link>
                   </Button>
                 </TooltipTrigger>
@@ -60,19 +60,19 @@ export default function CombinedTeamAttendancePage() {
           <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
             <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 overflow-x-auto">
               <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
-                <CalendarDays className="w-4 h-4" />
+                <AppIcon name="calendar" />
                 Calendar Heatmap
               </TabsTrigger>
               <TabsTrigger value="today" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
-                <Users className="w-4 h-4" />
+                <AppIcon name="directory" />
                 Overview
               </TabsTrigger>
               <TabsTrigger value="analytics" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
-                <BarChart3 className="w-4 h-4" />
+                <AppIcon name="chart" />
                 Analytics & Trends
               </TabsTrigger>
               <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
-                <Activity className="w-4 h-4" />
+                <AppIcon name="activity" />
                 Open Shifts
               </TabsTrigger>
             </TabsList>
@@ -98,11 +98,11 @@ export default function CombinedTeamAttendancePage() {
           <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
             <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150">
               <TabsTrigger value="today" className="rounded-lg data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300">
-                <Users className="w-4 h-4 mr-2" />
+                <AppIcon name="directory" className=" mr-2" />
                 Today's Status
               </TabsTrigger>
               <TabsTrigger value="graph" className="rounded-lg data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300">
-                <BarChart3 className="w-4 h-4 mr-2" />
+                <AppIcon name="chart" className=" mr-2" />
                 Trends & Graphs
               </TabsTrigger>
             </TabsList>

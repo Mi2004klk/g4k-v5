@@ -153,8 +153,8 @@ export function AppIcon({
   );
 }
 ```
-- [ ] **1.2a** Create `registry.ts` + `AppIcon.tsx` in `packages/ui/src/components/icon/`.
-- [ ] **1.2b** Export `AppIcon` + `IconName` type from `packages/ui/src/components/index.ts`.
+- [x] **1.2a** Create `registry.ts` + `AppIcon.tsx` in `packages/ui/src/components/icon/`.
+- [x] **1.2b** Export `AppIcon` + `IconName` type from `packages/ui/src/components/index.ts`.
 
 ### 1.3 Sizing / spacing / alignment tokens (enforced via `AppIcon`)
 - **Size scale** (mapped to the existing Tailwind usage): `xs`=12px, `sm`=14px, `md`=16px (default), `lg`=20px, `xl`=24px, `2xl`=32px, `hero`=48px.
@@ -168,7 +168,7 @@ export function AppIcon({
 - **Default tones by meaning** (in the registry): status icons carry semantic colors (success/warning/danger/info); primary actions `brand`/`primary`; nav icons inherit their module accent color (passed via `tone`/`className` from `nav-group.tsx` using the existing `accentClasses`).
 - **Override per context:** `<AppIcon name="clock" tone="success" />` or `<AppIcon name="trash" className="text-rose-600" />`.
 - **Contrast:** keep ≥3:1 against backgrounds (WCAG non-text). For dark surfaces use the light variant.
-- [ ] Document the tone→color token table in the registry file header so contributors pick the right tone.
+- [x] Document the tone→color token table in the registry file header so contributors pick the right tone.
 
 ---
 
@@ -315,15 +315,15 @@ For each, replace the lucide import + JSX with `AppIcon`. Swapping these once pr
 `radio-group.tsx`, `sonner.tsx` (dedupe `CircleCheck`/`LoaderCircle`/`TriangleAlert`/`OctagonX`→ use `success`/`loading`/`warning`/`error` registry names), `data-table.tsx`, `inline-edit.tsx`,
 `empty-state.tsx`, `error-boundary.tsx`, `offline-banner.tsx`, `filter-bar.tsx`,
 `file-upload-popup.tsx`.
-- [ ] **3.1** Swap each primitive's lucide icons → `<AppIcon name=…/>`. Preserve indicator semantics (Check in Checkbox/Select/RadioGroup must render as a crisp glyph at `size="xs"`).
-- [ ] **3.2** For `sonner.tsx` toasts, map success→`success`, error→`error`, warning→`warning`, info→`info` (semantic tones drive color → vibrant, not grey).
+- [x] **3.1** Swap each primitive's lucide icons → `<AppIcon name=…/>`. Preserve indicator semantics (Check in Checkbox/Select/RadioGroup must render as a crisp glyph at `size="xs"`).
+- [x] **3.2** For `sonner.tsx` toasts, map success→`success`, error→`error`, warning→`warning`, info→`info` (semantic tones drive color → vibrant, not grey).
 
 ---
 
 ## PART 4 — TYPE-SURFACE MIGRATION (icon-as-prop)
 
-- [ ] **4.1** `metric-widget.tsx` — change `icon: LucideIcon` → `icon: IconName` and render `<AppIcon name={icon} size="lg" />` (or accept `IconDefinition`/`IconName`). Update each `MetricWidget` caller to pass a registry name.
-- [ ] **4.2** `navGroups` (`dashboard/layout.tsx`) — change `icon: <LucideComponent>` to `icon: IconName`; in `nav-group.tsx:82` render `<AppIcon name={item.icon} size="md" className={accent.text}/>` (the accent color drives the nav icon color → vibrant per-module). Same for the stat-card arrays (`admin-attendance-analytics`, `hr-attendance-analytics`, `hr-activity-feed-widget`, `role-select`).
+- [x] **4.1** `metric-widget.tsx` — change `icon: LucideIcon` → `icon: IconName` and render `<AppIcon name={icon} size="lg" />` (or accept `IconDefinition`/`IconName`). Update each `MetricWidget` caller to pass a registry name.
+- [x] **4.2** `navGroups` (`dashboard/layout.tsx`) — change `icon: <LucideComponent>` to `icon: IconName`; in `nav-group.tsx:82` render `<AppIcon name={item.icon} size="md" className={accent.text}/>` (the accent color drives the nav icon color → vibrant per-module). Same for the stat-card arrays (`admin-attendance-analytics`, `hr-attendance-analytics`, `hr-activity-feed-widget`, `role-select`).
 
 ---
 
@@ -347,12 +347,12 @@ Apply per area; each `<LucideIcon className="w-4 h-4 …"/>` → `<AppIcon name=
 
 ## PART 6 — CLEANUP & DEPENDENCY HYGINE
 
-- [ ] **6.1** Remove `lucide-react` from `apps/web/package.json` and `packages/ui/package.json` (deps + peer + devDeps) once zero imports remain; run `pnpm install` to update the lockfile.
-- [ ] **6.2** Remove `"lucide-react"` from `next.config.ts` `optimizePackageImports` (FA tree-shakes via per-icon imports; no entry needed — or add `@fortawesome/free-solid-svg-icons` if desired, but per-import is already optimal).
-- [ ] **6.3** Delete dead/duplicate imports found in the audit (`Megaphone`, `BarChart3`, `CheckSquare`, `Star` unused in `layout.tsx`; demo icons in `command-menu.tsx` if the command-menu is not used).
-- [ ] **6.4** Replace the emoji-as-icons (📊 🗓 ✓) with registry icons.
-- [ ] **6.5** Resolve the version split (becomes moot once lucide is removed).
-- [ ] **6.6** Keep `DotLoader` (CSS dots) for button loading — it's not an icon library dependency.
+- [x] **6.1** Remove `lucide-react` from `apps/web/package.json` and `packages/ui/package.json` (deps + peer + devDeps) once zero imports remain; run `pnpm install` to update the lockfile.
+- [x] **6.2** Remove `"lucide-react"` from `next.config.ts` `optimizePackageImports` (FA tree-shakes via per-icon imports; no entry needed — or add `@fortawesome/free-solid-svg-icons` if desired, but per-import is already optimal).
+- [x] **6.3** Delete dead/duplicate imports found in the audit (`Megaphone`, `BarChart3`, `CheckSquare`, `Star` unused in `layout.tsx`; demo icons in `command-menu.tsx` if the command-menu is not used).
+- [x] **6.4** Replace the emoji-as-icons (📊 🗓 ✓) with registry icons.
+- [x] **6.5** Resolve the version split (becomes moot once lucide is removed).
+- [x] **6.6** Keep `DotLoader` (CSS dots) for button loading — it's not an icon library dependency.
 
 ---
 
@@ -373,16 +373,16 @@ Each phase leaves the app fully functional; you can stop after any phase.
 ## PART 8 — VERIFICATION & ACCEPTANCE
 
 **States (every icon must render correctly in):**
-- [ ] normal, hover, active, selected, disabled, loading (`spin`), expanded/collapsed, focus, error, empty, responsive (360→1536px).
+- [x] normal, hover, active, selected, disabled, loading (`spin`), expanded/collapsed, focus, error, empty, responsive (360→1536px).
 **No regressions:**
-- [ ] No layout shift (FA `<svg>` accepts the same `w-*/h-*` classes); no overlap/cramping (every icon `shrink-0`); no icon oversized for its container.
-- [ ] No console errors (unknown FA icon, missing import).
-- [ ] No remaining `from "lucide-react"` imports (`grep -r "lucide-react" apps/web/src packages/ui/src` → empty) and the dependency removed from both `package.json` files.
+- [x] No layout shift (FA `<svg>` accepts the same `w-*/h-*` classes); no overlap/cramping (every icon `shrink-0`); no icon oversized for its container.
+- [x] No console errors (unknown FA icon, missing import).
+- [x] No remaining `from "lucide-react"` imports (`grep -r "lucide-react" apps/web/src packages/ui/src` → empty) and the dependency removed from both `package.json` files.
 **Consistency:**
-- [ ] One icon system (`AppIcon` + registry) used everywhere; zero raw FA imports in app code; zero lucide.
-- [ ] Semantic tones applied (status/category/action are colored, not all-grey); nav icons carry module accent colors.
-- [ ] Consistent sizing scale (`xs…hero`); consistent icon+label gaps; vertical alignment centered.
-- [ ] Dark-mode parity + WCAG non-text contrast (≥3:1).
+- [x] One icon system (`AppIcon` + registry) used everywhere; zero raw FA imports in app code; zero lucide.
+- [x] Semantic tones applied (status/category/action are colored, not all-grey); nav icons carry module accent colors.
+- [x] Consistent sizing scale (`xs…hero`); consistent icon+label gaps; vertical alignment centered.
+- [x] Dark-mode parity + WCAG non-text contrast (≥3:1).
 
 ---
 

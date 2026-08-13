@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Building2, Users, Archive, Edit2, Loader2, MoreVertical, ArchiveRestore, Download, Trash2, ShieldCheck, User as UserIcon } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -223,7 +223,7 @@ export function DepartmentsTab() {
       cell: ({ row }: any) => (
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
-            <Building2 className="w-4 h-4" />
+            <AppIcon name="building" />
           </div>
           <div>
             <span 
@@ -269,7 +269,7 @@ export function DepartmentsTab() {
             {teams.length > 0 ? (
               teams.map((team: any) => (
                 <span key={team.id} className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
-                  <Users className="w-3 h-3 text-neutral-400" />
+                  <AppIcon name="directory" size="xs" className=" text-neutral-400" />
                   {team.name}
                 </span>
               ))
@@ -308,7 +308,7 @@ export function DepartmentsTab() {
                     <TooltipTrigger asChild>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Department actions">
-                          <MoreVertical className="h-4 w-4" />
+                          <AppIcon name="more" />
                         </Button>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
@@ -324,20 +324,20 @@ export function DepartmentsTab() {
                     reset({ name: dept.name, description: dept.description || "" }); 
                     setIsDeptModalOpen(true); 
                   }}>
-                    <Edit2 className="w-4 h-4 mr-2 text-violet-600" /> Edit
+                    <AppIcon name="edit" className=" mr-2 text-violet-600" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isArchived ? (
                     <DropdownMenuItem onClick={() => restoreMutation.mutate(dept.id)}>
-                      <ArchiveRestore className="w-4 h-4 mr-2 text-emerald-600" /> Restore
+                      <AppIcon name="archiveRestore" className=" mr-2 text-emerald-600" /> Restore
                     </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "archive", payload: dept })}>
-                      <Archive className="w-4 h-4 mr-2 text-amber-600" /> Archive
+                      <AppIcon name="archive" className=" mr-2 text-amber-600" /> Archive
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: dept })}>
-                    <Trash2 className="w-4 h-4 mr-2 text-rose-600" /> Delete
+                    <AppIcon name="trash" className=" mr-2 text-rose-600" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -355,12 +355,12 @@ export function DepartmentsTab() {
       <div className="flex justify-end gap-2 mb-4">
         {isAdmin && (
           <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-            <Download className="w-4 h-4" /> Export
+            <AppIcon name="download" /> Export
           </Button>
         )}
         {isAdmin && (
           <Button onClick={() => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow">
-            <Plus className="w-4 h-4" /> Add Department
+            <AppIcon name="plus" /> Add Department
           </Button>
         )}
       </div>
@@ -444,7 +444,7 @@ export function DepartmentsTab() {
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsDeptModalOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createDeptMutation.isPending || updateDeptMutation.isPending}>
-                {(createDeptMutation.isPending || updateDeptMutation.isPending) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                {(createDeptMutation.isPending || updateDeptMutation.isPending) ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
                 {editingDept ? "Update" : "Create"}
               </Button>
             </DialogFooter>
@@ -476,8 +476,8 @@ export function DepartmentsTab() {
             ) : (
               <Tabs defaultValue="employees" className="w-full flex-1 flex flex-col">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="employees" className="gap-2"><UserIcon className="w-4 h-4" /> Employees</TabsTrigger>
-                  <TabsTrigger value="hrs" className="gap-2"><ShieldCheck className="w-4 h-4" /> HRs</TabsTrigger>
+                  <TabsTrigger value="employees" className="gap-2"><AppIcon name="profile" /> Employees</TabsTrigger>
+                  <TabsTrigger value="hrs" className="gap-2"><AppIcon name="shieldCheck" /> HRs</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="employees" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
@@ -499,7 +499,7 @@ export function DepartmentsTab() {
                           }
                         }}
                       >
-                        {assignEmployeeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Assign"}
+                        {assignEmployeeMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Assign"}
                       </Button>
                     </div>
                   )}
@@ -545,7 +545,7 @@ export function DepartmentsTab() {
                           }
                         }}
                       >
-                        {addHrMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add HR"}
+                        {addHrMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Add HR"}
                       </Button>
                     </div>
                   )}
@@ -574,7 +574,7 @@ export function DepartmentsTab() {
                               onClick={() => removeHrMutation.mutate({ deptId: selectedDeptMembers.id, userId: hr.id })}
                               disabled={removeHrMutation.isPending}
                             >
-                              {removeHrMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                              {removeHrMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
                             </Button>
                           )}
                         </div>

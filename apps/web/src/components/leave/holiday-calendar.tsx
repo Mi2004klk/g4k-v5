@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Trash2, Edit2, MapPin, Clock } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent } from "@g4k/ui/components";
@@ -167,7 +167,7 @@ export function HolidayCalendar() {
     <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <CalendarIcon className="w-4 h-4 text-violet-600" />
+          <AppIcon name="calendar" className=" text-violet-600" />
           {format(currentDate, "MMMM yyyy")}
         </CardTitle>
         <div className="flex items-center gap-1">
@@ -175,7 +175,7 @@ export function HolidayCalendar() {
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" onClick={openAdd} className="mr-2 h-7 px-2 text-xs">
-                  <Plus className="w-3 h-3 mr-1" /> Add Holiday/Event
+                  <AppIcon name="plus" size="xs" className=" mr-1" /> Add Holiday/Event
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -190,10 +190,10 @@ export function HolidayCalendar() {
             </Dialog>
           )}
           <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-7 w-7" aria-label="Previous month">
-            <ChevronLeft className="h-4 w-4" />
+            <AppIcon name="chevronLeft" />
           </Button>
           <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-7 w-7" aria-label="Next month">
-            <ChevronRight className="h-4 w-4" />
+            <AppIcon name="chevronRight" />
           </Button>
         </div>
       </CardHeader>
@@ -249,10 +249,10 @@ export function HolidayCalendar() {
                           {isEvent && (holiday.start_time || holiday.location) && (
                             <div className="flex flex-col gap-1 text-[11px] text-neutral-600 font-medium my-1">
                               {holiday.start_time && (
-                                <div className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-neutral-400" /> {holiday.start_time}</div>
+                                <div className="flex items-center gap-1.5"><AppIcon name="teamAttendance" size="xs" className=" text-neutral-400" /> {holiday.start_time}</div>
                               )}
                               {holiday.location && (
-                                <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3 text-neutral-400" /> {holiday.location}</div>
+                                <div className="flex items-center gap-1.5"><AppIcon name="location" size="xs" className=" text-neutral-400" /> {holiday.location}</div>
                               )}
                             </div>
                           )}
@@ -271,7 +271,7 @@ export function HolidayCalendar() {
                                   <Tooltip>
                                     <TooltipTriggerComponent asChild>
                                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(holiday)} aria-label="Edit item">
-                                        <Edit2 className="w-3 h-3 text-neutral-500" />
+                                        <AppIcon name="edit" size="xs" className=" text-neutral-500" />
                                       </Button>
                                     </TooltipTriggerComponent>
                                     <TooltipContent className="text-xs">Edit item</TooltipContent>
@@ -283,7 +283,7 @@ export function HolidayCalendar() {
                                       <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" aria-label="Delete item" onClick={() => {
                                         setConfirmState({ isOpen: true, id: holiday.id });
                                       }}>
-                                        <Trash2 className="w-3 h-3" />
+                                        <AppIcon name="trash" size="xs" />
                                       </Button>
                                     </TooltipTriggerComponent>
                                     <TooltipContent className="text-xs">Delete item</TooltipContent>

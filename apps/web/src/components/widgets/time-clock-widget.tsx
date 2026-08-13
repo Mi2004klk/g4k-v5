@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, Play, Square, Coffee, AlertCircle, Clock } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
@@ -160,19 +160,19 @@ export function TimeClockWidget({ className }: { className?: string }) {
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-            <Clock className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+            <AppIcon name="teamAttendance" className=" text-violet-600 dark:text-violet-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Time Clock
           </span>
-          {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           {isOffline ? (
             <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
-              <AlertCircle className="w-3 h-3" /> Offline Mode
+              <AppIcon name="error" size="xs" /> Offline Mode
             </span>
           ) : isError ? (
             <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
-              <AlertCircle className="w-3 h-3" /> Connection Error
+              <AppIcon name="error" size="xs" /> Connection Error
               <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[10px] font-bold text-rose-600 hover:text-rose-700 ml-1">
                 Retry
               </Button>
@@ -232,7 +232,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
             onClick={() => handlePunch("clock_in")}
             className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
           >
-            <Play className="w-4 h-4" />
+            <AppIcon name="play" />
             <span>Start Shift</span>
           </Button>
         )}
@@ -249,7 +249,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
                     className="flex-1 h-12 border-warning/50 text-warning hover:bg-warning/10 gap-2"
                     aria-label="Pause Work Session"
                   >
-                    <Coffee className="w-4 h-4" />
+                    <AppIcon name="break" />
                     <span>Pause for Break</span>
                   </Button>
                 </TooltipTrigger>
@@ -263,7 +263,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
               variant="destructive"
               className="flex-1 h-12 gap-2"
             >
-              <Square className="w-4 h-4" />
+              <AppIcon name="stop" />
               <span>End Shift</span>
             </Button>
           </>
@@ -279,7 +279,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
                   className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
                   aria-label="Resume Work Session"
                 >
-                  <Play className="w-4 h-4" />
+                  <AppIcon name="play" />
                   <span>Resume Work</span>
                 </Button>
               </TooltipTrigger>
@@ -295,7 +295,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
             variant="outline"
             className="w-full h-12 border-emerald-600/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 font-semibold gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150"
           >
-            <Play className="w-4 h-4" />
+            <AppIcon name="play" />
             <span>Continue Shift</span>
           </Button>
         )}
@@ -327,7 +327,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
         confirmText="Confirm Clock Out"
       >
         <div className="flex items-center gap-2 text-rose-600 mb-2">
-          <AlertCircle className="w-5 h-5" />
+          <AppIcon name="error" size="lg" />
           <span className="font-semibold text-sm">Action cannot be reversed</span>
         </div>
       </ConfirmDialog>

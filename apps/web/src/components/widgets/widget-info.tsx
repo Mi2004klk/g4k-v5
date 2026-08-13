@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Info } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import {
   Tooltip,
   TooltipContent,
@@ -21,7 +21,7 @@ export function WidgetInfo({ summary }: { summary: React.ReactNode }) {
               e.stopPropagation();
             }}
           >
-            <Info className="w-3.5 h-3.5" />
+            <AppIcon name="info" size="sm" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-[220px] text-xs leading-relaxed z-50">

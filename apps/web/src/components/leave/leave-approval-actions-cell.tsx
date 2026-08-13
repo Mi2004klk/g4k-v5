@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, X, Loader2 } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -95,9 +95,9 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
           disabled={decisionMutation.isPending}
         >
           {decisionMutation.isPending && decisionMutation.variables?.decision === "approved" ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <AppIcon name="loading" size="sm" className=" animate-spin" />
           ) : (
-            <Check className="w-3.5 h-3.5" />
+            <AppIcon name="check" size="sm" />
           )}
           Approve
         </Button>
@@ -108,7 +108,7 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
           onClick={() => setIsRejectOpen(true)}
           disabled={decisionMutation.isPending}
         >
-          <X className="w-3.5 h-3.5" />
+          <AppIcon name="close" size="sm" />
           Reject
         </Button>
       </div>

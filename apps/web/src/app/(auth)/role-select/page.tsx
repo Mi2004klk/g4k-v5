@@ -6,7 +6,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
-import { User, Shield, Briefcase, ChevronRight } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 
@@ -61,12 +61,12 @@ export default function RoleSelectPage() {
   const getRoleInfo = (role: string) => {
     switch (role) {
       case "super_admin":
-        return { icon: Shield, title: "Super Admin", desc: "Full system access" };
+        return { icon: "shield", title: "Super Admin", desc: "Full system access" };
       case "hr":
-        return { icon: Briefcase, title: "HR Manager", desc: "Manage employees & attendance" };
+        return { icon: "briefcase", title: "HR Manager", desc: "Manage employees & attendance" };
       case "employee":
       default:
-        return { icon: User, title: "Employee", desc: "Access your personal workspace" };
+        return { icon: "profile", title: "Employee", desc: "Access your personal workspace" };
     }
   };
 
@@ -154,7 +154,7 @@ export default function RoleSelectPage() {
                     <div className="w-1.5 h-1.5 bg-brand-violet rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 ) : (
-                  <ChevronRight className="w-5 h-5 text-neutral-300 dark:text-neutral-600 group-hover:text-brand-violet transition-colors shrink-0 ml-2" />
+                  <AppIcon name="chevronRight" size="lg" className=" text-neutral-300 dark:text-neutral-600 group-hover:text-brand-violet transition-colors shrink-0 ml-2" />
                 )}
               </button>
             );

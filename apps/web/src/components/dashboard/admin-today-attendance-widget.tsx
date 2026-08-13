@@ -2,7 +2,7 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Users, ArrowRight, Loader2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
@@ -34,16 +34,16 @@ export function AdminTodayAttendanceWidget() {
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
-            <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <AppIcon name="directory" className=" text-emerald-600 dark:text-emerald-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             Today's Attendance
             <WidgetInfo summary={`${presentCount + lateCount} clocked in out of ${totalCount}`} />
           </span>
-          {isFetching && !isPending && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
+          {isFetching && !isPending && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
         
-        <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:text-emerald-500 transition-colors relative z-20 group-hover:translate-x-1" />
+        <AppIcon name="arrowRight" className=" text-neutral-400 group-hover:text-emerald-500 transition-colors relative z-20 group-hover:translate-x-1" />
       </div>
 
       <div className="flex-1 flex flex-col justify-center">
@@ -62,7 +62,7 @@ export function AdminTodayAttendanceWidget() {
           </div>
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
-            <AlertCircle className="w-5 h-5 text-rose-400" />
+            <AppIcon name="error" size="lg" className=" text-rose-400" />
             <p className="text-xs font-medium text-rose-600">Failed to load attendance</p>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Retry
@@ -93,19 +93,19 @@ export function AdminTodayAttendanceWidget() {
             <div className="grid grid-cols-3 gap-2">
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-neutral-500 uppercase flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500" /> On Time
+                  <AppIcon name="success" size="xs" className=" text-emerald-500" /> On Time
                 </span>
                 <span className="text-sm font-bold text-neutral-900 dark:text-white">{presentCount}</span>
               </div>
               <div className="flex flex-col border-l border-neutral-100 dark:border-neutral-800 pl-2">
                 <span className="text-[10px] font-bold text-neutral-500 uppercase flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-amber-500" /> Late
+                  <AppIcon name="teamAttendance" size="xs" className=" text-amber-500" /> Late
                 </span>
                 <span className="text-sm font-bold text-neutral-900 dark:text-white">{lateCount}</span>
               </div>
               <div className="flex flex-col border-l border-neutral-100 dark:border-neutral-800 pl-2">
                 <span className="text-[10px] font-bold text-neutral-500 uppercase flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 text-rose-600" /> Absent
+                  <AppIcon name="error" size="xs" className=" text-rose-600" /> Absent
                 </span>
                 <span className="text-sm font-bold text-neutral-900 dark:text-white">{absentCount}</span>
               </div>

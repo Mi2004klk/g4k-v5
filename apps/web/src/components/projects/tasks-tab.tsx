@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { Plus, Kanban, Calendar, CheckSquare, Loader2, List as ListIcon, Trash2, CheckCircle } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
@@ -223,19 +223,19 @@ export function TasksTab() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex bg-neutral-100/80 dark:bg-neutral-900/50 p-1 rounded-lg w-full sm:w-auto overflow-x-auto thin-scrollbar">
           <Button variant={viewMode === "kanban" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("kanban")} className="h-8 text-xs px-3 rounded-md shrink-0">
-            <Kanban className="w-3.5 h-3.5 mr-1.5" />
+            <AppIcon name="kanban" size="sm" className=" mr-1.5" />
             Board
           </Button>
           <Button variant={viewMode === "list" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("list")} className="h-8 text-xs px-3 rounded-md shrink-0">
-            <ListIcon className="w-3.5 h-3.5 mr-1.5" />
+            <AppIcon name="list" size="sm" className=" mr-1.5" />
             List
           </Button>
           <Button variant={viewMode === "gantt" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("gantt")} className="h-8 text-xs px-3 rounded-md shrink-0">
-            <Calendar className="w-3.5 h-3.5 mr-1.5" />
+            <AppIcon name="calendar" size="sm" className=" mr-1.5" />
             Timeline
           </Button>
           <Button variant={viewMode === "qa" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("qa")} className="h-8 text-xs px-3 rounded-md shrink-0">
-            <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
+            <AppIcon name="tasks" size="sm" className=" mr-1.5" />
             QA Forms
           </Button>
         </div>
@@ -243,7 +243,7 @@ export function TasksTab() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white font-semibold gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-              <Plus className="w-4 h-4" /> New Task
+              <AppIcon name="plus" /> New Task
             </Button>
           </DialogTrigger>
             <DialogContent>
@@ -392,7 +392,7 @@ export function TasksTab() {
                   disabled={createMutation.isPending || !title}
                   className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold mt-4"
                 >
-                  {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Task"}
+                  {createMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Create Task"}
                 </Button>
               </div>
             </DialogContent>
@@ -439,10 +439,10 @@ export function TasksTab() {
               </span>
               <div className="flex-1" />
               <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })}>
-                <CheckCircle className="w-4 h-4 mr-2" /> Mark Done
+                <AppIcon name="success" className=" mr-2" /> Mark Done
               </Button>
               <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)}>
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                <AppIcon name="trash" className=" mr-2" /> Delete
               </Button>
             </div>
           )}

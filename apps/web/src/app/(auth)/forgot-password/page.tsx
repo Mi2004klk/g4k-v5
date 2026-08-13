@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 
 import { Button } from "@g4k/ui/components";
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
               </div>
               <Link href="/login" className="block w-full">
                 <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-e1 hover:shadow-e2 transition-shadow duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                  <ArrowLeft className="w-4 h-4" />
+                  <AppIcon name="arrowLeft" />
                   Return to Sign In
                 </Button>
               </Link>
