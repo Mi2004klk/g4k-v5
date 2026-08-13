@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { Users, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
-import { Card, Skeleton, Button, StatusBadge } from "@g4k/ui/components";
+import { Card, Skeleton, Button, StatusBadge, Avatar, AvatarFallback } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 
@@ -73,9 +73,9 @@ export function HrTeamAttendanceWidget() {
             {topRecords.map((r: any) => (
               <div key={r.user_id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                    {r.user_name?.charAt(0) || "U"}
-                  </div>
+                  <Avatar className="w-6 h-6">
+                    <AvatarFallback name={r.user_name} className="text-[10px]" />
+                  </Avatar>
                   <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{r.user_name}</span>
                 </div>
                 <StatusBadge 

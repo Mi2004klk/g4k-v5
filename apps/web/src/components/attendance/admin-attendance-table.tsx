@@ -80,7 +80,6 @@ export function AdminAttendanceTable() {
   });
   const users = usersData?.data || [];
   const userOptions = [
-    { label: "All Employees", value: "all" },
     ...users.map((u: any) => ({ label: u.name, value: u.id.toString() }))
   ];
 
@@ -197,7 +196,7 @@ export function AdminAttendanceTable() {
                 setSheetTab("trends");
                 setSelectedUser(row.original.user_id);
               }}
-              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-all text-neutral-400 hover:text-violet-500"
+              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all text-neutral-400 hover:text-violet-500"
               title="View Trends"
             >
               <TrendingUp className="w-4 h-4" />
@@ -326,7 +325,6 @@ export function AdminAttendanceTable() {
   ];
 
   const statusOptions = [
-    { label: "All", value: "all" },
     { label: "Present", value: "present" },
     { label: "Absent", value: "absent" },
     { label: "Late", value: "late" },
@@ -335,7 +333,7 @@ export function AdminAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         
         <FilterBar
           searchQuery={search || ""}
@@ -408,7 +406,7 @@ export function AdminAttendanceTable() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
             <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />

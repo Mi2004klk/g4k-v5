@@ -18,7 +18,7 @@ export default function Error({
 
   return (
     <div className="flex-1 flex items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-6 min-h-[400px]">
-      <div className="max-w-md w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-8 text-center shadow-sm">
+      <div className="max-w-md w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-8 text-center shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <div className="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6" />
         </div>

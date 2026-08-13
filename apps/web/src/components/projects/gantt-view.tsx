@@ -70,7 +70,7 @@ export function GanttView({ tasks }: { tasks: any[] }) {
                   className="grid items-center hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30"
                   style={{ gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' }}
                 >
-                  <div className="p-3 col-span-3 font-semibold text-neutral-800 dark:text-neutral-200 border-r border-neutral-100 dark:border-neutral-800 truncate sticky left-0 bg-white dark:bg-neutral-900 z-10 group-hover:bg-neutral-50 dark:group-hover:bg-neutral-800/30">
+                  <div className="p-3 col-span-3 font-semibold text-neutral-800 dark:text-neutral-200 border-r border-neutral-100 dark:border-neutral-800 truncate sticky left-0 bg-card dark:bg-neutral-900 z-10 group-hover:bg-neutral-50 dark:group-hover:bg-neutral-800/30">
                     {task.title}
                   </div>
                   <div className="col-span-12 relative h-full flex items-center px-2">

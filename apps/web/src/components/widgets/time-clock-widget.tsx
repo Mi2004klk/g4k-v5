@@ -28,6 +28,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const [showConfirmOut, setShowConfirmOut] = useState(false);
   const [showConfirmContinue, setShowConfirmContinue] = useState(false);
   const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
 
   const queryClient = useQueryClient();
   
@@ -54,6 +55,17 @@ export function TimeClockWidget({ className }: { className?: string }) {
       syncWithServer(todayData.day, todayData.events || []);
     }
   }, [todayData, syncWithServer]);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const handleSyncFail = () => {
@@ -117,8 +129,8 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
 
   return (
-    <div className={cn("relative w-full h-full p-5 bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl transition-shadow duration-150 flex flex-col justify-between", className)}>
-      {isPending && (
+    <div className={cn("relative w-full h-full p-5 bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl transition-shadow duration-150 flex flex-col justify-between", className)}>
+      {isPending && !todayData && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-xl p-6 gap-6">
           <div className="flex justify-between w-full">
             <Skeleton className="h-4 w-24" />
@@ -144,14 +156,18 @@ export function TimeClockWidget({ className }: { className?: string }) {
             Time Clock
           </span>
           {isFetching && <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />}
-          {isError && (
+          {isOffline ? (
             <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
               <AlertCircle className="w-3 h-3" /> Offline Mode
+            </span>
+          ) : isError ? (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
+              <AlertCircle className="w-3 h-3" /> Connection Error
               <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[10px] font-bold text-rose-600 hover:text-rose-700 ml-1">
                 Retry
               </Button>
             </span>
-          )}
+          ) : null}
         </div>
         <StatusBadge
           status={
@@ -262,7 +278,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
           <Button
             onClick={() => setShowConfirmContinue(true)}
             variant="outline"
-            className="w-full h-12 border-emerald-600/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 font-semibold gap-2 shadow-sm"
+            className="w-full h-12 border-emerald-600/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 font-semibold gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150"
           >
             <Play className="w-4 h-4" />
             <span>Continue Shift</span>

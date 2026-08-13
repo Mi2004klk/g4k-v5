@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { getGreeting } from "@/lib/greeting";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
@@ -211,7 +212,7 @@ export default function DashboardPage() {
       },
     ];
 
-    if (hasCapability(userCapabilities, "attendance.clock-in")) {
+    if (hasCapability(userCapabilities, "attendance.clock-self")) {
       widgets.push({
         id: "time-clock",
         component: <TimeClockWidget />,
@@ -225,9 +226,17 @@ export default function DashboardPage() {
   const greetingData = useMemo(() => getGreeting(new Date(), user?.id || 0), [user?.id]);
   const firstName = user?.name?.split(" ")[0] || "Team Member";
 
+  if (!activeRole) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-neutral-900 p-6 rounded-2xl text-neutral-900 dark:text-white shadow-sm border border-border">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card dark:bg-neutral-900 p-6 rounded-2xl text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-border">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
             {greetingData.salutation}

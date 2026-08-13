@@ -254,7 +254,7 @@ function MonthCalendarGrid({
                     
                     {/* Tiny overtime indicator if day is late but also has overtime */}
                     {record && record.overtime_seconds > 0 && status === "late" && (
-                      <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-sm" aria-label="Has overtime" />
+                      <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-e1 hover:shadow-e2 transition-shadow duration-150" aria-label="Has overtime" />
                     )}
                     {/* Subtle clock-in indicator dot */}
                     {record?.clock_in && (

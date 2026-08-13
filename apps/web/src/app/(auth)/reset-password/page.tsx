@@ -106,10 +106,10 @@ function ResetPasswordForm() {
         </div>
 
         <CardHeader className="space-y-2 pb-6 pt-6 text-center">
-          <CardTitle className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">
+          <CardTitle className="text-2xl font-bold font-display tracking-tight text-foreground">
             Create New Password
           </CardTitle>
-          <CardDescription className="text-sm font-sans text-neutral-500 dark:text-neutral-400">
+          <CardDescription className="text-sm font-sans text-muted-foreground">
             Choose a strong password for your account
           </CardDescription>
         </CardHeader>
@@ -121,7 +121,7 @@ function ResetPasswordForm() {
                 Invalid or missing reset link. Please request a new password reset.
               </div>
               <Link href="/forgot-password" className="block w-full">
-                <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-e1 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                   Request Password Reset
                 </Button>
               </Link>
@@ -201,15 +201,15 @@ function ResetPasswordForm() {
 
               <Button
                 type="submit"
-                className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
                 disabled={isLoading}
               >
 <span className="relative z-10 flex items-center justify-center">
                   {isLoading ? (
                     <div className="flex space-x-1.5 items-center justify-center h-full">
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   ) : (
                     "Reset Password"
@@ -227,7 +227,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950 font-sans">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-card font-sans">Loading...</div>}>
       <ResetPasswordForm />
     </Suspense>
   );

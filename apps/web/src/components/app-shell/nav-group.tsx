@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@g4k/ui/components";
 import { hasCapability } from "@/lib/capabilities";
 import { useAuthStore } from "@/lib/auth-store";
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,7 +72,7 @@ export const NavItem = memo(function NavItem({
           isDisabled
             ? "opacity-50 cursor-not-allowed text-neutral-400 dark:text-neutral-600"
             : isActive
-            ? cn("font-semibold shadow-sm ring-1 ring-inset", accent.bg, accent.bgDark, accent.ring, accent.text, accent.textDark)
+            ? cn("font-semibold shadow-e1 hover:shadow-e2 transition-shadow duration-150 ring-1 ring-inset", accent.bg, accent.bgDark, accent.ring, accent.text, accent.textDark)
             : cn("text-neutral-600 dark:text-neutral-400 font-medium group-hover/nav:bg-opacity-50", accent.hoverBg, accent.hoverText)
         )}
       >
@@ -87,6 +86,8 @@ export const NavItem = memo(function NavItem({
                 ? "text-neutral-400 dark:text-neutral-600"
                 : isActive
                 ? "text-inherit"
+                : currentlyCollapsed
+                ? accent.text
                 : "text-neutral-400 group-hover/nav:text-inherit"
             )}
           />
@@ -103,17 +104,6 @@ export const NavItem = memo(function NavItem({
     </div>
   );
 
-  if (currentlyCollapsed) {
-    return (
-      <Tooltip delayDuration={150}>
-        <TooltipTrigger className="block w-full">{content}</TooltipTrigger>
-        <TooltipContent side="right" className="text-xs flex items-center gap-1.5">
-          <div className={cn("w-1.5 h-1.5 rounded-full", accent.bg)} />
-          {item.name}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
   return content;
 });
 

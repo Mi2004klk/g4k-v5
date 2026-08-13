@@ -353,15 +353,15 @@ export function FilterBar({
             }
             if (filter.value && filter.value !== "all") {
               if (filter.type === "date-range") {
-                if (!filter.value.start && !filter.value.end) return null
-                const label = `${filter.value.start || ""} to ${filter.value.end || ""}`
+                if (!filter.value.from && !filter.value.to) return null
+                const label = `${filter.value.from ? format(filter.value.from, "MMM d") : ""} to ${filter.value.to ? format(filter.value.to, "MMM d") : ""}`
                 return (
                   <Badge key={filter.key} variant="secondary" className="pl-3 pr-1 h-6 rounded-full flex items-center gap-1 font-normal">
                     {filter.label}: {label}
                     <div
                       role="button"
                       className="h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
-                      onClick={() => filter.onChange("all")}
+                      onClick={() => filter.onChange({ from: undefined, to: undefined })}
                     >
                       <X className="h-3 w-3" />
                     </div>

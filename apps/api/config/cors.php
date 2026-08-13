@@ -20,14 +20,13 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        env('FRONTEND_URL', 'http://localhost:3000'),
-        'https://g4k-v4.vercel.app',
-        'https://g4k-v4-p24bp49v9-naval-treasure-group.vercel.app',
+        env('FRONTEND_URL'),
+        'https://g4-k-web.vercel.app'
     ],
 
     'allowed_origins_patterns' => [
-        '#^http://localhost:\d+$#',
-        '#^https://.*\.vercel\.app$#'
+        '#^https://g4-k-web-[a-z0-9]+-naval-treasure-group\.vercel\.app$#i',
+        '#^http://localhost:\d+$#'
     ],
 
     'allowed_headers' => ['*', 'X-Refresh-Token', 'Authorization', 'Content-Type', 'Accept', 'X-Socket-Id'],

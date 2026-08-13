@@ -48,7 +48,7 @@ export function QuickTaskWidget() {
   };
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 overflow-hidden">
+    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 overflow-hidden">
       <div>
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">

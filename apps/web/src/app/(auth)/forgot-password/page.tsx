@@ -70,8 +70,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
-      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
+      <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-card dark:bg-neutral-900 rounded-xl relative">
         <div className="w-full h-28 bg-primary relative flex items-center justify-center pt-2 pb-2">
            <Image
               src="/landscape-logo.png"
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
                 If an account matching your identifier exists, a password-reset link has been sent.
               </div>
               <Link href="/login" className="block w-full">
-                <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-e1 hover:shadow-e2 transition-shadow duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                   <ArrowLeft className="w-4 h-4" />
                   Return to Sign In
                 </Button>
@@ -135,7 +135,7 @@ export default function ForgotPasswordPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                  className="w-full h-11 mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
                   disabled={isLoading}
                 >
 <span className="relative z-10 flex items-center justify-center">

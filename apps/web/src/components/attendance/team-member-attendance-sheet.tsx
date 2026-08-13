@@ -166,7 +166,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                       
                       return (
                         <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                          <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 bg-white dark:bg-neutral-950 shrink-0 md:order-1 shadow-sm z-10 ${
+                          <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 bg-card dark:bg-neutral-950 shrink-0 md:order-1 shadow-e1 hover:shadow-e2 transition-shadow duration-150 z-10 ${
                             isClockIn ? 'border-emerald-500' : isClockOut ? 'border-rose-500' : 'border-amber-400'
                           }`}>
                             {isClockIn && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
@@ -175,7 +175,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                           </div>
                           
                           <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] px-4">
-                            <div className="flex flex-col bg-white dark:bg-neutral-900 p-3 rounded-xl border border-neutral-100 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+                            <div className="flex flex-col bg-card dark:bg-neutral-900 p-3 rounded-xl border border-neutral-100 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold text-sm text-neutral-900 dark:text-white capitalize">

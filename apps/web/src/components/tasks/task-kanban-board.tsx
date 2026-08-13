@@ -23,6 +23,8 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
   ContextMenuTrigger,
+  Avatar,
+  AvatarFallback,
 } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
@@ -59,7 +61,7 @@ function TaskCard({
   return (
     <Card
       onClick={() => onTaskSelect?.(task)}
-      className={`border-neutral-200/60 dark:border-neutral-800 shadow-sm transition-all bg-white dark:bg-neutral-900 ${
+      className={`border-neutral-200/60 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all bg-card dark:bg-neutral-900 ${
         isOverlay ? "scale-105 rotate-2 cursor-grabbing shadow-xl ring-2 ring-ring" : "hover:shadow cursor-grab"
       }`}
     >
@@ -87,9 +89,9 @@ function TaskCard({
 
           {task.assignee && (
             <div className="flex items-center gap-1 text-neutral-600 dark:text-neutral-300 font-medium">
-              <div className="w-4 h-4 rounded-full bg-primary text-primary-foreground font-bold text-[8px] flex items-center justify-center">
-                {task.assignee.name.charAt(0)}
-              </div>
+              <Avatar className="w-4 h-4">
+                <AvatarFallback name={task.assignee.name} className="text-[8px]" />
+              </Avatar>
               <span className="truncate max-w-[80px]">{task.assignee.name}</span>
             </div>
           )}

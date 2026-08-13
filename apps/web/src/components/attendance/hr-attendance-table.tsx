@@ -140,7 +140,7 @@ export function HrAttendanceTable() {
                 setSheetTab("trends");
                 setSelectedUser(row.original.user_id);
               }}
-              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-all text-muted-foreground hover:text-violet-500"
+              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all text-muted-foreground hover:text-violet-500"
               title="View Trends"
             >
               <TrendingUp className="w-4 h-4" />
@@ -260,7 +260,6 @@ export function HrAttendanceTable() {
   ];
 
   const statusOptions = [
-    { label: "All", value: "all" },
     { label: "Present", value: "present" },
     { label: "Absent", value: "absent" },
     { label: "Late", value: "late" },

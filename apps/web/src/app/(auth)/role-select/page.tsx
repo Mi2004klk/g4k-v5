@@ -72,7 +72,7 @@ export default function RoleSelectPage() {
 
   if (!user || !user.roles || user.roles.length === 1) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950">
         <div className="flex space-x-1.5 items-center justify-center">
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -84,8 +84,8 @@ export default function RoleSelectPage() {
 
   if (user.roles.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
-        <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 p-6 text-center bg-white dark:bg-neutral-900 rounded-xl">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
+        <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 p-6 text-center bg-card dark:bg-neutral-900 rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">No Workspace Assigned</CardTitle>
           </CardHeader>
@@ -95,7 +95,7 @@ export default function RoleSelectPage() {
             </p>
             <button 
               onClick={() => { clearAuth(); router.push('/login'); }} 
-              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg shadow-sm transition-all font-sans"
+              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all font-sans"
             >
               Sign out
             </button>
@@ -106,8 +106,8 @@ export default function RoleSelectPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
-      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
+      <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-card dark:bg-neutral-900 rounded-xl relative">
         <div className="w-full h-28 bg-primary relative flex items-center justify-center pt-2 pb-2">
            <Image
               src="/landscape-logo.png"
@@ -138,7 +138,7 @@ export default function RoleSelectPage() {
                 key={role}
                 onClick={() => handleSelectRole(role)}
                 disabled={isLoading !== null}
-                className="w-full flex items-center p-4 text-left border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-brand-violet dark:hover:border-brand-violet hover:bg-brand-violet/5 transition-all group disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-neutral-900 shadow-sm"
+                className="w-full flex items-center p-4 text-left border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-brand-violet dark:hover:border-brand-violet hover:bg-brand-violet/5 transition-all group disabled:opacity-50 disabled:cursor-not-allowed bg-card dark:bg-neutral-900 shadow-e1 hover:shadow-e2 transition-shadow duration-150"
               >
                 <div className="w-10 h-10 rounded-full bg-brand-violet/10 flex items-center justify-center mr-4 shrink-0 group-hover:scale-110 transition-transform">
                   <Icon className="w-5 h-5 text-brand-violet" />

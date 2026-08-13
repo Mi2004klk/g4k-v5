@@ -26,7 +26,7 @@ export function AdminTodayAttendanceWidget() {
   const presentPct = totalCount ? ((presentCount + lateCount) / totalCount) * 100 : 0;
 
   return (
-    <Card className="h-full flex flex-col bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden relative transition-shadow duration-150 group">
+    <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden relative transition-shadow duration-150 group">
       <Link href="/dashboard/admin/attendance" className="absolute inset-0 z-10">
         <span className="sr-only">View Full Company Attendance</span>
       </Link>

@@ -2,13 +2,13 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { Card, Skeleton, StatusBadge } from "@g4k/ui/components";
-import { ClipboardList, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Card, Skeleton, StatusBadge, Button } from "@g4k/ui/components";
+import {  ClipboardList, ArrowRight, CheckCircle2 , AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 export function EmployeeApprovalStatusWidget() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["tasks-submitted"],
     queryFn: () => apiFetch("/tasks/submitted"),
     staleTime: 60_000,
@@ -17,7 +17,7 @@ export function EmployeeApprovalStatusWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
+      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <Skeleton className="w-7 h-7 rounded-md" />
@@ -30,10 +30,29 @@ export function EmployeeApprovalStatusWidget() {
     );
   }
 
+  if (isError) {
+    return (
+      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+        <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold">Approval Status</span>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
+          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load status</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            Retry
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   const tasks = data?.data?.slice(0, 3) || [];
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
+    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">

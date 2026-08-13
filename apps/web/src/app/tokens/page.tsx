@@ -61,7 +61,7 @@ export default function TokensPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
           {brandTokens.map((token) => (
             <div key={token.name} className="flex flex-col gap-2">
-              <div className={`h-16 w-full rounded-md shadow-sm flex items-center justify-center ${token.var} ${token.text}`}>
+              <div className={`h-16 w-full rounded-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex items-center justify-center ${token.var} ${token.text}`}>
                 <span className="text-xs font-medium px-2 text-center leading-tight">Aa</span>
               </div>
               <span className="text-xs text-secondary-foreground">{token.name}</span>
@@ -75,7 +75,7 @@ export default function TokensPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {semanticTokens.map((token) => (
             <div key={token.name} className="flex flex-col gap-2">
-              <div className={`h-16 w-full rounded-md shadow-sm flex items-center justify-center ${token.var} ${token.text}`}>
+              <div className={`h-16 w-full rounded-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex items-center justify-center ${token.var} ${token.text}`}>
                 <span className="text-xs font-medium px-2 text-center leading-tight">Aa</span>
               </div>
               <span className="text-xs text-secondary-foreground">{token.name}</span>

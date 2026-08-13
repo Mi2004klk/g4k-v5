@@ -168,11 +168,13 @@ export default function UsersPage() {
     delayError: 400,
   });
 
-  // Watch for drafting
-  const formValues = watch();
+  // Watch for drafting using subscription to avoid re-renders
   useEffect(() => {
-    setDraftData(formValues);
-  }, [formValues, setDraftData]);
+    const subscription = watch((value) => {
+      setDraftData(value as UserFormValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, setDraftData]);
 
   // Queries
   const { data, isPending, isError, refetch } = useQuery({
@@ -194,6 +196,7 @@ export default function UsersPage() {
     queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
     staleTime: STALE_TIME_DEPARTMENTS,
+    enabled: hasCapability(capabilities, "departments.manage"),
   });
 
   const watchDept = watch("department_id");
@@ -206,11 +209,13 @@ export default function UsersPage() {
     queryKey: queryKeys.designations,
     queryFn: () => apiFetch("/designations").then(res => res.data || []),
     staleTime: STALE_TIME_DESIGNATIONS,
+    enabled: hasCapability(capabilities, "designations.manage"),
   });
 
   const { data: work_schedules = [] } = useQuery({
     queryKey: ["work_schedules"],
     queryFn: () => apiFetch("/work-schedules"),
+    enabled: hasCapability(capabilities, "settings.manage"),
   });
 
   const { data: activityData, isLoading: isLoadingActivity } = useQuery({
@@ -458,7 +463,7 @@ export default function UsersPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm">
+          <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
             {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             Export
           </Button>
@@ -474,7 +479,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 bg-card dark:bg-neutral-900">
         <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
           <FilterBar
             searchQuery={search}
@@ -488,7 +493,6 @@ export default function UsersPage() {
                 value: roleFilter,
                 onChange: setRoleFilter,
                 options: [
-                  { label: "All", value: "all" },
                   { label: "Super Admin", value: "super_admin" },
                   { label: "HR", value: "hr" },
                   { label: "Employee", value: "employee" },
@@ -501,7 +505,6 @@ export default function UsersPage() {
                 value: statusFilter,
                 onChange: setStatusFilter,
                 options: [
-                  { label: "All", value: "all" },
                   { label: "Active", value: "active" },
                   { label: "Inactive", value: "inactive" },
                 ],
@@ -512,7 +515,7 @@ export default function UsersPage() {
                 label: "Department",
                 value: deptFilter,
                 onChange: setDeptFilter,
-                options: [{ label: "All", value: "all" }, ...deptOptions],
+                options: [...deptOptions],
               },
             ]}
           />
@@ -530,7 +533,7 @@ export default function UsersPage() {
         </div>
       )}
 
-      <Card className="border-none shadow-sm">
+      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <CardContent className="p-0">
           {isPending ? (
             <div className="p-6 space-y-4">
@@ -552,8 +555,9 @@ export default function UsersPage() {
           ) : (
             <div className="space-y-4">
               <DataTable 
-                columns={columns} 
-                data={usersList} 
+                  columns={columns} 
+                  data={usersList} 
+                  getRowId={(r: any) => String(r.id)} 
                 onRowSelectionChange={setRowSelection}
                 page={page}
                 perPage={perPage}
@@ -779,3 +783,4 @@ export default function UsersPage() {
     </div>
   );
 }
+

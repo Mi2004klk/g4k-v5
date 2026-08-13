@@ -131,14 +131,14 @@ export function AuditLogTable() {
             type="date"
             value={filters.start_date}
             onChange={(e) => setStartDate(e.target.value)}
-            className="h-9 px-3 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+            className="h-9 px-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
           />
           <span>to</span>
           <input
             type="date"
             value={filters.end_date}
             onChange={(e) => setEndDate(e.target.value)}
-            className="h-9 px-3 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+            className="h-9 px-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
           />
         </div>
         <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap">

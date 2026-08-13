@@ -12,10 +12,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
-    'company_id', 'employee_id', 'name', 'username', 'email', 'password',
+    'company_id', 'employee_id', 'name', 'username', 'email',
     'department_id', 'team_id', 'designation_id', 'phone', 'alternate_mobile',
     'emergency_contact', 'joining_date', 'blood_group', 'working_hours',
-    'must_change_password', 'status', 'avatar_url', 'preferences', 'work_schedule_id', 'active_role'
+    'avatar_url', 'preferences', 'work_schedule_id'
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable

@@ -26,6 +26,8 @@ class UserController extends Controller
     private function buildIndexQuery(Request $request)
     {
         $query = User::with(['department', 'team', 'designation', 'roleAssignments']);
+        
+        $query->when($request->boolean('only_trashed'), fn($q) => $q->onlyTrashed());
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -123,25 +125,28 @@ class UserController extends Controller
         $forceChange = \App\Models\Setting::where('category', 'security')->where('key', 'force_password_change')->value('value');
         $mustChange = filter_var($forceChange, FILTER_VALIDATE_BOOLEAN);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'username' => $validated['username'] ?? null,
-            'employee_id' => $validated['employee_id'] ?? $employeeCode,
-            'phone' => $validated['phone'] ?? null,
-            'department_id' => $validated['department_id'] ?? null,
-            'team_id' => $validated['team_id'] ?? null,
-            'designation_id' => $validated['designation_id'] ?? null,
-            'password' => Hash::make(\Illuminate\Support\Str::random(16)),
-            'must_change_password' => $mustChange,
-            'password_changed_at' => now(),
-            'status' => 'active',
-        ]);
+        $user = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $employeeCode, $mustChange, $roles) {
+            $user = User::forceCreate([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'username' => $validated['username'] ?? null,
+                'employee_id' => $validated['employee_id'] ?? $employeeCode,
+                'phone' => $validated['phone'] ?? null,
+                'department_id' => $validated['department_id'] ?? null,
+                'team_id' => $validated['team_id'] ?? null,
+                'designation_id' => $validated['designation_id'] ?? null,
+                'password' => Hash::make(\Illuminate\Support\Str::random(16)),
+                'must_change_password' => $mustChange,
+                'password_changed_at' => now(),
+                'status' => 'active',
+            ]);
 
-        foreach ($roles as $roleName) {
-            $user->roleAssignments()->create(['role' => $roleName]);
+            foreach ($roles as $roleName) {
+                $user->roleAssignments()->create(['role' => $roleName]);
             }
-            \Illuminate\Support\Facades\Cache::forget("user.{$user->id}.roles");
+            return $user;
+        });
+        \Illuminate\Support\Facades\Cache::forget("user.{$user->id}.roles");
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'create', 'user', $user->id, null, $user->toArray());
@@ -176,23 +181,28 @@ class UserController extends Controller
             }
         }
 
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'username' => $validated['username'] ?? $user->username,
-            'employee_id' => $validated['employee_id'] ?? $user->employee_id,
-            'phone' => $validated['phone'] ?? null,
-            'department_id' => $validated['department_id'] ?? null,
-            'team_id' => $validated['team_id'] ?? null,
-            'designation_id' => $validated['designation_id'] ?? null,
-            'work_schedule_id' => $validated['work_schedule_id'] ?? null,
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $validated) {
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'username' => $validated['username'] ?? $user->username,
+                'employee_id' => $validated['employee_id'] ?? $user->employee_id,
+                'phone' => $validated['phone'] ?? null,
+                'department_id' => $validated['department_id'] ?? null,
+                'team_id' => $validated['team_id'] ?? null,
+                'designation_id' => $validated['designation_id'] ?? null,
+                'work_schedule_id' => $validated['work_schedule_id'] ?? null,
+            ]);
 
-        if (isset($validated['roles']) && count($validated['roles']) > 0) {
-            $user->roleAssignments()->delete();
-            foreach ($validated['roles'] as $roleName) {
-                $user->roleAssignments()->create(['role' => $roleName]);
+            if (isset($validated['roles']) && count($validated['roles']) > 0) {
+                $user->roleAssignments()->delete();
+                foreach ($validated['roles'] as $roleName) {
+                    $user->roleAssignments()->create(['role' => $roleName]);
+                }
             }
+        });
+        
+        if (isset($validated['roles']) && count($validated['roles']) > 0) {
             \Illuminate\Support\Facades\Cache::forget("user.{$user->id}.roles");
         }
 
@@ -236,7 +246,7 @@ class UserController extends Controller
             }
         }
 
-        $user->update(['status' => $validated['status']]);
+        $user->forceFill(['status' => $validated['status']])->save();
         AuditLogger::log($request, 'update_status', 'user', $user->id, $before, $user->toArray());
 
         return response()->json($user);
@@ -338,20 +348,23 @@ class UserController extends Controller
 
         $tempPassword = \Illuminate\Support\Str::random(16);
 
+        $user->password = Hash::make($tempPassword);
+        $user->must_change_password = true;
+        $user->password_changed_at = now();
+        $user->save();
+        $user->tokens()->delete();
+
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+
         try {
             \Illuminate\Support\Facades\Mail::raw("Your password has been reset by an administrator. Your temporary password is: {$tempPassword}\nPlease login and change it immediately.", function ($message) use ($user) {
                 $message->to($user->email)->subject('Password Reset by Administrator');
             });
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Failed to email temp password to {$user->email}: " . $e->getMessage());
-            return response()->json(['message' => 'Could not send the reset email; no changes were made.'], 422);
+            // We've already changed the password, so it's a partial failure.
+            return response()->json(['message' => 'Password reset, but could not send the email.'], 200);
         }
-
-        $user->password = Hash::make($tempPassword);
-        $user->must_change_password = true;
-        $user->password_changed_at = now();
-        $user->save();
-        $user->tokens()->delete();
 
         AuditLogger::log($request, 'reset_password', 'user', $user->id, null, ['status' => 'password_reset']);
 
@@ -402,7 +415,7 @@ class UserController extends Controller
             }
 
             $before = $user->toArray();
-            $user->update(['status' => $status]);
+            $user->forceFill(['status' => $status])->save();
             AuditLogger::log($request, "bulk_{$status}", 'user', $user->id, $before, $user->toArray());
         }
 

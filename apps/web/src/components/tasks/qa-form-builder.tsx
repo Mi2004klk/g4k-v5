@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Button } from "@g4k/ui/components";
+import {  Button , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Plus, X, Trash2, ArrowUp, ArrowDown, CheckCircle, Loader2 } from "lucide-react";
@@ -85,16 +85,18 @@ export function QAFormBuilder() {
                 onChange={(e) => updateField(index, "label", e.target.value)}
                 className="text-xs h-8 flex-1"
               />
-              <select
-                value={field.field_type}
-                onChange={(e) => updateField(index, "field_type", e.target.value)}
-                className="h-8 text-xs border border-input bg-background rounded-md px-2"
-              >
-                <option value="input">Text Input</option>
-                <option value="textarea">Textarea</option>
-                <option value="checkbox">Checkbox</option>
-                <option value="slider">Rating Slider</option>
-              </select>
+              <Select value={field.field_type} onValueChange={(val) => updateField(index, "field_type", val)}>
+      <SelectTrigger className="w-full h-9">
+        <SelectValue placeholder="Select..." />
+      </SelectTrigger>
+      <SelectContent>
+                <SelectItem value="input">Text Input</SelectItem>
+                <SelectItem value="textarea">Textarea</SelectItem>
+                <SelectItem value="checkbox">Checkbox</SelectItem>
+                <SelectItem value="slider">Rating Slider</SelectItem>
+              
+      </SelectContent>
+    </Select>
               <Button
                 size="icon"
                 variant="ghost"

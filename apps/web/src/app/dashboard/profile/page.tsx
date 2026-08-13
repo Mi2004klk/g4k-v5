@@ -37,10 +37,10 @@ import { strongPasswordSchema } from "@/lib/validations";
 import { parseUserAgent } from "@/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 
-import { Button } from "@g4k/ui/components";
+import {  Button , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { PasswordInput } from "@g4k/ui/components";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, ConfirmDialog } from "@g4k/ui/components";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, ConfirmDialog, Avatar, AvatarFallback } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -339,7 +339,9 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="opacity-50">{profile?.name ? profile.name.charAt(0) : <Skeleton className="w-8 h-8 rounded-full" />}</span>
+                <Avatar className="w-full h-full">
+                  <AvatarFallback name={profile?.name || ""} className="text-4xl" />
+                </Avatar>
               )}
             </div>
             <button
@@ -465,18 +467,20 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Designation</label>
-              <select
-                value={designationId}
-                onChange={(e) => setDesignationId(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:ring-offset-neutral-950 dark:placeholder:text-muted-foreground dark:focus-visible:ring-brand-violet font-sans"
-              >
-                <option value="">Select Designation</option>
+              <Select value={designationId} onValueChange={(v) => { setDesignationId(e.target.value)(v as any); }}>
+<SelectTrigger className="w-full h-9">
+<SelectValue placeholder="Select Designation" />
+</SelectTrigger>
+<SelectContent>
+                <SelectItem value="">Select Designation</SelectItem>
                 {designations?.map((d: any) => (
-                  <option key={d.id} value={d.id}>
+                  <SelectItem value={d.id}>
                     {d.name}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+              
+      </SelectContent>
+    </Select>
             </div>
             <div>
               <label className="font-semibold block mb-1 text-muted-foreground">Email Address (Read-only)</label>

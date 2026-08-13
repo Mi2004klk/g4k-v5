@@ -180,7 +180,7 @@ export function CommandPalette() {
             <Clock className="w-4 h-4 mr-2" />
             <span>View Attendance History</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/leave"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/attendance?tab=leave"))}>
             <Coffee className="w-4 h-4 mr-2 text-violet-500" />
             <span>Request Leave</span>
           </CommandItem>
@@ -188,13 +188,9 @@ export function CommandPalette() {
 
         {isHrOrAdmin && (
           <CommandGroup heading="Admin Actions">
-            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/admin/attendance"))}>
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/attendance?tab=all"))}>
               <Users className="w-4 h-4 mr-2 text-emerald-500" />
               <span>View Company Attendance</span>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/admin/reports"))}>
-              <Download className="w-4 h-4 mr-2 text-blue-500" />
-              <span>Generate Attendance Summary</span>
             </CommandItem>
           </CommandGroup>
         )}
@@ -213,11 +209,11 @@ export function CommandPalette() {
             <Users className="w-4 h-4 mr-2" />
             <span>User Accounts Management</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/departments"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users?tab=departments"))}>
             <Building2 className="w-4 h-4 mr-2" />
             <span>Departments & Teams</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/designations"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users?tab=designations"))}>
             <Briefcase className="w-4 h-4 mr-2" />
             <span>Designations Master</span>
           </CommandItem>
@@ -225,7 +221,7 @@ export function CommandPalette() {
             <UserCircle className="w-4 h-4 mr-2" />
             <span>My Profile</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/settings"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/profile?tab=settings"))}>
             <Settings className="w-4 h-4 mr-2" />
             <span>Admin Settings</span>
           </CommandItem>

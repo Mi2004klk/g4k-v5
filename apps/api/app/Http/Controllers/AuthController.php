@@ -428,6 +428,8 @@ class AuthController extends Controller
         // Revoke all existing tokens to kick out attackers/old sessions (AUTH-2)
         $user->tokens()->delete();
 
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+
         \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->delete();
 
         return response()->json(['message' => 'Password reset successful.']);
@@ -452,6 +454,8 @@ class AuthController extends Controller
         $user->must_change_password = false;
         $user->password_changed_at = now();
         $user->save();
+
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
 
         $deviceName = $user->currentAccessToken()->name ?? 'Unknown Device';
         $user->tokens()->delete(); // Revoke ALL existing tokens

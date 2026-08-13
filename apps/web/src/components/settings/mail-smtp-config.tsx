@@ -6,13 +6,14 @@ import { Save, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@g4k/ui/components";
 
 const smtpSchema = z.object({
   from_address: z.string().email("Invalid email address").optional().or(z.literal('')),
@@ -108,7 +109,7 @@ export function MailSmtpConfig() {
   }
 
   return (
-    <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+    <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-base">Mail / SMTP Settings</CardTitle>
@@ -146,11 +147,22 @@ export function MailSmtpConfig() {
             </div>
             <div>
               <label className="text-xs font-medium">Encryption</label>
-              <select {...form.register("encryption")} className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1">
-                <option value="tls">TLS</option>
-                <option value="ssl">SSL</option>
-                <option value="none">None</option>
-              </select>
+              <Controller
+                name="encryption"
+                control={form.control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent mt-1">
+                      <SelectValue placeholder="Select Encryption" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tls">TLS</SelectItem>
+                      <SelectItem value="ssl">SSL</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
             <div>
               <label className="text-xs font-medium">Timeout (sec)</label>

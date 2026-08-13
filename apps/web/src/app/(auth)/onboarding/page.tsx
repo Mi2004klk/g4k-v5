@@ -56,7 +56,7 @@ export default function OnboardingPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950">
         <div className="flex space-x-1.5 items-center justify-center">
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -69,8 +69,8 @@ export default function OnboardingPage() {
   const primaryRole = user.roles?.[0] || 'employee';
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950 font-sans">
-      <Card className="w-full max-w-md shadow-sm border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl relative">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
+      <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-card dark:bg-neutral-900 rounded-xl relative">
         <div className="w-full relative flex flex-col items-center justify-center pt-8 pb-4">
            {/* Replace gradient hero with the animated logo */}
            <video 
@@ -130,7 +130,7 @@ export default function OnboardingPage() {
             <Button
               onClick={handleFinish}
               disabled={isLoading}
-              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
+              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"
             >
 <span className="relative z-10 flex items-center justify-center">
                 {isLoading ? (

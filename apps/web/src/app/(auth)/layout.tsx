@@ -30,7 +30,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   // Optionally hide content while redirecting from an auth page
   if (mounted && token && user && (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password')) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950">
         <div className="flex space-x-1.5 items-center justify-center">
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

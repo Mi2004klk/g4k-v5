@@ -1,7 +1,13 @@
 {
   "version": 2,
-  "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
-  "installCommand": "pnpm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "env": {
+    "NODE_OPTIONS": "--no-experimental-fetch"
+  },
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--no-experimental-fetch"
+    }
+  }
 }

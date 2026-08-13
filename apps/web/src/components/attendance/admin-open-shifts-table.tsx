@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
-import { Input, Button, Checkbox, DataTable } from "@g4k/ui/components";
+import {  Input, Button, Checkbox, DataTable , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
@@ -180,16 +180,18 @@ export function AdminOpenShiftsTable() {
 
           <div className="relative shrink-0">
             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <select
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="h-10 pl-9 pr-8 py-2 w-[160px] text-sm bg-transparent border border-amber-100 dark:border-amber-900/30 rounded-lg focus:ring-2 focus:ring-amber-500 appearance-none text-foreground"
-            >
-              <option value="all">All Departments</option>
+            <Select value={deptFilter} onValueChange={(v) => { setDeptFilter(e.target.value)(v as any); }}>
+<SelectTrigger className="w-full h-9">
+<SelectValue placeholder="Select..." />
+</SelectTrigger>
+<SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
               {departments.map((d: any) => (
-                <option key={d.id} value={d.id.toString()}>{d.name}</option>
+                <SelectItem value={d.id.toString()}>{d.name}</SelectItem>
               ))}
-            </select>
+            
+      </SelectContent>
+    </Select>
           </div>
         </div>
 

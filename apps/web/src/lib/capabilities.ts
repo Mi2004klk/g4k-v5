@@ -11,14 +11,16 @@ export function useCapabilities() {
     queryFn: async () => {
       if (!token) return [];
       const res = await apiFetch("/me/capabilities");
-      if (typeof window !== "undefined") {
-        document.cookie = `g4k_capabilities=${encodeURIComponent(JSON.stringify(res.capabilities || []))}; path=/; max-age=86400; SameSite=Lax`;
+      if (!res.capabilities || res.capabilities.length === 0) {
+        throw new Error("Permissions unavailable — retry");
       }
-      return res.capabilities || [];
+      if (typeof window !== "undefined") {
+        document.cookie = `g4k_capabilities=${encodeURIComponent(JSON.stringify(res.capabilities))}; path=/; max-age=86400; SameSite=Lax`;
+      }
+      return res.capabilities;
     },
     enabled: !!token,
     staleTime: 1000 * 60 * 30, // 30 minutes
-    placeholderData: ["*"], // Optimistic: show all items until real capabilities load
   });
 }
 

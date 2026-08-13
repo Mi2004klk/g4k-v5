@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api-client";
 import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
+import { Input, Slider } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
 export function TaskDetailSheet({
@@ -153,15 +153,14 @@ export function TaskDetailSheet({
                 <span>Progress</span>
                 <span>{progress}%</span>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={progress}
-                onChange={(e) => setProgress(parseInt(e.target.value))}
-                onMouseUp={() => progressMutation.mutate(progress)}
-                onTouchEnd={() => progressMutation.mutate(progress)}
-                className="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer dark:bg-neutral-700"
+              <Slider
+                min={0}
+                max={100}
+                step={1}
+                value={[progress]}
+                onValueChange={(val) => setProgress(val[0])}
+                onValueCommit={(val) => progressMutation.mutate(val[0])}
+                className="w-full"
               />
             </div>
 

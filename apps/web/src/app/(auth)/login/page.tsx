@@ -153,16 +153,16 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full h-10 mt-2 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-sm transition-all duration-300 active:scale-[0.98] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                className="w-full h-10 mt-2 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 transition-all duration-300 active:scale-[0.98] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed border-none"
                 disabled={isLoading || lockoutSeconds > 0}
               >
                 {/* Rainbow Hover Border Effect */}
 <span className="relative z-10 flex items-center justify-center">
                   {isLoading ? (
                     <div className="flex space-x-1.5 items-center justify-center h-full">
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   ) : lockoutSeconds > 0 ? (
                     `Try again in ${Math.ceil(lockoutSeconds / 60)}m ${lockoutSeconds % 60}s`
@@ -174,7 +174,7 @@ export default function LoginPage() {
               <div className="text-center mt-4">
                 <Link
                   href="/forgot-password"
-                  className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors block"
+                  className="text-xs font-medium text-muted-foreground hover:text-neutral-900 dark:hover:text-white transition-colors block"
                 >
                   Forgot password?
                 </Link>

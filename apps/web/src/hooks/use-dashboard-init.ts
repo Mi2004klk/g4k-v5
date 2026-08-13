@@ -1,1 +1,14 @@
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";`nimport { apiFetch } from "@/lib/api-client";`nimport { queryKeys } from "@/lib/query-keys";`n`nexport function useDashboardInit<TData = any>(options?: Omit<UseQueryOptions<any, Error, TData>, "queryKey" | "queryFn">) {`n  return useQuery({`n    queryKey: queryKeys.dashboardInit,`n    queryFn: () => apiFetch("/dashboard/init").then(res => res.data),`n    staleTime: 5 * 60_000,`n    refetchOnMount: false,`n    refetchOnWindowFocus: false,`n    ...options,`n  });`n}
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+
+export function useDashboardInit<TData = any>(options?: Omit<UseQueryOptions<any, Error, TData>, "queryKey" | "queryFn">) {
+  return useQuery({
+    queryKey: queryKeys.dashboardInit,
+    queryFn: () => apiFetch("/dashboard/init").then(res => res.data),
+    staleTime: 5 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+}

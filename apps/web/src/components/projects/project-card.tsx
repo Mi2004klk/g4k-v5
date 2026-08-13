@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { Folder, Calendar, CheckCircle2, Clock, MoreVertical, Flag } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, Avatar, AvatarFallback } from "@g4k/ui/components";
 import { Badge } from "@g4k/ui/components";
 
 export function ProjectCard({ project, onClick }: { project: any; onClick?: () => void }) {
@@ -22,7 +22,7 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
   return (
     <Card
       onClick={onClick}
-      className="hover:shadow-md transition-all cursor-pointer bg-white dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
+      className="hover:shadow-md transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
@@ -68,13 +68,13 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
           <div className="flex -space-x-1.5 overflow-hidden">
             {project.members && project.members.length > 0 ? (
               project.members.slice(0, 3).map((m: any) => (
-                <div
-                  key={m.id}
-                  className="inline-block h-5 w-5 rounded-full ring-1 ring-white dark:ring-neutral-900 bg-violet-500 text-white font-bold text-[9px] flex items-center justify-center"
-                  title={m.name}
-                >
-                  {m.name.charAt(0)}
-                </div>
+                  <Avatar 
+                    key={m.id} 
+                    className="inline-block h-5 w-5 rounded-full ring-1 ring-white dark:ring-neutral-900"
+                    title={m.name}
+                  >
+                    <AvatarFallback name={m.name} className="text-[9px]" />
+                  </Avatar>
               ))
             ) : (
               <span className="text-[10px]">No members</span>

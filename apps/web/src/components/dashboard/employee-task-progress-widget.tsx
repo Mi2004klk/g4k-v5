@@ -3,21 +3,21 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
-import { Card, Skeleton } from "@g4k/ui/components";
+import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
-import { CheckCircle2, ListTodo } from "lucide-react";
+import {  CheckCircle2, ListTodo , AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 export function EmployeeTaskProgressWidget() {
-  const { data, isLoading } = useDashboardInit({
+  const { data, isLoading, isError, refetch } = useDashboardInit({
     select: (data: any) => data.metrics?.recent_task_progress,
     placeholderData: keepPreviousData,
   });
 
   if (isLoading) {
     return (
-      <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
+      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
         <div className="flex items-center gap-2 pb-3">
           <Skeleton className="w-7 h-7 rounded-md" />
           <Skeleton className="h-4 w-32" />
@@ -27,10 +27,29 @@ export function EmployeeTaskProgressWidget() {
     );
   }
 
+  if (isError) {
+    return (
+      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+        <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold">Task Progress</span>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
+          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load tasks</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            Retry
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   const tasks = data || [];
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
+    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">

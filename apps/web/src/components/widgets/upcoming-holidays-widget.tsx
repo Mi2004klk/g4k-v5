@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format, isAfter, startOfDay } from "date-fns";
-import { Calendar, ChevronRight, Clock, MapPin } from "lucide-react";
+import {  Calendar, ChevronRight, Clock, MapPin , AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent, Skeleton, Button } from "@g4k
 export function UpcomingHolidaysWidget() {
   const currentYear = new Date().getFullYear();
   
-  const { data: holidays, isLoading } = useQuery({
+  const { data: holidays, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.holidays(currentYear),
     queryFn: () => apiFetch(`/holidays?year=${currentYear}`),
     staleTime: STALE_TIME_CONFIG,
@@ -26,7 +26,7 @@ export function UpcomingHolidaysWidget() {
     : [];
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 flex flex-col">
+    <Card className="h-full bg-card dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 flex flex-col">
       <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-bold flex items-center gap-2">
           <Calendar className="w-4 h-4 text-violet-600" />
@@ -44,6 +44,14 @@ export function UpcomingHolidaysWidget() {
             <Skeleton className="h-12 w-full rounded-lg" />
             <Skeleton className="h-12 w-full rounded-lg" />
             <Skeleton className="h-12 w-full rounded-lg" />
+          </div>
+        ) : isError ? (
+          <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 m-4">
+            <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+            <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load holidays</span>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+              Retry
+            </Button>
           </div>
         ) : upcomingList.length === 0 ? (
           <div className="p-6 text-center text-sm text-neutral-500">

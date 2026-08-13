@@ -80,10 +80,10 @@ export function MessageComposer({
   };
 
   return (
-    <div className="relative p-3 border-t border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center gap-2">
+    <div className="relative p-3 border-t border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-2">
       {/* Mentions Dropdown */}
       {showMentions && filteredUsers.length > 0 && (
-        <div className="absolute bottom-full left-12 mb-2 w-48 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute bottom-full left-12 mb-2 w-48 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50 overflow-hidden">
           {filteredUsers.map((u: any) => (
             <button
               key={u.id}

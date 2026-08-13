@@ -20,8 +20,6 @@ import {
   Building2,
   Briefcase,
   UserCircle,
-  Sun,
-  Moon,
   CalendarDays,
   FolderKanban,
   CalendarCheck,
@@ -54,7 +52,6 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { CommandPalette } from "@/components/app-shell/command-palette";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
-import { TopbarTimer } from "@/components/app-shell/topbar-timer";
 import { NavGroup, NavItem } from "@/components/app-shell/nav-group";
 import { ReverbProvider } from "@/hooks/use-reverb";
 import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
@@ -70,31 +67,19 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@g4k/ui/component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 
 export const navGroups = [
-  { label: "My Work", items: [
+  { label: "Overview", items: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "My Attendance", href: "/dashboard/attendance", icon: CalendarCheck },
-    { name: "Projects", href: "/dashboard/projects", icon: FolderKanban, capability: "projects.manage" },
-    { name: "Tasks", href: "/dashboard/tasks", icon: CheckSquare, capability: "tasks.submit" },
-    { name: "Chat", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
-    { name: "Announcement", href: "/dashboard/announcements", icon: Megaphone },
-    { name: "Leave & Time Off", href: "/dashboard/leave", icon: CalendarDays, capability: "leave.request-self" },
-    { name: "Reports", href: "/dashboard/reports", icon: BarChart3, capability: "reports.view" },
+    { name: "Attendance & Time", href: "/dashboard/attendance", icon: CalendarCheck },
+    { name: "Projects & Tasks", href: "/dashboard/projects", icon: FolderKanban, capability: "projects.manage" },
+    { name: "Communications", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
   ]},
-  { label: "People", items: [
+  { label: "Organization", items: [
     { name: "Directory", href: "/dashboard/directory", icon: Users, capability: "directory.view" },
-    { name: "Employees", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
+    { name: "Employee Management", href: "/dashboard/org/users", icon: Users, capability: "users.employee.manage" },
     { name: "Team Attendance", href: "/dashboard/org/attendance", icon: Clock, capability: "hr.view-team-attendance" },
-    { name: "Org Leave Approvals", href: "/dashboard/org/leave", icon: CalendarDays, capability: "leave.approve-employee" },
-    { name: "Departments", href: "/dashboard/org/departments", icon: Building2, capability: "departments.manage" },
-    { name: "Designations", href: "/dashboard/org/designations", icon: Briefcase, capability: "designations.manage" },
-  ]},
-  { label: "Administration", items: [
-    { name: "Admin Attendance", href: "/dashboard/admin/attendance", icon: Clock, capability: "admin.view-all-attendance" },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings, capability: "settings.manage" },
-    { name: "Audit Log", href: "/dashboard/audit", icon: ShieldAlert, capability: "audit.view" },
   ]},
   { label: "Account", items: [
-    { name: "My Profile", href: "/dashboard/profile", icon: UserCircle, capability: "profile.edit" },
+    { name: "Settings & Profile", href: "/dashboard/profile", icon: Settings },
   ]},
 ];
 
@@ -118,22 +103,12 @@ function getAccent(href: string) {
   if (href === "/dashboard") color = "blue";
   else if (href.startsWith("/dashboard/attendance")) color = "green";
   else if (href.startsWith("/dashboard/projects")) color = "indigo";
-  else if (href.startsWith("/dashboard/tasks")) color = "green";
   else if (href.startsWith("/dashboard/chat")) color = "pink";
-  else if (href.startsWith("/dashboard/announcements")) color = "orange";
-  else if (href.startsWith("/dashboard/leave")) color = "amber";
-  else if (href.startsWith("/dashboard/reports")) color = "violet";
-  else if (href.startsWith("/dashboard/directory")) color = "pink";
-  else if (href.startsWith("/dashboard/org/users")) color = "indigo";
-  else if (href.startsWith("/dashboard/org/attendance")) color = "green";
-  else if (href.startsWith("/dashboard/admin/attendance")) color = "green";
-  else if (href.startsWith("/dashboard/org/leave")) color = "amber";
-  else if (href.startsWith("/dashboard/org/departments")) color = "indigo";
-  else if (href.startsWith("/dashboard/org/designations")) color = "indigo";
-  else if (href.startsWith("/dashboard/profile")) color = "cyan";
-  else if (href.startsWith("/dashboard/settings")) color = "teal";
-  else if (href.startsWith("/dashboard/audit")) color = "rose";
-  return accentClasses[color];
+  else if (href.startsWith("/dashboard/directory")) color = "amber";
+  else if (href.startsWith("/dashboard/org/users")) color = "cyan";
+  else if (href.startsWith("/dashboard/org/attendance")) color = "teal";
+  else if (href.startsWith("/dashboard/profile")) color = "rose";
+  return accentClasses[color] || accentClasses.violet;
 }
 
 export default function DashboardLayout({
@@ -143,6 +118,7 @@ export default function DashboardLayout({
 }) {
   const sidebarState = useUIStore((s) => s.sidebarState);
   const isInitialized = useUIStore((s) => s.isInitialized);
+  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
   const cycleSidebarState = useUIStore((s) => s.cycleSidebarState);
   const setSidebarStateSilent = useUIStore((s) => s.setSidebarStateSilent);
   const syncWithServer = useTimerStore((s) => s.syncWithServer);
@@ -209,7 +185,7 @@ export default function DashboardLayout({
     window.location.href = "/login";
   };
 
-  const isCollapsed = sidebarState === "collapsed";
+  const isCollapsed = sidebarState === "collapsed" && !isHoverExpanded;
 
   if (isErrorCapabilities) {
     return (
@@ -234,32 +210,23 @@ export default function DashboardLayout({
         <HelpOverlay />
         <CommandPalette />
         <div className={cn(
-          "grid h-[100dvh] w-full bg-app overflow-hidden transition-[grid-template-columns] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]",
+          "grid h-[100dvh] w-full bg-app overflow-hidden transition-[grid-template-columns] duration-[400ms] ease-[cubic-bezier(0.68,-0.55,0.265,1.55)]",
           sidebarState === "expanded" ? "md:grid-cols-[240px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[64px_1fr]" : "grid-cols-1"
         )}>
           {/* Desktop Sidebar */}
-          <aside className={cn(
-            "bg-surface border-r border-border relative z-20 h-full transition-[width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]",
-            sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col"
+          <aside 
+            onMouseEnter={() => sidebarState === "collapsed" && setIsHoverExpanded(true)}
+            onMouseLeave={() => setIsHoverExpanded(false)}
+            className={cn(
+            "bg-surface border-r border-border relative h-full transition-[width,transform] duration-[400ms] ease-[cubic-bezier(0.68,-0.55,0.265,1.55)]",
+            sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col",
+            isHoverExpanded ? "absolute top-0 left-0 bottom-0 z-50 w-[240px] shadow-2xl" : "relative z-20 w-full"
           )}>
-            <div className="flex items-center h-16 shrink-0 px-4 gap-3 border-b border-border">
+            <div className="flex items-center h-16 shrink-0 px-4 border-b border-border justify-center overflow-hidden">
               {isCollapsed ? (
-                <div className="relative group w-8 h-8 flex items-center justify-center cursor-pointer ml-1" onClick={cycleSidebarState}>
-                  <Image src="/icon.png" alt="Logo" width={32} height={32} className="rounded-md absolute inset-0 transition-opacity duration-[220ms] group-hover:opacity-0" priority />
-                  <ChevronRight className="w-5 h-5 text-neutral-500 group-hover:text-primary absolute opacity-0 group-hover:opacity-100 transition-opacity duration-[220ms]" />
-                </div>
+                <Image src="/icon.png" alt="Logo" width={40} height={40} className="rounded-md shrink-0 transition-opacity duration-[400ms]" priority />
               ) : (
-                <div className="flex items-center gap-3 w-full">
-                  <Tooltip delayDuration={150}>
-                    <TooltipTrigger asChild>
-                      <button onClick={cycleSidebarState} className="text-neutral-500 hover:text-primary transition-colors flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-sm" aria-label="Toggle sidebar">
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="text-xs">Collapse sidebar (Ctrl+B)</TooltipContent>
-                  </Tooltip>
-                  <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={176} height={40} className="object-contain h-10 w-auto transition-opacity duration-[220ms]" priority />
-                </div>
+                <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={176} height={40} className="object-contain w-full max-w-[176px] h-auto max-h-10 transition-opacity duration-[400ms]" priority />
               )}
             </div>
 
@@ -277,22 +244,27 @@ export default function DashboardLayout({
             </div>
 
             <div className="mt-auto p-4 border-t border-border flex flex-col gap-2">
-              <Tooltip delayDuration={150}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "justify-start text-xs text-neutral-600 dark:text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40",
-                      isCollapsed && "justify-center px-0"
-                    )}
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-4 h-4 text-rose-600 shrink-0" />
-                    {!isCollapsed && <span className="ml-2 font-medium whitespace-nowrap">Log out</span>}
-                  </Button>
-                </TooltipTrigger>
-                {isCollapsed && <TooltipContent side="right" className="text-xs">Log out</TooltipContent>}
-              </Tooltip>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white",
+                  isCollapsed ? "justify-center px-0" : "justify-start"
+                )}
+                onClick={cycleSidebarState}
+              >
+                {isCollapsed ? <ChevronRight className="w-5 h-5 shrink-0" /> : <><ChevronLeft className="w-5 h-5 shrink-0" /><span className="ml-2 font-medium whitespace-nowrap">Collapse</span></>}
+              </Button>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "justify-start text-xs text-neutral-600 dark:text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40",
+                  isCollapsed && "justify-center px-0"
+                )}
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 text-rose-600 shrink-0" />
+                {!isCollapsed && <span className="ml-2 font-medium whitespace-nowrap">Log out</span>}
+              </Button>
             </div>
           </aside>
 
@@ -344,26 +316,6 @@ export default function DashboardLayout({
               </div>
 
               <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                <TopbarTimer />
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className="h-9 w-9 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-white shrink-0 focus-visible:ring-2 focus-visible:ring-violet-500"
-                        aria-label="Toggle theme"
-                      >
-                        {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="text-xs">
-                      Toggle theme
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
                 <NotificationsBell />
 
                 <DropdownMenu>

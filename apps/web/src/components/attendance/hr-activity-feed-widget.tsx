@@ -73,7 +73,7 @@ export function HrActivityFeedWidget() {
   }, [data]);
 
   return (
-    <div className="h-[400px] bg-white dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden flex flex-col transition-shadow duration-150">
+    <div className="h-[400px] bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden flex flex-col transition-shadow duration-150">
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
@@ -122,9 +122,7 @@ export function HrActivityFeedWidget() {
             <div className="relative">
               <Avatar className="w-8 h-8 border border-neutral-200 dark:border-neutral-800">
                 <AvatarImage src={act.user.avatar_url} />
-                <AvatarFallback className="text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-                  {act.user.name?.charAt(0) || "U"}
-                </AvatarFallback>
+                <AvatarFallback name={act.user.name} />
               </Avatar>
               <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center ${act.bg} border border-white dark:border-neutral-900`}>
                 <act.icon className={`w-2.5 h-2.5 ${act.color}`} />

@@ -32,10 +32,6 @@ class AttendanceController extends Controller
         return $this->handlePunch($request, 'break_end');
     }
 
-    public function continueShift(Request $request)
-    {
-        return $this->handlePunch($request, 'break_end');
-    }
 
     public function clockOut(Request $request)
     {
@@ -97,6 +93,8 @@ class AttendanceController extends Controller
         }
         $today = Carbon::now()->toDateString();
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$user->id}_{$activeRole}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("dashboard_global");
 
         return response()->json([
             'day' => $dayRecord,
@@ -185,9 +183,18 @@ class AttendanceController extends Controller
             ->get();
 
         // Pass work_schedules standard_seconds to frontend
-        $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
-            return DB::table('work_schedules')->where('is_default', true)->first();
-        });
+        $scheduleId = $user->work_schedule_id;
+        $schedule = null;
+        if ($scheduleId) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$scheduleId}", 86400, function() use ($scheduleId) {
+                return DB::table('work_schedules')->where('id', $scheduleId)->first();
+            });
+        }
+        if (!$schedule) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
+                return DB::table('work_schedules')->where('is_default', true)->first();
+            });
+        }
         $standardSeconds = $schedule ? $schedule->standard_seconds : 31500;
 
         $lastMod = max(($day?->updated_at) ?? '', ($events->max('updated_at')) ?? '');
@@ -207,7 +214,8 @@ class AttendanceController extends Controller
     {
         $user = $request->user();
         $days = AttendanceDay::where('user_id', $user->id)
-            ->orderBy('date', 'desc')
+            ->orderByDesc('date')
+            ->orderByDesc('id')
             ->cursorPaginate(30);
 
         // Fetch task_time_logs for the paginated dates
@@ -358,35 +366,60 @@ class AttendanceController extends Controller
 
     public function overview(Request $request)
     {
-        $query = DB::table('attendance_days')
-            ->join('users', 'users.id', '=', 'attendance_days.user_id')
-            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name')
-            ->orderBy('date', 'desc');
+        $isTodayNoStatusFilter = $request->query('date') === now()->toDateString() && !$request->filled('status');
+        
+        if ($isTodayNoStatusFilter) {
+            $date = now()->toDateString();
+            $query = DB::table('users')
+                ->leftJoin('attendance_days', function ($join) use ($date) {
+                    $join->on('users.id', '=', 'attendance_days.user_id')
+                         ->where('attendance_days.date', '=', $date);
+                })
+                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->select(
+                    'attendance_days.*', 
+                    'users.id as user_id',
+                    'users.name as user_name', 
+                    'users.email as user_email', 
+                    'users.department_id', 
+                    'departments.name as department_name',
+                    DB::raw("COALESCE(attendance_days.status, 'absent') as status")
+                )
+                ->where('users.is_active', true)
+                ->orderBy('users.name', 'asc');
+        } else {
+            $query = DB::table('attendance_days')
+                ->join('users', 'users.id', '=', 'attendance_days.user_id')
+                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name')
+                ->orderBy('date', 'desc');
+                
+            if ($request->filled('date')) {
+                $query->where('date', $request->query('date'));
+            }
+            if ($request->filled('from')) {
+                $query->where('date', '>=', $request->query('from'));
+            }
+            if ($request->filled('to')) {
+                $query->where('date', '<=', $request->query('to'));
+            }
+            if ($request->filled('status')) {
+                $status = $request->query('status');
+                if ($status === 'open') {
+                    $query->whereNotNull('attendance_days.clock_in')
+                          ->whereNull('attendance_days.clock_out');
+                } else {
+                    $query->where('attendance_days.status', $status);
+                }
+            }
+        }
 
         $this->applyHrScoping($query, $request->user());
 
-        if ($request->filled('date')) {
-            $query->where('date', $request->query('date'));
-        }
-        if ($request->filled('from')) {
-            $query->where('date', '>=', $request->query('from'));
-        }
-        if ($request->filled('to')) {
-            $query->where('date', '<=', $request->query('to'));
-        }
         if ($request->filled('department_id')) {
             $query->where('users.department_id', $request->query('department_id'));
         }
-        if ($request->filled('status')) {
-            $status = $request->query('status');
-            if ($status === 'open') {
-                $query->whereNotNull('attendance_days.clock_in')
-                      ->whereNull('attendance_days.clock_out');
-            } else {
-                $query->where('attendance_days.status', $status);
-            }
-        }
+        
         if ($request->filled('search')) {
             $searchTerm = '%' . $request->query('search') . '%';
             $query->where(function($q) use ($searchTerm) {

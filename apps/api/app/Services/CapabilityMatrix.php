@@ -14,13 +14,14 @@ class CapabilityMatrix
         'super_admin' => ['*'],
         'hr' => [
             'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
-            'users.employee.manage', 'directory.view', 'directory.send-message',
+            'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
             'profile.edit', 'attendance.clock-self', 'leave.request-self',
-            'reports.view'
+            'reports.view', 'tasks.view', 'projects.view'
         ],
         'employee' => [
             'attendance.clock-self', 'leave.request-self', 'profile.edit',
-            'directory.view', 'directory.send-message', 'reports.view'
+            'directory.view', 'directory.send-message', 'chat.access', 'reports.view',
+            'tasks.view', 'projects.view'
         ]
     ];
 

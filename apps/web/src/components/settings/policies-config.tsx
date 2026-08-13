@@ -117,7 +117,7 @@ export function PoliciesConfig() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+      <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
         <CardHeader>
           <CardTitle className="text-base">Password Policy</CardTitle>
         </CardHeader>
@@ -180,7 +180,7 @@ export function PoliciesConfig() {
       </CardContent>
       </Card>
 
-      <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+      <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
         <CardHeader>
           <CardTitle className="text-base">Session & Device Rules</CardTitle>
         </CardHeader>

@@ -32,7 +32,7 @@ export const queryKeys = {
   hrAttendance: (date: string, dept?: string) => ["hr-attendance-today", date, dept ?? "all"] as const,
   adminAttendanceGraph: (groupBy: string, mode: string, date: string) => ["admin-attendance-graph", groupBy, mode, date] as const,
   hrAttendanceGraph: (groupBy: string, mode: string, date: string) => ["hr-attendance-graph", groupBy, mode, date] as const,
-  myLeaveHistory: (type?: string, status?: string) => ["my-leave-history", type ?? "all", status ?? "all"] as const,
+  myLeaveHistory: (type?: string, status?: string, search?: string, page?: string | number) => ["my-leave-history", type ?? "all", status ?? "all", search ?? "", page ?? 1] as const,
   holidays: (year: number) => ["holidays", year] as const,
   memberAttendanceDay: (userId: number, date: string) => ["hr-member-attendance-day", userId, date] as const,
   memberHistory: (userId: number) => ["hr-member-history", userId] as const,
@@ -43,6 +43,7 @@ export const queryKeys = {
   companyProfile: ["company-profile"] as const,
   workSchedules: ["work-schedules"] as const,
   passwordResets: (status: string) => ["password-resets", status] as const,
+  teamLeaveApprovals: (status: string, search?: string, page?: string | number) => ["team-leave-approvals", status, search ?? "", page ?? 1] as const,
   autoNumberings: ["auto-numberings"] as const,
 
   // --- Reports & Audit ---

@@ -82,7 +82,7 @@ function NumberingRow({ record, onSave, isPending }: { record: any; onSave: (dat
   };
 
   return (
-    <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+    <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-base capitalize">{record.entity_type} ID Format</CardTitle>
       </CardHeader>

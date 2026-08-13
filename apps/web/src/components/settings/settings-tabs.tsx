@@ -9,7 +9,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Tabs, TabsContent, TabsList, TabsTrigger, FileUploadPopup } from "@g4k/ui/components";
+import {  Tabs, TabsContent, TabsList, TabsTrigger, FileUploadPopup , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
@@ -20,6 +20,7 @@ import { SecurityRequestsConfig } from "./security-requests-config";
 import { MailSmtpConfig } from "./mail-smtp-config";
 import { NotificationsConfig } from "./notifications-config";
 import { HolidayCalendar } from "@/components/leave/holiday-calendar";
+import { AuditLogTable } from "@/components/settings/audit-log-table";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 
 const profileSchema = z.object({
@@ -196,12 +197,13 @@ export function SettingsTabs() {
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="holidays">Holidays</TabsTrigger>
             <TabsTrigger value="mail">Mail / SMTP</TabsTrigger>
+            <TabsTrigger value="audit">Audit Log</TabsTrigger>
           </>
         )}
       </TabsList>
 
       <TabsContent value="company">
-        <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+        <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
           <CardHeader>
             <CardTitle className="text-base">Company Information</CardTitle>
           </CardHeader>
@@ -239,20 +241,24 @@ export function SettingsTabs() {
                 <h3 className="text-sm font-semibold text-neutral-900 dark:text-white border-b pb-2">Localization</h3>
                 <div>
                   <label className="text-xs font-medium">Timezone</label>
-                  <select
-                    {...profileForm.register("timezone")}
-                    className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
-                  >
-                    <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
-                    <option value="America/New_York">Eastern Time (US & Canada)</option>
-                    <option value="Europe/London">London</option>
-                    <option value="Europe/Paris">Paris</option>
-                    <option value="Asia/Dubai">Dubai</option>
-                    <option value="Asia/Kolkata">India (IST)</option>
-                    <option value="Asia/Singapore">Singapore</option>
-                    <option value="Asia/Tokyo">Tokyo</option>
-                    <option value="Australia/Sydney">Sydney</option>
-                  </select>
+                  <Select value={undefined} onValueChange={undefined}>
+      <SelectTrigger className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1">
+        <SelectValue placeholder="Select..." />
+      </SelectTrigger>
+      <SelectContent>
+        
+                    <SelectItem value="America/Los_Angeles">Pacific Time (US & Canada)</SelectItem>
+                    <SelectItem value="America/New_York">Eastern Time (US & Canada)</SelectItem>
+                    <SelectItem value="Europe/London">London</SelectItem>
+                    <SelectItem value="Europe/Paris">Paris</SelectItem>
+                    <SelectItem value="Asia/Dubai">Dubai</SelectItem>
+                    <SelectItem value="Asia/Kolkata">India (IST)</SelectItem>
+                    <SelectItem value="Asia/Singapore">Singapore</SelectItem>
+                    <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
+                    <SelectItem value="Australia/Sydney">Sydney</SelectItem>
+                  
+      </SelectContent>
+    </Select>
                   <p className="text-[10px] text-neutral-500 mt-1">Select the primary timezone for the company.</p>
                 </div>
               </div>
@@ -278,7 +284,7 @@ export function SettingsTabs() {
       {isAdmin && (
         <>
           <TabsContent value="schedule">
-            <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+            <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
           <CardHeader>
             <CardTitle className="text-base">Standard Work Schedule (ATT-Q1)</CardTitle>
           </CardHeader>
@@ -392,13 +398,19 @@ export function SettingsTabs() {
       </TabsContent>
 
       <TabsContent value="holidays">
-        <div className="bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-sm h-[calc(100vh-200px)]">
+        <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-[calc(100vh-200px)]">
           <HolidayCalendar />
         </div>
       </TabsContent>
 
       <TabsContent value="mail">
         <MailSmtpConfig />
+      </TabsContent>
+
+      <TabsContent value="audit">
+        <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 p-4">
+          <AuditLogTable />
+        </div>
       </TabsContent>
         </>
       )}

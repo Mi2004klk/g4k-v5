@@ -124,7 +124,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         {/* Main Content Skeleton */}
         <div className="flex-1 flex flex-col">
           {/* Header Skeleton */}
-          <div className="h-16 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 md:px-8 justify-between">
+          <div className="h-16 bg-card dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 md:px-8 justify-between">
             <div className="h-6 w-48 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
             <div className="h-8 w-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
           </div>

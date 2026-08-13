@@ -76,11 +76,11 @@ class LeaveRequestController extends Controller
                          ->where('end_date', '>=', $validated['end_date']);
                   });
             })
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'approved'])
             ->exists();
 
         if ($overlap) {
-            return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);
+            return response()->json(['message' => 'You already have a pending or approved leave request overlapping these dates.'], 422);
         }
 
         try {
@@ -102,7 +102,7 @@ class LeaveRequestController extends Controller
         } catch (\Illuminate\Database\QueryException $e) {
             // Error code 23505 for unique violation in Postgres or 23000/1062 in MySQL
             if (in_array($e->getCode(), ['23505', '23000', '1062'])) {
-                return response()->json(['message' => 'You already have a pending leave request overlapping these dates.'], 422);
+                return response()->json(['message' => 'You already have a pending or approved leave request overlapping these dates.'], 422);
             }
             throw $e;
         }
@@ -129,33 +129,6 @@ class LeaveRequestController extends Controller
         try {
             if ($validated['decision'] === 'approved') {
                 $approval = ApprovalService::approve($approval, $user->id, $validated['reason'] ?? null);
-                
-                $leaveRequest = LeaveRequest::find($id);
-                if ($leaveRequest) {
-                    $start = \Carbon\Carbon::parse($leaveRequest->start_date);
-                    $end = \Carbon\Carbon::parse($leaveRequest->end_date);
-                    
-                    for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
-                        // Insert or update attendance_days
-                        \App\Models\AttendanceDay::updateOrCreate(
-                            [
-                                'user_id' => $leaveRequest->user_id,
-                                'date' => $d->toDateString(),
-                            ],
-                            [
-                                'status' => 'on_leave',
-                                'leave_type' => $leaveRequest->type,
-                                'first_punch_in' => null,
-                                'last_punch_out' => null,
-                                'total_work_seconds' => 0,
-                                'total_break_seconds' => 0,
-                                'late_seconds' => 0,
-                                'is_processed' => true,
-                                'is_anomalous' => false,
-                            ]
-                        );
-                    }
-                }
             } else {
                 $approval = ApprovalService::reject($approval, $user->id, $validated['reason']);
             }
@@ -168,13 +141,15 @@ class LeaveRequestController extends Controller
 
         $leaveRequest = LeaveRequest::find($id);
         if ($leaveRequest) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$user->id}_hr");
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$user->id}_super_admin");
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leaveRequest->user_id}_employee");
-            
             $today = \Carbon\Carbon::now()->toDateString();
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_hr_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_super_admin_{$today}");
+            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+            foreach ($admins as $adminId) {
+                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+            }
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leaveRequest->user_id}_employee");
             \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leaveRequest->user_id}_employee_{$today}");
         }
 

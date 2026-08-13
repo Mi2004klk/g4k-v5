@@ -14,7 +14,7 @@ export function NotificationsConfig() {
 
   const { data: settings = [], isLoading } = useQuery({
     queryKey: [...queryKeys.settings, "notifications"],
-    queryFn: () => apiFetch("/settings?category=notifications"),
+    queryFn: () => apiFetch("/settings/grouped").then((res: any) => res["notifications"] || []),
   });
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function NotificationsConfig() {
   if (isLoading) return <div className="p-4 text-center">Loading...</div>;
 
   return (
-    <Card className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+    <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader>
         <CardTitle className="text-base">System Notification Preferences</CardTitle>
       </CardHeader>

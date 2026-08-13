@@ -119,14 +119,6 @@ export async function apiFetch<T = any>(
             if (typeof window !== "undefined" && window.location.pathname !== "/onboarding") {
               window.location.href = "/onboarding";
             }
-          } else {
-            if (typeof window !== "undefined" && window.location.pathname !== "/dashboard") {
-              window.location.href = "/dashboard?error=unauthorized";
-            } else if (typeof window !== "undefined") {
-              // If already on dashboard, just replace state so it triggers the toast
-              window.history.replaceState(null, "", "/dashboard?error=unauthorized");
-              window.dispatchEvent(new Event("popstate"));
-            }
           }
         }
 

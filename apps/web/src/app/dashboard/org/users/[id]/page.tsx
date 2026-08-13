@@ -23,10 +23,12 @@ export default function EmployeeDetailPage() {
   const router = useRouter();
   const userId = params.id as string;
 
-  const { data: user, isPending } = useQuery({
+  const { data: user, isPending, isError, refetch } = useQuery({
     queryKey: ["user", Number(userId)],
     queryFn: () => apiFetch(`/users/${userId}`),
   });
+  
+  const { data: capabilities } = useCapabilities();
 
   const { data: leaves } = useQuery({
     queryKey: ["user-leaves", userId],
@@ -59,16 +61,19 @@ export default function EmployeeDetailPage() {
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    enabled: hasCapability(capabilities, "departments.manage"),
   });
 
   const { data: designations = [] } = useQuery({
     queryKey: queryKeys.designations,
     queryFn: () => apiFetch("/designations").then(res => res.data || []),
+    enabled: hasCapability(capabilities, "designations.manage"),
   });
 
   const { data: workSchedules = [] } = useQuery({
     queryKey: queryKeys.workSchedules,
     queryFn: () => apiFetch("/work-schedules").then(res => res.data || []),
+    enabled: hasCapability(capabilities, "settings.manage"),
   });
 
   const {
@@ -78,8 +83,34 @@ export default function EmployeeDetailPage() {
     updateMutation, statusMutation, deleteMutation, resetPasswordMutation
   } = useUserActions();
 
-  const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
+
+  if (isPending) {
+    return (
+      <PageContainer title="Employee Profile" description="Loading profile...">
+        <div className="space-y-6">
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (isError) {
+    return (
+      <PageContainer title="Employee Profile" description="Failed to load profile.">
+        <div className="p-8 text-center bg-card dark:bg-neutral-900 border rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+          <ShieldAlert className="w-8 h-8 text-rose-500 mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Failed to load user</h3>
+          <p className="text-xs text-neutral-500 mb-4">The user could not be found or you don't have permission.</p>
+          <div className="flex justify-center gap-3">
+            <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
+            <Button onClick={() => refetch()}>Retry</Button>
+          </div>
+        </div>
+      </PageContainer>
+    );
+  }
 
   if (!user) {
     return <div className="p-8">User not found</div>;
@@ -133,7 +164,7 @@ export default function EmployeeDetailPage() {
       }
     >
       <div className="space-y-6">
-        <Card className="border-none shadow-sm bg-white dark:bg-neutral-900">
+        <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 bg-card dark:bg-neutral-900">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <Avatar size="lg" className="w-24 h-24">
@@ -163,7 +194,7 @@ export default function EmployeeDetailPage() {
           </TabsList>
 
           <TabsContent value="profile" className="mt-0">
-             <Card className="border-none shadow-sm"><CardHeader><CardTitle>Profile Info</CardTitle></CardHeader><CardContent>
+             <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Profile Info</CardTitle></CardHeader><CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                   <div><span className="text-neutral-500 block mb-1">Email</span><span className="font-medium">{user.email}</span></div>
                   <div><span className="text-neutral-500 block mb-1">Phone</span><span className="font-medium">{user.phone || "N/A"}</span></div>
@@ -174,7 +205,7 @@ export default function EmployeeDetailPage() {
           </TabsContent>
 
           <TabsContent value="attendance" className="mt-0">
-            <Card className="border-none shadow-sm"><CardHeader><CardTitle>Attendance</CardTitle></CardHeader><CardContent>
+            <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Attendance</CardTitle></CardHeader><CardContent>
                 <div className="flex justify-between items-center bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-lg border mb-4">
                   <div>
                     <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">Attendance Record</h4>
@@ -192,7 +223,7 @@ export default function EmployeeDetailPage() {
           </TabsContent>
 
           <TabsContent value="leave" className="mt-0">
-            <Card className="border-none shadow-sm"><CardHeader><CardTitle>Leave History</CardTitle></CardHeader><CardContent>
+            <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Leave History</CardTitle></CardHeader><CardContent>
                {leaves?.data?.length ? (
                  <div className="space-y-4">
                    {leaves.data.map((l: any) => (
@@ -211,7 +242,7 @@ export default function EmployeeDetailPage() {
           </TabsContent>
 
           <TabsContent value="projects" className="mt-0">
-            <Card className="border-none shadow-sm"><CardHeader><CardTitle>Assignments</CardTitle></CardHeader><CardContent>
+            <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Assignments</CardTitle></CardHeader><CardContent>
                <h3 className="font-bold mb-3">Projects ({assignments?.projects?.length || 0})</h3>
                {assignments?.projects?.length > 0 ? (
                  <div className="flex flex-wrap gap-2 mb-6">
@@ -234,7 +265,7 @@ export default function EmployeeDetailPage() {
           </TabsContent>
 
           <TabsContent value="activity" className="mt-0">
-            <Card className="border-none shadow-sm"><CardHeader><CardTitle>Recent Activity</CardTitle></CardHeader><CardContent>
+            <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Recent Activity</CardTitle></CardHeader><CardContent>
                {activity?.data?.length ? (
                  <div className="space-y-3">
                    {activity.data.map((log: any) => (
@@ -298,7 +329,7 @@ function UserAttendanceView({ userId }: { userId: number }) {
     return <div className="p-4 flex justify-center"><Skeleton className="w-full h-64" /></div>;
   }
 
-  const days = historyData?.days || [];
+  const days = historyData?.data || [];
 
   return (
     <div className="mt-4">

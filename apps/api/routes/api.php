@@ -28,7 +28,15 @@ use App\Http\Controllers\AutoNumberingController;
 // NEVER add a second `/api/...` copy here — it would create a broken `/api/api/...` route.
 
 // Public (unauthenticated) endpoints
-Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'g4k-api']));
+Route::get('/ping', fn () => response()->json(['status'=>'ok','db'=>\App\Models\User::count()]));
+Route::get('/health', function () {
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        return response()->json(['status' => 'ok', 'db' => 'connected', 'users' => \App\Models\User::count()]);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+});
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
@@ -37,7 +45,6 @@ Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->m
 Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate'])
     ->middleware(['auth:sanctum']);
 Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
-    Route::get('/auth/profile', [AuthController::class, 'profile']);
     Route::get('/me/capabilities', [AuthController::class, 'capabilities']);
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -86,8 +93,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
             Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/break-end', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
-            Route::post('/attendance/continue', [AttendanceController::class, 'continueShift']);
-            Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
         });
         Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);
         Route::get('/attendance/me/history', [AttendanceController::class, 'meHistory']);
@@ -118,7 +123,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     });
     // HR or Admin approve
     Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware(['capability:leave.approve-employee', 'throttle:15,1']);
-    Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/admin/history', [LeaveRequestController::class, 'adminHistory'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/export', [LeaveRequestController::class, 'export'])->middleware('capability:leave.approve-employee|settings.manage');
@@ -170,7 +174,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     Route::middleware('capability:timer.track')->group(function () {
         Route::post('/timer/log', [TimerController::class, 'logTime']);
-        Route::get('/timer/logs', [TimerController::class, 'index']);
     });
 
     Route::middleware('capability:settings.manage')->group(function () {
@@ -221,12 +224,13 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
             Route::post('/settings/bulk', [\App\Http\Controllers\SettingsController::class, 'bulkUpdate']);
             Route::post('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'update']);
             Route::post('/company-profile/logo', [\App\Http\Controllers\CompanyProfileController::class, 'uploadLogo']);
+            Route::post('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'store']);
             Route::put('/work-schedules/{id}', [\App\Http\Controllers\WorkScheduleController::class, 'update']);
         });
         Route::post('/settings/mail/test', [\App\Http\Controllers\SettingsController::class, 'testMail']);
         Route::get('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'show']);
-        Route::get('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'index']);
     });
+    Route::get('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'index'])->middleware('capability:settings.manage|users.hr.manage');
     
     Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->middleware('capability:audit.view');
     Route::get('/audit-logs/export', [\App\Http\Controllers\AuditLogController::class, 'export'])->middleware('capability:audit.view');
@@ -236,7 +240,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     Route::middleware('capability:users.hr.manage|users.employee.manage')->group(function () {
         Route::post('/users/bulk', [UserController::class, 'bulk']);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
-        Route::patch('/users/{id}/restore', [UserController::class, 'restore']);
         Route::patch('/users/{id}/status', [UserController::class, 'updateStatus']);
         Route::get('/users/{id}/leave-history', [UserController::class, 'leaveHistory']);
         Route::get('/users/{id}/assignments', [UserController::class, 'assignments']);
@@ -246,7 +249,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Explicitly place show and activity outside so the controller can handle $isSelf bypasses
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::get('/users/{id}/activity', [UserController::class, 'activity']);
-    Route::apiResource('companies', CompanyController::class)->middleware('capability:settings.manage');
     Route::apiResource('auto-numberings', AutoNumberingController::class)->only(['index', 'update'])->middleware('capability:settings.manage');
     
     // Leave Module
@@ -257,25 +259,27 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     });
 
     // Departments
+    Route::get('/departments', [DepartmentController::class, 'index']);
     Route::middleware('capability:departments.manage')->group(function () {
         Route::get('/departments/export', [DepartmentController::class, 'export']);
         Route::patch('/departments/{id}/archive', [DepartmentController::class, 'archive']);
         Route::patch('/departments/{id}/restore', [DepartmentController::class, 'restore']);
-        Route::post('/departments/{department}/teams', [DepartmentController::class, 'storeTeam']);
-        Route::delete('/departments/{department}/teams/{team}', [DepartmentController::class, 'destroyTeam']);
-        
         Route::put('/departments/{id}/hrs', [DepartmentController::class, 'syncHrs']);
         Route::post('/departments/{id}/hrs/{userId}', [DepartmentController::class, 'addHr']);
         Route::delete('/departments/{id}/hrs/{userId}', [DepartmentController::class, 'removeHr']);
         Route::put('/departments/{id}/employees', [DepartmentController::class, 'syncEmployees']);
         
-        Route::apiResource('departments', DepartmentController::class);
+        Route::apiResource('departments', DepartmentController::class)->except(['index']);
     });
 
     // Designations
+    Route::get('/designations', [DesignationController::class, 'index']);
     Route::middleware('capability:designations.manage')->group(function () {
         Route::get('/designations/export', [DesignationController::class, 'export']);
         Route::patch('/designations/{id}/status', [DesignationController::class, 'updateStatus']);
-        Route::apiResource('designations', DesignationController::class);
+        Route::apiResource('designations', DesignationController::class)->except(['index']);
     });
 });
+
+
+

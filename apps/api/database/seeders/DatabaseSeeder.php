@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             'leave.request-self',
             'leave.approve-employee',
             'leave.approve-hr',
+            'chat.access',
             'settings.manage',
             'audit.view',
             'users.hr.manage',
@@ -46,12 +47,12 @@ class DatabaseSeeder extends Seeder
             'super_admin' => ['*'],
             'hr' => [
                 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
-                'users.employee.manage', 'directory.view', 'directory.send-message',
+                'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
                 'profile.edit', 'attendance.clock-self', 'leave.request-self', 'announcements.manage'
             ],
             'employee' => [
                 'attendance.clock-self', 'leave.request-self', 'profile.edit',
-                'directory.view', 'directory.send-message'
+                'directory.view', 'directory.send-message', 'chat.access'
             ]
         ];
 

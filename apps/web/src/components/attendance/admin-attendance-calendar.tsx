@@ -47,7 +47,7 @@ export function AdminAttendanceCalendar() {
   const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
   return (
-    <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm">
+    <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-lg font-bold text-neutral-900 dark:text-white">

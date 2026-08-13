@@ -3,21 +3,45 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent, CardHeader, CardTitle, Skeleton, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, Skeleton, Avatar, AvatarFallback, AvatarImage, Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
-import { Users } from "lucide-react";
+import {  Users , AlertTriangle } from "lucide-react";
 
 export function TeamAttendanceWidget() {
   const date = format(new Date(), "yyyy-MM-dd");
   
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["attendance", "team-today", date],
     queryFn: () => apiFetch(`/attendance/team-today?date=${date}`),
     staleTime: 60000,
   });
 
+  if (isError) {
+    return (
+      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+        <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-violet-600" />
+            <span className="text-sm font-bold">Team Attendance</span>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
+          <AlertTriangle className="w-6 h-6 text-rose-400 mb-2" />
+          <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load attendance</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            Retry
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   if (!isLoading && (!data || !data.employees || data.employees.length === 0)) {
-    return null;
+    return (
+      <Card className="h-full flex flex-col items-center justify-center border-none shadow-e1 overflow-hidden p-6 text-center">
+        <div className="text-sm font-semibold text-muted-foreground">No team members scheduled today</div>
+      </Card>
+    );
   }
 
   const counts = data?.counts || { present: 0, late: 0, leave: 0, absent: 0, leave_pending: 0 };
@@ -66,7 +90,7 @@ export function TeamAttendanceWidget() {
                   <div className="relative">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={emp.avatar_url || ''} />
-                      <AvatarFallback className="text-[10px]">{emp.user_name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback name={emp.user_name} className="text-[10px]" />
                     </Avatar>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-neutral-900 ${statusColor}`} />
                   </div>

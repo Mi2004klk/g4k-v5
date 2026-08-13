@@ -83,9 +83,6 @@ class AttendanceService
             }
             if ($hasStartedOnDate) {
                 $events[] = $ev;
-                if ($ev->type === 'clock_out') {
-                    break;
-                }
             }
         }
 
