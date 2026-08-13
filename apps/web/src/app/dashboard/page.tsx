@@ -3,7 +3,7 @@
 import { useAuthStore } from "@/lib/auth-store";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
@@ -58,6 +58,11 @@ export default function DashboardPage() {
 
   // Role determined by initData?.role, not a default (per requirements)
   const activeRole = initData?.role;
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -189,7 +194,7 @@ export default function DashboardPage() {
   const greetingData = useMemo(() => getGreeting(new Date(), user?.id || 0), [user?.id]);
   const firstName = user?.name?.split(" ")[0] || "Team Member";
 
-  if (isLoading || (!activeRole && !isError)) {
+  if (!mounted || isLoading || (!activeRole && !isError)) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <div className="flex flex-col items-center justify-center gap-4">
