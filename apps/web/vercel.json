@@ -1,13 +1,5 @@
 {
   "version": 2,
   "devCommand": "pnpm dev",
-  "framework": "nextjs",
-  "env": {
-    "NODE_OPTIONS": "--no-experimental-fetch"
-  },
-  "build": {
-    "env": {
-      "NODE_OPTIONS": "--no-experimental-fetch"
-    }
-  }
+  "framework": "nextjs"
 }
