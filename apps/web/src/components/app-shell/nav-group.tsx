@@ -52,7 +52,7 @@ export const NavItem = memo(function NavItem({
     }
   };
 
-  const itemPy = density === "compact" ? "py-1" : "py-1.5";
+  const itemPy = density === "compact" ? "py-1.5" : "py-2";
   
   const content = (
     <div className="relative group/nav flex items-center">
@@ -66,29 +66,27 @@ export const NavItem = memo(function NavItem({
         aria-disabled={isDisabled}
         aria-label={item.name}
         className={cn(
-          "flex-1 flex items-center gap-2.5 px-2.5 transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-lg",
+          "flex-1 flex items-center gap-3 px-3 transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-md",
           itemPy,
-          currentlyCollapsed ? "justify-center px-0 text-xs" : "text-sm",
+          currentlyCollapsed ? "justify-center px-0 text-[13px]" : "text-sm",
           isDisabled
             ? "opacity-50 cursor-not-allowed text-neutral-400 dark:text-neutral-600"
             : isActive
-            ? cn("font-semibold shadow-e1 hover:shadow-e2 transition-shadow duration-150 ring-1 ring-inset", accent.bg, accent.bgDark, accent.ring, accent.text, accent.textDark)
-            : cn("text-neutral-600 dark:text-neutral-400 font-medium group-hover/nav:bg-opacity-50", accent.hoverBg, accent.hoverText)
+            ? cn("font-semibold shadow-sm ring-1 ring-inset", accent.bg, accent.bgDark, accent.ring, accent.text, accent.textDark)
+            : cn("text-neutral-700 dark:text-neutral-300 font-medium group-hover/nav:bg-opacity-50 hover:shadow-sm", accent.hoverBg, accent.hoverText)
         )}
       >
         <div className={cn(
-          "w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition-colors bg-transparent"
+          "w-8 h-8 rounded-md flex items-center justify-center shrink-0 transition-colors bg-transparent"
         )}>
           <item.icon
             className={cn(
-              "w-4 h-4 shrink-0 transition-colors",
+              "w-5 h-5 shrink-0 transition-colors stroke-[2.5px]",
               isDisabled
                 ? "text-neutral-400 dark:text-neutral-600"
                 : isActive
                 ? "text-inherit"
-                : currentlyCollapsed
-                ? accent.text
-                : "text-neutral-400 group-hover/nav:text-inherit"
+                : cn(accent.text, "group-hover/nav:text-inherit")
             )}
           />
         </div>

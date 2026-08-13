@@ -210,7 +210,7 @@ export default function DashboardLayout({
         <HelpOverlay />
         <CommandPalette />
         <div className={cn(
-          "grid h-[100dvh] w-full bg-app overflow-hidden transition-[grid-template-columns] duration-[400ms] ease-[cubic-bezier(0.68,-0.55,0.265,1.55)]",
+          "grid h-[100dvh] w-full bg-app overflow-hidden transition-[grid-template-columns] duration-300 ease-in-out",
           sidebarState === "expanded" ? "md:grid-cols-[240px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[64px_1fr]" : "grid-cols-1"
         )}>
           {/* Desktop Sidebar */}
@@ -218,15 +218,15 @@ export default function DashboardLayout({
             onMouseEnter={() => sidebarState === "collapsed" && setIsHoverExpanded(true)}
             onMouseLeave={() => setIsHoverExpanded(false)}
             className={cn(
-            "bg-surface border-r border-border relative h-full transition-[width,transform] duration-[400ms] ease-[cubic-bezier(0.68,-0.55,0.265,1.55)]",
+            "bg-surface border-r border-border relative h-full transition-[width,transform] duration-300 ease-in-out",
             sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col",
             isHoverExpanded ? "absolute top-0 left-0 bottom-0 z-50 w-[240px] shadow-2xl" : "relative z-20 w-full"
           )}>
-            <div className="flex items-center h-16 shrink-0 px-4 border-b border-border justify-center overflow-hidden">
+            <div className="flex items-center h-16 shrink-0 px-4 justify-center overflow-hidden">
               {isCollapsed ? (
-                <Image src="/icon.png" alt="Logo" width={40} height={40} className="rounded-md shrink-0 transition-opacity duration-[400ms]" priority />
+                <Image src="/icon.png" alt="Logo" width={44} height={44} className="rounded-md shrink-0 transition-opacity duration-300" priority />
               ) : (
-                <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={176} height={40} className="object-contain w-full max-w-[176px] h-auto max-h-10 transition-opacity duration-[400ms]" priority />
+                <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={180} height={44} className="object-contain w-full max-w-[180px] h-auto max-h-11 transition-opacity duration-300" priority />
               )}
             </div>
 
@@ -252,7 +252,17 @@ export default function DashboardLayout({
                 )}
                 onClick={cycleSidebarState}
               >
-                {isCollapsed ? <ChevronRight className="w-5 h-5 shrink-0" /> : <><ChevronLeft className="w-5 h-5 shrink-0" /><span className="ml-2 font-medium whitespace-nowrap">Collapse</span></>}
+                {sidebarState === "collapsed" ? (
+                  <>
+                    <ChevronRight className="w-5 h-5 shrink-0" />
+                    {isHoverExpanded && <span className="ml-2 font-medium whitespace-nowrap">Expand</span>}
+                  </>
+                ) : (
+                  <>
+                    <ChevronLeft className="w-5 h-5 shrink-0" />
+                    <span className="ml-2 font-medium whitespace-nowrap">Collapse</span>
+                  </>
+                )}
               </Button>
               <Button
                 variant="ghost"
