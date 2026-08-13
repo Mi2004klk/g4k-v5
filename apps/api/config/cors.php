@@ -25,7 +25,7 @@ return [
     ],
 
     'allowed_origins_patterns' => [
-        '#^https://g4-k-web-[a-z0-9]+-naval-treasure-group\.vercel\.app$#i',
+        '#^https://.*\.vercel\.app$#i',
         '#^http://localhost:\d+$#'
     ],
 
