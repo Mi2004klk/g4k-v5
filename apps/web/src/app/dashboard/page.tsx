@@ -56,7 +56,8 @@ export default function DashboardPage() {
   
   const { data: initData, isLoading, isError, refetch } = useDashboardInit({ enabled: !!token });
   
-  const activeRole = initData?.role || user?.active_role;
+  // Role determined by initData?.role, not a default (per requirements)
+  const activeRole = initData?.role;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -75,98 +76,63 @@ export default function DashboardPage() {
     if (activeRole === "super_admin") {
       return [
         {
-          id: "announcements",
-          component: <AnnouncementBoard />,
-          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 12, h: 3 }),
-        },
-        {
           id: "total-employees",
           component: (
             <MetricWidget title="Total Employees" metricKey="total_employees" icon={"directory"} color="indigo" breakdown={true} />
           ),
-          defaultLayout: responsiveLayout({ x: 0, y: 3, w: 3, h: 2 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 3, h: 2 }),
         },
         {
           id: "active-projects",
           component: (
             <MetricWidget title="Active Projects" metricKey="active_projects" icon={"projects"} color="emerald" subtitle="In progress" />
           ),
-          defaultLayout: responsiveLayout({ x: 3, y: 3, w: 3, h: 2 }),
+          defaultLayout: responsiveLayout({ x: 3, y: 0, w: 3, h: 2 }),
         },
         {
           id: "admin-today-attendance",
           component: <AdminTodayAttendanceWidget />,
-          defaultLayout: responsiveLayout({ x: 6, y: 3, w: 3, h: 2 }),
+          defaultLayout: responsiveLayout({ x: 6, y: 0, w: 3, h: 2 }),
         },
         {
           id: "pending-approvals",
           component: <PendingApprovalsWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 5, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 2, w: 6, h: 3 }),
         },
         {
           id: "recent-activity",
           component: <RecentActivityWidget />,
-          defaultLayout: responsiveLayout({ x: 6, y: 5, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 6, y: 2, w: 6, h: 3 }),
         },
         {
           id: "quick-task",
           component: <QuickTaskWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 8, w: 6, h: 3 }),
-        },
-        {
-          id: "quick-notes",
-          component: <QuickNotes />,
-          defaultLayout: responsiveLayout({ x: 6, y: 8, w: 6, h: 3 }),
-        },
+          defaultLayout: responsiveLayout({ x: 0, y: 5, w: 6, h: 3 }),
+        }
       ];
     }
     
     if (activeRole === "hr") {
       return [
         {
-          id: "announcements",
-          component: <AnnouncementBoard />,
-          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 12, h: 3 }),
-        },
-        {
           id: "team-attendance",
           component: <HrTeamAttendanceWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 3, w: 4, h: 2 }),
-        },
-        {
-          id: "team-attendance-today",
-          component: <TeamAttendanceWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 5, w: 8, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 4, h: 2 }),
         },
         {
           id: "pending-leave",
-          component: <PendingApprovalsWidget />,
-          defaultLayout: responsiveLayout({ x: 4, y: 3, w: 4, h: 3 }),
-        },
-        {
-          id: "active-projects",
-          component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={"clipboard"} color="blue" subtitle="Ongoing projects" />,
-          defaultLayout: responsiveLayout({ x: 8, y: 3, w: 4, h: 2 }),
+          component: <PendingApprovalsWidget />, // Handles leave & submissions
+          defaultLayout: responsiveLayout({ x: 4, y: 0, w: 4, h: 3 }),
         },
         {
           id: "team-activity",
           component: <HrActivityFeedWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 6, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 3, w: 6, h: 3 }),
         },
         {
           id: "quick-task",
           component: <QuickTaskWidget />,
-          defaultLayout: responsiveLayout({ x: 6, y: 6, w: 6, h: 3 }),
-        },
-        {
-          id: "upcoming-holidays",
-          component: <UpcomingHolidaysWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 9, w: 4, h: 3 }),
-        },
-        {
-          id: "quick-notes",
-          component: <QuickNotes />,
-          defaultLayout: responsiveLayout({ x: 4, y: 9, w: 8, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 6, y: 3, w: 6, h: 3 }),
         },
       ];
     }
@@ -197,16 +163,6 @@ export default function DashboardPage() {
         id: "recent-task-progress",
         component: <EmployeeTaskProgressWidget />,
         defaultLayout: responsiveLayout({ x: 0, y: 5, w: 4, h: 3 }),
-      },
-      {
-        id: "upcoming-holidays",
-        component: <UpcomingHolidaysWidget />,
-        defaultLayout: responsiveLayout({ x: 4, y: 6, w: 4, h: 3 }),
-      },
-      {
-        id: "quick-notes",
-        component: <QuickNotes />,
-        defaultLayout: responsiveLayout({ x: 8, y: 6, w: 4, h: 3 }),
       },
     ];
 

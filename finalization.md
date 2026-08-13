@@ -82,10 +82,10 @@
 ## MODULE 2 — DASHBOARD
 
 ### 2.1 Dashboard per role
-- [ ] **Admin:** company-wide summary widgets (total employees, active projects, today's attendance summary, pending approvals, recent activity, quick task). **No Time Clock widget** (admins don't clock in/out).
-- [ ] **HR:** team-level widgets (team attendance, pending leave, pending submissions, team activity, quick task).
-- [ ] **Employee:** personal widgets (time clock, active projects, pending tasks, task progress, approval status, announcements).
-- [ ] Role determined by `initData?.role` (from `/dashboard/init`), not a default.
+- [x] **Admin:** company-wide summary widgets (total employees, active projects, today's attendance summary, pending approvals, recent activity, quick task). **No Time Clock widget** (admins don't clock in/out).
+- [x] **HR:** team-level widgets (team attendance, pending leave, pending submissions, team activity, quick task).
+- [x] **Employee:** personal widgets (time clock, active projects, pending tasks, task progress, approval status, announcements).
+- [x] Role determined by `initData?.role` (from `/dashboard/init`), not a default.
 
 ### 2.2 Widget loading/error states
 - [ ] Every widget has: skeleton while loading, **isolated error + Retry** on failure (not blank), meaningful empty state.
