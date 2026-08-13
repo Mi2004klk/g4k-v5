@@ -70,7 +70,7 @@ export default function RoleSelectPage() {
     }
   };
 
-  if (!user || !user.roles || user.roles.length === 1) {
+  if (!user || (user.roles && user.roles.length === 1)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950">
         <div className="flex space-x-1.5 items-center justify-center">
@@ -82,7 +82,7 @@ export default function RoleSelectPage() {
     );
   }
 
-  if (user.roles.length === 0) {
+  if (!user.roles || user.roles.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
         <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 p-6 text-center bg-card dark:bg-neutral-900 rounded-xl">
