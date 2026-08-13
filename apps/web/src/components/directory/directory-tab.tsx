@@ -188,7 +188,7 @@ export function DirectoryTab() {
           </div>
           <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg shrink-0">
             <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("grid")}
               className={`h-8 px-3 ${viewMode === "grid" ? "shadow-e1" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
@@ -197,7 +197,7 @@ export function DirectoryTab() {
               {viewMode === "grid" && <span>Grid</span>}
             </Button>
             <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
+              variant={viewMode === "list" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("list")}
               className={`h-8 px-3 ${viewMode === "list" ? "shadow-e1" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}

@@ -74,13 +74,13 @@ export default function LoginPage() {
       setAuth(result.token, result.user, result.active_role, result.refresh_token);
       toast.success("Login successful!");
 
-      if (!result.onboarded) {
-        router.push("/onboarding");
-      } else if (result.user?.roles?.length > 1) {
-        router.push("/role-select");
-      } else {
-        router.push("/dashboard");
-      }
+      const targetRoute = !result.onboarded
+        ? "/onboarding"
+        : (result.user?.roles?.length > 1 || result.user?.role_assignments?.length > 1)
+        ? "/role-select"
+        : "/dashboard";
+
+      window.location.href = targetRoute;
     } catch (error: any) {
       if (error.status === 423 && error.data?.retry_after) {
         setLockoutSeconds(error.data.retry_after);

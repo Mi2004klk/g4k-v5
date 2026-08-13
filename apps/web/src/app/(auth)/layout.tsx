@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { Grainient } from "@/components/ui/grainient";
@@ -8,25 +8,26 @@ import { Grainient } from "@/components/ui/grainient";
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const token = useAuthStore((s) => s.token);
-  const user = useAuthStore((s) => s.user);
   const [mounted, setMounted] = useState(false);
+  const initialAuthChecked = useRef(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && token && user) {
-      if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
-        if (!user.roles || user.roles.length > 1 || user.roles.length === 0) {
-          router.replace('/role-select');
-        } else {
-          router.replace('/dashboard');
+    if (!initialAuthChecked.current) {
+      initialAuthChecked.current = true;
+      const { token, user } = useAuthStore.getState();
+      if (token && user) {
+        if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
+          const roles = user.roles || user.role_assignments || [];
+          if (roles.length > 1) {
+            router.replace('/role-select');
+          } else {
+            router.replace('/dashboard');
+          }
         }
       }
     }
-  }, [mounted, token, user, pathname, router]);
+  }, [pathname, router]);
 
 
   return (

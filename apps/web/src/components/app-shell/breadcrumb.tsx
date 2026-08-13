@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { queryKeys, STALE_TIME_DIRECTORY } from "@/lib/query-keys";
+import { queryKeys, STALE_TIME_USERS } from "@/lib/query-keys";
 
 function BreadcrumbSegment({
   segment,

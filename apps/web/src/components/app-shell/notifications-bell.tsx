@@ -204,7 +204,7 @@ export function NotificationsBell() {
               )}
             </div>
             
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 pr-8">
               {visibleNotifications.length > 0 && (
                 <>
                   <button

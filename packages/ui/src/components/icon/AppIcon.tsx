@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { iconRegistry, IconName } from "./registry";
+import { iconRegistry, IconName, IconEntry } from "./registry";
 import { cn } from "../../utils/cn";
 
 const SIZE_CLASS: Record<string,string> = {
@@ -21,7 +21,7 @@ export function AppIcon({
     console.warn(`AppIcon: missing icon in registry for name: ${name}`);
     return null;
   }
-  const resolvedTone = tone ?? entry.tone ?? "neutral";
+  const resolvedTone = tone ?? (entry as IconEntry).tone ?? "neutral";
   return (
     <FontAwesomeIcon
       icon={entry.icon}

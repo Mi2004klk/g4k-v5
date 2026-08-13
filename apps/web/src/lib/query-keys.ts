@@ -1,4 +1,5 @@
 export const STALE_TIME_DIRECTORY = 10 * 60_000;   // 10 min — people rarely change
+export const STALE_TIME_USERS = 5 * 60_000;       // 5 min — user profiles / details
 export const STALE_TIME_DEPARTMENTS = 10 * 60_000;  // 10 min
 export const STALE_TIME_DESIGNATIONS = 10 * 60_000; // 10 min
 export const STALE_TIME_HOLIDAYS = 30 * 60_000;     // 30 min — yearly data

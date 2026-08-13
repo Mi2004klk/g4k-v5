@@ -92,7 +92,6 @@ export default function DashboardLayout({
 }) {
   const sidebarState = useUIStore((s) => s.sidebarState);
   const isInitialized = useUIStore((s) => s.isInitialized);
-  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
   const cycleSidebarState = useUIStore((s) => s.cycleSidebarState);
   const setSidebarStateSilent = useUIStore((s) => s.setSidebarStateSilent);
   const syncWithServer = useTimerStore((s) => s.syncWithServer);
@@ -159,7 +158,7 @@ export default function DashboardLayout({
     window.location.href = "/login";
   };
 
-  const isCollapsed = sidebarState === "collapsed" && !isHoverExpanded;
+  const isCollapsed = sidebarState === "collapsed";
 
   if (isErrorCapabilities) {
     return (
@@ -188,13 +187,9 @@ export default function DashboardLayout({
           sidebarState === "expanded" ? "md:grid-cols-[240px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[64px_1fr]" : "grid-cols-1"
         )}>
           {/* Desktop Sidebar */}
-          <aside 
-            onMouseEnter={() => sidebarState === "collapsed" && setIsHoverExpanded(true)}
-            onMouseLeave={() => setIsHoverExpanded(false)}
-            className={cn(
-            "bg-surface border-r border-border relative h-full transition-[width,transform] duration-300 ease-in-out",
-            sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col",
-            isHoverExpanded ? "absolute top-0 left-0 bottom-0 z-50 w-[240px] shadow-2xl" : "relative z-20 w-full"
+          <aside className={cn(
+            "bg-surface border-r border-border relative h-full transition-[width,transform] duration-300 ease-in-out z-20 w-full",
+            sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col"
           )}>
             <div className="flex items-center h-16 shrink-0 px-4 justify-center overflow-hidden">
               {isCollapsed ? (
@@ -227,10 +222,7 @@ export default function DashboardLayout({
                 onClick={cycleSidebarState}
               >
                 {sidebarState === "collapsed" ? (
-                  <>
-                    <AppIcon name="chevronRight" size="lg" className=" shrink-0" />
-                    {isHoverExpanded && <span className="ml-2 font-medium whitespace-nowrap">Expand</span>}
-                  </>
+                  <AppIcon name="chevronRight" size="lg" className=" shrink-0" />
                 ) : (
                   <>
                     <AppIcon name="chevronLeft" size="lg" className=" shrink-0" />
