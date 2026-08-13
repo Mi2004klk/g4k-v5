@@ -148,7 +148,7 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { data: userCapabilities = EMPTY_CAPABILITIES } = useCapabilities();
+  const { data: userCapabilities = EMPTY_CAPABILITIES, isLoading: isLoadingCapabilities, isError: isErrorCapabilities, refetch: refetchCapabilities } = useCapabilities();
   const authUser = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const density = useAuthStore((s) => s.density);
@@ -211,6 +211,23 @@ export default function DashboardLayout({
   };
 
   const isCollapsed = sidebarState === "collapsed";
+
+  if (isErrorCapabilities) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
+        <ShieldAlert className="w-12 h-12 text-rose-500" />
+        <div className="text-center space-y-1">
+          <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Session could not load</h2>
+          <p className="text-sm text-neutral-500">We couldn't verify your permissions.</p>
+        </div>
+        <div className="flex items-center gap-3 mt-2">
+          <Button variant="outline" onClick={() => refetchCapabilities()}>Retry</Button>
+          <Button variant="ghost" onClick={handleLogout}>Log out</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AuthGuard>
       <ReverbProvider>

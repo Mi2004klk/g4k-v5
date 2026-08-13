@@ -192,16 +192,16 @@ Candidates to inspect (in order of likelihood) using the T1 stack trace:
 
 These currently misbehave *because* of RC-1; verify they're correct once 500s are gone, and harden them so a
 future API failure degrades safely instead of showing the wrong role:
-- [ ] **3.1** `/me/capabilities` must return the full capability set for the active role; the frontend
+- [✅] **3.1** `/me/capabilities` must return the full capability set for the active role; the frontend
       `navGroups` filter (`dashboard/layout.tsx`) must use it. If the call fails, the UI must NOT silently
       fall back to "employee" — show a clear "Session/permissions could not load — retry" state instead.
-- [ ] **3.2** `active_role` must come from the token ability + `/dashboard/init`, not a hardcoded default;
+- [✅] **3.2** `active_role` must come from the token ability + `/dashboard/init`, not a hardcoded default;
       the **"Role: Employee" badge must be removed entirely** (requirement) — and must never show the wrong
       role. Delete the badge element + its copy.
-- [ ] **3.3** **Time Clock widget** is role-gated in `dashboard/page.tsx` (employee branch only). Confirm
+- [✅] **3.3** **Time Clock widget** is role-gated in `dashboard/page.tsx` (employee branch only). Confirm
       admin/HR branches don't register it; and gate it by capability, not just branch, so a stale layout
       can't surface it to admin.
-- [ ] **3.4** Nav must reflect capabilities: admin sees Dashboard, Attendance, Projects, Tasks, Chat,
+- [✅] **3.4** Nav must reflect capabilities: admin sees Dashboard, Attendance, Projects, Tasks, Chat,
       Announcements, Leave, Reports, Directory, Employees, Team Attendance, Org Leave, Departments,
       Designations, Settings, Audit Log, Profile — not the 3-item employee set.
 

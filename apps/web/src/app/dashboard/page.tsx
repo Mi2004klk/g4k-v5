@@ -4,7 +4,8 @@ import { useAuthStore } from "@/lib/auth-store";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { apiFetch } from "@/lib/api-client";
 import { format } from "date-fns";
@@ -50,9 +51,15 @@ function responsiveLayout(base: {x: number, y: number, w: number, h: number}) {
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
-  const activeRole = user?.active_role || "employee";
   const router = useRouter();
   const queryClient = useQueryClient();
+  
+  const { data: initData } = useQuery({
+    queryKey: queryKeys.dashboardInit,
+    staleTime: 5 * 60_000,
+  });
+  
+  const activeRole = initData?.role || user?.active_role;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -63,6 +70,8 @@ export default function DashboardPage() {
       }
     }
   }, [router]);
+
+  const { data: userCapabilities = [] } = useCapabilities();
 
   // Memoized widget catalog based on active role
   const availableWidgets = useMemo(() => {
@@ -166,7 +175,7 @@ export default function DashboardPage() {
     }
 
     // Default Employee view
-    return [
+    const widgets = [
       {
         id: "announcements",
         component: <AnnouncementBoard />,
@@ -181,11 +190,6 @@ export default function DashboardPage() {
         id: "pending-tasks",
         component: <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={ClipboardList} color="amber" subtitle="Tasks assigned to you" />,
         defaultLayout: responsiveLayout({ x: 2, y: 3, w: 2, h: 2 }),
-      },
-      {
-        id: "time-clock",
-        component: <TimeClockWidget />,
-        defaultLayout: responsiveLayout({ x: 4, y: 3, w: 4, h: 3 }),
       },
       {
         id: "approval-status",
@@ -208,7 +212,17 @@ export default function DashboardPage() {
         defaultLayout: responsiveLayout({ x: 8, y: 6, w: 4, h: 3 }),
       },
     ];
-  }, [activeRole]);
+
+    if (hasCapability(userCapabilities, "attendance.clock-in")) {
+      widgets.push({
+        id: "time-clock",
+        component: <TimeClockWidget />,
+        defaultLayout: responsiveLayout({ x: 4, y: 3, w: 4, h: 3 }),
+      });
+    }
+
+    return widgets;
+  }, [activeRole, userCapabilities]);
 
   const greetingData = useMemo(() => getGreeting(new Date(), user?.id || 0), [user?.id]);
   const firstName = user?.name?.split(" ")[0] || "Team Member";
@@ -226,9 +240,6 @@ export default function DashboardPage() {
           <p className="text-xs text-primary-foreground/70 mt-1">
             {greetingData.subtitle}
           </p>
-        </div>
-        <div className="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-mono font-bold capitalize">
-          Role: {activeRole.replace("_", " ")}
         </div>
       </div>
 
