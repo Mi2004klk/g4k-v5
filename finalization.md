@@ -88,13 +88,13 @@
 - [x] Role determined by `initData?.role` (from `/dashboard/init`), not a default.
 
 ### 2.2 Widget loading/error states
-- [ ] Every widget has: skeleton while loading, **isolated error + Retry** on failure (not blank), meaningful empty state.
-- [ ] One failed widget does NOT crash sibling widgets.
-- [ ] The shared `useDashboardInit()` query is single — all widgets select from it.
+- [x] Every widget has: skeleton while loading, **isolated error + Retry** on failure (not blank), meaningful empty state.
+- [x] One failed widget does NOT crash sibling widgets.
+- [x] The shared `useDashboardInit()` query is single — all widgets select from it.
 
 ### 2.3 Dashboard greeting
-- [ ] Time-based greeting (Good morning/afternoon/evening/night).
-- [ ] **No "Role: Employee" badge** (removed entirely).
+- [x] Time-based greeting (Good morning/afternoon/evening/night).
+- [x] **No "Role: Employee" badge** (removed entirely).
 
 ---
 
