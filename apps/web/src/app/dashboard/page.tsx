@@ -24,6 +24,7 @@ import Link from "next/link";
 import { RecentActivityWidget } from "@/components/widgets/recent-activity-widget";
 import { EmptyState } from "@g4k/ui/components";
 import { Card } from "@g4k/ui/components";
+import { Button } from "@g4k/ui/components";
 
 import { AdminTodayAttendanceWidget } from "@/components/dashboard/admin-today-attendance-widget";
 import { PendingApprovalsWidget } from "@/components/widgets/pending-approvals-widget";
@@ -51,7 +52,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   
-  const { data: initData } = useDashboardInit();
+  const token = useAuthStore((s) => s.token);
+  
+  const { data: initData, isLoading, isError, refetch } = useDashboardInit({ enabled: !!token });
   
   const activeRole = initData?.role || user?.active_role;
 
@@ -221,10 +224,24 @@ export default function DashboardPage() {
   const greetingData = useMemo(() => getGreeting(new Date(), user?.id || 0), [user?.id]);
   const firstName = user?.name?.split(" ")[0] || "Team Member";
 
-  if (!activeRole) {
+  if (isLoading || (!activeRole && !isError)) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
-        <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
+        <div className="flex flex-col items-center justify-center gap-4">
+          <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
+          <p className="text-sm text-neutral-500 font-medium">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+        <p className="text-sm text-neutral-500 font-medium">Failed to load dashboard data.</p>
+        <Button onClick={() => refetch()} variant="outline">
+          Retry
+        </Button>
       </div>
     );
   }
