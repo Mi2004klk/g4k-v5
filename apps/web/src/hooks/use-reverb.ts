@@ -35,7 +35,7 @@ const ReverbContext = createContext<ReverbContextType>({
  */
 function isReverbAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!process.env.NEXT_PUBLIC_REVERB_HOST; // Only connect if explicitly configured
+  return !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY; // Only connect if explicitly configured
 }
 
 export function ReverbProvider({ children }: { children: ReactNode }) {
@@ -59,18 +59,10 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     window.Pusher = Pusher;
 
     const echo = new Echo({
-      broadcaster: 'reverb',
-      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || 'g4k_reverb_key',
-      cluster: 'mt1',
-      wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || window.location.hostname,
-      wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 8080),
-      wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT || 8080),
-      forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME || 'http') === 'https',
-      enabledTransports: ['ws', 'wss'],
-      activityTimeout: 120000,
-      pongTimeout: 30000,
-      maxReconnectionAttempts: 5,
-      maxReconnectGap: 10000,
+      broadcaster: 'pusher',
+      key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || 'pusher_key',
+      cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || 'ap2',
+      forceTLS: true,
       authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
       auth: {
         headers: {
