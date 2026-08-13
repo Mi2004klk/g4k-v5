@@ -49,11 +49,11 @@ steps:
       - |
         echo "Waiting for service to be fully ready..."
         sleep 5
-        URL=$(gcloud run services describe ${_SERVICE} --region=${_REGION} --format="value(status.url)")
-        echo "Curling $URL/api/health"
-        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL/api/health" || echo "000")
-        if [ "$HTTP_CODE" -ne 200 ]; then
-          echo "Smoke check failed! HTTP status code: $HTTP_CODE"
+        URL=$$(gcloud run services describe ${_SERVICE} --region=${_REGION} --format="value(status.url)")
+        echo "Curling $$URL/api/health"
+        HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" "$$URL/api/health" || echo "000")
+        if [ "$$HTTP_CODE" -ne 200 ]; then
+          echo "Smoke check failed! HTTP status code: $$HTTP_CODE"
           exit 1
         fi
         echo "Smoke check passed!"
