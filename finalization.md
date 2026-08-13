@@ -68,14 +68,14 @@
 - [x] Single-role users go straight to dashboard.
 
 ### 1.4 Logout
-- [ ] Clears token, refresh token, cookies.
-- [ ] Redirects to `/login`.
-- [ ] Works from any page (header dropdown + sidebar collapsed).
+- [x] Clears token, refresh token, cookies.
+- [x] Redirects to `/login`.
+- [x] Works from any page (header dropdown + sidebar collapsed).
 
 ### 1.5 Route protection
-- [ ] `/dashboard/*` routes require a valid token (middleware.ts checks `g4k_token` cookie).
-- [ ] Auth routes (`/login`, `/forgot-password`, etc.) redirect to dashboard if already logged in.
-- [ ] No route accessible without auth that should require it.
+- [x] `/dashboard/*` routes require a valid token (middleware.ts checks `g4k_token` cookie).
+- [x] Auth routes (`/login`, `/forgot-password`, etc.) redirect to dashboard if already logged in.
+- [x] No route accessible without auth that should require it.
 
 ---
 

@@ -16,11 +16,22 @@ const PROTECTED: Record<string, string> = {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   
-  // Only intercept /dashboard paths
+  const isAuthRoute = 
+    pathname.startsWith("/login") || 
+    pathname.startsWith("/forgot-password") || 
+    pathname.startsWith("/reset-password");
+
+  const token = req.cookies.get("g4k_token")?.value;
+
+  // If user is accessing an auth route but already has a token, send them to dashboard
+  if (isAuthRoute && token) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  // Only intercept /dashboard paths from here on
   if (!pathname.startsWith("/dashboard")) return NextResponse.next();
   
-  // Verify auth cookie
-  const token = req.cookies.get("g4k_token")?.value;
+  // Verify auth cookie for dashboard routes
   if (!token) return NextResponse.redirect(new URL("/login", req.url));
   
   // Check if route is protected
@@ -44,4 +55,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/dashboard/:path*"] };
+export const config = { matcher: ["/dashboard/:path*", "/login", "/forgot-password", "/reset-password"] };
