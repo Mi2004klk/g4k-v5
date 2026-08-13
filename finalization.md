@@ -1,222 +1,397 @@
-# finalization.md — The Single Implementation Plan to Make the App Production-Ready
+# finalization.md — The Complete Implementation Plan to Make Every Workflow Production-Ready
 
-> **This is the ONLY document you need to execute.** Every item is confirmed, line-level, and ordered by
-> "what to fix first to unfreeze the app." Apply top-to-bottom, commit after each group, deploy, verify.
-> Do not skip — each group unblocks the next.
+> **This is the ONLY plan you need.** Organised by workflow/module. Apply top-to-bottom. After each module,
+> commit + verify before moving on. The acceptance standard: **implement → deploy → start using** — every
+> Admin, HR, and Employee workflow works from login through task completion with no stuck loading, broken
+> components, placeholder data, manual refreshes, or workflow blockers.
 
 ---
 
-## GROUP 1 — UNFREEZE THE APP (fix these FIRST; they cause the dashboard freeze)
+## MODULE 0 — UNFREEZE (fix FIRST; nothing else is testable until the app renders)
 
-The dashboard is stuck because React hits ReferenceErrors and TypeErrors during render → ErrorBoundary
-catches → re-renders → same error → **infinite loop / frozen page**. Fix all 7 items below and the app
-unfreezes.
+### 0.1 Fix every missing icon import (ReferenceError = hard crash = frozen dashboard)
+- **`projects/[id]/page.tsx:95`** — `<Folder>` used but not imported. Add `import { Folder } from "lucide-react"`.
+- **`org/users/page.tsx:537`** — `<UsersIcon>` used but not imported. Add `import { Users } from "lucide-react"` and change `<UsersIcon` to `<Users`.
+- **Audit ALL files** for any component/icon referenced in JSX but not imported. Run `pnpm --filter web build` — turbopak catches missing imports at build time. **The fact that the live build has these means the build wasn't run or a stale cache served.**
+- **Acceptance:** zero `ReferenceError: X is not defined` in the console; dashboard renders without crashing.
 
-### 1.1 Fix `Folder is not defined`
-- **File:** `apps/web/src/app/dashboard/projects/[id]/page.tsx:95`
-- **Bug:** `<Folder className="w-5 h-5 text-violet-600" />` — `Folder` is used but **never imported** (the
-  icon migration removed the lucide import but left the JSX reference). ReferenceError → hard crash.
-- **Fix:** add the import at the top of the file:
-  ```ts
-  import { Folder } from "lucide-react";   // if still on lucide
-  // OR if migrating to FA:
-  import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-  import { faFolder } from "@fortawesome/free-solid-svg-icons";
-  // and change the JSX to <FontAwesomeIcon icon={faFolder} className="w-5 h-5 text-violet-600" />
-  ```
-  **Whichever icon library is currently in use — just make sure the import exists.** Check what other icons
-  in the same file import from and match.
+### 0.2 Guard ALL `.find()` / `.map()` / `.length()` / `.filter()` on API-sourced data
+- **Pattern everywhere:** `const items = Array.isArray(raw) ? raw : [];` — never call array methods on a value that might be `undefined`/`null`/object.
+- **Every widget** that destructures from a `useQuery` result: `recent-activity-widget`, `announcement-board`, `quick-notes`, `pending-approvals-widget`, `employee-approval-status-widget`, `employee-task-progress-widget`, `team-attendance-widget`, `upcoming-holidays-widget`, `metric-widget`.
+- **Every `select` function** in a `useQuery`: must never throw — return `[]` on unexpected shape.
+- **Every `setQueryData(old => ...)` callback**: guard `old` — `return old ? { ...old, data: (old.data ?? []).map(...) } : old`.
+- **Acceptance:** zero `TypeError: X.find/map/length is not a function` or `Cannot read properties of undefined` in the console.
 
-### 1.2 Fix `UsersIcon is not defined`
-- **File:** `apps/web/src/app/dashboard/org/users/page.tsx:537`
-- **Bug:** `icon={<UsersIcon className="w-8 h-8 text-neutral-400" />}` — `UsersIcon` is used but not
-  imported. ReferenceError → hard crash → the Employee page blanks + floods the console.
-- **Fix:** add the import:
-  ```ts
-  import { Users } from "lucide-react";   // then use <Users className="w-8 h-8 text-neutral-400" />
-  // (the original name was "Users" — "UsersIcon" was likely an alias that was removed)
-  ```
-  Or replace with whatever icon system is active. The key: **the component referenced in JSX must be imported.**
+### 0.3 Guard ALL date-fns calls (RangeError: Invalid time value)
+- **Create/verify** `safeFormat(ts, fmt)` and `safeFromNow(ts)` in `apps/web/src/lib/format.ts`.
+- **Route through them every** `format(new Date(...))`, `formatDistanceToNow(...)`, `formatDistance(...)` call that takes an API-sourced timestamp.
+- **Files:** `announcement-board.tsx`, `hr-activity-feed-widget.tsx`, `employee-approval-status-widget.tsx`, `employee-task-progress-widget.tsx`, `command-palette.tsx`, `notifications-bell.tsx`, `today-summary-card.tsx`, `attendance-history-calendar.tsx`, `leave-history-table.tsx`, `time-clock-widget.tsx`, all table date columns.
+- **Acceptance:** zero `RangeError: Invalid time value` in the console.
 
-### 1.3 Audit ALL other potentially-missing imports
-- **Action:** grep the entire `apps/web/src` for any component/icon used in JSX but not imported:
-  ```bash
-  # Quick check: find all <CapitalizedComponent> in JSX, then verify each is imported in that file.
-  # The build should catch these (Next.js turbopack), but if the build passed with stale caches,
-  # runtime ReferenceErrors slip through.
-  ```
-- **Specifically check:** any file that was recently modified for the icon migration or UI changes. Look
-  for `<IconName` or `<ComponentName` where the name doesn't appear in an `import` statement.
-- **Fix:** add the missing import for each.
+### 0.4 Remove the auth-redirect bubble (login stuck after "Login successful")
+- **File:** `apps/web/src/app/(auth)/layout.tsx:32`.
+- **Bug:** when `token && user` are hydrated from localStorage, the layout replaces `{children}` with a bouncing-dots loader + `router.replace('/dashboard')`. If the dashboard is slow/broken, the user is stuck on the bubble.
+- **Also:** `login/page.tsx` shows "Login successful" toast but doesn't navigate — the redirect from `(auth)/layout.tsx` is supposed to fire but may not because the layout condition checks a stale state.
+- **Fix:**
+  1. In `login/page.tsx`, after `setAuth(...)`, **immediately** `router.push(targetRoute)` (not `router.replace`) where `targetRoute` = `!result.onboarded ? '/onboarding' : result.user?.roles?.length > 1 ? '/role-select' : '/dashboard'`. Don't rely on the layout's redirect.
+  2. In `(auth)/layout.tsx`, render `{children}` (the login form) **always**. Do the redirect as a fire-and-forget `router.replace` in a `useEffect` — but don't replace children with a loader. The login form should remain visible and interactive until the router swaps the page.
+  3. Ensure the `router.push` uses the correct Next.js App Router method. After `setAuth`, the Zustand store updates synchronously → the `router.push` should fire immediately.
+- **Acceptance:** after clicking Sign In with valid credentials, the user is **automatically** navigated to their dashboard (or role-select/onboarding) within 1 second — no manual refresh needed.
 
-### 1.4 Guard ALL `.find()` / `.map()` / `.length` / `.filter()` on API-sourced data
-Every widget/component that reads an array from a React Query result must guard against `undefined`/non-array.
-**Pattern:** `const items = Array.isArray(raw) ? raw : [];`
+### 0.5 Ensure the dashboard loads after navigation
+- **File:** `apps/web/src/app/dashboard/page.tsx`.
+- The dashboard reads `useDashboardInit()` (a `useQuery` for `/dashboard/init`). If this query is still loading, the page shows a skeleton. If it errors, widgets show Retry.
+- **Fix:** ensure the query is `enabled: !!token` (not firing before auth). Add a **page-level loading state** (not just widget-level) so the user sees "Loading dashboard..." not a blank page. Add an **error boundary** with a Retry button at the page level.
+- **Acceptance:** after login, the dashboard loads within 2 seconds warm; shows skeleton while loading, not a blank screen; recovers automatically if the API is briefly slow.
 
-| File | Field | Current | Fix |
+---
+
+## MODULE 1 — AUTHENTICATION & SESSION
+
+### 1.1 Login flow
+- [ ] Login accepts email **or** employee ID + password.
+- [ ] Password show/hide toggle works.
+- [ ] Loading state on the Sign In button while submitting.
+- [ ] Invalid credentials → clear inline error, form retains values.
+- [ ] **Successful login → automatic redirect** to the correct dashboard/role-select/onboarding (fix 0.4).
+- [ ] No stuck loading after "Login successful".
+
+### 1.2 Session persistence
+- [ ] Token stored in Zustand `persist` (localStorage `g4k-auth`).
+- [ ] On refresh, `auth-guard.tsx` silently restores session via `/auth/refresh` (sends `X-Refresh-Token` header).
+- [ ] If refresh fails → redirect to `/login`.
+- [ ] If refresh succeeds → stay on the current page (no redirect loop).
+
+### 1.3 Role selection
+- [ ] Multi-role users see role-select screen after login.
+- [ ] Selecting a role calls `/auth/role-select` → new scoped token → redirect to dashboard.
+- [ ] Single-role users go straight to dashboard.
+
+### 1.4 Logout
+- [ ] Clears token, refresh token, cookies.
+- [ ] Redirects to `/login`.
+- [ ] Works from any page (header dropdown + sidebar collapsed).
+
+### 1.5 Route protection
+- [ ] `/dashboard/*` routes require a valid token (middleware.ts checks `g4k_token` cookie).
+- [ ] Auth routes (`/login`, `/forgot-password`, etc.) redirect to dashboard if already logged in.
+- [ ] No route accessible without auth that should require it.
+
+---
+
+## MODULE 2 — DASHBOARD
+
+### 2.1 Dashboard per role
+- [ ] **Admin:** company-wide summary widgets (total employees, active projects, today's attendance summary, pending approvals, recent activity, quick task). **No Time Clock widget** (admins don't clock in/out).
+- [ ] **HR:** team-level widgets (team attendance, pending leave, pending submissions, team activity, quick task).
+- [ ] **Employee:** personal widgets (time clock, active projects, pending tasks, task progress, approval status, announcements).
+- [ ] Role determined by `initData?.role` (from `/dashboard/init`), not a default.
+
+### 2.2 Widget loading/error states
+- [ ] Every widget has: skeleton while loading, **isolated error + Retry** on failure (not blank), meaningful empty state.
+- [ ] One failed widget does NOT crash sibling widgets.
+- [ ] The shared `useDashboardInit()` query is single — all widgets select from it.
+
+### 2.3 Dashboard greeting
+- [ ] Time-based greeting (Good morning/afternoon/evening/night).
+- [ ] **No "Role: Employee" badge** (removed entirely).
+
+---
+
+## MODULE 3 — ATTENDANCE (core daily workflow)
+
+### 3.1 Time Clock widget (HR + Employee only; NOT Admin)
+- [ ] **Role boundary:** Admin dashboard does NOT show the Time Clock widget. HR + Employee see it.
+- [ ] Clock In / Start Break / End Break / Clock Out buttons work (real API calls).
+- [ ] Loading state on each button while submitting (disable + spinner).
+- [ ] **Never shows "Connection Error / Retry" when the backend is functional** — if the `/dashboard/init` query loads `attendance_today`, the widget shows the correct state (active/break/completed).
+- [ ] Live timer (HH:MM:SS) counts up while active; shows total worked today.
+- [ ] Timer persists across page navigation (Zustand `timer-store` with `persist`).
+- [ ] Timer turns amber when overtime threshold exceeded.
+- [ ] "Continue Shift" button after clock-out (calls `clock_in` again; `reconcileDay` must count the second segment).
+- [ ] **Fix:** remove the `break` on first clock_out in `AttendanceService::reconcileDay` (line ~86-88) so continued-shift time is counted.
+
+### 3.2 Today's Summary
+- [ ] Shows **real calculated data** from `/dashboard/init` → `attendance_today`:
+  - Clock-in time (real, not placeholder).
+  - Break duration (real total, not 0:00 placeholder).
+  - Clock-out time (real or "—" if not yet clocked out).
+  - Total worked (live timer, not dummy).
+  - Overtime indicator (amber when > standard hours).
+  - Late badge (if clocked in after shift start + grace).
+- [ ] If no attendance data for today: show "You haven't clocked in yet" empty state (not dummy zeros).
+
+### 3.3 Recent Shift Log
+- [ ] Shows **real shift records** from `/attendance/me/history` — actual dates with real clock-in/out/break/total/overtime data.
+- [ ] **Not placeholder/mock data** — if no history exists, show "No attendance records yet."
+- [ ] Compact, responsive layout (doesn't overflow the page).
+- [ ] Each row clickable → day detail dialog (clock-in, breaks, clock-out, total, projects, tasks).
+- [ ] Calendar heatmap view with distinct colors per status (present/late/overtime/leave/absent).
+
+### 3.4 Clock-in 422 fix
+- [ ] Backend: make repeat `clock_in` idempotent (`AttendanceService::recordEvent` — if already on open shift, return current day instead of throwing ValidationException).
+- [ ] Frontend: disable punch button while in-flight; reconcile local state if server already has an open shift.
+
+### 3.5 Attendance pages
+- [ ] `/dashboard/attendance` (self): time clock + today summary + recent shift log.
+- [ ] HR team attendance (`/dashboard/org/attendance`): every employee today, filter present/absent/late, per-employee detail.
+- [ ] Admin attendance (`/dashboard/admin/attendance`): company-wide overview, calendar, analytics, open shifts.
+- [ ] Manual correction works (add/edit/remove event, audit logged).
+- [ ] Export honors filters (date range, department, person).
+
+---
+
+## MODULE 4 — LEAVE / TIME OFF
+
+### 4.1 Request leave
+- [ ] Date selection: themed Calendar (future-only — no past dates, no today).
+- [ ] Leave type selection (casual/sick/earned/unpaid).
+- [ ] Reason (required, validated).
+- [ ] Submit → routes to correct approver (employee→HR, HR→admin).
+- [ ] Success toast + redirect to leave history.
+
+### 4.2 Leave history
+- [ ] Shows **real** leave requests with status (Pending/Approved/Rejected).
+- [ ] Responsive table; no duplicate filter bars.
+- [ ] Status badge colors correct (pending=amber, approved=green, rejected=red).
+- [ ] Empty state: "No leave requests yet."
+
+### 4.3 Leave approvals (HR/Admin)
+- [ ] Pending approvals list shows **real** pending requests.
+- [ ] Approve button → `POST /approvals/{id}/decision` → 200 (not 500).
+- [ ] Reject button → reason dialog → reject.
+- [ ] After action: list updates, cache busted, status changed.
+- [ ] Filter by status (all/pending/approved/rejected) + search.
+- [ ] Export works (correct URL + auth token).
+
+### 4.4 Holidays
+- [ ] Holiday calendar shows **real** holidays from `/holidays`.
+- [ ] Admin can CRUD holidays.
+- [ ] Upcoming holidays widget on dashboard shows real upcoming holidays (not placeholder).
+- [ ] Holiday data integrated with attendance (holidays skipped in shift reminders, shown on calendar).
+
+---
+
+## MODULE 5 — EMPLOYEE / ORGANISATION MANAGEMENT
+
+### 5.1 Employee list (`/dashboard/org/users`)
+- [ ] **Fix `Cannot read properties of undefined (reading 'length')`** — the users data from `/users` must be guarded: `const users = data?.data ?? [];` (API returns `{ data: [...], next_cursor }`).
+- [ ] **Fix "No employees found" when employees exist** — ensure the data path is correct (the response shape may be `{ data: { data: [...] } }` if double-wrapped).
+- [ ] Table loads, paginates, searches, filters by role/status/department.
+- [ ] Create/edit user dialogs work (all fields: name, email, employee ID, department, team, designation, roles).
+- [ ] Deactivate/delete/reset-password/activity-log actions work.
+- [ ] Restore soft-deleted users (UI button exists).
+
+### 5.2 User detail (`/dashboard/org/users/[id]`)
+- [ ] **Fix breadcrumb** — must show the correct hierarchy (e.g., "Dashboard > Employee Management > {User Name}", not "org > users").
+- [ ] Tabs: Personal Info (editable), Attendance (real history, not empty), Leave (real history), Projects & Tasks, Activity Log.
+- [ ] **Fix attendance tab showing empty** — read `historyData?.data` not `historyData?.days`.
+- [ ] Action buttons: Edit, Reset Password, Activate/Deactivate, Delete, Send Message.
+
+### 5.3 Departments
+- [ ] Create/edit/archive/delete.
+- [ ] Assign HR(s) to department.
+- [ ] Assign employees to department.
+- [ ] Member list (HR + employees) with add/remove.
+
+### 5.4 Designations
+- [ ] Full CRUD.
+
+### 5.5 Directory
+- [ ] Search by name/department/designation.
+- [ ] Grid/list toggle.
+- [ ] Card: photo, name, designation, department, email, phone (if visible).
+- [ ] Click card → public profile sheet → Send Message (opens DM).
+- [ ] No `Cannot read properties of undefined` crash.
+
+### 5.6 Breadcrumbs
+- [ ] Every page has a correct breadcrumb reflecting its actual hierarchy.
+- [ ] Active state on the current route.
+- [ ] Back navigation works (browser back + breadcrumb click).
+- [ ] Deep-link: pasting a URL works (route protection + data loading).
+
+---
+
+## MODULE 6 — COMMUNICATION / CHAT
+
+### 6.1 Fix "Something went wrong"
+- [ ] **Root cause:** likely the `Folder` missing import or a shape-mismatch crash in the chat components, OR a missing capability.
+- [ ] After Group 0 fixes, verify chat loads.
+- [ ] If chat still crashes: check `chat/message-list.tsx`, `conversation-list.tsx`, `message-composer.tsx` for unguarded data access.
+
+### 6.2 Chat workflow
+- [ ] Conversation list loads (DMs + global).
+- [ ] Messages send and appear (optimistic update or refetch).
+- [ ] Global chat receives task-completion notifications.
+- [ ] Direct messages work (from directory "Send Message").
+
+---
+
+## MODULE 7 — NOTIFICATIONS
+
+### 7.1 Real notifications (not placeholder)
+- [ ] Notifications generated from **real system events**: leave decision, task assignment, attendance reminder, announcement, shift-start reminder.
+- [ ] Notification bell shows **real** unread count.
+- [ ] Notification list shows real data (title, body, type, timestamp, link).
+- [ ] Mark as read / mark all as read works.
+- [ ] Clicking a notification navigates to the relevant page.
+- [ ] Notifications respect role/permissions (only the correct user sees their notifications).
+- [ ] **No mock/random notification data.**
+
+### 7.2 Notification bell
+- [ ] Opens without crashing (fix the `Slot failed` if it regressed).
+- [ ] Tooltip shows unread count.
+- [ ] Modal uses shared Dialog (not custom overlay).
+
+---
+
+## MODULE 8 — ANALYTICS / TRENDS
+
+### 8.1 Real metrics (not random data)
+- [ ] Admin/HR analytics graphs use **real** attendance/leave data from `/attendance/admin/graph` or `/attendance/hr/graph`.
+- [ ] Weekly/monthly toggle works.
+- [ ] Graphs show present/late/absent counts per day/week.
+- [ ] **No random/demo data** — if no data exists for the period, show "No data for this period."
+- [ ] Per-employee trends graph (HR).
+
+### 8.2 Fix "Invalid time value" in attendance views
+- [ ] All date formatting in attendance tables/graphs guarded via `safeFormat`/`safeFromNow`.
+
+---
+
+## MODULE 9 — SETTINGS & PROFILE
+
+### 9.1 Consolidate settings (remove unnecessary)
+- [ ] **Keep:** Company profile (name, logo), Work schedules (standard hours), Holidays, Password policy, Session rules, SMTP configuration (if required).
+- [ ] **Remove/consolidate:** unnecessary settings screens that don't serve the product workflow. Review each tab and ask "does this configuration affect a real feature?"
+- [ ] Company Information: keep name + logo. Remove redundant fields (timezone locked to Asia/Kolkata is fine).
+
+### 9.2 SMTP settings
+- [ ] If part of the requirements: SMTP config (host, port, encryption, username, password) stored in DB settings.
+- [ ] Connected to the email workflow (forgot-password sends via configured SMTP).
+- [ ] If SMTP not configured: forgot-password shows the correct toast ("Email not configured yet. Setup email from Admin Settings."), does NOT attempt to send.
+- [ ] Test email button works.
+
+### 9.3 Profile management
+- [ ] View own profile (photo, name, phone, designation, department, role).
+- [ ] Edit name, phone, avatar.
+- [ ] Change password (current + new + confirm; wrapped in `<form>`; autocomplete attributes).
+- [ ] Avatar upload works (fix the 500 — check Supabase disk config + credentials on Cloud Run).
+- [ ] Device sessions: list logged-in devices, revoke any.
+- [ ] Logout current device.
+
+### 9.4 Avatar upload 500 fix
+- [ ] Ensure `FILESYSTEM_DISK=s3` on Cloud Run.
+- [ ] Ensure AWS_* secrets are set.
+- [ ] Ensure `supabase` disk defined in `config/filesystems.php`.
+- [ ] Check Cloud Logging for the actual PHP exception.
+
+---
+
+## MODULE 10 — DATE COMPONENTS (global fix)
+
+### 10.1 Themed Calendar everywhere
+- [ ] Replace ALL native `<input type="date">` with the themed `Calendar` (Popover + react-day-picker).
+- [ ] **Date format consistency:** display as `DD-MM-YYYY` (or the app's chosen format) everywhere.
+- [ ] **Future-only validation** where required (leave requests).
+- [ ] **Timezone:** all dates stored/returned as UTC; displayed in the user's timezone. Ensure `APP_TIMEZONE=UTC` on the backend; the frontend formats with the user's locale.
+- [ ] **No `RangeError: Invalid time value`** anywhere — every date-fns call guarded.
+
+### 10.2 FilterBar date-range
+- [ ] Fix the date-range chip bug (reads `.start/.end` but onChange stores `{from,to}`).
+- [ ] Date-range chips show correctly and are removable.
+
+---
+
+## MODULE 11 — STATES & UX QUALITY
+
+### 11.1 Every page must have
+- [ ] **Loading state:** skeleton or spinner (not blank page).
+- [ ] **Error state:** isolated error + Retry button (not "Something went wrong" full-screen).
+- [ ] **Empty state:** meaningful message + illustration + CTA (not bare "No results").
+- [ ] **Disabled state:** buttons disabled while submitting.
+- [ ] **Permission-denied state:** if a user lacks access, show a clear "You don't have access" message (not a crash/redirect loop).
+
+### 11.2 No manual refresh needed
+- [ ] Every workflow completes without requiring a browser refresh:
+  - Login → auto-redirect.
+  - Form submit → data updates (React Query invalidation).
+  - Action (approve/reject/clock-in) → list updates immediately.
+  - Navigation → page loads data on mount.
+
+### 11.3 No mock/placeholder/demo data
+- [ ] Remove ALL hardcoded mock arrays, demo data, random values presented as real.
+- [ ] If no data exists: show the proper empty state.
+- [ ] If the API returns data: display it. If the API fails: show error + retry.
+
+### 11.4 Responsive
+- [ ] Every page works at 360 / 414 / 768 / 1024 / 1280 / 1536 px.
+- [ ] No horizontal overflow, no overlapping components, no clipped content.
+- [ ] Sidebar collapses on mobile; bottom nav works.
+- [ ] Tables scroll horizontally on mobile.
+
+---
+
+## MODULE 12 — CLEANUP
+
+### 12.1 Remove duplicate `value="all"` in FilterBar selects (13 sites)
+### 12.2 Remove dead endpoints (`/companies`, `/auth/profile` dup, `/timer/logs`, etc.)
+### 12.3 Complete or revert the Font Awesome icon migration (no half-migrated state)
+### 12.4 Replace native controls with themed primitives (~35 sites)
+### 12.5 Token adoption (replace `bg-white` → `bg-surface`, `shadow-sm` → `shadow-e1`)
+### 12.6 Delete superseded planning docs (after the app works)
+
+---
+
+## VERIFICATION MATRIX (do not call "done" until every row passes for every role)
+
+| Workflow | Admin | HR | Employee |
 |---|---|---|---|
-| `widgets/recent-activity-widget.tsx` | `data?.recent_activity` | `\|\| []` | `Array.isArray(x) ? x : []` |
-| `widgets/announcement-board.tsx` | `announcements` | `\|\| []` | same |
-| `widgets/quick-notes.tsx` | `notes` | `\|\| []` | same |
-| `widgets/pending-approvals-widget.tsx` | `pending_approvals` | `\|\| []` | same |
-| `dashboard/employee-approval-status-widget.tsx` | tasks from `/tasks/submitted` | `\|\| []` | same |
-| `dashboard/employee-task-progress-widget.tsx` | `recent_task_progress` | `\|\| []` | same |
-| `dashboard/team-attendance-widget.tsx` | team-today response | `return null` on error | `Array.isArray` + error/retry state |
-| `widgets/upcoming-holidays-widget.tsx` | `holidays` | `\|\| []` | same |
-| `widgets/metric-widget.tsx` | `data.metrics[metricKey]` | `?? 0` | guard metrics object too |
-
-**Also:** any `select` function in a `useQuery` that returns an array must guard: if the API response is not
-the expected shape, return `[]` — never let `select` throw (it crashes `createResult` → render loop).
-
-### 1.5 Guard `setQueryData` optimistic callbacks
-| File | Line | Fix |
-|---|---|---|
-| `notifications-bell.tsx` | ~53, ~86 | `return old ? { ...old, data: (old.data ?? []).map(...) } : old;` |
-| `leave/leave-approval-actions-cell.tsx` | ~41 | same |
-| `projects/tasks-tab.tsx` | ~90 | same |
-
-### 1.6 Fix ALL date-fns `RangeError: Invalid time value`
-Add a `safeFormat(ts, fmt)` and `safeFromNow(ts)` to `apps/web/src/lib/format.ts` (if not already present),
-then route every unguarded call through it:
-
-| File | Current | Fix |
-|---|---|---|
-| `announcement-board.tsx:225` | `format(new Date(item.created_at), "MMM d")` | `safeFormat(item.created_at, "MMM d")` |
-| `hr-activity-feed-widget.tsx:140` | `formatDistanceToNow(parseISO(act.timestamp), ...)` | `safeFromNow(act.timestamp)` |
-| `employee-approval-status-widget.tsx:87` | `formatDistanceToNow(new Date(task.submitted_at), ...)` | `safeFromNow(task.submitted_at)` |
-| `employee-task-progress-widget.tsx:98` | `formatDistanceToNow(new Date(task.updated_at), ...)` | `safeFromNow(task.updated_at)` |
-| `command-palette.tsx:102` | `formatDistanceToNow(item.timestamp, ...)` | `safeFromNow(item.timestamp)` |
-
-The `safeFormat`/`safeFromNow` helpers:
-```ts
-import { format, formatDistanceToNow, isValid } from "date-fns";
-export function safeFormat(ts: any, fmt: string): string {
-  if (!ts) return "";
-  const d = new Date(ts);
-  return isValid(d) ? format(d, fmt) : "";
-}
-export function safeFromNow(ts: any): string {
-  if (!ts) return "";
-  const d = new Date(ts);
-  if (!isValid(d)) return "";
-  try { return formatDistanceToNow(d, { addSuffix: true }); } catch { return ""; }
-}
-```
-
-### 1.7 Fix avatar upload 500
-- **Endpoint:** `POST /api/profile/avatar` returns 500.
-- **Backend file:** `apps/api/app/Http/Controllers/ProfileController.php` (`uploadAvatar` method).
-- **Likely cause:** the `supabase` disk configuration, or the `Storage::disk('supabase')` call, or the
-  Supabase S3 credentials/endpoint being misconfigured on Cloud Run. Check:
-  1. `FILESYSTEM_DISK=s3` is set on Cloud Run (not `local`).
-  2. `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT`, `AWS_BUCKET` are set as Cloud Run secrets.
-  3. The `supabase` disk is defined in `config/filesystems.php`.
-  4. The Supabase bucket `g4k` exists and allows writes.
-  5. Check Cloud Logging (`stderr`) for the actual PHP exception.
-- **Fix:** correct the missing env/secret/disk config. If the disk call itself is the issue, fall back to
-  `$file->store('avatars', 's3')` (the `s3` disk has the same config as `supabase`).
+| Login → auto-redirect to dashboard | ✅ | ✅ | ✅ |
+| Dashboard renders (no freeze, no console errors) | ✅ | ✅ | ✅ |
+| Nav correct per role (no 403 on open) | ✅ | ✅ | ✅ |
+| Time Clock widget (role-correct: NO for admin, YES for HR/emp) | — | ✅ | ✅ |
+| Clock in/break/out/continue works | — | ✅ | ✅ |
+| Today's Summary shows real data | — | ✅ | ✅ |
+| Recent Shift Log shows real records | — | ✅ | ✅ |
+| Leave request (future dates only) → routes correctly | ✅ | ✅ | ✅ |
+| Leave history (real, correct status) | ✅ | ✅ | ✅ |
+| Leave approvals (approve/reject, 200) | ✅ | ✅ | — |
+| Holidays display (real data) | ✅ | ✅ | ✅ |
+| Employee list loads (no crash) | ✅ | ✅ | — |
+| User detail (all tabs, real data) | ✅ | ✅ | — |
+| Departments CRUD + assign | ✅ | — | — |
+| Directory (search, card, Send Message) | ✅ | ✅ | ✅ |
+| Chat loads (no "Something went wrong") | ✅ | ✅ | ✅ |
+| Notifications (real, bell works, mark-read) | ✅ | ✅ | ✅ |
+| Analytics (real data, not random) | ✅ | ✅ | — |
+| Settings (consolidated, functional) | ✅ | — | — |
+| Profile (view/edit/avatar/devices) | ✅ | ✅ | ✅ |
+| Breadcrumbs correct | ✅ | ✅ | ✅ |
+| No stuck loading on any page | ✅ | ✅ | ✅ |
+| No manual refresh needed | ✅ | ✅ | ✅ |
+| Responsive at all breakpoints | ✅ | ✅ | ✅ |
+| No console errors | ✅ | ✅ | ✅ |
 
 ---
 
-## GROUP 2 — NAVIGATION & ROLE CORRECTNESS (after the app unfreezes)
+## IMPLEMENTATION ORDER
 
-### 2.1 Verify all nav items render + navigate for each role
-Once the freeze is fixed, test as Admin, HR, Employee:
-- Every `navGroups` item has a matching route (`page.tsx` exists).
-- No nav item 403s on open (capability key matches the route middleware).
-- Tasks/Projects: decide visibility — if HR/employee shouldn't see them, hide the nav items; if they should,
-  grant `tasks.view`/`projects.view` in the matrix.
+1. **Module 0** (unfreeze) — fix missing imports + guard all data access + fix login redirect. **Deploy. App unfreezes.**
+2. **Module 1** (auth) — verify login/session/role-select/route-protection.
+3. **Module 2** (dashboard) — fix role-based widgets, remove Role badge, add error states.
+4. **Module 3** (attendance) — fix Time Clock role boundary, Today's Summary, Recent Shift Log, clock-in 422.
+5. **Module 4** (leave) — fix request/history/approvals/holidays.
+6. **Module 5** (employee/org) — fix the `length` crash, breadcrumb, data loading.
+7. **Module 6** (chat) — fix "Something went wrong."
+8. **Module 7** (notifications) — ensure real events.
+9. **Module 8** (analytics) — ensure real data.
+10. **Module 9** (settings/profile) — consolidate, fix avatar 500.
+11. **Module 10** (dates) — global date-component fix.
+12. **Module 11** (states/UX) — loading/empty/error everywhere + remove mock data.
+13. **Module 12** (cleanup) — duplicates, dead endpoints, tokens.
+14. **Verification matrix** — test every row for every role on the live URL.
 
-### 2.2 Remove the "Role: Employee" badge (if still present)
-- Check `dashboard/page.tsx` for any "Role: {activeRole}" badge element. If present: delete it. (It was
-  removed in a prior fix but may have regressed.)
-
-### 2.3 Fix the auth redirect bubble (if still stranding)
-- Check `(auth)/layout.tsx:32`. If it replaces `{children}` with a bouncing-dots loader while redirecting:
-  render `{children}` (the login form) immediately and let `router.replace` swap it.
-
----
-
-## GROUP 3 — BACKEND WORKFLOW FIXES
-
-### 3.1 Clock-in 422 (state machine)
-- **File:** `apps/api/app/Services/AttendanceService.php:32-44`.
-- **Fix:** make repeat `clock_in` idempotent (if already on an open shift, return current day instead of
-  throwing `ValidationException`). Also disable the punch button in-flight on the frontend (`time-clock-widget.tsx`).
-
-### 3.2 Continue-shift data loss
-- **File:** `apps/api/app/Services/AttendanceService.php:86-88`.
-- **Fix:** remove the `break` on first `clock_out` so a re-clock-in segment's time is counted.
-
-### 3.3 Export fetch bugs
-- **Files:** `approvals-tab.tsx:144-146` (Bearer null), `admin-attendance-table.tsx:128`, `departments-tab.tsx:200`,
-  `designations-tab.tsx:146` (missing `/api`), `settings-tabs.tsx:122` (no fallback).
-- **Fix:** replace each raw `fetch(...)` with `apiFetch(endpoint)` (handles auth + `/api` + blob).
-
-### 3.4 Employee-profile attendance tab empty
-- **File:** `org/users/[id]/page.tsx:301`.
-- **Fix:** `historyData?.days` → `historyData?.data`.
-
-### 3.5 Password inputs not in a `<form>`
-- **File:** `apps/web/src/app/dashboard/profile/page.tsx`.
-- **Fix:** wrap the change-password inputs in `<form onSubmit={handleChangePassword}>`. Add `autocomplete`
-  attributes (`current-password`, `new-password`).
-
----
-
-## GROUP 4 — UI CONSISTENCY (after workflows work)
-
-### 4.1 Complete the icon migration (or revert it)
-- **Decision required:** either (a) finish the Font Awesome migration properly (import every icon used), or
-  (b) revert to lucide-react everywhere and abandon the FA migration. The current half-migrated state (missing
-  imports → ReferenceErrors) is what's crashing the app.
-- **If reverting:** ensure every icon used in JSX has a `from "lucide-react"` import. Run the build locally
-  (`pnpm --filter web build`) — turbopack WILL catch missing imports at build time; the fact that the live
-  build has these errors means the build either didn't catch them (caching) or wasn't run.
-
-### 4.2 Remove duplicate FilterBar `value="all"` entries (13 sites)
-- **Files:** users, leave, notifications, departments, designations, tasks, leave-history-table.
-- **Fix:** delete the `{ value: "all", ... }` entry from each options array (FilterBar auto-prepends it).
-
-### 4.3 Replace native controls with themed primitives (~35 sites)
-- native `<select>` → `Select`/`Combobox`; native `<input type=date>` → `Calendar`; native `<input type=checkbox>`
-  → `Checkbox`. Concentration: `tasks/page.tsx` (6 selects), `reports`, `profile`, `settings/*`.
-
-### 4.4 Token adoption (112 `bg-white` → `bg-surface`/`bg-card`; 64 `shadow-sm` → `shadow-e1`)
-- File-by-file sweep. Worst: profile, attendance graphs, auth pages, settings.
-
----
-
-## GROUP 5 — DEPLOYMENT & VERIFICATION
-
-### 5.1 Deploy
-- Apply Groups 1–4. Commit + push to both repos. Confirm Vercel + Cloud Build rebuild for the latest SHA.
-
-### 5.2 Verify (per role — Admin, HR, Employee)
-- [ ] Login page renders immediately (no stuck bubble).
-- [ ] Dashboard renders (no infinite loop, no console errors).
-- [ ] No `ReferenceError`, `TypeError`, or `RangeError` in the console.
-- [ ] All nav items work for each role (no 403 on open).
-- [ ] Clock-in works. Leave approve works. Exports download. Avatar upload works.
-- [ ] Responsive at 360 / 768 / 1280 px.
-- [ ] Deployed SHA matches `git rev-parse HEAD`.
-
-### 5.3 Clean up old docs
-After the app is verified working, delete the superseded planning files:
-`final-fix-*.md`, `finalization-*.md`, `fix-6.md`, `new design system.md`, `AGENT.md`, `CLAUDE.md`.
-Keep: `README.md`, `context.md`, `finalization.md`.
-
----
-
-## SUMMARY: what to do RIGHT NOW
-
-1. **Fix the two missing imports** (`Folder` in `projects/[id]/page.tsx:95`, `UsersIcon` in
-   `org/users/page.tsx:537`). These are the direct cause of the dashboard freeze.
-2. **Guard all `.find/.map/.length`** on API data with `Array.isArray` (Group 1.4).
-3. **Guard all date-fns calls** with `safeFormat`/`safeFromNow` (Group 1.6).
-4. **Guard `setQueryData`** callbacks (Group 1.5).
-5. **Commit, push, deploy.** The app should unfreeze.
-6. Then proceed through Groups 2–4 to complete the remaining workflows.
-
-**Items 1–5 are small, surgical edits (add imports, add `Array.isArray` guards, add a helper function).
-They will unfreeze the app on the next deploy.**
+> **The bottom line:** Module 0 unfreezes the app (5 surgical edits). Modules 1–12 make every workflow
+> functional. The verification matrix proves it. **Implement Module 0 first, deploy, verify the dashboard
+> renders — then proceed module by module.**
