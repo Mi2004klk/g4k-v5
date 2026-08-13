@@ -14,7 +14,7 @@ import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const GanttView = dynamic(() => import("@/components/projects/gantt-view").then(mod => mod.GanttView), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge } from "@g4k/ui/components";
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 export function TasksTab() {
@@ -274,16 +274,17 @@ export function TasksTab() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-neutral-500">Priority</label>
-                    <select
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value)}
-                      className="w-full h-9 text-xs border border-input bg-background rounded-md px-2"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
+                    <Select value={priority} onValueChange={setPriority}>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="Priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-neutral-500">Due Date</label>
@@ -299,58 +300,62 @@ export function TasksTab() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-neutral-500">Project</label>
-                    <select
-                      value={projectId}
-                      onChange={(e) => setProjectId(e.target.value)}
-                      className="w-full h-9 text-xs border border-input bg-background rounded-md px-2"
-                    >
-                      <option value="">No Project</option>
-                      {projectsData?.data?.map((p: any) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                    <Select value={projectId} onValueChange={setProjectId}>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="No Project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Project</SelectItem>
+                        {projectsData?.data?.map((p: any) => (
+                          <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-neutral-500">Assignee</label>
-                    <select
-                      value={assigneeId}
-                      onChange={(e) => setAssigneeId(e.target.value)}
-                      className="w-full h-9 text-xs border border-input bg-background rounded-md px-2"
-                    >
-                      <option value="">Unassigned</option>
-                      {usersData?.data?.map((u: any) => (
-                        <option key={u.id} value={u.id}>{u.name}</option>
-                      ))}
-                    </select>
+                    <Select value={assigneeId} onValueChange={setAssigneeId}>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="Unassigned" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Unassigned</SelectItem>
+                        {usersData?.data?.map((u: any) => (
+                          <SelectItem key={u.id} value={String(u.id)}>{u.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-neutral-500">QA Form</label>
-                    <select
-                      value={qaFormId}
-                      onChange={(e) => setQaFormId(e.target.value)}
-                      className="w-full h-9 text-xs border border-input bg-background rounded-md px-2"
-                    >
-                      <option value="">None</option>
-                      {qaFormsData?.map((q: any) => (
-                        <option key={q.id} value={q.id}>{q.title}</option>
-                      ))}
-                    </select>
+                    <Select value={qaFormId} onValueChange={setQaFormId}>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {qaFormsData?.map((q: any) => (
+                          <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-neutral-500">Dependency (Blocked By)</label>
-                    <select
-                      value={blockedBy}
-                      onChange={(e) => setBlockedBy(e.target.value)}
-                      className="w-full h-9 text-xs border border-input bg-background rounded-md px-2"
-                    >
-                      <option value="">None</option>
-                      {tasks?.map((t: any) => (
-                        <option key={t.id} value={t.id}>{t.title}</option>
-                      ))}
-                    </select>
+                    <Select value={blockedBy} onValueChange={setBlockedBy}>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {tasks?.map((t: any) => (
+                          <SelectItem key={t.id} value={String(t.id)}>{t.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -363,15 +368,16 @@ export function TasksTab() {
                     <div className="grid grid-cols-2 gap-4 mt-3">
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-neutral-500">Pattern</label>
-                        <select
-                          value={recurrencePattern}
-                          onChange={(e) => setRecurrencePattern(e.target.value)}
-                          className="w-full h-9 text-xs border border-input bg-background rounded-md px-2"
-                        >
-                          <option value="daily">Daily</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="monthly">Monthly</option>
-                        </select>
+                        <Select value={recurrencePattern} onValueChange={setRecurrencePattern}>
+                          <SelectTrigger className="w-full h-9 text-xs">
+                            <SelectValue placeholder="Daily" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-neutral-500">Interval</label>
