@@ -81,24 +81,7 @@ class DashboardController extends Controller
                         }
                     }
 
-                    // Projects
-                    if (Schema::hasTable('projects')) {
-                        $projects = DB::table('projects')
-                            ->leftJoin('users', 'projects.owner_id', '=', 'users.id')
-                            ->where('projects.status', 'pending_approval')
-                            ->select('projects.id', 'projects.created_at', 'users.name as user_name', 'projects.name as title')
-                            ->get();
-                        foreach ($projects as $p) {
-                            $approvals[] = [
-                                'id' => $p->id,
-                                'type' => 'project',
-                                'title' => $p->title,
-                                'user_name' => $p->user_name ?? 'Unassigned',
-                                'created_at' => $p->created_at,
-                                'route' => '/projects/' . $p->id
-                            ];
-                        }
-                    }
+
 
                     usort($approvals, fn($a, $b) => strtotime($b['created_at']) - strtotime($a['created_at']));
                     return array_slice($approvals, 0, 10); // Return top 10 recent approvals

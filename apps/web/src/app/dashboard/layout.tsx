@@ -69,7 +69,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/u
 export const navGroups = [
   { label: "Overview", items: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Attendance & Time", href: "/dashboard/attendance", icon: CalendarCheck },
+    { name: "Attendance & Time", href: "/dashboard/attendance", icon: CalendarCheck, capability: "attendance.clock-self" },
     { name: "Projects & Tasks", href: "/dashboard/projects", icon: FolderKanban, capability: "projects.manage" },
     { name: "Communications", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
   ]},
