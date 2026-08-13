@@ -131,7 +131,6 @@ export default function RoleSelectPage() {
         <CardContent className="space-y-3 pb-8">
           {user.roles.map((role: string) => {
             const info = getRoleInfo(role);
-            const Icon = info.icon;
             
             return (
               <button
@@ -141,7 +140,7 @@ export default function RoleSelectPage() {
                 className="w-full flex items-center p-4 text-left border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-brand-violet dark:hover:border-brand-violet hover:bg-brand-violet/5 transition-all group disabled:opacity-50 disabled:cursor-not-allowed bg-card dark:bg-neutral-900 shadow-e1 hover:shadow-e2 transition-shadow duration-150"
               >
                 <div className="w-10 h-10 rounded-full bg-brand-violet/10 flex items-center justify-center mr-4 shrink-0 group-hover:scale-110 transition-transform">
-                  <Icon className="w-5 h-5 text-brand-violet" />
+                  <AppIcon name={info.icon as IconName} className="w-5 h-5 text-brand-violet" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-neutral-900 dark:text-white text-sm font-sans">{info.title}</h3>
