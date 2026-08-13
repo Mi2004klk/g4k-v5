@@ -4,5 +4,10 @@
       "src": "apps/web/package.json",
       "use": "@vercel/next"
     }
-  ]
+  ],
+  "build": {
+    "env": {
+      "NODE_OPTIONS": ""
+    }
+  }
 }
