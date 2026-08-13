@@ -94,9 +94,19 @@ class OfflineEngine {
 
   async recordPunch(type: string, timestamp: string): Promise<string> {
     if (!this.dbPromise) return "no-db";
+    const db = await this.dbPromise;
+
+    // dedupe: if a pending punch of the same type exists for today, reuse its client_id
+    const pending = await db.getAllFromIndex('punches', 'by-status', 'pending');
+    const today = timestamp.split('T')[0];
+    const existing = pending.find(p => p.type === type && p.timestamp.startsWith(today));
+    
+    if (existing) {
+      if (navigator.onLine) this.syncAll();
+      return existing.client_id;
+    }
 
     const client_id = `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const db = await this.dbPromise;
 
     await db.put('punches', {
       client_id,

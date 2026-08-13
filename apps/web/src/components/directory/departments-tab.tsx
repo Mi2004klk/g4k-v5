@@ -197,15 +197,7 @@ export function DepartmentsTab() {
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/departments/export?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
-          'Accept': 'application/json'
-        }
-      });
-      if (!response.ok) throw new Error("Export failed");
-      
-      const blob = await response.blob();
+      const blob = await apiFetch(`/departments/export?${params.toString()}`);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

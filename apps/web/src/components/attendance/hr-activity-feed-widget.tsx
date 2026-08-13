@@ -3,11 +3,12 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Clock, FileEdit, Activity } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage, Skeleton, EmptyState } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
+import { safeFromNow } from "@/lib/format";
 
 interface MemberDay {
   id: number;
@@ -137,7 +138,7 @@ export function HrActivityFeedWidget() {
                 {act.message}
               </p>
               <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
-                {formatDistanceToNow(parseISO(act.timestamp), { addSuffix: true })}
+                {safeFromNow(act.timestamp)}
               </p>
             </div>
           </div>

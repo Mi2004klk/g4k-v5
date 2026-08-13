@@ -43,7 +43,6 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const layoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-
   const { data: preferencesData } = useDashboardInit({
     select: (data: any) => data.preferences,
     staleTime: 60_000,
@@ -124,6 +123,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   }, [preferencesData, availableWidgets]);
 
   const handleLayoutChange = (_currentLayout: any, allLayouts: any) => {
+    const isDifferent = JSON.stringify(layouts) !== JSON.stringify(allLayouts);
+    if (!isDifferent) return; // Prevent unnecessary re-renders (Fix for #2)
+
     setLayouts(allLayouts);
     if (layoutTimeoutRef.current) {
       clearTimeout(layoutTimeoutRef.current);

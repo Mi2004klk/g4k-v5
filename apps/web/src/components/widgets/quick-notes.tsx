@@ -21,7 +21,7 @@ export function QuickNotes() {
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   const { data: notes = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => data.quick_notes,
+    select: (data: any) => Array.isArray(data.quick_notes) ? data.quick_notes : [],
     placeholderData: keepPreviousData,
   });
 

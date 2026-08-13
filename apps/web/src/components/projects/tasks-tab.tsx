@@ -9,6 +9,7 @@ import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useUrlState } from "@/hooks/use-url-state";
 import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const GanttView = dynamic(() => import("@/components/projects/gantt-view").then(mod => mod.GanttView), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
@@ -84,11 +85,10 @@ export function TasksTab() {
       const previous = queryClient.getQueryData(queryKeys.tasks);
       
       queryClient.setQueryData(queryKeys.tasks, (old: any) => {
-        if (!old?.data) return old;
-        return {
+        return old ? {
           ...old,
-          data: old.data.map((t: any) => (t.id === taskId ? { ...t, status } : t)),
-        };
+          data: (old.data ?? []).map((t: any) => (t.id === taskId ? { ...t, status } : t)),
+        } : old;
       });
 
       return { previous };
@@ -222,19 +222,19 @@ export function TasksTab() {
     <div className="space-y-6 mt-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex bg-neutral-100/80 dark:bg-neutral-900/50 p-1 rounded-lg w-full sm:w-auto overflow-x-auto thin-scrollbar">
-          <Button variant={viewMode === "kanban" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("kanban")} className="h-8 text-xs px-3 rounded-md shrink-0">
+          <Button variant={viewMode === "kanban" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("kanban")} className="h-8 text-xs px-3 rounded-md shrink-0">
             <Kanban className="w-3.5 h-3.5 mr-1.5" />
             Board
           </Button>
-          <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("list")} className="h-8 text-xs px-3 rounded-md shrink-0">
+          <Button variant={viewMode === "list" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("list")} className="h-8 text-xs px-3 rounded-md shrink-0">
             <ListIcon className="w-3.5 h-3.5 mr-1.5" />
             List
           </Button>
-          <Button variant={viewMode === "gantt" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("gantt")} className="h-8 text-xs px-3 rounded-md shrink-0">
+          <Button variant={viewMode === "gantt" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("gantt")} className="h-8 text-xs px-3 rounded-md shrink-0">
             <Calendar className="w-3.5 h-3.5 mr-1.5" />
             Timeline
           </Button>
-          <Button variant={viewMode === "qa" ? "default" : "ghost"} size="sm" onClick={() => setViewMode("qa")} className="h-8 text-xs px-3 rounded-md shrink-0">
+          <Button variant={viewMode === "qa" ? "primary" : "ghost"} size="sm" onClick={() => setViewMode("qa")} className="h-8 text-xs px-3 rounded-md shrink-0">
             <CheckSquare className="w-3.5 h-3.5 mr-1.5" />
             QA Forms
           </Button>

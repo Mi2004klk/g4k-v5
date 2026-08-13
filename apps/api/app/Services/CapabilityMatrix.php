@@ -15,7 +15,7 @@ class CapabilityMatrix
         'hr' => [
             'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
             'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
-            'profile.edit', 'attendance.clock-self', 'leave.request-self',
+            'profile.edit', 'leave.request-self',
             'reports.view', 'tasks.view', 'projects.view'
         ],
         'employee' => [

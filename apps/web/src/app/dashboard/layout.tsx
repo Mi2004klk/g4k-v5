@@ -70,7 +70,7 @@ export const navGroups = [
   { label: "Overview", items: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Attendance & Time", href: "/dashboard/attendance", icon: CalendarCheck, capability: "attendance.clock-self" },
-    { name: "Projects & Tasks", href: "/dashboard/projects", icon: FolderKanban, capability: "projects.manage" },
+    { name: "Projects & Tasks", href: "/dashboard/projects", icon: FolderKanban, capability: "projects.view" },
     { name: "Communications", href: "/dashboard/chat", icon: MessageSquare, capability: "directory.send-message" },
   ]},
   { label: "Organization", items: [
@@ -204,8 +204,8 @@ export default function DashboardLayout({
   }
 
   return (
-    <AuthGuard>
-      <ReverbProvider>
+    <ReverbProvider>
+      <AuthGuard>
         <TooltipProvider>
         <HelpOverlay />
         <CommandPalette />
@@ -425,26 +425,30 @@ export default function DashboardLayout({
                 <span>Dashboard</span>
               </Link>
 
-              <Link
-                href="/dashboard/projects"
-                prefetch={false}
-                className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
-                  pathname.startsWith("/dashboard/projects") ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                )}
-              >
-                <FolderKanban className="w-5 h-5 shrink-0" />
-                <span>Projects</span>
-              </Link>
+              {hasCapability(userCapabilities, "projects.view") && (
+                <Link
+                  href="/dashboard/projects"
+                  prefetch={false}
+                  className={cn(
+                    "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                    pathname.startsWith("/dashboard/projects") ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  )}
+                >
+                  <FolderKanban className="w-5 h-5 shrink-0" />
+                  <span>Projects</span>
+                </Link>
+              )}
 
-              <Link
-                href="/dashboard/attendance"
-                prefetch={false}
-                title="My Attendance"
-                className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-emerald-600 text-white shadow-lg -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-              >
-                <Clock className="w-6 h-6 shrink-0" />
-              </Link>
+              {hasCapability(userCapabilities, "attendance.clock-self") && (
+                <Link
+                  href="/dashboard/attendance"
+                  prefetch={false}
+                  title="My Attendance"
+                  className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-emerald-600 text-white shadow-lg -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                >
+                  <Clock className="w-6 h-6 shrink-0" />
+                </Link>
+              )}
 
               <Link
                 href="/dashboard/chat"
@@ -473,7 +477,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </TooltipProvider>
+      </AuthGuard>
     </ReverbProvider>
-  </AuthGuard>
   );
 }

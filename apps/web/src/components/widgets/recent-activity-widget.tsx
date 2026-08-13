@@ -64,7 +64,7 @@ export function RecentActivityWidget() {
     );
   }
 
-  const activities = data?.recent_activity || [];
+  const activities = Array.isArray(data?.recent_activity) ? data.recent_activity : [];
 
   function safeFormatDistance(dateString: string | undefined | null) {
     if (!dateString) return "—";

@@ -47,13 +47,12 @@ export function NotificationsBell() {
       const previous = queryClient.getQueryData(queryKeys.notifications(filter));
       
       queryClient.setQueryData(queryKeys.notifications(filter), (old: any) => {
-        if (!old?.data) return old;
-        return {
+        return old ? {
           ...old,
-          data: old.data.map((n: any) => 
+          data: (old.data ?? []).map((n: any) => 
             n.id === id ? { ...n, read_at: new Date().toISOString() } : n
           )
-        };
+        } : old;
       });
 
       return { previous };
@@ -80,11 +79,10 @@ export function NotificationsBell() {
       const previous = queryClient.getQueryData(queryKeys.notifications(filter));
 
       queryClient.setQueryData(queryKeys.notifications(filter), (old: any) => {
-        if (!old?.data) return old;
-        return {
+        return old ? {
           ...old,
-          data: old.data.map((n: any) => ({ ...n, read_at: new Date().toISOString() }))
-        };
+          data: (old.data ?? []).map((n: any) => ({ ...n, read_at: new Date().toISOString() }))
+        } : old;
       });
 
       return { previous };
@@ -218,7 +216,7 @@ export function NotificationsBell() {
                     <span className="hidden sm:inline">Mark read</span>
                   </button>
                   <button
-                    onClick={() => clearAllMutation.mutate()}
+                    onClick={() => handleClearPopup()}
                     title="Clear All"
                     className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
                   >

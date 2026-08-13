@@ -42,7 +42,7 @@ class AttendanceController extends Controller
     {
         $validated = $request->validate([
             'client_id' => 'required|string',
-            'timestamp' => 'nullable|date',
+            'timestamp' => 'nullable|string',
             'meta' => 'nullable|array',
         ]);
 
@@ -108,7 +108,7 @@ class AttendanceController extends Controller
             'events' => 'required|array',
             'events.*.client_id' => 'required|string',
             'events.*.type' => 'required|in:clock_in,clock_out,break_start,break_end',
-            'events.*.timestamp' => 'required|date',
+            'events.*.timestamp' => 'required|string',
             'events.*.meta' => 'nullable|array',
         ]);
 

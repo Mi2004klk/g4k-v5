@@ -17,7 +17,7 @@ export function PendingApprovalsWidget() {
   const user = useAuthStore((s) => s.user);
 
   const { data: requests = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => data.pending_approvals,
+    select: (data: any) => Array.isArray(data.pending_approvals) ? data.pending_approvals : [],
     placeholderData: keepPreviousData,
   });
 

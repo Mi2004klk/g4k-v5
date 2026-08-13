@@ -125,16 +125,7 @@ export function AdminAttendanceTable() {
         if (debouncedSearch) params.append("search", debouncedSearch);
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/attendance/export?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${getAuthToken()}`,
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) throw new Error("Export failed");
-      
-      const blob = await response.blob();
+      const blob = await apiFetch(`/attendance/export?${params.toString()}`);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

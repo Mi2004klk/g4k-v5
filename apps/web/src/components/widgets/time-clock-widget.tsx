@@ -29,6 +29,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const [showConfirmContinue, setShowConfirmContinue] = useState(false);
   const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
   const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+  const [isPunching, setIsPunching] = useState(false);
 
   const queryClient = useQueryClient();
   
@@ -85,6 +86,13 @@ export function TimeClockWidget({ className }: { className?: string }) {
   if (!isActive && !isOnBreak && !hasWorked) activeState = "not_started";
 
   const handlePunch = async (type: string) => {
+    // If local state is not_started, but todayData has a clock_in, reconcile instead of punching
+    if (type === "clock_in" && activeState === "not_started" && todayData?.day?.clock_in) {
+      syncWithServer(todayData.day, todayData.events || []);
+      return;
+    }
+
+    setIsPunching(true);
     // Optimistic UI state
     const timestamp = new Date().toISOString();
     
@@ -123,6 +131,8 @@ export function TimeClockWidget({ className }: { className?: string }) {
         toast.error(msg);
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit }); // Re-sync store state
+    } finally {
+      setIsPunching(false);
     }
   };
 
@@ -218,6 +228,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
       <div className="flex items-center justify-center gap-3">
         {activeState === "not_started" && (
           <Button
+            disabled={isPunching}
             onClick={() => handlePunch("clock_in")}
             className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
           >
@@ -232,6 +243,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    disabled={isPunching}
                     onClick={() => handlePunch("start_break")}
                     variant="outline"
                     className="flex-1 h-12 border-warning/50 text-warning hover:bg-warning/10 gap-2"
@@ -246,6 +258,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
             </TooltipProvider>
 
             <Button
+              disabled={isPunching}
               onClick={() => setShowConfirmOut(true)}
               variant="destructive"
               className="flex-1 h-12 gap-2"
@@ -261,6 +274,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  disabled={isPunching}
                   onClick={() => handlePunch("end_break")}
                   className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
                   aria-label="Resume Work Session"
@@ -276,6 +290,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
         {activeState === "completed" && (
           <Button
+            disabled={isPunching}
             onClick={() => setShowConfirmContinue(true)}
             variant="outline"
             className="w-full h-12 border-emerald-600/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 font-semibold gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150"

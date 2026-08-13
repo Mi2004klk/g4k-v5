@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { Loader2, Megaphone, Trash2, Pin, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
+import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
@@ -22,7 +22,7 @@ export function AnnouncementBoard() {
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   const { data: announcements = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => data.announcements,
+    select: (data: any) => Array.isArray(data.announcements) ? data.announcements : [],
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -222,7 +222,7 @@ export function AnnouncementBoard() {
                   </h4>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-neutral-400">
-                      {format(new Date(item.created_at), "MMM d")}
+                      {safeFormat(item.created_at, "MMM d")}
                     </span>
                     {isAdminOrHr && (
                       <div className="flex items-center gap-1">

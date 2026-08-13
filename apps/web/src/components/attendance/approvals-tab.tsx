@@ -141,14 +141,8 @@ export function ApprovalsTab() {
 
   const handleExport = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api'}/api/leave-requests/export?status=${statusFilter}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error("Export failed");
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
+      const blob = await apiFetch(`/leave-requests/export?status=${statusFilter}`);
+      const blobUrl = window.URL.createObjectURL(blob as Blob);
       const a = document.createElement("a");
       a.href = blobUrl;
       a.download = `leave_export_${statusFilter}.xlsx`;

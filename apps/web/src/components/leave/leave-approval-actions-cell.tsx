@@ -35,10 +35,9 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
       const previousLeaves = queryClient.getQueryData(queryKeys.orgLeaveRequests);
       
       queryClient.setQueryData(queryKeys.orgLeaveRequests, (old: any) => {
-        if (!old?.data) return old;
-        return {
+        return old ? {
           ...old,
-          data: old.data.map((item: any) => {
+          data: (old.data ?? []).map((item: any) => {
             if (item.approval?.id === approvalId) {
               return {
                 ...item,
@@ -47,7 +46,7 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
             }
             return item;
           }),
-        };
+        } : old;
       });
       return { previousLeaves };
     },

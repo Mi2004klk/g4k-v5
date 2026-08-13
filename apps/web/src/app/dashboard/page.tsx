@@ -39,6 +39,7 @@ import { TeamAttendanceWidget } from "@/components/dashboard/team-attendance-wid
 import { EmployeeTaskProgressWidget } from "@/components/dashboard/employee-task-progress-widget";
 import { UpcomingHolidaysWidget } from "@/components/widgets/upcoming-holidays-widget";
 
+const EMPTY_CAPABILITIES: any[] = [];
 const cols = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
 
 function responsiveLayout(base: {x: number, y: number, w: number, h: number}) {
@@ -70,7 +71,7 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  const { data: userCapabilities = [] } = useCapabilities();
+  const { data: userCapabilities = EMPTY_CAPABILITIES } = useCapabilities();
 
   // Memoized widget catalog based on active role
   const availableWidgets = useMemo(() => {

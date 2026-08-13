@@ -29,6 +29,10 @@ class AttendanceService
 
             $lastType = $lastEvent->type ?? null;
 
+            if ($type === 'clock_in' && in_array($lastType, ['clock_in', 'break_start', 'break_end'])) {
+                return static::reconcileDay($userId, $date); // already on shift — no-op, return current day
+            }
+
             $valid = match ($type) {
                 'clock_in' => $lastType === null || $lastType === 'clock_out',
                 'break_start' => $lastType === 'clock_in' || $lastType === 'break_end',

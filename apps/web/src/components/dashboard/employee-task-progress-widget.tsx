@@ -7,11 +7,11 @@ import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import {  CheckCircle2, ListTodo , AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
+import { safeFromNow } from "@/lib/format";
 
 export function EmployeeTaskProgressWidget() {
   const { data, isLoading, isError, refetch } = useDashboardInit({
-    select: (data: any) => data.metrics?.recent_task_progress,
+    select: (data: any) => Array.isArray(data.metrics?.recent_task_progress) ? data.metrics.recent_task_progress : [],
     placeholderData: keepPreviousData,
   });
 
@@ -46,7 +46,7 @@ export function EmployeeTaskProgressWidget() {
     );
   }
 
-  const tasks = data || [];
+  const tasks = Array.isArray(data) ? data : [];
 
   return (
     <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
@@ -95,7 +95,7 @@ export function EmployeeTaskProgressWidget() {
                 
                 <p className="text-[10px] text-neutral-400 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-600 inline-block"></span>
-                  Updated {task.updated_at ? formatDistanceToNow(new Date(task.updated_at), { addSuffix: true }) : 'recently'}
+                  Updated {safeFromNow(task.updated_at) || 'recently'}
                 </p>
               </Link>
             ))}

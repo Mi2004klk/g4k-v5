@@ -5,7 +5,7 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, Skeleton, StatusBadge, Button } from "@g4k/ui/components";
 import {  ClipboardList, ArrowRight, CheckCircle2 , AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
+import { safeFromNow } from "@/lib/format";
 
 export function EmployeeApprovalStatusWidget() {
   const { data, isLoading, isError, refetch } = useQuery({
@@ -84,7 +84,7 @@ export function EmployeeApprovalStatusWidget() {
                         {task.title}
                       </p>
                       <p className="text-[10px] text-neutral-400">
-                        {task.submitted_at ? formatDistanceToNow(new Date(task.submitted_at), { addSuffix: true }) : 'Unknown'}
+                        {safeFromNow(task.submitted_at) || 'Unknown'}
                       </p>
                     </div>
                   </div>

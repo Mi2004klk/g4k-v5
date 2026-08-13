@@ -119,16 +119,10 @@ export function SettingsTabs() {
       const formData = new FormData();
       formData.append("logo", file);
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/company-profile/logo`, {
+      return await apiFetch("/company-profile/logo", {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${getAuthToken()}`,
-          "Accept": "application/json"
-        },
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to upload logo");
-      return res.json();
     },
     onSuccess: () => {
       toast.success("Logo uploaded successfully");

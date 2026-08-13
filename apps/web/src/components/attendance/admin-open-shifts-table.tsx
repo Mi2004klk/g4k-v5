@@ -180,7 +180,7 @@ export function AdminOpenShiftsTable() {
 
           <div className="relative shrink-0">
             <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <Select value={deptFilter} onValueChange={(v) => { setDeptFilter(e.target.value)(v as any); }}>
+            <Select value={deptFilter} onValueChange={setDeptFilter}>
 <SelectTrigger className="w-full h-9">
 <SelectValue placeholder="Select..." />
 </SelectTrigger>

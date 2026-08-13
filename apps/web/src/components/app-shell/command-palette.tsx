@@ -27,7 +27,7 @@ import { offlineEngine } from "@/lib/offline-engine";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { apiFetch } from "@/lib/api-client";
 import { useRecentStore } from "@/stores/recent-store";
-import { formatDistanceToNow } from "date-fns";
+import { safeFromNow } from "@/lib/format";
 
 import {
   CommandDialog,
@@ -99,7 +99,7 @@ export function CommandPalette() {
                       {item.subtitle && <span className="text-xs text-muted-foreground">{item.subtitle}</span>}
                     </div>
                   </div>
-                  <span className="text-[10px] text-muted-foreground">{formatDistanceToNow(item.timestamp, { addSuffix: true })}</span>
+                  <span className="text-[10px] text-muted-foreground">{safeFromNow(item.timestamp)}</span>
                 </div>
               </CommandItem>
             ))}
