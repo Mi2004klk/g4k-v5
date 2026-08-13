@@ -211,17 +211,17 @@ future API failure degrades safely instead of showing the wrong role:
 
 Every endpoint the frontend calls must exist, be capability-gated, and return the shape the UI expects. Known
 gaps to close (consolidated):
-- [ ] **4.1** Task lifecycle: `POST /tasks/{id}/approve|redo` + `/tasks/submitted` shape; task-completion →
+- [✅] **4.1** Task lifecycle: `POST /tasks/{id}/approve|redo` + `/tasks/submitted` shape; task-completion →
       Global Chat (final-fix-3 §1, §2).
-- [ ] **4.2** Attendance: per-employee weekly/monthly graph (`/attendance/{admin,hr}/graph?user_id=`),
+- [✅] **4.2** Attendance: per-employee weekly/monthly graph (`/attendance/{admin,hr}/graph?user_id=`),
       continue-shift button, day-detail projects/tasks join (final-fix-4 §1/§5, final-fix-3 §5).
-- [ ] **4.3** Leave: atomic leave→attendance sync (final-fix-5 §C.5); all-users leave history (final-fix-2 §5).
-- [ ] **4.4** HR-managed departments pivot (`department_hr`) wired through `HrScope` (final-fix-2 §2/§3).
-- [ ] **4.5** SMTP-via-Admin-Settings + not-configured guard (final-fix-1 §5/§6); `SmtpSettings` must not
+- [✅] **4.3** Leave: atomic leave→attendance sync (final-fix-5 §C.5); all-users leave history (final-fix-2 §5).
+- [✅] **4.4** HR-managed departments pivot (`department_hr`) wired through `HrScope` (final-fix-2 §2/§3).
+- [✅] **4.5** SMTP-via-Admin-Settings + not-configured guard (final-fix-1 §5/§6); `SmtpSettings` must not
       break boot (RC-1 candidate).
-- [ ] **4.6** Directory: search by dept/designation, card phone, filter `type` fix, Send Message on profile
+- [✅] **4.6** Directory: search by dept/designation, card phone, filter `type` fix, Send Message on profile
       (final-fix-4 §10).
-- [ ] **4.7** Confirm every widget's query key + endpoint resolves to a real route; a 500 on any one must
+- [✅] **4.7** Confirm every widget's query key + endpoint resolves to a real route; a 500 on any one must
       show that widget's error state, not crash siblings.
 
 ---

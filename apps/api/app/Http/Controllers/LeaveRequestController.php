@@ -125,10 +125,45 @@ class LeaveRequestController extends Controller
 
         $user = $request->user();
 
-        if ($validated['decision'] === 'approved') {
-            $approval = ApprovalService::approve($approval, $user->id, $validated['reason'] ?? null);
-        } else {
-            $approval = ApprovalService::reject($approval, $user->id, $validated['reason']);
+        DB::beginTransaction();
+        try {
+            if ($validated['decision'] === 'approved') {
+                $approval = ApprovalService::approve($approval, $user->id, $validated['reason'] ?? null);
+                
+                $leaveRequest = LeaveRequest::find($id);
+                if ($leaveRequest) {
+                    $start = \Carbon\Carbon::parse($leaveRequest->start_date);
+                    $end = \Carbon\Carbon::parse($leaveRequest->end_date);
+                    
+                    for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+                        // Insert or update attendance_days
+                        \App\Models\AttendanceDay::updateOrCreate(
+                            [
+                                'user_id' => $leaveRequest->user_id,
+                                'date' => $d->toDateString(),
+                            ],
+                            [
+                                'status' => 'on_leave',
+                                'leave_type' => $leaveRequest->type,
+                                'first_punch_in' => null,
+                                'last_punch_out' => null,
+                                'total_work_seconds' => 0,
+                                'total_break_seconds' => 0,
+                                'late_seconds' => 0,
+                                'is_processed' => true,
+                                'is_anomalous' => false,
+                            ]
+                        );
+                    }
+                }
+            } else {
+                $approval = ApprovalService::reject($approval, $user->id, $validated['reason']);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to process decision: ' . $e->getMessage()], 500);
         }
 
         $leaveRequest = LeaveRequest::find($id);

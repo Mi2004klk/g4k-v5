@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
             Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/break-end', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+            Route::post('/attendance/continue', [AttendanceController::class, 'continueShift']);
             Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
         });
         Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);

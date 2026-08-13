@@ -32,6 +32,11 @@ class AttendanceController extends Controller
         return $this->handlePunch($request, 'break_end');
     }
 
+    public function continueShift(Request $request)
+    {
+        return $this->handlePunch($request, 'break_end');
+    }
+
     public function clockOut(Request $request)
     {
         return $this->handlePunch($request, 'clock_out');

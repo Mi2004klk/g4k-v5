@@ -26,19 +26,23 @@ class PostTaskCompletionToGlobalChat implements ShouldQueue
      */
     public function handle(TaskCompleted $event): void
     {
-        $task = $event->task;
-        $user = $event->user;
+        try {
+            $task = $event->task;
+            $user = $event->user;
 
-        $globalConv = Conversation::where('scope', 'global')->first();
-        if ($globalConv) {
-            $assigneeName = $task->assignee ? $task->assignee->name : 'Unassigned';
-            $msg = Message::create([
-                'conversation_id' => $globalConv->id,
-                'sender_id' => $user->id,
-                'body' => "✅ **Task Completed**: \"{$task->title}\" by {$assigneeName}",
-                'type' => 'text',
-            ]);
-            broadcast(new MessageSent($msg))->toOthers();
+            $globalConv = Conversation::where('scope', 'global')->first();
+            if ($globalConv) {
+                $assigneeName = $task->assignee ? $task->assignee->name : 'Unassigned';
+                $msg = Message::create([
+                    'conversation_id' => $globalConv->id,
+                    'sender_id' => $user->id,
+                    'body' => "✅ **Task Completed**: \"{$task->title}\" by {$assigneeName}",
+                    'type' => 'text',
+                ]);
+                broadcast(new MessageSent($msg))->toOthers();
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to post task completion to global chat: " . $e->getMessage());
         }
     }
 }
