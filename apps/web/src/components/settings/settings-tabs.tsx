@@ -13,14 +13,8 @@ import {  Tabs, TabsContent, TabsList, TabsTrigger, FileUploadPopup , Select, Se
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { AutoNumberingConfig } from "./auto-numbering-config";
-import { PoliciesConfig } from "./policies-config";
-import { RemindersConfig } from "./reminders-config";
-import { SecurityRequestsConfig } from "./security-requests-config";
 import { MailSmtpConfig } from "./mail-smtp-config";
-import { NotificationsConfig } from "./notifications-config";
 import { HolidayCalendar } from "@/components/leave/holiday-calendar";
-import { AuditLogTable } from "@/components/settings/audit-log-table";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 
 const profileSchema = z.object({
@@ -155,7 +149,7 @@ export function SettingsTabs() {
   const handleProfileSubmit = (data: any) => {
     updateProfileMutation.mutate({
       name: data.name,
-      timezone: data.timezone,
+      timezone: "Asia/Kolkata",
     });
   };
 
@@ -184,14 +178,9 @@ export function SettingsTabs() {
         {isAdmin && (
           <>
             <TabsTrigger value="schedule">Work Schedules</TabsTrigger>
-            <TabsTrigger value="numbering">Auto-Numbering</TabsTrigger>
             <TabsTrigger value="policies">Policies</TabsTrigger>
-            <TabsTrigger value="reminders">Reminders</TabsTrigger>
-            <TabsTrigger value="security">Password Reset Requests</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="holidays">Holidays</TabsTrigger>
             <TabsTrigger value="mail">Mail / SMTP</TabsTrigger>
-            <TabsTrigger value="audit">Audit Log</TabsTrigger>
           </>
         )}
       </TabsList>
@@ -218,7 +207,7 @@ export function SettingsTabs() {
                   <label className="text-xs font-medium">Company Logo</label>
                   <div className="flex items-center gap-4 mt-2 mb-4">
                     {profile?.logo_url ? (
-                      <img src={profile.logo_url} alt="Logo" className="w-16 h-16 object-contain rounded-md border border-neutral-200 dark:border-neutral-800 bg-white" />
+                      <img src={profile.logo_url} alt="Logo" className="w-16 h-16 object-contain rounded-md border border-neutral-200 dark:border-neutral-800 bg-surface" />
                     ) : (
                       <div className="w-16 h-16 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center text-xs text-neutral-400">
                         No Logo
@@ -231,31 +220,7 @@ export function SettingsTabs() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-neutral-900 dark:text-white border-b pb-2">Localization</h3>
-                <div>
-                  <label className="text-xs font-medium">Timezone</label>
-                  <Select value={undefined} onValueChange={undefined}>
-      <SelectTrigger className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1">
-        <SelectValue placeholder="Select..." />
-      </SelectTrigger>
-      <SelectContent>
-        
-                    <SelectItem value="America/Los_Angeles">Pacific Time (US & Canada)</SelectItem>
-                    <SelectItem value="America/New_York">Eastern Time (US & Canada)</SelectItem>
-                    <SelectItem value="Europe/London">London</SelectItem>
-                    <SelectItem value="Europe/Paris">Paris</SelectItem>
-                    <SelectItem value="Asia/Dubai">Dubai</SelectItem>
-                    <SelectItem value="Asia/Kolkata">India (IST)</SelectItem>
-                    <SelectItem value="Asia/Singapore">Singapore</SelectItem>
-                    <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
-                    <SelectItem value="Australia/Sydney">Sydney</SelectItem>
-                  
-      </SelectContent>
-    </Select>
-                  <p className="text-[10px] text-neutral-500 mt-1">Select the primary timezone for the company.</p>
-                </div>
-              </div>
+              {/* Timezone removed and hardcoded to Asia/Kolkata */}
 
               <Button type="submit" disabled={updateProfileMutation.isPending || !profileForm.formState.isValid}>
                 {updateProfileMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
@@ -371,24 +336,8 @@ export function SettingsTabs() {
         </Card>
       </TabsContent>
 
-      <TabsContent value="reminders">
-        <RemindersConfig />
-      </TabsContent>
-
       <TabsContent value="policies">
         <PoliciesConfig />
-      </TabsContent>
-
-      <TabsContent value="numbering">
-        <AutoNumberingConfig />
-      </TabsContent>
-
-      <TabsContent value="security">
-        <SecurityRequestsConfig />
-      </TabsContent>
-
-      <TabsContent value="notifications">
-        <NotificationsConfig />
       </TabsContent>
 
       <TabsContent value="holidays">
@@ -399,12 +348,6 @@ export function SettingsTabs() {
 
       <TabsContent value="mail">
         <MailSmtpConfig />
-      </TabsContent>
-
-      <TabsContent value="audit">
-        <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 p-4">
-          <AuditLogTable />
-        </div>
       </TabsContent>
         </>
       )}

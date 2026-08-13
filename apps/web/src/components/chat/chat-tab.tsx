@@ -123,7 +123,7 @@ export function ChatTab() {
     },
   });
 
-  const messages = messageData?.pages.flatMap((page: any) => page.data) || [];
+  const messages = messageData?.pages?.flatMap((page: any) => Array.isArray(page?.data) ? page.data : []) || [];
   const selectedConv = conversations.find((c: any) => c.id === selectedId);
 
   return (
@@ -156,8 +156,8 @@ export function ChatTab() {
                   </Button>
                   <div>
                     <h3 className="font-bold text-neutral-900 dark:text-white">
-                      {selectedConv?.type === 'direct' 
-                        ? selectedConv?.participants?.find((p: any) => p.id !== user?.id)?.name 
+                      {selectedConv?.scope === 'direct' 
+                        ? selectedConv?.users?.find((p: any) => p.id !== user?.id)?.name 
                         : selectedConv?.name}
                     </h3>
                   </div>

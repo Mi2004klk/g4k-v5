@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
+import { safeFormat } from "@/lib/format";
 
 import * as echarts from 'echarts/core';
 import { BarChart, LineChart } from 'echarts/charts';
@@ -41,7 +42,7 @@ export function AdminAttendanceTrendsGraph() {
     if (!data?.stats) return { labels: [], present: [], absent: [], late: [], hours: [], overtime: [] };
     
     const stats = data.stats;
-    const labels = stats.map((d: any) => groupBy === "date" ? format(new Date(d.date), "MMM d") : d.name);
+    const labels = stats.map((d: any) => groupBy === "date" ? safeFormat(d.date, "MMM d") : d.name);
     const present = stats.map((d: any) => d.present || 0);
     const absent = stats.map((d: any) => d.absent || 0);
     const late = stats.map((d: any) => d.late || 0);
@@ -193,7 +194,7 @@ export function AdminAttendanceTrendsGraph() {
 
       <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl">
             <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />
           </div>
         )}

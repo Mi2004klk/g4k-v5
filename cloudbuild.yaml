@@ -3,7 +3,6 @@
 substitutions:
   _SERVICE: g4k-api
   _REGION: asia-south1
-  _IMAGE: asia-south1-docker.pkg.dev/${PROJECT_ID}/g4k/${_SERVICE}:${SHORT_SHA}
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -11,11 +10,11 @@ options:
 steps:
   - name: gcr.io/cloud-builders/docker
     id: Build
-    args: ["build", "-f", "Dockerfile", "-t", "${_IMAGE}", "."]
+    args: ["build", "-f", "Dockerfile", "-t", "asia-south1-docker.pkg.dev/${PROJECT_ID}/g4k/${_SERVICE}:latest", "."]
 
   - name: gcr.io/cloud-builders/docker
     id: Push
-    args: ["push", "${_IMAGE}"]
+    args: ["push", "asia-south1-docker.pkg.dev/${PROJECT_ID}/g4k/${_SERVICE}:latest"]
 
   - name: google/cloud-sdk:slim
     id: Deploy
@@ -24,7 +23,7 @@ steps:
       - run
       - deploy
       - ${_SERVICE}
-      - --image=${_IMAGE}
+      - --image=asia-south1-docker.pkg.dev/${PROJECT_ID}/g4k/${_SERVICE}:latest
       - --region=${_REGION}
       - --platform=managed
       - --allow-unauthenticated
@@ -57,6 +56,3 @@ steps:
           exit 1
         fi
         echo "Smoke check passed!"
-
-images:
-  - ${_IMAGE}

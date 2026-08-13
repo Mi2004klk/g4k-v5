@@ -33,6 +33,7 @@ import {
 } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { StatusBadge } from "@g4k/ui/components/badge";
+import { safeFormat } from "@/lib/format";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useIsMobile } from "@g4k/ui/hooks";
@@ -66,7 +67,7 @@ interface AttendanceDay {
   tasks?: string[];
 }
 
-type DayStatus = "present" | "overtime" | "late" | "leave" | "absent" | "nodata";
+type DayStatus = "present" | "overtime" | "late" | "leave" | "absent" | "holiday" | "nodata";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -76,13 +77,18 @@ function formatSecs(secs: number): string {
   return `${h}h ${m}m`;
 }
 
-function getStatus(days: AttendanceDay[], dateStr: string): DayStatus {
+function getStatus(days: AttendanceDay[], holidays: any[], dateStr: string): DayStatus {
   const day = days.find((d) => d.date === dateStr);
+  const isHoliday = holidays.find((h) => h.date === dateStr);
+  
+  if (day && day.status === "leave") return "leave";
+  if (day && day.status === "late") return "late";
+  if (day && day.status === "present" && day.overtime_seconds > 0) return "overtime";
+  if (day && day.status === "present") return "present";
+  
+  if (isHoliday) return "holiday";
+  
   if (!day) return "nodata";
-  if (day.status === "leave") return "leave";
-  if (day.status === "late") return "late";
-  if (day.status === "present" && day.overtime_seconds > 0) return "overtime";
-  if (day.status === "present") return "present";
   return "absent";
 }
 
@@ -91,32 +97,35 @@ function getDayRecord(days: AttendanceDay[], dateStr: string): AttendanceDay | u
 }
 
 const STATUS_STYLES: Record<DayStatus, string> = {
-  nodata:   "bg-neutral-100 dark:bg-neutral-800",
-  absent:   "bg-neutral-200 dark:bg-neutral-700",
-  late:     "bg-amber-300 dark:bg-amber-500",
-  present:  "bg-emerald-300 dark:bg-emerald-500",
+  nodata: "bg-neutral-100 dark:bg-neutral-800",
+  absent: "bg-neutral-200 dark:bg-neutral-700",
+  late: "bg-amber-300 dark:bg-amber-500",
+  present: "bg-emerald-300 dark:bg-emerald-500",
   overtime: "bg-indigo-400 dark:bg-indigo-500",
-  leave:    "bg-violet-300 dark:bg-violet-500",
+  leave: "bg-violet-300 dark:bg-violet-500",
+  holiday: "bg-blue-300 dark:bg-blue-500",
 };
 
 const STATUS_LABEL: Record<DayStatus, string> = {
-  nodata:   "No data",
-  absent:   "Absent",
-  late:     "Late",
-  present:  "Present",
+  nodata: "No data",
+  absent: "Absent",
+  late: "Late",
+  present: "Present",
   overtime: "Overtime",
-  leave:    "On Leave",
+  leave: "On Leave",
+  holiday: "Holiday",
 };
 
 // ─── Legend ──────────────────────────────────────────────────────────────────
 
 function CalendarLegend({ compact = false }: { compact?: boolean }) {
   const items: [DayStatus, string][] = [
-    ["nodata",   "No Data"],
-    ["late",     "Late"],
-    ["present",  "Present"],
+    ["nodata", "No Data"],
+    ["late", "Late"],
+    ["present", "Present"],
     ["overtime", "Overtime"],
-    ["leave",    "Leave"],
+    ["leave", "Leave"],
+    ["holiday", "Holiday"],
   ];
   return (
     <div
@@ -140,12 +149,17 @@ function CalendarLegend({ compact = false }: { compact?: boolean }) {
 
 // ─── Day Tooltip Content ──────────────────────────────────────────────────────
 
-function DayTooltipContent({ date, record }: { date: Date; record?: AttendanceDay }) {
+function DayTooltipContent({ date, record, holiday }: { date: Date; record?: AttendanceDay; holiday?: any }) {
   const dateStr = format(date, "yyyy-MM-dd");
-  const status = record ? getStatus([record], dateStr) : "nodata";
+  const status = getStatus(record ? [record] : [], holiday ? [holiday] : [], dateStr);
   return (
     <div className="space-y-1 text-left min-w-[120px]">
       <p className="font-semibold text-xs">{format(date, "EEEE, MMM d")}</p>
+      {holiday && (
+        <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+          {holiday.name} {holiday.type === 'event' ? '(Event)' : ''}
+        </p>
+      )}
       <p className="text-[11px] capitalize">
         <span
           className={`inline-block w-2 h-2 rounded-sm mr-1 ${STATUS_STYLES[status]}`}
@@ -175,10 +189,12 @@ function DayTooltipContent({ date, record }: { date: Date; record?: AttendanceDa
 
 function MonthCalendarGrid({
   days,
+  holidays,
   currentDate,
   onDayClick,
 }: {
   days: AttendanceDay[];
+  holidays: any[];
   currentDate: Date;
   onDayClick: (day: AttendanceDay | null, date: Date) => void;
 }) {
@@ -206,71 +222,76 @@ function MonthCalendarGrid({
         </div>
 
         {/* Day cells */}
-        <div className="grid grid-cols-7 gap-1">
-          {calendarDays.map((date, idx) => {
-            const dateStr = format(date, "yyyy-MM-dd");
-            const inCurrentMonth = isSameMonth(date, currentDate);
-            const record = getDayRecord(days, dateStr);
-            const status = getStatus(days, dateStr);
-            const isKnownDay = !!record;
-            const todayFlag = isToday(date);
+        <div className="grid grid-cols-7 border-t border-l border-border/50" data-testid="month-calendar-grid-cells">
+        {calendarDays.map((date, i) => {
+          const dateStr = format(date, "yyyy-MM-dd");
+          const isCurrMonth = isSameMonth(date, currentDate);
+          const isCurrDay = isToday(date);
+          const record = getDayRecord(days, dateStr);
+          const holiday = holidays.find(h => h.date === dateStr);
+          const status = getStatus(days, holidays, dateStr);
+          const isFuture = date > new Date();
 
-            return (
-              <Tooltip key={idx}>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    data-testid={`day-cell-${dateStr}`}
-                    onClick={() => isKnownDay || inCurrentMonth ? onDayClick(record ?? null, date) : undefined}
-                    disabled={!isKnownDay && !inCurrentMonth}
-                    className={[
-                      "relative flex flex-col items-center justify-center rounded-md",
-                      "aspect-square w-full text-[11px] font-medium transition-all duration-150",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400",
-                      inCurrentMonth ? "opacity-100" : "opacity-25 pointer-events-none",
-                      isKnownDay
-                        ? `${STATUS_STYLES[status]} hover:scale-110 hover:shadow-md cursor-pointer`
-                        : "bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-default",
-                      todayFlag ? "ring-2 ring-violet-400 ring-offset-1 dark:ring-offset-neutral-900" : "",
-                    ].join(" ")}
-                    aria-label={`${format(date, "MMM d")}: ${STATUS_LABEL[status]}`}
-                  >
+          return (
+            <Tooltip key={dateStr}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onDayClick(record || null, date)}
+                  disabled={isFuture}
+                  className={`
+                    relative p-1 md:p-2 min-h-[4rem] md:min-h-[5.5rem] border-r border-b border-border/50
+                    hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors
+                    flex flex-col items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500
+                    ${!isCurrMonth ? "opacity-30 bg-neutral-50/50 dark:bg-neutral-900/50" : ""}
+                    ${isFuture ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+                  `}
+                  aria-label={`View details for ${dateStr}`}
+                >
+                  <div className="flex items-center justify-between w-full">
                     <span
-                      className={[
-                        "text-[11px] font-semibold leading-none",
-                        isKnownDay && status === "present"
-                          ? "text-emerald-900 dark:text-emerald-100"
-                          : isKnownDay && status === "overtime"
-                          ? "text-indigo-900 dark:text-indigo-100"
-                          : isKnownDay && status === "late"
-                          ? "text-amber-900 dark:text-amber-100"
-                          : isKnownDay && status === "leave"
-                          ? "text-violet-900 dark:text-violet-100"
-                          : "text-neutral-600 dark:text-neutral-400",
-                      ].join(" ")}
+                      className={`text-xs md:text-sm font-semibold flex items-center justify-center
+                      ${isCurrDay ? "bg-violet-600 text-white w-6 h-6 rounded-full" : "text-neutral-700 dark:text-neutral-300 w-6 h-6"}
+                    `}
                     >
                       {format(date, "d")}
                     </span>
-                    
-                    {/* Tiny overtime indicator if day is late but also has overtime */}
-                    {record && record.overtime_seconds > 0 && status === "late" && (
-                      <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-e1 hover:shadow-e2 transition-shadow duration-150" aria-label="Has overtime" />
+                    {status !== "nodata" && (
+                      <div
+                        className={`w-2 h-2 rounded-full ${STATUS_STYLES[status]}`}
+                        title={STATUS_LABEL[status]}
+                      />
                     )}
-                    {/* Subtle clock-in indicator dot */}
-                    {record?.clock_in && (
-                      <span className="absolute bottom-1 w-1 h-1 rounded-full bg-white/60 dark:bg-black/30" />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                {inCurrentMonth && (
-                  <TooltipContent side="top" className="max-w-[180px]">
-                    <DayTooltipContent date={date} record={record} />
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            );
-          })}
-        </div>
+                  </div>
+                  {/* Compact timeline bar for desktop */}
+                  {record && record.first_event && record.last_event && (
+                    <div className="hidden md:block w-full mt-auto">
+                      <div className="h-1.5 w-full bg-neutral-200 dark:bg-neutral-700 rounded-sm overflow-hidden flex">
+                        {record.break_seconds > 0 ? (
+                          <div className="flex w-full h-full">
+                            <div className="h-full bg-violet-400" style={{ width: "45%" }} />
+                            <div className="h-full bg-amber-400" style={{ width: "10%" }} />
+                            <div className="h-full bg-violet-400" style={{ width: "45%" }} />
+                          </div>
+                        ) : (
+                          <div className="h-full bg-violet-400 w-full" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {holiday && (
+                    <div className="w-full mt-auto truncate text-[9px] text-blue-600 dark:text-blue-400 font-semibold hidden md:block">
+                      {holiday.name}
+                    </div>
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="p-3 shadow-xl">
+                <DayTooltipContent date={date} record={record} holiday={holiday} />
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
       </div>
     </TooltipProvider>
   );
@@ -278,87 +299,86 @@ function MonthCalendarGrid({
 
 // ─── Activity Strip (Mobile — GitHub-style) ──────────────────────────────────
 
-function ActivityStrip({
-  days,
-  onDayClick,
-}: {
-  days: AttendanceDay[];
-  onDayClick: (day: AttendanceDay | null, date: Date) => void;
-}) {
-  // Show rolling 16 weeks (112 days) ending today
-  const today = new Date();
-  const WEEKS = 16;
-  const start = startOfWeek(subWeeks(today, WEEKS - 1), { weekStartsOn: 1 });
-  const end = endOfWeek(today, { weekStartsOn: 1 });
-
-  const weeks = useMemo(() => {
-    const weekStarts = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
-    return weekStarts.map((weekStart) =>
-      eachDayOfInterval({
-        start: weekStart,
-        end: endOfWeek(weekStart, { weekStartsOn: 1 }),
-      })
-    );
-  }, []);
-
-  const WEEKDAY_LABELS_SHORT = ["M", "W", "F"]; // only show alternate for compactness
+function ContributionHeatmap({ days, holidays }: { days: AttendanceDay[]; holidays: any[] }) {
+  const isMobile = useIsMobile();
+  const weeksToShow = isMobile ? 26 : 52; 
+  
+  const calendarWeeks = useMemo(() => {
+    const end = endOfWeek(new Date(), { weekStartsOn: 1 });
+    const start = startOfWeek(subWeeks(end, weeksToShow - 1), { weekStartsOn: 1 });
+    return eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+  }, [weeksToShow]);
 
   return (
-    <div className="w-full" data-testid="activity-strip">
-      <div className="flex items-start gap-px overflow-x-auto pb-1 scrollbar-none">
-        {/* Y-axis weekday labels */}
-        <div className="flex flex-col gap-px mr-1 shrink-0 pt-5">
-          {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
-            <span
-              key={i}
-              className={`h-[10px] text-[8px] text-neutral-400 leading-[10px] ${
-                i % 2 === 0 ? "visible" : "invisible"
-              }`}
-            >
-              {d}
-            </span>
-          ))}
+    <TooltipProvider delayDuration={0}>
+      <div className="flex items-start gap-2 overflow-x-auto pb-2 scrollbar-hide" data-testid="contribution-heatmap">
+        {/* Days of week labels */}
+        <div className="flex flex-col gap-[3px] text-[10px] text-neutral-400 font-medium pr-1 pt-[14px]">
+          <span className="h-[10px] flex items-center leading-none">M</span>
+          <span className="h-[10px] flex items-center leading-none"></span>
+          <span className="h-[10px] flex items-center leading-none">W</span>
+          <span className="h-[10px] flex items-center leading-none"></span>
+          <span className="h-[10px] flex items-center leading-none">F</span>
+          <span className="h-[10px] flex items-center leading-none"></span>
+          <span className="h-[10px] flex items-center leading-none">S</span>
         </div>
 
-        {/* Week columns */}
-        {weeks.map((week, wi) => {
-          const weekLabel =
-            wi === 0 || (wi > 0 && !isSameMonth(week[0], weeks[wi - 1]?.[0]))
-              ? format(week[0], "MMM")
-              : null;
-          return (
-            <div key={wi} className="flex flex-col gap-px shrink-0">
-              {/* Month label at top */}
-              <span className="h-4 text-[8px] text-neutral-400 whitespace-nowrap leading-4 mb-px">
-                {weekLabel || ""}
-              </span>
-              {week.map((date, di) => {
-                const dateStr = format(date, "yyyy-MM-dd");
-                const record = getDayRecord(days, dateStr);
-                const status = getStatus(days, dateStr);
-                const isFuture = date > today;
-                return (
-                  <button
-                    key={di}
-                    type="button"
-                    onClick={() => !isFuture && onDayClick(record ?? null, date)}
-                    disabled={isFuture}
-                    title={`${format(date, "MMM d")} — ${STATUS_LABEL[status]}`}
-                    className={[
-                      "w-[10px] h-[10px] rounded-[2px] transition-all duration-150",
-                      isFuture
-                        ? "bg-neutral-100 dark:bg-neutral-800 opacity-30 cursor-default"
-                        : `${STATUS_STYLES[status]} hover:scale-125 hover:z-10 cursor-pointer`,
-                    ].join(" ")}
-                    aria-label={`${format(date, "MMM d")}: ${STATUS_LABEL[status]}`}
-                  />
-                );
-              })}
-            </div>
-          );
-        })}
+        {/* Grid cells */}
+        <div className="flex gap-[3px]">
+          {calendarWeeks.map((weekStart, wIdx) => {
+            const weekDays = eachDayOfInterval({
+              start: weekStart,
+              end: endOfWeek(weekStart, { weekStartsOn: 1 }),
+            });
+            return (
+              <div key={wIdx} className="flex flex-col gap-[3px]">
+                {weekDays.map((date) => {
+                  const dateStr = format(date, "yyyy-MM-dd");
+                  const record = getDayRecord(days, dateStr);
+                  const holiday = holidays.find(h => h.date === dateStr);
+                  const status = getStatus(days, holidays, dateStr);
+                  const isFuture = date > new Date();
+
+                  // Hide future days
+                  if (isFuture && !holiday) {
+                    return <div key={dateStr} className="w-[10px] h-[10px] rounded-[2px]" />;
+                  }
+                  if (isFuture && holiday) {
+                      return (
+                      <Tooltip key={dateStr}>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-[10px] h-[10px] rounded-[2px] transition-colors ${STATUS_STYLES[status]}`}
+                            aria-label={`Holiday on ${dateStr}`}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <DayTooltipContent date={date} holiday={holiday} />
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  return (
+                    <Tooltip key={dateStr}>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`w-[10px] h-[10px] rounded-[2px] transition-all hover:ring-1 hover:ring-offset-1 hover:ring-neutral-400 ${STATUS_STYLES[status]}`}
+                          aria-label={`${STATUS_LABEL[status]} on ${dateStr}`}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <DayTooltipContent date={date} record={record} holiday={holiday} />
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
@@ -374,17 +394,23 @@ export function AttendanceHistoryCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<AttendanceDay | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [viewMode, setViewMode] = useState<"month" | "year">("month");
   const isMobile = useIsMobile();
 
   const prevMonth = () => setCurrentDate((prev) => subMonths(prev, 1));
   const nextMonth = () => setCurrentDate((prev) => addMonths(prev, 1));
+
+  const { data: holidaysData } = useQuery({
+    queryKey: queryKeys.holidays(currentDate.getFullYear()),
+    queryFn: () => apiFetch(`/holidays?year=${currentDate.getFullYear()}`),
+  });
+  const holidays = Array.isArray(holidaysData) ? holidaysData : (holidaysData?.data || []);
 
   const handleDayClick = (record: AttendanceDay | null, date: Date) => {
     if (record) {
       setSelectedDay(record);
       setSelectedDate(date);
     } else {
-      // Day in current month but no record — still allow opening (shows empty timeline)
       const synthetic: AttendanceDay = {
         id: 0,
         user_id: 0,
@@ -420,6 +446,7 @@ export function AttendanceHistoryCalendar({
         {/* Show nav only on desktop or when in month view */}
         {!isMobile && (
           <div className="flex items-center gap-1.5">
+
             <Button
               variant="outline"
               size="icon"
@@ -444,10 +471,11 @@ export function AttendanceHistoryCalendar({
 
       {/* ── Calendar / Strip ───────────────────────────── */}
       {isMobile ? (
-        <ActivityStrip days={days} onDayClick={handleDayClick} />
+        <ContributionHeatmap days={days} holidays={holidays} />
       ) : (
         <MonthCalendarGrid
           days={days}
+          holidays={holidays}
           currentDate={currentDate}
           onDayClick={handleDayClick}
         />
@@ -577,7 +605,7 @@ function DayDetailContent({
                     {evt.type.replace(/_/g, " ")}
                   </span>
                   <div className="font-mono text-sm font-semibold mt-0.5">
-                    {format(new Date(evt.timestamp), "hh:mm a")}
+                    {safeFormat(evt.timestamp, "hh:mm a")}
                   </div>
                 </div>
                 {evt.device_meta?.platform && (

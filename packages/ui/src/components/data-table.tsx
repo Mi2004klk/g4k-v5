@@ -406,7 +406,7 @@ export function DataTable<TData, TValue>({
                 return (
                   <div
                     key={row.id}
-                    className="absolute left-4 right-4 rounded-lg border bg-card p-4 text-card-foreground shadow-sm space-y-3"
+                    className="absolute left-4 right-4 rounded-lg border bg-card p-4 text-card-foreground shadow-e1 space-y-3"
                     style={{
                       top: 0,
                       transform: `translateY(${virtualRow.start}px)`,

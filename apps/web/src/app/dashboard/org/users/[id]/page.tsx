@@ -80,7 +80,7 @@ export default function EmployeeDetailPage() {
     confirmState, setConfirmState,
     isEditOpen, setIsEditOpen,
     editingUser, setEditingUser,
-    updateMutation, statusMutation, deleteMutation, resetPasswordMutation
+    updateMutation, statusMutation, deleteMutation, restoreMutation, resetPasswordMutation
   } = useUserActions();
 
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
@@ -147,15 +147,23 @@ export default function EmployeeDetailPage() {
                   <Button variant="outline" size="icon"><AppIcon name="more" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2">
-                    <AppIcon name="key" /> Reset Password
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "status", payload: user })} className="gap-2">
-                    <AppIcon name="audit" /> {user.status === "active" ? "Deactivate" : "Activate"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
-                    <AppIcon name="trash" /> Delete
-                  </DropdownMenuItem>
+                  {user.deleted_at ? (
+                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "restore", payload: user })} className="gap-2 text-emerald-600 font-medium">
+                      <AppIcon name="history" /> Restore User
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2">
+                        <AppIcon name="key" /> Reset Password
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "status", payload: user })} className="gap-2">
+                        <AppIcon name="audit" /> {user.status === "active" ? "Deactivate" : "Activate"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
+                        <AppIcon name="trash" /> Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
@@ -298,20 +306,24 @@ export default function EmployeeDetailPage() {
       <ConfirmDialog
         open={confirmState.isOpen}
         onOpenChange={(open) => setConfirmState(prev => ({ ...prev, isOpen: open }))}
-        title={confirmState.type === "delete" ? "Delete User" : confirmState.type === "status" ? "Change Status" : "Reset Password"}
+        title={confirmState.type === "delete" ? "Delete User" : confirmState.type === "restore" ? "Restore User" : confirmState.type === "status" ? "Change Status" : "Reset Password"}
         description={
           confirmState.type === "delete"
             ? `Are you sure you want to delete ${confirmState.payload?.name}? This action cannot be undone.`
+            : confirmState.type === "restore"
+            ? `Are you sure you want to restore ${confirmState.payload?.name}? Their account will be reactivated.`
             : confirmState.type === "status"
             ? `Are you sure you want to ${confirmState.payload?.status === 'active' ? 'deactivate' : 'activate'} ${confirmState.payload?.name}?`
             : `Are you sure you want to reset the password for ${confirmState.payload?.name} to the system default?`
         }
-        confirmText={confirmState.type === "delete" ? "Delete" : "Confirm"}
+        confirmText={confirmState.type === "delete" ? "Delete" : confirmState.type === "restore" ? "Restore" : "Confirm"}
         onConfirm={() => {
           if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
+          else if (confirmState.type === "restore") restoreMutation.mutate(confirmState.payload.id);
           else if (confirmState.type === "status") statusMutation.mutate({ id: confirmState.payload.id, status: confirmState.payload.status === "active" ? "inactive" : "active" });
           else if (confirmState.type === "reset-password") resetPasswordMutation.mutate(confirmState.payload.id);
         }}
+        isLoading={deleteMutation.isPending || statusMutation.isPending || restoreMutation.isPending || resetPasswordMutation.isPending}
         isDestructive={confirmState.type === "delete"}
       />
     </PageContainer>

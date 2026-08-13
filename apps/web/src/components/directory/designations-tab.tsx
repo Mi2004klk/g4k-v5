@@ -44,9 +44,9 @@ import { DataTable, StatusBadge } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Badge } from "@g4k/ui/components";
-import { 
-  queryKeys, 
-  STALE_TIME_DESIGNATIONS 
+import {
+  queryKeys,
+  STALE_TIME_DESIGNATIONS
 } from "@/lib/query-keys";
 
 export function DesignationsTab() {
@@ -74,7 +74,7 @@ export function DesignationsTab() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
-  
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<DesigFormValues>({
     resolver: zodResolver(desigSchema),
     defaultValues: { name: "", description: "" }
@@ -142,7 +142,7 @@ export function DesignationsTab() {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
-      
+
       const blob = await apiFetch(`/designations/export?${params.toString()}`);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -158,66 +158,66 @@ export function DesignationsTab() {
     }
   };
 
-  const designationsList = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const designationsList = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const totalPages = data?.last_page || data?.data?.last_page || 1;
   const columns = useMemo<any[]>(() => {
     const baseColumns: any[] = [
       {
-      accessorKey: "name",
-      header: "Designation",
-      cell: ({ row }: any) => (
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
-            <AppIcon name="award" />
-          </div>
-          <div>
-            <span className="font-semibold text-neutral-900 dark:text-white block">
-              {row.original.name}
-            </span>
-            {row.original.description && (
-              <span className="text-xs text-neutral-500">{row.original.description}</span>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "users_count",
-      header: "Assigned Employees",
-      cell: ({ row }: any) => {
-        const count = row.original.users_count || 0;
-        const users = row.original.users || [];
-        return (
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {users.length > 0 ? users.slice(0, 3).map((u: any, i: number) => (
-                <Avatar key={i} className="w-6 h-6 border-2 border-background">
-                  <AvatarImage src={u.avatar_url || ""} />
-                  <AvatarFallback name={u.name} className="text-[9px]" />
-                </Avatar>
-              )) : [...Array(Math.min(count, 3))].map((_, i) => (
-                <Avatar key={i} className="w-6 h-6 border-2 border-background">
-                  <AvatarFallback className="text-[9px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
-                </Avatar>
-              ))}
+        accessorKey: "name",
+        header: "Designation",
+        cell: ({ row }: any) => (
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
+              <AppIcon name="award" />
             </div>
-            <span className="text-xs font-medium text-neutral-600">{count} employees</span>
+            <div>
+              <span className="font-semibold text-neutral-900 dark:text-white block">
+                {row.original.name}
+              </span>
+              {row.original.description && (
+                <span className="text-xs text-neutral-500">{row.original.description}</span>
+              )}
+            </div>
           </div>
-        );
-      }
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }: any) => {
-        const isActive = row.original.is_active;
-        return (
-          <StatusBadge status={isActive ? "success" : "danger"} dot className="uppercase">
-            {isActive ? "Active" : "Inactive"}
-          </StatusBadge>
-        );
-      }
-    },
+        ),
+      },
+      {
+        accessorKey: "users_count",
+        header: "Assigned Employees",
+        cell: ({ row }: any) => {
+          const count = row.original.users_count || 0;
+          const users = row.original.users || [];
+          return (
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {users.length > 0 ? users.slice(0, 3).map((u: any, i: number) => (
+                  <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                    <AvatarImage src={u.avatar_url || ""} />
+                    <AvatarFallback name={u.name} className="text-[9px]" />
+                  </Avatar>
+                )) : [...Array(Math.min(count, 3))].map((_, i) => (
+                  <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                    <AvatarFallback className="text-[9px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              <span className="text-xs font-medium text-neutral-600">{count} employees</span>
+            </div>
+          );
+        }
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }: any) => {
+          const isActive = row.original.is_active;
+          return (
+            <StatusBadge status={isActive ? "success" : "danger"} dot className="uppercase">
+              {isActive ? "Active" : "Inactive"}
+            </StatusBadge>
+          );
+        }
+      },
     ];
 
     if (isAdmin) {
@@ -237,10 +237,10 @@ export function DesignationsTab() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => { 
-                    setEditingDesig(desig); 
-                    reset({ name: desig.name, description: desig.description || "" }); 
-                    setIsModalOpen(true); 
+                  <DropdownMenuItem onClick={() => {
+                    setEditingDesig(desig);
+                    reset({ name: desig.name, description: desig.description || "" });
+                    setIsModalOpen(true);
                   }}>
                     <AppIcon name="edit" className=" mr-2 text-violet-600" /> Edit
                   </DropdownMenuItem>
@@ -328,9 +328,9 @@ export function DesignationsTab() {
             </div>
           ) : (
             <div className="space-y-4">
-              <DataTable 
-                columns={columns} 
-                data={designationsList} 
+              <DataTable
+                columns={columns}
+                data={designationsList}
                 page={page}
                 perPage={perPage}
                 totalPages={totalPages}

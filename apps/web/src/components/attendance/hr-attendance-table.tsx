@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
+import { safeFormat } from "@/lib/format";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
@@ -24,13 +25,13 @@ export function HrAttendanceTable() {
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
   const [search, setSearch] = useUrlState("search", "");
-  
+
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [sheetTab, setSheetTab] = useState<"day" | "history" | "trends">("day");
-  
+
   // Dialog & selection state
   const [correctionData, setCorrectionData] = useState<{ dayId: number, userId: number, date: string, action: string, type: string } | null>(null);
   const [rowSelection, setRowSelection] = useState({});
@@ -93,6 +94,46 @@ export function HrAttendanceTable() {
   const records = data?.data?.data || [];
   const totalPages = data?.data?.last_page || 1;
 
+  const handleExport = async (all: boolean = true) => {
+    try {
+      let selectedIds = Object.keys(rowSelection);
+      if (!all && selectedIds.length === 0) {
+        toast.error("Please select at least one record to export.");
+        return;
+      }
+      
+      if (!all) {
+        toast.info(`Exporting ${selectedIds.length} selected records...`);
+      } else {
+        toast.info("Exporting team attendance...");
+      }
+
+      const params = new URLSearchParams();
+      if (selectedDate) params.append("date", selectedDate);
+      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      
+      if (!all && selectedIds.length > 0) {
+        params.append("ids", selectedIds.join(","));
+      }
+      
+      const blob = await apiFetch(`/attendance/hr/export?${params.toString()}`);
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `team_attendance_${selectedDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Export successful.");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to export attendance");
+    }
+  };
+
 
 
   const columns: any[] = [
@@ -122,10 +163,10 @@ export function HrAttendanceTable() {
       header: "Employee",
       cell: ({ row }: any) => {
         const isOpenShift = row.original.clock_in && !row.original.clock_out;
-        
+
         return (
           <div className="flex items-center gap-3 group">
-            <button 
+            <button
               onClick={() => {
                 setSheetTab("day");
                 setSelectedUser(row.original.user_id);
@@ -146,7 +187,7 @@ export function HrAttendanceTable() {
               <AppIcon name="trendingUp" />
             </button>
             {isOpenShift && (
-              <button 
+              <button
                 onClick={() => setCorrectionData({
                   dayId: row.original.id,
                   userId: row.original.user_id,
@@ -173,12 +214,12 @@ export function HrAttendanceTable() {
       cell: ({ row }: any) => {
         const status = row.getValue("status") as string;
         const isLeave = status === "leave";
-        
+
         return (
           <div className="flex items-center gap-2">
-            <StatusBadge 
-              status={status === "present" ? "success" : status === "late" ? "warning" : isLeave ? "info" : "danger"} 
-              dot 
+            <StatusBadge
+              status={status === "present" ? "success" : status === "late" ? "warning" : isLeave ? "info" : "danger"}
+              dot
               className="uppercase"
             >
               {status}
@@ -197,7 +238,7 @@ export function HrAttendanceTable() {
       header: "Clock In",
       cell: ({ row }: any) => {
         const val = row.getValue("clock_in") as string;
-        return <span className="font-mono text-muted-foreground">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+        return <span className="font-mono text-muted-foreground">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
       },
     },
     {
@@ -205,7 +246,7 @@ export function HrAttendanceTable() {
       header: "Clock Out",
       cell: ({ row }: any) => {
         const val = row.getValue("clock_out") as string;
-        return <span className="font-mono text-muted-foreground">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+        return <span className="font-mono text-muted-foreground">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
       },
     },
     {
@@ -240,9 +281,9 @@ export function HrAttendanceTable() {
                 Leave History
               </Link>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 ml-2"
               onClick={(e) => {
                 e.stopPropagation();
@@ -305,16 +346,27 @@ export function HrAttendanceTable() {
             setDeptFilter("all");
           }}
         />
+
+        <div className="flex items-center gap-2 mt-4 sm:mt-0">
+          {Object.keys(rowSelection).length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-9 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
+              Export Selected
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-9 whitespace-nowrap shrink-0" aria-label="Export team report for selected date">
+            Export Team List
+          </Button>
+        </div>
       </div>
 
       <div className="bg-card rounded-xl border border-border overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm">
             <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />
           </div>
         )}
-        <DataTable 
-          columns={columns} 
+        <DataTable
+          columns={columns}
           data={records}
           onRowSelectionChange={setRowSelection}
           rowSelection={rowSelection}
@@ -327,11 +379,11 @@ export function HrAttendanceTable() {
         />
       </div>
 
-      <TeamMemberAttendanceSheet 
-        userId={selectedUser} 
+      <TeamMemberAttendanceSheet
+        userId={selectedUser}
         date={selectedDate || format(new Date(), "yyyy-MM-dd")}
         initialTab={sheetTab}
-        onClose={() => setSelectedUser(null)} 
+        onClose={() => setSelectedUser(null)}
       />
 
       <HrCorrectionDialog

@@ -5,6 +5,62 @@ import { usePathname } from "next/navigation";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { cn } from "@/lib/utils";
 
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api-client";
+import { queryKeys, STALE_TIME_DIRECTORY } from "@/lib/query-keys";
+
+function BreadcrumbSegment({
+  segment,
+  parentSegment,
+  url,
+  isLast,
+}: {
+  segment: string;
+  parentSegment: string;
+  url: string;
+  isLast: boolean;
+}) {
+  let formatted = segment.replace(/-/g, " ");
+  if (segment === "users") formatted = "Employee Management";
+
+  const isNumericId = !isNaN(Number(segment));
+  const isUserSegment = isNumericId && parentSegment === "users";
+
+  const { data: userData } = useQuery({
+    queryKey: queryKeys.user(Number(segment)),
+    queryFn: () => apiFetch(`/users/${segment}`),
+    enabled: isUserSegment,
+    staleTime: STALE_TIME_USERS,
+  });
+
+  if (isUserSegment) {
+    if (userData?.data?.name) {
+      formatted = userData.data.name;
+    } else if (userData?.name) {
+      formatted = userData.name;
+    } else {
+      formatted = "Profile"; // Fallback while loading or error
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1 capitalize min-w-0">
+      <AppIcon name="chevronRight" size="xs" className=" text-neutral-400 shrink-0" />
+      <Link
+        href={url}
+        className={cn(
+          "transition-colors truncate max-w-[120px] sm:max-w-[200px] inline-block align-bottom",
+          isLast
+            ? "font-semibold text-neutral-900 dark:text-white"
+            : "hover:text-neutral-900 dark:hover:text-white"
+        )}
+      >
+        {formatted}
+      </Link>
+    </div>
+  );
+}
+
 export function Breadcrumb() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
@@ -24,24 +80,18 @@ export function Breadcrumb() {
       {segments.slice(1).map((segment, index) => {
         let url = `/${segments.slice(0, index + 2).join("/")}`;
         if (url === "/dashboard/org") url = "/dashboard/org/users";
+        if (segment === "org") return null; // Skip 'org' in breadcrumb display
         const isLast = index === segments.length - 2;
-        const formatted = segment.replace(/-/g, " ");
-
+        const parentSegment = segments[index]; // Because we slice(1), segments[index] refers to the parent
+        
         return (
-          <div key={url} className="flex items-center gap-1 capitalize min-w-0">
-            <AppIcon name="chevronRight" size="xs" className=" text-neutral-400 shrink-0" />
-            <Link
-              href={url}
-              className={cn(
-                "transition-colors truncate max-w-[120px] sm:max-w-[200px] inline-block align-bottom",
-                isLast
-                  ? "font-semibold text-neutral-900 dark:text-white"
-                  : "hover:text-neutral-900 dark:hover:text-white"
-              )}
-            >
-              {formatted}
-            </Link>
-          </div>
+          <BreadcrumbSegment
+            key={url}
+            segment={segment}
+            parentSegment={parentSegment}
+            url={url}
+            isLast={isLast}
+          />
         );
       })}
     </nav>

@@ -17,7 +17,7 @@ import { Checkbox } from "./checkbox"
 import { Combobox } from "./combobox"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Calendar } from "./calendar"
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
 import { cn } from "../utils/cn"
 
 
@@ -176,16 +176,16 @@ export function FilterBar({
                 )}
               >
                 <AppIcon name="calendar" className="mr-2 " />
-                {filter.value?.from ? (
-                  filter.value.to ? (
-                    <>
-                      {format(filter.value.from, "LLL dd, y")} -{" "}
-                      {format(filter.value.to, "LLL dd, y")}
-                    </>
+                  {isValid(filter.value.from) ? (
+                    filter.value.to && isValid(filter.value.to) ? (
+                      <>
+                        {format(filter.value.from, "LLL dd, y")} -{" "}
+                        {format(filter.value.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(filter.value.from, "LLL dd, y")
+                    )
                   ) : (
-                    format(filter.value.from, "LLL dd, y")
-                  )
-                ) : (
                   <span>Pick a date range</span>
                 )}
               </Button>
@@ -354,7 +354,9 @@ export function FilterBar({
             if (filter.value && filter.value !== "all") {
               if (filter.type === "date-range") {
                 if (!filter.value.from && !filter.value.to) return null
-                const label = `${filter.value.from ? format(filter.value.from, "MMM d") : ""} to ${filter.value.to ? format(filter.value.to, "MMM d") : ""}`
+                const fromLabel = filter.value.from && isValid(filter.value.from) ? format(filter.value.from, "MMM d") : ""
+                const toLabel = filter.value.to && isValid(filter.value.to) ? format(filter.value.to, "MMM d") : ""
+                const label = `${fromLabel} to ${toLabel}`
                 return (
                   <Badge key={filter.key} variant="secondary" className="pl-3 pr-1 h-6 rounded-full flex items-center gap-1 font-normal">
                     {filter.label}: {label}

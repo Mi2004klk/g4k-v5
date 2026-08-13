@@ -74,6 +74,7 @@ export const queryKeys = {
   designationsPaginated: (search?: string, status?: string) => ["designations", search ?? "", status ?? "all"] as const,
   userActivity: (id: number) => ["user-activity", id] as const,
   department: (id: number) => ["department", id] as const,
+  user: (id: number) => ["user", id] as const,
   pins: ["pins"] as const,
   myAttendanceHistory: () => ["my-attendance-history"] as const,
   orgAttendance: ["org-attendance"] as const,

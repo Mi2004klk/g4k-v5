@@ -6,11 +6,11 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { toast } from "sonner";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { 
-  queryKeys, 
-  STALE_TIME_DIRECTORY, 
-  STALE_TIME_DEPARTMENTS, 
-  STALE_TIME_DESIGNATIONS 
+import {
+  queryKeys,
+  STALE_TIME_DIRECTORY,
+  STALE_TIME_DEPARTMENTS,
+  STALE_TIME_DESIGNATIONS
 } from "@/lib/query-keys";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -83,12 +83,12 @@ export default function UsersPage() {
   const router = useRouter();
   const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
-  
+
   const [search, setSearch] = useUrlState("search", "");
   const [roleFilter, setRoleFilter] = useUrlState("role", "all");
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("department_id", "all");
-  
+
   // Pagination State
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -107,7 +107,7 @@ export default function UsersPage() {
   }, [roleFilter, statusFilter, deptFilter]);
 
   const { triggerExport, isExporting } = useExport();
-  
+
   const [rowSelection, setRowSelection] = useState({});
 
   // Modals
@@ -167,7 +167,13 @@ export default function UsersPage() {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      if (statusFilter && statusFilter !== "all") {
+        if (statusFilter === "trashed") {
+          params.append("only_trashed", "1");
+        } else {
+          params.append("status", statusFilter);
+        }
+      }
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
       params.append("page", page.toString());
       params.append("per_page", perPage.toString());
@@ -245,12 +251,12 @@ export default function UsersPage() {
     if (roleFilter && roleFilter !== "all") params.append("role", roleFilter);
     if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
     if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-    
+
     await triggerExport(`/users/export?${params.toString()}`, "users_export.csv");
   };
 
-  const usersList = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const usersList = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const totalPages = data?.last_page || data?.data?.last_page || 1;
   const selectedCount = Object.keys(rowSelection).length;
 
   const columns: any[] = useMemo<any[]>(() => [
@@ -394,37 +400,44 @@ export default function UsersPage() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => router.push(`/dashboard/org/users/${user.id}`)} className="gap-2 font-medium text-violet-600">
-                  <AppIcon name="userCheck" /> View Details
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  setActivityUser(user);
-                  setIsActivityOpen(true);
-                }} className="gap-2 text-blue-600">
-                  <AppIcon name="activity" /> View Activity
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2 text-amber-600">
-                  <AppIcon name="key" /> Reset Password
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => {
-                  if (isInactive) {
-                    statusMutation.mutate({ id: user.id, status: 'active' });
-                  } else {
-                    setConfirmState({ isOpen: true, type: "deactivate", payload: user });
-                  }
-                }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
-                  {isInactive ? <AppIcon name="userCheck" /> : <AppIcon name="userX" />}
-                  {isInactive ? "Activate" : "Deactivate"}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
-                  <AppIcon name="trash" /> Delete
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setEditingUser(row.original); setIsEditOpen(true); }} className="gap-2">
-                  <AppIcon name="edit" /> Edit
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56 font-sans">
+                {user.deleted_at ? (
+                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "restore", payload: user })} className="gap-2 text-emerald-600 font-medium">
+                    <AppIcon name="history" /> Restore User
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    <DropdownMenuItem onClick={() => router.push(`/dashboard/org/users/${user.id}`)} className="gap-2 font-medium text-violet-600">
+                      <AppIcon name="userCheck" /> View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                      setActivityUser(user);
+                      setIsActivityOpen(true);
+                    }} className="gap-2 text-blue-600">
+                      <AppIcon name="activity" /> View Activity
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2 text-amber-600">
+                      <AppIcon name="key" /> Reset Password
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => {
+                      if (isInactive) {
+                        statusMutation.mutate({ id: user.id, status: 'active' });
+                      } else {
+                        setConfirmState({ isOpen: true, type: "deactivate", payload: user });
+                      }
+                    }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
+                      {isInactive ? <AppIcon name="userCheck" /> : <AppIcon name="userX" />}
+                      {isInactive ? "Activate" : "Deactivate"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
+                      <AppIcon name="trash" /> Delete
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setEditingUser(row.original); setIsEditOpen(true); }} className="gap-2">
+                      <AppIcon name="edit" /> Edit
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -491,6 +504,7 @@ export default function UsersPage() {
                 options: [
                   { label: "Active", value: "active" },
                   { label: "Inactive", value: "inactive" },
+                  { label: "Deleted", value: "trashed" },
                 ],
               },
               {
@@ -538,10 +552,10 @@ export default function UsersPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <DataTable 
-                  columns={columns} 
-                  data={usersList} 
-                  getRowId={(r: any) => String(r.id)} 
+              <DataTable
+                columns={columns}
+                data={usersList}
+                getRowId={(r: any) => String(r.id)}
                 onRowSelectionChange={setRowSelection}
                 page={page}
                 perPage={perPage}
@@ -560,11 +574,11 @@ export default function UsersPage() {
             <DialogTitle>Add New Employee</DialogTitle>
             <DialogDescription className="sr-only">Create a new employee record.</DialogDescription>
           </DialogHeader>
-          
+
           {hasDraft && (
             <div className="bg-blue-50 border border-blue-100 p-3 rounded-md flex items-center justify-between mt-2">
               <span className="text-sm text-blue-700">You have an unsaved draft.</span>
-              <Button size="sm" variant="outline" className="h-7 text-xs bg-white text-blue-700 hover:bg-blue-50" onClick={() => {
+              <Button size="sm" variant="outline" className="h-7 text-xs bg-surface text-blue-700 hover:bg-blue-50" onClick={() => {
                 restoreDraft();
                 reset(draftData);
               }}>
@@ -744,25 +758,43 @@ export default function UsersPage() {
 
       <ConfirmDialog
         open={confirmState.isOpen}
-        onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, type: "" }) }}
-        onConfirm={() => {
-          if (confirmState.type === "deactivate") statusMutation.mutate({ id: confirmState.payload.id, status: "inactive" });
-          if (confirmState.type === "bulk-deactivate") bulkMutation.mutate({ ids: confirmState.payload.ids, action: 'deactivate' });
-          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
-          if (confirmState.type === "reset-password") resetPasswordMutation.mutate(confirmState.payload.id);
-        }}
+        onOpenChange={(open) => !open && setConfirmState({ isOpen: false, type: "" })}
         title={
-          confirmState.type === "delete" ? "Delete User" : 
+          confirmState.type === "delete" ? "Delete User" :
+          confirmState.type === "restore" ? "Restore User" :
           confirmState.type === "deactivate" ? "Deactivate User" :
-          confirmState.type === "bulk-deactivate" ? "Bulk Deactivate Users" :
+          confirmState.type === "bulk-deactivate" ? "Bulk Deactivate" :
           "Reset Password"
         }
         description={
-          confirmState.type === "delete" ? "Are you sure? This cannot be undone." : 
-          confirmState.type === "reset-password" ? "Are you sure? The user will be emailed a link to reset their password." :
-          "Users will no longer be able to log in."
+          confirmState.type === "delete" ? `Are you sure you want to delete ${confirmState.payload?.name}? This will archive their record but preserve historical data.` :
+          confirmState.type === "restore" ? `Are you sure you want to restore ${confirmState.payload?.name}? Their account will be reactivated.` :
+          confirmState.type === "deactivate" ? `Deactivating ${confirmState.payload?.name} will prevent them from logging in.` :
+          confirmState.type === "bulk-deactivate" ? `Are you sure you want to deactivate ${confirmState.payload?.ids?.length} users?` :
+          `Are you sure you want to reset the password for ${confirmState.payload?.name}? It will be reset to the default "Password@123".`
         }
-        isLoading={statusMutation.isPending || deleteMutation.isPending || bulkMutation.isPending || resetPasswordMutation.isPending}
+        confirmText={
+          confirmState.type === "delete" ? "Delete" :
+          confirmState.type === "restore" ? "Restore" :
+          confirmState.type === "deactivate" ? "Deactivate" :
+          confirmState.type === "bulk-deactivate" ? "Deactivate All" :
+          "Reset Password"
+        }
+        variant={confirmState.type === "restore" ? "default" : (confirmState.type === "reset-password" ? "warning" : "destructive")}
+        onConfirm={() => {
+          if (confirmState.type === "delete") {
+            deleteMutation.mutate(confirmState.payload.id);
+          } else if (confirmState.type === "restore") {
+            restoreMutation.mutate(confirmState.payload.id);
+          } else if (confirmState.type === "deactivate") {
+            statusMutation.mutate({ id: confirmState.payload.id, status: 'inactive' });
+          } else if (confirmState.type === "bulk-deactivate") {
+            bulkMutation.mutate({ ids: confirmState.payload.ids, action: 'deactivate' });
+          } else if (confirmState.type === "reset-password") {
+            resetPasswordMutation.mutate(confirmState.payload.id);
+          }
+        }}
+        isLoading={deleteMutation.isPending || statusMutation.isPending || bulkMutation.isPending || resetPasswordMutation.isPending || restoreMutation.isPending}
       />
     </div>
   );

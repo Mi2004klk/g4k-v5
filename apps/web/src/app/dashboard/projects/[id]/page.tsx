@@ -8,7 +8,7 @@ import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
-import { Button, Input, Textarea, Skeleton } from "@g4k/ui/components";
+import { Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -141,16 +141,20 @@ export default function ProjectDetailPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Priority</label>
-              <select
+              <Select
                 value={editForm.priority}
-                onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                onValueChange={(val) => setEditForm({ ...editForm, priority: val })}
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                <SelectTrigger className="w-full bg-surface">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button
               onClick={() => updateProjectMutation.mutate()}
@@ -165,7 +169,7 @@ export default function ProjectDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <Card className="border-none shadow-sm">
+          <Card className="border-none shadow-e1">
             <CardHeader>
               <CardTitle className="text-base font-bold">Project History & Activity</CardTitle>
             </CardHeader>
@@ -217,7 +221,7 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="border-none shadow-sm bg-violet-50/50 dark:bg-violet-950/30 border-violet-100 dark:border-violet-900">
+          <Card className="border-none shadow-e1 bg-violet-50/50 dark:bg-violet-950/30 border-violet-100 dark:border-violet-900">
             <CardHeader>
               <CardTitle className="text-base font-bold text-violet-800 dark:text-violet-300">Project Workflow</CardTitle>
             </CardHeader>
@@ -243,7 +247,7 @@ export default function ProjectDetailPage() {
               )}
 
               {project.status === "review" && hasCapability(caps, "manage_projects") && (
-                <div className="space-y-3 p-4 bg-white dark:bg-neutral-900 rounded-lg border border-amber-200 dark:border-amber-900">
+                <div className="space-y-3 p-4 bg-surface dark:bg-neutral-900 rounded-lg border border-amber-200 dark:border-amber-900">
                   <div className="flex items-center gap-2 text-amber-600 font-bold text-sm">
                     <AppIcon name="error" /> Pending HR Review
                   </div>

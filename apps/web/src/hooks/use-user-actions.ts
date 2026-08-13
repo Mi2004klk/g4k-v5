@@ -43,6 +43,17 @@ export function useUserActions() {
     onError: (err: any) => toast.error(err.message || "Failed to delete user."),
   });
 
+  const restoreMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/users/${id}/restore`, { method: "POST" }),
+    onSuccess: (_, variables) => {
+      toast.success("User restored successfully.");
+      setConfirmState({ isOpen: false, type: "" });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
+      queryClient.invalidateQueries({ queryKey: ["user", variables] });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to restore user."),
+  });
+
   const resetPasswordMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/users/${id}/reset-password`, { method: "POST" }),
     onSuccess: (res: any) => {
@@ -62,6 +73,7 @@ export function useUserActions() {
     updateMutation,
     statusMutation,
     deleteMutation,
+    restoreMutation,
     resetPasswordMutation,
   };
 }

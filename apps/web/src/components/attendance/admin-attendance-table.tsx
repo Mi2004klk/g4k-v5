@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
+import { safeFormat } from "@/lib/format";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
@@ -259,7 +260,7 @@ export function AdminAttendanceTable() {
       header: "Clock In",
       cell: ({ row }: any) => {
         const val = row.getValue("clock_in") as string;
-        return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+        return <span className="font-mono text-neutral-500">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
       },
     },
     {
@@ -267,7 +268,7 @@ export function AdminAttendanceTable() {
       header: "Clock Out",
       cell: ({ row }: any) => {
         const val = row.getValue("clock_out") as string;
-        return <span className="font-mono text-neutral-500">{val ? format(new Date(val), "hh:mm a") : "—"}</span>;
+        return <span className="font-mono text-neutral-500">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
       },
     },
     {
@@ -340,8 +341,8 @@ export function AdminAttendanceTable() {
                 to: dateTo ? new Date(dateTo) : undefined
               },
               onChange: (range: any) => {
-                if (range?.from) setDateFrom(format(range.from, "yyyy-MM-dd"));
-                if (range?.to) setDateTo(format(range.to, "yyyy-MM-dd"));
+                setDateFrom(range?.from ? format(range.from, "yyyy-MM-dd") : "");
+                setDateTo(range?.to ? format(range.to, "yyyy-MM-dd") : "");
               },
             },
             {
@@ -399,7 +400,7 @@ export function AdminAttendanceTable() {
 
       <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm">
             <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />
           </div>
         )}

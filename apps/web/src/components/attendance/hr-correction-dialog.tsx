@@ -5,6 +5,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, differenceInSeconds } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
+import { safeFormat } from "@/lib/format";
 import {
   Dialog,
   DialogContent,
@@ -185,7 +186,7 @@ export function HrCorrectionDialog({
               Manual Correction
             </DialogTitle>
             <DialogDescription>
-              Audit-logged correction for {dayData?.user?.name} on {format(new Date(date), "MMM d, yyyy")}.
+              Audit-logged correction for {dayData?.user?.name} on {safeFormat(date, "MMM d, yyyy")}.
             </DialogDescription>
           </DialogHeader>
 
@@ -219,7 +220,7 @@ export function HrCorrectionDialog({
                     <SelectContent>
                       {events.map((ev: any) => (
                         <SelectItem key={ev.id} value={ev.id.toString()}>
-                          {ev.type.replace('_', ' ')} at {format(new Date(ev.timestamp), "hh:mm a")}
+                          {ev.type.replace('_', ' ')} at {safeFormat(ev.timestamp, "hh:mm a")}
                         </SelectItem>
                       ))}
                     </SelectContent>

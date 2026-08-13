@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
+import { safeFormat } from "@/lib/format";
 
 import * as echarts from 'echarts/core';
 import { BarChart, LineChart } from 'echarts/charts';
@@ -39,7 +40,7 @@ export function TeamMemberTrendsGraph({ userId }: { userId: number }) {
     if (!data?.stats) return { labels: [], hours: [], overtime: [] };
     
     const stats = data.stats;
-    const labels = stats.map((d: any) => format(new Date(d.date), "MMM d"));
+    const labels = stats.map((d: any) => safeFormat(d.date, "MMM d"));
     // Convert seconds to hours
     const hours = stats.map((d: any) => parseFloat(((d.total_seconds || 0) / 3600).toFixed(2)));
     const overtime = stats.map((d: any) => parseFloat(((d.overtime_seconds || 0) / 3600).toFixed(2)));
@@ -123,7 +124,7 @@ export function TeamMemberTrendsGraph({ userId }: { userId: number }) {
 
       <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl">
             <AppIcon name="loading" size="xl" className=" animate-spin text-violet-500" />
           </div>
         )}

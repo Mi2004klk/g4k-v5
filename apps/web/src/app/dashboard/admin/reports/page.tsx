@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Button, Input, DataTable, Card } from "@g4k/ui/components";
+import { Button, Input, DataTable, Card, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { SavedReportViews } from "@/components/reports/saved-report-views";
 import { toast } from "sonner";
 import { STALE_TIME_DEPARTMENTS, queryKeys } from "@/lib/query-keys";
@@ -100,54 +100,58 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <Card className="p-4 border-none shadow-sm flex flex-col md:flex-row gap-4 items-end bg-white dark:bg-neutral-900">
+      <Card className="p-4 border-none shadow-e1 flex flex-col md:flex-row gap-4 items-end bg-surface dark:bg-neutral-900">
         <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <label htmlFor="report-type" className="text-xs font-bold text-neutral-500 uppercase">Report Type</label>
-            <select
-              id="report-type"
+            <Select
               value={reportType}
-              onChange={(e) => setReportType(e.target.value as any)}
-              className="w-full h-10 px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+              onValueChange={(v: "attendance-summary" | "leave-summary") => setReportType(v)}
             >
-              <option value="attendance-summary">Attendance Summary</option>
-              <option value="leave-summary">Leave Summary</option>
-            </select>
+              <SelectTrigger id="report-type" className="w-full h-10 bg-surface">
+                <SelectValue placeholder="Select report type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="attendance-summary">Attendance Summary</SelectItem>
+                <SelectItem value="leave-summary">Leave Summary</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="start-date" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> Start Date</label>
-            <Input
-              id="start-date"
-              type="date"
-              value={filters.start}
-              onChange={(e) => setFilters({ ...filters, start: e.target.value })}
+          <div className="space-y-1.5 flex flex-col">
+            <label className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> Start Date</label>
+            <DatePicker
+              value={filters.start ? new Date(filters.start) : undefined}
+              onChange={(date) => setFilters({ ...filters, start: date ? format(date, "yyyy-MM-dd") : "" })}
+              className="w-full"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="end-date" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> End Date</label>
-            <Input
-              id="end-date"
-              type="date"
-              value={filters.end}
-              onChange={(e) => setFilters({ ...filters, end: e.target.value })}
+          <div className="space-y-1.5 flex flex-col">
+            <label className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> End Date</label>
+            <DatePicker
+              value={filters.end ? new Date(filters.end) : undefined}
+              onChange={(date) => setFilters({ ...filters, end: date ? format(date, "yyyy-MM-dd") : "" })}
+              className="w-full"
             />
           </div>
 
           <div className="space-y-1.5">
             <label htmlFor="dept-filter" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="building" size="xs" /> Department</label>
-            <select
-              id="dept-filter"
+            <Select
               value={filters.dept}
-              onChange={(e) => setFilters({ ...filters, dept: e.target.value })}
-              className="w-full h-10 px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"
+              onValueChange={(v) => setFilters({ ...filters, dept: v })}
             >
-              <option value="all">All Departments</option>
-              {departments.map((d: any) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
+              <SelectTrigger id="dept-filter" className="w-full h-10 bg-surface">
+                <SelectValue placeholder="All Departments" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map((d: any) => (
+                  <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -163,7 +167,7 @@ export default function ReportsPage() {
         </div>
       </Card>
 
-      <Card className="border-none shadow-sm overflow-hidden">
+      <Card className="border-none shadow-e1 overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center text-neutral-500 flex flex-col items-center">
             <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-4" />

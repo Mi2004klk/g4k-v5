@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { safeFormat } from "@/lib/format";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import {
@@ -83,7 +84,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
         <SheetHeader className="mb-6">
           <SheetTitle>Attendance Details</SheetTitle>
           <SheetDescription>
-            {user ? `${user.name} - ${format(new Date(date), "EEEE, MMMM do, yyyy")}` : "Loading..."}
+            {user ? `${user.name} - ${safeFormat(date, "EEEE, MMMM do, yyyy")}` : "Loading..."}
           </SheetDescription>
         </SheetHeader>
 
@@ -193,7 +194,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                                   )}
                                 </div>
                                 <time className="text-xs font-mono text-neutral-500">
-                                  {format(new Date(event.timestamp), "hh:mm a")}
+                                  {safeFormat(event.timestamp, "hh:mm a")}
                                 </time>
                               </div>
                               

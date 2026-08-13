@@ -14,7 +14,7 @@ import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const GanttView = dynamic(() => import("@/components/projects/gantt-view").then(mod => mod.GanttView), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 export function TasksTab() {
@@ -286,13 +286,12 @@ export function TasksTab() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex flex-col">
                     <label className="text-xs font-semibold text-neutral-500">Due Date</label>
-                    <Input
-                      type="date"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
-                      className="text-xs h-9"
+                    <DatePicker
+                      value={dueDate ? new Date(dueDate) : undefined}
+                      onChange={(date) => setDueDate(date ? format(date, "yyyy-MM-dd") : "")}
+                      className="text-xs h-9 w-full"
                     />
                   </div>
                 </div>
@@ -360,10 +359,12 @@ export function TasksTab() {
                 </div>
 
                 <div className="border-t border-neutral-100 dark:border-neutral-800 pt-4">
-                  <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    <input type="checkbox" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="rounded border-neutral-300" />
-                    Recurring Task
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="recurring-checkbox" checked={isRecurring} onCheckedChange={(checked) => setIsRecurring(checked === true)} />
+                    <label htmlFor="recurring-checkbox" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      Recurring Task
+                    </label>
+                  </div>
                   {isRecurring && (
                     <div className="grid grid-cols-2 gap-4 mt-3">
                       <div className="space-y-1">

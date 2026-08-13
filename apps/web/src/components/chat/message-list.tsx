@@ -109,6 +109,8 @@ export function MessageList({
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const msg = messages[virtualRow.index];
+          if (!msg) return null;
+          
           const isMe = msg.sender_id === currentUserId;
 
           return (

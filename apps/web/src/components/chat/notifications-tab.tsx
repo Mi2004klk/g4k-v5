@@ -43,8 +43,8 @@ export function NotificationsTab() {
     refetchInterval: isConnected ? false : 30_000,
   });
 
-  const notificationsData = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const notificationsData = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const markReadMutation = useMutation({
     mutationFn: async (id: number) => {

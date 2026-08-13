@@ -72,8 +72,8 @@ export const NavItem = memo(function NavItem({
           isDisabled
             ? "opacity-50 cursor-not-allowed text-neutral-400 dark:text-neutral-600"
             : isActive
-            ? cn("font-semibold shadow-sm ring-1 ring-inset", accent.bg, accent.bgDark, accent.ring, accent.text, accent.textDark)
-            : cn("text-neutral-700 dark:text-neutral-300 font-medium group-hover/nav:bg-opacity-50 hover:shadow-sm", accent.hoverBg, accent.hoverText)
+            ? cn("font-semibold shadow-e1 ring-1 ring-inset", accent.bg, accent.bgDark, accent.ring, accent.text, accent.textDark)
+            : cn("text-neutral-700 dark:text-neutral-300 font-medium group-hover/nav:bg-opacity-50 hover:shadow-e1", accent.hoverBg, accent.hoverText)
         )}
       >
         <div className={cn(

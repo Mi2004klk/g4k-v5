@@ -6,7 +6,7 @@ import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, end
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
-import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent, DatePicker } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { toast } from "sonner";
 
@@ -131,9 +131,13 @@ export function HolidayCalendar() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 flex flex-col">
           <Label>Date</Label>
-          <Input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+          <DatePicker 
+            value={formData.date ? new Date(formData.date) : undefined} 
+            onChange={(date) => setFormData({ ...formData, date: date ? format(date, "yyyy-MM-dd") : "" })} 
+            className="w-full"
+          />
         </div>
       </div>
       <div className="space-y-2">

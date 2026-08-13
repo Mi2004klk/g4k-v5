@@ -32,17 +32,18 @@ export function DirectoryTab() {
   const [deptFilter, setDeptFilter] = useUrlState("department", "all");
   const [desigFilter, setDesigFilter] = useUrlState("designation", "all");
   const [visFilter, setVisFilter] = useUrlState("visibility", "all");
+  const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   useTrackRecent(
     selectedUser
       ? {
-          id: String(selectedUser.id),
-          type: "employee",
-          title: selectedUser.name,
-          subtitle: selectedUser.designation?.name || "Employee",
-          url: `/dashboard/directory?search=${selectedUser.name}`, // Preserving search context roughly
-        }
+        id: String(selectedUser.id),
+        type: "employee",
+        title: selectedUser.name,
+        subtitle: selectedUser.designation?.name || "Employee",
+        url: `/dashboard/directory?search=${selectedUser.name}`, // Preserving search context roughly
+      }
       : null
   );
 
@@ -157,32 +158,54 @@ export function DirectoryTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      {/* Search Bar */}
+      {/* Search Bar & View Toggle */}
       <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 mb-6">
         <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
-          <FilterBar
-            searchQuery={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search by name, email, designation, or department..."
-            filters={[
-              {
-                key: "department",
-                label: "Department",
-                type: "select",
-                value: deptFilter,
-                onChange: setDeptFilter,
-                options: (deptsData?.data || deptsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
-              },
-              {
-                key: "designation",
-                label: "Designation",
-                type: "select",
-                value: desigFilter,
-                onChange: setDesigFilter,
-                options: (desigsData?.data || desigsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
-              }
-            ]}
-          />
+          <div className="flex-1 w-full">
+            <FilterBar
+              searchQuery={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search by name, email, designation, or department..."
+              filters={[
+                {
+                  key: "department",
+                  label: "Department",
+                  type: "select",
+                  value: deptFilter,
+                  onChange: setDeptFilter,
+                  options: (deptsData?.data || deptsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
+                },
+                {
+                  key: "designation",
+                  label: "Designation",
+                  type: "select",
+                  value: desigFilter,
+                  onChange: setDesigFilter,
+                  options: (desigsData?.data || desigsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
+                }
+              ]}
+            />
+          </div>
+          <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg shrink-0">
+            <Button
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className={`h-8 px-3 ${viewMode === "grid" ? "shadow-e1" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+            >
+              <AppIcon name="grid" size="sm" className={viewMode === "grid" ? "mr-1" : ""} />
+              {viewMode === "grid" && <span>Grid</span>}
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={`h-8 px-3 ${viewMode === "list" ? "shadow-e1" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
+            >
+              <AppIcon name="list" size="sm" className={viewMode === "list" ? "mr-1" : ""} />
+              {viewMode === "list" && <span>List</span>}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -205,6 +228,28 @@ export function DirectoryTab() {
           title="No employees found"
           description="Try broadening your search term."
         />
+      ) : viewMode === "list" ? (
+        <Card className="border-none shadow-e1">
+          <CardContent className="p-0">
+            <DataTable
+              columns={columns}
+              data={users}
+              page={1}
+              perPage={users.length}
+              totalPages={1}
+              onPageChange={() => {}}
+              onPerPageChange={() => {}}
+            />
+            {hasNextPage && (
+              <div className="p-4 flex justify-center border-t">
+                <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                  {isFetchingNextPage ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
+                  Load More
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {users.map((user: any) => (
@@ -214,7 +259,7 @@ export function DirectoryTab() {
               className="border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden flex flex-col h-full bg-card dark:bg-neutral-900 rounded-xl"
             >
               <div className="h-16 w-full bg-violet-600 dark:bg-violet-800 relative">
-                <div className="absolute inset-0 bg-white/10 dark:bg-black/10 pattern-dots opacity-20"></div>
+                <div className="absolute inset-0 bg-surface/10 dark:bg-black/10 pattern-dots opacity-20"></div>
               </div>
               <CardContent className="p-0 flex-1 flex flex-col items-center text-center">
                 <div className="-mt-10 mb-3 relative rounded-full p-1 bg-card dark:bg-neutral-900">
@@ -230,7 +275,7 @@ export function DirectoryTab() {
                   <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 mt-1 truncate">
                     {user.designation?.name || "Team Member"}
                   </p>
-                  
+
                   <div className="space-y-2 mt-4 mb-4 text-xs text-neutral-500 w-full flex-1">
                     {user.department && (
                       <div className="flex justify-center items-center gap-1.5 truncate text-neutral-600 dark:text-neutral-400 font-medium">
@@ -247,7 +292,7 @@ export function DirectoryTab() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="w-full flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-3 pb-4 mt-auto">
                     <div className="text-[10px] uppercase font-bold tracking-wider text-neutral-400">
                       ID: {user.employee_code || user.employee_id || "N/A"}

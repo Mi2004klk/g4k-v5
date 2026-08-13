@@ -39,6 +39,13 @@ export function LeaveRequestForm() {
       setType("casual");
       queryClient.invalidateQueries({ queryKey: [queryKeys.myLeaveHistory()[0]] });
       queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
+      
+      // Redirect to leave history
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", "leave");
+        window.location.href = url.toString();
+      }
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to submit leave request.");

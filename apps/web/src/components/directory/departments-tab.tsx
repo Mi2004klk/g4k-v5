@@ -12,9 +12,9 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { 
-  queryKeys, 
-  STALE_TIME_DEPARTMENTS 
+import {
+  queryKeys,
+  STALE_TIME_DEPARTMENTS
 } from "@/lib/query-keys";
 
 const deptSchema = z.object({
@@ -76,7 +76,7 @@ export function DepartmentsTab() {
 
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
-  
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<DeptFormValues>({
     resolver: zodResolver(deptSchema),
     defaultValues: { name: "", description: "" }
@@ -187,8 +187,19 @@ export function DepartmentsTab() {
     onSuccess: () => {
       toast.success("Employees assigned successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: any) => toast.error(err.message || "Failed to assign employees."),
+  });
+
+  const removeEmployeeMutation = useMutation({
+    mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/employees/${userId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success("Employee removed successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to remove employee."),
   });
 
   const bulkExport = async () => {
@@ -196,7 +207,7 @@ export function DepartmentsTab() {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
-      
+
       const blob = await apiFetch(`/departments/export?${params.toString()}`);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -212,85 +223,85 @@ export function DepartmentsTab() {
     }
   };
 
-  const deptList = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const deptList = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const columns: any[] = useMemo<any[]>(() => {
     const baseColumns: any[] = [
       {
-      accessorKey: "name",
-      header: "Department",
-      cell: ({ row }: any) => (
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
-            <AppIcon name="building" />
-          </div>
-          <div>
-            <span 
-              className="font-semibold text-neutral-900 dark:text-white block cursor-pointer hover:underline decoration-violet-500 underline-offset-4"
-              onClick={() => setSelectedDeptMembers(row.original)}
-            >
-              {row.original.name}
-            </span>
-            {row.original.description && (
-              <span className="text-xs text-neutral-500">{row.original.description}</span>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "users_count",
-      header: "Members",
-      cell: ({ row }: any) => {
-        const count = row.original.users_count || 0;
-        return (
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {(row.original.users || []).slice(0, 3).map((u: any, i: number) => (
-                <Avatar key={i} className="w-6 h-6 border-2 border-background">
-                  <AvatarImage src={u.avatar_url || ""} />
-                  <AvatarFallback name={u.name} className="text-[9px]" />
-                </Avatar>
-              ))}
+        accessorKey: "name",
+        header: "Department",
+        cell: ({ row }: any) => (
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+              <AppIcon name="building" />
             </div>
-            <span className="text-xs font-medium text-neutral-600">{count} members</span>
+            <div>
+              <span
+                className="font-semibold text-neutral-900 dark:text-white block cursor-pointer hover:underline decoration-violet-500 underline-offset-4"
+                onClick={() => setSelectedDeptMembers(row.original)}
+              >
+                {row.original.name}
+              </span>
+              {row.original.description && (
+                <span className="text-xs text-neutral-500">{row.original.description}</span>
+              )}
+            </div>
           </div>
-        );
-      }
-    },
-    {
-      accessorKey: "teams",
-      header: "Sub-teams",
-      cell: ({ row }: any) => {
-        const teams = row.original.teams || [];
-        return (
-          <div className="flex flex-wrap gap-1">
-            {teams.length > 0 ? (
-              teams.map((team: any) => (
-                <span key={team.id} className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
-                  <AppIcon name="directory" size="xs" className=" text-neutral-400" />
-                  {team.name}
-                </span>
-              ))
-            ) : <span className="text-neutral-400 text-xs italic">No teams</span>}
-          </div>
-        );
+        ),
       },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }: any) => {
-        const isActive = row.original.is_active;
-        const isArchived = !!row.original.archived_at;
-        return (
-          <StatusBadge status={isArchived ? "neutral" : (isActive ? "success" : "danger")} dot className="uppercase">
-            {isArchived ? "Archived" : (isActive ? "Active" : "Inactive")}
-          </StatusBadge>
-        );
+      {
+        accessorKey: "users_count",
+        header: "Members",
+        cell: ({ row }: any) => {
+          const count = row.original.users_count || 0;
+          return (
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {(row.original.users || []).slice(0, 3).map((u: any, i: number) => (
+                  <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                    <AvatarImage src={u.avatar_url || ""} />
+                    <AvatarFallback name={u.name} className="text-[9px]" />
+                  </Avatar>
+                ))}
+              </div>
+              <span className="text-xs font-medium text-neutral-600">{count} members</span>
+            </div>
+          );
+        }
+      },
+      {
+        accessorKey: "teams",
+        header: "Sub-teams",
+        cell: ({ row }: any) => {
+          const teams = row.original.teams || [];
+          return (
+            <div className="flex flex-wrap gap-1">
+              {teams.length > 0 ? (
+                teams.map((team: any) => (
+                  <span key={team.id} className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
+                    <AppIcon name="directory" size="xs" className=" text-neutral-400" />
+                    {team.name}
+                  </span>
+                ))
+              ) : <span className="text-neutral-400 text-xs italic">No teams</span>}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }: any) => {
+          const isActive = row.original.is_active;
+          const isArchived = !!row.original.archived_at;
+          return (
+            <StatusBadge status={isArchived ? "neutral" : (isActive ? "success" : "danger")} dot className="uppercase">
+              {isArchived ? "Archived" : (isActive ? "Active" : "Inactive")}
+            </StatusBadge>
+          );
+        }
       }
-    }
     ];
 
     if (isAdmin) {
@@ -319,10 +330,10 @@ export function DepartmentsTab() {
                 </TooltipProvider>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => { 
-                    setEditingDept(dept); 
-                    reset({ name: dept.name, description: dept.description || "" }); 
-                    setIsDeptModalOpen(true); 
+                  <DropdownMenuItem onClick={() => {
+                    setEditingDept(dept);
+                    reset({ name: dept.name, description: dept.description || "" });
+                    setIsDeptModalOpen(true);
                   }}>
                     <AppIcon name="edit" className=" mr-2 text-violet-600" /> Edit
                   </DropdownMenuItem>
@@ -409,9 +420,9 @@ export function DepartmentsTab() {
             </div>
           ) : (
             <div className="space-y-4">
-              <DataTable 
-                columns={columns} 
-                data={deptList} 
+              <DataTable
+                columns={columns}
+                data={deptList}
                 page={page}
                 perPage={perPage}
                 totalPages={totalPages}
@@ -520,6 +531,17 @@ export function DepartmentsTab() {
                               <p className="text-xs text-neutral-500">{user.designation?.name || "Employee"} • {user.employee_id || "N/A"}</p>
                             </div>
                           </div>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+                              onClick={() => removeEmployeeMutation.mutate({ deptId: selectedDeptMembers.id, userId: user.id })}
+                              disabled={removeEmployeeMutation.isPending}
+                            >
+                              {removeEmployeeMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
+                            </Button>
+                          )}
                         </div>
                       ))}
                     </div>

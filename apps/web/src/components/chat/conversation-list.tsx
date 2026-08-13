@@ -46,6 +46,8 @@ export function ConversationList({
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const conv = conversations[virtualRow.index];
+          if (!conv) return null;
+          
           const isSelected = selectedId === conv.id;
 
           const currentUserData = conv.users?.find((u: any) => u.id === currentUserId);
@@ -54,7 +56,7 @@ export function ConversationList({
             conv.latestMessage.sender_id !== currentUserId &&
             (!lastReadAt || new Date(conv.latestMessage.created_at) > new Date(lastReadAt));
 
-          const title = conv.name || (conv.scope === "direct" ? conv.users?.[0]?.name || "Direct Message" : "Chat");
+          const title = conv.name || (conv.scope === "direct" ? conv.users?.find((u: any) => u.id !== currentUserId)?.name || "Direct Message" : "Chat");
 
           return (
             <div

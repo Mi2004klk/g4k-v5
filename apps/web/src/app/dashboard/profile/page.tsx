@@ -335,15 +335,15 @@ export default function ProfilePage() {
                   {isLoading && !profile ? <Skeleton className="h-8 w-48 mb-2" /> : (profile?.name || "Your Profile")}
                 </h1>
                 <div className="flex flex-wrap items-center gap-4 text-sm font-sans mt-2">
-                  <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
+                  <div className="flex items-center text-muted-foreground bg-surface/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
                     <AppIcon name="hash" className=" mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-24" /> : (profile?.employee_id || "Employee ID: N/A")}
                   </div>
-                  <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
+                  <div className="flex items-center text-muted-foreground bg-surface/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
                     <AppIcon name="building" className=" mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.department?.name || "No Department")}
                   </div>
-                  <div className="flex items-center text-muted-foreground bg-white/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
+                  <div className="flex items-center text-muted-foreground bg-surface/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
                     <AppIcon name="briefcase" className=" mr-2 text-brand-violet/70" />
                     {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.designation?.name || "No Designation")}
                   </div>
@@ -538,6 +538,7 @@ export default function ProfilePage() {
                    }
                  }}
                >
+                 <input type="text" name="username" value={authUser?.email || ""} autoComplete="username" className="hidden" readOnly />
                  <div>
                  <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Current Password</label>
                  <PasswordInput
@@ -545,6 +546,7 @@ export default function ProfilePage() {
                    value={currentPassword}
                    onChange={(e) => setCurrentPassword(e.target.value)}
                    className="font-sans"
+                   autoComplete="current-password"
                  />
                </div>
                <div>
@@ -554,6 +556,7 @@ export default function ProfilePage() {
                    value={newPassword}
                    onChange={(e) => setNewPassword(e.target.value)}
                    className="font-sans"
+                   autoComplete="new-password"
                  />
                </div>
                <div>
@@ -563,10 +566,11 @@ export default function ProfilePage() {
                    value={confirmPassword}
                    onChange={(e) => setConfirmPassword(e.target.value)}
                    className="font-sans"
+                   autoComplete="new-password"
                  />
                </div>
                <Button
-                 onClick={() => changePasswordMutation.mutate()}
+                 type="submit"
                  disabled={
                    changePasswordMutation.isPending ||
                    !currentPassword ||

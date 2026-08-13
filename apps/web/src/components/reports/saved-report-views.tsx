@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { SheetDescription, Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
+import { SheetDescription, Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useIsMobile } from "@g4k/ui/hooks";
 import { formatDistanceToNow } from "date-fns";
@@ -58,24 +58,26 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
     <div className="relative">
       <div className="flex items-center gap-2">
         {/* Simple Select implementation for saved views if DropdownMenu is not fully available */}
-        <select
-          className="h-10 px-3 py-2 text-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg focus:ring-2 focus:ring-emerald-500 text-neutral-900 dark:text-neutral-100 w-full sm:min-w-[200px]"
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val === "") return;
+        <Select
+          value=""
+          onValueChange={(val) => {
+            if (!val) return;
             const view = views.find((v: any) => v.id.toString() === val);
             if (view && view.filters) {
               onApplyFilters(view.filters);
               toast.info(`Applied view: ${view.name}`);
             }
-            e.target.value = "";
           }}
         >
-          <option value="">Load saved view...</option>
-          {views.map((v: any) => (
-            <option key={v.id} value={v.id}>{v.name}</option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full sm:min-w-[200px] h-10 bg-surface">
+            <SelectValue placeholder="Load saved view..." />
+          </SelectTrigger>
+          <SelectContent>
+            {views.map((v: any) => (
+              <SelectItem key={v.id} value={v.id.toString()}>{v.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {isMobile ? (
           <Sheet open={isSaving} onOpenChange={setIsSaving}>

@@ -32,7 +32,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const [isPunching, setIsPunching] = useState(false);
 
   const queryClient = useQueryClient();
-  
+
   const isActive = useTimerStore((s) => s.isActive);
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
   const baseSeconds = useTimerStore((s) => s.baseSeconds);
@@ -81,7 +81,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   if (isOnBreak) activeState = "on_break";
   // `activeSeconds` logically means we have some accumulated time or active shift. 
   const hasWorked = baseSeconds > 0 || isActive;
-  
+
   if (!isActive && !isOnBreak && hasWorked) activeState = "completed";
   if (!isActive && !isOnBreak && !hasWorked) activeState = "not_started";
 
@@ -95,7 +95,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
     setIsPunching(true);
     // Optimistic UI state
     const timestamp = new Date().toISOString();
-    
+
     // Check auto-end break on clock out
     if (type === "clock_out" && isOnBreak) {
       await offlineEngine.recordPunch("break_end", timestamp);
@@ -141,7 +141,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   return (
     <div className={cn("relative w-full h-full p-5 bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl transition-shadow duration-150 flex flex-col justify-between", className)}>
       {isPending && !todayData && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-xl p-6 gap-6">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-xl p-6 gap-6">
           <div className="flex justify-between w-full">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-6 w-20 rounded-full" />
@@ -170,7 +170,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
             <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
               <AppIcon name="error" size="xs" /> Offline Mode
             </span>
-          ) : isError ? (
+          ) : isError && !todayData ? (
             <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
               <AppIcon name="error" size="xs" /> Connection Error
               <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[10px] font-bold text-rose-600 hover:text-rose-700 ml-1">
@@ -182,8 +182,8 @@ export function TimeClockWidget({ className }: { className?: string }) {
         <StatusBadge
           status={
             activeState === "active" ? "success" :
-            activeState === "on_break" ? "warning" :
-            activeState === "completed" ? "info" : "neutral"
+              activeState === "on_break" ? "warning" :
+                activeState === "completed" ? "info" : "neutral"
           }
           className="uppercase tracking-wider px-2.5 py-0.5 text-[10px]"
         >
@@ -195,7 +195,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
         <LiveTimer
           render={(formattedTime, displaySeconds) => {
             const isOvertime = displaySeconds > standardSeconds;
-            
+
             // Format time difference nicely
             const formatTimeDiff = (secs: number) => {
               const h = Math.floor(secs / 3600);

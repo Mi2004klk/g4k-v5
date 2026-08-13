@@ -120,7 +120,7 @@ class LeaveRequestController extends Controller
         ]);
 
         $approval = Approval::where('approvable_type', LeaveRequest::class)
-            ->where('approvable_id', $id)
+            ->where('id', $id)
             ->firstOrFail();
 
         $user = $request->user();

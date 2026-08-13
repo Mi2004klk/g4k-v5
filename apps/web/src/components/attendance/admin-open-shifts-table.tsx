@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
-import {  Input, Button, Checkbox, DataTable , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import {  Input, Button, Checkbox, DataTable , Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
@@ -202,10 +202,9 @@ export function AdminOpenShiftsTable() {
               Notify HR ({Object.keys(rowSelection).length})
             </Button>
           )}
-          <Input 
-            type="date" 
-            value={selectedDate || ""} 
-            onChange={(e) => setSelectedDate(e.target.value)}
+          <DatePicker 
+            value={selectedDate ? new Date(selectedDate) : undefined} 
+            onChange={(date) => setSelectedDate(date ? format(date, "yyyy-MM-dd") : "")}
             className="w-auto min-w-[140px] h-10 shrink-0 border-amber-100 dark:border-amber-900/30 focus-visible:ring-amber-500"
           />
         </div>

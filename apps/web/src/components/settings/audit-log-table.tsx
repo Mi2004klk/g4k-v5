@@ -9,8 +9,9 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { DataTable } from "@g4k/ui/components";
-import { FilterBar } from "@g4k/ui/components";
+import { FilterBar, DatePicker } from "@g4k/ui/components";
 import { getAuthToken } from "@/lib/auth-store";
+import { safeFormat } from "@/lib/format";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
@@ -127,18 +128,18 @@ export function AuditLogTable() {
           />
         </div>
         <div className="flex items-center gap-2 text-sm text-neutral-500">
-          <input
-            type="date"
-            value={filters.start_date}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
+          <DatePicker
+            value={filters.start_date ? new Date(filters.start_date) : undefined}
+            onChange={(date) => setStartDate(date ? format(date, "yyyy-MM-dd") : "")}
+            className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
+            placeholder="Start date"
           />
           <span>to</span>
-          <input
-            type="date"
-            value={filters.end_date}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
+          <DatePicker
+            value={filters.end_date ? new Date(filters.end_date) : undefined}
+            onChange={(date) => setEndDate(date ? format(date, "yyyy-MM-dd") : "")}
+            className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
+            placeholder="End date"
           />
         </div>
         <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap">

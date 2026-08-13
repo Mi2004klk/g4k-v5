@@ -243,6 +243,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::patch('/users/{id}/status', [UserController::class, 'updateStatus']);
         Route::get('/users/{id}/leave-history', [UserController::class, 'leaveHistory']);
         Route::get('/users/{id}/assignments', [UserController::class, 'assignments']);
+        Route::post('/users/{id}/restore', [UserController::class, 'restore']);
         Route::apiResource('users', UserController::class)->except(['show']);
     });
     
@@ -268,6 +269,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::post('/departments/{id}/hrs/{userId}', [DepartmentController::class, 'addHr']);
         Route::delete('/departments/{id}/hrs/{userId}', [DepartmentController::class, 'removeHr']);
         Route::put('/departments/{id}/employees', [DepartmentController::class, 'syncEmployees']);
+        Route::delete('/departments/{id}/employees/{userId}', [DepartmentController::class, 'removeEmployee']);
         
         Route::apiResource('departments', DepartmentController::class)->except(['index']);
     });

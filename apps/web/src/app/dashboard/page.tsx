@@ -37,13 +37,13 @@ import { UpcomingHolidaysWidget } from "@/components/widgets/upcoming-holidays-w
 const EMPTY_CAPABILITIES: any[] = [];
 const cols = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
 
-function responsiveLayout(base: {x: number, y: number, w: number, h: number}) {
+function responsiveLayout(base: { x: number, y: number, w: number, h: number }) {
   return {
     lg: base,
     md: { ...base, w: Math.min(base.w, cols.md) },
     sm: { ...base, w: Math.min(base.w, cols.sm), x: 0 },
     xs: { ...base, w: Math.min(base.w, cols.xs), x: 0 },
-    xxs:{ ...base, w: Math.min(base.w, cols.xxs), x: 0 },
+    xxs: { ...base, w: Math.min(base.w, cols.xxs), x: 0 },
   };
 }
 
@@ -51,11 +51,11 @@ export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const router = useRouter();
   const queryClient = useQueryClient();
-  
+
   const token = useAuthStore((s) => s.token);
-  
+
   const { data: initData, isLoading, isError, refetch } = useDashboardInit({ enabled: !!token });
-  
+
   // Role determined by initData?.role, not a default (per requirements)
   const activeRole = initData?.role;
 
@@ -111,9 +111,9 @@ export default function DashboardPage() {
         }
       ];
     }
-    
+
     if (activeRole === "hr") {
-      return [
+      const hrWidgets = [
         {
           id: "team-attendance",
           component: <HrTeamAttendanceWidget />,
@@ -135,6 +135,15 @@ export default function DashboardPage() {
           defaultLayout: responsiveLayout({ x: 6, y: 3, w: 6, h: 3 }),
         },
       ];
+      
+      if (hasCapability(userCapabilities, "attendance.clock-self")) {
+        hrWidgets.push({
+          id: "time-clock",
+          component: <TimeClockWidget />,
+          defaultLayout: responsiveLayout({ x: 0, y: 6, w: 6, h: 3 }),
+        });
+      }
+      return hrWidgets;
     }
 
     // Default Employee view

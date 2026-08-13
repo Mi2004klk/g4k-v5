@@ -1,5 +1,83 @@
-import { redirect } from "next/navigation";
+"use client";
 
-export default function AdminAttendanceRedirectPage() {
-  redirect("/dashboard/org/attendance");
+import { useUrlState } from '@/hooks/use-url-state';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
+import Link from 'next/link';
+import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
+import { AppIcon, IconName } from "@g4k/ui/components";
+
+// Admin Components
+import { AdminAttendanceTable } from '@/components/attendance/admin-attendance-table';
+import { AdminAttendanceAnalytics } from '@/components/attendance/admin-attendance-analytics';
+import { AdminAttendanceTrendsGraph } from '@/components/attendance/admin-attendance-trends-graph';
+import { AdminOpenShiftsTable } from '@/components/attendance/admin-open-shifts-table';
+import { AdminAttendanceCalendar } from '@/components/attendance/admin-attendance-calendar';
+
+export default function AdminAttendancePage() {
+  const [tab, setTab] = useUrlState('tab', 'calendar');
+
+  return (
+    <div className="space-y-6 max-w-[1400px] mx-auto w-full">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">Company Attendance Console</h1>
+          <p className="text-sm text-neutral-500 mt-1">Global overview of employee attendance, historical analytics, and open shift management.</p>
+        </div>
+        <div className="flex items-center gap-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/dashboard/org/attendance">
+                <Button variant="outline" size="sm" className="gap-2 bg-card">
+                  <AppIcon name="users" />
+                  View HR Console
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Switch to team-level view</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        </div>
+      </div>
+      <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
+        <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 overflow-x-auto">
+          <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+            <AppIcon name="calendar" />
+            Calendar Heatmap
+          </TabsTrigger>
+          <TabsTrigger value="today" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+            <AppIcon name="directory" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+            <AppIcon name="chart" />
+            Analytics & Trends
+          </TabsTrigger>
+          <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+            <AppIcon name="activity" />
+            Open Shifts
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="calendar" className="outline-none m-0 focus-visible:ring-0">
+          <AdminAttendanceCalendar />
+        </TabsContent>
+
+        <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0">
+          <AdminAttendanceTable />
+        </TabsContent>
+        
+        <TabsContent value="analytics" className="outline-none m-0 focus-visible:ring-0 space-y-6">
+          <AdminAttendanceAnalytics />
+          <AdminAttendanceTrendsGraph />
+        </TabsContent>
+
+        <TabsContent value="shifts" className="outline-none m-0 focus-visible:ring-0">
+          <AdminOpenShiftsTable />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }

@@ -221,4 +221,15 @@ class DepartmentController extends Controller
 
         return response()->json(['message' => 'Employees assigned successfully.']);
     }
+
+    public function removeEmployee(Request $request, string $id, string $userId)
+    {
+        $department = Department::findOrFail($id);
+        $user = \App\Models\User::where('department_id', $department->id)->findOrFail($userId);
+        $user->update(['department_id' => null]);
+        
+        AuditLogger::log($request, 'delete', 'department_employee', $department->id, ['user_id' => $userId], null);
+        
+        return response()->json(['message' => 'Employee removed from department successfully.']);
+    }
 }

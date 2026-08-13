@@ -38,7 +38,7 @@ export function TodaySummaryCard() {
 
   const day = data?.day;
   const standardSeconds = data?.standard_seconds || 31500;
-  
+
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);
@@ -91,7 +91,19 @@ export function TodaySummaryCard() {
         {getStatusBadge()}
       </CardHeader>
       <CardContent className="pt-4 flex-1 flex flex-col justify-between">
-        <div className="space-y-4">
+        {!day && !isActive && !isOnBreak ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
+            <AppIcon name="teamAttendance" size="xl" className="text-neutral-300 dark:text-neutral-700 mb-3" />
+            <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
+              You haven't clocked in yet
+            </p>
+            <p className="text-xs text-neutral-500 mt-1">
+              Start your shift using the Time Clock widget.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-neutral-500">
               <AppIcon name="teamAttendance" />
@@ -113,7 +125,7 @@ export function TodaySummaryCard() {
                 {breaks.length > 0 && <span className="text-xs text-neutral-400 font-normal ml-1">({breaks.length})</span>}
               </span>
             </div>
-            
+
             {breaks.length > 0 && (
               <div className="pl-6 space-y-1 mt-1 border-l-2 border-neutral-100 dark:border-neutral-800 ml-1.5">
                 {breaks.map((b, i) => (
@@ -137,7 +149,7 @@ export function TodaySummaryCard() {
               {day?.clock_out ? new Date(day.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (isActive ? "In Progress" : "--:--")}
             </span>
           </div>
-          
+
           {isLate && (
             <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 flex items-start gap-2">
               <AppIcon name="warning" className=" text-amber-600 mt-0.5" />
@@ -149,11 +161,11 @@ export function TodaySummaryCard() {
               </div>
             </div>
           )}
-          
+
           {day?.clock_in && !isLate && (
-             <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center">
-                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-1">On Time Arrival <AppIcon name="check" size="xs" /></span>
-             </div>
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-1">On Time Arrival <AppIcon name="check" size="xs" /></span>
+            </div>
           )}
 
         </div>
@@ -181,8 +193,10 @@ export function TodaySummaryCard() {
                 </>
               );
             }}
-          />
-        </div>
+            />
+          </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );

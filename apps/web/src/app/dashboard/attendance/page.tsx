@@ -130,27 +130,67 @@ export default function PersonalAttendancePage() {
                   <div className="max-h-[360px] overflow-y-auto thin-scrollbar p-2">
                     <div className="flex flex-col gap-1">
                       {recentHistory.map((day: any) => (
-                        <div key={day.date} className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full shrink-0 ${day.status === 'present' || day.status === 'overtime' ? 'bg-emerald-500' : day.status === 'late' ? 'bg-amber-500' : day.status === 'leave' ? 'bg-violet-500' : 'bg-neutral-300'}`} />
-                            <div>
-                              <p className="text-sm font-semibold text-neutral-900 dark:text-white">
-                                {format(new Date(day.date), "EEE, MMM d")}
-                              </p>
-                              <p className="text-xs text-neutral-500 capitalize">
-                                {day.status}
-                              </p>
+                        <Dialog key={day.date}>
+                          <DialogTrigger asChild>
+                            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800 cursor-pointer">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-2 h-2 rounded-full shrink-0 ${day.status === 'present' || day.status === 'overtime' ? 'bg-emerald-500' : day.status === 'late' ? 'bg-amber-500' : day.status === 'leave' ? 'bg-violet-500' : 'bg-neutral-300'}`} />
+                                <div>
+                                  <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+                                    {format(new Date(day.date), "EEE, MMM d")}
+                                  </p>
+                                  <p className="text-xs text-neutral-500 capitalize">
+                                    {day.status}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-mono font-medium text-neutral-900 dark:text-white">
+                                  {formatSecs(day.total_seconds)}
+                                </p>
+                                <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
+                                  Worked
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-mono font-medium text-neutral-900 dark:text-white">
-                              {formatSecs(day.total_seconds)}
-                            </p>
-                            <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
-                              Worked
-                            </p>
-                          </div>
-                        </div>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                              <DialogTitle>Day Details</DialogTitle>
+                              <DialogDescription>{format(new Date(day.date), "EEEE, MMMM do, yyyy")}</DialogDescription>
+                            </DialogHeader>
+                            <div className="mt-4 space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800">
+                                  <div className="text-xs text-neutral-500 mb-1 font-semibold uppercase tracking-wider">Worked Hours</div>
+                                  <div className="text-2xl font-mono font-bold text-neutral-900 dark:text-white">
+                                    {formatSecs(day.total_seconds)}
+                                  </div>
+                                </div>
+                                <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl border border-amber-100 dark:border-amber-900/50">
+                                  <div className="text-xs text-amber-600/80 dark:text-amber-500/80 mb-1 font-semibold uppercase tracking-wider">Overtime</div>
+                                  <div className="text-2xl font-mono font-bold text-amber-700 dark:text-amber-400">
+                                    {formatSecs(day.overtime_seconds || 0)}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="space-y-3 bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800">
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-neutral-500 flex items-center gap-2"><AppIcon name="teamAttendance" size="sm" /> Clock In</span>
+                                  <span className="font-semibold text-neutral-900 dark:text-white">{day.clock_in ? new Date(day.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-neutral-500 flex items-center gap-2"><AppIcon name="break" size="sm" /> Break Duration</span>
+                                  <span className="font-semibold text-neutral-900 dark:text-white">{formatSecs(day.break_seconds || 0)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-neutral-500 flex items-center gap-2"><AppIcon name="logout" size="sm" /> Clock Out</span>
+                                  <span className="font-semibold text-neutral-900 dark:text-white">{day.clock_out ? new Date(day.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--"}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       ))}
                     </div>
                   </div>

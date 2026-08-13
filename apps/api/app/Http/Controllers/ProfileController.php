@@ -54,8 +54,9 @@ class ProfileController extends Controller
         $user = $request->user();
         
         // Use S3 (Supabase) Storage for avatars
-        $path = $request->file('avatar')->store('avatars', 's3');
-        $avatarUrl = Storage::disk('s3')->url($path);
+        $disk = config('filesystems.default');
+        $path = $request->file('avatar')->store('avatars', $disk);
+        $avatarUrl = Storage::disk($disk)->url($path);
 
         $before = $user->toArray();
         $user->avatar_url = $avatarUrl;
