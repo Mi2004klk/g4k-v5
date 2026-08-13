@@ -41,5 +41,22 @@ steps:
       - --set-env-vars=AWS_ENDPOINT=https://jtcgtjrqijdnecwtuspv.supabase.co/storage/v1/s3,AWS_BUCKET=g4k,SUPABASE_URL=https://jtcgtjrqijdnecwtuspv.supabase.co,REVERB_HOST=g4k-reverb-XXXXXX-as.a.run.app,REVERB_PORT=443,REVERB_SCHEME=https,REVERB_ALLOWED_ORIGINS=https://g4-k-web.vercel.app,FRONTEND_URL=https://g4-k-web.vercel.app,APP_URL=https://g4-k-web.vercel.app
       - --update-secrets=APP_KEY=g4k-app-key:latest,DB_PASSWORD=g4k-db-password:latest,REVERB_APP_ID=g4k-reverb-app-id:latest,REVERB_APP_KEY=g4k-reverb-app-key:latest,REVERB_APP_SECRET=g4k-reverb-app-secret:latest,AWS_ACCESS_KEY_ID=g4k-s3-key:latest,AWS_SECRET_ACCESS_KEY=g4k-s3-secret:latest,SENTRY_LARAVEL_DSN=g4k-sentry-dsn:latest,MAIL_PASSWORD=g4k-mail-password:latest
 
+  - name: 'google/cloud-sdk:slim'
+    id: SmokeCheck
+    entrypoint: 'sh'
+    args: 
+      - '-c'
+      - |
+        echo "Waiting for service to be fully ready..."
+        sleep 5
+        URL=$(gcloud run services describe ${_SERVICE} --region=${_REGION} --format="value(status.url)")
+        echo "Curling $URL/api/ping"
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL/api/ping" || echo "000")
+        if [ "$HTTP_CODE" -ne 200 ]; then
+          echo "Smoke check failed! HTTP status code: $HTTP_CODE"
+          exit 1
+        fi
+        echo "Smoke check passed!"
+
 images:
   - ${_IMAGE}

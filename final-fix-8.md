@@ -159,7 +159,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   # expect: Access-Control-Allow-Origin: https://<vercel>  +  Access-Control-Allow-Credentials: true
   ```
 
-### 2.3 Boot-500 diagnostic + fix (RC-1)
+### ✅ 2.3 Boot-500 diagnostic + fix (RC-1)
 Candidates to inspect (in order of likelihood) using the T1 stack trace:
 1. **Unrun migrations** (T2) → any model/service referencing a new column/table throws.
 2. `app/Listeners/PostTaskCompletionToGlobalChat.php` — does it reference a `Conversation`/`Message` scope or
@@ -172,7 +172,7 @@ Candidates to inspect (in order of likelihood) using the T1 stack trace:
 - **Hardening:** wrap each `Event::listen`/`Model::observe` registration in `AppServiceProvider::boot()` in
   its own try/catch (log, don't crash boot) so one broken listener never takes down the whole app.
 
-### 2.4 Reverb (RC-4)
+### ✅ 2.4 Reverb (RC-4)
 - Deploy **Reverb as its own Cloud Run service** (`g4k-reverb`) on its own `*.run.app` domain
   (`php artisan reverb:start --host=0.0.0.0 --port=8080`; Cloud Run exposes `$PORT`).
 - On **Vercel**, set all four: `NEXT_PUBLIC_REVERB_HOST=<reverb>.run.app`, `_PORT=443`, `_SCHEME=https`,
@@ -180,7 +180,7 @@ Candidates to inspect (in order of likelihood) using the T1 stack trace:
 - Until Reverb ships, `use-reverb.ts` already degrades gracefully if `NEXT_PUBLIC_REVERB_HOST` is unset —
   so at least the failed-WSS console noise stops.
 
-### 2.5 Deploy pipeline (RC-5)
+### ✅ 2.5 Deploy pipeline (RC-5)
 - **Push** the latest commit to both remotes; confirm Cloud Build + Vercel rebuild for that SHA.
 - Ensure `cloudbuild.yaml` runs `php artisan migrate --force` on deploy (or a pre-deploy Job) — currently
   migrations only run in `start.sh` (per-instance); verify it actually ran on the prod revision.

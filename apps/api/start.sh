@@ -3,7 +3,7 @@ set -e
 cd /var/www/html
 
 # 1. Migrations (idempotent). Runs once per cold start; with min-instances=1 cold starts are rare.
-php artisan migrate --force
+php artisan migrate --force --isolated
 
 # 2. config:cache is INTENTIONALLY skipped — Cloud Run injects env/secrets at runtime, so baking them
 #    at build time would be wrong. route:cache + view:cache already ran at build (Dockerfile).
