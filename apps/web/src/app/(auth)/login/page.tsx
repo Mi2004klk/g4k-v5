@@ -193,7 +193,7 @@ export default function LoginPage() {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  Gen2k Conglomerate (2018) • Milestone 1
+                  Gen2k Conglomerate (2018) • Milestone 3 - Module wiring v2
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
