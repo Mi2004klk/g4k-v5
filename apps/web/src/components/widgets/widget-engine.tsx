@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { ErrorBoundary } from "@g4k/ui/components";
@@ -43,9 +44,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
-  const { data: preferencesData } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data: preferencesData } = useDashboardInit({
     select: (data: any) => data.preferences,
     staleTime: 60_000,
   });

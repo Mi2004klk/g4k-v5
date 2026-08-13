@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
             if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
                 \App\Support\SmtpSettings::apply();
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Ignore during migrations
         }
 
@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
         foreach ($listeners as [$event, $listener]) {
             try {
                 Event::listen($event, $listener);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to register listener $listener for $event: " . $e->getMessage());
             }
         }
@@ -61,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
         foreach ($observers as $model => $observer) {
             try {
                 $model::observe($observer);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to register observer $observer for $model: " . $e->getMessage());
             }
         }

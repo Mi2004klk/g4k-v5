@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
 import { formatDistanceToNow } from "date-fns";
 import { Activity, AlertTriangle, Loader2 } from "lucide-react";
@@ -10,9 +11,7 @@ import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 import { WidgetInfo } from "./widget-info";
 
 export function RecentActivityWidget() {
-  const { data, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data, isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => data.metrics,
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,

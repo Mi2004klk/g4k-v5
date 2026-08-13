@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { Loader2, Megaphone, Trash2, Pin, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -20,9 +21,7 @@ export function AnnouncementBoard() {
   const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
-  const { data: announcements = [], isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data: announcements = [], isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => data.announcements,
     staleTime: 60_000,
     placeholderData: keepPreviousData,

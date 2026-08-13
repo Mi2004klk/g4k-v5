@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Download, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { getAuthToken } from "@/lib/auth-store";
@@ -42,7 +42,8 @@ export default function OrgLeaveApprovalsPage() {
       params.append("page", approvalsPage.toString());
       params.append("per_page", approvalsPerPage.toString());
       return apiFetch(`/leave-requests?${params.toString()}`);
-    }
+    },
+    placeholderData: keepPreviousData,
   });
 
   const { data: historyData, isLoading: isLoadingHistory } = useQuery({
@@ -57,7 +58,8 @@ export default function OrgLeaveApprovalsPage() {
       params.append("per_page", historyPerPage.toString());
       return apiFetch(`/leave-requests/admin/history?${params.toString()}`);
     },
-    enabled: tab === "history"
+    enabled: tab === "history",
+    placeholderData: keepPreviousData,
   });
 
   const records = useMemo(() => {

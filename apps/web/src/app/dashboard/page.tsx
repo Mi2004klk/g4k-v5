@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { queryKeys } from "@/lib/query-keys";
 import { apiFetch } from "@/lib/api-client";
 import { format } from "date-fns";
@@ -54,10 +55,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   
-  const { data: initData } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    staleTime: 5 * 60_000,
-  });
+  const { data: initData } = useDashboardInit();
   
   const activeRole = initData?.role || user?.active_role;
 

@@ -53,8 +53,19 @@ export default function TasksPage() {
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.tasks,
-    queryFn: () => apiFetch("/tasks?per_page=100"),
+    queryKey: [...queryKeys.tasks, statusFilter, searchQuery, assigneeFilter],
+    queryFn: () => {
+      const p = new URLSearchParams();
+      p.append("per_page", "100");
+      if (statusFilter !== "all") p.append("status", statusFilter);
+      if (searchQuery) p.append("search", searchQuery);
+      if (assigneeFilter === "me") {
+        if (user?.id) p.append("assignee_id", user.id.toString());
+      } else if (assigneeFilter !== "all") {
+        p.append("assignee_id", assigneeFilter);
+      }
+      return apiFetch(`/tasks?${p.toString()}`);
+    },
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_TASKS,
   });
@@ -162,15 +173,7 @@ export default function TasksPage() {
   });
 
   const tasks = data?.data?.data || [];
-
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((t: any) => {
-      if (statusFilter !== "all" && t.status !== statusFilter) return false;
-      if (assigneeFilter === "me" && t.assignee_id !== user?.id) return false;
-      if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      return true;
-    });
-  }, [tasks, statusFilter, searchQuery]);
+  const filteredTasks = tasks; // Using server-side filtering now
 
   const columns: ColumnDef<any>[] = [
     {

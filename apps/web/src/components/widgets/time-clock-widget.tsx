@@ -9,6 +9,7 @@ import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { offlineEngine } from "@/lib/offline-engine";
 import {
   ConfirmDialog,
@@ -40,9 +41,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const startBreak = useTimerStore((s) => s.startBreak);
   const endBreak = useTimerStore((s) => s.endBreak);
 
-  const { data: todayData, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data: todayData, isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => data.attendance_today,
     placeholderData: keepPreviousData,
   });

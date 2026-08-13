@@ -12,6 +12,7 @@ import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
+import { keepPreviousData } from "@tanstack/react-query";
 import { Input, Button, Checkbox, DataTable, StatusBadge, Combobox, FilterBar } from "@g4k/ui/components";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
@@ -97,8 +98,9 @@ export function AdminAttendanceTable() {
       params.append("per_page", perPage.toString());
       return apiFetch(`/attendance/admin/overview?${params.toString()}`);
     },
+    placeholderData: keepPreviousData,
     staleTime: STALE_TIME_ATTENDANCE,
-    refetchInterval: isConnected ? false : 120_000,
+    refetchInterval: isConnected ? false : 60_000,
   });
 
   const records = data?.data?.data || [];

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { ClipboardList, Check, X, AlertTriangle, Calendar, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
@@ -15,9 +16,7 @@ export function PendingApprovalsWidget() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
 
-  const { data: requests = [], isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data: requests = [], isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => data.pending_approvals,
     placeholderData: keepPreviousData,
   });

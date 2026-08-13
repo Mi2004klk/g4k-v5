@@ -41,6 +41,7 @@ import {
 import { toast } from "sonner";
 import { SheetDescription, Button } from "@g4k/ui/components";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { useTheme } from "next-themes";
@@ -155,9 +156,7 @@ export default function DashboardLayout({
   const setDensity = useAuthStore((s) => s.setDensity);
   const { theme, setTheme } = useTheme();
 
-  const { data: initData, refetch: refetchPins } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data: initData, refetch: refetchPins } = useDashboardInit({
     staleTime: 5 * 60_000,
   });
   const preferencesData = initData?.preferences ? { preferences: initData.preferences } : null;
@@ -171,7 +170,7 @@ export default function DashboardLayout({
   useEffect(() => {
     // Prefetch consolidated dashboard init data on cold load
     if (!authUser) return;
-    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init") });
+    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init").then(r => r.data), staleTime: 5 * 60_000 });
   }, [authUser, queryClient]);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Skeleton } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
@@ -9,9 +10,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 export function EmployeeTaskProgressWidget() {
-  const { data, isLoading } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data, isLoading } = useDashboardInit({
     select: (data: any) => data.metrics?.recent_task_progress,
     placeholderData: keepPreviousData,
   });

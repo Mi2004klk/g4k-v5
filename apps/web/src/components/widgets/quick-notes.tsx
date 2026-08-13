@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { StickyNote, Plus, Trash2, AlertTriangle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
@@ -19,9 +20,7 @@ export function QuickNotes() {
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
-  const { data: notes = [], isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.dashboardInit,
-    queryFn: () => apiFetch("/dashboard/init"),
+  const { data: notes = [], isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => data.quick_notes,
     placeholderData: keepPreviousData,
   });
