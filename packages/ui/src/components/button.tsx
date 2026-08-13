@@ -70,33 +70,21 @@ export const DotLoader = () => (
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, isLoading, children, disabled, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
-    
-    const content = asChild ? (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        disabled={isLoading || disabled}
-        {...props}
-      >
-        {children}
-      </Comp>
-    ) : (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        disabled={isLoading || disabled}
-        {...props}
-      >
-        {isLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <DotLoader />
-          </div>
-        ) : null}
-        <span className={cn("inline-flex items-center gap-2", isLoading && "opacity-0")}>
+    if (asChild) {
+      return (
+        <Slot className={cn(buttonVariants({ variant, size, className }))}
+              ref={ref as any} {...props}>
           {children}
-        </span>
-      </Comp>
+        </Slot>
+      );
+    }
+    
+    const content = (
+      <button className={cn(buttonVariants({ variant, size, className }))} ref={ref}
+              disabled={isLoading || disabled} {...props}>
+        {isLoading && <span className="absolute inset-0 flex items-center justify-center"><DotLoader/></span>}
+        <span className={cn("inline-flex items-center gap-2", isLoading && "opacity-0")}>{children}</span>
+      </button>
     );
 
     if (variant === "primary" && size === "lg" && !asChild) {

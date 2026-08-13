@@ -21,6 +21,8 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:3000'),
+        'https://g4k-v4.vercel.app',
+        'https://g4k-v4-p24bp49v9-naval-treasure-group.vercel.app',
     ],
 
     'allowed_origins_patterns' => [
