@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
+    <div className="h-full min-h-screen flex items-center justify-center p-4 bg-transparent font-sans">
       <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-card dark:bg-neutral-900 rounded-xl relative">
         <div className="w-full h-28 bg-primary relative flex items-center justify-center pt-2 pb-2">
            <Image

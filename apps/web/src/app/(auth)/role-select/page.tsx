@@ -72,7 +72,7 @@ export default function RoleSelectPage() {
 
   if (!user || (user.roles && user.roles.length === 1)) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
         <div className="flex space-x-1.5 items-center justify-center">
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -84,7 +84,7 @@ export default function RoleSelectPage() {
 
   if (!user.roles || user.roles.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-transparent font-sans">
         <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 p-6 text-center bg-card dark:bg-neutral-900 rounded-xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-xl font-bold font-display text-neutral-900 dark:text-white">No Workspace Assigned</CardTitle>
@@ -106,7 +106,7 @@ export default function RoleSelectPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950 font-sans">
+    <div className="h-full min-h-screen flex items-center justify-center p-4 bg-transparent font-sans">
       <Card className="w-full max-w-md shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-card dark:bg-neutral-900 rounded-xl relative">
         <div className="w-full h-28 bg-primary relative flex items-center justify-center pt-2 pb-2">
            <Image

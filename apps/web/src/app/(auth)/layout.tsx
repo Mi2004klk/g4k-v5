@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
+import { Grainient } from "@/components/ui/grainient";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -30,15 +31,29 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   // Optionally hide content while redirecting from an auth page
   if (mounted && token && user && (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password')) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-card dark:bg-neutral-950">
-        <div className="flex space-x-1.5 items-center justify-center">
-           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 z-0">
+          <Grainient />
+        </div>
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4 bg-transparent">
+          <div className="flex space-x-1.5 items-center justify-center">
+            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       </div>
     );
   }
 
-  return <>{children}</>;
+  return (
+    <div className="relative min-h-screen">
+      <div className="absolute inset-0 z-0">
+        <Grainient />
+      </div>
+      <div className="relative z-10 h-full w-full">
+        {children}
+      </div>
+    </div>
+  );
 }

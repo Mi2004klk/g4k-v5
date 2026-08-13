@@ -92,7 +92,7 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background font-sans">
+    <div className="h-full min-h-screen flex items-center justify-center p-4 bg-transparent font-sans">
       <Card className="w-full max-w-md shadow-e1 border border-border overflow-hidden bg-card rounded-xl relative">
         <div className="w-full h-28 bg-primary relative flex items-center justify-center pt-2 pb-2">
            <Image
