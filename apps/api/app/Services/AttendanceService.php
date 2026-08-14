@@ -199,15 +199,33 @@ class AttendanceService
         $graceSeconds = $grace * 60;
 
         if ($firstClockIn) {
-            $scheduledStart = Carbon::parse($date . ' ' . $startTimeStr);
+            $companyTz = \App\Models\CompanyProfile::first()?->timezone ?? 'Asia/Kolkata';
+            $scheduledStart = Carbon::createFromFormat('Y-m-d H:i:s', $date . ' ' . $startTimeStr, $companyTz);
             if ($firstClockIn->timestamp > $scheduledStart->timestamp + $graceSeconds) {
                 $lateSeconds = $firstClockIn->timestamp - $scheduledStart->timestamp;
                 $lateMinutes = (int) floor($lateSeconds / 60);
             }
         }
 
+        $isHoliday = DB::table('holidays')->where(function($q) use ($date) {
+            $q->where('date', $date);
+            $monthDay = Carbon::parse($date)->format('m-d');
+            if ($monthDay === '02-28' && !Carbon::parse($date)->isLeapYear()) {
+                $q->orWhere(function($q2) {
+                    $q2->where('recurring', true)->whereRaw("TO_CHAR(date, 'MM-DD') IN ('02-28', '02-29')");
+                });
+            } else {
+                $q->orWhere(function($q2) use ($monthDay) {
+                    $q2->where('recurring', true)->whereRaw("TO_CHAR(date, 'MM-DD') = ?", [$monthDay]);
+                });
+            }
+        })->exists();
+
         $status = 'absent';
-        if ($firstClockIn !== null) {
+        if ($isHoliday) {
+            $status = 'holiday';
+            $lateMinutes = 0;
+        } elseif ($firstClockIn !== null) {
             $status = ($lateMinutes > 0) ? 'late' : 'present';
         }
 

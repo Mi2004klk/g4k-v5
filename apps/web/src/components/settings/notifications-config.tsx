@@ -12,7 +12,7 @@ export function NotificationsConfig() {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Record<string, string[]>>({});
 
-  const { data: settings = [], isLoading } = useQuery({
+  const { data: settings = [], isLoading, isError, refetch } = useQuery({
     queryKey: [...queryKeys.settings, "notifications"],
     queryFn: () => apiFetch("/settings/grouped").then((res: any) => res["notifications"] || []),
   });
@@ -65,7 +65,19 @@ export function NotificationsConfig() {
     });
   };
 
-  if (isLoading) return <div className="p-4 text-center">Loading...</div>;
+  if (isLoading) return <Skeleton className="w-full h-80 rounded-xl" />;
+
+  if (isError) {
+    return (
+      <Card className="p-6 text-center space-y-3 border border-rose-200 bg-rose-50/50">
+        <AppIcon name="warning" size="xl" className="mx-auto text-rose-500" />
+        <p className="text-xs font-semibold text-rose-700">Failed to load notification preferences.</p>
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-xs">
+          Retry
+        </Button>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">

@@ -166,19 +166,24 @@ class OfflineEngine {
   async syncAll() {
     if (this.syncing || !this.dbPromise) return;
     this.syncing = true;
+    let syncedCount = 0;
     try {
-      await this.syncPendingPunches();
-      await this.syncPendingRequests();
+      syncedCount += await this.syncPendingPunches();
+      syncedCount += await this.syncPendingRequests();
+      if (syncedCount > 0 && typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('offline-sync-complete'));
+      }
     } finally {
       this.syncing = false;
       this.updateQueueCount();
     }
   }
 
-  private async syncPendingPunches() {
-    if (!this.dbPromise) return;
+  private async syncPendingPunches(): Promise<number> {
+    if (!this.dbPromise) return 0;
     const db = await this.dbPromise;
     const pending = await db.getAllFromIndex('punches', 'by-status', 'pending');
+    let count = 0;
 
     for (const punch of pending) {
       try {
@@ -193,6 +198,7 @@ class OfflineEngine {
 
         punch.syncStatus = 'synced';
         await db.put('punches', punch);
+        count++;
       } catch (err: any) {
         if (err.status && err.status >= 400 && err.status < 500) {
           punch.syncStatus = 'failed';
@@ -208,12 +214,14 @@ class OfflineEngine {
         }
       }
     }
+    return count;
   }
 
-  private async syncPendingRequests() {
-    if (!this.dbPromise) return;
+  private async syncPendingRequests(): Promise<number> {
+    if (!this.dbPromise) return 0;
     const db = await this.dbPromise;
     const pending = await db.getAllFromIndex('requests', 'by-status', 'pending');
+    let count = 0;
 
     for (const req of pending) {
       // Check retry ladder
@@ -229,6 +237,7 @@ class OfflineEngine {
         await apiFetch(req.endpoint, req.options, true);
         req.syncStatus = 'synced';
         await db.put('requests', req);
+        count++;
       } catch (err: any) {
         req.retryCount++;
         
@@ -241,6 +250,7 @@ class OfflineEngine {
         await db.put('requests', req);
       }
     }
+    return count;
   }
 }
 

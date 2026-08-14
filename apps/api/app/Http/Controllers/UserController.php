@@ -152,13 +152,6 @@ class UserController extends Controller
         return response()->json($user, 201);
     }
 
-    public function show(string $id)
-    {
-        $user = User::with(['department', 'team', 'designation', 'roleAssignments'])->findOrFail($id);
-        $user->makeHidden(['blood_group', 'emergency_contact', 'alternate_mobile', 'preferences']);
-        return response()->json($user);
-    }
-
     public function update(UpdateUserRequest $request, string $id)
     {
         $user = User::findOrFail($id);
@@ -206,6 +199,21 @@ class UserController extends Controller
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'update', 'user', $user->id, $before, $user->toArray());
+
+        return response()->json($user);
+    }
+
+    public function show(Request $request, string $id)
+    {
+        $user = User::with(['department', 'team', 'designation', 'roleAssignments'])->findOrFail($id);
+
+        $isSelf = (int) $request->user()->id === (int) $user->id;
+        $canViewAny = $this->hasCapability($request, 'users.hr.manage');
+        $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
+
+        if (!$isSelf && !$canViewAny && !$canViewEmployee) {
+            return response()->json(['message' => 'Unauthorized to view this user profile.'], 403);
+        }
 
         return response()->json($user);
     }

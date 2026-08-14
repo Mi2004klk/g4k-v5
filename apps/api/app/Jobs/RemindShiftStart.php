@@ -18,11 +18,6 @@ class RemindShiftStart implements ShouldQueue
         $today = now()->toDateString();
         $now = now();
         
-        // Skip on Sundays
-        if (now()->isSunday()) {
-            return;
-        }
-
         // Get offset setting (e.g. 15 minutes before shift)
         $offsetSetting = \App\Models\Setting::where('key', 'reminders.shift_offset')->value('value') ?? 15;
         $offsetMinutes = (int) $offsetSetting;
@@ -47,11 +42,24 @@ class RemindShiftStart implements ShouldQueue
             ->toArray();
 
         $notifications = [];
+        $dayIso = now()->dayOfWeekIso;
 
         foreach ($users as $user) {
             $schedule = ($user->work_schedule_id && $workSchedules->has($user->work_schedule_id))
                 ? $workSchedules->get($user->work_schedule_id)
                 : $defaultSchedule;
+
+            $workingDays = [1, 2, 3, 4, 5, 6];
+            if ($schedule && !empty($schedule->working_days)) {
+                $decoded = is_string($schedule->working_days) ? json_decode($schedule->working_days, true) : $schedule->working_days;
+                if (is_array($decoded)) {
+                    $workingDays = array_map('intval', $decoded);
+                }
+            }
+
+            if (!in_array($dayIso, $workingDays)) {
+                continue;
+            }
                 
             $startTimeStr = $schedule->start_time ?? '09:00:00';
             $shiftStart = Carbon::parse($today . ' ' . $startTimeStr);
@@ -77,8 +85,16 @@ class RemindShiftStart implements ShouldQueue
             }
         }
 
-        if (!empty($notifications)) {
-            Notification::insert($notifications);
+        foreach ($notifications as $n) {
+            \App\Services\NotificationService::send(
+                $n['user_id'],
+                $n['type'] ?? 'info',
+                $n['title'],
+                $n['body'],
+                $n['data'] ?? null,
+                $n['link'] ?? null,
+                $n['priority'] ?? 'normal'
+            );
         }
     }
 }

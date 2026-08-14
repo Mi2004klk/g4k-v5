@@ -20,7 +20,7 @@ export function QuickTaskWidget() {
     queryFn: () => apiFetch("/users?limit=50"),
   });
 
-  const users = usersData?.data || [];
+  const users = Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []);
 
   const createTaskMutation = useMutation({
     mutationFn: (payload: { title: string; assignee_id: string; notify_global_chat: boolean }) =>
@@ -33,7 +33,7 @@ export function QuickTaskWidget() {
       setTitle("");
       setAssigneeId("");
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardMetrics });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create task");

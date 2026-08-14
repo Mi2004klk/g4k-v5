@@ -38,7 +38,11 @@ class AnnouncementController extends Controller
             'pinned_at' => !empty($validated['pinned']) ? now() : null,
         ]);
 
-        broadcast(new AnnouncementCreated($announcement))->toOthers();
+        try {
+            broadcast(new AnnouncementCreated($announcement))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed to broadcast AnnouncementCreated event: " . $e->getMessage());
+        }
         
         \Illuminate\Support\Facades\Cache::forget("announcements_all");
 

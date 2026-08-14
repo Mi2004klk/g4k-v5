@@ -11,6 +11,7 @@ const PROTECTED: Record<string, string> = {
   "/dashboard/audit": "audit.view",
   "/dashboard/admin/attendance": "admin.view-all-attendance",
   "/dashboard/admin/reports": "reports.manage",
+  "/dashboard/reports": "reports.view",
 };
 
 export function middleware(req: NextRequest) {
@@ -26,6 +27,15 @@ export function middleware(req: NextRequest) {
   // If user is accessing an auth route but already has a token, send them to dashboard
   if (isAuthRoute && token) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  const isProtectedSessionRoute =
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/role-select") ||
+    pathname.startsWith("/change-password");
+
+  if (isProtectedSessionRoute && !token) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // Only intercept /dashboard paths from here on
@@ -55,4 +65,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/dashboard/:path*", "/login", "/forgot-password", "/reset-password"] };
+export const config = { matcher: ["/dashboard/:path*", "/login", "/forgot-password", "/reset-password", "/onboarding", "/role-select", "/change-password"] };

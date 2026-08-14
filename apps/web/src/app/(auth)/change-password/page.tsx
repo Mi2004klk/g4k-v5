@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -41,6 +41,12 @@ export default function ChangePasswordPage() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const token = useAuthStore((s) => s.token);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token && !user) {
+      router.replace("/login");
+    }
+  }, [token, user]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(changeSchema),

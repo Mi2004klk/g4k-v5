@@ -30,6 +30,8 @@ function DensityProvider() {
   return null;
 }
 
+import { queryKeys } from "@/lib/query-keys";
+
 export function Providers({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
@@ -57,6 +59,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         },
         mutationCache: new MutationCache({
           onError: (error: any, variables: any, context: any, mutation: any) => {
+            if (mutation?.meta?.suppressToast) return;
             const status = error?.status;
             if (status >= 500) {
               import("sonner").then(({ toast }) => 
@@ -67,13 +70,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
                   },
                 })
               );
-            } else {
-              import("sonner").then(({ toast }) => toast.error(error?.message || "An unexpected error occurred"));
             }
           },
         }),
       })
   );
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleSyncComplete = () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+    };
+    window.addEventListener("offline-sync-complete", handleSyncComplete);
+    return () => window.removeEventListener("offline-sync-complete", handleSyncComplete);
+  }, [queryClient]);
 
   return (
     <NextThemesProvider

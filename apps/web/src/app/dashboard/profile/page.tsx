@@ -73,7 +73,7 @@ export default function ProfilePage() {
 
   const { data: designations } = useQuery({
     queryKey: ["designations"],
-    queryFn: () => apiFetch("/designations"),
+    queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])),
   });
 
   const { data: sessions } = useQuery({

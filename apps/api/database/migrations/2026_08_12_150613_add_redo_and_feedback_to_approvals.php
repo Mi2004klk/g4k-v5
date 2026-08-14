@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         // Add feedback column
-        Schema::table('approvals', function (Blueprint $table) {
-            $table->text('feedback')->nullable();
-        });
+        if (!Schema::hasColumn('approvals', 'feedback')) {
+            Schema::table('approvals', function (Blueprint $table) {
+                $table->text('feedback')->nullable();
+            });
+        }
 
         // Postgres enum check constraint is named table_column_check
         DB::statement("ALTER TABLE approvals DROP CONSTRAINT IF EXISTS approvals_decision_check");

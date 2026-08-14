@@ -9,9 +9,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('leave_requests', function (Blueprint $table) {
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-        });
+        if (!Schema::hasColumn('leave_requests', 'status')) {
+            Schema::table('leave_requests', function (Blueprint $table) {
+                $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            });
+        }
 
         // Sync existing statuses using a subquery (portable across SQLite & Postgres;
         // the previous `UPDATE ... FROM ... alias` syntax is Postgres-only and broke tests).

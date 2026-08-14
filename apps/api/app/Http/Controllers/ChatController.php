@@ -68,8 +68,9 @@ class ChatController extends Controller
         $type = $validated['type'] ?? 'text';
 
         if ($request->hasFile('attachment')) {
-            $path = $request->file('attachment')->store('chat_attachments', 'supabase');
-            $attachmentUrl = \Illuminate\Support\Facades\Storage::disk('supabase')->url($path);
+            $disk = config('filesystems.default');
+            $path = $request->file('attachment')->store('chat_attachments', $disk);
+            $attachmentUrl = \Illuminate\Support\Facades\Storage::disk($disk)->url($path);
             
             if (!isset($validated['type'])) {
                 $mimeType = $request->file('attachment')->getMimeType();
@@ -101,7 +102,11 @@ class ChatController extends Controller
             }
         }
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessageSent event: ' . $e->getMessage());
+        }
 
         return response()->json($message->load(['sender', 'replyTo']));
     }

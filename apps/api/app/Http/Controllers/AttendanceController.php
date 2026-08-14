@@ -723,7 +723,7 @@ class AttendanceController extends Controller
     {
         $validated = $request->validated();
 
-        $day = AttendanceDay::where('id', $validated['attendance_day_id'])->first();
+        $day = AttendanceDay::where('id', $validated['attendance_day_id'])->firstOrFail();
         $actor = $request->user();
 
         // HR-CORRECT: HR may only correct attendance within their own team/department.
@@ -905,8 +905,16 @@ class AttendanceController extends Controller
             }
         }
 
-        if (!empty($notifications)) {
-            \App\Models\Notification::insert($notifications);
+        foreach ($notifications as $n) {
+            \App\Services\NotificationService::send(
+                $n['user_id'],
+                $n['type'] ?? 'warning',
+                $n['title'],
+                $n['body'],
+                $n['data'] ?? null,
+                $n['link'] ?? null,
+                $n['priority'] ?? 'normal'
+            );
         }
 
         return response()->json(['message' => 'Notifications sent successfully.']);

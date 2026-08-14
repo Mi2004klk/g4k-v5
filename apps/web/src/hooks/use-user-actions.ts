@@ -17,6 +17,7 @@ export function useUserActions() {
       setIsEditOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: any) => toast.error(err.message || "Failed to update user."),
   });
@@ -28,6 +29,7 @@ export function useUserActions() {
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: any) => toast.error(err.message || "Failed to update status."),
   });
@@ -39,6 +41,7 @@ export function useUserActions() {
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: ["user", variables] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: any) => toast.error(err.message || "Failed to delete user."),
   });
@@ -50,6 +53,7 @@ export function useUserActions() {
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: ["user", variables] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: any) => toast.error(err.message || "Failed to restore user."),
   });

@@ -83,6 +83,19 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'You already have a pending or approved leave request overlapping these dates.'], 422);
         }
 
+        // Leave Balance check
+        $startDate = \Carbon\Carbon::parse($validated['start_date']);
+        $endDate = \Carbon\Carbon::parse($validated['end_date']);
+        $requestedDays = $startDate->diffInDays($endDate) + 1;
+        $balance = \App\Models\LeaveBalance::getOrCreate($userId, $validated['type'], (int) $startDate->format('Y'));
+        
+        if (($balance->allowed - $balance->used) < $requestedDays) {
+            $available = max(0, $balance->allowed - $balance->used);
+            return response()->json([
+                'message' => "Insufficient leave balance for requested {$validated['type']} leave. Available: {$available} day(s), Requested: {$requestedDays} day(s)."
+            ], 422);
+        }
+
         try {
             $leave = DB::transaction(function() use ($userId, $validated) {
                 $leave = LeaveRequest::create([
@@ -120,7 +133,9 @@ class LeaveRequestController extends Controller
         ]);
 
         $approval = Approval::where('approvable_type', LeaveRequest::class)
-            ->where('id', $id)
+            ->where(function ($query) use ($id) {
+                $query->where('id', $id)->orWhere('approvable_id', $id);
+            })
             ->firstOrFail();
 
         $user = $request->user();
@@ -139,7 +154,7 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'Failed to process decision: ' . $e->getMessage()], 500);
         }
 
-        $leaveRequest = LeaveRequest::find($id);
+        $leaveRequest = LeaveRequest::find($approval->approvable_id);
         if ($leaveRequest) {
             $today = \Carbon\Carbon::now()->toDateString();
             $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();

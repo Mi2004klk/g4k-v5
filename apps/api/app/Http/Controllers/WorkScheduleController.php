@@ -10,7 +10,7 @@ class WorkScheduleController extends Controller
     public function index()
     {
         $schedules = DB::table('work_schedules')->get();
-        return response()->json($schedules);
+        return response()->json(['data' => $schedules]);
     }
 
     public function update(Request $request, int $id)

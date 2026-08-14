@@ -195,11 +195,14 @@ class AuthController extends Controller
 
         \App\Services\AuditLogger::log($request, 'login', 'User', $user->id, null, null);
 
+        $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($primaryRole);
+
         return response()->json([
             'token' => $accessToken,
             'refresh_token' => $refreshToken,
             'user' => $user,
             'active_role' => $primaryRole,
+            'capabilities' => $capabilities,
             'must_change_password' => (bool)$user->must_change_password,
             'password_expired' => $passwordExpired,
             'onboarded' => !is_null($user->onboarded_at),
@@ -218,7 +221,7 @@ class AuthController extends Controller
 
         $tokenInstance = PersonalAccessToken::findToken($rawRefreshToken);
 
-        if (!$tokenInstance || !$tokenInstance->can('refresh')) {
+        if (!$tokenInstance || $tokenInstance->expires_at?->isPast() || !in_array('refresh', $tokenInstance->abilities ?? [])) {
             return response()->json(['message' => 'Invalid or expired refresh token'], 401);
         }
 
@@ -229,17 +232,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'User not found'], 401);
         }
 
-        // AUTH-8: Explicitly run the onboarding checks inside refresh
-        if (is_null($user->onboarded_at)) {
-            return response()->json(['message' => 'You must complete onboarding before continuing.', 'onboarding_required' => true], 403);
-        }
-
-        // Revoke old refresh token (Token Rotation)
+        // Revoke the single used refresh token (token rotation)
         $tokenInstance->delete();
 
+        // Load roles and settings
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
         $primaryRole = $user->active_role ?? $rolesCollection->first() ?? 'employee';
+
+        $deviceName = $request->device_name ?? 'Unknown Device';
 
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
             return \Illuminate\Support\Facades\DB::table('settings')
@@ -265,15 +266,16 @@ class AuthController extends Controller
             }
         }
 
-        // Issue new pair
-        $newAccessTokenObj = $user->createToken('Refreshed Session', ['role:' . $primaryRole], now()->addMinutes($accessTtl));
+        // Issue new Access Token
+        $newAccessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole], now()->addMinutes($accessTtl));
         $newAccessTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
         ])->saveQuietly();
         $newAccessToken = $newAccessTokenObj->plainTextToken;
 
-        $newRefreshTokenObj = $user->createToken('Refreshed Session_refresh', ['refresh'], now()->addDays($refreshTtl));
+        // Issue new Refresh Token
+        $newRefreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl));
         $newRefreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -292,12 +294,14 @@ class AuthController extends Controller
         }
 
         $cookie = $this->createAuthCookies($newRefreshToken, $refreshTtl);
+        $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($primaryRole);
 
         return response()->json([
             'token' => $newAccessToken,
             'refresh_token' => $newRefreshToken,
             'user' => $user,
             'active_role' => $primaryRole,
+            'capabilities' => $capabilities,
             'must_change_password' => (bool)$user->must_change_password,
             'password_expired' => $passwordExpired,
             'onboarded' => !is_null($user->onboarded_at),
@@ -331,10 +335,13 @@ class AuthController extends Controller
         $user->active_role = $request->role;
         $user->save();
 
+        $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($request->role);
+
         return response()->json([
             'token' => $token,
             'user' => $user,
-            'active_role' => $request->role
+            'active_role' => $request->role,
+            'capabilities' => $capabilities,
         ]);
     }
 

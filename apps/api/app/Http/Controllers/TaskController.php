@@ -97,6 +97,17 @@ class TaskController extends Controller
             'metadata' => ['title' => $task->title],
         ]);
 
+        if (!empty($task->assignee_id)) {
+            \App\Services\NotificationService::send(
+                $task->assignee_id,
+                'info',
+                'New Task Assigned',
+                "You have been assigned a new task: {$task->title}",
+                ['task_id' => $task->id],
+                "/dashboard/tasks"
+            );
+        }
+
         if ($request->boolean('notify_global_chat')) {
             $globalConv = \App\Models\Conversation::where('scope', 'global')->first();
             if ($globalConv) {
@@ -107,7 +118,11 @@ class TaskController extends Controller
                     'body' => "📋 **Quick Task Assigned**: \"{$task->title}\" to {$assigneeName}",
                     'type' => 'text',
                 ]);
-                broadcast(new \App\Events\MessageSent($msg))->toOthers();
+                try {
+                    broadcast(new \App\Events\MessageSent($msg))->toOthers();
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Failed to broadcast MessageSent event: " . $e->getMessage());
+                }
             }
         }
 
@@ -165,9 +180,24 @@ class TaskController extends Controller
                 
                 $shouldNotify = $request->input('notify_global_chat', true);
                 if ($shouldNotify) {
-                    event(new \App\Events\TaskCompleted($task, $request->user()));
+                    try {
+                        event(new \App\Events\TaskCompleted($task, $request->user()));
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning("Failed to dispatch TaskCompleted event: " . $e->getMessage());
+                    }
                 }
             }
+        }
+
+        if (isset($validated['assignee_id']) && $validated['assignee_id'] != $task->assignee_id && !empty($validated['assignee_id'])) {
+            \App\Services\NotificationService::send(
+                (int) $validated['assignee_id'],
+                'info',
+                'Task Assigned to You',
+                "You have been assigned the task: {$task->title}",
+                ['task_id' => $task->id],
+                "/dashboard/tasks"
+            );
         }
 
         $task->update($validated);

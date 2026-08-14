@@ -27,6 +27,7 @@ import {
 } from "./dropdown-menu"
 import { Pagination } from "./pagination"
 import { EmptyState } from "./empty-state"
+import { Skeleton } from "./skeleton"
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -46,6 +47,8 @@ export interface DataTableProps<TData, TValue> {
   totalPages?: number
   onPageChange?: (page: number) => void
   onPerPageChange?: (perPage: number) => void
+  isLoading?: boolean
+  skeletonRows?: number
   className?: string
 }
 
@@ -208,6 +211,8 @@ export function DataTable<TData, TValue>({
   totalPages,
   onPageChange,
   onPerPageChange,
+  isLoading,
+  skeletonRows = 5,
   className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
@@ -353,7 +358,17 @@ export function DataTable<TData, TValue>({
                 ))}
               </thead>
               <tbody className="divide-y divide-border/60 bg-background">
-                {rows.length > 0 ? (
+                {isLoading ? (
+                  Array.from({ length: skeletonRows }).map((_, rIdx) => (
+                    <tr key={`skel-row-${rIdx}`} className="animate-pulse">
+                      {tableColumns.map((col, cIdx) => (
+                        <td key={`skel-cell-${cIdx}`} className={cn("p-4", density === "compact" ? "py-2 px-3" : "py-3.5 px-4")}>
+                          <Skeleton className="h-4 w-3/4 rounded" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : rows.length > 0 ? (
                   rows.map((row) => (
                     <tr
                       key={row.id}
@@ -392,7 +407,14 @@ export function DataTable<TData, TValue>({
           </div>
         ) : (
           <div className="w-full p-3 space-y-3">
-            {rows.length > 0 ? (
+            {isLoading ? (
+              Array.from({ length: skeletonRows }).map((_, rIdx) => (
+                <div key={`skel-m-row-${rIdx}`} className="rounded-lg border border-border bg-card p-4 space-y-2 animate-pulse">
+                  <Skeleton className="h-4 w-1/2 rounded" />
+                  <Skeleton className="h-3 w-3/4 rounded" />
+                </div>
+              ))
+            ) : rows.length > 0 ? (
               rows.map((row) => (
                 <div
                   key={row.id}

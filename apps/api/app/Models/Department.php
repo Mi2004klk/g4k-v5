@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
      */
 class Department extends Model
 {
-    use \App\Traits\GeneratesAutoNumber;
+    use SoftDeletes, \App\Traits\GeneratesAutoNumber;
 
     protected $fillable = ['department_id', 'company_id', 'name', 'description', 'is_active', 'archived_at'];
     protected $casts = ['archived_at' => 'datetime'];

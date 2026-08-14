@@ -9,6 +9,20 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_USERS } from "@/lib/query-keys";
 
+const SEGMENT_LABELS: Record<string, string> = {
+  admin: "Administration",
+  org: "Organization",
+  users: "Employee Directory",
+  leave: "Leave Management",
+  attendance: "Attendance Records",
+  settings: "Settings",
+  projects: "Projects",
+  tasks: "Task Management",
+  reports: "Reports & Analytics",
+  chat: "Team Chat",
+  profile: "My Profile",
+};
+
 function BreadcrumbSegment({
   segment,
   parentSegment,
@@ -20,8 +34,7 @@ function BreadcrumbSegment({
   url: string;
   isLast: boolean;
 }) {
-  let formatted = segment.replace(/-/g, " ");
-  if (segment === "users") formatted = "Employee Management";
+  let formatted = SEGMENT_LABELS[segment] || segment.replace(/-/g, " ");
 
   const isNumericId = !isNaN(Number(segment));
   const isUserSegment = isNumericId && parentSegment === "users";

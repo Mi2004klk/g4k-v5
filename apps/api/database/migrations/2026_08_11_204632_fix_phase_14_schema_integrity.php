@@ -13,9 +13,15 @@ return new class extends Migration
     public function up(): void
     {
         // DB-4: Missing Foreign Key
-        Schema::table('attendance_events', function (Blueprint $table) {
-            $table->foreign('project_id')->references('id')->on('projects')->nullOnDelete();
-        });
+        if (Schema::hasTable('attendance_events') && Schema::hasTable('projects')) {
+            try {
+                Schema::table('attendance_events', function (Blueprint $table) {
+                    $table->foreign('project_id')->references('id')->on('projects')->nullOnDelete();
+                });
+            } catch (\Throwable $e) {
+                // Ignore if foreign key already exists
+            }
+        }
 
         // Postgres-specific raw queries
         if (DB::connection()->getDriverName() === 'pgsql') {
@@ -30,9 +36,11 @@ return new class extends Migration
             DB::statement('DROP INDEX IF EXISTS leave_requests_no_overlap');
 
             // DB-7: Export Jobs Status Check Constraint
+            DB::statement("ALTER TABLE export_jobs DROP CONSTRAINT IF EXISTS export_jobs_status_check");
             DB::statement("ALTER TABLE export_jobs ADD CONSTRAINT export_jobs_status_check CHECK (status IN ('pending', 'processing', 'completed', 'failed'))");
             
             // DB-7: Scheduled Reports Status Check Constraint
+            DB::statement("ALTER TABLE scheduled_reports DROP CONSTRAINT IF EXISTS scheduled_reports_status_check");
             DB::statement("ALTER TABLE scheduled_reports ADD CONSTRAINT scheduled_reports_status_check CHECK (status IN ('active', 'paused'))");
         }
     }

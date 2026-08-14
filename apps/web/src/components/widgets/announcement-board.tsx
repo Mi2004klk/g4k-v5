@@ -32,7 +32,7 @@ export function AnnouncementBoard() {
     if (typeof window !== "undefined" && (window as any).Echo) {
       const channel = (window as any).Echo.channel("public-announcements");
       channel.listen(".AnnouncementPosted", () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       });
       return () => {
         channel.stopListening(".AnnouncementPosted");
@@ -48,7 +48,7 @@ export function AnnouncementBoard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
 
@@ -60,7 +60,7 @@ export function AnnouncementBoard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
 
@@ -69,7 +69,7 @@ export function AnnouncementBoard() {
       return apiFetch(`/announcements/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       toast.success("Announcement deleted");
     },
   });
@@ -88,7 +88,7 @@ export function AnnouncementBoard() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.announcements });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       setShowCreate(false);
       setCreateData({ title: "", body: "", scope: "company", pinned: false });
       toast.success("Announcement posted");

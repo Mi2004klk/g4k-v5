@@ -30,7 +30,7 @@ interface AuthState {
   user: UserProfile | null;
   activeRole: string | null;
   density: "comfortable" | "compact";
-  setAuth: (token: string, user: UserProfile, activeRole?: string, refreshToken?: string) => void;
+  setAuth: (token: string, user: UserProfile, activeRole?: string, refreshToken?: string, capabilities?: string[]) => void;
   setDensity: (density: "comfortable" | "compact") => void;
   clearAuth: () => void;
 }
@@ -43,9 +43,15 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       activeRole: null,
       density: "compact",
-      setAuth: (token, user, activeRole, refreshToken) => {
+      setAuth: (token, user, activeRole, refreshToken, capabilities) => {
         if (typeof window !== "undefined") {
-          document.cookie = `g4k_token=${token}; path=/; max-age=900; SameSite=Lax`;
+          document.cookie = `g4k_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+          if (capabilities && Array.isArray(capabilities)) {
+            try {
+              const encoded = encodeURIComponent(JSON.stringify(capabilities));
+              document.cookie = `g4k_capabilities=${encoded}; path=/; max-age=604800; SameSite=Lax`;
+            } catch {}
+          }
         }
         return set((state) => ({
           token,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -18,6 +18,12 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token && !user) {
+      router.replace("/login");
+    }
+  }, [token, user]);
 
   async function handleFinish() {
     setIsLoading(true);

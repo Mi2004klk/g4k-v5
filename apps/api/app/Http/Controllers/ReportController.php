@@ -79,9 +79,8 @@ class ReportController extends Controller
 
                 if ($key === 'productivity') {
                     $data->getCollection()->transform(function($u) {
-                        $rate = $u->total_tasks > 0 ? ($u->completed_tasks / $u->total_tasks) : 0;
-                        $hours = $u->total_seconds / 3600;
-                        $u->productivity_score = round($rate * $hours, 2);
+                        $rate = $u->total_tasks > 0 ? (($u->completed_tasks / $u->total_tasks) * 100) : 0;
+                        $u->productivity_score = round($rate, 1);
                         return $u;
                     });
                 }
@@ -178,10 +177,10 @@ class ReportController extends Controller
         $query = User::query()
             ->with('department')
             ->withCount([
-                'leaveRequests as total_requests' => fn($q) => $q->whereBetween('start_date', [$start, $end]),
-                'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->whereBetween('start_date', [$start, $end]),
-                'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->whereBetween('start_date', [$start, $end]),
-                'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->whereBetween('start_date', [$start, $end]),
+                'leaveRequests as total_requests' => fn($q) => $q->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
             ]);
 
         if (!$hasManage) {

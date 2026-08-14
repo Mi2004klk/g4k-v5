@@ -74,8 +74,16 @@ class FlagOpenShifts implements ShouldQueue
             AttendanceDay::whereIn('id', $dayIds)->update(['is_flagged' => true]);
         }
 
-        if (!empty($notifications)) {
-            Notification::insert($notifications);
+        foreach ($notifications as $n) {
+            \App\Services\NotificationService::send(
+                $n['user_id'],
+                $n['type'] ?? 'alert',
+                $n['title'],
+                $n['body'],
+                $n['data'] ?? null,
+                $n['link'] ?? null,
+                $n['priority'] ?? 'normal'
+            );
         }
     }
 }

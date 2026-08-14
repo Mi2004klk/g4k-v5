@@ -610,17 +610,6 @@ export function DepartmentsTab() {
         </SheetContent>
       </Sheet>
 
-      <ConfirmDialog
-        open={confirmState.isOpen}
-        onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, type: "", payload: null }) }}
-        onConfirm={() => {
-          if (confirmState.type === "archive") archiveMutation.mutate(confirmState.payload.id);
-          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
-        }}
-        title={confirmState.type === "delete" ? "Delete Department" : "Archive Department"}
-        description={confirmState.type === "delete" ? "Are you sure? This action cannot be undone." : "Archiving will hide this department."}
-        isLoading={archiveMutation.isPending || deleteMutation.isPending}
-      />
     </div>
   );
 }

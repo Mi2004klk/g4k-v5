@@ -348,7 +348,10 @@ export default function UsersPage() {
       accessorKey: "roles",
       header: "Role",
       cell: ({ row }: any) => {
-        const activeRoles = row.original.role_assignments?.map((r: any) => r.role) || [];
+        const rawRoles = row.original.role_assignments?.map((r: any) => r.role)
+          || (Array.isArray(row.original.roles) ? row.original.roles.map((r: any) => typeof r === 'string' ? r : r.role) : [])
+          || (row.original.active_role ? [row.original.active_role] : []);
+        const activeRoles = Array.from(new Set(rawRoles.filter(Boolean)));
         return (
           <div className="flex flex-wrap gap-1">
             {activeRoles.length > 0 ? (

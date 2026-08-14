@@ -45,12 +45,14 @@ export const navGroups = [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
     { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance", capability: "attendance.clock-self" },
     { name: "Projects & Tasks", href: "/dashboard/projects", icon: "projects", capability: "projects.view" },
-    { name: "Communications", href: "/dashboard/chat", icon: "chat", capability: "directory.send-message" },
+    { name: "Communications", href: "/dashboard/chat", icon: "chat", capability: "chat.access" },
   ]},
   { label: "Organization", items: [
     { name: "Directory", href: "/dashboard/directory", icon: "directory", capability: "directory.view" },
     { name: "Employee Management", href: "/dashboard/org/users", icon: "directory", capability: "users.employee.manage" },
     { name: "Team Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
+    { name: "Admin Attendance", href: "/dashboard/admin/attendance", icon: "teamAttendance", capability: "admin.view-all-attendance" },
+    { name: "Reports & Analytics", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },
   ]},
   { label: "Account", items: [
     { name: "Settings & Profile", href: "/dashboard/profile", icon: "settings" },
@@ -325,12 +327,14 @@ export default function DashboardLayout({
                         My Profile
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/settings" prefetch={false} className="cursor-pointer gap-2">
-                        <AppIcon name="settings" className=" text-muted-foreground" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
+                    {hasCapability(userCapabilities, "settings.manage") && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/settings" prefetch={false} className="cursor-pointer gap-2">
+                          <AppIcon name="settings" className=" text-muted-foreground" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Theme</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer gap-2">

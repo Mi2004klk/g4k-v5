@@ -52,6 +52,16 @@ class CapabilityMatrix
     }
 
     /**
+     * Get assigned roles for a given user ID.
+     */
+    public static function getAssignedRoles(int $userId): array
+    {
+        return \App\Models\RoleAssignment::where('user_id', $userId)
+            ->pluck('role')
+            ->toArray();
+    }
+
+    /**
      * Clear role capability cache.
      */
     public static function clearCache(?string $role = null): void
@@ -70,14 +80,14 @@ class CapabilityMatrix
      */
     public static function hasCapability(string $role, string $capability): bool
     {
-        if ($role === 'super_admin' && in_array($capability, self::SELF_SERVICE_EXCLUDED)) {
+        if ($role === 'super_admin' && in_array($capability, self::SELF_SERVICE_EXCLUDED, true)) {
             return false;
         }
 
         $roleCapabilities = static::getCapabilitiesForRole($role);
 
         if (in_array('*', $roleCapabilities)) {
-            return !in_array($capability, self::SELF_SERVICE_EXCLUDED);
+            return true;
         }
 
         return in_array($capability, $roleCapabilities);

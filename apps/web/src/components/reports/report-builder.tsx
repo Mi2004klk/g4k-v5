@@ -14,7 +14,7 @@ export function ReportBuilder() {
   const [reportKey, setReportKey] = useState("tasks");
   const [search, setSearch] = useState("");
 
-  const { data: reportData, isLoading, refetch } = useQuery({
+  const { data: reportData, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.reportData(reportKey, search),
     queryFn: () => apiFetch(`/reports/data?key=${reportKey}&search=${encodeURIComponent(search)}`),
   });
@@ -103,15 +103,17 @@ export function ReportBuilder() {
       </CardHeader>
 
       <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center p-12 text-neutral-400">
-            <AppIcon name="loading" size="xl" className=" animate-spin mr-2" /> Loading report data...
+        {isError ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
+            <AppIcon name="warning" size="xl" className="text-rose-400" />
+            <p className="text-xs font-semibold text-rose-600">Failed to load report data</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-xs">
+              Retry
+            </Button>
           </div>
-        ) : items.length === 0 ? (
-          <p className="text-xs text-neutral-400 py-8 text-center">No data found for this report.</p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-neutral-100 dark:border-neutral-800">
-            <DataTable columns={columns} data={items} />
+            <DataTable columns={columns} data={items} isLoading={isLoading} />
           </div>
         )}
       </CardContent>

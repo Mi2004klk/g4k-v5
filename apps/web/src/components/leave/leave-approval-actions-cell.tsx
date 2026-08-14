@@ -61,6 +61,7 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orgLeaveRequests });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
 

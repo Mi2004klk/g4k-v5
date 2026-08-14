@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Project extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'name', 'description', 'status', 'priority', 'start_date',
         'end_date', 'deadline', 'team_id', 'department_id', 'progress', 'created_by'

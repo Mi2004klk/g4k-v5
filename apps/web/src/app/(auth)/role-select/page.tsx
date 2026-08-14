@@ -21,32 +21,26 @@ export default function RoleSelectPage() {
   const autoSelectedRef = useState({ done: false })[0];
 
   useEffect(() => {
+    if (!token && !user) {
+      router.replace("/login");
+      return;
+    }
     if (user && user.roles && user.roles.length === 1 && !autoSelectedRef.done) {
       autoSelectedRef.done = true;
       handleSelectRole(user.roles[0]);
     }
-  }, [user?.id, user?.roles?.length]);
+  }, [token, user?.id, user?.roles?.length]);
 
   async function handleSelectRole(role: string) {
     setIsLoading(role);
     try {
-      await apiFetch("/auth/role-select", {
+      const data = await apiFetch("/auth/role-select", {
         method: "POST",
         body: JSON.stringify({ role }),
       });
 
-      // Silently refresh to get new active_role token
-      if (token) {
-         try {
-            const result = await apiFetch("/auth/refresh");
-            setAuth(result.token, result.user, result.active_role, result.refresh_token);
-            router.push("/dashboard");
-         } catch {
-            router.push("/dashboard");
-         }
-      } else {
-         router.push("/dashboard");
-      }
+      setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
+      router.push("/dashboard");
     } catch (error: any) {
       if (error.status === 429) {
         toast.error("Too many requests. Please try again later.");

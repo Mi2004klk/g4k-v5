@@ -48,9 +48,10 @@ class CompanyProfileController extends Controller
             'logo' => 'required|image|max:5120', // max 5MB
         ]);
 
+        $disk = config('filesystems.default');
         $file = $request->file('logo');
-        $path = $file->store('company-logos', 'supabase');
-        $logoUrl = Storage::disk('supabase')->url($path);
+        $path = $file->store('company-logos', $disk);
+        $logoUrl = Storage::disk($disk)->url($path);
 
         $profile = CompanyProfile::first();
         if (!$profile) {

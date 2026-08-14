@@ -22,7 +22,7 @@ export function ApprovalsTab() {
   const [historyTypeFilter, setHistoryTypeFilter] = useUrlState("h_type", "all");
   const [search, setSearch] = useUrlState("search", "");
 
-  const [userIdFilter] = useUrlState("user_id", "");
+  const [userIdFilter, setUserIdFilter] = useUrlState("user_id", "");
 
   // Approvals pagination
   const [approvalsPage, setApprovalsPage] = useState(1);
@@ -173,12 +173,7 @@ export function ApprovalsTab() {
                 variant="ghost" 
                 size="sm" 
                 className="h-6 text-xs text-rose-600 hover:text-rose-700 bg-rose-50"
-                onClick={() => {
-                  const url = new URL(window.location.href);
-                  url.searchParams.delete('user_id');
-                  window.history.replaceState({}, '', url.toString());
-                  window.location.reload();
-                }}
+                onClick={() => setUserIdFilter("")}
               >
                 Clear User Filter
               </Button>
@@ -223,6 +218,7 @@ export function ApprovalsTab() {
               <DataTable
                 columns={columns}
                 data={records}
+                isLoading={isLoading}
                 page={approvalsPage}
                 perPage={approvalsPerPage}
                 totalPages={approvalsTotalPages}

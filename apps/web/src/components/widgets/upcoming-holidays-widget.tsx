@@ -1,11 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { format, isAfter, startOfDay } from "date-fns";
+import { isAfter, startOfDay } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
+import { safeFormat } from "@/lib/format";
 import { Card, CardHeader, CardTitle, CardContent, Skeleton, Button } from "@g4k/ui/components";
 
 export function UpcomingHolidaysWidget() {
@@ -21,7 +22,12 @@ export function UpcomingHolidaysWidget() {
 
   const upcomingList = Array.isArray(holidays) || Array.isArray(holidays?.data) 
     ? (holidays?.data || holidays)
-      .filter((h: any) => !isAfter(today, new Date(h.date)))
+      .filter((h: any) => {
+        if (!h?.date) return false;
+        const d = new Date(h.date);
+        if (isNaN(d.getTime())) return false;
+        return !isAfter(today, d);
+      })
       .slice(0, 3)
     : [];
 
@@ -29,10 +35,10 @@ export function UpcomingHolidaysWidget() {
     <Card className="h-full bg-card dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 flex flex-col">
       <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <AppIcon name="calendar" className=" text-violet-600" />
+          <AppIcon name="calendar" className=" text-primary" />
           Upcoming Holidays & Events
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild className="h-8 text-xs font-semibold text-violet-600 dark:text-violet-400">
+        <Button variant="ghost" size="sm" asChild className="h-8 text-xs font-semibold text-primary">
           <Link href="/dashboard/org/leave">
             View All <AppIcon name="chevronRight" size="xs" className=" ml-1" />
           </Link>
@@ -74,7 +80,7 @@ export function UpcomingHolidaysWidget() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400">
-                    {format(new Date(holiday.date), "MMM d, yyyy")}
+                    {safeFormat(holiday.date, "MMM d, yyyy")}
                   </div>
                   {isEvent && (holiday.start_time || holiday.location) && (
                     <div className="flex items-center gap-3 mt-1.5 text-[11px] text-neutral-500">

@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@g4k/
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@g4k/ui/components";
+import { Input, PasswordInput } from "@g4k/ui/components";
 
 const smtpSchema = z.object({
   from_address: z.string().email("Invalid email address").optional().or(z.literal('')),
@@ -124,35 +125,35 @@ export function MailSmtpConfig() {
         <form onSubmit={form.handleSubmit((d) => updateMutation.mutate(d))} className="space-y-4 max-w-xl">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium">From Name</label>
-              <input type="text" {...form.register("from_name")} className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+              <label className="text-xs font-medium mb-1 block">From Name</label>
+              <Input type="text" {...form.register("from_name")} className="h-9 text-xs" />
               {form.formState.errors.from_name && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.from_name.message}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium">From Address</label>
-              <input type="email" {...form.register("from_address")} className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+              <label className="text-xs font-medium mb-1 block">From Address</label>
+              <Input type="email" {...form.register("from_address")} className="h-9 text-xs" />
               {form.formState.errors.from_address && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.from_address.message}</p>}
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium">Host</label>
-            <input type="text" {...form.register("host")} className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+            <label className="text-xs font-medium mb-1 block">Host</label>
+            <Input type="text" {...form.register("host")} className="h-9 text-xs" />
             {form.formState.errors.host && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.host.message}</p>}
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-medium">Port</label>
-              <input type="number" {...form.register("port")} className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+              <label className="text-xs font-medium mb-1 block">Port</label>
+              <Input type="number" {...form.register("port")} className="h-9 text-xs" />
               {form.formState.errors.port && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.port.message}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium">Encryption</label>
+              <label className="text-xs font-medium mb-1 block">Encryption</label>
               <Controller
                 name="encryption"
                 control={form.control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent mt-1">
+                    <SelectTrigger className="w-full text-xs h-9">
                       <SelectValue placeholder="Select Encryption" />
                     </SelectTrigger>
                     <SelectContent>
@@ -165,19 +166,19 @@ export function MailSmtpConfig() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium">Timeout (sec)</label>
-              <input type="number" {...form.register("timeout")} className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+              <label className="text-xs font-medium mb-1 block">Timeout (sec)</label>
+              <Input type="number" {...form.register("timeout")} className="h-9 text-xs" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-medium">Username</label>
-              <input type="text" {...form.register("username")} className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+              <label className="text-xs font-medium mb-1 block">Username</label>
+              <Input type="text" {...form.register("username")} className="h-9 text-xs" />
               {form.formState.errors.username && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.username.message}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium">Password</label>
-              <input type="password" {...form.register("password")} placeholder="••••••" className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+              <label className="text-xs font-medium mb-1 block">Password</label>
+              <PasswordInput {...form.register("password")} placeholder="••••••" className="h-9 text-xs" />
             </div>
           </div>
           

@@ -34,6 +34,7 @@ export function CommandPalette() {
 
   const isHrOrAdmin = hasCapability(capabilities, "hr.view-team-attendance") || hasCapability(capabilities, "admin.view-all-attendance");
   const canCorrect = hasCapability(capabilities, "admin.correct-attendance") || hasCapability(capabilities, "hr.correct-attendance") || isHrOrAdmin;
+  const canClockSelf = hasCapability(capabilities, "attendance.clock-self");
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -109,55 +110,59 @@ export function CommandPalette() {
         )}
         
         <CommandGroup heading="Attendance">
-          {!isActive && (
-            <CommandItem onSelect={() => runCommand(async () => {
-              const ts = new Date().toISOString();
-              useTimerStore.getState().startTimer(ts, 0);
-              try { await offlineEngine.recordPunch("clock_in", ts); toast.success("Clocked In"); } 
-              catch(err: any) { toast.error(err.message); }
-            })}>
-              <AppIcon name="play" className=" mr-2 text-emerald-500" />
-              <span>Clock In</span>
-            </CommandItem>
-          )}
-          {isActive && !isOnBreak && (
-            <CommandItem onSelect={() => runCommand(async () => {
-              const ts = new Date().toISOString();
-              useTimerStore.getState().startBreak(ts);
-              try { await offlineEngine.recordPunch("break_start", ts); toast.success("Break Started"); } 
-              catch(err: any) { toast.error(err.message); }
-            })}>
-              <AppIcon name="break" className=" mr-2 text-amber-500" />
-              <span>Start Break</span>
-            </CommandItem>
-          )}
-          {isOnBreak && (
-            <CommandItem onSelect={() => runCommand(async () => {
-              const ts = new Date().toISOString();
-              const { endBreak } = useTimerStore.getState();
-              endBreak(ts);
-              try { await offlineEngine.recordPunch("break_end", ts); toast.success("Break Ended"); } 
-              catch(err: any) { toast.error(err.message); }
-            })}>
-              <AppIcon name="play" className=" mr-2 text-emerald-500" />
-              <span>End Break & Resume Work</span>
-            </CommandItem>
-          )}
-          {isActive && (
-            <CommandItem onSelect={() => runCommand(async () => {
-              const ts = new Date().toISOString();
-              const state = useTimerStore.getState();
-              if (state.isOnBreak) {
-                await offlineEngine.recordPunch("break_end", ts);
-                state.endBreak(ts);
-              }
-              state.stopTimer();
-              try { await offlineEngine.recordPunch("clock_out", ts); toast.success("Clocked Out"); } 
-              catch(err: any) { toast.error(err.message); }
-            })}>
-              <AppIcon name="stop" className=" mr-2 text-rose-600" />
-              <span>Clock Out</span>
-            </CommandItem>
+          {canClockSelf && (
+            <>
+              {!isActive && (
+                <CommandItem onSelect={() => runCommand(async () => {
+                  const ts = new Date().toISOString();
+                  useTimerStore.getState().startTimer(ts, 0);
+                  try { await offlineEngine.recordPunch("clock_in", ts); toast.success("Clocked In"); } 
+                  catch(err: any) { toast.error(err.message); }
+                })}>
+                  <AppIcon name="play" className=" mr-2 text-emerald-500" />
+                  <span>Clock In</span>
+                </CommandItem>
+              )}
+              {isActive && !isOnBreak && (
+                <CommandItem onSelect={() => runCommand(async () => {
+                  const ts = new Date().toISOString();
+                  useTimerStore.getState().startBreak(ts);
+                  try { await offlineEngine.recordPunch("break_start", ts); toast.success("Break Started"); } 
+                  catch(err: any) { toast.error(err.message); }
+                })}>
+                  <AppIcon name="break" className=" mr-2 text-amber-500" />
+                  <span>Start Break</span>
+                </CommandItem>
+              )}
+              {isOnBreak && (
+                <CommandItem onSelect={() => runCommand(async () => {
+                  const ts = new Date().toISOString();
+                  const { endBreak } = useTimerStore.getState();
+                  endBreak(ts);
+                  try { await offlineEngine.recordPunch("break_end", ts); toast.success("Break Ended"); } 
+                  catch(err: any) { toast.error(err.message); }
+                })}>
+                  <AppIcon name="play" className=" mr-2 text-emerald-500" />
+                  <span>End Break & Resume Work</span>
+                </CommandItem>
+              )}
+              {isActive && (
+                <CommandItem onSelect={() => runCommand(async () => {
+                  const ts = new Date().toISOString();
+                  const state = useTimerStore.getState();
+                  if (state.isOnBreak) {
+                    await offlineEngine.recordPunch("break_end", ts);
+                    state.endBreak(ts);
+                  }
+                  state.stopTimer();
+                  try { await offlineEngine.recordPunch("clock_out", ts); toast.success("Clocked Out"); } 
+                  catch(err: any) { toast.error(err.message); }
+                })}>
+                  <AppIcon name="stop" className=" mr-2 text-rose-600" />
+                  <span>Clock Out</span>
+                </CommandItem>
+              )}
+            </>
           )}
           <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/attendance"))}>
             <AppIcon name="teamAttendance" className=" mr-2" />
@@ -175,6 +180,18 @@ export function CommandPalette() {
               <AppIcon name="directory" className=" mr-2 text-emerald-500" />
               <span>View Company Attendance</span>
             </CommandItem>
+            {hasCapability(capabilities, "admin.view-all-attendance") && (
+              <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/admin/attendance"))}>
+                <AppIcon name="teamAttendance" className=" mr-2 text-blue-500" />
+                <span>Admin Attendance Overview</span>
+              </CommandItem>
+            )}
+            {hasCapability(capabilities, "reports.view") && (
+              <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/reports"))}>
+                <AppIcon name="spreadsheet" className=" mr-2 text-violet-500" />
+                <span>Reports & Analytics</span>
+              </CommandItem>
+            )}
           </CommandGroup>
         )}
 

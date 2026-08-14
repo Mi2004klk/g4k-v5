@@ -38,7 +38,14 @@ class DatabaseSeeder extends Seeder
             'profile.edit',
             'announcements.manage',
             'tasks.view',
-            'projects.view'
+            'tasks.manage',
+            'projects.view',
+            'projects.manage',
+            'qa.view',
+            'qa.manage',
+            'timer.track',
+            'reports.view',
+            'reports.manage'
         ];
 
         foreach ($capabilities as $cap) {
@@ -51,11 +58,11 @@ class DatabaseSeeder extends Seeder
                 'attendance.clock-self',
                 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
                 'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
-                'profile.edit', 'leave.request-self', 'announcements.manage', 'tasks.view', 'projects.view'
+                'profile.edit', 'leave.request-self', 'announcements.manage', 'tasks.view', 'projects.view', 'reports.view'
             ],
             'employee' => [
                 'attendance.clock-self', 'leave.request-self', 'profile.edit',
-                'directory.view', 'directory.send-message', 'chat.access', 'tasks.view', 'projects.view'
+                'directory.view', 'directory.send-message', 'chat.access', 'tasks.view', 'projects.view', 'reports.view'
             ]
         ];
 
@@ -68,6 +75,8 @@ class DatabaseSeeder extends Seeder
                 DB::table('role_capabilities')->updateOrInsert(['role' => $role, 'capability_key' => $cap], ['created_at' => now(), 'updated_at' => now()]);
             }
         }
+
+        \App\Services\CapabilityMatrix::clearCache();
 
         // 1. AutoNumbering Configuration
         AutoNumbering::firstOrCreate(

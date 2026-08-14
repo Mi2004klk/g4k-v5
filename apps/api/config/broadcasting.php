@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'null') === 'reverb' && empty(env('REVERB_APP_KEY')) 
+    'default' => ((env('BROADCAST_CONNECTION') === 'pusher' && empty(env('PUSHER_APP_KEY'))) ||
+                  (env('BROADCAST_CONNECTION') === 'reverb' && empty(env('REVERB_APP_KEY'))))
                  ? 'log' 
                  : env('BROADCAST_CONNECTION', 'null'),
 
@@ -60,9 +61,13 @@ return [
                 'scheme' => env('PUSHER_SCHEME', 'https'),
                 'encrypted' => true,
                 'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+                'curl_options' => [
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                ],
             ],
             'client_options' => [
-                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                'verify' => false,
             ],
         ],
 

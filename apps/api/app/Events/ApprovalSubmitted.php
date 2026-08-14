@@ -31,8 +31,9 @@ class ApprovalSubmitted implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
+        $role = $this->approval->current_approver_role ?? 'hr';
         return [
-            new PrivateChannel('user.' . $this->approval->approver_id),
+            new PrivateChannel('approvals.' . $role),
         ];
     }
 }

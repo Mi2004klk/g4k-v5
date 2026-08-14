@@ -33,3 +33,8 @@ Broadcast::channel('conversation.{id}', function ($user, $id) {
         ->where('conversation_id', $id)
         ->exists();
 });
+
+Broadcast::channel('approvals.{role}', function ($user, $role) {
+    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    return in_array($role, $roles) || in_array('super_admin', $roles);
+});

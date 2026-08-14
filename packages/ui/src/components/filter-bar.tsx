@@ -206,13 +206,36 @@ export function FilterBar({
           </Popover>
         )
       case "date":
+        const singleDateVal = filter.value ? new Date(filter.value) : undefined;
         return (
-          <Input
-            type="date"
-            className="h-9 w-full sm:w-[150px] shrink-0"
-            value={filter.value || ""}
-            onChange={(e) => filter.onChange(e.target.value)}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-9 justify-start text-left font-normal border-dashed border-border/80 shadow-2xs text-xs min-w-[140px]",
+                  !filter.value && "text-muted-foreground"
+                )}
+              >
+                <AppIcon name="calendar" size="xs" className="mr-2 text-muted-foreground shrink-0" />
+                {singleDateVal && isValid(singleDateVal) ? format(singleDateVal, "MMM d, yyyy") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={singleDateVal && isValid(singleDateVal) ? singleDateVal : undefined}
+                onSelect={(d: Date | undefined) => {
+                  if (d && isValid(d)) {
+                    filter.onChange(format(d, "yyyy-MM-dd"));
+                  } else {
+                    filter.onChange("");
+                  }
+                }}
+              />
+            </PopoverContent>
+          </Popover>
         )
       default:
         return null

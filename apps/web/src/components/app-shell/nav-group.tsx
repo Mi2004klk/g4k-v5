@@ -46,7 +46,7 @@ export const NavItem = memo(function NavItem({
     } else if (item.href === "/dashboard/tasks") {
       queryClient.prefetchQuery({ queryKey: queryKeys.tasks, queryFn: () => apiFetch("/tasks") });
     } else if (item.href === "/dashboard/announcements") {
-      queryClient.prefetchQuery({ queryKey: queryKeys.announcements, queryFn: () => apiFetch("/announcements") });
+      queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init") });
     } else if (item.href === "/dashboard/org/leave") {
       queryClient.prefetchQuery({ queryKey: queryKeys.orgLeaveRequestsPaginated(), queryFn: () => apiFetch("/leave-requests/pending") });
     }

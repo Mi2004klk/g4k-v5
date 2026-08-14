@@ -50,4 +50,10 @@ class NotificationService
 
         return $notification ?? null;
     }
+
+    public static function sendGlobalNotification(\App\Models\User|int $user, string $body, ?string $link = null, ?array $data = null): ?Notification
+    {
+        $userId = is_object($user) ? $user->id : (int) $user;
+        return self::send($userId, 'system', 'Holiday & Event Reminder', $body, $data, $link, 'normal');
+    }
 }

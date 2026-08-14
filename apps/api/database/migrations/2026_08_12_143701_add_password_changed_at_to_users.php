@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('password_changed_at')->nullable();
-        });
+        if (!Schema::hasColumn('users', 'password_changed_at')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->timestamp('password_changed_at')->nullable();
+            });
 
-        // Backfill to updated_at
-        DB::statement('UPDATE users SET password_changed_at = updated_at');
+            // Backfill to updated_at
+            DB::statement('UPDATE users SET password_changed_at = updated_at');
+        }
     }
 
     /**

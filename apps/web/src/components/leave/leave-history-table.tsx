@@ -141,17 +141,7 @@ export function LeaveHistoryTable({
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 min-h-[300px]">
-        {records && records.length > 0 ? (
-          <DataTable
-            columns={columns}
-            data={records}
-            page={page}
-            perPage={perPage}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-            onPerPageChange={onPerPageChange}
-          />
-        ) : !isLoading ? (
+        {!isLoading && (!records || records.length === 0) ? (
           <div className="p-8">
             <EmptyState
               icon={<AppIcon name="plane" size="hero" className=" text-neutral-300" />}
@@ -159,7 +149,18 @@ export function LeaveHistoryTable({
               description="You haven't requested any time off, or no requests match your current filters."
             />
           </div>
-        ) : null}
+        ) : (
+          <DataTable
+            columns={columns}
+            data={records || []}
+            isLoading={isLoading}
+            page={page}
+            perPage={perPage}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            onPerPageChange={onPerPageChange}
+          />
+        )}
       </div>
     </div>
   );
