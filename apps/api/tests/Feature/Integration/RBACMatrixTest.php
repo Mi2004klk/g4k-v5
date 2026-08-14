@@ -28,10 +28,9 @@ class RBACMatrixTest extends TestCase
         $hr = User::where('username', 'aravind')->first(); // role: hr
         $admin = User::where('username', 'karthik')->first(); // role: super_admin
 
-        DB::table('users')->update([
-            'must_change_password' => false,
-            'onboarded_at' => now()
-        ]);
+        $employee->update(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'employee']);
+        $hr->update(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'hr']);
+        $admin->update(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'super_admin']);
 
         $empToken = $employee->createToken('emp', ['role:employee'])->plainTextToken;
         $hrToken = $hr->createToken('hr', ['role:hr'])->plainTextToken;

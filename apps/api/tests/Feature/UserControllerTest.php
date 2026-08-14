@@ -31,7 +31,8 @@ class UserControllerTest extends TestCase
 
     public function test_admin_with_employee_manage_can_create_employee_but_not_hr()
     {
-        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now()]);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'hr']);
+        RoleAssignment::create(['user_id' => $admin->id, 'role' => 'hr']);
         $token = $admin->createToken('test', ['role:hr', 'users.employee.manage'])->plainTextToken;
 
         // Try creating employee (should work)
@@ -89,7 +90,8 @@ class UserControllerTest extends TestCase
 
     public function test_export_endpoint()
     {
-        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now()]);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'super_admin']);
+        RoleAssignment::create(['user_id' => $admin->id, 'role' => 'super_admin']);
         $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
 
         $res = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->get('/api/users/export');
@@ -98,7 +100,7 @@ class UserControllerTest extends TestCase
 
     public function test_cannot_deactivate_last_super_admin()
     {
-        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'status' => 'active']);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'status' => 'active', 'active_role' => 'super_admin']);
         $admin->roleAssignments()->create(['role' => 'super_admin']);
         $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
 
@@ -112,7 +114,8 @@ class UserControllerTest extends TestCase
 
     public function test_can_deactivate_user()
     {
-        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'status' => 'active']);
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'status' => 'active', 'active_role' => 'super_admin']);
+        RoleAssignment::create(['user_id' => $admin->id, 'role' => 'super_admin']);
         $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
 
         $user = User::factory()->create(['status' => 'active']);

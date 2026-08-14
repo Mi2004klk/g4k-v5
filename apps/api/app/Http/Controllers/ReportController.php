@@ -79,8 +79,10 @@ class ReportController extends Controller
 
                 if ($key === 'productivity') {
                     $data->getCollection()->transform(function($u) {
-                        $rate = $u->total_tasks > 0 ? (($u->completed_tasks / $u->total_tasks) * 100) : 0;
-                        $u->productivity_score = round($rate, 1);
+                        $taskCompletionRate = $u->total_tasks > 0 ? (($u->completed_tasks / $u->total_tasks) * 100) : 0;
+                        $loggedHours = ($u->total_seconds ?? 0) / 3600;
+                        $timeScore = min(100, ($loggedHours / 160) * 100);
+                        $u->productivity_score = round(($taskCompletionRate * 0.8) + ($timeScore * 0.2), 1);
                         return $u;
                     });
                 }

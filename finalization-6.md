@@ -315,21 +315,21 @@ Action: after implementing §15, regenerate `context.md` from this doc so it is 
 
 ### PHASE 1 — Correctness & permissions
 
-- `1.1 [P0][MISSING] DB/BE` — **Leave balance.** `leave_balances(user_id,type,year,allowed,used)`; allocate on user create + year rollover; check+deduct on approval; restore on reject/cancel; block at request if no balance (policy). **Accept:** 0-balance casual request → blocked; approval decrements; reject restores.
-- `1.2 [P1][WRONG-PERM] BE` — **Authorize `GET /users/{id}`** (isSelf || canView). **Accept:** emp A → emp B = 403.
-- `1.3 [P1][WRONG-PERM] BE/seed` — **Grant `reports.view` to HR+Employee** (catalog + seeder); add catalog-missing caps explicitly. **Accept:** HR/emp `GET /reports/data` → 200 in a SEEDED DB (not just fallback).
-- `1.4 [P1][FE-BE-MISMATCH] BE` — **Fix approval id mismatch.** `/approvals/{id}/decision` resolve by `approvable_id` (or emit `approvals.id` from `DashboardController::init`); fix cache-bust to use `$approval->approvable_id`. **Accept:** approve from dashboard widget → 200 + status flips.
-- `1.5 [P1][WRONG-LOGIC] BE` — **Late-detection timezone fix.** Build `$scheduledStart` in company tz (configurable, default `Asia/Kolkata`); compare instants. **Accept:** 09:30 IST vs 09:00+10grace → ~20 min late.
-- `1.6 [P1][BROKEN] BE` — **`AttendanceController::correct` `firstOrFail`.** **Accept:** bad day → 404.
-- `1.7 [P1][BROKEN] BE` — **`SendHolidayReminders`** method fix; route reminders through `NotificationService`/`Notification::create` (observer). **Accept:** command runs clean; bell pushes.
-- `1.8 [P1][DEAD-ASYNC] BE` — **Reminder notifications via observer.** Replace bulk `Notification::insert` with `Notification::create` per row in `RemindShiftStart`/`AlertMissedClockIn`/`FlagOpenShifts`. **Accept:** reminder → live bell.
-- `1.9 [P1][MISSING] BE` — **Task-assignment notification** on create + assignee change. **Accept:** assignee gets bell.
-- `1.10 [P1][BROKEN] BE` — **`ApprovalSubmitted` channel** (role/dept presence, not null `approver_id`); queue `NotifyApprovalSubmitted`. **Accept:** no failing broadcast jobs.
-- `1.11 [P1][WRONG-LOGIC] BE` — **Wrap sync broadcasts** (Announcement/Task/Chat) in try/catch or `DB::afterCommit`. **Accept:** broadcaster down → write still 200.
-- `1.12 [P2][WRONG-LOGIC] BE` — **Reports:** redefine `productivity_score`; `leaveSummary` overlap predicate. **Accept:** spanning leave counted; score meaningful.
-- `1.13 [P2][DATA] BE` — **Apply SoftDeletes trait** (Department/Project/Task); resolve `archived_at` vs `deleted_at`. **Accept:** soft-delete excludes from lists; restore works.
-- `1.14 [P2][WRONG-LOGIC] BE` — **Attendance edge cases:** holidays in `reconcileDay`; midnight-crossing; respect `working_days` in reminders; include open-shift time in `total_seconds` (or document client-timer dependency). **Accept:** holiday → not absent; Sat-off → no reminder.
-- `1.15 [P2][WRONG-LOGIC] BE` — **Holidays reminder dedup** (`lock_key`/correct `type` filter). **Accept:** no resend spam.
+- ✅ `1.1 [P0][MISSING] DB/BE` — **Leave balance.** `leave_balances(user_id,type,year,allowed,used)`; allocate on user create + year rollover; check+deduct on approval; restore on reject/cancel; block at request if no balance (policy). **Accept:** 0-balance casual request → blocked; approval decrements; reject restores.
+- ✅ `1.2 [P1][WRONG-PERM] BE` — **Authorize `GET /users/{id}`** (isSelf || canView). **Accept:** emp A → emp B = 403.
+- ✅ `1.3 [P1][WRONG-PERM] BE/seed` — **Grant `reports.view` to HR+Employee** (catalog + seeder); add catalog-missing caps explicitly. **Accept:** HR/emp `GET /reports/data` → 200 in a SEEDED DB (not just fallback).
+- ✅ `1.4 [P1][FE-BE-MISMATCH] BE` — **Fix approval id mismatch.** `/approvals/{id}/decision` resolve by `approvable_id` (or emit `approvals.id` from `DashboardController::init`); fix cache-bust to use `$approval->approvable_id`. **Accept:** approve from dashboard widget → 200 + status flips.
+- ✅ `1.5 [P1][WRONG-LOGIC] BE` — **Late-detection timezone fix.** Build `$scheduledStart` in company tz (configurable, default `Asia/Kolkata`); compare instants. **Accept:** 09:30 IST vs 09:00+10grace → ~20 min late.
+- ✅ `1.6 [P1][BROKEN] BE` — **`AttendanceController::correct` `firstOrFail`.** **Accept:** bad day → 404.
+- ✅ `1.7 [P1][BROKEN] BE` — **`SendHolidayReminders`** method fix; route reminders through `NotificationService`/`Notification::create` (observer). **Accept:** command runs clean; bell pushes.
+- ✅ `1.8 [P1][DEAD-ASYNC] BE` — **Reminder notifications via observer.** Replace bulk `Notification::insert` with `Notification::create` per row in `RemindShiftStart`/`AlertMissedClockIn`/`FlagOpenShifts`. **Accept:** reminder → live bell.
+- ✅ `1.9 [P1][MISSING] BE` — **Task-assignment notification** on create + assignee change. **Accept:** assignee gets bell.
+- ✅ `1.10 [P1][BROKEN] BE` — **`ApprovalSubmitted` channel** (role/dept presence, not null `approver_id`); queue `NotifyApprovalSubmitted`. **Accept:** no failing broadcast jobs.
+- ✅ `1.11 [P1][WRONG-LOGIC] BE` — **Wrap sync broadcasts** (Announcement/Task/Chat) in try/catch or `DB::afterCommit`. **Accept:** broadcaster down → write still 200.
+- ✅ `1.12 [P2][WRONG-LOGIC] BE` — **Reports:** redefine `productivity_score`; `leaveSummary` overlap predicate. **Accept:** spanning leave counted; score meaningful.
+- ✅ `1.13 [P2][DATA] BE` — **Apply SoftDeletes trait** (Department/Project/Task); resolve `archived_at` vs `deleted_at`. **Accept:** soft-delete excludes from lists; restore works.
+- ✅ `1.14 [P2][WRONG-LOGIC] BE` — **Attendance edge cases:** holidays in `reconcileDay`; midnight-crossing; respect `working_days` in reminders; include open-shift time in `total_seconds` (or document client-timer dependency). **Accept:** holiday → not absent; Sat-off → no reminder.
+- ✅ `1.15 [P2][WRONG-LOGIC] BE` — **Holidays reminder dedup** (`lock_key`/correct `type` filter). **Accept:** no resend spam.
 
 ### PHASE 2 — Auth reliability
 

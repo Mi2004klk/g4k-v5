@@ -40,17 +40,29 @@ class DashboardController extends Controller
                     // Leaves
                     $leaves = DB::table('leave_requests')
                         ->join('users', 'leave_requests.user_id', '=', 'users.id')
+                        ->leftJoin('approvals', function($join) {
+                            $join->on('approvals.approvable_id', '=', 'leave_requests.id')
+                                 ->where('approvals.approvable_type', '=', 'App\\Models\\LeaveRequest');
+                        })
                         ->where('leave_requests.status', 'pending')
-                        ->select('leave_requests.id', 'leave_requests.created_at', 'users.name as user_name', 'leave_requests.reason as title')
+                        ->select(
+                            'leave_requests.id as leave_request_id',
+                            'approvals.id as approval_id',
+                            'leave_requests.created_at',
+                            'users.name as user_name',
+                            'leave_requests.reason as title'
+                        )
                         ->get();
                     foreach ($leaves as $l) {
                         $approvals[] = [
-                            'id' => $l->id,
+                            'id' => $l->approval_id ?? $l->leave_request_id,
+                            'leave_request_id' => $l->leave_request_id,
+                            'approval_id' => $l->approval_id,
                             'type' => 'leave',
                             'title' => $l->title ?? 'Leave Request',
                             'user_name' => $l->user_name,
                             'created_at' => $l->created_at,
-                            'route' => '/attendance/leave/admin'
+                            'route' => '/dashboard/attendance?tab=leave'
                         ];
                     }
 
