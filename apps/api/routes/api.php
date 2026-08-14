@@ -58,6 +58,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::post('/auth/onboarding/complete', [AuthController::class, 'completeOnboarding']);
     Route::post('/auth/role-select', [AuthController::class, 'roleSelect'])->middleware('throttle:10,1');
+    Route::put('/auth/role', [AuthController::class, 'switchRole']);
     Route::get('/auth/sessions', [AuthController::class, 'sessions']);
     Route::delete('/auth/sessions/{id}', [AuthController::class, 'revokeSession']);
 

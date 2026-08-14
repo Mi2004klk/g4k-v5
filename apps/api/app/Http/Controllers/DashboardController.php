@@ -17,15 +17,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $today = Carbon::now()->toDateString();
         
-        $activeRole = 'employee';
-        if ($user->currentAccessToken()) {
-            foreach ($user->currentAccessToken()->abilities as $ability) {
-                if (str_starts_with($ability, 'role:')) {
-                    $activeRole = substr($ability, 5);
-                    break;
-                }
-            }
-        }
+        $activeRole = $user->active_role ?? 'employee';
 
         $safeCall = function($controller, $method, $fallback = null) use ($request) {
             try {
@@ -102,16 +94,7 @@ class DashboardController extends Controller
     public function metrics(Request $request)
     {
         $user = $request->user();
-        $activeRole = 'employee';
-        
-        if ($user->currentAccessToken()) {
-            foreach ($user->currentAccessToken()->abilities as $ability) {
-                if (str_starts_with($ability, 'role:')) {
-                    $activeRole = substr($ability, 5);
-                    break;
-                }
-            }
-        }
+        $activeRole = $user->active_role ?? 'employee';
 
         $today = Carbon::now()->toDateString();
         $cacheKey = "dashboard_metrics_{$user->id}_{$activeRole}_{$today}";

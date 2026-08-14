@@ -533,9 +533,11 @@ class AuthController extends Controller
     {
         if ($request->user()) {
             \App\Services\AuditLogger::log($request, 'logout', 'User', $request->user()->id, null, null);
-            $tokenId = $request->user()->currentAccessToken()->id;
-            $request->user()->currentAccessToken()->delete();
-            SessionRevoked::dispatch($request->user()->id, (string)$tokenId);
+            if ($request->user()->currentAccessToken()) {
+                $tokenId = $request->user()->currentAccessToken()->id;
+                $request->user()->currentAccessToken()->delete();
+                SessionRevoked::dispatch($request->user()->id, (string)$tokenId);
+            }
         }
 
         $rawRefreshToken = $request->cookie('g4k_refresh_token') ?? $request->header('X-Refresh-Token');
@@ -554,16 +556,29 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user()->load(['department', 'designation', 'company', 'roleAssignments']);
-        $activeRole = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
-        $user->active_role = str_replace('role:', '', $activeRole);
+        $user->active_role = $user->active_role ?? 'employee';
         return response()->json($user);
     }
 
     public function capabilities(Request $request)
     {
-        $activeRole = $request->user()->currentAccessToken()->abilities[0] ?? 'employee';
-        $activeRole = str_replace('role:', '', $activeRole);
+        $activeRole = $request->user()->active_role ?? 'employee';
         $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($activeRole);
         return response()->json(['capabilities' => $capabilities]);
+    }
+
+    public function switchRole(Request $request)
+    {
+        $request->validate([
+            'role' => 'required|string',
+        ]);
+        $user = $request->user();
+        $roles = \App\Services\CapabilityMatrix::getAssignedRoles($user->id);
+        if (!in_array($request->role, $roles)) {
+            return response()->json(['message' => 'Role not assigned to user'], 403);
+        }
+        $user->active_role = $request->role;
+        $user->save();
+        return response()->json(['message' => 'Role updated', 'active_role' => $user->active_role]);
     }
 }

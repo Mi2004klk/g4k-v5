@@ -16,7 +16,7 @@ class TaskController extends Controller
 {
     private function userHasManage(Request $request): bool
     {
-        $role = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $role = $request->user()->active_role ?? 'employee';
         return CapabilityMatrix::hasCapability($role, 'tasks.manage');
     }
 

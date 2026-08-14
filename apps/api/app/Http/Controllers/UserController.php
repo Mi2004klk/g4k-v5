@@ -17,9 +17,7 @@ class UserController extends Controller
 {
     private function hasCapability(Request $request, string $capability): bool
     {
-        $token = $request->user()->currentAccessToken();
-        $activeRole = $token ? ($token->abilities[0] ?? 'employee') : 'employee';
-        $activeRole = str_replace('role:', '', $activeRole);
+        $activeRole = $request->user()->active_role ?? 'employee';
         return CapabilityMatrix::hasCapability($activeRole, $capability);
     }
 

@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, Avatar, AvatarFallback, AvatarImage, Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 
 export function TeamAttendanceWidget() {
   const date = format(new Date(), "yyyy-MM-dd");
@@ -36,16 +36,16 @@ export function TeamAttendanceWidget() {
     );
   }
 
-  if (!isLoading && (!data || !data.employees || data.employees.length === 0)) {
+  const counts = data?.counts || { present: 0, late: 0, leave: 0, absent: 0, leave_pending: 0 };
+  const employees = Array.isArray(data?.employees) ? data.employees : (Array.isArray(data) ? data : []);
+
+  if (!isLoading && employees.length === 0) {
     return (
       <Card className="h-full flex flex-col items-center justify-center border-none shadow-e1 overflow-hidden p-6 text-center">
         <div className="text-sm font-semibold text-muted-foreground">No team members scheduled today</div>
       </Card>
     );
   }
-
-  const counts = data?.counts || { present: 0, late: 0, leave: 0, absent: 0, leave_pending: 0 };
-  const employees = Array.isArray(data?.employees) ? data.employees : [];
 
   return (
     <Card className="h-full flex flex-col border-none shadow-e1 overflow-hidden">

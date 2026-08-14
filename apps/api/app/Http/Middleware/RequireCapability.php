@@ -22,29 +22,22 @@ class RequireCapability
             abort(401, 'Unauthenticated');
         }
 
-        $token = $user->currentAccessToken();
-        if (!$token) {
-            abort(401, 'No active session token');
-        }
+        $activeRole = $user->active_role;
 
-        $activeRole = null;
-        $abilities = $token->abilities ?? [];
-        if (!is_array($abilities) && !is_object($abilities)) {
-            $abilities = [];
-        }
-        foreach ($abilities as $ability) {
-            if (str_starts_with($ability, 'role:')) {
-                $activeRole = substr($ability, 5);
-                break;
+        if (!$activeRole && $user->currentAccessToken()) {
+            $abilities = $user->currentAccessToken()->abilities ?? [];
+            if (is_array($abilities) || is_object($abilities)) {
+                foreach ($abilities as $ability) {
+                    if (str_starts_with($ability, 'role:')) {
+                        $activeRole = substr($ability, 5);
+                        break;
+                    }
+                }
             }
         }
 
-        if (!$activeRole && app()->environment('testing')) {
-            $activeRole = $user->active_role;
-        }
-
         if (!$activeRole) {
-            return response()->json(['message' => 'Role not selected.'], 403);
+            $activeRole = 'employee';
         }
 
         $allCaps = [];

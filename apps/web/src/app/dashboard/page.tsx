@@ -54,10 +54,10 @@ export default function DashboardPage() {
 
   const token = useAuthStore((s) => s.token);
 
-  const { data: initData, isLoading, isError, refetch } = useDashboardInit({ enabled: !!token });
+  const { data: initData, isLoading, isError, refetch } = useDashboardInit();
 
-  // Role determined by initData?.role, not a default (per requirements)
-  const activeRole = initData?.role;
+  // Role determined by initData?.role or user?.active_role, falling back to employee
+  const activeRole = initData?.role || user?.active_role || "employee";
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {

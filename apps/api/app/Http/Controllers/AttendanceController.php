@@ -82,15 +82,7 @@ class AttendanceController extends Controller
             ->orderBy('timestamp', 'asc')
             ->get();
 
-        $activeRole = 'employee';
-        if ($user->currentAccessToken()) {
-            foreach ($user->currentAccessToken()->abilities as $ability) {
-                if (str_starts_with($ability, 'role:')) {
-                    $activeRole = substr($ability, 5);
-                    break;
-                }
-            }
-        }
+        $activeRole = $user->active_role ?? 'employee';
         $today = Carbon::now()->toDateString();
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$user->id}_{$activeRole}_{$today}");
@@ -269,7 +261,7 @@ class AttendanceController extends Controller
 
     private function applyHrScoping($query, $user)
     {
-        $activeRole = str_replace('role:', '', $user->currentAccessToken()->abilities[0] ?? 'employee');
+        $activeRole = $user->active_role ?? 'employee';
         $isAdmin = $activeRole === 'super_admin';
         
         if (!$isAdmin) {
@@ -283,7 +275,7 @@ class AttendanceController extends Controller
         $date = $request->query('date', \Carbon\Carbon::today()->toDateString());
         $user = $request->user();
         
-        $activeRole = str_replace('role:', '', $user->currentAccessToken()->abilities[0] ?? 'employee');
+        $activeRole = $user->active_role ?? 'employee';
         $isAdmin = $activeRole === 'super_admin';
         
         $cacheKey = "team_today_{$activeRole}_{$user->department_id}_{$date}";
@@ -446,7 +438,7 @@ class AttendanceController extends Controller
     {
         // First verify they have access to this user (same department or admin)
         $targetUser = \App\Models\User::findOrFail($userId);
-        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $activeRole = $request->user()->active_role ?? 'employee';
         $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin && !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
@@ -487,7 +479,7 @@ class AttendanceController extends Controller
     {
         // First verify they have access to this user
         $targetUser = \App\Models\User::findOrFail($userId);
-        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $activeRole = $request->user()->active_role ?? 'employee';
         $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin && !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
@@ -735,7 +727,7 @@ class AttendanceController extends Controller
         $actor = $request->user();
 
         // HR-CORRECT: HR may only correct attendance within their own team/department.
-        $activeRole = str_replace('role:', '', $actor->currentAccessToken()->abilities[0] ?? 'employee');
+        $activeRole = $actor->active_role ?? 'employee';
         $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin) {

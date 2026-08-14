@@ -31,7 +31,7 @@ export function HrActivityFeedWidget() {
   });
 
   const activities = useMemo(() => {
-    const items = (data?.data || []) as MemberDay[];
+    const items = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])) as MemberDay[];
     const acts: any[] = [];
     
     items.forEach((member: MemberDay) => {

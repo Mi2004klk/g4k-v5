@@ -49,7 +49,7 @@ class AnnouncementController extends Controller
     {
         $announcement = Announcement::findOrFail($id);
         
-        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $activeRole = $request->user()->active_role ?? 'employee';
         if ($announcement->created_by !== $request->user()->id && $activeRole !== 'super_admin') {
             return response()->json(['message' => 'Unauthorized. You can only modify your own announcements.'], 403);
         }
@@ -78,7 +78,7 @@ class AnnouncementController extends Controller
     {
         $announcement = Announcement::findOrFail($id);
 
-        $activeRole = str_replace('role:', '', $request->user()->currentAccessToken()->abilities[0] ?? 'employee');
+        $activeRole = $request->user()->active_role ?? 'employee';
         if ($announcement->created_by !== $request->user()->id && $activeRole !== 'super_admin') {
             return response()->json(['message' => 'Unauthorized. You can only delete your own announcements.'], 403);
         }

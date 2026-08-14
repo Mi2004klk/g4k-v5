@@ -24,7 +24,7 @@ export function HrAttendanceAnalytics() {
   });
 
   const stats = useMemo(() => {
-    const records = data?.data || [];
+    const records = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
     let present = 0;
     let absent = 0;
     let late = 0;

@@ -91,8 +91,8 @@ export function HrAttendanceTable() {
     refetchInterval: isConnected ? false : 60_000,
   });
 
-  const records = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const records = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+  const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const handleExport = async (all: boolean = true) => {
     try {
