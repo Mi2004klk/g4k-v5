@@ -404,7 +404,9 @@ export function AttendanceHistoryCalendar({
     queryKey: queryKeys.holidays(currentDate.getFullYear()),
     queryFn: () => apiFetch(`/holidays?year=${currentDate.getFullYear()}`),
   });
-  const holidays = Array.isArray(holidaysData) ? holidaysData : (holidaysData?.data || []);
+  const holidays = Array.isArray(holidaysData) 
+    ? holidaysData 
+    : (Array.isArray(holidaysData?.data) ? holidaysData.data : []);
 
   const handleDayClick = (record: AttendanceDay | null, date: Date) => {
     if (record) {

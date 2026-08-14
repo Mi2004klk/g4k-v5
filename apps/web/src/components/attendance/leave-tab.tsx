@@ -34,7 +34,7 @@ export function LeaveTab() {
     placeholderData: keepPreviousData,
   });
 
-  const records = data?.data || [];
+  const records = Array.isArray(data?.data) ? data.data : [];
 
   return (
     <ErrorBoundary>
@@ -52,12 +52,12 @@ export function LeaveTab() {
             </div>
 
             {/* Right Column: History */}
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col min-w-0">
               <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-full flex flex-col min-h-[500px]">
                 <CardHeader>
                   <CardTitle className="text-base font-bold">My Leave History</CardTitle>
                 </CardHeader>
-                <CardContent className="p-0 flex-1">
+                <CardContent className="p-0 flex-1 flex flex-col min-h-0">
                   <LeaveHistoryTable 
                     records={records} 
                     isLoading={isPending} 

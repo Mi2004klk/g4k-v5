@@ -38,7 +38,7 @@ export default function PersonalAttendancePage() {
     staleTime: STALE_TIME_ATTENDANCE,
   });
 
-  const historyList = historyData?.data || [];
+  const historyList = Array.isArray(historyData?.data) ? historyData.data : [];
   const sortedHistory = [...historyList].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const recentHistory = sortedHistory.slice(0, 7);
 

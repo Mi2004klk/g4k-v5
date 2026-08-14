@@ -191,11 +191,11 @@ export default function DashboardLayout({
             "bg-surface border-r border-border relative h-full transition-[width,transform] duration-300 ease-in-out z-20 w-full",
             sidebarState === "hidden" ? "hidden" : "hidden md:flex flex-col"
           )}>
-            <div className="flex items-center h-16 shrink-0 px-4 justify-center overflow-hidden">
+            <div className="flex items-center h-24 shrink-0 px-4 justify-center overflow-hidden py-4">
               {isCollapsed ? (
-                <Image src="/icon.png" alt="Logo" width={44} height={44} className="rounded-md shrink-0 transition-opacity duration-300" priority />
+                <Image src="/icon.png" alt="Logo" width={56} height={56} className="rounded-md shrink-0 transition-opacity duration-300" priority />
               ) : (
-                <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={180} height={44} className="object-contain w-full max-w-[180px] h-auto max-h-11 transition-opacity duration-300" priority />
+                <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={200} height={60} className="object-contain w-full max-w-[200px] h-auto max-h-14 transition-opacity duration-300" priority />
               )}
             </div>
 

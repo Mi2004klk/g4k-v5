@@ -46,6 +46,7 @@ export interface DataTableProps<TData, TValue> {
   totalPages?: number
   onPageChange?: (page: number) => void
   onPerPageChange?: (perPage: number) => void
+  className?: string
 }
 
 // Memoized individual cell to prevent re-rendering all cells when one changes or during scroll
@@ -207,6 +208,7 @@ export function DataTable<TData, TValue>({
   totalPages,
   onPageChange,
   onPerPageChange,
+  className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -284,9 +286,9 @@ export function DataTable<TData, TValue>({
   const effectiveColumnsCount = table.getVisibleFlatColumns().length
 
   return (
-    <div className="space-y-3 w-full">
+    <div className={cn("space-y-3 w-full flex flex-col h-full", className)}>
       {/* Table Toolbar */}
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 text-xs flex items-center gap-1.5 border-border/70 shadow-2xs">
@@ -318,7 +320,7 @@ export function DataTable<TData, TValue>({
       <div
         ref={tableContainerRef}
         onScroll={handleScroll}
-        className="rounded-xl border border-border/80 bg-card shadow-2xs overflow-hidden"
+        className="rounded-xl border border-border/80 bg-card shadow-2xs overflow-auto flex-1 min-h-0"
       >
         {!isMobile ? (
           <div className="overflow-x-auto w-full">

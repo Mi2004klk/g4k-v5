@@ -94,7 +94,7 @@ export function LeaveRequestForm() {
   const tomorrow = startOfTomorrow();
 
   return (
-    <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+    <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl flex flex-col">
       <CardHeader>
         <CardTitle className="text-base font-bold">Request Time Off</CardTitle>
       </CardHeader>
