@@ -27,13 +27,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
-                \App\Support\SmtpSettings::apply();
-            }
-        } catch (\Throwable $e) {
-            // Ignore during migrations
-        }
+        // try {
+        //     if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+        //         \App\Support\SmtpSettings::apply();
+        //     }
+        // } catch (\Throwable $e) {
+        //     // Ignore during migrations
+        // }
 
         $listeners = [
             [\App\Events\ApprovalSubmitted::class, \App\Listeners\NotifyApprovalSubmitted::class],
@@ -67,11 +67,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         RateLimiter::for('api', function (Request $request) {
-            try {
-                return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
-            } catch (\Throwable $e) {
-                return Limit::none();
-            }
+            return Limit::none();
         });
     }
 }
