@@ -341,29 +341,29 @@ Action: after implementing §15, regenerate `context.md` from this doc so it is 
 
 ### PHASE 3 — Spec feature build (the missing ~15)
 
-- `3.1 [P1][MISSING] FE/BE` — **Kanban board** for tasks (To Do/In Progress/Under Review/Done) + drag-between-columns status update. BE: task status PATCH; FE: dnd-kit board. **Accept:** drag card → status persists.
-- `3.2 [P1][MISSING] FE/BE` — **Task dependencies** (`blocked_by`/`depends_on` self-ref on tasks); gate start. **Accept:** B cannot start while A pending.
-- `3.3 [P1][MISSING] FE/BE` — **Recurring tasks** (daily/weekly-on-days/monthly-on-date; auto-recreate on completion; HR notified; turn-off). Advanced-collapsed section in create form. **Accept:** complete instance → next created.
-- `3.4 [P1][MISSING] FE/BE` — **Per-project work timer** (start/pause/resume/end; logs time). BE `/timer/log` exists; build FE timer UI per project. **Accept:** time logged per project per day.
-- `3.5 [P1][MISSING] FE/BE` — **QA form on project + required on task submission.** Wire `qa-forms` to project; employee fills QA on submit; HR reviews with QA answers. **Accept:** can't submit task without QA (when required).
-- `3.6 [P1][MISSING] FE/BE` — **Custom group chats** (HR creates, members-only; employees see only added groups). BE conversation type + membership; FE create-group UI. **Accept:** non-member can't see group.
-- `3.7 [P1][MISSING] FE/BE` — **@mention** in all chats (type `@` → dropdown of chat members; mention → notification w/ snippet). **Accept:** mentioned user notified.
-- `3.8 [P1][MISSING] FE/BE` — **DM read receipts** + mark-on-open. **Accept:** sender sees read state.
-- `3.9 [P1][MISSING] FE/BE` — **Pin messages in project chats (HR).** **Accept:** pinned stay on top.
-- `3.10 [P1][MISSING] FE/BE` — **Chat file/image sharing** (popup w/ size/type limits). Storage path-style (0.7) prerequisite. **Accept:** image/file sends + previews.
-- `3.11 [P1][MISSING] BE/scheduler` — **Shift reminders** (15-min before; 30-min-late → HR alert) + configurable times. Depends on 0.1. **Accept:** reminders fire at the right times.
-- `3.12 [P1][MISSING] BE/scheduler` — **Holiday 10-day reminder** + **Admin weekly summary email (Sunday)**. Depends on 0.1 + SMTP. **Accept:** email delivered.
-- `3.13 [P1][MISSING] BE` — **Suspicious-login detection → notify HR/Admin** (beyond lockout). **Accept:** anomalous login → notification.
-- `3.14 [P2][MISSING] FE` — **Inline editing** (pencil→edit-in-place; Enter save / Esc cancel) for task/project/dept names.
-- `3.15 [P2][MISSING] FE` — **Drag-and-drop** task reorder (persist order) + dashboard widget rearrange (persist per user).
-- `3.16 [P2][MISSING] FE` — **Gantt/timeline** project view (bars + task diamond milestones).
-- `3.17 [P2][MISSING] FE` — **Pinned items (favorites)** in sidebar (projects/tasks/profiles; pins endpoint exists → build UI).
-- `3.18 [P2][MISSING] FE` — **Autosave draft every 30s** + restore banner ("You have an unsaved draft…").
-- `3.19 [P2][MISSING] FE` — **Keyboard shortcuts** Ctrl+N (context new), Ctrl+/ (help overlay), Esc/Enter semantics.
-- `3.20 [P2][MISSING] FE` — **Empty-state illustrations + action buttons** across all lists.
-- `3.21 [P2][MISSING] FE` — **Progress-bar animate 0→value**; **bell high-priority-only filter**; **widget refresh-on-hover + click-to-deep-link**.
-- `3.22 [P2][MISSING] FE` — **Complaint/feedback → DM to HR/Admin + high-priority notification** (feedback endpoint exists → wire routing).
-- `3.23 [P2][MISSING] BE` — **Excel export** for reports (queued job, 0.1 prereq); project-completion + task-statistics reports.
+- ✅ `3.1 [P1][MISSING] FE/BE` — **Kanban board** for tasks (To Do/In Progress/Under Review/Done) + drag-between-columns status update. BE: task status PATCH; FE: dnd-kit board. **Accept:** drag card → status persists.
+- ✅ `3.2 [P1][MISSING] FE/BE` — **Task dependencies** (`blocked_by`/`depends_on` self-ref on tasks); gate start. **Accept:** B cannot start while A pending.
+- ✅ `3.3 [P1][MISSING] FE/BE` — **Recurring tasks** (daily/weekly-on-days/monthly-on-date; auto-recreate on completion; HR notified; turn-off). Advanced-collapsed section in create form. **Accept:** complete instance → next created.
+- ✅ `3.4 [P1][MISSING] FE/BE` — **Per-project work timer** (start/pause/resume/end; logs time). BE `/timer/log` exists; build FE timer UI per project. **Accept:** time logged per project per day.
+- ✅ `3.5 [P1][MISSING] FE/BE` — **QA form on project + required on task submission.** Wire `qa-forms` to project; employee fills QA on submit; HR reviews with QA answers. **Accept:** can't submit task without QA (when required).
+- ✅ `3.6 [P1][MISSING] FE/BE` — **Custom group chats** (HR creates, members-only; employees see only added groups). BE conversation type + membership; FE create-group UI. **Accept:** non-member can't see group.
+- ✅ `3.7 [P1][MISSING] FE/BE` — **@mention** in all chats (type `@` → dropdown of chat members; mention → notification w/ snippet). **Accept:** mentioned user notified.
+- ✅ `3.8 [P1][MISSING] FE/BE` — **DM read receipts** + mark-on-open. **Accept:** sender sees read state.
+- ✅ `3.9 [P1][MISSING] FE/BE` — **Pin messages in project chats (HR).** **Accept:** pinned stay on top.
+- ✅ `3.10 [P1][MISSING] FE/BE` — **Chat file/image sharing** (popup w/ size/type limits). Storage path-style (0.7) prerequisite. **Accept:** image/file sends + previews.
+- ✅ `3.11 [P1][MISSING] BE/scheduler` — **Shift reminders** (15-min before; 30-min-late → HR alert) + configurable times. Depends on 0.1. **Accept:** reminders fire at the right times.
+- ✅ `3.12 [P1][MISSING] BE/scheduler` — **Holiday 10-day reminder** + **Admin weekly summary email (Sunday)**. Depends on 0.1 + SMTP. **Accept:** email delivered.
+- ✅ `3.13 [P1][MISSING] BE` — **Suspicious-login detection → notify HR/Admin** (beyond lockout). **Accept:** anomalous login → notification.
+- ✅ `3.14 [P2][MISSING] FE` — **Inline editing** (pencil→edit-in-place; Enter save / Esc cancel) for task/project/dept names.
+- ✅ `3.15 [P2][MISSING] FE` — **Drag-and-drop** task reorder (persist order) + dashboard widget rearrange (persist per user).
+- ✅ `3.16 [P2][MISSING] FE` — **Gantt/timeline** project view (bars + task diamond milestones).
+- ✅ `3.17 [P2][MISSING] FE` — **Pinned items (favorites)** in sidebar (projects/tasks/profiles; pins endpoint exists → build UI).
+- ✅ `3.18 [P2][MISSING] FE` — **Autosave draft every 30s** + restore banner ("You have an unsaved draft…").
+- ✅ `3.19 [P2][MISSING] FE` — **Keyboard shortcuts** Ctrl+N (context new), Ctrl+/ (help overlay), Esc/Enter semantics.
+- ✅ `3.20 [P2][MISSING] FE` — **Empty-state illustrations + action buttons** across all lists.
+- ✅ `3.21 [P2][MISSING] FE` — **Progress-bar animate 0→value**; **bell high-priority-only filter**; **widget refresh-on-hover + click-to-deep-link**.
+- ✅ `3.22 [P2][MISSING] FE` — **Complaint/feedback → DM to HR/Admin + high-priority notification** (feedback endpoint exists → wire routing).
+- ✅ `3.23 [P2][MISSING] BE` — **Excel export** for reports (queued job, 0.1 prereq); project-completion + task-statistics reports.
 
 ### PHASE 4 — Frontend data / cache / UX
 
