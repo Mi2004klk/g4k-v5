@@ -41,7 +41,7 @@ broken widget → because the dashboard layout shares queries, the whole dashboa
 
 ---
 
-## PART 1 — [P0, 1 line] Backend: 500 instead of 401 for unauthenticated requests
+## PART 1 — ✅ [P0, 1 line] Backend: 500 instead of 401 for unauthenticated requests
 
 ### Root cause (verified live + in source)
 
@@ -113,7 +113,7 @@ curl -s -o /dev/null -w "%{http_code}\n" https://g4k-api-579515345084.asia-south
 
 ---
 
-## PART 2 — [P0] Backend: valid-token 500s (schema drift + broadcast in transaction)
+## PART 2 — ✅ [P0] Backend: valid-token 500s (schema drift + broadcast in transaction)
 
 Part 1 fixes *unauthenticated* 500s. But the live console shows **authenticated** calls
 (`/dashboard/init`, `/directory`, `/projects`, `/notifications`) also returning 500. With a valid token,
@@ -177,7 +177,7 @@ And: `php artisan migrate:status` must show **zero** `Pending` rows.
 
 ---
 
-## PART 3 — [P0] Frontend: the real crash sites (this is what round-3 got wrong)
+## PART 3 — ✅ [P0] Frontend: the real crash sites (this is what round-3 got wrong)
 
 Round-3 said array access was guarded. It is **not** — at the points that actually crash. Below are the verified
 unguarded sites in the deployed code, grouped by the live error they produce. The canonical safe pattern to copy
