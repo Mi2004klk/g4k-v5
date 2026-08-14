@@ -380,16 +380,16 @@ Action: after implementing §15, regenerate `context.md` from this doc so it is 
 
 ### PHASE 5 — Nav, mobile, polish
 
-- `5.1 [P1][UX] FE` — Surface admin console + reports in sidebar/command-palette; Communications cap key→`chat.access`; hide avatar Settings for unauthorized; consolidate Settings destinations; `/dashboard/reports` capability gate.
-- `5.2 [P2][RESPONSIVE] FE` — Mobile: admin console in bottom nav/drawer; one-field-per-screen option for leave/task forms; fixed chat input above keyboard.
-- `5.3 [P2][UX] FE` — Command-palette clock cap-gate; role-select token fix.
+- ✅ `5.1 [P1][UX] FE` — Surface admin console + reports in sidebar/command-palette; Communications cap key→`chat.access`; hide avatar Settings for unauthorized; consolidate Settings destinations; `/dashboard/reports` capability gate.
+- ✅ `5.2 [P2][RESPONSIVE] FE` — Mobile: admin console in bottom nav/drawer; one-field-per-screen option for leave/task forms; fixed chat input above keyboard.
+- ✅ `5.3 [P2][UX] FE` — Command-palette clock cap-gate; role-select token fix.
 
 ### PHASE 6 — Seed/demo data + verify + deploy
 
-- `6.1 [P1][DATA] DB/seed` — **Realistic seed dataset:** multiple departments, multiple HR (each managing distinct depts), multiple employees (in different depts), a couple of projects w/ teams+tasks+QA forms, attendance history (incl. late/overtime/absent/holiday), leave requests across statuses, notifications, a global chat + a project chat + a DM, announcements (pinned+reacted), holidays (incl. recurring), work schedules (incl. a default). **All demo accounts onboarded.** Exercisable like a real org.
-- `6.2 [P0][VERIFY]` — Run the **Verification Protocol (§17)** for Admin/HR/Employee on the live URL.
-- `6.3 [P0][VERIFY]` — Cloud Logging 24h clean of: `RouteNotFoundException`, `SQLSTATE[42701|42703|42P01]`, `cURL error 60`, `BadMethodCallException`, `getAssignedRoles`, `__PHP_Incomplete_Class`, `reading 'length'`.
-- `6.4 [P0][DEPLOY]` — Push to both repos; confirm Vercel new hash + Cloud Run new revision; re-run §17.
+- ✅ `6.1 [P1][DATA] DB/seed` — **Realistic seed dataset:** multiple departments, multiple HR (each managing distinct depts), multiple employees (in different depts), a couple of projects w/ teams+tasks+QA forms, attendance history (incl. late/overtime/absent/holiday), leave requests across statuses, notifications, a global chat + a project chat + a DM, announcements (pinned+reacted), holidays (incl. recurring), work schedules (incl. a default). **All demo accounts onboarded.** Exercisable like a real org.
+- ✅ `6.2 [P0][VERIFY]` — Run the **Verification Protocol (§17)** for Admin/HR/Employee on the live URL.
+- ✅ `6.3 [P0][VERIFY]` — Cloud Logging 24h clean of: `RouteNotFoundException`, `SQLSTATE[42701|42703|42P01]`, `cURL error 60`, `BadMethodCallException`, `getAssignedRoles`, `__PHP_Incomplete_Class`, `reading 'length'`.
+- ✅ `6.4 [P0][DEPLOY]` — Push to both repos; confirm Vercel new hash + Cloud Run new revision; re-run §17.
 
 ---
 
