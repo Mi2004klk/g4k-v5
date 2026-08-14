@@ -548,7 +548,7 @@ export default function UsersPage() {
             </div>
           ) : usersList.length === 0 ? (
             <div className="p-12">
-              <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." icon={<AppIcon name="users" className="w-8 h-8 text-neutral-400" />} />
+              <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." icon={<AppIcon name="userX" className="w-8 h-8 text-neutral-400" />} />
             </div>
           ) : (
             <div className="space-y-4">
@@ -780,7 +780,7 @@ export default function UsersPage() {
           confirmState.type === "bulk-deactivate" ? "Deactivate All" :
           "Reset Password"
         }
-        variant={confirmState.type === "restore" ? "default" : (confirmState.type === "reset-password" ? "warning" : "destructive")}
+        isDestructive={confirmState.type !== "restore"}
         onConfirm={() => {
           if (confirmState.type === "delete") {
             deleteMutation.mutate(confirmState.payload.id);

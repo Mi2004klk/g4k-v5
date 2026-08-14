@@ -303,7 +303,7 @@ production. If you still see this error, it's a **stale browser cache** — hard
 
 ---
 
-## PART 4 — Carryover from round 3 (verify these are actually done in the deployed code)
+## PART 4 — ✅ Carryover from round 3 (verify these are actually done in the deployed code)
 
 Round-3 covered RBAC and the theme dropdown. Since the deployed code was byte-identical to the un-fixed local
 copy, **confirm these are present in production** (they may not be). Re-stated crisply; full detail in
@@ -333,7 +333,7 @@ copy, **confirm these are present in production** (they may not be). Re-stated c
 
 ---
 
-## PART 5 — Cross-cutting deploy hygiene (ship with the above)
+## PART 5 — ✅ Cross-cutting deploy hygiene (ship with the above)
 
 | Gate | Requirement | Where |
 |---|---|---|
@@ -346,7 +346,7 @@ copy, **confirm these are present in production** (they may not be). Re-stated c
 
 ---
 
-## PART 6 — Implementation order + the PROOF protocol (do NOT skip §6.2)
+## PART 6 — ✅ Implementation order + the PROOF protocol (do NOT skip §6.2)
 
 ### 6.1 Implementation order
 
