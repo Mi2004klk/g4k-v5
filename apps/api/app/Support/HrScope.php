@@ -8,11 +8,14 @@ class HrScope
 {
     public static function managedDepartmentIds(User $hr): array
     {
-        $ids = $hr->managedDepartments()->pluck('departments.id')->all();
-        // backward-compat: include own department if not already managed
-        if ($hr->department_id && !in_array($hr->department_id, $ids)) {
-            $ids[] = $hr->department_id;
+        try {
+            $ids = $hr->managedDepartments()->pluck('departments.id')->all();
+            if ($hr->department_id && !in_array($hr->department_id, $ids)) {
+                $ids[] = $hr->department_id;
+            }
+            return array_values(array_unique($ids));
+        } catch (\Throwable $e) {
+            return $hr->department_id ? [$hr->department_id] : [];
         }
-        return $ids;
     }
 }

@@ -14,6 +14,7 @@ class HrAttendanceWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(\Database\Seeders\DatabaseSeeder::class);
         $this->hrDept = Department::create(['name' => 'HR']);
         $this->engDept = Department::create(['name' => 'Engineering']);
         
@@ -21,23 +22,39 @@ class HrAttendanceWorkflowTest extends TestCase
             'department_id' => $this->hrDept->id,
             'onboarded_at' => now(),
             'must_change_password' => false,
+            'active_role' => 'hr',
+        ]);
+        \App\Models\RoleAssignment::create([
+            'user_id' => $this->hrManager->id,
+            'role' => 'hr'
         ]);
 
         $this->hrEmployee = User::factory()->create([
             'department_id' => $this->hrDept->id,
             'onboarded_at' => now(),
             'must_change_password' => false,
+            'active_role' => 'employee',
+        ]);
+        \App\Models\RoleAssignment::create([
+            'user_id' => $this->hrEmployee->id,
+            'role' => 'employee'
         ]);
         
         $this->engEmployee = User::factory()->create([
             'department_id' => $this->engDept->id,
             'onboarded_at' => now(),
             'must_change_password' => false,
+            'active_role' => 'employee',
+        ]);
+        \App\Models\RoleAssignment::create([
+            'user_id' => $this->engEmployee->id,
+            'role' => 'employee'
         ]);
         
         $this->superAdmin = User::factory()->create([
             'onboarded_at' => now(),
             'must_change_password' => false,
+            'active_role' => 'super_admin',
         ]);
         \App\Models\RoleAssignment::create([
             'user_id' => $this->superAdmin->id,

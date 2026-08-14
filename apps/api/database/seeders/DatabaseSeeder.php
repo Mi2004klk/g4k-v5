@@ -253,6 +253,7 @@ class DatabaseSeeder extends Seeder
                     "blood_group" => $emp["blood_group"],
                     "working_hours" => $emp["working_hours"],
                     "work_schedule_id" => 1,
+                    "onboarded_at" => now(),
                 ]
             );
 

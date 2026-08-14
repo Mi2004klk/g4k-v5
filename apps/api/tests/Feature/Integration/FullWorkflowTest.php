@@ -41,7 +41,10 @@ class FullWorkflowTest extends TestCase
         \App\Models\AttendanceEvent::where('user_id', $employee->id)->delete();
         \App\Models\AttendanceDay::where('user_id', $employee->id)->delete();
         
-        $punchInTime = now()->setTime(9, 30, 0); // 9:30 AM (Late)
+        $punchInTime = now()->subHours(4)->setTime(9, 30, 0); // Past timestamp
+        if ($punchInTime->gt(now())) {
+            $punchInTime = now()->subHours(2);
+        }
         
         $response = $this->withToken($empToken)
             ->postJson('/api/attendance/clock-in', [
@@ -50,9 +53,6 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-clock-in',
             ]);
             
-        if ($response->status() !== 200) {
-            dd($response->json(), $response->status());
-        }
         $response->assertStatus(200);
         
         // 3. Employee Takes Break

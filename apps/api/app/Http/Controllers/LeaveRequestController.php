@@ -149,6 +149,9 @@ class LeaveRequestController extends Controller
             }
 
             DB::commit();
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 403);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to process decision: ' . $e->getMessage()], 500);

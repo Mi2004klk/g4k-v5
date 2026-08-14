@@ -100,8 +100,19 @@ class AttendanceService
                 $schedule = \App\Models\WorkSchedule::where('is_default', true)->first();
             }
         }
-        $startTimeStr = $schedule->start_time ?? '09:00:00';
-        $standardSeconds = $schedule->standard_seconds ?? 31500;
+        $startTimeStr = '09:00:00';
+        $standardSeconds = 31500;
+        $graceMinutes = 10;
+
+        if (is_object($schedule)) {
+            $startTimeStr = $schedule->start_time ?? '09:00:00';
+            $standardSeconds = (int)($schedule->standard_seconds ?? 31500);
+            $graceMinutes = (int)($schedule->grace_minutes ?? 10);
+        } elseif (is_array($schedule)) {
+            $startTimeStr = $schedule['start_time'] ?? '09:00:00';
+            $standardSeconds = (int)($schedule['standard_seconds'] ?? 31500);
+            $graceMinutes = (int)($schedule['grace_minutes'] ?? 10);
+        }
 
         $firstClockIn = null;
         $lastClockOut = null;
@@ -207,16 +218,19 @@ class AttendanceService
             }
         }
 
-        $isHoliday = DB::table('holidays')->where(function($q) use ($date) {
+        $monthDay = Carbon::parse($date)->format('m-d');
+        $driver = DB::connection()->getDriverName();
+        $dateExpr = $driver === 'sqlite' ? "strftime('%m-%d', date)" : "TO_CHAR(date, 'MM-DD')";
+
+        $isHoliday = DB::table('holidays')->where(function($q) use ($date, $monthDay, $dateExpr) {
             $q->where('date', $date);
-            $monthDay = Carbon::parse($date)->format('m-d');
             if ($monthDay === '02-28' && !Carbon::parse($date)->isLeapYear()) {
-                $q->orWhere(function($q2) {
-                    $q2->where('recurring', true)->whereRaw("TO_CHAR(date, 'MM-DD') IN ('02-28', '02-29')");
+                $q->orWhere(function($q2) use ($dateExpr) {
+                    $q2->where('recurring', true)->whereRaw("{$dateExpr} IN ('02-28', '02-29')");
                 });
             } else {
-                $q->orWhere(function($q2) use ($monthDay) {
-                    $q2->where('recurring', true)->whereRaw("TO_CHAR(date, 'MM-DD') = ?", [$monthDay]);
+                $q->orWhere(function($q2) use ($monthDay, $dateExpr) {
+                    $q2->where('recurring', true)->whereRaw("{$dateExpr} = ?", [$monthDay]);
                 });
             }
         })->exists();

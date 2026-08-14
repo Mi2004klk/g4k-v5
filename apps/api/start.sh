@@ -14,7 +14,7 @@ if [ ! -f "frankenphp" ] && [ -f "/usr/local/bin/frankenphp" ]; then
 fi
 
 # 4. Start background queue worker & scheduler runner
-php artisan queue:work database --tries=3 --backoff=60 --max-time=3600 --sleep=3 &
+(while true; do php artisan queue:work database --tries=3 --backoff=60 --max-time=3600 --sleep=3; sleep 2; done) &
 (while true; do php artisan schedule:run --no-interaction; sleep 60; done) &
 
 # 5. Octane = PID 1. Cloud Run injects PORT=8080; binding 0.0.0.0 is MANDATORY.

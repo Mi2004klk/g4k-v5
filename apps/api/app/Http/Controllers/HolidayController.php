@@ -11,20 +11,41 @@ class HolidayController extends Controller
 {
     public function index(Request $request)
     {
-        $year = $request->query('year', date('Y'));
+        $year = (int)$request->query('year', date('Y'));
         
         $holidays = Cache::remember("holidays_{$year}", 3600, function () use ($year) {
             $baseHolidays = Holiday::whereYear('date', $year)->orderBy('date', 'asc')->get();
             $recurringHolidays = Holiday::where('recurring', true)->whereYear('date', '<', $year)->get();
             
-            // Map recurring to current year
             $expanded = $recurringHolidays->map(function ($h) use ($year) {
-                $newH = clone $h;
-                $newH->date = \Carbon\Carbon::parse($h->date)->setYear($year)->toDateString();
-                return $newH;
+                $dt = \Carbon\Carbon::parse($h->date);
+                if ($dt->month === 2 && $dt->day === 29 && !\Carbon\Carbon::create($year)->isLeapYear()) {
+                    $dateStr = sprintf('%04d-02-28', $year);
+                } else {
+                    $dateStr = $dt->copy()->setYear((int)$year)->toDateString();
+                }
+                return [
+                    'id' => $h->id,
+                    'name' => $h->name,
+                    'date' => $dateStr,
+                    'recurring' => (bool)$h->recurring,
+                    'description' => $h->description,
+                    'created_at' => $h->created_at ? (string)$h->created_at : null,
+                    'updated_at' => $h->updated_at ? (string)$h->updated_at : null,
+                ];
             });
-            
-            return $baseHolidays->concat($expanded)->sortBy('date')->values();
+
+            $baseArray = $baseHolidays->map(fn($h) => [
+                'id' => $h->id,
+                'name' => $h->name,
+                'date' => is_string($h->date) ? $h->date : \Carbon\Carbon::parse($h->date)->toDateString(),
+                'recurring' => (bool)$h->recurring,
+                'description' => $h->description,
+                'created_at' => $h->created_at ? (string)$h->created_at : null,
+                'updated_at' => $h->updated_at ? (string)$h->updated_at : null,
+            ]);
+
+            return $baseArray->concat($expanded)->sortBy('date')->values()->all();
         });
 
         return response()->json($holidays);

@@ -18,9 +18,10 @@ return new class extends Migration
             });
         }
 
-        // Postgres enum check constraint is named table_column_check
-        DB::statement("ALTER TABLE approvals DROP CONSTRAINT IF EXISTS approvals_decision_check");
-        DB::statement("ALTER TABLE approvals ADD CONSTRAINT approvals_decision_check CHECK (decision::text = ANY (ARRAY['approved'::character varying, 'rejected'::character varying, 'redo'::character varying]::text[]))");
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE approvals DROP CONSTRAINT IF EXISTS approvals_decision_check");
+            DB::statement("ALTER TABLE approvals ADD CONSTRAINT approvals_decision_check CHECK (decision::text = ANY (ARRAY['approved'::character varying, 'rejected'::character varying, 'redo'::character varying]::text[]))");
+        }
     }
 
     /**
