@@ -28,14 +28,21 @@ use App\Http\Controllers\AutoNumberingController;
 // NEVER add a second `/api/...` copy here — it would create a broken `/api/api/...` route.
 
 // Public (unauthenticated) endpoints
-Route::get('/ping', fn () => response()->json(['status'=>'ok','db'=>\App\Models\User::count()]));
-Route::get('/health', function () {
+Route::get('/ping', function () {
     try {
-        \Illuminate\Support\Facades\DB::connection()->getPdo();
-        return response()->json(['status' => 'ok', 'db' => 'connected', 'users' => \App\Models\User::count()]);
-    } catch (\Exception $e) {
-        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        $userCount = \App\Models\User::count();
+        return response()->json(['status' => 'ok', 'db' => 'connected', 'users' => $userCount]);
+    } catch (\Throwable $e) {
+        return response()->json(['status' => 'degraded', 'error' => $e->getMessage()], 200);
     }
+});
+
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'service' => 'g4k-api',
+        'timestamp' => now()->toIso8601String(),
+    ]);
 });
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
