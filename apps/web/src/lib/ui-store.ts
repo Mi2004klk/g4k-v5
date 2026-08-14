@@ -75,6 +75,7 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "g4k-ui-storage",
+      skipHydration: true,
       partialize: (state) => ({
         sidebarState: state.sidebarState,
         dismissedNotificationIds: state.dismissedNotificationIds,

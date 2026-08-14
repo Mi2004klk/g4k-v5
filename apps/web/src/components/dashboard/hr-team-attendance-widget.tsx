@@ -17,7 +17,7 @@ export function HrTeamAttendanceWidget() {
     placeholderData: keepPreviousData,
   });
 
-  const records = data?.data || [];
+  const records = Array.isArray(data?.data) ? data.data : [];
   const presentCount = records.filter((r: any) => r.status === "present" || r.status === "late").length;
   const totalCount = records.length;
   const topRecords = records.slice(0, 3);

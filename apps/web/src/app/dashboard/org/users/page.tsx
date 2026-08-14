@@ -184,27 +184,27 @@ export default function UsersPage() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    queryFn: () => apiFetch("/departments").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     staleTime: STALE_TIME_DEPARTMENTS,
     enabled: hasCapability(capabilities, "departments.manage"),
   });
 
   const watchDept = watch("department_id");
-  const selectedDept = departments?.find((d: any) => d.id === Number(watchDept));
+  const selectedDept = (Array.isArray(departments) ? departments : []).find((d: any) => d.id === Number(watchDept));
   const availableTeams = selectedDept?.teams || [];
 
 
 
   const { data: designations = [] } = useQuery({
     queryKey: queryKeys.designations,
-    queryFn: () => apiFetch("/designations").then(res => res.data || []),
+    queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     staleTime: STALE_TIME_DESIGNATIONS,
     enabled: hasCapability(capabilities, "designations.manage"),
   });
 
   const { data: work_schedules = [] } = useQuery({
     queryKey: ["work_schedules"],
-    queryFn: () => apiFetch("/work-schedules"),
+    queryFn: () => apiFetch("/work-schedules").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     enabled: hasCapability(capabilities, "settings.manage"),
   });
 
@@ -446,7 +446,7 @@ export default function UsersPage() {
     }
   ], []);
 
-  const deptOptions = departments?.map((d: any) => ({ label: d.name, value: d.id.toString() })) || [];
+  const deptOptions = (Array.isArray(departments) ? departments : []).map((d: any) => ({ label: d.name, value: d.id.toString() }));
 
   return (
     <div className="space-y-6">

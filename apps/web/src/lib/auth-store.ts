@@ -64,6 +64,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "g4k-auth",
+      skipHydration: true,
     }
   )
 );

@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('attendance_events', function (Blueprint $table) {
-            $table->boolean('is_approved')->default(false)->after('type');
-        });
+        if (!Schema::hasColumn('attendance_events', 'is_approved')) {
+            Schema::table('attendance_events', function (Blueprint $table) {
+                $table->boolean('is_approved')->default(false)->after('type');
+            });
+        }
 
-        Schema::table('attendance_days', function (Blueprint $table) {
-            $table->integer('unapproved_break_seconds')->default(0)->after('break_seconds');
-        });
+        if (!Schema::hasColumn('attendance_days', 'unapproved_break_seconds')) {
+            Schema::table('attendance_days', function (Blueprint $table) {
+                $table->integer('unapproved_break_seconds')->default(0)->after('break_seconds');
+            });
+        }
     }
 
     /**

@@ -17,7 +17,7 @@ export function AdminTodayAttendanceWidget() {
     placeholderData: keepPreviousData,
   });
 
-  const records = data?.data || [];
+  const records = Array.isArray(data?.data) ? data.data : [];
   const presentCount = records.filter((r: any) => r.status === "present").length;
   const lateCount = records.filter((r: any) => r.status === "late").length;
   const absentCount = records.filter((r: any) => r.status === "absent").length;

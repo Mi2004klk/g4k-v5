@@ -60,19 +60,19 @@ export default function EmployeeDetailPage() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    queryFn: () => apiFetch("/departments").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     enabled: hasCapability(capabilities, "departments.manage"),
   });
 
   const { data: designations = [] } = useQuery({
     queryKey: queryKeys.designations,
-    queryFn: () => apiFetch("/designations").then(res => res.data || []),
+    queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     enabled: hasCapability(capabilities, "designations.manage"),
   });
 
   const { data: workSchedules = [] } = useQuery({
     queryKey: queryKeys.workSchedules,
-    queryFn: () => apiFetch("/work-schedules").then(res => res.data || []),
+    queryFn: () => apiFetch("/work-schedules").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     enabled: hasCapability(capabilities, "settings.manage"),
   });
 

@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('work_schedule_id')->nullable()->after('working_hours');
-        });
+        if (!Schema::hasColumn('users', 'work_schedule_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->unsignedBigInteger('work_schedule_id')->nullable()->after('working_hours');
+            });
+        }
     }
 
     /**

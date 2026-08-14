@@ -12,6 +12,16 @@ import { useAuthStore } from "@/lib/auth-store";
 // This resolves the hydration race condition that forced skeletons to flash on cold load.
 // Offline mutation queueing is handled separately by the OfflineEngine.
 
+import { useUIStore } from "@/lib/ui-store";
+
+function StoreHydration() {
+  React.useEffect(() => {
+    useAuthStore.persist.rehydrate();
+    useUIStore.persist.rehydrate();
+  }, []);
+  return null;
+}
+
 function DensityProvider() {
   const density = useAuthStore((state) => state.density);
   React.useEffect(() => {
@@ -73,6 +83,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <QueryClientProvider client={queryClient}>
+        <StoreHydration />
         <DensityProvider />
         <ErrorBoundary>
           {children}

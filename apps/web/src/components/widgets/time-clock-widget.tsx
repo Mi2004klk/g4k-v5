@@ -44,7 +44,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const endBreak = useTimerStore((s) => s.endBreak);
 
   const { data: todayData, isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => data.attendance_today,
+    select: (data: any) => data?.attendance_today ?? null,
     placeholderData: keepPreviousData,
   });
 

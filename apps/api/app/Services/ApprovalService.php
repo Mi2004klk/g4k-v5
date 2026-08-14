@@ -103,11 +103,13 @@ class ApprovalService
             }
         });
 
-        try {
-            event(new ApprovalDecided($approval));
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
-        }
+        DB::afterCommit(function () use ($approval) {
+            try {
+                event(new ApprovalDecided($approval));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
+            }
+        });
 
         return $approval;
     }
@@ -150,11 +152,13 @@ class ApprovalService
             }
         });
 
-        try {
-            event(new ApprovalDecided($approval));
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
-        }
+        DB::afterCommit(function () use ($approval) {
+            try {
+                event(new ApprovalDecided($approval));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
+            }
+        });
 
         return $approval;
     }
@@ -185,11 +189,13 @@ class ApprovalService
             ]);
         });
 
-        try {
-            event(new ApprovalDecided($approval));
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
-        }
+        DB::afterCommit(function () use ($approval) {
+            try {
+                event(new ApprovalDecided($approval));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
+            }
+        });
 
         return $approval;
     }

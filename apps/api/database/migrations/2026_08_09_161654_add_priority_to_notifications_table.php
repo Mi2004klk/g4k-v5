@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->string('priority')->default('normal')->after('type');
-        });
+        if (!Schema::hasColumn('notifications', 'priority')) {
+            Schema::table('notifications', function (Blueprint $table) {
+                $table->string('priority')->default('normal')->after('type');
+            });
+        }
     }
 
     /**

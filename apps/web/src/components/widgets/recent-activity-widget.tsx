@@ -12,7 +12,7 @@ import { WidgetInfo } from "./widget-info";
 
 export function RecentActivityWidget() {
   const { data, isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => data.metrics,
+    select: (data: any) => data?.metrics ?? null,
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,
   });

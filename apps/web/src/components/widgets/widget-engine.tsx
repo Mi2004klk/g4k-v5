@@ -44,7 +44,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const { data: preferencesData } = useDashboardInit({
-    select: (data: any) => data.preferences,
+    select: (data: any) => data?.preferences ?? null,
     staleTime: 60_000,
   });
 
@@ -98,8 +98,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     setMounted(true);
     if (!preferencesData) return;
 
-    if (preferencesData.preferences?.dashboard_layout && Object.keys(preferencesData.preferences.dashboard_layout).length > 0) {
-      const savedLayouts = preferencesData.preferences.dashboard_layout;
+    const savedLayouts = preferencesData.dashboard_layout || preferencesData.preferences?.dashboard_layout;
+    if (savedLayouts && Object.keys(savedLayouts).length > 0) {
       const mergedBreakpoints: any = {};
       const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'];
       
