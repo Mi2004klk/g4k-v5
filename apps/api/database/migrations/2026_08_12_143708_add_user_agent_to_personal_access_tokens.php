@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('personal_access_tokens', function (Blueprint $table) {
-            $table->string('user_agent')->nullable();
-        });
+        if (!Schema::hasColumn('personal_access_tokens', 'user_agent')) {
+            Schema::table('personal_access_tokens', function (Blueprint $table) {
+                $table->string('user_agent')->nullable();
+            });
+        }
     }
 
     /**

@@ -63,18 +63,18 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
       if (event.type === "break_start") {
         currentBreakStart = event;
       } else if (event.type === "break_end" && currentBreakStart) {
-        const start = new Date(currentBreakStart.time);
-        const end = new Date(event.time);
+        const start = new Date(currentBreakStart.timestamp);
+        const end = new Date(event.timestamp);
         const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
-        breaks.push({ start, end, duration: durationSecs });
+        breaks.push({ start, end, duration: durationSecs, isApproved: currentBreakStart.is_approved });
         currentBreakStart = null;
       }
     }
     if (currentBreakStart) {
-      const start = new Date(currentBreakStart.time);
+      const start = new Date(currentBreakStart.timestamp);
       const end = new Date();
       const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
-      breaks.push({ start, end: null, duration: durationSecs, isOngoing: true });
+      breaks.push({ start, end: null, duration: durationSecs, isOngoing: true, isApproved: currentBreakStart.is_approved });
     }
   }
 
@@ -111,7 +111,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
               <div className="space-y-8">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800">
-                    <div className="text-xs text-neutral-500 mb-1 font-semibold uppercase tracking-wider">Worked Hours</div>
+                    <div className="text-xs text-neutral-500 mb-1 font-semibold uppercase tracking-wider">Productive Hours</div>
                     <div className="text-2xl font-mono font-bold text-neutral-900 dark:text-white">
                       {day?.total_seconds ? `${Math.floor(day.total_seconds / 3600)}h ${Math.floor((day.total_seconds % 3600) / 60)}m` : "0h 0m"}
                     </div>
@@ -129,20 +129,25 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-neutral-500">
                       <AppIcon name="break" />
-                      <span className="text-sm font-medium">Break Duration</span>
+                      <span className="text-sm font-medium">Unapproved Break Duration</span>
                     </div>
                     <span className="text-sm font-bold text-neutral-900 dark:text-white">
-                      {day?.break_seconds ? `${Math.floor(day.break_seconds / 3600)}h ${Math.floor((day.break_seconds % 3600) / 60)}m` : "0h 0m"}
-                      {breaks.length > 0 && <span className="text-xs text-neutral-400 font-normal ml-1">({breaks.length})</span>}
+                      {day?.unapproved_break_seconds ? `${Math.floor(day.unapproved_break_seconds / 3600)}h ${Math.floor((day.unapproved_break_seconds % 3600) / 60)}m` : "0h 0m"}
+                      {breaks.length > 0 && <span className="text-xs text-neutral-400 font-normal ml-1">({breaks.filter((b: any) => !b.isApproved).length})</span>}
                     </span>
                   </div>
                   {breaks.length > 0 && (
-                    <div className="pl-6 space-y-1 mt-1 border-l-2 border-neutral-100 dark:border-neutral-800 ml-1.5">
-                      {breaks.map((b, i) => (
+                    <div className="pl-6 space-y-2 mt-1 border-l-2 border-neutral-100 dark:border-neutral-800 ml-1.5 py-1">
+                      {breaks.map((b: any, i: number) => (
                         <div key={i} className="flex justify-between items-center text-xs text-neutral-500">
-                          <span>
-                            {b.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {b.isOngoing ? "Now" : b.end?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span>
+                              {b.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {b.isOngoing ? "Now" : b.end?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <StatusBadge status={b.isApproved ? "success" : "warning"} dot className="text-[10px] py-0 px-1.5 h-4">
+                              {b.isApproved ? "Approved" : "Unapproved"}
+                            </StatusBadge>
+                          </div>
                           <span className="font-mono">{Math.floor(b.duration / 60)}m</span>
                         </div>
                       ))}

@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     default: "Games4Kings Workplace OS",
   },
   description: "Gen2k Conglomerate Workplace Management System",
+  manifest: "/manifest.json",
   icons: {
     icon: "/icon.png",
     apple: "/apple-icon.png",
@@ -44,27 +45,6 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${sora.variable} h-full antialiased min-h-full flex flex-col`}
     >
-      <head>
-        <link rel="manifest" href="/manifest.json" crossOrigin="use-credentials" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(registration) {
-                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    },
-                    function(err) {
-                      console.log('ServiceWorker registration failed: ', err);
-                    }
-                  );
-                });
-              }
-            `,
-          }}
-        />
-      </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <WebVitals />
         <Providers>

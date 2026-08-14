@@ -276,7 +276,7 @@ export function AnnouncementBoard() {
 
                   <div className="flex items-center gap-1">
                     {emojis.map(({ key, label }) => {
-                      const uids: number[] = reactions[key] || [];
+                      const uids: number[] = Array.isArray(reactions[key]) ? reactions[key] : [];
                       const count = uids.length;
                       const hasReacted = user?.id ? uids.includes(user.id) : false;
 

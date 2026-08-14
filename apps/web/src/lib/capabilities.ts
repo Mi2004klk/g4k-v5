@@ -28,7 +28,12 @@ export function useCapabilities() {
   });
 }
 
+const SELF_SERVICE_EXCLUDED = ["attendance.clock-self"] as const;
+
 export function hasCapability(capabilities: string[] = [], requiredCapability: string): boolean {
+  if (SELF_SERVICE_EXCLUDED.includes(requiredCapability as any)) {
+    return capabilities.includes(requiredCapability);
+  }
   if (capabilities.includes("*")) {
     return true;
   }

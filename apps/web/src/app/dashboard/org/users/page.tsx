@@ -119,7 +119,7 @@ export default function UsersPage() {
     confirmState, setConfirmState,
     isEditOpen, setIsEditOpen,
     editingUser, setEditingUser,
-    updateMutation, statusMutation, deleteMutation, resetPasswordMutation
+    updateMutation, statusMutation, deleteMutation, resetPasswordMutation, restoreMutation
   } = useUserActions();
 
   // Forms

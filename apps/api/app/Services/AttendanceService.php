@@ -90,15 +90,14 @@ class AttendanceService
             }
         }
 
-        // Get user's specific work schedule if assigned, otherwise default
         $user = $cachedUser ?? User::find($userId);
         $schedule = $cachedSchedule;
         if (!$schedule) {
             if ($user && $user->work_schedule_id) {
-                $schedule = \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
+                $schedule = \App\Models\WorkSchedule::find($user->work_schedule_id);
             }
             if (!$schedule) {
-                $schedule = \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
+                $schedule = \App\Models\WorkSchedule::where('is_default', true)->first();
             }
         }
         $startTimeStr = $schedule->start_time ?? '09:00:00';
@@ -111,9 +110,11 @@ class AttendanceService
 
         $totalSeconds = 0;
         $breakSeconds = 0;
+        $unapprovedBreakSeconds = 0;
 
         $currentWorkStart = null;
         $currentBreakStart = null;
+        $currentBreakIsApproved = false;
 
         foreach ($events as $event) {
             $ts = $event->timestamp;
@@ -132,11 +133,16 @@ class AttendanceService
                         $currentWorkStart = null;
                     }
                     $currentBreakStart = $ts;
+                    $currentBreakIsApproved = $event->is_approved ?? false;
                     break;
 
                 case 'break_end':
                     if ($currentBreakStart) {
-                        $breakSeconds += abs($ts->diffInSeconds($currentBreakStart));
+                        $duration = abs($ts->diffInSeconds($currentBreakStart));
+                        $breakSeconds += $duration;
+                        if (!$currentBreakIsApproved) {
+                            $unapprovedBreakSeconds += $duration;
+                        }
                         $currentBreakStart = null;
                     }
                     $currentWorkStart = $ts;
@@ -149,7 +155,11 @@ class AttendanceService
                         $currentWorkStart = null;
                     }
                     if ($currentBreakStart) {
-                        $breakSeconds += abs($ts->diffInSeconds($currentBreakStart));
+                        $duration = abs($ts->diffInSeconds($currentBreakStart));
+                        $breakSeconds += $duration;
+                        if (!$currentBreakIsApproved) {
+                            $unapprovedBreakSeconds += $duration;
+                        }
                         $currentBreakStart = null;
                     }
                     break;
@@ -214,6 +224,7 @@ class AttendanceService
                 'last_event' => $lastEvent,
                 'total_seconds' => $totalSeconds,
                 'break_seconds' => $breakSeconds,
+                'unapproved_break_seconds' => $unapprovedBreakSeconds,
                 'overtime_seconds' => $overtimeSeconds,
                 'late_minutes' => $lateMinutes,
                 'has_open_shift' => $hasOpenShift,

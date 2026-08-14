@@ -47,10 +47,6 @@ class RequireCapability
             return response()->json(['message' => 'Role not selected.'], 403);
         }
 
-        if ($activeRole === 'super_admin') {
-            return $next($request);
-        }
-
         $allCaps = [];
         foreach ($capabilities as $c) {
             if (is_string($c)) {

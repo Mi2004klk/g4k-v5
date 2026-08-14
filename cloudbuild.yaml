@@ -55,4 +55,10 @@ steps:
           echo "Smoke check failed! HTTP status code: $$HTTP_CODE"
           exit 1
         fi
+        echo "Curling $$URL/api/ping"
+        PING_CODE=$$(curl -s -o /dev/null -w "%{http_code}" "$$URL/api/ping" || echo "000")
+        if [ "$$PING_CODE" -ne 200 ]; then
+          echo "Ping check failed! HTTP status code: $$PING_CODE"
+          exit 1
+        fi
         echo "Smoke check passed!"

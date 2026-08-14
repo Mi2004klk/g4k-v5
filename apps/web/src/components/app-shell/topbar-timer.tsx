@@ -6,12 +6,18 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LiveTimer } from "@/components/attendance/live-timer";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@g4k/ui/components";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 export function TopbarTimer() {
+  const { data: capabilities = [] } = useCapabilities();
   const isActive = useTimerStore((s) => s.isActive);
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
   const standardSeconds = useTimerStore((s) => s.standardSeconds);
   const router = useRouter();
+
+  if (!hasCapability(capabilities, "attendance.clock-self")) {
+    return null;
+  }
 
   if (!isActive) {
     return (

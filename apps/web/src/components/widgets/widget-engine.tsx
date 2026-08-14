@@ -60,7 +60,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
           return { ...item, h: 1, minH: 1, maxH: 1 };
         }
         // If uncollapsed, restore original height if currently stuck at h: 1
-        const defaultWidget = availableWidgets.find((w) => w.id === item.i);
+        const defaultWidget = Array.isArray(availableWidgets) ? availableWidgets.find((w) => w.id === item.i) : undefined;
         const normalHeight = defaultWidget?.defaultLayout?.h || 3;
         const currentH = item.h === 1 ? normalHeight : item.h;
         return { ...item, h: currentH, minH: undefined, maxH: undefined };
@@ -107,15 +107,17 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         const savedBp = Array.isArray(savedLayouts[bp]) ? savedLayouts[bp] : [];
         const mergedBp = [...savedBp];
         
-        availableWidgets.forEach(w => {
-          const exists = mergedBp.find((item: any) => item.i === w.id);
-          if (!exists) {
-            mergedBp.push({ ...(w.defaultLayout?.[bp] || w.defaultLayout), i: w.id });
-          }
-        });
+        if (Array.isArray(availableWidgets)) {
+          availableWidgets.forEach(w => {
+            const exists = mergedBp.find((item: any) => item.i === w.id);
+            if (!exists) {
+              mergedBp.push({ ...(w.defaultLayout?.[bp] || w.defaultLayout), i: w.id });
+            }
+          });
+        }
         
         // Filter out old/removed widgets
-        mergedBreakpoints[bp] = mergedBp.filter((item: any) => availableWidgets.find(w => w.id === item.i));
+        mergedBreakpoints[bp] = mergedBp.filter((item: any) => Array.isArray(availableWidgets) ? availableWidgets.find(w => w.id === item.i) : false);
       });
       
       setLayouts((prev: any) => JSON.stringify(prev) === JSON.stringify(mergedBreakpoints) ? prev : mergedBreakpoints);

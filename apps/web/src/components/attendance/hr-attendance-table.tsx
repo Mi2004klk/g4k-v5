@@ -136,169 +136,145 @@ export function HrAttendanceTable() {
 
 
 
-  const columns: any[] = [
-    {
-      id: "select",
-      header: ({ table }: any) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-          className="ml-2"
-        />
-      ),
-      cell: ({ row }: any) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value: any) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          className="ml-2"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "user_name",
-      header: "Employee",
-      cell: ({ row }: any) => {
-        const isOpenShift = row.original.clock_in && !row.original.clock_out;
-
-        return (
-          <div className="flex items-center gap-3 group">
-            <button
-              onClick={() => {
-                setSheetTab("day");
-                setSelectedUser(row.original.user_id);
-              }}
-              className="flex flex-col text-left hover:opacity-80 transition-opacity"
-            >
-              <span className="font-semibold text-foreground underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
-              <span className="text-[11px] text-muted-foreground font-normal">{row.original.user_email}</span>
-            </button>
-            <button
-              onClick={() => {
-                setSheetTab("trends");
-                setSelectedUser(row.original.user_id);
-              }}
-              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all text-muted-foreground hover:text-violet-500"
-              title="View Trends"
-            >
-              <AppIcon name="trendingUp" />
-            </button>
-            {isOpenShift && (
+    const columns: any[] = [
+      {
+        id: "select",
+        size: 40,
+        header: ({ table }: any) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+            className="ml-2"
+          />
+        ),
+        cell: ({ row }: any) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="ml-2"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        id: "date",
+        size: 120,
+        header: "Date",
+        cell: ({ row }: any) => {
+          return <span className="text-sm font-medium text-foreground">{safeFormat(row.original.date, "MMM dd, yyyy")}</span>;
+        }
+      },
+      {
+        accessorKey: "user_name",
+        header: "Employee",
+        size: 200,
+        cell: ({ row }: any) => {
+          const isOpenShift = row.original.clock_in && !row.original.clock_out;
+  
+          return (
+            <div className="flex items-center gap-3 group">
               <button
-                onClick={() => setCorrectionData({
-                  dayId: row.original.id,
-                  userId: row.original.user_id,
-                  date: row.original.date,
-                  action: "add_event",
-                  type: "clock_out"
-                })}
-                className="hover:opacity-80 transition-opacity"
-                title="Open shift - missing clock out"
+                onClick={() => {
+                  setSheetTab("day");
+                  setSelectedUser(row.original.user_id);
+                }}
+                className="flex flex-col text-left hover:opacity-80 transition-opacity"
               >
-                <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
-                  <AppIcon name="error" size="xs" />
-                  OPEN SHIFT
-                </StatusBadge>
+                <span className="font-semibold text-foreground underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
+                <span className="text-[11px] text-muted-foreground font-normal">{row.original.user_email}</span>
               </button>
-            )}
-          </div>
-        );
+              {isOpenShift && (
+                <button
+                  onClick={() => setCorrectionData({
+                    dayId: row.original.id,
+                    userId: row.original.user_id,
+                    date: row.original.date,
+                    action: "add_event",
+                    type: "clock_out"
+                  })}
+                  className="hover:opacity-80 transition-opacity ml-2"
+                  title="Open shift - missing clock out"
+                >
+                  <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
+                    <AppIcon name="error" size="xs" />
+                    OPEN
+                  </StatusBadge>
+                </button>
+              )}
+            </div>
+          );
+        },
       },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }: any) => {
-        const status = row.getValue("status") as string;
-        const isLeave = status === "leave";
-
-        return (
-          <div className="flex items-center gap-2">
-            <StatusBadge
-              status={status === "present" ? "success" : status === "late" ? "warning" : isLeave ? "info" : "danger"}
-              dot
-              className="uppercase"
-            >
-              {status}
-            </StatusBadge>
-            {row.original.late_minutes > 0 && (
-              <StatusBadge status="warning" className="font-mono">
-                LATE · {row.original.late_minutes}m
-              </StatusBadge>
-            )}
-          </div>
-        );
+      {
+        accessorKey: "clock_in",
+        header: "Clock In",
+        size: 120,
+        cell: ({ row }: any) => {
+          const val = row.getValue("clock_in") as string;
+          return <span className="font-mono text-muted-foreground">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
+        },
       },
-    },
-    {
-      accessorKey: "clock_in",
-      header: "Clock In",
-      cell: ({ row }: any) => {
-        const val = row.getValue("clock_in") as string;
-        return <span className="font-mono text-muted-foreground">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
+      {
+        id: "productive_hours",
+        header: "Total Productive Hours",
+        size: 180,
+        cell: ({ row }: any) => {
+          const secs = row.original.total_seconds || 0;
+          const hours = Math.floor(secs / 3600);
+          const mins = Math.floor((secs % 3600) / 60);
+          return <span className="font-mono font-bold text-emerald-600">{hours}h {mins}m</span>;
+        },
       },
-    },
-    {
-      accessorKey: "clock_out",
-      header: "Clock Out",
-      cell: ({ row }: any) => {
-        const val = row.getValue("clock_out") as string;
-        return <span className="font-mono text-muted-foreground">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
+      {
+        id: "break_hours",
+        header: "Total Break",
+        size: 140,
+        cell: ({ row }: any) => {
+          const secs = row.original.unapproved_break_seconds || 0;
+          const hours = Math.floor(secs / 3600);
+          const mins = Math.floor((secs % 3600) / 60);
+          return <span className="font-mono text-amber-600 font-medium">{hours}h {mins}m</span>;
+        },
       },
-    },
-    {
-      id: "worked_hours",
-      header: "Worked Hours",
-      cell: ({ row }: any) => {
-        const secs = row.original.total_seconds || 0;
-        const hours = Math.floor(secs / 3600);
-        const mins = Math.floor((secs % 3600) / 60);
-        return <span className="font-mono font-bold">{hours}h {mins}m</span>;
+      {
+        id: "working_hours",
+        header: "Total Working Hours",
+        size: 180,
+        cell: ({ row }: any) => {
+          // Total working hours includes all breaks
+          const secs = (row.original.total_seconds || 0) + (row.original.break_seconds || 0);
+          const hours = Math.floor(secs / 3600);
+          const mins = Math.floor((secs % 3600) / 60);
+          return <span className="font-mono font-bold text-foreground">{hours}h {mins}m</span>;
+        },
       },
-    },
-    {
-      id: "overtime",
-      header: "Overtime",
-      cell: ({ row }: any) => {
-        const secs = row.original.overtime_seconds || 0;
-        const hours = Math.floor(secs / 3600);
-        const mins = Math.floor((secs % 3600) / 60);
-        return <span className="font-mono text-amber-600">{hours}h {mins}m</span>;
-      },
-    },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }: any) => {
-        return (
-          <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="sm" asChild className="h-8 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-50">
-              <Link href={`/dashboard/org/leave?user_id=${row.original.user_id}`}>
-                <AppIcon name="calendar" className=" mr-1" />
-                Leave History
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 ml-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedUser(row.original.user_id);
-                setSheetTab("trends");
-              }}
-            >
-              <AppIcon name="trendingUp" className=" mr-1" />
-              Trends
-            </Button>
-          </div>
-        );
-      },
-    }
-  ];
+      {
+        id: "actions",
+        header: "Actions",
+        size: 100,
+        cell: ({ row }: any) => {
+          return (
+            <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs font-semibold px-3 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedUser(row.original.user_id);
+                  setSheetTab("day");
+                }}
+              >
+                Summary
+              </Button>
+            </div>
+          );
+        },
+      }
+    ];
 
   const statusOptions = [
     { label: "Present", value: "present" },
@@ -368,6 +344,7 @@ export function HrAttendanceTable() {
         <DataTable
           columns={columns}
           data={records}
+          density="compact"
           onRowSelectionChange={setRowSelection}
           rowSelection={rowSelection}
           getRowId={(row: any) => String(row.user_id || row.id)}

@@ -103,11 +103,12 @@ const MemoizedCell = React.memo(
     return (
       <td
         className={cn(
-          "align-middle transition-colors group-hover:bg-muted/50 data-[state=selected]:bg-muted",
+          "align-middle transition-colors group-hover:bg-muted/50 data-[state=selected]:bg-muted flex-1",
           density === "compact" ? "p-2" : "p-4",
           stickyFirstCol && isFirstCol ? "sticky left-0 z-10 bg-background" : "",
           editable ? "group/cell relative" : ""
         )}
+        style={{ width: cell.column.getSize(), flex: `1 1 ${cell.column.getSize()}px` }}
       >
         {isEditing ? (
           <div className="flex items-center gap-2">
@@ -348,9 +349,10 @@ export function DataTable<TData, TValue>({
                       <th
                         key={header.id}
                         className={cn(
-                          "h-12 px-4 text-left align-middle font-medium text-muted-foreground",
+                          "h-12 px-4 text-left align-middle font-medium text-muted-foreground flex-1",
                           stickyFirstCol && index === 0 ? "sticky left-0 z-30 bg-muted/50" : ""
                         )}
+                        style={{ width: header.getSize(), flex: `1 1 ${header.getSize()}px` }}
                       >
                         {header.isPlaceholder
                           ? null

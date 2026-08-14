@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('department_hr', function (Blueprint $t) {
-            $t->id();
-            $t->foreignId('department_id')->constrained()->cascadeOnDelete();
-            $t->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $t->unique(['department_id','user_id']);
-            $t->timestamps();
-        });
+        if (!Schema::hasTable('department_hr')) {
+            Schema::create('department_hr', function (Blueprint $t) {
+                $t->id();
+                $t->foreignId('department_id')->constrained()->cascadeOnDelete();
+                $t->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $t->unique(['department_id','user_id']);
+                $t->timestamps();
+            });
+        }
 
         // 2.1d Migration backfill
         $hrs = \Illuminate\Support\Facades\DB::table('users')

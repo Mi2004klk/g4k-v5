@@ -101,10 +101,13 @@ class ApprovalService
                     $leave->update(['status' => 'approved']);
                 }
             }
-            
-            // Dispatch synchronously inside the transaction so LeaveAttendanceIntegration can participate in it
-            event(new ApprovalDecided($approval));
         });
+
+        try {
+            event(new ApprovalDecided($approval));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
+        }
 
         return $approval;
     }
@@ -147,7 +150,11 @@ class ApprovalService
             }
         });
 
-        event(new ApprovalDecided($approval));
+        try {
+            event(new ApprovalDecided($approval));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
+        }
 
         return $approval;
     }
@@ -176,12 +183,13 @@ class ApprovalService
                 'decision_reason' => $reason,
                 'feedback' => $reason,
             ]);
-            
-            // Approvable specific logic should be handled by listeners or controller, 
-            // but we can handle Task here if we want or leave it to TaskController
         });
 
-        event(new ApprovalDecided($approval));
+        try {
+            event(new ApprovalDecided($approval));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed to dispatch ApprovalDecided event: " . $e->getMessage());
+        }
 
         return $approval;
     }

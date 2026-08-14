@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
         $roleCaps = [
             'super_admin' => ['*'],
             'hr' => [
+                'attendance.clock-self',
                 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
                 'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
                 'profile.edit', 'leave.request-self', 'announcements.manage', 'tasks.view', 'projects.view'

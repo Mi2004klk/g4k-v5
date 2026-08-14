@@ -8,12 +8,19 @@ use Illuminate\Support\Facades\Cache;
 class CapabilityMatrix
 {
     /**
+     * Capabilities that are SELF-SERVICE and excluded for super_admin.
+     */
+    protected const SELF_SERVICE_EXCLUDED = [
+        'attendance.clock-self',
+    ];
+
+    /**
      * Default role capability matrix fallback for unseeded or fresh environments.
      */
     protected static array $defaultMatrix = [
         'super_admin' => ['*'],
         'hr' => [
-            'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
+            'attendance.clock-self', 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
             'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
             'profile.edit', 'leave.request-self',
             'reports.view', 'tasks.view', 'projects.view'
@@ -63,10 +70,14 @@ class CapabilityMatrix
      */
     public static function hasCapability(string $role, string $capability): bool
     {
+        if ($role === 'super_admin' && in_array($capability, self::SELF_SERVICE_EXCLUDED)) {
+            return false;
+        }
+
         $roleCapabilities = static::getCapabilitiesForRole($role);
 
         if (in_array('*', $roleCapabilities)) {
-            return true;
+            return !in_array($capability, self::SELF_SERVICE_EXCLUDED);
         }
 
         return in_array($capability, $roleCapabilities);

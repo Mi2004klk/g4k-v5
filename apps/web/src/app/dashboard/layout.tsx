@@ -333,9 +333,20 @@ export default function DashboardLayout({
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Theme</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer gap-2">
+                      <AppIcon name="sun" className="text-muted-foreground" />
+                      <span>Light</span>
+                      {theme === "light" && <AppIcon name="check" size="xs" className="ml-auto text-primary" />}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer gap-2">
+                      <AppIcon name="moon" className="text-muted-foreground" />
+                      <span>Dark</span>
+                      {theme === "dark" && <AppIcon name="check" size="xs" className="ml-auto text-primary" />}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer gap-2">
-                      <AppIcon name="computer" className=" text-muted-foreground" />
-                      System Theme
+                      <AppIcon name="computer" className="text-muted-foreground" />
+                      <span>System</span>
+                      {theme === "system" && <AppIcon name="check" size="xs" className="ml-auto text-primary" />}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Density</DropdownMenuLabel>

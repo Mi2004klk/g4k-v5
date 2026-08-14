@@ -31,7 +31,7 @@ class LeaveAttendanceIntegration implements ShouldQueue
 
             // Fetch work schedule working_days
             $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
-                return \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
+                return \App\Models\WorkSchedule::where('is_default', true)->first();
             });
             $workingDays = [1, 2, 3, 4, 5, 6]; // Default Mon-Sat
             if ($schedule && !empty($schedule->working_days)) {
