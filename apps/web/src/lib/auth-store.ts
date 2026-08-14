@@ -18,6 +18,7 @@ export interface UserProfile {
   };
   active_role?: string;
   roles?: string[];
+  role_assignments?: any[];
   department?: any;
   designation?: any;
   company?: any;
