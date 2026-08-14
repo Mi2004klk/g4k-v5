@@ -386,7 +386,7 @@ class AttendanceController extends Controller
                 ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name')
                 ->orderBy('date', 'desc');
                 
-            if ($request->filled('date')) {
+            if ($request->filled('date') && $request->query('date') !== 'all') {
                 $query->where('date', $request->query('date'));
             }
             if ($request->filled('from')) {
@@ -523,24 +523,35 @@ class AttendanceController extends Controller
 
     public function hrToday(Request $request)
     {
-        $date = now()->toDateString();
-        $query = DB::table('users')
-            ->leftJoin('attendance_days', function ($join) use ($date) {
-                $join->on('users.id', '=', 'attendance_days.user_id')
-                     ->where('attendance_days.date', '=', $date);
-            })
-            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-            ->select(
-                'attendance_days.*', 
-                'users.id as user_id',
-                'users.name as user_name', 
-                'users.email as user_email', 
-                'users.department_id', 
-                'departments.name as department_name',
-                DB::raw("COALESCE(attendance_days.status, 'absent') as computed_status")
-            )
-            ->where('users.is_active', true)
-            ->orderBy('users.name', 'asc');
+        $reqDate = $request->query('date');
+        $isAll = $reqDate === 'all';
+        $date = ($reqDate && !$isAll) ? $reqDate : now()->toDateString();
+
+        if ($isAll) {
+            $query = DB::table('attendance_days')
+                ->join('users', 'users.id', '=', 'attendance_days.user_id')
+                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->select('attendance_days.*', 'users.id as user_id', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name', 'attendance_days.status as computed_status')
+                ->orderBy('date', 'desc');
+        } else {
+            $query = DB::table('users')
+                ->leftJoin('attendance_days', function ($join) use ($date) {
+                    $join->on('users.id', '=', 'attendance_days.user_id')
+                         ->where('attendance_days.date', '=', $date);
+                })
+                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+                ->select(
+                    'attendance_days.*', 
+                    'users.id as user_id',
+                    'users.name as user_name', 
+                    'users.email as user_email', 
+                    'users.department_id', 
+                    'departments.name as department_name',
+                    DB::raw("COALESCE(attendance_days.status, 'absent') as computed_status")
+                )
+                ->where('users.is_active', true)
+                ->orderBy('users.name', 'asc');
+        }
 
         $this->applyHrScoping($query, $request->user());
 

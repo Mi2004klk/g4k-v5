@@ -92,7 +92,12 @@ export function DirectoryTab() {
     onError: (err: any) => toast.error(err.message || "Failed to start chat."),
   });
 
-  const users = data?.pages.flatMap((page) => page.data || []) || [];
+  const users = data?.pages.flatMap((page: any) => {
+    if (Array.isArray(page?.data)) return page.data;
+    if (Array.isArray(page?.data?.data)) return page.data.data;
+    if (Array.isArray(page)) return page;
+    return [];
+  }) || [];
 
   const columns: any[] = [
     {

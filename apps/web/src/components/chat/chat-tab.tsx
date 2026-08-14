@@ -31,10 +31,13 @@ export function ChatTab() {
     }
   }, [initialConvId]);
 
-  const { data: conversations = [] } = useQuery({
+  const { data: rawConversations } = useQuery({
     queryKey: queryKeys.conversations,
     queryFn: () => apiFetch("/conversations"),
   });
+  const conversations = Array.isArray(rawConversations) 
+    ? rawConversations 
+    : (Array.isArray(rawConversations?.data) ? rawConversations.data : []);
 
   const { 
     data: messageData,

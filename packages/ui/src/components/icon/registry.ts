@@ -43,11 +43,13 @@ export const iconRegistry = {
   tasks:           { icon: faListCheck, tone: "success" },
   chat:            { icon: faMessage, tone: "primary" },
   directory:       { icon: faUsers, tone: "warning" },
+  users:           { icon: faUsers, tone: "warning" },
   employees:       { icon: faIdCard, tone: "info" },
   teamAttendance:  { icon: faClock, tone: "success" },
   settings:        { icon: faGear, tone: "neutral" },
   audit:           { icon: faShieldHalved, tone: "danger" },
   profile:         { icon: faUser, tone: "neutral" },
+  user:            { icon: faUser, tone: "neutral" },
   // actions
   plus: { icon: faPlus }, edit: { icon: faPenToSquare }, trash: { icon: faTrashCan, tone: "danger" },
   save: { icon: faFloppyDisk }, download: { icon: faDownload }, upload: { icon: faUpload },

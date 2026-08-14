@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { MailSmtpConfig } from "./mail-smtp-config";
+import { PoliciesConfig } from "./policies-config";
 import { HolidayCalendar } from "@/components/leave/holiday-calendar";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 

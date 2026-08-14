@@ -507,7 +507,12 @@ class AuthController extends Controller
         $user->onboarded_at = now();
         $user->save();
 
-        return response()->json(['message' => 'Onboarding marked as completed.']);
+        $user->load(['department', 'designation', 'company', 'roleAssignments']);
+
+        return response()->json([
+            'message' => 'Onboarding marked as completed.',
+            'user' => $user,
+        ]);
     }
 
     public function sessions(Request $request)

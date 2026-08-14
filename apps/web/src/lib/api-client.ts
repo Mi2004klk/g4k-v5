@@ -117,11 +117,11 @@ export async function apiFetch<T = any>(
 
         const errorData = await response.json().catch(() => ({}));
 
-        if (response.status === 403) {
-          if (errorData.needs_onboarding) {
-            if (typeof window !== "undefined" && window.location.pathname !== "/onboarding") {
-              window.location.href = "/onboarding";
-            }
+        if (response.status === 403 && errorData.needs_onboarding) {
+          const curUser = useAuthStore.getState().user;
+          const curToken = getAuthToken();
+          if (curUser && curToken) {
+            useAuthStore.getState().setAuth(curToken, { ...curUser, onboarded_at: null }, curUser.active_role || 'employee');
           }
         }
 
