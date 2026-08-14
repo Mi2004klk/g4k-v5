@@ -367,16 +367,16 @@ Action: after implementing §15, regenerate `context.md` from this doc so it is 
 
 ### PHASE 4 — Frontend data / cache / UX
 
-- `4.1 [P1][CACHE] FE` — Fix dead invalidation keys: `announcement-board`→`dashboardInit`; `quick-task-widget`→`dashboardInit`; add `dashboardInit` invalidation to user CRUD / leave approval / task CRUD.
-- `4.2 [P1][BROKEN] FE` — Guard `quick-task-widget.tsx:23` (`Array.isArray`); `upcoming-holidays-widget.tsx:77` `safeFormat`; `profile` designations queryFn.
-- `4.3 [P1][UX] UI` — **Calendar v8→v9 classNames** (`packages/ui/.../calendar.tsx`); verify across all pickers.
-- `4.4 [P1][UX] UI` — **DataTable `isLoading`** + skeleton rows; wire into approvals/reports/leave-history.
-- `4.5 [P1][UX] FE` — Add error+retry to attendance page, approvals-tab, leave-history-table, report-builder, profile, notifications-config.
-- `4.6 [P2][UX] FE` — Remove hard reloads (leave form, approvals filter → router state).
-- `4.7 [P2][CACHE] FE` — Offline replay invalidates cache; realtime gaps (announcements, attendance clock → dashboard widgets).
-- `4.8 [P2][UX] FE` — Dedupe error toasts (global vs per-mutation).
-- `4.9 [P2][UX] UI/FE` — Replace 52× hardcoded `bg-violet-600`→`primary` token (dark-mode safe); adopt radius token.
-- `4.10 [P2][UX] FE` — mail-smtp themed inputs; FilterBar single-date themed; breadcrumb hierarchy map; delete dead code (TopbarTimer, orphan sessions/error, DataTable virtualizer).
+- ✅ `4.1 [P1][CACHE] FE` — Fix dead invalidation keys: `announcement-board`→`dashboardInit`; `quick-task-widget`→`dashboardInit`; add `dashboardInit` invalidation to user CRUD / leave approval / task CRUD.
+- ✅ `4.2 [P1][BROKEN] FE` — Guard `quick-task-widget.tsx:23` (`Array.isArray`); `upcoming-holidays-widget.tsx:77` `safeFormat`; `profile` designations queryFn.
+- ✅ `4.3 [P1][UX] UI` — **Calendar v8→v9 classNames** (`packages/ui/.../calendar.tsx`); verify across all pickers.
+- ✅ `4.4 [P1][UX] UI` — **DataTable `isLoading`** + skeleton rows; wire into approvals/reports/leave-history.
+- ✅ `4.5 [P1][UX] FE` — Add error+retry to attendance page, approvals-tab, leave-history-table, report-builder, profile, notifications-config.
+- ✅ `4.6 [P2][UX] FE` — Remove hard reloads (leave form, approvals filter → router state).
+- ✅ `4.7 [P2][CACHE] FE` — Offline replay invalidates cache; realtime gaps (announcements, attendance clock → dashboard widgets).
+- ✅ `4.8 [P2][UX] FE` — Dedupe error toasts (global vs per-mutation).
+- ✅ `4.9 [P2][UX] UI/FE` — Replace 52× hardcoded `bg-violet-600`→`primary` token (dark-mode safe); adopt radius token.
+- ✅ `4.10 [P2][UX] FE` — mail-smtp themed inputs; FilterBar single-date themed; breadcrumb hierarchy map; delete dead code (TopbarTimer, orphan sessions/error, DataTable virtualizer).
 
 ### PHASE 5 — Nav, mobile, polish
 
