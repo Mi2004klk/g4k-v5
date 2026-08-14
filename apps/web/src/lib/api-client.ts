@@ -11,6 +11,12 @@ export function getToken(): string | null {
   return getAuthToken();
 }
 
+export function asArray<T = any>(res: any): T[] {
+  if (Array.isArray(res?.data)) return res.data;
+  if (Array.isArray(res)) return res;
+  return [];
+}
+
 
 let refreshPromise: Promise<string> | null = null;
 
