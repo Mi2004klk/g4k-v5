@@ -72,7 +72,10 @@ export async function apiFetch<T = any>(
                 const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
                 const refreshRes = await fetch(refreshUrl, {
                   method: "GET",
-                  headers: { "X-Refresh-Token": useAuthStore.getState().refreshToken || "" },
+                  headers: {
+                    "Accept": "application/json",
+                    "X-Refresh-Token": useAuthStore.getState().refreshToken || "",
+                  },
                   credentials: "include",
                 });
 

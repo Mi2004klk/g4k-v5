@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'capability' => \App\Http\Middleware\RequireCapability::class,
         ]);
+
+        // API-only app: there is no web login route. Never try to redirect guests to route('login')
+        // (which is undefined and throws RouteNotFoundException -> HTTP 500). Return null so unauthenticated
+        // API requests always get a clean AuthenticationException -> 401 JSON.
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         \Sentry\Laravel\Integration::handles($exceptions);
