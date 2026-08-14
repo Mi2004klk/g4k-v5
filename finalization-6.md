@@ -333,11 +333,11 @@ Action: after implementing §15, regenerate `context.md` from this doc so it is 
 
 ### PHASE 2 — Auth reliability
 
-- `2.1 [P1][BROKEN] FE/BE` — **Stop idle forced logout.** Refresh `g4k_token` cookie on each successful `apiFetch` + `visibilitychange` heartbeat (or lengthen cookie TTL to refresh-token window). **Accept:** 20-min idle nav → stays logged in.
-- `2.2 [P1][BROKEN] FE` — **Fix deep-link spinner.** Add `/onboarding`,`/role-select`,`/change-password` to middleware matcher (no-token→`/login`); client redirect when `!user`. **Accept:** logged-out paste → `/login`.
-- `2.3 [P1][BROKEN] FE/BE` — **Capabilities cookie race.** Echo caps in login/role-select/refresh; write `g4k_capabilities` immediately. **Accept:** first protected nav post-login → no `?error=unauthorized`.
-- `2.4 [P1][BROKEN] BE` — **Fix `PUT /auth/role`** (implement `getAssignedRoles` or reuse `RoleAssignment` query). **Accept:** → 200.
-- `2.5 [P2][UX] FE` — **Role-select** consume response token (drop double `/auth/refresh`).
+- ✅ `2.1 [P1][BROKEN] FE/BE` — **Stop idle forced logout.** Refresh `g4k_token` cookie on each successful `apiFetch` + `visibilitychange` heartbeat (or lengthen cookie TTL to refresh-token window). **Accept:** 20-min idle nav → stays logged in.
+- ✅ `2.2 [P1][BROKEN] FE` — **Fix deep-link spinner.** Add `/onboarding`,`/role-select`,`/change-password` to middleware matcher (no-token→`/login`); client redirect when `!user`. **Accept:** logged-out paste → `/login`.
+- ✅ `2.3 [P1][BROKEN] FE/BE` — **Capabilities cookie race.** Echo caps in login/role-select/refresh; write `g4k_capabilities` immediately. **Accept:** first protected nav post-login → no `?error=unauthorized`.
+- ✅ `2.4 [P1][BROKEN] BE` — **Fix `PUT /auth/role`** (implement `getAssignedRoles` or reuse `RoleAssignment` query). **Accept:** → 200.
+- ✅ `2.5 [P2][UX] FE` — **Role-select** consume response token (drop double `/auth/refresh`).
 
 ### PHASE 3 — Spec feature build (the missing ~15)
 
