@@ -213,9 +213,12 @@ export function DataTable<TData, TValue>({
   const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
   const isMobile = useIsMobile()
 
-  // Include checkbox column automatically if rowSelection is needed
+  // Include checkbox column automatically if rowSelection is needed and not already present
   const tableColumns = useMemo(() => {
     if (!onRowSelectionChange) return columns
+    const hasSelect = columns.some((c: any) => c.id === "select")
+    if (hasSelect) return columns
+
     const selectColumn: ColumnDef<TData, any> = {
       id: "select",
       header: ({ table }) => (
@@ -234,6 +237,7 @@ export function DataTable<TData, TValue>({
       ),
       enableSorting: false,
       enableHiding: false,
+      size: 40,
     }
     return [selectColumn, ...columns]
   }, [columns, onRowSelectionChange])
@@ -260,32 +264,12 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  useEffect(() => {
-    // Legacy sync - the controlled state handler above is preferred
-    // onRowSelectionChange?.(externalRowSelection !== undefined ? externalRowSelection : internalRowSelection)
-  }, [internalRowSelection, externalRowSelection, onRowSelectionChange])
-
-  // Virtualization setup
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const { rows } = table.getRowModel()
-  
-  const desktopRowHeight = density === "compact" ? 40 : 64
-  const estimatedCardHeight = 200 // approximate height for mobile card
-  const rowHeight = isMobile ? estimatedCardHeight : desktopRowHeight
-
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: useCallback(() => rowHeight, [rowHeight]),
-    overscan: 10,
-  })
-
-  const virtualRows = rowVirtualizer.getVirtualItems()
 
   // Infinite Scroll / Cursor Pagination
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
-      // Skip infinite scroll if page-number pagination is used
       if (page !== undefined) return;
       
       const target = e.target as HTMLDivElement
@@ -297,18 +281,20 @@ export function DataTable<TData, TValue>({
     [fetchNextPage, hasNextPage, isFetchingNextPage, page]
   )
 
+  const effectiveColumnsCount = table.getVisibleFlatColumns().length
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 w-full">
       {/* Table Toolbar */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="ml-auto flex items-center gap-2">
-              <AppIcon name="sliders" />
+            <Button variant="outline" size="sm" className="h-8 text-xs flex items-center gap-1.5 border-border/70 shadow-2xs">
+              <AppIcon name="sliders" size="xs" />
               View
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[150px]">
+          <DropdownMenuContent align="end" className="w-[160px]">
             {table
               .getAllColumns()
               .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide())
@@ -316,7 +302,7 @@ export function DataTable<TData, TValue>({
                 return (
                   <DropdownMenuCheckboxItem
                     key={column.id}
-                    className="capitalize"
+                    className="capitalize text-xs"
                     checked={column.getIsVisible()}
                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
@@ -328,126 +314,118 @@ export function DataTable<TData, TValue>({
         </DropdownMenu>
       </div>
 
-      {/* Table Container with Virtualization */}
+      {/* Table Container */}
       <div
         ref={tableContainerRef}
         onScroll={handleScroll}
-        className="rounded-md border bg-background relative h-[400px] md:h-[600px] overflow-auto"
+        className="rounded-xl border border-border/80 bg-card shadow-2xs overflow-hidden"
       >
         {!isMobile ? (
-          <table className="w-full caption-bottom text-sm grid">
-            <thead
-              className={cn(
-                "[&_tr]:border-b grid",
-                stickyHeader ? "sticky top-0 z-20 bg-muted/50 backdrop-blur" : ""
-              )}
-            >
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="flex w-full">
-                  {headerGroup.headers.map((header, index) => {
-                    return (
-                      <th
-                        key={header.id}
-                        className={cn(
-                          "h-12 px-4 text-left align-middle font-medium text-muted-foreground flex-1",
-                          stickyFirstCol && index === 0 ? "sticky left-0 z-30 bg-muted/50" : ""
-                        )}
-                        style={{ width: header.getSize(), flex: `1 1 ${header.getSize()}px` }}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    )
-                  })}
-                </tr>
-              ))}
-            </thead>
-            <tbody
-              className="relative grid w-full"
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
-              }}
-            >
-              {virtualRows.length > 0 ? (
-                virtualRows.map((virtualRow) => {
-                  const row = rows[virtualRow.index]
-                  return (
-                    <MemoizedRow
-                      key={row.id}
-                      row={row}
-                      virtualRow={virtualRow}
-                      density={density}
-                      stickyFirstCol={stickyFirstCol}
-                      onInlineEditSave={onInlineEditSave}
-                    />
-                  )
-                })
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} className="h-64 align-middle">
-                    <EmptyState
-                      title="No records found"
-                      description="Try adjusting your filters or search query."
-                    />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        ) : (
-          <div
-            className="relative w-full p-4"
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-            }}
-          >
-            {virtualRows.length > 0 ? (
-              virtualRows.map((virtualRow) => {
-                const row = rows[virtualRow.index]
-                return (
-                  <div
-                    key={row.id}
-                    className="absolute left-4 right-4 rounded-lg border bg-card p-4 text-card-foreground shadow-e1 space-y-3"
-                    style={{
-                      top: 0,
-                      transform: `translateY(${virtualRow.start}px)`,
-                      // allow dynamic height by not forcing it if possible, but virtualizer requires explicit height or dynamic measurement
-                    }}
-                    ref={rowVirtualizer.measureElement}
-                    data-index={virtualRow.index}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      // skip select column header text if it's the checkbox
-                      const headerTitle = cell.column.id === "select" ? "" : cell.column.columnDef.header
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead
+                className={cn(
+                  "border-b border-border/80 bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider",
+                  stickyHeader ? "sticky top-0 z-20 backdrop-blur-md" : ""
+                )}
+              >
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header, index) => {
                       return (
-                        <div key={cell.id} className="flex flex-col gap-1 border-b border-border/50 pb-2 last:border-0 last:pb-0 overflow-hidden">
-                          {headerTitle && (
-                            <span className="text-xs font-medium text-muted-foreground truncate">
-                              {typeof headerTitle === "string" ? headerTitle : cell.column.id}
-                            </span>
+                        <th
+                          key={header.id}
+                          className={cn(
+                            "h-10 px-4 align-middle text-muted-foreground whitespace-nowrap",
+                            stickyFirstCol && index === 0 ? "sticky left-0 z-30 bg-muted/60" : ""
                           )}
-                          <span className="text-sm break-words">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </span>
-                        </div>
+                          style={header.getSize() !== 150 ? { width: header.getSize() } : undefined}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </th>
                       )
                     })}
-                  </div>
-                )
-              })
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="divide-y divide-border/60 bg-background">
+                {rows.length > 0 ? (
+                  rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className="group transition-colors hover:bg-muted/40 data-[state=selected]:bg-primary/5"
+                    >
+                      {row.getVisibleCells().map((cell, index) => (
+                        <td
+                          key={cell.id}
+                          className={cn(
+                            "align-middle transition-colors",
+                            density === "compact" ? "py-2 px-3 text-xs" : "py-3.5 px-4 text-sm",
+                            stickyFirstCol && index === 0 ? "sticky left-0 z-10 bg-background group-hover:bg-muted/40" : ""
+                          )}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={effectiveColumnsCount} className="py-12 px-4 text-center">
+                      <div className="flex justify-center w-full">
+                        <EmptyState
+                          title="No records found"
+                          description="Try adjusting your filters or search query."
+                          className="max-w-md mx-auto"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="w-full p-3 space-y-3">
+            {rows.length > 0 ? (
+              rows.map((row) => (
+                <div
+                  key={row.id}
+                  className="rounded-lg border border-border bg-card p-4 text-card-foreground shadow-2xs space-y-2.5"
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const headerTitle = cell.column.id === "select" ? "" : cell.column.columnDef.header
+                    return (
+                      <div key={cell.id} className="flex flex-col gap-1 border-b border-border/40 pb-2 last:border-0 last:pb-0 overflow-hidden">
+                        {headerTitle && (
+                          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider truncate">
+                            {typeof headerTitle === "string" ? headerTitle : cell.column.id}
+                          </span>
+                        )}
+                        <span className="text-sm break-words">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ))
             ) : (
-              <div className="py-12">
+              <div className="py-10">
                 <EmptyState
                   title="No records found"
                   description="Try adjusting your filters or search query."
+                  className="max-w-md mx-auto"
                 />
               </div>
             )}
           </div>
         )}
         {isFetchingNextPage && (
-          <div className="p-4 text-center text-sm text-muted-foreground">Loading more...</div>
+          <div className="p-4 text-center text-xs font-medium text-muted-foreground animate-pulse">Loading more records...</div>
         )}
       </div>
 

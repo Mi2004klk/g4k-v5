@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import {  Button , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
 export function QAFormBuilder() {
@@ -52,10 +52,10 @@ export function QAFormBuilder() {
   });
 
   return (
-    <Card className=" border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader>
         <CardTitle className="text-base font-bold flex items-center gap-2">
-          <AppIcon name="success" className=" text-violet-600" />
+          <AppIcon name="success" className="text-primary" />
           Create QA Form Template
         </CardTitle>
       </CardHeader>
@@ -86,17 +86,16 @@ export function QAFormBuilder() {
                 className="text-xs h-8 flex-1"
               />
               <Select value={field.field_type} onValueChange={(val) => updateField(index, "field_type", val)}>
-      <SelectTrigger className="w-full h-9">
-        <SelectValue placeholder="Select..." />
-      </SelectTrigger>
-      <SelectContent>
-                <SelectItem value="input">Text Input</SelectItem>
-                <SelectItem value="textarea">Textarea</SelectItem>
-                <SelectItem value="checkbox">Checkbox</SelectItem>
-                <SelectItem value="slider">Rating Slider</SelectItem>
-              
-      </SelectContent>
-    </Select>
+                <SelectTrigger className="w-40 h-8 text-xs">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="input">Text Input</SelectItem>
+                  <SelectItem value="textarea">Textarea</SelectItem>
+                  <SelectItem value="checkbox">Checkbox</SelectItem>
+                  <SelectItem value="slider">Rating Slider</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 size="icon"
                 variant="ghost"
@@ -114,7 +113,7 @@ export function QAFormBuilder() {
             variant="outline"
             size="sm"
             onClick={addField}
-            className="w-full h-8 text-xs gap-1"
+            className="w-full h-8 text-xs gap-1 border-dashed"
           >
             <AppIcon name="plus" size="sm" /> Add Field
           </Button>
@@ -123,9 +122,9 @@ export function QAFormBuilder() {
         <Button
           onClick={() => createFormMutation.mutate()}
           disabled={createFormMutation.isPending || !title || fields.length === 0}
-          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold h-9 text-xs"
+          className="w-full font-semibold h-9 text-xs"
         >
-          {createFormMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : "Save QA Form"}
+          {createFormMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : "Save QA Form"}
         </Button>
       </CardContent>
     </Card>

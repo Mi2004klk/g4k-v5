@@ -45,9 +45,9 @@ export function GanttView({ tasks }: { tasks: any[] }) {
             className="grid border-b border-neutral-100 dark:border-neutral-800 text-[10px] font-bold uppercase text-neutral-400 bg-neutral-50 dark:bg-neutral-900/50"
             style={{ gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' }}
           >
-            <div className="p-3 col-span-3 border-r border-neutral-100 dark:border-neutral-800 sticky left-0 bg-neutral-50 dark:bg-neutral-900/90 z-10 snap-start">Task Name</div>
+            <div className="p-3 col-span-3 border-r border-neutral-100 dark:border-neutral-800 sticky left-0 bg-neutral-50 dark:bg-neutral-900/90 z-10 snap-start whitespace-nowrap">Task Name</div>
             {days.map((day) => (
-              <div key={day.toISOString()} className="p-2 text-center border-r border-neutral-100 dark:border-neutral-800 snap-start">
+              <div key={day.toISOString()} className="p-2 text-center border-r border-neutral-100 dark:border-neutral-800 snap-start whitespace-nowrap min-w-[60px]">
                 {format(day, "d MMM")}
               </div>
             ))}
