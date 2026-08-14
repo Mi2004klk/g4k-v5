@@ -30,7 +30,7 @@ function DensityProvider() {
   return null;
 }
 
-import { queryKeys } from "@/lib/query-keys";
+import { VersionGuard } from "./version-guard";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
@@ -95,6 +95,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <StoreHydration />
         <DensityProvider />
+        <VersionGuard />
         <ErrorBoundary>
           {children}
         </ErrorBoundary>

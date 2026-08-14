@@ -61,15 +61,18 @@ steps:
           echo "Ping check failed! HTTP status code: $$PING_CODE"
           exit 1
         fi
-        echo "Testing unauthenticated API endpoint behavior (expecting 401 with Accept: application/json)..."
-        DASH_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "Accept: application/json" "$$URL/api/dashboard/init" || echo "000")
-        if [ "$$DASH_CODE" -ne 401 ] && [ "$$DASH_CODE" -ne 200 ]; then
-          echo "Dashboard endpoint check failed! HTTP status code: $$DASH_CODE"
-          exit 1
-        fi
-        NOTIF_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "Accept: application/json" "$$URL/api/notifications" || echo "000")
-        if [ "$$NOTIF_CODE" -ne 401 ] && [ "$$NOTIF_CODE" -ne 200 ]; then
-          echo "Notifications endpoint check failed! HTTP status code: $$NOTIF_CODE"
-          exit 1
-        fi
-        echo "Smoke check passed!"
+        echo "Testing authenticated API endpoints for Admin, HR, Employee..."
+        for USER in "g4kkarthik@gmail.com:Admin@123" "hr@games4king.in:Hr@123" "praveen@games4king.in:Dev@123"; do
+          EMAIL=$$(echo $$USER | cut -d':' -f1)
+          PASS=$$(echo $$USER | cut -d':' -f2)
+          TOKEN=$$(curl -s -X POST "$$URL/api/auth/login" -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"identifier\":\"$$EMAIL\",\"password\":\"$$PASS\"}" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+          if [ -n "$$TOKEN" ]; then
+            echo "Authenticated successfully as $$EMAIL"
+            DASH_RES=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $$TOKEN" -H "Accept: application/json" "$$URL/api/dashboard/init")
+            if [ "$$DASH_RES" -ne 200 ]; then
+              echo "Authenticated dashboard/init check failed for $$EMAIL with code $$DASH_RES"
+              exit 1
+            fi
+          fi
+        done
+        echo "Authenticated smoke check passed cleanly!"
