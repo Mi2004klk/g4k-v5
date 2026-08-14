@@ -290,6 +290,12 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::patch('/designations/{id}/status', [DesignationController::class, 'updateStatus']);
         Route::apiResource('designations', DesignationController::class)->except(['index']);
     });
+
+    // Admin Jobs
+    Route::middleware('capability:settings.manage')->group(function () {
+        Route::get('/admin/jobs', [SettingsController::class, 'jobs']);
+        Route::post('/admin/jobs/retry', [SettingsController::class, 'retryJobs']);
+    });
 });
 
 

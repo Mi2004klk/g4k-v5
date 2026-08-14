@@ -80,4 +80,22 @@ class SettingsController extends Controller
             return response()->json(['message' => 'Failed to send test email. Please check your settings.'], 500);
         }
     }
+
+    public function jobs()
+    {
+        $pendingCount = \Illuminate\Support\Facades\DB::table('jobs')->count();
+        $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->orderBy('failed_at', 'desc')->take(20)->get();
+
+        return response()->json([
+            'pending_count' => $pendingCount,
+            'failed_count' => count($failedJobs),
+            'failed_jobs' => $failedJobs,
+        ]);
+    }
+
+    public function retryJobs()
+    {
+        \Illuminate\Support\Facades\Artisan::call('queue:retry', ['id' => 'all']);
+        return response()->json(['message' => 'Failed jobs queued for retry.']);
+    }
 }
