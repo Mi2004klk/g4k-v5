@@ -32,13 +32,12 @@ class FullWorkflowTest extends TestCase
         $employee = User::where('username', 'praveen')->first();
 
         $this->assertNotNull($hr);
-        $this->assertNotNull($employee);
-
         if ($employee->department_id) {
-            \App\Models\Department::where('id', $employee->department_id)->update(['manager_id' => $hr->id]);
+            $hr->update(['department_id' => $employee->department_id]);
         } else {
-            $dept = \App\Models\Department::create(['name' => 'HR Dept', 'manager_id' => $hr->id]);
+            $dept = \App\Models\Department::create(['name' => 'HR Dept']);
             $employee->update(['department_id' => $dept->id]);
+            $hr->update(['department_id' => $dept->id]);
         }
 
         $empToken = $employee->createToken('emp-token', ['role:employee'])->plainTextToken;

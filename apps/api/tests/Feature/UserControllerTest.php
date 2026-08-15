@@ -75,7 +75,7 @@ class UserControllerTest extends TestCase
         // Test dept filter
         $res = $this->getJson('/api/users?department_id=' . $dept->id);
         $res->assertStatus(200);
-        $this->assertCount(1, $res->json('data'));
+        if (count($res->json('data')) !== 1) { dump($res->json('data')); } $this->assertCount(1, $res->json('data'));
 
         // Test status filter
         $res2 = $this->getJson('/api/users?status=inactive');

@@ -36,7 +36,8 @@ class LeaveTest extends TestCase
         ]);
         $this->hr->roleAssignments()->create(['role' => 'hr']);
 
-        $department = \App\Models\Department::create(['name' => 'Test HR Dept', 'manager_id' => $this->hr->id]);
+        $department = \App\Models\Department::create(['name' => 'Test HR Dept']);
+        $this->hr->update(['department_id' => $department->id]);
 
         $this->employee = User::factory()->create([
             'must_change_password' => false,
@@ -159,8 +160,13 @@ class LeaveTest extends TestCase
 
         $this->assertDatabaseHas('attendance_days', [
             'user_id' => $this->employee->id,
+            'date' => '2026-10-10',
+            'status' => 'on_leave'
+        ]);
+        $this->assertDatabaseHas('attendance_days', [
+            'user_id' => $this->employee->id,
             'date' => '2026-10-12',
-            'status' => 'leave'
+            'status' => 'on_leave'
         ]);
         
         // Assert notification fired for Employee
@@ -215,7 +221,7 @@ class LeaveTest extends TestCase
         $approvalId = $request['approval_id'] ?? $request['approval']['id'] ?? $request['data']['approval']['id'] ?? null;
 
         if (app()->environment('testing')) {
-            dump('Admin ID: ' . $this->admin->id . ' HR ID: ' . $this->hr->id);
+            // dump('Admin ID: ' . $this->admin->id . ' HR ID: ' . $this->hr->id);
         }
 
         app('auth')->forgetGuards();
