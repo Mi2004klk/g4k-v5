@@ -85,10 +85,8 @@ export default function LoginPage() {
       if (error.status === 423 && error.data?.retry_after) {
         setLockoutSeconds(error.data.retry_after);
         form.setError("root", { type: "manual", message: `Account locked. Try again in ${Math.ceil(error.data.retry_after / 60)} minutes.` });
-        toast.error(`Account locked. Try again in ${Math.ceil(error.data.retry_after / 60)} minutes.`);
       } else {
         form.setError("root", { type: "manual", message: error.message || "Invalid credentials. Please try again." });
-        toast.error(error.message || "Invalid credentials. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -115,11 +113,6 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <DisabledWhileSubmitting isSubmitting={isLoading}>
                 <ValidationSummary errors={form.formState.errors} />
-              {form.formState.errors.root && (
-                <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-[var(--radius)] text-sm font-medium text-center">
-                  {form.formState.errors.root.message}
-                </div>
-              )}
 
               <FormField
                 control={form.control}
