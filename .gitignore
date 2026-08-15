@@ -40,7 +40,7 @@ remote.log
 tests_output.log
 scratch/
 User-avatar-image/
-projects/
+/projects/
 walkthrough.md
 finalization-report.md
 apps/api/dump3.txt
