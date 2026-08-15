@@ -94,12 +94,31 @@ class DemoPurgeCommand extends Command
         // Targeted cache clearing
         $demoUserIds = DB::table('users')->where('is_demo', true)->pluck('id');
         foreach ($demoUserIds as $uid) {
+            Cache::forget("user_{$uid}");
             Cache::forget("user_{$uid}_roles");
             Cache::forget("user_prefs_{$uid}");
         }
-        $cacheKeys = ['holidays', 'settings:notifications', 'dashboard_*']; 
-        // Note: For wildcard clearing in Redis, it's more complex, but we'll clear common static keys
-        Cache::forget('holidays_list');
+        
+        $currentYear = date('Y');
+        Cache::forget("holidays_{$currentYear}");
+        Cache::forget("holidays_" . ($currentYear + 1));
+        Cache::forget("holidays_" . ($currentYear - 1));
+        
+        Cache::forget('dashboard_global');
+        
+        $allUserIds = DB::table('users')->pluck('id');
+        foreach ($allUserIds as $uid) {
+            Cache::forget("dashboard_init_{$uid}");
+            Cache::forget("team_today_{$uid}");
+            Cache::forget("u_{$uid}");
+        }
+
+        Cache::forget('settings:security');
+        Cache::forget('settings:notifications');
+        Cache::forget('settings:mail');
+
+        // Cleanup demo files
+        \Illuminate\Support\Facades\Storage::disk('public')->deleteDirectory('avatars');
         
         // Audit Log teardown event (un-tagged so it survives)
         \App\Models\AuditLog::create([

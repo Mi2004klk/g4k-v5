@@ -2,6 +2,9 @@
 set -e
 cd /var/www/html
 
+# Run the scheduler in the background
+php artisan schedule:work >> /tmp/scheduler.log 2>&1 &
+
 # Run the queue worker in the background
 php artisan queue:work database --tries=3 --backoff=60 --max-time=3600 --sleep=3 &
 

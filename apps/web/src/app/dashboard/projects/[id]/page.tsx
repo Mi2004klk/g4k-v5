@@ -48,7 +48,7 @@ export default function ProjectDetailPage() {
     mutationFn: async () => {
       // QA enforcement: every field marked required in the qa_form must have a non-empty value
       const missingQaLabels = (project?.qa_form?.fields || [])
-        .filter((field: any) => field.required && !String(qaValues[field.id] ?? "").trim())
+        .filter((field: any) => field.is_required && !String(qaValues[field.id] ?? "").trim())
         .map((field: any) => field.label);
         
       if (project?.qa_form_id && missingQaLabels.length > 0) {

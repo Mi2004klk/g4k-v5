@@ -162,7 +162,14 @@ export async function apiFetch<T = any>(
         return (await response.blob()) as unknown as T;
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Contract completion: If API returns a bare array, wrap it to match standard Laravel paginated/resource structure
+      if (Array.isArray(data)) {
+        return { data } as unknown as T;
+      }
+      
+      return data;
     } catch (error: any) {
       // Intercept offline / network failures for mutations (NOT 5xx server errors)
       const isNetworkError = error?.message?.includes("Failed to fetch") || (typeof navigator !== "undefined" && !navigator.onLine);

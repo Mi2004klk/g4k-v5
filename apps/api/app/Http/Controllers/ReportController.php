@@ -141,7 +141,7 @@ class ReportController extends Controller
         $user = $request->user();
 
         // Also we need to include hasManage and user ID in the cache key so HR and Admin don't share the same cache!
-        $cacheRole = $hasManage ? 'admin' : "hr_{$user->department_id}";
+        $cacheRole = $hasManage ? 'admin' : "u_{$user->id}";
         $cacheKey = "report_attendance_summary_{$start}_{$end}_{$dept}_{$page}_{$cacheRole}";
 
         $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user) {
@@ -177,21 +177,28 @@ class ReportController extends Controller
         $hasManage = $this->userHasManage($request);
         $user = $request->user();
 
-        $query = User::query()
-            ->with('department')
-            ->withCount([
-                'leaveRequests as total_requests' => fn($q) => $q->where('start_date', '<=', $end)->where('end_date', '>=', $start),
-                'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
-                'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
-                'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
-            ]);
+        $cacheRole = $hasManage ? 'admin' : "u_{$user->id}";
+        $cacheKey = "report_leave_summary_{$start}_{$end}_{$dept}_{$cacheRole}";
 
-        if (!$hasManage) {
-            $query->where('id', $user->id);
-        } elseif ($dept && $dept !== 'all') {
-            $query->where('department_id', $dept);
-        }
+        $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user) {
+            $query = User::query()
+                ->with('department')
+                ->withCount([
+                    'leaveRequests as total_requests' => fn($q) => $q->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                    'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                    'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                    'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                ]);
 
-        return response()->json($query->paginate(25));
+            if (!$hasManage) {
+                $query->where('id', $user->id);
+            } elseif ($dept && $dept !== 'all') {
+                $query->where('department_id', $dept);
+            }
+
+            return $query->paginate(25);
+        });
+
+        return response()->json($results);
     }
 }

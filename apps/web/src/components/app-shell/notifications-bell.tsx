@@ -304,7 +304,15 @@ export function NotificationsBell() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-primary truncate flex items-center gap-1.5">
                       {n.link ? (
-                        <Link href={n.link} prefetch={false} className="hover:underline hover:text-orange-600 dark:hover:text-orange-400" onClick={() => setOpen(false)}>
+                        <Link 
+                          href={n.link} 
+                          prefetch={false} 
+                          className="hover:underline hover:text-orange-600 dark:hover:text-orange-400" 
+                          onClick={() => {
+                            if (!n.read_at) markReadMutation.mutate(n.id);
+                            setOpen(false);
+                          }}
+                        >
                           {n.title || "Notification"}
                         </Link>
                       ) : (

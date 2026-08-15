@@ -13,8 +13,23 @@ class Announcement extends Model
 
     protected $casts = [
         'pinned_at' => 'datetime',
-        'reactions' => 'array',
     ];
+
+    public function getReactionsAttribute($value)
+    {
+        if ($this->relationLoaded('reactionsList')) {
+            $reactionsJson = [];
+            foreach ($this->reactionsList as $reaction) {
+                if (!isset($reactionsJson[$reaction->emoji])) {
+                    $reactionsJson[$reaction->emoji] = [];
+                }
+                $reactionsJson[$reaction->emoji][] = $reaction->user_id;
+            }
+            return $reactionsJson;
+        }
+
+        return is_string($value) ? json_decode($value, true) : ($value ?? []);
+    }
 
     public function team(): BelongsTo
     {

@@ -8,6 +8,8 @@ import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
+import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
+import { asArray } from "@/lib/utils";
 import { DataTable, Skeleton, ErrorBoundary } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
@@ -77,7 +79,7 @@ export function NotificationsTab() {
     refetchInterval: isConnected ? false : 30_000,
   });
 
-  const notificationsData = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const notificationsData = asArray(data);
   const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const markReadMutation = useMutation({
@@ -144,7 +146,11 @@ export function NotificationsTab() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               {item.link ? (
-                <Link href={item.link} className={`text-sm hover:underline hover:text-primary-600 dark:hover:text-primary-400 ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
+                <Link 
+                  href={item.link} 
+                  onClick={() => { if (!item.read_at) markReadMutation.mutate(item.id); }}
+                  className={`text-sm hover:underline hover:text-primary-600 dark:hover:text-primary-400 ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}
+                >
                   {item.title || "Notification"}
                 </Link>
               ) : (

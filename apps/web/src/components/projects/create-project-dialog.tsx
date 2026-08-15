@@ -27,6 +27,7 @@ export function CreateProjectDialog({
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [allowEmployeeTasks, setAllowEmployeeTasks] = useState(false);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const { data: deptsData } = useQuery({ queryKey: ["departments"], queryFn: () => apiFetch("/departments") });
   const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
@@ -65,6 +66,9 @@ export function CreateProjectDialog({
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create project.");
+      if (err.errors) {
+        setFieldErrors(err.errors);
+      }
     },
   });
 
@@ -79,7 +83,8 @@ export function CreateProjectDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label htmlFor="project-name" className="text-sm font-medium">Name</label>
-            <Input id="project-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Project Name" />
+            <Input id="project-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Project Name" className={fieldErrors.name ? "border-red-500" : ""} />
+            {fieldErrors.name && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.name[0]}</p>}
           </div>
           
           <div className="space-y-2">
@@ -88,10 +93,11 @@ export function CreateProjectDialog({
               id="project-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="flex w-full rounded-[var(--radius)] border border-neutral-200 bg-white px-3 py-2 text-sm shadow-e1"
+              className={`flex w-full rounded-[var(--radius)] border bg-white px-3 py-2 text-sm shadow-e1 ${fieldErrors.description ? "border-red-500" : "border-neutral-200"}`}
               rows={3}
               placeholder="Project Description"
             />
+            {fieldErrors.description && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.description[0]}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -148,7 +154,8 @@ export function CreateProjectDialog({
 
             <div className="space-y-2">
               <label htmlFor="project-deadline" className="text-sm font-medium">Deadline</label>
-              <Input id="project-deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+              <Input id="project-deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={fieldErrors.deadline ? "border-red-500" : ""} />
+              {fieldErrors.deadline && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.deadline[0]}</p>}
             </div>
           </div>
 
@@ -221,7 +228,10 @@ export function CreateProjectDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button 
             className="bg-primary-600 hover:bg-primary-700 text-white" 
-            onClick={() => createMutation.mutate()}
+            onClick={() => {
+              setFieldErrors({});
+              createMutation.mutate();
+            }}
             disabled={!name.trim() || createMutation.isPending}
           >
             {createMutation.isPending ? "Creating..." : "Create Project"}

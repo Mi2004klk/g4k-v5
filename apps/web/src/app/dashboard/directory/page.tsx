@@ -18,7 +18,7 @@ export default function DirectoryModulePage() {
     >
       <ErrorBoundary>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 w-full justify-start overflow-x-auto flex-nowrap md:justify-center">
             <TabsTrigger value="directory">Directory</TabsTrigger>
             <TabsTrigger value="departments">Departments</TabsTrigger>
             <TabsTrigger value="designations">Designations & Roles</TabsTrigger>

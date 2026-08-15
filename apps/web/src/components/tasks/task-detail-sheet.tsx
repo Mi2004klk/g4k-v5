@@ -117,7 +117,7 @@ export function TaskDetailSheet({
       if (qaForm) {
         for (const field of qaForm.fields || []) {
           const val = qaValues[field.id];
-          if (field.required && (val === undefined || val === '' || (Array.isArray(val) && val.length === 0))) {
+          if (field.is_required && (val === undefined || val === '' || (Array.isArray(val) && val.length === 0))) {
             throw new Error(`Field "${field.label}" is required.`);
           }
         }

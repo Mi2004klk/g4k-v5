@@ -38,7 +38,6 @@ export * from "./data-table";
 export * from "./filter-bar";
 export * from "./pagination";
 export * from "./breadcrumb";
-export * from "./command-menu";
 export * from "./help-overlay";
 export * from "./confirm-dialog";
 export * from "./file-upload-popup";

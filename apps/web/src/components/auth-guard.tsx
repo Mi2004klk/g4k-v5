@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { useReverb } from "@/hooks/use-reverb";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -91,8 +93,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, token, user, isInitializing, router]);
 
-  // Listen for SessionRevoked real-time event
+  // Listen for SessionRevoked real-time event and new conversations
   const { subscribe, leaveChannel } = useReverb();
+  const queryClient = useQueryClient();
+  
   useEffect(() => {
     if (!user?.id || !token) return;
 
@@ -103,15 +107,19 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         clearAuth();
         router.push("/login?reason=expired");
       });
+      channel.listen('.conversation.created', (e: any) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      });
     }
 
     return () => {
       if (channel) {
         channel.stopListening('.session.revoked');
+        channel.stopListening('.conversation.created');
       }
       leaveChannel(channelName);
     };
-  }, [user?.id, token, subscribe, leaveChannel, clearAuth, router]);
+  }, [user?.id, token, subscribe, leaveChannel, clearAuth, router, queryClient]);
 
   if (isInitializing) {
     return (

@@ -57,27 +57,22 @@ class DemoDataController extends Controller
             'confirmation' => 'required|string|in:REMOVE DEMO DATA'
         ]);
 
-        Artisan::call('demo:purge');
-        
-        \App\Services\NotificationService::sendGlobalNotification(
-            $request->user(), 
-            "Demo dataset has been successfully removed.",
-            "/dashboard/settings"
-        );
+        \App\Jobs\PurgeDemoDataJob::dispatch($request->user()->id);
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Demo purge executed successfully.'
-        ]);
+            'message' => 'Demo purge queued successfully. It may take a few minutes to complete.'
+        ], 202);
     }
 
     public function seed(Request $request)
     {
-        Artisan::queue('demo:seed', ['--fresh' => true]);
+        \App\Jobs\SeedDemoDataJob::dispatch($request->user()->id);
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Demo seed queued successfully. It may take a few minutes to complete.',
             'version' => 'v2.0.0'
-        ]);
+        ], 202);
     }
 }

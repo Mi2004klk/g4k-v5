@@ -189,8 +189,16 @@ class ProjectController extends Controller
             'qa_values' => 'nullable|array',
         ]);
 
-        if ($project->qa_form_id && empty($validated['qa_values'])) {
-            return response()->json(['message' => 'QA Form values are required for this project.'], 422);
+        if ($project->qa_form_id) {
+            $form = \App\Models\QaForm::with('fields')->find($project->qa_form_id);
+            if ($form) {
+                $qaValues = $validated['qa_values'] ?? [];
+                foreach ($form->fields as $field) {
+                    if ($field->is_required && (!isset($qaValues[$field->id]) || $qaValues[$field->id] === '' || $qaValues[$field->id] === null)) {
+                        return response()->json(['message' => "QA Field '{$field->label}' is required."], 422);
+                    }
+                }
+            }
         }
 
         if ($project->qa_form_id && !empty($validated['qa_values'])) {

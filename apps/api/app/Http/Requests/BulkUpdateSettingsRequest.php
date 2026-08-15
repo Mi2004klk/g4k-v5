@@ -37,7 +37,7 @@ class BulkUpdateSettingsRequest extends FormRequest
                         'auto_numbering' => ['format', 'next_number'],
                         'policies' => ['leave_policy', 'attendance_policy'],
                         'reminders' => ['daily_reminder_time', 'weekly_report_day'],
-                        'security' => ['password.expiry_days', 'session.max_concurrent', 'session.access_token_ttl', 'session.refresh_token_ttl', 'password_history_limit', 'force_password_change'],
+                        'security' => ['password.expiry_days', 'session.max_devices', 'session.max_concurrent', 'session.access_token_ttl', 'session.refresh_token_ttl', 'password_history_limit', 'force_password_change'],
                         'mail' => ['host', 'port', 'username', 'password', 'encryption', 'from_address', 'from_name'],
                         'notifications' => ['leave_request.channels', 'attendance_reminder.channels', 'weekly_summary.channels']
                     ];

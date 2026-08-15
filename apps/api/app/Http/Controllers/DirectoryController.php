@@ -109,6 +109,13 @@ class DirectoryController extends Controller
         if (!$conversation) {
             $conversation = \App\Models\Conversation::create(['scope' => 'direct']);
             $conversation->users()->attach([$senderId, $recipient->id]);
+            
+            $conversation->load('users');
+            try {
+                broadcast(new \App\Events\ConversationCreated($conversation))->toOthers();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to broadcast ConversationCreated event: ' . $e->getMessage());
+            }
         }
 
         $msg = \App\Models\Message::create([

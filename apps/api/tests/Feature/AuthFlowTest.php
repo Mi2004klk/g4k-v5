@@ -75,7 +75,17 @@ class AuthFlowTest extends TestCase
 
     public function test_force_password_change_middleware()
     {
-        $this->markTestSkipped('Force password change middleware is disabled per phase 31 configuration.');
+        $user = User::factory()->create([
+            'must_change_password' => true,
+        ]);
+
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Trying to access a protected route
+        $response = $this->withToken($token)->getJson('/api/profile');
+
+        $response->assertStatus(403)
+                 ->assertJson(['must_change_password' => true]);
     }
 
     public function test_force_onboarding_middleware()

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { asArray } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
@@ -34,7 +35,7 @@ export function LeaveTab() {
     placeholderData: keepPreviousData,
   });
 
-  const records = Array.isArray(data?.data) ? data.data : [];
+  const records = asArray(data);
 
   return (
     <ErrorBoundary>

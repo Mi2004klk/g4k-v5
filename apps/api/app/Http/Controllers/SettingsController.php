@@ -83,14 +83,28 @@ class SettingsController extends Controller
 
     public function jobs()
     {
-        $pendingCount = \Illuminate\Support\Facades\DB::table('jobs')->count();
-        $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->orderBy('failed_at', 'desc')->take(20)->get();
+        try {
+            $pendingCount = \Illuminate\Support\Facades\Schema::hasTable('jobs') 
+                ? \Illuminate\Support\Facades\DB::table('jobs')->count() 
+                : 0;
+            
+            $failedJobs = \Illuminate\Support\Facades\Schema::hasTable('failed_jobs') 
+                ? \Illuminate\Support\Facades\DB::table('failed_jobs')->orderBy('failed_at', 'desc')->take(20)->get() 
+                : collect([]);
 
-        return response()->json([
-            'pending_count' => $pendingCount,
-            'failed_count' => count($failedJobs),
-            'failed_jobs' => $failedJobs,
-        ]);
+            return response()->json([
+                'pending_count' => $pendingCount,
+                'failed_count' => count($failedJobs),
+                'failed_jobs' => $failedJobs,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'pending_count' => 0,
+                'failed_count' => 0,
+                'failed_jobs' => [],
+                'error' => 'Queue tables unavailable',
+            ]);
+        }
     }
 
     public function retryJobs()

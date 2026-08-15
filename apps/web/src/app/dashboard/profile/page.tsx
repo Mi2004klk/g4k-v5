@@ -30,8 +30,11 @@ import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 import { queryKeys } from "@/lib/query-keys";
 import { DataTable } from "@g4k/ui/components";
 
+import { useRouter } from "next/navigation";
+
 export default function ProfilePage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const authUser = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -519,6 +522,66 @@ export default function ProfilePage() {
                       <div className="text-muted-foreground text-[11px]">Contact info completely hidden from directory.</div>
                    </button>
                 </div>
+             </CardContent>
+           </Card>
+
+           {/* Feedback & Complaints Form */}
+           <Card className="border border-border shadow-e1 bg-card rounded-xl">
+             <CardHeader>
+               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
+                 <AppIcon name="mail" className=" text-brand-violet" />
+                 Submit Feedback or Complaint
+               </CardTitle>
+               <CardDescription className="text-xs text-muted-foreground font-sans">
+                 Send direct feedback or file a complaint to HR.
+               </CardDescription>
+             </CardHeader>
+             <CardContent className="text-xs font-sans">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const subject = formData.get('subject') as string;
+                    const category = formData.get('category') as string;
+                    const body = formData.get('body') as string;
+                    if (!subject || !category || !body) {
+                       toast.error("Please fill all fields");
+                       return;
+                    }
+                    apiFetch('/feedback', {
+                      method: 'POST',
+                      body: JSON.stringify({ subject, category, body })
+                    }).then((res) => {
+                      toast.success("Feedback submitted successfully. HR will contact you via direct message.");
+                      (e.target as HTMLFormElement).reset();
+                      if (res.conversation_id) {
+                        router.push(`/dashboard/chat?conversation=${res.conversation_id}`);
+                      }
+                    }).catch((err) => {
+                      toast.error(err.message || "Failed to submit feedback");
+                    });
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label htmlFor="fb-category" className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Category</label>
+                    <select id="fb-category" name="category" className="w-full h-9 rounded-[var(--radius)] border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+                       <option value="suggestion">Suggestion</option>
+                       <option value="complaint">Complaint</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="fb-subject" className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Subject</label>
+                    <Input id="fb-subject" name="subject" placeholder="What is this about?" required />
+                  </div>
+                  <div>
+                    <label htmlFor="fb-body" className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Details</label>
+                    <textarea id="fb-body" name="body" required rows={4} className="w-full rounded-[var(--radius)] border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" placeholder="Please provide details..."></textarea>
+                  </div>
+                  <Button type="submit" className="w-full bg-neutral-900 hover:bg-neutral-800 text-white shadow-e1">
+                    Submit to HR
+                  </Button>
+                </form>
              </CardContent>
            </Card>
 

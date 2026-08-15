@@ -82,28 +82,28 @@ class UserController extends Controller
 
     public function export(Request $request)
     {
-        $query = $this->buildIndexQuery($request);
-        // $users = $query->orderBy('id', 'desc')->get(); removed to prevent OOM
+        $job = \App\Models\ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => 'users',
+            'format' => 'csv',
+            'status' => 'pending',
+            'filters' => [
+                'only_trashed' => $request->boolean('only_trashed'),
+                'search' => $request->input('search'),
+                'department_id' => $request->input('department_id'),
+                'status' => $request->input('status'),
+                'role' => $request->input('role'),
+                '_has_manage' => $this->hasCapability($request, 'users.hr.manage') || $request->user()->roleAssignments->pluck('role')->contains('super_admin'),
+                '_user_id' => $request->user()->id,
+            ],
+        ]);
 
-        return response()->streamDownload(function () use ($query) {
-            $writer = SimpleExcelWriter::streamDownload('users.csv');
-            foreach ($query->orderBy('id', 'desc')->cursor() as $user) {
-                $roles = $user->roleAssignments->pluck('role')->implode(', ');
-                $writer->addRow([
-                    'ID' => $user->id,
-                    'Name' => $user->name,
-                    'Email' => $user->email,
-                    'Employee ID' => $user->employee_id,
-                    'Phone' => $user->phone,
-                    'Department' => $user->department->name ?? 'N/A',
-                    'Designation' => $user->designation->name ?? 'N/A',
-                    'Roles' => $roles,
-                    'Status' => $user->status,
-                    'Created At' => $user->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-            $writer->close();
-        }, 'users.csv', ['Content-Type' => 'text/csv']);
+        dispatch(new \App\Jobs\GenerateReportJob($job));
+
+        return response()->json([
+            'message' => 'Export started. You will be notified when it is ready.',
+            'job_id' => $job->id,
+        ]);
     }
 
     public function store(StoreUserRequest $request)
@@ -313,6 +313,10 @@ class UserController extends Controller
         $before = $user->toArray();
         $user->delete();
         
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
+        $user->tokens()->delete();
+
         AuditLogger::log($request, 'delete', 'user', $user->id, $before, null);
         
         return response()->json(null, 204);

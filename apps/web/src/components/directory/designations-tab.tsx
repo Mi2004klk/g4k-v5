@@ -12,6 +12,7 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { asArray } from "@/lib/utils";
 
 const desigSchema = z.object({
   name: z.string().min(1, "Title is required"),
@@ -159,7 +160,7 @@ export function DesignationsTab() {
     }
   };
 
-  const designationsList = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const designationsList = asArray(data);
   const totalPages = data?.last_page || data?.data?.last_page || 1;
   const columns = useMemo<any[]>(() => {
     const baseColumns: any[] = [
@@ -347,13 +348,13 @@ export function DesignationsTab() {
           <form onSubmit={handleSubmit((data) => editingDesig ? updateMutation.mutate(data) : createMutation.mutate(data))}>
             <div className="space-y-4 py-2">
               <div>
-                <label className="block mb-1 text-sm font-semibold">Title *</label>
-                <Input {...register("name")} placeholder="e.g. Senior Software Engineer" />
-                {errors.name && <p className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
+                <label htmlFor="desig-name" className="block mb-1 text-sm font-semibold">Title *</label>
+                <Input id="desig-name" {...register("name")} placeholder="e.g. Senior Software Engineer" aria-describedby={errors.name ? "desig-name-error" : undefined} />
+                {errors.name && <p id="desig-name-error" role="alert" className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
               </div>
               <div>
-                <label className="block mb-1 text-sm font-semibold">Description</label>
-                <Input {...register("description")} placeholder="Optional description..." />
+                <label htmlFor="desig-desc" className="block mb-1 text-sm font-semibold">Description</label>
+                <Input id="desig-desc" {...register("description")} placeholder="Optional description..." />
               </div>
             </div>
             <DialogFooter className="mt-4">

@@ -12,6 +12,7 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { asArray } from "@/lib/utils";
 import {
   queryKeys,
   STALE_TIME_DEPARTMENTS
@@ -224,7 +225,7 @@ export function DepartmentsTab() {
     }
   };
 
-  const deptList = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const deptList = asArray(data);
   const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const columns: any[] = useMemo<any[]>(() => {
@@ -439,13 +440,13 @@ export function DepartmentsTab() {
           <form onSubmit={handleSubmit((data) => editingDept ? updateDeptMutation.mutate(data) : createDeptMutation.mutate(data))}>
             <div className="space-y-4 py-2">
               <div>
-                <label className="block mb-1 text-sm font-semibold">Department Name *</label>
-                <Input {...register("name")} placeholder="e.g. Engineering" />
-                {errors.name && <p className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
+                <label htmlFor="dept-name" className="block mb-1 text-sm font-semibold">Department Name *</label>
+                <Input id="dept-name" {...register("name")} placeholder="e.g. Engineering" aria-describedby={errors.name ? "dept-name-error" : undefined} />
+                {errors.name && <p id="dept-name-error" role="alert" className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
               </div>
               <div>
-                <label className="block mb-1 text-sm font-semibold">Description</label>
-                <Input {...register("description")} placeholder="Optional description..." />
+                <label htmlFor="dept-desc" className="block mb-1 text-sm font-semibold">Description</label>
+                <Input id="dept-desc" {...register("description")} placeholder="Optional description..." />
               </div>
             </div>
             <DialogFooter className="mt-4">

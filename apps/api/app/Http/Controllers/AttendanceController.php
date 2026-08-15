@@ -87,6 +87,8 @@ class AttendanceController extends Controller
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("dashboard_global");
+        \Illuminate\Support\Facades\Cache::forget("attendanceSummary_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("attendance_day_{$user->id}_{$today}");
 
         return response()->json([
             'day' => $dayRecord,
@@ -745,9 +747,13 @@ class AttendanceController extends Controller
         $activeRole = $actor->active_role ?? 'employee';
         $isAdmin = $activeRole === 'super_admin';
             
+        $targetUser = User::where('id', $day->user_id)->first();
+        if (!$targetUser) {
+            return response()->json(['message' => 'Target user not found or inactive.'], 404);
+        }
+
         if (!$isAdmin) {
-            $targetUser = User::where('id', $day->user_id)->first();
-            if (!$targetUser || !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($actor))) {
+            if (!in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($actor))) {
                 return response()->json(['message' => 'Forbidden. HR users can only correct attendance within their assigned department/team.'], 403);
             }
         }
@@ -841,51 +847,30 @@ class AttendanceController extends Controller
         $startDate = $validated['start_date'] ?? now()->toDateString();
         $endDate = $validated['end_date'] ?? $startDate;
 
-        $query = DB::table('attendance_days')
-            ->join('users', 'users.id', '=', 'attendance_days.user_id')
-            ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email')
-            ->whereBetween('date', [$startDate, $endDate])
-            ->orderBy('date', 'asc');
-            
-        if ($request->filled('ids')) {
-            $ids = explode(',', $request->query('ids'));
-            $query->whereIn('attendance_days.id', $ids);
-        }
-        
-        $query->when($validated['department_id'] ?? null, fn($q, $dept) => $q->where('users.department_id', $dept))
-              ->when($validated['user_id'] ?? null, fn($q, $user) => $q->where('users.id', $user))
-              ->when($validated['search'] ?? null, fn($q, $search) => 
-                  $q->where(fn($sub) => 
-                      $sub->where('users.name', 'ilike', "%{$search}%")
-                          ->orWhere('users.email', 'ilike', "%{$search}%")
-                  )
-              );
-            
-        $this->applyHrScoping($query, $request->user());
-        return response()->streamDownload(function () use ($query) {
-            $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload('attendance_export.xlsx');
-            
-            $query->chunk(500, function ($records) use ($writer) {
-                foreach ($records as $row) {
-                    $hours = floor($row->total_seconds / 3600);
-                    $mins = floor(($row->total_seconds % 3600) / 60);
-                    $otHours = floor($row->overtime_seconds / 3600);
-                    $otMins = floor(($row->overtime_seconds % 3600) / 60);
+        $job = \App\Models\ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => 'attendance-export',
+            'format' => 'xlsx',
+            'status' => 'pending',
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'ids' => $request->query('ids'),
+                'department_id' => $validated['department_id'] ?? null,
+                'user_id' => $validated['user_id'] ?? null,
+                'search' => $validated['search'] ?? null,
+                '_has_manage' => $this->userHasManage($request),
+                '_department_id' => $request->user()->department_id,
+                '_user_id' => $request->user()->id,
+            ],
+        ]);
 
-                    $writer->addRow([
-                        'Date' => $row->date,
-                        'Employee Name' => $row->user_name,
-                        'Email' => $row->user_email,
-                        'Status' => strtoupper($row->status),
-                        'Total Worked (hh:mm)' => sprintf('%02dh %02dm', $hours, $mins),
-                        'Overtime (hh:mm)' => sprintf('%02dh %02dm', $otHours, $otMins),
-                        'Late (mins)' => $row->late_minutes,
-                    ]);
-                }
-            });
+        dispatch(new \App\Jobs\GenerateReportJob($job));
 
-            $writer->close();
-        }, "attendance_export_{$startDate}_to_{$endDate}.xlsx");
+        return response()->json([
+            'message' => 'Export started. You will be notified when it is ready.',
+            'job_id' => $job->id,
+        ]);
     }
 
     public function notifyOpenShifts(Request $request)

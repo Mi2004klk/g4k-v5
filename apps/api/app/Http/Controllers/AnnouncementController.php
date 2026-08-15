@@ -10,7 +10,7 @@ class AnnouncementController extends Controller
 {
     public function index(Request $request)
     {
-        $announcements = Announcement::with(['creator', 'team'])
+        $announcements = Announcement::with(['creator', 'team', 'reactionsList'])
             ->orderBy('pinned_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->limit(100)
@@ -127,26 +127,45 @@ class AnnouncementController extends Controller
 
         $announcement = Announcement::findOrFail($id);
         $userId = $request->user()->id;
-        $reactions = $announcement->reactions ?? [];
-
         $emoji = $validated['emoji'];
-        if (!isset($reactions[$emoji])) {
-            $reactions[$emoji] = [];
-        }
 
-        if (in_array($userId, $reactions[$emoji])) {
-            // Remove reaction if already reacted
-            $reactions[$emoji] = array_values(array_filter($reactions[$emoji], fn($uid) => $uid !== $userId));
-            if (empty($reactions[$emoji])) {
-                unset($reactions[$emoji]);
-            }
+        $existingReaction = \Illuminate\Support\Facades\DB::table('reactions')
+            ->where('reactable_type', Announcement::class)
+            ->where('reactable_id', $announcement->id)
+            ->where('user_id', $userId)
+            ->where('emoji', $emoji)
+            ->first();
+
+        if ($existingReaction) {
+            \Illuminate\Support\Facades\DB::table('reactions')->where('id', $existingReaction->id)->delete();
         } else {
-            // Add reaction
-            $reactions[$emoji][] = $userId;
+            \Illuminate\Support\Facades\DB::table('reactions')->insert([
+                'reactable_type' => Announcement::class,
+                'reactable_id' => $announcement->id,
+                'user_id' => $userId,
+                'emoji' => $emoji,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
-        $announcement->update(['reactions' => $reactions]);
+        // We also need to map this back to the JSON structure expected by the frontend for announcements
+        $reactionsDb = \Illuminate\Support\Facades\DB::table('reactions')
+            ->where('reactable_type', Announcement::class)
+            ->where('reactable_id', $announcement->id)
+            ->get();
+            
+        $reactionsJson = [];
+        foreach ($reactionsDb as $reaction) {
+            if (!isset($reactionsJson[$reaction->emoji])) {
+                $reactionsJson[$reaction->emoji] = [];
+            }
+            $reactionsJson[$reaction->emoji][] = $reaction->user_id;
+        }
+        
+        // Temporarily assign it to the object for the response (the model can have an accessor later)
+        $announcement->reactions = $reactionsJson;
 
-        return response()->json(['data' => $announcement->fresh()->load(['creator', 'team'])]);
+        return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
 }

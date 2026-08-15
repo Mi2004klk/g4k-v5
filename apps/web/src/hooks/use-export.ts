@@ -16,15 +16,16 @@ export function useExport() {
   }, [downloadUrls]);
 
   const triggerExport = useCallback(
-    async (endpoint: string, filename: string) => {
+    async (endpoint: string, filename: string, options?: any) => {
       setIsExporting(true);
       const toastId = toast.loading(`Generating export for ${filename}...`);
       
       try {
-        // 1. Send POST request to queue the export
-        const response = await apiFetch(endpoint, {
-          method: "POST",
-        });
+        const fetchOptions = {
+          method: "GET",
+          ...options
+        };
+        const response = await apiFetch(endpoint, fetchOptions);
 
         // If backend does immediate mock return for now (before real Queue is ready):
         if (response instanceof Blob) {
@@ -41,14 +42,15 @@ export function useExport() {
           return;
         }
 
-        const data = await response.json().catch(() => ({}));
+        // apiFetch already parses the JSON if it's not a Blob
+        const data = response;
 
         if (data.job_id) {
           toast.success(`Export queued (Job ${data.job_id}). We will notify you when it is ready.`, { id: toastId });
           
-          // In the future, listen to reverb channel for this user/job
-          // const channel = subscribe(`private-exports.${data.job_id}`);
-          // channel?.listen('.export.ready', (e: any) => { ... download ... });
+          setIsExporting(false);
+        } else if (data.message === "Export queued") {
+          toast.success(`Export queued. Check the Reports section later.`, { id: toastId });
           setIsExporting(false);
         } else {
           toast.success(`Export completed.`, { id: toastId });

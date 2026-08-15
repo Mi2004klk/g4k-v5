@@ -367,9 +367,16 @@ class TaskController extends Controller
             'qa_values' => 'nullable|array',
         ]);
 
-        // Require QA values if QA form is present
-        if ($task->qa_form_id && empty($validated['qa_values'])) {
-            return response()->json(['message' => 'QA Form values are required for this task.'], 422);
+        if ($task->qa_form_id) {
+            $form = \App\Models\QaForm::with('fields')->find($task->qa_form_id);
+            if ($form) {
+                $qaValues = $validated['qa_values'] ?? [];
+                foreach ($form->fields as $field) {
+                    if ($field->is_required && (!isset($qaValues[$field->id]) || $qaValues[$field->id] === '' || $qaValues[$field->id] === null)) {
+                        return response()->json(['message' => "QA Field '{$field->label}' is required."], 422);
+                    }
+                }
+            }
         }
 
         if ($task->qa_form_id && !empty($validated['qa_values'])) {

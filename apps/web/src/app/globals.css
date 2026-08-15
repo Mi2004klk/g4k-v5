@@ -317,4 +317,4 @@
     --duration-sidebar: 1ms;
     --duration-drawer: 1ms;
   }
-}
+}@utility pb-safe { padding-bottom: env(safe-area-inset-bottom); }

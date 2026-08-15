@@ -134,7 +134,105 @@ class GenerateReportJob implements ShouldQueue
                 });
                 break;
 
-            case 'attendance-summary':
+            case 'attendance-export':
+                $start = $filters['start_date'] ?? now()->toDateString();
+                $end = $filters['end_date'] ?? now()->toDateString();
+                
+                $query = \Illuminate\Support\Facades\DB::table('attendance_days')
+                    ->join('users', 'users.id', '=', 'attendance_days.user_id')
+                    ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id')
+                    ->whereBetween('date', [$start, $end])
+                    ->orderBy('date', 'asc');
+                    
+                if (!empty($filters['ids'])) {
+                    $query->whereIn('attendance_days.id', explode(',', $filters['ids']));
+                }
+                if (!empty($filters['department_id'])) {
+                    $query->where('users.department_id', $filters['department_id']);
+                }
+                if (!empty($filters['user_id'])) {
+                    $query->where('users.id', $filters['user_id']);
+                }
+                if (!empty($filters['search'])) {
+                    $search = $filters['search'];
+                    $query->where(fn($sub) => 
+                        $sub->where('users.name', 'ilike', "%{$search}%")
+                            ->orWhere('users.email', 'ilike', "%{$search}%")
+                    );
+                }
+
+                if (!$hasManage) {
+                    $query->where('users.id', $userId);
+                } else {
+                    // HR scoping logic inline or duplicated since we're in a job
+                    // Simplified: if HR, only their department (assuming $departmentId is set if they are HR, else they see all)
+                    $hrRole = \Illuminate\Support\Facades\DB::table('role_assignments')->where('user_id', $userId)->pluck('role')->toArray();
+                    if (!in_array('super_admin', $hrRole) && in_array('hr', $hrRole) && $departmentId) {
+                        $query->where('users.department_id', $departmentId);
+                    }
+                }
+
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(function($row) {
+                        $hours = floor($row->total_seconds / 3600);
+                        $mins = floor(($row->total_seconds % 3600) / 60);
+                        $otHours = floor($row->overtime_seconds / 3600);
+                        $otMins = floor(($row->overtime_seconds % 3600) / 60);
+
+                        return [
+                            'Date' => $row->date,
+                            'Employee Name' => $row->user_name,
+                            'Email' => $row->user_email,
+                            'Status' => strtoupper($row->status),
+                            'Total Worked (hh:mm)' => sprintf('%02dh %02dm', $hours, $mins),
+                            'Overtime (hh:mm)' => sprintf('%02dh %02dm', $otHours, $otMins),
+                            'Late (mins)' => $row->late_minutes,
+                        ];
+                    })->toArray());
+                });
+                break;
+
+            case 'leave-export':
+                $query = \App\Models\LeaveRequest::with(['approval', 'user']);
+
+                if (!$hasManage) {
+                    $query->where('user_id', $userId);
+                } else {
+                    $hrRole = \Illuminate\Support\Facades\DB::table('role_assignments')->where('user_id', $userId)->pluck('role')->toArray();
+                    if (!in_array('super_admin', $hrRole) && in_array('hr', $hrRole) && $departmentId) {
+                        $query->whereHas('user', function($q) use ($departmentId) {
+                            $q->where('department_id', $departmentId);
+                        });
+                    }
+                }
+
+                if (!empty($filters['status'])) {
+                    $status = $filters['status'];
+                    $query->whereHas('approval', function($q) use ($status) {
+                        $q->where('status', $status);
+                    });
+                }
+                
+                if (!empty($filters['type'])) {
+                    $query->where('type', $filters['type']);
+                }
+
+                $query->orderBy('created_at', 'desc');
+
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(fn($leave) => [
+                        'ID' => $leave->id,
+                        'Employee Name' => $leave->user->name ?? 'Unknown',
+                        'Employee Email' => $leave->user->email ?? 'Unknown',
+                        'Leave Type' => ucfirst($leave->type),
+                        'Start Date' => $leave->start_date,
+                        'End Date' => $leave->end_date,
+                        'Reason' => $leave->reason,
+                        'Status' => ucfirst($leave->approval->status ?? 'pending'),
+                        'Submitted At' => $leave->created_at->format('Y-m-d H:i:s'),
+                    ])->toArray());
+                });
+                break;
                 $start = $filters['start'] ?? now()->subDays(30)->toDateString();
                 $end = $filters['end'] ?? now()->toDateString();
                 $dept = $filters['dept'] ?? null;

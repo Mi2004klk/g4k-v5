@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     return [{ source: '/api/:path*', destination: 'http://127.0.0.1:8000/api/:path*' }];
   },
   productionBrowserSourceMaps: false,
+  transpilePackages: ["@g4k/ui"],
   experimental: {
     optimizePackageImports: ["date-fns", "@g4k/ui", "echarts", "echarts-for-react", "framer-motion", "@tiptap/react", "@tiptap/starter-kit", "@dnd-kit/core", "@dnd-kit/sortable", "@tanstack/react-table", "react-grid-layout"],
   },
@@ -22,19 +23,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-import { withSentryConfig } from "@sentry/nextjs";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const analyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-export default withSentryConfig(
-  analyzer(nextConfig),
-  {
-    silent: true,
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-    widenClientFileUpload: true,
-  }
-);
+export default analyzer(nextConfig);

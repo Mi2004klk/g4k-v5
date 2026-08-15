@@ -335,7 +335,7 @@ class AuthController extends Controller
         $newRefreshToken = $newRefreshTokenObj->plainTextToken;
 
         // Enforce max concurrent sessions
-        $maxConcurrent = $settings['session.max_concurrent'] ?? null;
+        $maxConcurrent = $settings['session.max_devices'] ?? null;
         if ($maxConcurrent !== null && $maxConcurrent !== 'null' && $maxConcurrent !== '') {
             $maxTokens = (int)$maxConcurrent * 2;
             $tokens = $user->tokens()->orderBy('created_at', 'desc')->get();
@@ -376,7 +376,15 @@ class AuthController extends Controller
         $deviceName = $user->currentAccessToken()->name;
         $user->currentAccessToken()->delete();
 
-        $tokenObj = $user->createToken($deviceName, ['role:' . $request->role]);
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            return \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key')
+                ->toArray();
+        });
+        $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
+
+        $tokenObj = $user->createToken($deviceName, ['role:' . $request->role], now()->addMinutes($accessTtl));
         $tokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')

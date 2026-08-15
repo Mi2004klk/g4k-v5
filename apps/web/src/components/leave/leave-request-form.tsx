@@ -26,6 +26,7 @@ export function LeaveRequestForm() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [type, setType] = useState("casual");
   const [reason, setReason] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const submitMutation = useMutation({
     mutationFn: async (payload: any) => {
@@ -45,11 +46,15 @@ export function LeaveRequestForm() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to submit leave request.");
+      if (err.errors) {
+        setFieldErrors(err.errors);
+      }
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldErrors({});
     if (!startDate || !endDate) return;
 
     if (endDate < startDate) {
@@ -113,6 +118,7 @@ export function LeaveRequestForm() {
                     initialFocus />
                 </PopoverContent>
               </Popover>
+              {fieldErrors.start_date && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.start_date[0]}</p>}
             </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-neutral-500">End Date *</label>
@@ -130,6 +136,7 @@ export function LeaveRequestForm() {
                     initialFocus />
                 </PopoverContent>
               </Popover>
+              {fieldErrors.end_date && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.end_date[0]}</p>}
             </div>
           </div>
           
@@ -157,6 +164,7 @@ export function LeaveRequestForm() {
                 </div>
               ))}
             </RadioGroup>
+            {fieldErrors.type && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.type[0]}</p>}
           </div>
 
           <div className="space-y-1">
@@ -166,9 +174,10 @@ export function LeaveRequestForm() {
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="text-xs resize-none focus-visible:ring-primary-500"
+              className={`text-xs resize-none focus-visible:ring-primary-500 ${fieldErrors.reason ? "border-red-500" : ""}`}
               placeholder="Provide a brief reason for your leave request..."
             />
+            {fieldErrors.reason && <p className="text-red-500 text-[10px] mt-1">{fieldErrors.reason[0]}</p>}
           </div>
 
           <Button

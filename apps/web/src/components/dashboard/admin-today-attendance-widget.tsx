@@ -8,6 +8,7 @@ import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { WidgetInfo } from "../widgets/widget-info";
+import { asArray } from "@/lib/utils";
 
 export function AdminTodayAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
@@ -17,7 +18,7 @@ export function AdminTodayAttendanceWidget() {
     placeholderData: keepPreviousData,
   });
 
-  const records = Array.isArray(data?.data) ? data.data : [];
+  const records = asArray(data);
   const presentCount = records.filter((r: any) => r.status === "present").length;
   const lateCount = records.filter((r: any) => r.status === "late").length;
   const absentCount = records.filter((r: any) => r.status === "absent").length;

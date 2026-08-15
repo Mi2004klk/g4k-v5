@@ -74,7 +74,7 @@ export default function PersonalAttendancePage() {
       }
     >
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 w-full justify-start overflow-x-auto flex-nowrap md:justify-center">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="leave">My Leave</TabsTrigger>
           {isHrOrAdmin && <TabsTrigger value="approvals">Team Leave Approvals</TabsTrigger>}

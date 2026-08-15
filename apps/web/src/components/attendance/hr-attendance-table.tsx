@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { safeFormat } from "@/lib/format";
 
 import { useUrlState } from "@/hooks/use-url-state";
+import { asArray } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
@@ -91,7 +92,7 @@ export function HrAttendanceTable() {
     refetchInterval: isConnected ? false : 60_000,
   });
 
-  const records = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+  const records = asArray(data);
   const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const handleExport = async (all: boolean = true) => {

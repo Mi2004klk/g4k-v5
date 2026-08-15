@@ -304,54 +304,24 @@ class LeaveRequestController extends Controller
 
     public function export(Request $request)
     {
-        $user = $request->user();
-        $roles = $user->getCachedRoles();
+        $job = \App\Models\ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => 'leave-export',
+            'format' => 'xlsx',
+            'status' => 'pending',
+            'filters' => [
+                'status' => $request->query('status'),
+                'type' => $request->query('type'),
+                '_department_id' => $request->user()->department_id,
+                '_user_id' => $request->user()->id,
+            ],
+        ]);
 
-        $query = LeaveRequest::with(['approval', 'user']);
+        dispatch(new \App\Jobs\GenerateReportJob($job));
 
-        if (in_array('super_admin', $roles)) {
-            // Admin sees all
-        } elseif (in_array('hr', $roles)) {
-            $query->whereHas('user', function($q) use ($user) {
-                $q->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
-            });
-        } else {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        if ($request->filled('status')) {
-            $status = $request->query('status');
-            $query->whereHas('approval', function($q) use ($status) {
-                $q->where('status', $status);
-            });
-        }
-        
-        if ($request->filled('type')) {
-            $query->where('type', $request->query('type'));
-        }
-
-        $query->orderBy('created_at', 'desc');
-
-        // get() removed for streaming
-
-        return response()->streamDownload(function () use ($query) {
-            $writer = \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload('leave_requests_export.xlsx');
-            
-            foreach ($query->cursor() as $leave) {
-                $writer->addRow([
-                    'ID' => $leave->id,
-                    'Employee Name' => $leave->user->name ?? 'Unknown',
-                    'Employee Email' => $leave->user->email ?? 'Unknown',
-                    'Leave Type' => ucfirst($leave->type),
-                    'Start Date' => $leave->start_date,
-                    'End Date' => $leave->end_date,
-                    'Reason' => $leave->reason,
-                    'Status' => ucfirst($leave->approval->status ?? 'pending'),
-                    'Submitted At' => $leave->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-
-            $writer->close();
-        }, "leave_requests_export_" . now()->format('Y_m_d') . ".xlsx");
+        return response()->json([
+            'message' => 'Export started. You will be notified when it is ready.',
+            'job_id' => $job->id,
+        ]);
     }
 }

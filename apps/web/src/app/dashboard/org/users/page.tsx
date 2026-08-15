@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { toast } from "sonner";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
+import { asArray } from "@/lib/utils";
 import {
   queryKeys,
   STALE_TIME_DIRECTORY,
@@ -269,7 +270,7 @@ export default function UsersPage() {
     await triggerExport(`/users/export?${params.toString()}`, "users_export.csv");
   };
 
-  const usersList = Array.isArray(data?.data) ? data.data : (data?.data?.data || []);
+  const usersList = asArray(data);
   const totalPages = data?.last_page || data?.data?.last_page || 1;
   const selectedCount = Object.keys(rowSelection).length;
 
@@ -599,30 +600,30 @@ export default function UsersPage() {
             <div className="space-y-4 py-2 text-xs max-h-[60dvh] overflow-y-auto px-1 mt-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
-                  <Input {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} />
+                  <label htmlFor="user-name" className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
+                  <Input id="user-name" {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} />
                   {errors.name && <p className="text-red-500 text-[10px] mt-1">{errors.name.message}</p>}
                 </div>
                 <div>
-                  <label className="block mb-1 font-semibold">Username</label>
-                  <Input {...register("username")} placeholder="janedoe" />
+                  <label htmlFor="user-username" className="block mb-1 font-semibold">Username</label>
+                  <Input id="user-username" {...register("username")} placeholder="janedoe" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
-                  <Input type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} />
+                  <label htmlFor="user-email" className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
+                  <Input id="user-email" type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} />
                   {errors.email && <p className="text-red-500 text-[10px] mt-1">{errors.email.message}</p>}
                 </div>
                 <div>
-                  <label className="block mb-1 font-semibold">Phone</label>
-                  <Input {...register("phone")} placeholder="+91 98765 43210" />
+                  <label htmlFor="user-phone" className="block mb-1 font-semibold">Phone</label>
+                  <Input id="user-phone" {...register("phone")} placeholder="+91 98765 43210" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-1 font-semibold">Employee ID</label>
-                  <Input {...register("employee_id")} placeholder="Auto-generated if blank" />
+                  <label htmlFor="user-employee_id" className="block mb-1 font-semibold">Employee ID</label>
+                  <Input id="user-employee_id" {...register("employee_id")} placeholder="Auto-generated if blank" />
                 </div>
                 <div>
                   <label className="block mb-1 font-semibold">Department</label>

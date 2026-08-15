@@ -3,8 +3,7 @@
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { QueryClient, MutationCache, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import { ErrorBoundary, OfflineBanner } from "@g4k/ui/components";
+import { ErrorBoundary, OfflineBanner, Toaster } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 
 // Architectural Decision:
