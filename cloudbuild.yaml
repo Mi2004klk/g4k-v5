@@ -116,7 +116,7 @@ steps:
           exit 1
         fi
         echo "Testing authenticated API endpoints for Admin, HR, Employee..."
-        for USER in "g4kkarthik@gmail.com:Admin@123" "hr@games4king.in:Hr@123" "praveen@games4king.in:Dev@123"; do
+        for USER in "admin@games4king.in:password" "hr@games4king.in:password" "employee@games4king.in:password"; do
           EMAIL=$$(echo $$USER | cut -d':' -f1)
           PASS=$$(echo $$USER | cut -d':' -f2)
           TOKEN=$$(curl -s -X POST "$$URL/api/auth/login" -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"identifier\":\"$$EMAIL\",\"password\":\"$$PASS\"}" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
