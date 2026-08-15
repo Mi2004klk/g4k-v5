@@ -7,15 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class LeaveBalance extends Model
 {
+    use \App\Traits\HasDemoTag;
     use HasFactory;
 
-    protected $fillable = [
-        'user_id',
+    protected $fillable = ['user_id',
         'leave_type',
         'year',
         'allowed',
-        'used',
-    ];
+        'used', 'demo_tag'];
 
     protected $casts = [
         'year' => 'integer',

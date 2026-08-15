@@ -16,19 +16,16 @@ class ForcePasswordChange
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        // DISABLED FOR NOW
-        // if ($user && $user->must_change_password) {
-        //     // AUTH-5: Always enforce force_password_change when must_change_password=true
-        //     // (Ignoring the security.force_password_change setting from the database for stricter security)
-        //     $allowedRoutes = ['api/auth/change-password', 'api/auth/logout'];
-        //     
-        //     if (!in_array($request->path(), $allowedRoutes)) {
-        //         return response()->json([
-        //             'message' => 'You must change your password before continuing.',
-        //             'must_change_password' => true
-        //         ], 403);
-        //     }
-        // }
+        if ($user && $user->must_change_password) {
+            // AUTH-5: Always enforce force_password_change when must_change_password=true
+            // (Ignoring the security.force_password_change setting from the database for stricter security)
+            if (!$request->is('api/auth/change-password') && !$request->is('api/auth/logout')) {
+                return response()->json([
+                    'message' => 'You must change your password before continuing.',
+                    'must_change_password' => true
+                ], 403);
+            }
+        }
         return $next($request);
     }
 }

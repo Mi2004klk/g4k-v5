@@ -9,10 +9,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Message extends Model
 {
-    protected $fillable = [
-        'conversation_id', 'sender_id', 'type', 'body',
-        'attachment_url', 'reply_to_id', 'edited_at', 'pinned_at'
-    ];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['conversation_id', 'sender_id', 'type', 'body',
+        'attachment_url', 'reply_to_id', 'edited_at', 'pinned_at', 'demo_tag'];
 
     protected $casts = [
         'edited_at' => 'datetime',

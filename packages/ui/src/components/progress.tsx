@@ -57,10 +57,17 @@ const Progress = React.forwardRef<
       className={cn(progressVariants({ size }), className)}
       {...props}
     >
+      <style>{`
+        @keyframes progress-stripe-anim {
+          from { background-position: 1rem 0; }
+          to { background-position: 0 0; }
+        }
+      `}</style>
       <ProgressPrimitive.Indicator
         className={cn(
           "h-full w-full flex-1 transition-all duration-600",
-          colorClass
+          colorClass,
+          striped && "animate-[progress-stripe-anim_1s_linear_infinite]"
         )}
         style={{ 
           transform: `translateX(-${100 - (value || 0)}%)`,

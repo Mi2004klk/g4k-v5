@@ -11,7 +11,7 @@ function Skeleton({ className, shape = "text", ...props }: SkeletonProps) {
         "animate-pulse bg-muted",
         {
           "h-32 w-full rounded-xl": shape === "card",
-          "h-12 w-full rounded-md": shape === "row",
+          "h-12 w-full rounded-[var(--radius)]": shape === "row",
           "h-4 w-full rounded": shape === "text",
           "h-10 w-10 rounded-full": shape === "avatar",
         },

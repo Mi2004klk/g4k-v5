@@ -11,45 +11,40 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {  Tabs, TabsContent, TabsList, TabsTrigger, FileUploadPopup , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
-import { Button } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
+import { Button, Input, Skeleton } from "@g4k/ui/components";
 import { MailSmtpConfig } from "./mail-smtp-config";
 import { PoliciesConfig } from "./policies-config";
 import { HolidayCalendar } from "@/components/leave/holiday-calendar";
+import { WorkSchedulesConfig } from "./work-schedules-config";
+import { AuditLogTable } from "./audit-log-table";
+import { NotificationsConfig } from "./notifications-config";
+import { AutoNumberingConfig } from "./auto-numbering-config";
+import { RemindersConfig } from "./reminders-config";
+import { SecurityRequestsConfig } from "./security-requests-config";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/state-helpers";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters"),
   timezone: z.string().default("Asia/Kolkata"),
 });
 
-const scheduleSchema = z.object({
-  name: z.string().min(2, "Name required"),
-  start_time: z.string(),
-  end_time: z.string(),
-  break_minutes: z.coerce.number().min(0).max(120),
-  grace_minutes: z.coerce.number().min(0).max(60),
-  working_days: z.array(z.number()).min(1, "Select at least one working day"),
-});
-
 type ProfileFormValues = z.infer<typeof profileSchema>;
-type ScheduleFormValues = z.infer<typeof scheduleSchema>;
+
+import { useUrlState } from "@/hooks/use-url-state";
 
 export function SettingsTabs() {
   const queryClient = useQueryClient();
-  const user = useAuthStore((s) => s.user);
-  const isAdmin = user?.active_role === 'super_admin';
+  const { data: caps } = useCapabilities();
+  const canManageSettings = hasCapability(caps, 'settings.manage');
   
   const [logoUploadOpen, setLogoUploadOpen] = useState(false);
+  const [tab, setTab] = useUrlState("tab", "company");
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: queryKeys.companyProfile,
     queryFn: () => apiFetch("/company-profile"),
-  });
-
-  const { data: schedules = [], isLoading: isSchedulesLoading } = useQuery({
-    queryKey: queryKeys.workSchedules,
-    queryFn: () => apiFetch("/work-schedules"),
   });
 
   const profileForm = useForm<ProfileFormValues>({
@@ -57,20 +52,6 @@ export function SettingsTabs() {
     defaultValues: {
       name: "",
       timezone: "Asia/Kolkata"
-    },
-    mode: "onTouched",
-    delayError: 400,
-  });
-
-  const scheduleForm = useForm<ScheduleFormValues>({
-    resolver: zodResolver(scheduleSchema) as any,
-    defaultValues: {
-      name: "Standard G4K Schedule",
-      start_time: "09:00",
-      end_time: "18:30",
-      break_minutes: 45,
-      grace_minutes: 10,
-      working_days: [1, 2, 3, 4, 5, 6]
     },
     mode: "onTouched",
     delayError: 400,
@@ -85,27 +66,19 @@ export function SettingsTabs() {
     }
   }, [profile, profileForm]);
 
-  const activeSchedule = schedules?.[0] || {};
-
-  useEffect(() => {
-    if (activeSchedule.id) {
-      scheduleForm.reset({
-        name: activeSchedule.name || "Standard G4K Schedule",
-        start_time: activeSchedule.start_time || "09:00",
-        end_time: activeSchedule.end_time || "18:30",
-        break_minutes: activeSchedule.break_minutes ?? 45,
-        grace_minutes: activeSchedule.grace_minutes ?? 10,
-        working_days: activeSchedule.working_days ? JSON.parse(activeSchedule.working_days) : [1, 2, 3, 4, 5, 6],
-      });
-    }
-  }, [activeSchedule, scheduleForm]);
-
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) =>
       apiFetch("/company-profile", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
       toast.success("Company profile updated");
       queryClient.invalidateQueries({ queryKey: queryKeys.companyProfile });
+    },
+    onError: (error: any) => {
+      if (error?.errors) {
+        Object.keys(error.errors).forEach(key => {
+          profileForm.setError(key as any, { message: error.errors[key][0] });
+        });
+      }
     },
   });
 
@@ -129,16 +102,7 @@ export function SettingsTabs() {
     }
   });
 
-  const updateScheduleMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
-      apiFetch(`/work-schedules/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    onSuccess: () => {
-      toast.success("Work schedule updated");
-      queryClient.invalidateQueries({ queryKey: queryKeys.workSchedules });
-    },
-  });
-
-  if (isProfileLoading || isSchedulesLoading) {
+  if (isProfileLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-64 rounded-xl" />
@@ -150,38 +114,25 @@ export function SettingsTabs() {
   const handleProfileSubmit = (data: any) => {
     updateProfileMutation.mutate({
       name: data.name,
-      timezone: "Asia/Kolkata",
-    });
-  };
-
-  const handleScheduleSubmit = (data: any) => {
-    const start = (data.start_time || "09:00").split(":");
-    const end = (data.end_time || "18:30").split(":");
-    const startSecs = parseInt(start[0]) * 3600 + parseInt(start[1] || "0") * 60;
-    const endSecs = parseInt(end[0]) * 3600 + parseInt(end[1] || "0") * 60;
-    const breakSecs = (data.break_minutes || 0) * 60;
-    let diff = endSecs - startSecs - breakSecs;
-    const standardSeconds = diff > 0 ? diff : 0;
-
-    updateScheduleMutation.mutate({
-      id: activeSchedule.id || 1,
-      data: {
-        ...data,
-        standard_seconds: standardSeconds,
-      },
+      timezone: data.timezone,
     });
   };
 
   return (
-    <Tabs defaultValue="company" className="w-full">
+    <Tabs value={tab} onValueChange={setTab} className="w-full">
       <TabsList className="mb-4">
         <TabsTrigger value="company">Company Profile</TabsTrigger>
-        {isAdmin && (
+        {canManageSettings && (
           <>
             <TabsTrigger value="schedule">Work Schedules</TabsTrigger>
             <TabsTrigger value="policies">Policies</TabsTrigger>
             <TabsTrigger value="holidays">Holidays</TabsTrigger>
             <TabsTrigger value="mail">Mail / SMTP</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="autonumber">Auto-Numbering</TabsTrigger>
+            <TabsTrigger value="reminders">Reminders</TabsTrigger>
+            <TabsTrigger value="security">Security Requests</TabsTrigger>
+            <TabsTrigger value="audit">Audit Log</TabsTrigger>
           </>
         )}
       </TabsList>
@@ -193,24 +144,27 @@ export function SettingsTabs() {
           </CardHeader>
           <CardContent>
             <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-6 max-w-xl">
+              <DisabledWhileSubmitting isSubmitting={updateProfileMutation.isPending}>
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-neutral-900 dark:text-white border-b pb-2">Identity</h3>
+                <ValidationSummary errors={profileForm.formState.errors} />
                 <div>
-                  <label className="text-xs font-medium">Company Name <span className="text-red-500">*</span></label>
-                  <input
+                  <label htmlFor="company-name" className="text-xs font-medium">Company Name <span className="text-red-500">*</span></label>
+                  <Input
+                    id="company-name"
                     type="text"
                     {...profileForm.register("name")}
-                    className={`w-full text-sm rounded-lg border ${profileForm.formState.errors.name ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
+                    error={profileForm.formState.errors.name?.message}
+                    className="mt-1"
                   />
-                  {profileForm.formState.errors.name && <p className="text-[10px] text-red-500 mt-1">{profileForm.formState.errors.name.message}</p>}
                 </div>
                 <div>
                   <label className="text-xs font-medium">Company Logo</label>
                   <div className="flex items-center gap-4 mt-2 mb-4">
                     {profile?.logo_url ? (
-                      <img src={profile.logo_url} alt="Logo" className="w-16 h-16 object-contain rounded-md border border-neutral-200 dark:border-neutral-800 bg-surface" />
+                      <img src={profile.logo_url} alt="Logo" className="w-16 h-16 object-contain rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-800 bg-surface" />
                     ) : (
-                      <div className="w-16 h-16 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center text-xs text-neutral-400">
+                      <div className="w-16 h-16 rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center text-xs text-neutral-400">
                         No Logo
                       </div>
                     )}
@@ -221,12 +175,36 @@ export function SettingsTabs() {
                 </div>
               </div>
 
-              {/* Timezone removed and hardcoded to Asia/Kolkata */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-neutral-900 dark:text-white border-b pb-2">Preferences</h3>
+                <div>
+                  <label className="text-xs font-medium">Timezone <span className="text-red-500">*</span></label>
+                  <Select
+                    value={profileForm.watch("timezone")}
+                    onValueChange={(val) => profileForm.setValue("timezone", val, { shouldDirty: true, shouldValidate: true })}
+                  >
+                    <SelectTrigger className="w-full mt-1">
+                      <SelectValue placeholder="Select Timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Asia/Kolkata">Asia/Kolkata</SelectItem>
+                      <SelectItem value="UTC">UTC</SelectItem>
+                      <SelectItem value="America/New_York">America/New_York</SelectItem>
+                      <SelectItem value="Europe/London">Europe/London</SelectItem>
+                      <SelectItem value="Asia/Singapore">Asia/Singapore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {profileForm.formState.errors.timezone && (
+                    <p className="text-red-500 text-xs mt-1">{profileForm.formState.errors.timezone.message}</p>
+                  )}
+                </div>
+              </div>
 
               <Button type="submit" disabled={updateProfileMutation.isPending || !profileForm.formState.isValid}>
                 {updateProfileMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
                 {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
               </Button>
+              </DisabledWhileSubmitting>
             </form>
           </CardContent>
         </Card>
@@ -241,114 +219,43 @@ export function SettingsTabs() {
         />
       </TabsContent>
 
-      {isAdmin && (
+      {canManageSettings && (
         <>
           <TabsContent value="schedule">
-            <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
-          <CardHeader>
-            <CardTitle className="text-base">Standard Work Schedule (ATT-Q1)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={scheduleForm.handleSubmit(handleScheduleSubmit)} className="space-y-4 max-w-xl">
-              <div>
-                <label className="text-xs font-medium">Schedule Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  {...scheduleForm.register("name")}
-                  className={`w-full text-sm rounded-lg border ${scheduleForm.formState.errors.name ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
-                />
-                {scheduleForm.formState.errors.name && <p className="text-[10px] text-red-500 mt-1">{scheduleForm.formState.errors.name.message}</p>}
-              </div>
+            <WorkSchedulesConfig />
+          </TabsContent>
 
-              <div>
-                <label className="text-xs font-medium">Working Days <span className="text-red-500">*</span></label>
-                <div className="flex flex-wrap gap-3 mt-2">
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => {
-                    const dayNum = i + 1;
-                    const currentDays = scheduleForm.watch("working_days") || [];
-                    const isChecked = currentDays.includes(dayNum);
-                    return (
-                      <label key={dayNum} className={`flex items-center gap-1.5 text-sm cursor-pointer border rounded-md px-2 py-1 ${isChecked ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30' : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50'}`}>
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          className="accent-violet-600 hidden"
-                          onChange={(e) => {
-                            const newDays = e.target.checked
-                              ? [...currentDays, dayNum]
-                              : currentDays.filter((d: number) => d !== dayNum);
-                            scheduleForm.setValue("working_days", newDays, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-                          }}
-                        />
-                        <span className={isChecked ? "text-violet-700 dark:text-violet-300 font-semibold" : "text-neutral-500"}>{day}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-                {scheduleForm.formState.errors.working_days && <p className="text-[10px] text-red-500 mt-1">{scheduleForm.formState.errors.working_days.message}</p>}
-              </div>
+          <TabsContent value="policies">
+            <PoliciesConfig />
+          </TabsContent>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium">Start Time <span className="text-red-500">*</span></label>
-                  <input
-                    type="time"
-                    {...scheduleForm.register("start_time")}
-                    className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium">End Time <span className="text-red-500">*</span></label>
-                  <input
-                    type="time"
-                    {...scheduleForm.register("end_time")}
-                    className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium">Break (Mins) <span className="text-red-500">*</span></label>
-                  <input
-                    type="number"
-                    {...scheduleForm.register("break_minutes")}
-                    className={`w-full text-sm rounded-lg border ${scheduleForm.formState.errors.break_minutes ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
-                  />
-                  {scheduleForm.formState.errors.break_minutes && <p className="text-[10px] text-red-500 mt-1">{scheduleForm.formState.errors.break_minutes.message}</p>}
-                </div>
-                <div>
-                  <label className="text-xs font-medium">Grace (Mins) <span className="text-red-500">*</span></label>
-                  <input
-                    type="number"
-                    {...scheduleForm.register("grace_minutes")}
-                    className={`w-full text-sm rounded-lg border ${scheduleForm.formState.errors.grace_minutes ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
-                  />
-                  {scheduleForm.formState.errors.grace_minutes && <p className="text-[10px] text-red-500 mt-1">{scheduleForm.formState.errors.grace_minutes.message}</p>}
-                </div>
-              </div>
-
-              <Button type="submit" disabled={updateScheduleMutation.isPending || !scheduleForm.formState.isValid} size="sm" className="gap-2 mt-2">
-                {updateScheduleMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" />}
-                {updateScheduleMutation.isPending ? "Saving..." : "Save Schedule Rules"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="policies">
-        <PoliciesConfig />
-      </TabsContent>
-
-      <TabsContent value="holidays">
-        <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-[calc(100vh-200px)]">
-          <HolidayCalendar />
-        </div>
-      </TabsContent>
-
+          <TabsContent value="holidays">
+            <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-[calc(100dvh-200px)]">
+              <HolidayCalendar />
+            </div>
+          </TabsContent>
       <TabsContent value="mail">
         <MailSmtpConfig />
+      </TabsContent>
+
+      <TabsContent value="notifications">
+        <NotificationsConfig />
+      </TabsContent>
+
+      <TabsContent value="autonumber">
+        <AutoNumberingConfig />
+      </TabsContent>
+
+      <TabsContent value="reminders">
+        <RemindersConfig />
+      </TabsContent>
+
+      <TabsContent value="security">
+        <SecurityRequestsConfig />
+      </TabsContent>
+
+      <TabsContent value="audit">
+        <AuditLogTable />
       </TabsContent>
         </>
       )}

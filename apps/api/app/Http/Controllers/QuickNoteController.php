@@ -15,7 +15,7 @@ class QuickNoteController extends Controller
             ->limit(100)
             ->get();
 
-        return response()->json($notes);
+        return response()->json(['data' => $notes]);
     }
 
     public function store(Request $request)
@@ -37,7 +37,27 @@ class QuickNoteController extends Controller
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("quick_notes_{$user->id}");
 
-        return response()->json($note);
+        return response()->json(['data' => $note]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $note = QuickNote::where('user_id', $request->user()->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'body' => 'sometimes|string',
+            'pinned' => 'sometimes|boolean',
+        ]);
+
+        $note->update($validated);
+
+        $user = $request->user();
+        $activeRole = $user->active_role ?? 'employee';
+        $today = \Carbon\Carbon::now()->toDateString();
+        \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("quick_notes_{$user->id}");
+
+        return response()->json(['data' => $note]);
     }
 
     public function destroy(Request $request, $id)

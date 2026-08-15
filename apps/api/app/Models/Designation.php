@@ -13,7 +13,8 @@ use Illuminate\Database\Eloquent\Model;
      */
 class Designation extends Model
 {
-    protected $fillable = ['company_id', 'name', 'description', 'is_active'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['company_id', 'name', 'description', 'is_active', 'demo_tag', 'is_demo'];
 
     public function users()
     {

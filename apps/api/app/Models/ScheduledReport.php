@@ -7,13 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ScheduledReport extends Model
 {
-    protected $fillable = [
-        'user_id',
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id',
         'report_key',
         'schedule',
         'configuration',
-        'status',
-    ];
+        'status', 'demo_tag'];
 
     protected $casts = [
         'configuration' => 'array',

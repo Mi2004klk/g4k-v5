@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SavedView extends Model
 {
-    protected $fillable = ['user_id', 'entity', 'name', 'config'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id', 'entity', 'name', 'config', 'demo_tag'];
 
     protected $casts = [
         'config' => 'array',

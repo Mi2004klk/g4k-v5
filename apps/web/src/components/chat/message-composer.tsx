@@ -83,7 +83,7 @@ export function MessageComposer({
     <div className="relative p-3 border-t border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-2">
       {/* Mentions Dropdown */}
       {showMentions && filteredUsers.length > 0 && (
-        <div className="absolute bottom-full left-12 mb-2 w-48 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute bottom-full left-12 mb-2 w-48 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[var(--radius)] shadow-e3 z-50 overflow-hidden">
           {filteredUsers.map((u: any) => (
             <button
               key={u.id}
@@ -129,7 +129,7 @@ export function MessageComposer({
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Type a message... (use @ to mention)"
-        className="flex-1 text-xs bg-neutral-50 dark:bg-neutral-800 p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-violet-500 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
+        className="flex-1 text-xs bg-neutral-50 dark:bg-neutral-800 p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-primary-500 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
         rows={1}
       />
 
@@ -137,7 +137,7 @@ export function MessageComposer({
         size="icon"
         disabled={disabled || !text.trim()}
         onClick={handleSend}
-        className="h-9 w-9 bg-violet-600 hover:bg-violet-700 text-white rounded-xl shrink-0"
+        className="h-9 w-9 bg-primary-600 hover:bg-primary-700 text-white rounded-xl shrink-0"
         aria-label="Send message"
       >
         <AppIcon name="send" />

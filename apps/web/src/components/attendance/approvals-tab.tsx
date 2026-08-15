@@ -8,6 +8,7 @@ import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { getAuthToken } from "@/lib/auth-store";
 import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components/badge";
 import { FilterBar } from "@g4k/ui/components";
 import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
@@ -114,15 +115,12 @@ export function ApprovalsTab() {
         cell: ({ row }: any) => {
           const status = row.original.approval?.status || "pending";
           return (
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                status === "approved" ? "bg-emerald-100 text-emerald-800" :
-                status === "rejected" ? "bg-rose-100 text-rose-800" :
-                "bg-amber-100 text-amber-800"
-              }`}
+            <StatusBadge 
+              status={status === "approved" ? "success" : status === "rejected" ? "danger" : "warning"}
+              className="uppercase tracking-wide"
             >
               {status}
-            </span>
+            </StatusBadge>
           );
         },
       },
@@ -189,7 +187,7 @@ export function ApprovalsTab() {
         </TabsList>
 
         <TabsContent value="approvals" className="mt-0">
-          <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100vh-250px)]">
+          <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100dvh-250px)]">
             <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
               <FilterBar
                 searchQuery={search || ""}
@@ -230,7 +228,7 @@ export function ApprovalsTab() {
         </TabsContent>
         
         <TabsContent value="history" className="mt-0">
-          <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100vh-250px)]">
+          <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100dvh-250px)]">
             <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
               <FilterBar
                 searchQuery={search || ""}

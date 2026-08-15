@@ -182,7 +182,7 @@ export function HrCorrectionDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <DialogDescription className="sr-only">Review and process this attendance correction request.</DialogDescription>
-              <AppIcon name="teamAttendance" size="lg" className=" text-violet-500" />
+              <AppIcon name="teamAttendance" size="lg" className=" text-primary-500" />
               Manual Correction
             </DialogTitle>
             <DialogDescription>
@@ -291,7 +291,7 @@ export function HrCorrectionDialog({
             <Button 
               type="submit" 
               disabled={correctMutation.isPending || isLoading || (!reason.trim())}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
+              className="bg-primary-600 hover:bg-primary-700 text-white"
             >
               {correctMutation.isPending && <AppIcon name="loading" className=" mr-2 animate-spin" />}
               <AppIcon name="save" className=" mr-2" />

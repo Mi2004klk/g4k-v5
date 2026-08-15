@@ -12,10 +12,11 @@ class AutoNumberingService
     public static function generateNext(string $entityType): string
     {
         return DB::transaction(function () use ($entityType) {
-            $record = DB::table('auto_numberings')
-                ->where('entity_type', $entityType)
-                ->lockForUpdate()
-                ->first();
+            $query = DB::table('auto_numberings')->where('entity_type', $entityType);
+            if (DB::connection()->getDriverName() !== 'sqlite') {
+                $query->lockForUpdate();
+            }
+            $record = $query->first();
 
             if (!$record) {
                 // Fallback default if not seeded

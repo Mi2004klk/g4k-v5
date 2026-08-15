@@ -22,11 +22,6 @@ class AttendanceTest extends TestCase
     {
         parent::setUp();
         \Illuminate\Support\Facades\Cache::flush();
-        $this->withoutMiddleware([
-            \App\Http\Middleware\RequireCapability::class,
-            \App\Http\Middleware\ForceOnboarding::class,
-            \App\Http\Middleware\ForcePasswordChange::class,
-        ]);
         
         $this->user = User::factory()->create([
             'onboarded_at' => now(),
@@ -67,15 +62,15 @@ class AttendanceTest extends TestCase
 
     protected function actingAsUser($user, $role)
     {
-        \Laravel\Sanctum\Sanctum::actingAs($user, ["role:$role"]);
-        return $this;
+        $user->active_role = $role;
+        return $this->actingAs($user, 'sanctum');
     }
 
     public function test_can_clock_in()
     {
         $response = $this->actingAsUser($this->user, 'employee')->postJson('/api/attendance/clock-in', [
             'client_id' => Str::uuid()->toString(),
-            'timestamp' => now()->toIso8601String(),
+            'timestamp' => now()->toDateTimeString(),
         ]);
 
         $response->assertStatus(200);
@@ -99,8 +94,8 @@ class AttendanceTest extends TestCase
             'client_id' => Str::uuid()->toString(),
         ]);
 
-        // Try to clock in again
-        $response = $this->actingAsUser($this->user, 'employee')->postJson('/api/attendance/clock-in', [
+        // Try to end break without starting break
+        $response = $this->actingAsUser($this->user, 'employee')->postJson('/api/attendance/end-break', [
             'client_id' => Str::uuid()->toString(),
         ]);
 
@@ -142,7 +137,7 @@ class AttendanceTest extends TestCase
         $this->assertEquals(15, $day->late_minutes); // 9:15 - 9:00 = 15m
         $this->assertEquals(3600, $day->break_seconds); // 1 hour break
         
-        if ($day->total_seconds === 0) dd($day->toArray());
+        if ($day->total_seconds === 0) $this->fail('Total seconds is 0: ' . json_encode($day->toArray()));
         
         // Total time = 10 hours - 1 hour break = 9 hours = 32400 seconds
         $this->assertEquals(32400, $day->total_seconds);
@@ -209,7 +204,7 @@ class AttendanceTest extends TestCase
         $dayId = $response->json('day.id');
 
         // HR adds a missing clock_out
-        $response = $this->actingAsUser($this->hrUser, 'admin')->postJson('/api/attendance/correct', [
+        $response = $this->actingAsUser($this->hrUser, 'super_admin')->postJson('/api/attendance/correct', [
             'action' => 'add_event',
             'attendance_day_id' => $dayId,
             'type' => 'clock_out',

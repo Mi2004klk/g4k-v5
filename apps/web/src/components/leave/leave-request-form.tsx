@@ -17,6 +17,7 @@ import { format, startOfTomorrow } from "date-fns";
 
 import { useRouter } from "next/navigation";
 import { queryKeys } from "@/lib/query-keys";
+import { triggerInvalidation } from "@/lib/invalidation-map";
 
 export function LeaveRequestForm() {
   const router = useRouter();
@@ -39,9 +40,7 @@ export function LeaveRequestForm() {
       setEndDate(undefined);
       setReason("");
       setType("casual");
-      queryClient.invalidateQueries({ queryKey: [queryKeys.myLeaveHistory()[0]] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      triggerInvalidation(queryClient, "leave.request");
       router.push("/dashboard/attendance?tab=leave");
     },
     onError: (err: any) => {
@@ -103,7 +102,7 @@ export function LeaveRequestForm() {
               <Popover>
                 <PopoverTrigger asChild>
                   <button type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-xs">
+                    className="flex h-9 w-full items-center justify-between rounded-[var(--radius)] border border-border bg-background px-3 text-xs">
                     {startDate ? format(startDate, "dd-MM-yyyy") : <span className="text-muted tracking-wide uppercase">DD-MM-YYYY</span>}
                     <AppIcon name="calendar" className=" text-muted" />
                   </button>
@@ -120,7 +119,7 @@ export function LeaveRequestForm() {
               <Popover>
                 <PopoverTrigger asChild>
                   <button type="button"
-                    className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-background px-3 text-xs">
+                    className="flex h-9 w-full items-center justify-between rounded-[var(--radius)] border border-border bg-background px-3 text-xs">
                     {endDate ? format(endDate, "dd-MM-yyyy") : <span className="text-muted tracking-wide uppercase">DD-MM-YYYY</span>}
                     <AppIcon name="calendar" className=" text-muted" />
                   </button>
@@ -151,7 +150,7 @@ export function LeaveRequestForm() {
                   />
                   <Label
                     htmlFor={`type-${item.id}`}
-                    className="flex flex-col items-center justify-between rounded-md border-2 border-border bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-violet-600 peer-data-[state=checked]:bg-violet-50 dark:peer-data-[state=checked]:bg-violet-900/20 [&:has([data-state=checked])]:border-primary text-xs cursor-pointer text-center"
+                    className="flex flex-col items-center justify-between rounded-[var(--radius)] border-2 border-border bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-xs cursor-pointer text-center"
                   >
                     {item.label}
                   </Label>
@@ -167,7 +166,7 @@ export function LeaveRequestForm() {
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="text-xs resize-none focus-visible:ring-violet-500"
+              className="text-xs resize-none focus-visible:ring-primary-500"
               placeholder="Provide a brief reason for your leave request..."
             />
           </div>
@@ -175,7 +174,7 @@ export function LeaveRequestForm() {
           <Button
             type="submit"
             disabled={submitMutation.isPending || !startDate || !endDate || !reason}
-            className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold h-10"
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold h-10"
           >
             {submitMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Submit Request"}
           </Button>

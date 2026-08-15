@@ -15,7 +15,7 @@ class HrScope
             }
             return array_values(array_unique($ids));
         } catch (\Throwable $e) {
-            return $hr->department_id ? [$hr->department_id] : [];
+            return [];
         }
     }
 }

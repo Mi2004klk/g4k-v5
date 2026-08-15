@@ -21,10 +21,13 @@ class LeaveRequestController extends Controller
 
         $query = LeaveRequest::with(['approval', 'user']);
 
+        $isAdmin = in_array('super_admin', $roles);
+        $isHR = \App\Services\CapabilityMatrix::hasCapability($user->active_role ?? 'employee', 'leave.approve-employee');
+
         // Scope
-        if (in_array('super_admin', $roles)) {
+        if ($isAdmin) {
             // Admin sees all
-        } elseif (in_array('hr', $roles)) {
+        } elseif ($isHR) {
             $query->where(function($q) use ($user) {
                 $q->whereHas('approval', function($q2) {
                     $q2->where('current_approver_role', 'hr');
@@ -48,7 +51,7 @@ class LeaveRequestController extends Controller
 
         if ($request->filled('user_id')) {
             // Additional check to ensure they have permission to see this user's leave
-            if (in_array('super_admin', $roles) || in_array('hr', $roles)) {
+            if ($isAdmin || $isHR) {
                 $query->where('user_id', $request->query('user_id'));
             }
         }
@@ -139,6 +142,17 @@ class LeaveRequestController extends Controller
             ->firstOrFail();
 
         $user = $request->user();
+        $leaveRequest = LeaveRequest::findOrFail($approval->approvable_id);
+
+        if (!in_array('super_admin', $user->getCachedRoles()) && $leaveRequest->user_id !== $user->id) {
+            $targetUser = \App\Models\User::find($leaveRequest->user_id);
+            if ($targetUser) {
+                $managedDepts = \App\Support\HrScope::managedDepartmentIds($user);
+                if (!in_array($targetUser->department_id, $managedDepts)) {
+                    return response()->json(['message' => 'Unauthorized: Employee is not in your managed departments'], 403);
+                }
+            }
+        }
 
         DB::beginTransaction();
         try {
@@ -157,7 +171,6 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'Failed to process decision: ' . $e->getMessage()], 500);
         }
 
-        $leaveRequest = LeaveRequest::find($approval->approvable_id);
         if ($leaveRequest) {
             $today = \Carbon\Carbon::now()->toDateString();
             $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();

@@ -52,7 +52,7 @@ export function QuickTaskWidget() {
       <div>
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-[var(--radius)] bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
               <AppIcon name="success" className=" text-emerald-600 dark:text-emerald-400" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">

@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class WorkSchedule extends Model
 {
+    use \App\Traits\HasDemoTag;
     use HasFactory;
 
-    protected $fillable = [
-        'name',
+    protected $fillable = ['name',
         'start_time',
         'end_time',
         'break_minutes',
@@ -18,8 +18,7 @@ class WorkSchedule extends Model
         'standard_seconds',
         'working_days',
         'effective_from',
-        'is_default',
-    ];
+        'is_default', 'demo_tag'];
 
     protected $casts = [
         'working_days' => 'array',

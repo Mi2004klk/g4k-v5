@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
+import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 
 import { queryKeys } from "@/lib/query-keys";
 import { DataTable } from "@g4k/ui/components";
@@ -262,7 +263,7 @@ export default function ProfilePage() {
       cell: ({ row }) => {
         if (row.original.is_current) {
           return (
-            <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20 whitespace-nowrap">
+            <span className="px-2.5 py-1 rounded-[var(--radius)] text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20 whitespace-nowrap">
               Current Device
             </span>
           );
@@ -298,10 +299,10 @@ export default function ProfilePage() {
 
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto font-sans">
+    <div className="flex flex-col gap-page-sections page-padding max-w-5xl mx-auto font-sans w-full">
       {/* Header Profile Card */}
       <Card className="border border-border shadow-e1 overflow-hidden bg-card rounded-xl relative">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-violet-600" />
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-primary-600" />
         <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-brand-violet/5 dark:bg-brand-violet/10">
           <div className="relative group shrink-0">
             <div className="w-24 h-24 rounded-full bg-card border-2 border-brand-violet flex items-center justify-center font-bold text-3xl shadow-e1 overflow-hidden text-brand-violet">
@@ -352,12 +353,12 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-3 text-xs text-muted-foreground font-medium">
-              <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-md border border-border shadow-e1">
+              <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-[var(--radius)] border border-border shadow-e1">
                 <AppIcon name="mail" className=" .5 .5 text-brand-violet" />
                 {profile?.email}
               </span>
               {profile?.phone && (
-                <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-md border border-border shadow-e1">
+                <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-[var(--radius)] border border-border shadow-e1">
                   <AppIcon name="phone" className=" .5 .5 text-brand-violet" />
                   {profile.phone}
                 </span>
@@ -371,7 +372,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg shrink-0">
+            <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-[var(--radius)] shrink-0">
               <AppIcon name="calendar" />
             </div>
             <div>
@@ -386,7 +387,7 @@ export default function ProfilePage() {
         </Card>
         <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg shrink-0">
+            <div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-[var(--radius)] shrink-0">
               <AppIcon name="fileText" />
             </div>
             <div>
@@ -400,13 +401,13 @@ export default function ProfilePage() {
         </Card>
         <Card className="border border-border shadow-e1 bg-card rounded-xl">
           <CardContent className="p-4 flex items-center gap-4">
-            <div className="p-3 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg shrink-0">
+            <div className="p-3 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-[var(--radius)] shrink-0">
               <AppIcon name="tasks" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground">My Active Tasks</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                <span className="font-medium text-violet-600 dark:text-violet-400">{pendingTasks} Active</span> •{" "}
+                <span className="font-medium text-primary-600 dark:text-primary-400">{pendingTasks} Active</span> •{" "}
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">{completedTasks} Completed</span>
               </p>
             </div>
@@ -427,6 +428,8 @@ export default function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-xs font-sans">
+            <DisabledWhileSubmitting isSubmitting={updateProfileMutation.isPending}>
+            <div className="space-y-4">
             <div>
               <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Full Name</label>
               <Input value={name} onChange={(e) => setName(e.target.value)} className="font-sans" />
@@ -442,14 +445,14 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Designation</label>
-              <Select value={designationId} onValueChange={(v) => { setDesignationId(v); }}>
+              <Select value={designationId || "unset"} onValueChange={(v) => { setDesignationId(v === "unset" ? "" : v); }}>
 <SelectTrigger className="w-full h-9">
 <SelectValue placeholder="Select Designation" />
 </SelectTrigger>
 <SelectContent>
-                <SelectItem value="">Select Designation</SelectItem>
+                <SelectItem value="unset">Select Designation</SelectItem>
                 {designations?.map((d: any) => (
-                  <SelectItem value={d.id}>
+                  <SelectItem key={d.id} value={String(d.id)}>
                     {d.name}
                   </SelectItem>
                 ))}
@@ -472,6 +475,8 @@ export default function ProfilePage() {
                 "Save Personal Info"
               )}
             </Button>
+            </div>
+            </DisabledWhileSubmitting>
           </CardContent>
         </Card>
 
@@ -492,7 +497,7 @@ export default function ProfilePage() {
                    <button
                      onClick={() => handleVisibilityChange("public")}
                      disabled={updateVisibilityMutation.isPending}
-                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "public" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                     className={`p-3 text-left border rounded-[var(--radius)] transition-colors ${visibility === "public" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
                    >
                       <div className="font-semibold text-foreground mb-0.5">Public</div>
                       <div className="text-muted-foreground text-[11px]">Phone and email visible to all users.</div>
@@ -500,7 +505,7 @@ export default function ProfilePage() {
                    <button
                      onClick={() => handleVisibilityChange("internal")}
                      disabled={updateVisibilityMutation.isPending}
-                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "internal" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                     className={`p-3 text-left border rounded-[var(--radius)] transition-colors ${visibility === "internal" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
                    >
                       <div className="font-semibold text-foreground mb-0.5">Internal Only</div>
                       <div className="text-muted-foreground text-[11px]">Contact info visible only to your department & HR.</div>
@@ -508,7 +513,7 @@ export default function ProfilePage() {
                    <button
                      onClick={() => handleVisibilityChange("private")}
                      disabled={updateVisibilityMutation.isPending}
-                     className={`p-3 text-left border rounded-lg transition-colors ${visibility === "private" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
+                     className={`p-3 text-left border rounded-[var(--radius)] transition-colors ${visibility === "private" ? "border-brand-violet bg-brand-violet/5" : "border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
                    >
                       <div className="font-semibold text-foreground mb-0.5">Private</div>
                       <div className="text-muted-foreground text-[11px]">Contact info completely hidden from directory.</div>
@@ -519,15 +524,33 @@ export default function ProfilePage() {
 
            {/* Password Security Form */}
            <Card className="border border-border shadow-e1 bg-card rounded-xl">
-             <CardHeader>
-               <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-                 <AppIcon name="key" className=" text-brand-violet" />
-                 Security & Password
-               </CardTitle>
-               <CardDescription className="text-xs text-muted-foreground font-sans">
-                 Change your password to maintain account security.
-               </CardDescription>
-             </CardHeader>
+              <CardHeader>
+                <div className="flex justify-between items-start gap-4">
+                  <div>
+                    <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
+                      <AppIcon name="key" className=" text-brand-violet" />
+                      Security & Password
+                    </CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
+                      Change your password and manage two-factor authentication.
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="shrink-0 font-sans shadow-e1"
+                    onClick={async () => {
+                       try {
+                          await apiFetch('/auth/2fa/enable', { method: 'POST' });
+                       } catch(e: any) {
+                          toast.error(e.message || "2FA setup coming soon");
+                       }
+                    }}
+                  >
+                    Setup 2FA
+                  </Button>
+                </div>
+              </CardHeader>
              <CardContent className="text-xs font-sans">
                <form 
                  className="space-y-4" 
@@ -538,6 +561,8 @@ export default function ProfilePage() {
                    }
                  }}
                >
+                 <DisabledWhileSubmitting isSubmitting={changePasswordMutation.isPending}>
+                 <div className="space-y-4">
                  <input type="text" name="username" value={authUser?.email || ""} autoComplete="username" className="hidden" readOnly />
                  <div>
                  <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Current Password</label>
@@ -585,6 +610,8 @@ export default function ProfilePage() {
                    "Update Password"
                  )}
                </Button>
+               </div>
+               </DisabledWhileSubmitting>
                </form>
              </CardContent>
            </Card>
@@ -721,7 +748,7 @@ export default function ProfilePage() {
                   setAvatarFile(file);
                 }
               }}
-              className="font-sans file:bg-neutral-100 file:text-neutral-700 file:border-0 file:mr-4 file:py-2 file:px-4 file:rounded-md hover:file:bg-neutral-200 cursor-pointer text-sm"
+              className="font-sans file:bg-neutral-100 file:text-neutral-700 file:border-0 file:mr-4 file:py-2 file:px-4 file:rounded-[var(--radius)] hover:file:bg-neutral-200 cursor-pointer text-sm"
             />
           </div>
 

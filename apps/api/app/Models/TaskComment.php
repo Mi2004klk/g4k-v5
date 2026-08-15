@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TaskComment extends Model
 {
-    protected $fillable = ['task_id', 'user_id', 'body'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['task_id', 'user_id', 'body', 'demo_tag'];
 
     public function task(): BelongsTo
     {

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { queryKeys, STALE_TIME_USERS } from "@/lib/query-keys";
+import { queryKeys, STALE_TIME_USERS, STALE_TIME_PROJECTS } from "@/lib/query-keys";
 
 const SEGMENT_LABELS: Record<string, string> = {
   admin: "Administration",
@@ -38,12 +38,20 @@ function BreadcrumbSegment({
 
   const isNumericId = !isNaN(Number(segment));
   const isUserSegment = isNumericId && parentSegment === "users";
+  const isProjectSegment = isNumericId && parentSegment === "projects";
 
   const { data: userData } = useQuery({
     queryKey: queryKeys.user(Number(segment)),
     queryFn: () => apiFetch(`/users/${segment}`),
     enabled: isUserSegment,
     staleTime: STALE_TIME_USERS,
+  });
+
+  const { data: projectData } = useQuery({
+    queryKey: queryKeys.project(Number(segment)),
+    queryFn: () => apiFetch(`/projects/${segment}`),
+    enabled: isProjectSegment,
+    staleTime: STALE_TIME_PROJECTS,
   });
 
   if (isUserSegment) {
@@ -53,6 +61,14 @@ function BreadcrumbSegment({
       formatted = userData.name;
     } else {
       formatted = "Profile"; // Fallback while loading or error
+    }
+  } else if (isProjectSegment) {
+    if (projectData?.data?.name) {
+      formatted = projectData.data.name;
+    } else if (projectData?.name) {
+      formatted = projectData.name;
+    } else {
+      formatted = "Project"; // Fallback while loading or error
     }
   }
 

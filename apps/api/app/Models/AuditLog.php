@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AuditLog extends Model
 {
+    use \App\Traits\HasDemoTag;
     public $timestamps = false; // Uses custom 'at' timestamp
 
-    protected $fillable = [
-        'user_id',
+    protected $fillable = ['user_id',
         'action',
         'subject_type',
         'subject_id',
@@ -18,8 +18,7 @@ class AuditLog extends Model
         'after',
         'ip',
         'meta',
-        'at',
-    ];
+        'at', 'demo_tag'];
 
     protected $casts = [
         'before' => 'array',

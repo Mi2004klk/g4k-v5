@@ -42,7 +42,10 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const [echoInstance, setEchoInstance] = useState<any>(null);
-  
+  // Real pusher socket state — NOT mere Echo-instance existence. Drives the
+  // polling fallbacks in consumers (chat/notifications) when the socket drops.
+  const [socketConnected, setSocketConnected] = useState(false);
+
   // Track subscription counts to prevent one component from leaving a channel used by another
   const [subscriptions] = useState<Map<string, number>>(() => new Map());
 
@@ -53,6 +56,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
         window.Echo.disconnect();
       }
       setEchoInstance(null);
+      setSocketConnected(false);
       return;
     }
 
@@ -75,7 +79,28 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     window.Echo = echo;
     setEchoInstance(echo);
 
+    // Track the underlying pusher-js socket state so isConnected reflects the
+    // actual connection, not just the Echo instance existing.
+    const connection = (echo.connector as any)?.pusher?.connection;
+    const handleConnected = () => setSocketConnected(true);
+    const handleDisconnected = () => setSocketConnected(false);
+    if (connection) {
+      // Seed from the current state in case the socket already settled
+      setSocketConnected(connection.state === 'connected');
+      connection.bind('connected', handleConnected);
+      connection.bind('disconnected', handleDisconnected);
+      connection.bind('unavailable', handleDisconnected);
+      connection.bind('failed', handleDisconnected);
+    }
+
     return () => {
+      if (connection) {
+        connection.unbind('connected', handleConnected);
+        connection.unbind('disconnected', handleDisconnected);
+        connection.unbind('unavailable', handleDisconnected);
+        connection.unbind('failed', handleDisconnected);
+      }
+      setSocketConnected(false);
       echo.disconnect();
     };
   }, [user?.id, token]); // Reconnect if user changes
@@ -103,7 +128,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
 
   return createElement(
     ReverbContext.Provider,
-    { value: { subscribe, leaveChannel, isConnected: !!echoInstance, echo: echoInstance } },
+    { value: { subscribe, leaveChannel, isConnected: !!echoInstance && socketConnected, echo: echoInstance } },
     children
   );
 }

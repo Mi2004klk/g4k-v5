@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceDay extends Model
 {
-    protected $fillable = [
-        'user_id',
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id',
         'date',
         'status',
         'clock_in',
@@ -21,8 +21,7 @@ class AttendanceDay extends Model
         'late_minutes',
         'overtime_seconds',
         'source',
-        'version'
-    ];
+        'version', 'demo_tag'];
 
     protected $casts = [
         'clock_in' => 'datetime',

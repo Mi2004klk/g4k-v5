@@ -10,6 +10,7 @@ use App\Models\AutoNumbering;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use App\Models\Conversation;
 
 class DatabaseSeeder extends Seeder
 {
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
             'leave.approve-employee',
             'leave.approve-hr',
             'chat.access',
+            'chat.manage',
             'settings.manage',
             'audit.view',
             'users.hr.manage',
@@ -39,6 +41,7 @@ class DatabaseSeeder extends Seeder
             'announcements.manage',
             'tasks.view',
             'tasks.manage',
+            'tasks.create-own',
             'projects.view',
             'projects.manage',
             'qa.view',
@@ -58,11 +61,11 @@ class DatabaseSeeder extends Seeder
                 'attendance.clock-self',
                 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
                 'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
-                'profile.edit', 'leave.request-self', 'announcements.manage', 'tasks.view', 'projects.view', 'reports.view'
+                'profile.edit', 'leave.request-self', 'timer.track', 'announcements.manage', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'chat.manage', 'projects.view', 'reports.view', 'projects.manage', 'qa.view', 'qa.manage'
             ],
             'employee' => [
                 'attendance.clock-self', 'leave.request-self', 'profile.edit',
-                'directory.view', 'directory.send-message', 'chat.access', 'tasks.view', 'projects.view', 'reports.view'
+                'directory.view', 'directory.send-message', 'chat.access', 'tasks.view', 'tasks.create-own', 'projects.view', 'reports.view', 'timer.track'
             ]
         ];
 
@@ -126,13 +129,14 @@ class DatabaseSeeder extends Seeder
         // 3. Departments
         $deptGame = Department::firstOrCreate(["name" => "Game Dev Team"], ["company_id" => $company->id]);
         $deptYouTube = Department::firstOrCreate(["name" => "YouTube Team"], ["company_id" => $company->id]);
+        $deptMarketing = Department::firstOrCreate(["name" => "Marketing & Growth"], ["company_id" => $company->id]);
 
         // 4. Designations
         $designations = [
             "Senior Head", "HR Manager", "Senior Developer", "Unity Developer", "Lead UI Designer",
-            "Graphic Designer", "Game Tester", "Creative Director", "Video Production Lead", "Video Editor",
-            "Camera Operator", "Content Artist", "Game Developer", "Senior Designer", "Designer",
-            "QA Tester", "Director", "Chief Editor", "Editor", "Cameraman", "Actor", "Actress"
+            "Graphic Designer", "Creative Director", "Video Production Lead", "Video Editor",
+            "Camera Operator", "Content Artist", "Digital Marketer", "Marketing Executive",
+            "Game Tester" // Keeping extra just in case
         ];
 
         $desigMap = [];
@@ -144,106 +148,108 @@ class DatabaseSeeder extends Seeder
         $employees = [
             [
                 "name" => "Karthik R", "username" => "karthik", "email" => "g4kkarthik@gmail.com",
-                "password" => "Admin@123", "dept" => $deptYouTube->id, "role" => "super_admin",
+                "password" => "Admin@123", "dept" => $deptYouTube->id, "roles" => ["super_admin"],
                 "designation" => "Senior Head", "mobile" => "7708219011", "alt_mobile" => "6380847411",
                 "emergency" => "7092966257", "joining_date" => "2020-09-01", "blood_group" => "B+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Aravind Kumar", "username" => "aravind", "email" => "hr@games4king.in",
-                "password" => "Hr@123", "dept" => $deptYouTube->id, "role" => "hr",
+                "password" => "Hr@123", "dept" => $deptYouTube->id, "roles" => ["hr"],
                 "designation" => "HR Manager", "mobile" => "9786543210", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2022-01-15", "blood_group" => "O+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Praveen Kumar", "username" => "praveen", "email" => "praveen@games4king.in",
-                "password" => "Dev@123", "dept" => $deptGame->id, "role" => "employee",
+                "password" => "Dev@123", "dept" => $deptGame->id, "roles" => ["employee"],
                 "designation" => "Senior Developer", "mobile" => "9876543201", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2021-04-04", "blood_group" => "A+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Rahul S", "username" => "rahul", "email" => "rahul@games4king.in",
-                "password" => "Dev@123", "dept" => $deptGame->id, "role" => "employee",
+                "password" => "Dev@123", "dept" => $deptGame->id, "roles" => ["employee"],
                 "designation" => "Unity Developer", "mobile" => "9876543202", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2023-08-21", "blood_group" => "O+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
-                "name" => "Vignesh R", "username" => "vignesh", "email" => "vignesh@games4king.in",
-                "password" => "Design@123", "dept" => $deptGame->id, "role" => "employee",
-                "designation" => "Lead UI Designer", "mobile" => "9876543203", "alt_mobile" => null,
-                "emergency" => null, "joining_date" => "2021-02-12", "blood_group" => "AB+",
-                "working_hours" => "09:00 AM - 06:30 PM"
-            ],
-            [
                 "name" => "Santhosh M", "username" => "santhosh", "email" => "santhosh@games4king.in",
-                "password" => "Design@123", "dept" => $deptGame->id, "role" => "employee",
+                "password" => "Design@123", "dept" => $deptGame->id, "roles" => ["employee"],
                 "designation" => "Graphic Designer", "mobile" => "9876543204", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2024-07-10", "blood_group" => "B+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
-                "name" => "Naveen Raj", "username" => "naveen", "email" => "naveen@games4king.in",
-                "password" => "Qa@123", "dept" => $deptGame->id, "role" => "employee",
-                "designation" => "Game Tester", "mobile" => "9876543205", "alt_mobile" => null,
-                "emergency" => null, "joining_date" => "2023-11-18", "blood_group" => "O-",
-                "working_hours" => "09:00 AM - 06:30 PM"
-            ],
-            [
                 "name" => "Harish Kumar", "username" => "harish", "email" => "harish@games4king.in",
-                "password" => "Director@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "password" => "Director@123", "dept" => $deptYouTube->id, "roles" => ["employee"],
                 "designation" => "Creative Director", "mobile" => "9876543206", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2022-01-07", "blood_group" => "A+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Dinesh Kumar", "username" => "dinesh", "email" => "dinesh@games4king.in",
-                "password" => "Edit@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "password" => "Edit@123", "dept" => $deptYouTube->id, "roles" => ["employee"],
                 "designation" => "Video Production Lead", "mobile" => "9876543207", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2022-05-20", "blood_group" => "B-",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Ajith Kumar", "username" => "ajith", "email" => "ajith@games4king.in",
-                "password" => "Edit@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "password" => "Edit@123", "dept" => $deptYouTube->id, "roles" => ["employee"],
                 "designation" => "Video Editor", "mobile" => "9876543208", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2023-12-05", "blood_group" => "O+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Lokesh R", "username" => "lokesh", "email" => "lokesh@games4king.in",
-                "password" => "Camera@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "password" => "Camera@123", "dept" => $deptYouTube->id, "roles" => ["employee"],
                 "designation" => "Camera Operator", "mobile" => "9876543209", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2024-06-11", "blood_group" => "A-",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Akash Kumar", "username" => "akash", "email" => "akash@games4king.in",
-                "password" => "Actor@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "password" => "Actor@123", "dept" => $deptYouTube->id, "roles" => ["employee"],
                 "designation" => "Content Artist", "mobile" => "9876543210", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2024-03-01", "blood_group" => "B+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
             [
                 "name" => "Nivetha S", "username" => "nivetha", "email" => "nivetha@games4king.in",
-                "password" => "Actress@123", "dept" => $deptYouTube->id, "role" => "employee",
+                "password" => "Actress@123", "dept" => $deptYouTube->id, "roles" => ["employee"],
                 "designation" => "Content Artist", "mobile" => "9876543211", "alt_mobile" => null,
                 "emergency" => null, "joining_date" => "2024-04-14", "blood_group" => "O+",
                 "working_hours" => "09:00 AM - 06:30 PM"
             ],
+            [
+                "name" => "Vignesh R", "username" => "vignesh", "email" => "vignesh@games4king.in",
+                "password" => "Design@123", "dept" => $deptMarketing->id, "roles" => ["employee", "hr"],
+                "designation" => "Digital Marketer", "mobile" => "9876543203", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => "2021-02-12", "blood_group" => "AB+",
+                "working_hours" => "09:00 AM - 06:30 PM"
+            ],
+            [
+                "name" => "Priya S", "username" => "newjoin", "email" => "priya@games4king.in",
+                "password" => "NewJoin@123", "dept" => $deptMarketing->id, "roles" => ["employee"],
+                "designation" => "Marketing Executive", "mobile" => "9876543333", "alt_mobile" => null,
+                "emergency" => null, "joining_date" => date('Y-m-d'), "blood_group" => "A-",
+                "working_hours" => "09:00 AM - 06:30 PM", "unonboarded" => true
+            ]
         ];
 
+        $scheduleId = DB::table('work_schedules')->where('name', 'Standard G4K Schedule')->value('id');
+
         foreach ($employees as $emp) {
-            $user = User::firstOrCreate(
-                ["email" => $emp["email"]],
+            $user = User::updateOrCreate(
+                ["username" => $emp["username"]],
                 [
                     "company_id" => $company->id,
                     "name" => $emp["name"],
-                    "username" => $emp["username"],
+                    "email" => $emp["email"],
                     "password" => Hash::make($emp["password"]),
-                    "must_change_password" => true,
+                    "must_change_password" => false,
                     "department_id" => $emp["dept"],
                     "designation_id" => $desigMap[$emp["designation"]]->id,
                     "phone" => $emp["mobile"],
@@ -252,18 +258,33 @@ class DatabaseSeeder extends Seeder
                     "joining_date" => $emp["joining_date"],
                     "blood_group" => $emp["blood_group"],
                     "working_hours" => $emp["working_hours"],
-                    "work_schedule_id" => 1,
-                    "onboarded_at" => now(),
+                    "work_schedule_id" => $scheduleId,
+                    "is_demo" => true,
+                    "onboarded_at" => isset($emp["unonboarded"]) ? null : now(),
                 ]
             );
 
-            DB::table("role_assignments")->updateOrInsert(
-                ["user_id" => $user->id, "role" => $emp["role"]],
-                ["created_at" => now(), "updated_at" => now()]
-            );
+            foreach ($emp["roles"] as $role) {
+                DB::table("role_assignments")->updateOrInsert(
+                    ["user_id" => $user->id, "role" => $role],
+                    ["created_at" => now(), "updated_at" => now()]
+                );
+            }
+            
+            if (in_array("hr", $emp["roles"])) {
+                DB::table("department_hr")->updateOrInsert(
+                    ["department_id" => $emp["dept"], "user_id" => $user->id]
+                );
+            }
         }
 
-        // 7. Settings
+        // 7. Global chat conversation (every user sees scope=global conversations)
+        Conversation::firstOrCreate(
+            ['scope' => 'global'],
+            ['name' => 'Global Chat']
+        );
+
+        // 8. Settings
         $settings = [
             ['key' => 'password.min_length', 'value' => json_encode(8), 'category' => 'security'],
             ['key' => 'password.require_mixed', 'value' => json_encode(true), 'category' => 'security'],
@@ -289,7 +310,7 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // 8. Holidays (Indian Public & Company Holidays for 2026/2027)
+        // 9. Holidays (Indian Public & Company Holidays for 2026/2027)
         $currentYear = date('Y');
         $holidays = [
             ['name' => 'Republic Day', 'date' => "$currentYear-01-26", 'recurring' => true, 'description' => 'National Holiday'],
@@ -315,11 +336,5 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // 9. Demo Data Seeders (Phase 2)
-        $this->call([
-            AttendanceDemoDataSeeder::class,
-            LeaveRequestsDemoSeeder::class,
-            DayToDayDemoSeeder::class,
-        ]);
     }
 }

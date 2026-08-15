@@ -79,14 +79,14 @@ class LeaveAttendanceIntegration implements ShouldQueue
                         ->first();
 
                     if ($existing) {
-                        if ($existing->status !== 'absent' && $existing->status !== 'leave') {
+                        if ($existing->status !== 'absent' && $existing->status !== 'on_leave') {
                             Log::warning("Leave approval overwriting active attendance day status for user {$userId} on {$dateStr}. Old status: {$existing->status}");
                         }
 
                         DB::table('attendance_days')
                             ->where('id', $existing->id)
                             ->update([
-                                'status' => 'leave',
+                                'status' => 'on_leave',
                                 'source' => 'server',
                                 'updated_at' => now(),
                                 'version' => DB::raw('version + 1')
@@ -95,7 +95,7 @@ class LeaveAttendanceIntegration implements ShouldQueue
                         DB::table('attendance_days')->insert([
                             'user_id' => $userId,
                             'date' => $dateStr,
-                            'status' => 'leave',
+                            'status' => 'on_leave',
                             'source' => 'server',
                             'created_at' => now(),
                             'updated_at' => now(),

@@ -25,9 +25,32 @@ class RecurrenceService
                 break;
             case 'weekly':
                 $nextDueDate = $dueDate->addWeek();
+                if (isset($task->recurrence['days']) && is_array($task->recurrence['days']) && count($task->recurrence['days']) > 0) {
+                    $days = $task->recurrence['days'];
+                    // Find the next day in the list of days (0=Sun, 1=Mon, ..., 6=Sat)
+                    $currentDayOfWeek = $dueDate->dayOfWeek;
+                    $nextDayOfWeek = null;
+                    foreach ($days as $day) {
+                        if ($day > $currentDayOfWeek) {
+                            $nextDayOfWeek = $day;
+                            break;
+                        }
+                    }
+                    if ($nextDayOfWeek === null) {
+                        // Move to next week and pick the first day in the array
+                        $nextDayOfWeek = $days[0];
+                        $nextDueDate = $dueDate->addWeek()->startOfWeek()->addDays($nextDayOfWeek === 0 ? 6 : $nextDayOfWeek - 1);
+                    } else {
+                        $nextDueDate = $dueDate->copy()->next($nextDayOfWeek);
+                    }
+                }
                 break;
             case 'monthly':
                 $nextDueDate = $dueDate->addMonth();
+                if (isset($task->recurrence['day_of_month'])) {
+                    $dayOfMonth = $task->recurrence['day_of_month'];
+                    $nextDueDate->day(min($dayOfMonth, $nextDueDate->daysInMonth));
+                }
                 break;
             default:
                 return null;

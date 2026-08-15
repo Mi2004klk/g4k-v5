@@ -28,6 +28,8 @@ export function AdminAttendanceTable() {
   const [userFilter, setUserFilter] = useUrlState("user", "all");
   const [search, setSearch] = useUrlState("search", "");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [rowSelection, setRowSelection] = useState({});
@@ -85,19 +87,8 @@ export function AdminAttendanceTable() {
   ];
 
   const { data, isLoading, error } = useQuery({
-    queryKey: [...queryKeys.adminAttendance(dateFrom, deptFilter), dateTo, userFilter, statusFilter, debouncedSearch, page, perPage],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (dateFrom) params.append("from", dateFrom);
-      if (dateTo) params.append("to", dateTo);
-      if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      if (userFilter && userFilter !== "all") params.append("user_id", userFilter);
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
-      if (debouncedSearch) params.append("search", debouncedSearch);
-      params.append("page", page.toString());
-      params.append("per_page", perPage.toString());
-      return apiFetch(`/attendance/admin/overview?${params.toString()}`);
-    },
+    queryKey: ['attendance', 'admin-list', dateFrom, dateTo, deptFilter, userFilter, statusFilter, debouncedSearch, page, perPage, sortBy, sortOrder],
+    queryFn: () => apiFetch(`/attendance/admin/overview?from=${dateFrom}&to=${dateTo}&department_id=${deptFilter === "all" ? "" : deptFilter}&user_id=${userFilter === "all" ? "" : userFilter}&status=${statusFilter === "all" ? "" : statusFilter}&search=${debouncedSearch}&page=${page}&per_page=${perPage}&sort_by=${sortBy}&sort_dir=${sortOrder}`),
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_ATTENDANCE,
     refetchInterval: isConnected ? false : 60_000,
@@ -188,26 +179,30 @@ export function AdminAttendanceTable() {
                 setSheetTab("trends");
                 setSelectedUser(row.original.user_id);
               }}
-              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all text-neutral-400 hover:text-violet-500"
+              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all text-neutral-400 hover:text-primary-500"
               title="View Trends"
             >
               <AppIcon name="trendingUp" />
             </button>
             {isOpenShift && (
-              <button 
-                onClick={() => setCorrectionData({
-                  dayId: row.original.id,
-                  userId: row.original.user_id,
-                  date: row.original.date,
-                  action: "add_event",
-                  type: "clock_out"
-                })}
-                className="flex items-center gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+              <StatusBadge
+                status="warning"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCorrectionData({
+                    dayId: row.original.id,
+                    userId: row.original.user_id,
+                    date: row.original.date,
+                    action: "add_event",
+                    type: "clock_out"
+                  });
+                }}
+                className="cursor-pointer hover:opacity-80 transition-opacity gap-1"
                 title="Open shift - missing clock out"
               >
                 <AppIcon name="error" size="xs" />
                 OPEN SHIFT
-              </button>
+              </StatusBadge>
             )}
           </div>
         );
@@ -218,6 +213,46 @@ export function AdminAttendanceTable() {
       header: "Department",
       cell: ({ row }: any) => {
         return <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">{row.original.department_name || "—"}</span>;
+      },
+    },
+    {
+      accessorKey: "clock_in",
+      header: "Clock In",
+      meta: { align: 'right' },
+      cell: ({ row }: any) => {
+        const val = row.getValue("clock_in") as string;
+        return <span className="font-mono text-neutral-500">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
+      },
+    },
+    {
+      accessorKey: "clock_out",
+      header: "Clock Out",
+      meta: { align: 'right' },
+      cell: ({ row }: any) => {
+        const val = row.getValue("clock_out") as string;
+        return <span className="font-mono text-neutral-500">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
+      },
+    },
+    {
+      id: "worked_hours",
+      header: "Worked Hours",
+      meta: { align: 'right' },
+      cell: ({ row }: any) => {
+        const secs = row.original.total_seconds || 0;
+        const hours = Math.floor(secs / 3600);
+        const mins = Math.floor((secs % 3600) / 60);
+        return <span className="font-mono font-bold">{hours}h {mins}m</span>;
+      },
+    },
+    {
+      id: "overtime",
+      header: "Overtime",
+      meta: { align: 'right' },
+      cell: ({ row }: any) => {
+        const secs = row.original.overtime_seconds || 0;
+        const hours = Math.floor(secs / 3600);
+        const mins = Math.floor((secs % 3600) / 60);
+        return <span className="font-mono text-amber-600">{hours}h {mins}m</span>;
       },
     },
     {
@@ -244,7 +279,7 @@ export function AdminAttendanceTable() {
             {isLeave && (
               <Link 
                 href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
-                className="text-xs text-violet-600 hover:underline flex items-center gap-1"
+                className="text-xs text-primary-600 hover:underline flex items-center gap-1"
                 onClick={(e) => e.stopPropagation()}
               >
                 <AppIcon name="calendar" size="xs" />
@@ -255,42 +290,7 @@ export function AdminAttendanceTable() {
         );
       },
     },
-    {
-      accessorKey: "clock_in",
-      header: "Clock In",
-      cell: ({ row }: any) => {
-        const val = row.getValue("clock_in") as string;
-        return <span className="font-mono text-neutral-500">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
-      },
-    },
-    {
-      accessorKey: "clock_out",
-      header: "Clock Out",
-      cell: ({ row }: any) => {
-        const val = row.getValue("clock_out") as string;
-        return <span className="font-mono text-neutral-500">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
-      },
-    },
-    {
-      id: "worked_hours",
-      header: "Worked Hours",
-      cell: ({ row }: any) => {
-        const secs = row.original.total_seconds || 0;
-        const hours = Math.floor(secs / 3600);
-        const mins = Math.floor((secs % 3600) / 60);
-        return <span className="font-mono font-bold">{hours}h {mins}m</span>;
-      },
-    },
-    {
-      id: "overtime",
-      header: "Overtime",
-      cell: ({ row }: any) => {
-        const secs = row.original.overtime_seconds || 0;
-        const hours = Math.floor(secs / 3600);
-        const mins = Math.floor((secs % 3600) / 60);
-        return <span className="font-mono text-amber-600">{hours}h {mins}m</span>;
-      },
-    },
+
     {
       id: "actions",
       header: "",
@@ -328,9 +328,21 @@ export function AdminAttendanceTable() {
       <div className="flex flex-col xl:flex-row items-center gap-4 bg-card dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         
         <FilterBar
-          searchQuery={search || ""}
+          searchQuery={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search company (Press / to focus)"
+          searchPlaceholder="Search by name, ID, location..."
+          searchInputId="admin-team-search"
+          sortBy={sortBy}
+          sortDirection={sortOrder}
+          onSortChange={(field, dir) => {
+            setSortBy(field);
+            setSortOrder(dir as "asc" | "desc");
+          }}
+          sortOptions={[
+            { value: "date", label: "Date" },
+            { value: "user_name", label: "Employee Name" },
+            { value: "status", label: "Status" },
+          ]}
           filters={[
             {
               key: "date",
@@ -386,7 +398,7 @@ export function AdminAttendanceTable() {
         {/* Export Actions */}
         <div className="flex justify-end items-center gap-2 overflow-x-auto w-full xl:w-auto mt-4 xl:mt-0">
           {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-9 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
+            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-9 text-primary-600 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
               <AppIcon name="download" className=" mr-2" aria-hidden="true" />
               Export Selected
             </Button>
@@ -398,35 +410,33 @@ export function AdminAttendanceTable() {
         </div>
       </div>
 
-      <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm">
-            <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />
-          </div>
-        )}
-        
-        {error ? (
-          <div className="p-8 text-center text-rose-600 dark:text-rose-400">
-            Failed to load attendance data. Please try again.
-          </div>
-        ) : records.length === 0 && !isLoading ? (
-          <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
-            No employees found for this date.
-          </div>
-        ) : (
-          <DataTable 
-            columns={columns} 
-            data={records}
-            onRowSelectionChange={setRowSelection}
-            rowSelection={rowSelection}
-            getRowId={(row: any) => String(row.id)}
-            page={page}
-            perPage={perPage}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            onPerPageChange={setPerPage}
-          />
-        )}
+      <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-x-auto overflow-y-hidden w-full relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+        <DataTable 
+          columns={columns} 
+          data={records}
+          isLoading={isLoading}
+          isError={!!error}
+          stickyHeader={true}
+          stickyFirstCol={true}
+          onRowSelectionChange={setRowSelection}
+          rowSelection={rowSelection}
+          getRowId={(row: any) => String(row.id)}
+          page={page}
+          perPage={perPage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
+          onSortingChange={(sorting) => {
+            if (sorting.length > 0) {
+              setSortBy(sorting[0].id);
+              setSortOrder(sorting[0].desc ? "desc" : "asc");
+            } else {
+              setSortBy("date");
+              setSortOrder("desc");
+            }
+          }}
+        />
       </div>
 
       <TeamMemberAttendanceSheet 

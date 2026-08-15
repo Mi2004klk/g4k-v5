@@ -76,7 +76,7 @@ export function AdminAttendanceAnalytics() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col justify-center animate-pulse">
             <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-1/2 mb-2"></div>
@@ -97,13 +97,13 @@ export function AdminAttendanceAnalytics() {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {cards.map((card, i) => (
         <div key={i} className="bg-card border border-border rounded-xl p-4 relative overflow-hidden group hover:border-primary/50 transition-colors">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{card.title}</h4>
-            <div className={`p-1.5 rounded-md ${card.bg}`}>
-              <card.icon className={`w-4 h-4 ${card.color}`} />
+            <div className={`p-1.5 rounded-[var(--radius)] ${card.bg}`}>
+              <AppIcon name={card.icon as IconName} className={`w-4 h-4 ${card.color}`} />
             </div>
           </div>
           <div className="flex items-end gap-2">

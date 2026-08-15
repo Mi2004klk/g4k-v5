@@ -19,7 +19,7 @@ export function NotificationsBell() {
   const { subscribe, leaveChannel, isConnected } = useReverb();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState<"recent" | "unread">("recent");
+  const [filter, setFilter] = useState<"recent" | "unread" | "important">("recent");
 
   const dismissedNotificationIds = useUIStore(useShallow((s) => s.dismissedNotificationIds));
   const clearPopupNotifications = useUIStore((s) => s.clearPopupNotifications);
@@ -33,7 +33,12 @@ export function NotificationsBell() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.notifications(filter),
-    queryFn: () => apiFetch(`/notifications${filter === "unread" ? "?unreadOnly=true" : ""}`),
+    queryFn: () => {
+      let qs = "";
+      if (filter === "unread") qs = "?unreadOnly=true";
+      else if (filter === "important") qs = "?importantOnly=true";
+      return apiFetch(`/notifications${qs}`);
+    },
     enabled: !!user,
     refetchInterval: isConnected ? false : 30_000,
   });
@@ -141,13 +146,14 @@ export function NotificationsBell() {
     (n: any) => !dismissedNotificationIds.includes(n.id)
   );
   const unreadCount = countData?.count || 0;
+  const highPriorityCount = countData?.high_priority_count || 0;
 
   const getIcon = (type: string) => {
     switch (type) {
       case "leave_decision":
         return <AppIcon name="success" className=" text-emerald-500 shrink-0" />;
       case "task_assigned":
-        return <AppIcon name="briefcase" className=" text-violet-500 shrink-0" />;
+        return <AppIcon name="briefcase" className=" text-primary-500 shrink-0" />;
       case "message":
         return <AppIcon name="chat" className=" text-blue-500 shrink-0" />;
       case "missed_clock_in":
@@ -176,13 +182,17 @@ export function NotificationsBell() {
           <TooltipTrigger asChild>
             <button
               onClick={() => setOpen(true)}
-              className="relative h-9 w-9 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 shrink-0"
+              className={`relative h-9 w-9 flex items-center justify-center rounded-[var(--radius)] hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 shrink-0 ${highPriorityCount > 0 ? "text-rose-500 animate-pulse" : "text-neutral-600 dark:text-neutral-400"}`}
               aria-label="Notifications"
             >
-              <AppIcon name="bell" size="lg" className=" text-neutral-600 dark:text-neutral-400" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-surface" />
-              )}
+              <AppIcon name="bell" size="lg" />
+              {/* T-47.6: bell badge shows high-priority unread only; the full
+                  unread count remains visible in the panel header and tooltip. */}
+              {unreadCount > 0 ? (
+                <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-surface ${highPriorityCount > 0 ? "bg-rose-500" : "bg-primary-500"}`}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              ) : null}
             </button>
           </TooltipTrigger>
           <TooltipContent className="text-xs">
@@ -210,7 +220,7 @@ export function NotificationsBell() {
                   <button
                     onClick={() => markAllReadMutation.mutate()}
                     title="Mark as Read"
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius)] text-xs font-semibold text-neutral-500 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors"
                   >
                     <AppIcon name="read" size="sm" />
                     <span className="hidden sm:inline">Mark read</span>
@@ -218,7 +228,7 @@ export function NotificationsBell() {
                   <button
                     onClick={() => handleClearPopup()}
                     title="Clear All"
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius)] text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
                   >
                     <AppIcon name="trash" size="sm" />
                     <span className="hidden sm:inline">Clear</span>
@@ -232,7 +242,7 @@ export function NotificationsBell() {
           <div className="flex items-center px-4 py-2 border-b border-border bg-surface text-xs gap-2">
             <button 
               onClick={() => setFilter("recent")} 
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
+              className={`px-3 py-1 text-xs font-semibold rounded-[var(--radius)] transition-colors ${
                 filter === "recent" 
                   ? "bg-orange-500/10 text-orange-600 dark:text-orange-400" 
                   : "text-neutral-500 hover:bg-surface-2"
@@ -242,13 +252,23 @@ export function NotificationsBell() {
             </button>
             <button 
               onClick={() => setFilter("unread")} 
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
+              className={`px-3 py-1 text-xs font-semibold rounded-[var(--radius)] transition-colors ${
                 filter === "unread" 
                   ? "bg-orange-500/10 text-orange-600 dark:text-orange-400" 
                   : "text-neutral-500 hover:bg-surface-2"
               }`}
             >
               Unread
+            </button>
+            <button 
+              onClick={() => setFilter("important")} 
+              className={`px-3 py-1 text-xs font-semibold rounded-[var(--radius)] transition-colors ${
+                filter === "important" 
+                  ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" 
+                  : "text-neutral-500 hover:bg-surface-2"
+              }`}
+            >
+              Important
             </button>
           </div>
           

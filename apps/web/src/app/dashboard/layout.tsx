@@ -26,6 +26,7 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { CommandPalette } from "@/components/app-shell/command-palette";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
+import { ProjectTimerWidget } from "@/components/app-shell/project-timer-widget";
 import { NavGroup, NavItem } from "@/components/app-shell/nav-group";
 import { ReverbProvider } from "@/hooks/use-reverb";
 import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
@@ -53,6 +54,7 @@ export const navGroups = [
     { name: "Team Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
     { name: "Admin Attendance", href: "/dashboard/admin/attendance", icon: "teamAttendance", capability: "admin.view-all-attendance" },
     { name: "Reports & Analytics", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },
+    { name: "Admin Reports", href: "/dashboard/admin/reports", icon: "spreadsheet", capability: "admin.view-reports" },
   ]},
   { label: "Account", items: [
     { name: "Settings & Profile", href: "/dashboard/profile", icon: "settings" },
@@ -66,7 +68,7 @@ const accentClasses: Record<string, { bg: string; hoverBg: string; text: string;
   blue: { bg: "bg-blue-100", hoverBg: "hover:bg-blue-100 dark:hover:bg-blue-950", text: "text-blue-700", hoverText: "hover:text-blue-700 dark:hover:text-blue-300", bgDark: "dark:bg-blue-950", textDark: "dark:text-blue-300", border: "bg-blue-600", ring: "ring-1 ring-inset ring-blue-500/50" },
   slate: { bg: "bg-slate-100", hoverBg: "hover:bg-slate-100 dark:hover:bg-slate-900", text: "text-slate-700", hoverText: "hover:text-slate-700 dark:hover:text-slate-300", bgDark: "dark:bg-slate-900", textDark: "dark:text-slate-300", border: "bg-slate-600", ring: "ring-1 ring-inset ring-slate-500/50" },
   rose: { bg: "bg-rose-100", hoverBg: "hover:bg-rose-100 dark:hover:bg-rose-950", text: "text-rose-700", hoverText: "hover:text-rose-700 dark:hover:text-rose-300", bgDark: "dark:bg-rose-950", textDark: "dark:text-rose-300", border: "bg-rose-600", ring: "ring-1 ring-inset ring-rose-500/50" },
-  violet: { bg: "bg-violet-100", hoverBg: "hover:bg-violet-100 dark:hover:bg-violet-950", text: "text-violet-700", hoverText: "hover:text-violet-700 dark:hover:text-violet-300", bgDark: "dark:bg-violet-950", textDark: "dark:text-violet-300", border: "bg-violet-600", ring: "ring-1 ring-inset ring-violet-500/50" },
+  violet: { bg: "bg-primary-100", hoverBg: "hover:bg-primary-100 dark:hover:bg-primary-950", text: "text-primary-700", hoverText: "hover:text-primary-700 dark:hover:text-primary-300", bgDark: "dark:bg-primary-950", textDark: "dark:text-primary-300", border: "bg-primary-600", ring: "ring-1 ring-inset ring-primary-500/50" },
   indigo: { bg: "bg-indigo-100", hoverBg: "hover:bg-indigo-100 dark:hover:bg-indigo-950", text: "text-indigo-700", hoverText: "hover:text-indigo-700 dark:hover:text-indigo-300", bgDark: "dark:bg-indigo-950", textDark: "dark:text-indigo-300", border: "bg-indigo-600", ring: "ring-1 ring-inset ring-indigo-500/50" },
   teal: { bg: "bg-teal-100", hoverBg: "hover:bg-teal-100 dark:hover:bg-teal-950", text: "text-teal-700", hoverText: "hover:text-teal-700 dark:hover:text-teal-300", bgDark: "dark:bg-teal-950", textDark: "dark:text-teal-300", border: "bg-teal-600", ring: "ring-1 ring-inset ring-teal-500/50" },
   cyan: { bg: "bg-cyan-100", hoverBg: "hover:bg-cyan-100 dark:hover:bg-cyan-950", text: "text-cyan-700", hoverText: "hover:text-cyan-700 dark:hover:text-cyan-300", bgDark: "dark:bg-cyan-950", textDark: "dark:text-cyan-300", border: "bg-cyan-600", ring: "ring-1 ring-inset ring-cyan-500/50" },
@@ -181,6 +183,9 @@ export default function DashboardLayout({
   return (
     <ReverbProvider>
       <AuthGuard>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:p-4 focus:bg-background focus:text-foreground">
+          Skip to content
+        </a>
         <TooltipProvider>
         <HelpOverlay />
         <CommandPalette />
@@ -195,7 +200,7 @@ export default function DashboardLayout({
           )}>
             <div className="flex items-center h-24 shrink-0 px-4 justify-center overflow-hidden py-4">
               {isCollapsed ? (
-                <Image src="/icon.png" alt="Logo" width={56} height={56} className="rounded-md shrink-0 transition-opacity duration-300" priority />
+                <Image src="/icon.png" alt="Logo" width={56} height={56} className="rounded-[var(--radius)] shrink-0 transition-opacity duration-300" priority />
               ) : (
                 <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={200} height={60} className="object-contain w-full max-w-[200px] h-auto max-h-14 transition-opacity duration-300" priority />
               )}
@@ -261,7 +266,7 @@ export default function DashboardLayout({
                     <SheetDescription className="sr-only">Main navigation menu for the dashboard.</SheetDescription>
                       <div className="flex items-center justify-between h-16 shrink-0 px-6 border-b border-border bg-surface-2/40">
                         <div className="flex items-center gap-3">
-                          <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-md" priority />
+                          <Image src="/icon.png" alt="Logo" width={28} height={28} className="rounded-[var(--radius)]" priority />
                           <span className="font-display font-bold text-lg text-primary tracking-tight">
                             Workplace OS
                           </span>
@@ -294,6 +299,7 @@ export default function DashboardLayout({
               </div>
 
               <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                <ProjectTimerWidget />
                 <NotificationsBell />
 
                 <DropdownMenu>
@@ -301,7 +307,7 @@ export default function DashboardLayout({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <DropdownMenuTrigger asChild>
-                          <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-violet-500" aria-label="User menu">
+                          <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-primary-500" aria-label="User menu">
                             <Avatar size="md">
                               <AvatarFallback name={authUser?.name || "U"} />
                             </Avatar>
@@ -385,7 +391,7 @@ export default function DashboardLayout({
               </div>
             </header>
 
-            <main className="flex-1 overflow-y-auto relative z-10 bg-app p-4 pb-24 md:pb-6 md:p-6 lg:p-8">
+            <main id="main-content" className="flex-1 overflow-y-auto relative z-10 bg-app p-4 pb-24 md:pb-6 md:p-6 lg:p-8">
               <div key={pathname} className="mx-auto max-w-[1440px] animate-page-in">
                 <Breadcrumb />
                 {children}
@@ -425,7 +431,7 @@ export default function DashboardLayout({
                   href="/dashboard/attendance"
                   prefetch={false}
                   title="My Attendance"
-                  className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-emerald-600 text-white shadow-lg -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  className="flex flex-col items-center justify-center w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-emerald-600 text-white shadow-e3 -mt-5 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                 >
                   <AppIcon name="teamAttendance" size="xl" className=" shrink-0" />
                 </Link>

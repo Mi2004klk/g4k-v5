@@ -130,7 +130,7 @@ function ResetPasswordForm() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               {form.formState.errors.root && (
-                <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-md text-sm font-medium text-center font-sans">
+                <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-[var(--radius)] text-sm font-medium text-center font-sans">
                   {form.formState.errors.root.message}
                 </div>
               )}

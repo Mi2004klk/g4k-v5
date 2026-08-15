@@ -24,7 +24,7 @@ export default function ReportsPage() {
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: queryKeys.reports(reportType, filters),
     queryFn: () => {
       const params = new URLSearchParams();
@@ -168,17 +168,14 @@ export default function ReportsPage() {
       </Card>
 
       <Card className="border-none shadow-e1 overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 text-center text-neutral-500 flex flex-col items-center">
-            <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mb-4" />
-            Generating report...
-          </div>
-        ) : (
           <DataTable 
             columns={reportType === "attendance-summary" ? attendanceColumns : leaveColumns} 
             data={data?.data || []} 
+            isLoading={isLoading}
+            isError={isError}
+            stickyHeader={true}
+            stickyFirstCol={true}
           />
-        )}
       </Card>
     </div>
   );

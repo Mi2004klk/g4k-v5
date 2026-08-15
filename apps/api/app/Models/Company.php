@@ -6,12 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable([
-    'company_id', 'name', 'short_name', 'type', 'description', 
-    'primary_phone', 'secondary_phone', 'email', 'website', 'address', 'is_active'
-])]
+#[Fillable(['company_id', 'name', 'short_name', 'type', 'description', 
+    'primary_phone', 'secondary_phone', 'email', 'website', 'address', 'is_active', 'demo_tag'])]
 class Company extends Model
 {
+    use \App\Traits\HasDemoTag;
     use \App\Traits\GeneratesAutoNumber;
 
     public $autoNumberField = 'company_id';

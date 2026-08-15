@@ -32,3 +32,11 @@ export function parseUserAgent(ua: string): string {
 
   return `${browser} on ${os}`;
 }
+
+export function asArray<T = any>(data: any): T[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.data)) return data.data;
+  if (Array.isArray(data.employees)) return data.employees;
+  return [];
+}

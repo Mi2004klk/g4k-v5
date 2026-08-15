@@ -8,13 +8,13 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
+import { OneFieldForm } from "@/components/one-field-form";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
 import { queryKeys } from "@/lib/query-keys";
 
 export function QuickNotes() {
   const queryClient = useQueryClient();
-  const [text, setText] = useState("");
   const widgetStates = useUIStore(useShallow((s) => s.widgetStates));
   const toggleWidgetCollapse = useUIStore((s) => s.toggleWidgetCollapse);
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
@@ -33,7 +33,6 @@ export function QuickNotes() {
       });
     },
     onSuccess: () => {
-      setText("");
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
@@ -47,12 +46,24 @@ export function QuickNotes() {
     },
   });
 
+  const togglePinMutation = useMutation({
+    mutationFn: async ({ id, pinned }: { id: number; pinned: boolean }) => {
+      return apiFetch(`/quick-notes/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ pinned }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+    },
+  });
+
   return (
     <Collapsible open={!isCollapsed} onOpenChange={() => toggleWidgetCollapse("quick-notes")}>
       <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-[var(--radius)] bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
               <AppIcon name="fileText" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
@@ -60,34 +71,28 @@ export function QuickNotes() {
             </span>
             {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
-          <CollapsibleTrigger className="h-7 w-7 p-0 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+          <CollapsibleTrigger className="h-7 w-7 p-0 flex items-center justify-center rounded-[var(--radius)] text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
             {isCollapsed ? <AppIcon name="chevronDown" /> : <AppIcon name="chevronUp" />}
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent>
           <div className="space-y-3 pt-2">
             <div className="flex gap-2">
-              <Input
+              <OneFieldForm
+                title="Quick Note"
                 placeholder="Type a personal note..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                className="text-xs h-8"
+                buttonLabel="Add Note"
+                icon="plus"
+                onSubmit={(val) => createMutation.mutateAsync(val)}
+                isPending={createMutation.isPending}
               />
-              <Button
-                size="sm"
-                onClick={() => createMutation.mutate(text)}
-                disabled={!text.trim()}
-                className="h-8"
-              >
-                <AppIcon name="plus" size="sm" />
-              </Button>
             </div>
 
-            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+            <div className="space-y-2 max-h-[200px] overflow-y-auto thin-scrollbar pr-1">
               {isPending ? (
                 <div className="space-y-2">
                   {[1, 2].map(i => (
-                    <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                    <Skeleton key={i} className="h-10 w-full rounded-[var(--radius)]" />
                   ))}
                 </div>
               ) : isError ? (
@@ -106,24 +111,48 @@ export function QuickNotes() {
                 notes.map((n: any) => (
                   <div
                     key={n.id}
-                    className="p-2.5 rounded-lg bg-secondary text-xs flex items-start justify-between gap-2 border border-border"
+                    className={`p-2.5 rounded-[var(--radius)] text-xs flex items-start justify-between gap-2 border transition-colors ${
+                      n.pinned 
+                        ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50' 
+                        : 'bg-secondary border-border'
+                    }`}
                   >
-                    <Truncate text={n.body} className="text-secondary-foreground" />
+                    <div className="flex-1 min-w-0 flex items-start gap-2">
+                      {n.pinned && <AppIcon name="pin" size="xs" className="mt-1 text-amber-500 shrink-0" />}
+                      <Truncate text={n.body} className="text-secondary-foreground" />
+                    </div>
                     <TooltipProvider delayDuration={150}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setConfirmState({ isOpen: true, id: n.id })}
-                            className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
-                            aria-label="Delete note"
-                          >
-                            <AppIcon name="trash" size="sm" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="text-xs">Delete note</TooltipContent>
-                      </Tooltip>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => togglePinMutation.mutate({ id: n.id, pinned: !n.pinned })}
+                              className={`h-5 w-5 ${n.pinned ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50' : 'text-neutral-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50'}`}
+                              aria-label={n.pinned ? "Unpin note" : "Pin note"}
+                            >
+                              <AppIcon name="pin" size="sm" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-xs">{n.pinned ? "Unpin" : "Pin to top"}</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setConfirmState({ isOpen: true, id: n.id })}
+                              className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
+                              aria-label="Delete note"
+                            >
+                              <AppIcon name="trash" size="sm" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-xs">Delete note</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </TooltipProvider>
                   </div>
                 ))

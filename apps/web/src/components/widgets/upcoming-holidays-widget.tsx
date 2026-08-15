@@ -47,12 +47,12 @@ export function UpcomingHolidaysWidget() {
       <CardContent className="p-0 flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="p-4 space-y-3">
-            <Skeleton className="h-12 w-full rounded-lg" />
-            <Skeleton className="h-12 w-full rounded-lg" />
-            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-[var(--radius)]" />
+            <Skeleton className="h-12 w-full rounded-[var(--radius)]" />
+            <Skeleton className="h-12 w-full rounded-[var(--radius)]" />
           </div>
         ) : isError ? (
-          <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 m-4">
+          <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-[var(--radius)] p-4 m-4">
             <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
             <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load holidays</span>
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
@@ -74,7 +74,7 @@ export function UpcomingHolidaysWidget() {
                     <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
                       isEvent 
                         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
-                        : 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
+                        : 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
                     }`}>
                       {isEvent ? 'Event' : 'Holiday'}
                     </span>

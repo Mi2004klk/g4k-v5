@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Reaction extends Model
 {
-    protected $fillable = ['reactable_type', 'reactable_id', 'user_id', 'emoji'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['reactable_type', 'reactable_id', 'user_id', 'emoji', 'demo_tag'];
 
     public function reactable(): MorphTo
     {

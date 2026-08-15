@@ -77,14 +77,14 @@ export function HrActivityFeedWidget() {
     <div className="h-[400px] bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden flex flex-col transition-shadow duration-150">
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-            <AppIcon name="activity" className=" text-violet-600 dark:text-violet-400" />
+          <div className="w-7 h-7 rounded-[var(--radius)] bg-primary-100 dark:bg-primary-950 flex items-center justify-center">
+            <AppIcon name="activity" className=" text-primary-600 dark:text-primary-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Team Activity Feed
           </span>
         </div>
-        <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 rounded-full">
+        <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider bg-primary-100 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">
           Live
         </span>
       </div>
@@ -105,7 +105,7 @@ export function HrActivityFeedWidget() {
         )}
 
         {error && (
-          <div className="text-sm text-rose-600 p-2 text-center bg-rose-50 dark:bg-rose-950/30 rounded-lg">
+          <div className="text-sm text-rose-600 p-2 text-center bg-rose-50 dark:bg-rose-950/30 rounded-[var(--radius)]">
             Failed to load activity
           </div>
         )}
@@ -146,7 +146,7 @@ export function HrActivityFeedWidget() {
       </div>
       
       <div className="pt-3 mt-auto">
-        <Link href="/dashboard/org/attendance" className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 flex items-center justify-between w-full group transition-colors">
+        <Link href="/dashboard/org/attendance" className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center justify-between w-full group transition-colors">
           View All Activity
           <AppIcon name="activity" size="xs" className=" group-hover:translate-x-1 transition-transform" />
         </Link>

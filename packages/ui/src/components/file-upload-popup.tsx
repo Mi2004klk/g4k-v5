@@ -135,7 +135,7 @@ export function FileUploadPopup({
           {!file ? (
             <div
               className={cn(
-                "relative flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors",
+                "relative flex flex-col items-center justify-center gap-2 rounded-[var(--radius)] border-2 border-dashed p-8 transition-colors",
                 isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:bg-muted/50",
                 error ? "border-destructive bg-destructive/5" : ""
               )}
@@ -168,7 +168,7 @@ export function FileUploadPopup({
               />
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-lg border bg-muted/20">
+            <div className="relative overflow-hidden rounded-[var(--radius)] border bg-muted/20">
               <Button
                 variant="ghost"
                 size="icon"

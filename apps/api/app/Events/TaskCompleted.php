@@ -36,7 +36,7 @@ class TaskCompleted
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
+            new PrivateChannel('tasks.' . $this->task->project_id),
         ];
     }
 }

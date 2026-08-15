@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pin extends Model
 {
-    protected $fillable = [
-        'user_id',
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id',
         'type',
         'target_id',
         'label',
         'href',
-        'icon',
-    ];
+        'icon', 'demo_tag'];
 
     public function user()
     {

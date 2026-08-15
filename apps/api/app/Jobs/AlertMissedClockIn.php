@@ -27,8 +27,11 @@ class AlertMissedClockIn implements ShouldQueue
         $workSchedules = \Illuminate\Support\Facades\DB::table('work_schedules')->get()->keyBy('id');
         $defaultSchedule = $workSchedules->firstWhere('is_default', true);
 
-        // Get all active employees who haven't clocked in
+        // Get all active employees who haven't clocked in (exclude HR/Admin from alerts)
         $users = User::where('status', 'active')
+            ->whereDoesntHave('roleAssignments', function($q) {
+                $q->whereIn('role', ['hr', 'super_admin']);
+            })
             ->whereDoesntHave('attendanceDays', function($query) use ($today) {
                 $query->where('date', $today);
             })
@@ -42,8 +45,12 @@ class AlertMissedClockIn implements ShouldQueue
             ->pluck('user_id')
             ->toArray();
 
-        $superAdmins = User::whereHas('roleAssignments', fn($q) => $q->where('role', 'super_admin'))->get();
-        $hrByDept = User::whereHas('roleAssignments', fn($q) => $q->where('role', 'hr'))->get()->groupBy('department_id');
+        $superAdminIds = User::whereHas('roleAssignments', fn($q) => $q->where('role', 'super_admin'))->pluck('id')->toArray();
+        $hrPivotRecords = DB::table('department_hr')->get();
+        $hrIdsByDept = [];
+        foreach ($hrPivotRecords as $pivot) {
+            $hrIdsByDept[$pivot->department_id][] = $pivot->user_id;
+        }
 
         $notifications = [];
         $dayIso = now()->dayOfWeekIso;
@@ -76,11 +83,11 @@ class AlertMissedClockIn implements ShouldQueue
                 $onLeave = in_array($user->id, $usersOnLeave);
 
                 if (!$onLeave && !$isHoliday) {
-                    $hrUsers = collect($superAdmins)->merge($hrByDept[$user->department_id] ?? [])->unique('id');
+                    $hrUserIds = collect($superAdminIds)->merge($hrIdsByDept[$user->department_id] ?? [])->unique();
 
-                    foreach ($hrUsers as $hr) {
+                    foreach ($hrUserIds as $hrId) {
                         $notifications[] = [
-                            'user_id' => $hr->id,
+                            'user_id' => $hrId,
                             'title' => 'Missed Clock-In Alert',
                             'body' => "{$user->name} hasn't clocked in ({$offsetMinutes}m after shift start).",
                             'type' => 'alert',

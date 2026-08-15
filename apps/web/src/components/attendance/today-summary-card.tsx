@@ -151,7 +151,7 @@ export function TodaySummaryCard() {
           </div>
 
           {isLate && (
-            <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 flex items-start gap-2">
+            <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-[var(--radius)] border border-amber-100 dark:border-amber-900/50 flex items-start gap-2">
               <AppIcon name="warning" className=" text-amber-600 mt-0.5" />
               <div>
                 <p className="text-xs font-bold text-amber-700 dark:text-amber-500">Late Arrival</p>
@@ -163,7 +163,7 @@ export function TodaySummaryCard() {
           )}
 
           {day?.clock_in && !isLate && (
-            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center">
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2 rounded-[var(--radius)] border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center">
               <span className="text-xs font-bold text-emerald-700 dark:text-emerald-500 flex items-center gap-1">On Time Arrival <AppIcon name="check" size="xs" /></span>
             </div>
           )}

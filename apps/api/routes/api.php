@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
@@ -59,13 +60,18 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     Route::post('/auth/onboarding/complete', [AuthController::class, 'completeOnboarding']);
     Route::post('/auth/role-select', [AuthController::class, 'roleSelect'])->middleware('throttle:10,1');
     Route::put('/auth/role', [AuthController::class, 'roleSelect'])->middleware('throttle:10,1');
-    Route::put('/auth/role', [AuthController::class, 'switchRole']);
     Route::get('/auth/sessions', [AuthController::class, 'sessions']);
     Route::delete('/auth/sessions/{id}', [AuthController::class, 'revokeSession']);
 
     // Preferences API
     Route::get('/auth/preferences', [UserPreferenceController::class, 'show']);
     Route::put('/auth/preferences', [UserPreferenceController::class, 'update']);
+
+    // Companies API
+    Route::get('/companies', [CompanyProfileController::class, 'show']);
+    Route::get('/companies/{id}', [CompanyProfileController::class, 'show']);
+    Route::post('/companies', [CompanyProfileController::class, 'update']);
+    Route::put('/companies/{id}', [CompanyProfileController::class, 'update']);
 
     // Admin Password Resets
     Route::get('/admin/password-resets', [\App\Http\Controllers\AdminPasswordResetController::class, 'index'])->middleware('capability:settings.manage');
@@ -84,7 +90,9 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Profile API
     Route::middleware('capability:profile.edit')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show']);
+        Route::get('/auth/profile', [ProfileController::class, 'show']);
         Route::put('/profile', [ProfileController::class, 'update']);
+        Route::put('/auth/profile', [ProfileController::class, 'update']);
         Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
     });
 
@@ -92,6 +100,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     Route::middleware('capability:directory.view')->group(function () {
         Route::get('/directory', [DirectoryController::class, 'index']);
         Route::get('/directory/{id}', [DirectoryController::class, 'show']);
+        Route::post('/directory/{id}/send-message', [DirectoryController::class, 'sendMessage']);
     });
     // Attendance API
     Route::middleware('capability:attendance.clock-self')->group(function () {
@@ -102,6 +111,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
             Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/break-end', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+            Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
         });
         Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);
         Route::get('/attendance/me/history', [AttendanceController::class, 'meHistory']);
@@ -128,13 +138,17 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
         Route::get('/leave-requests/history', [LeaveRequestController::class, 'history']);
         Route::post('/leave-requests', [LeaveRequestController::class, 'store']);
-        Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
     });
-    // HR or Admin approve
+    
     Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware(['capability:leave.approve-employee', 'throttle:15,1']);
+    Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/admin/history', [LeaveRequestController::class, 'adminHistory'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/export', [LeaveRequestController::class, 'export'])->middleware('capability:leave.approve-employee|settings.manage');
+
+    Route::middleware('capability:leave.request-self')->group(function () {
+        Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
+    });
     
     Route::get('/holidays', [HolidayController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag');
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -147,9 +161,17 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     Route::middleware('capability:projects.view|projects.manage')->group(function () {
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::get('/projects/{id}', [ProjectController::class, 'show']);
+        Route::get('/projects/{id}/history', [ProjectController::class, 'history']);
+        
+        Route::middleware('capability:timer.track')->group(function () {
+            Route::get('/timer/logs', [TimerController::class, 'index']);
+            Route::post('/timer/logs', [TimerController::class, 'logTime']);
+            Route::post('/timer/log', [TimerController::class, 'logTime']);
+        });
         Route::post('/projects/{id}/submit', [ProjectController::class, 'submit']);
     });
     Route::middleware('capability:projects.manage')->group(function () {
+        Route::post('/projects/cover', [ProjectController::class, 'uploadCover']);
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
@@ -161,7 +183,10 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/tasks/submitted', [TaskController::class, 'submitted']);
         Route::get('/tasks/{id}', [TaskController::class, 'show']);
     });
-    Route::middleware(['capability:tasks.manage', 'throttle:30,1'])->group(function () {
+    // Granular task policies (employee My-Tasks self-create, assignee edits and
+    // submissions, project-level allow_employee_tasks) live in TaskController.
+    Route::middleware(['capability:tasks.view|tasks.manage|tasks.create-own', 'throttle:30,1'])->group(function () {
+        Route::post('/tasks/reorder', [TaskController::class, 'reorder']);
         Route::post('/tasks', [TaskController::class, 'store']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
@@ -196,7 +221,10 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
         Route::middleware('throttle:30,1')->group(function () {
             Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
+            Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroup']);
             Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+            Route::post('/conversations/{id}/messages/{msgId}/pin', [\App\Http\Controllers\ChatController::class, 'pinMessage']);
+            Route::post('/conversations/{id}/messages/{msgId}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinMessage']);
         });
         Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
         Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
@@ -213,6 +241,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     Route::get('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'index']);
     Route::post('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'store']);
+    Route::put('/quick-notes/{id}', [\App\Http\Controllers\QuickNoteController::class, 'update']);
     Route::delete('/quick-notes/{id}', [\App\Http\Controllers\QuickNoteController::class, 'destroy']);
 
     Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store']);
@@ -235,9 +264,18 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
             Route::post('/company-profile/logo', [\App\Http\Controllers\CompanyProfileController::class, 'uploadLogo']);
             Route::post('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'store']);
             Route::put('/work-schedules/{id}', [\App\Http\Controllers\WorkScheduleController::class, 'update']);
+            Route::post('/work-schedules/{id}/default', [\App\Http\Controllers\WorkScheduleController::class, 'setDefault']);
+            Route::delete('/work-schedules/{id}', [\App\Http\Controllers\WorkScheduleController::class, 'destroy']);
         });
         Route::post('/settings/mail/test', [\App\Http\Controllers\SettingsController::class, 'testMail']);
         Route::get('/company-profile', [\App\Http\Controllers\CompanyProfileController::class, 'show']);
+
+        // Demo Data Management
+        Route::prefix('demo-data')->group(function () {
+            Route::get('/', [\App\Http\Controllers\DemoDataController::class, 'getStatus']);
+            Route::delete('/', [\App\Http\Controllers\DemoDataController::class, 'purge']);
+            Route::post('/seed', [\App\Http\Controllers\DemoDataController::class, 'seed']);
+        });
     });
     Route::get('/work-schedules', [\App\Http\Controllers\WorkScheduleController::class, 'index'])->middleware('capability:settings.manage|users.hr.manage');
     
@@ -270,6 +308,9 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     // Departments
     Route::get('/departments', [DepartmentController::class, 'index']);
+    Route::get('/departments/{id}/teams', [DepartmentController::class, 'teams']);
+    Route::post('/departments/{id}/teams', [DepartmentController::class, 'storeTeam']);
+    Route::delete('/departments/{id}/teams/{teamId}', [DepartmentController::class, 'removeTeam']);
     Route::middleware('capability:departments.manage')->group(function () {
         Route::get('/departments/export', [DepartmentController::class, 'export']);
         Route::patch('/departments/{id}/archive', [DepartmentController::class, 'archive']);

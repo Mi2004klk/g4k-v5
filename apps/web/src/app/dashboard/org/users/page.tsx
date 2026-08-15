@@ -60,6 +60,7 @@ import { Combobox } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
+import { PageContainer } from "@/components/layout/page-container";
 
 import { DataTable } from "@g4k/ui/components";
 
@@ -159,6 +160,19 @@ export default function UsersPage() {
     });
     return () => subscription.unsubscribe();
   }, [watch, setDraftData]);
+
+  // Context-aware Ctrl+N shortcut
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "n" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        if (!hasDraft) reset({ name: "", email: "", username: "", phone: "", department_id: "", team_id: "", designation_id: "", employee_id: "", roles: ["employee"] });
+        setIsCreateOpen(true);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [hasDraft, reset, setIsCreateOpen]);
 
   // Queries
   const { data, isPending, isError, refetch } = useQuery({
@@ -285,7 +299,7 @@ export default function UsersPage() {
       cell: ({ row }: any) => {
         const user = row.original;
         return (
-          <div className={`flex items-center gap-3 ${canManageUsers ? 'cursor-pointer' : ''}`} onClick={() => {
+          <button className={`flex items-center gap-3 w-full text-left transition-opacity ${canManageUsers ? 'hover:opacity-80' : ''}`} onClick={() => {
             if (!canManageUsers) return;
             setEditingUser(user);
             resetEdit({
@@ -301,11 +315,11 @@ export default function UsersPage() {
             });
             setIsEditOpen(true);
           }}>
-            <Avatar className="w-9 h-9 cursor-pointer">
+            <Avatar className="w-9 h-9">
               {user.avatar_url && <AvatarImage src={user.avatar_url} alt={user.name} />}
               <AvatarFallback name={user.name} className="font-bold" />
             </Avatar>
-            <div className="cursor-pointer hover:underline decoration-violet-500">
+            <div>
               <div className="font-semibold text-neutral-900 dark:text-white">
                 {user.name}
               </div>
@@ -313,7 +327,7 @@ export default function UsersPage() {
                 <span>{user.email}</span>
               </div>
             </div>
-          </div>
+          </button>
         );
       },
     },
@@ -351,12 +365,12 @@ export default function UsersPage() {
         const rawRoles = row.original.role_assignments?.map((r: any) => r.role)
           || (Array.isArray(row.original.roles) ? row.original.roles.map((r: any) => typeof r === 'string' ? r : r.role) : [])
           || (row.original.active_role ? [row.original.active_role] : []);
-        const activeRoles = Array.from(new Set(rawRoles.filter(Boolean)));
+        const activeRoles = Array.from(new Set(rawRoles.filter(Boolean))) as string[];
         return (
           <div className="flex flex-wrap gap-1">
             {activeRoles.length > 0 ? (
               activeRoles.map((r: string) => (
-                <span key={r} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 capitalize">
+                <span key={r} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300 capitalize">
                   {r.replace("_", " ")}
                 </span>
               ))
@@ -410,7 +424,7 @@ export default function UsersPage() {
                   </DropdownMenuItem>
                 ) : (
                   <>
-                    <DropdownMenuItem onClick={() => router.push(`/dashboard/org/users/${user.id}`)} className="gap-2 font-medium text-violet-600">
+                    <DropdownMenuItem onClick={() => router.push(`/dashboard/org/users/${user.id}`)} className="gap-2 font-medium text-primary-600">
                       <AppIcon name="userCheck" /> View Details
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
@@ -452,17 +466,11 @@ export default function UsersPage() {
   const deptOptions = (Array.isArray(departments) ? departments : []).map((d: any) => ({ label: d.name, value: d.id.toString() }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
-            Employee Directory
-          </h1>
-          <p className="text-xs text-neutral-500">
-            Manage organization users, roles, and master data.
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <PageContainer
+      title="Employee Directory"
+      description="Manage organization users, roles, and master data."
+      actions={
+        <>
           <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
             {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
             Export
@@ -476,11 +484,9 @@ export default function UsersPage() {
               Add Employee
             </Button>
           )}
-        </div>
-      </div>
-
-      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 bg-card dark:bg-neutral-900">
-        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
+        </>
+      }
+      filterBar={
           <FilterBar
             searchQuery={search}
             onSearchChange={setSearch}
@@ -520,12 +526,11 @@ export default function UsersPage() {
               },
             ]}
           />
-        </CardContent>
-      </Card>
-
+        }
+    >
       {selectedCount > 0 && (
-        <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-900/50 rounded-lg p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
-          <span className="text-sm font-medium text-violet-700 dark:text-violet-300">{selectedCount} users selected</span>
+        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-900/50 rounded-[var(--radius)] p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
+          <span className="text-sm font-medium text-primary-700 dark:text-primary-300">{selectedCount} users selected</span>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="h-8" onClick={() => bulkMutation.mutate({ ids: Object.keys(rowSelection).map(Number), action: 'activate' })}>Bulk Activate</Button>
             <Button variant="outline" size="sm" className="h-8 text-rose-600" onClick={() => setConfirmState({ isOpen: true, type: "bulk-deactivate", payload: { ids: Object.keys(rowSelection).map(Number) } })}>Bulk Deactivate</Button>
@@ -579,7 +584,7 @@ export default function UsersPage() {
           </DialogHeader>
 
           {hasDraft && (
-            <div className="bg-blue-50 border border-blue-100 p-3 rounded-md flex items-center justify-between mt-2">
+            <div className="bg-blue-50 border border-blue-100 p-3 rounded-[var(--radius)] flex items-center justify-between mt-2">
               <span className="text-sm text-blue-700">You have an unsaved draft.</span>
               <Button size="sm" variant="outline" className="h-7 text-xs bg-surface text-blue-700 hover:bg-blue-50" onClick={() => {
                 restoreDraft();
@@ -591,8 +596,8 @@ export default function UsersPage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmitCreate)}>
-            <div className="space-y-4 py-2 text-xs max-h-[60vh] overflow-y-auto px-1 mt-2">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4 py-2 text-xs max-h-[60dvh] overflow-y-auto px-1 mt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
                   <Input {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} />
@@ -603,7 +608,7 @@ export default function UsersPage() {
                   <Input {...register("username")} placeholder="janedoe" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
                   <Input type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} />
@@ -614,7 +619,7 @@ export default function UsersPage() {
                   <Input {...register("phone")} placeholder="+91 98765 43210" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1 font-semibold">Employee ID</label>
                   <Input {...register("employee_id")} placeholder="Auto-generated if blank" />
@@ -635,7 +640,7 @@ export default function UsersPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1 font-semibold">Team</label>
                   <Controller
@@ -668,7 +673,7 @@ export default function UsersPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-1 font-semibold">Work Schedule</label>
                   <Controller
@@ -737,7 +742,7 @@ export default function UsersPage() {
       )}
 
       <Sheet open={isActivityOpen} onOpenChange={setIsActivityOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetContent className="w-full sm:w-[540px]">
           <SheetHeader>
             <SheetTitle>Activity Log</SheetTitle>
             <SheetDescription>Recent actions performed by {activityUser?.name}</SheetDescription>
@@ -749,7 +754,7 @@ export default function UsersPage() {
               <EmptyState title="No activity" description="No recent actions recorded." icon={<AppIcon name="history" size="2xl" className=" text-neutral-400" />} />
             ) : (
               activityData?.data?.map((log: any) => (
-                <div key={log.id} className="p-3 border rounded-lg text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">
+                <div key={log.id} className="p-3 border rounded-[var(--radius)] text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">
                   <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type}</span>
                   <span className="text-xs text-neutral-500">{new Date(log.at).toLocaleString()} - IP: {log.ip || 'N/A'}</span>
                 </div>
@@ -799,7 +804,7 @@ export default function UsersPage() {
         }}
         isLoading={deleteMutation.isPending || statusMutation.isPending || bulkMutation.isPending || resetPasswordMutation.isPending || restoreMutation.isPending}
       />
-    </div>
+    </PageContainer>
   );
 }
 

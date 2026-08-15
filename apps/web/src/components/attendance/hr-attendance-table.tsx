@@ -74,7 +74,7 @@ export function HrAttendanceTable() {
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: [...queryKeys.hrAttendance(selectedDate, deptFilter), statusFilter, debouncedSearch, page, perPage],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -160,14 +160,6 @@ export function HrAttendanceTable() {
         enableHiding: false,
       },
       {
-        id: "date",
-        size: 120,
-        header: "Date",
-        cell: ({ row }: any) => {
-          return <span className="text-sm font-medium text-foreground">{safeFormat(row.original.date, "MMM dd, yyyy")}</span>;
-        }
-      },
-      {
         accessorKey: "user_name",
         header: "Employee",
         size: 200,
@@ -207,6 +199,14 @@ export function HrAttendanceTable() {
             </div>
           );
         },
+      },
+      {
+        id: "date",
+        size: 120,
+        header: "Date",
+        cell: ({ row }: any) => {
+          return <span className="text-sm font-medium text-foreground">{safeFormat(row.original.date, "MMM dd, yyyy")}</span>;
+        }
       },
       {
         accessorKey: "clock_in",
@@ -335,15 +335,14 @@ export function HrAttendanceTable() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border border-border overflow-hidden relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm">
-            <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />
-          </div>
-        )}
+      <div className="bg-card rounded-xl border border-border overflow-x-auto overflow-y-hidden w-full relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <DataTable
           columns={columns}
           data={records}
+          isLoading={isLoading}
+          isError={!!error}
+          stickyHeader={true}
+          stickyFirstCol={true}
           density="compact"
           onRowSelectionChange={setRowSelection}
           rowSelection={rowSelection}

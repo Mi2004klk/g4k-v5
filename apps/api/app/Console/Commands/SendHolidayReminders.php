@@ -34,7 +34,12 @@ class SendHolidayReminders extends Command
         
         $expanded = $recurringHolidays->map(function ($h) use ($year) {
             $newH = clone $h;
-            $newH->date = Carbon::parse($h->date)->setYear($year)->startOfDay();
+            $parsedDate = Carbon::parse($h->date);
+            if ($parsedDate->format('m-d') === '02-29' && !Carbon::create($year)->isLeapYear()) {
+                $newH->date = Carbon::create($year, 2, 28)->startOfDay();
+            } else {
+                $newH->date = $parsedDate->setYear($year)->startOfDay();
+            }
             return $newH;
         });
         
@@ -59,7 +64,7 @@ class SendHolidayReminders extends Command
             
             $alreadySent = DB::table('notifications')
                 ->whereIn('type', ['system', 'App\Notifications\SystemNotification'])
-                ->where('data', 'LIKE', "%{$lockKey}%")
+                ->whereJsonContains('data->lock_key', $lockKey)
                 ->exists();
                 
             if ($alreadySent) {

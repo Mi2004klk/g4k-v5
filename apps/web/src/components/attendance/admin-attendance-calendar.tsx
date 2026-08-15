@@ -69,7 +69,7 @@ export function AdminAttendanceCalendar() {
 
       {isLoading ? (
         <div className="h-64 flex items-center justify-center">
-          <AppIcon name="loading" size="xl" className=" animate-spin text-violet-500" />
+          <AppIcon name="loading" size="xl" className=" animate-spin text-primary-500" />
         </div>
       ) : (
         <TooltipProvider delayDuration={100}>
@@ -116,11 +116,11 @@ export function AdminAttendanceCalendar() {
                         onClick={() => handleDayClick(date)}
                         disabled={isFutureFlag && !stat}
                         className={[
-                          "relative flex flex-col items-center justify-center rounded-lg sm:rounded-xl aspect-square w-full transition-all duration-200",
+                          "relative flex flex-col items-center justify-center rounded-[var(--radius)] sm:rounded-xl aspect-square w-full transition-all duration-200",
                           inCurrentMonth ? "opacity-100" : "opacity-30",
-                          isFutureFlag && !stat ? "cursor-default" : "cursor-pointer hover:scale-105 hover:shadow-md",
+                          isFutureFlag && !stat ? "cursor-default" : "cursor-pointer hover:scale-105 hover:shadow-e2",
                           bgColor,
-                          isTodayFlag ? "ring-2 ring-violet-500 ring-offset-2 dark:ring-offset-neutral-900" : ""
+                          isTodayFlag ? "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-neutral-900" : ""
                         ].join(" ")}
                       >
                         <span className={`text-sm sm:text-base font-semibold ${textColor}`}>

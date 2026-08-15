@@ -69,33 +69,33 @@ export function UserEditDialog({ isOpen, onOpenChange, user, departments, design
           <DialogDescription className="sr-only">Edit an existing employee record.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4 py-2 text-xs max-h-[60vh] overflow-y-auto px-1 mt-2">
+          <div className="space-y-4 py-2 text-xs max-h-[60dvh] overflow-y-auto px-1 mt-2">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
-                <Input {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} />
-                {errors.name && <p className="text-red-500 text-[10px] mt-1">{errors.name.message}</p>}
+                <label htmlFor="user-name" className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
+                <Input id="user-name" {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} aria-describedby={errors.name ? "name-error" : undefined} />
+                {errors.name && <p id="name-error" role="alert" className="text-red-500 text-[10px] mt-1">{errors.name.message}</p>}
               </div>
               <div>
-                <label className="block mb-1 font-semibold">Username</label>
-                <Input {...register("username")} placeholder="janedoe" />
+                <label htmlFor="user-username" className="block mb-1 font-semibold">Username</label>
+                <Input id="user-username" {...register("username")} placeholder="janedoe" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
-                <Input type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} />
-                {errors.email && <p className="text-red-500 text-[10px] mt-1">{errors.email.message}</p>}
+                <label htmlFor="user-email" className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
+                <Input id="user-email" type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} aria-describedby={errors.email ? "email-error" : undefined} />
+                {errors.email && <p id="email-error" role="alert" className="text-red-500 text-[10px] mt-1">{errors.email.message}</p>}
               </div>
               <div>
-                <label className="block mb-1 font-semibold">Phone</label>
-                <Input {...register("phone")} placeholder="+91 98765 43210" />
+                <label htmlFor="user-phone" className="block mb-1 font-semibold">Phone</label>
+                <Input id="user-phone" {...register("phone")} placeholder="+91 98765 43210" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-semibold">Employee ID</label>
-                <Input {...register("employee_id")} placeholder="Auto-generated if blank" />
+                <label htmlFor="user-employee-id" className="block mb-1 font-semibold">Employee ID</label>
+                <Input id="user-employee-id" {...register("employee_id")} placeholder="Auto-generated if blank" />
               </div>
               <div>
                 <label className="block mb-1 font-semibold">Department</label>

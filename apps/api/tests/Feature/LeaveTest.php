@@ -36,9 +36,12 @@ class LeaveTest extends TestCase
         ]);
         $this->hr->roleAssignments()->create(['role' => 'hr']);
 
+        $department = \App\Models\Department::create(['name' => 'Test HR Dept', 'manager_id' => $this->hr->id]);
+
         $this->employee = User::factory()->create([
             'must_change_password' => false,
             'onboarded_at' => now(),
+            'department_id' => $department->id,
         ]);
         $this->employee->roleAssignments()->create(['role' => 'employee']);
         

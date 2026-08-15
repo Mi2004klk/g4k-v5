@@ -66,7 +66,7 @@ export const NavItem = memo(function NavItem({
         aria-disabled={isDisabled}
         aria-label={item.name}
         className={cn(
-          "flex-1 flex items-center gap-3 px-3 transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-md",
+          "flex-1 flex items-center gap-3 px-3 transition-all relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-[var(--radius)]",
           itemPy,
           currentlyCollapsed ? "justify-center px-0 text-[13px]" : "text-sm",
           isDisabled
@@ -77,7 +77,7 @@ export const NavItem = memo(function NavItem({
         )}
       >
         <div className={cn(
-          "w-8 h-8 rounded-md flex items-center justify-center shrink-0 transition-colors bg-transparent"
+          "w-8 h-8 rounded-[var(--radius)] flex items-center justify-center shrink-0 transition-colors bg-transparent"
         )}>
           <AppIcon
             name={item.icon}
@@ -98,6 +98,7 @@ export const NavItem = memo(function NavItem({
             currentlyCollapsed && showLabels ? "opacity-0" : "opacity-100"
           )}>
             {item.name}
+            {isActive && <span className="sr-only"> (Current)</span>}
           </span>
         )}
       </Link>

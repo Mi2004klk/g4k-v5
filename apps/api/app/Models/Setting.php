@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Setting extends Model
 {
-    protected $fillable = [
-        'category',
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['category',
         'key',
         'value',
-        'updated_by',
-    ];
+        'updated_by', 'demo_tag'];
 
     protected $casts = [
         'value' => 'array',

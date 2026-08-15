@@ -31,7 +31,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             headers: rt ? { "X-Refresh-Token": rt } : {},
           });
           if (isMounted) {
-            setAuth(data.token, data.user, data.active_role);
+            setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
           }
         } catch {
           if (isMounted) {
@@ -54,6 +54,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [isInitializing, setAuth, clearAuth]);
 
   // Route protection & redirects effect
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   useEffect(() => {
     if (isInitializing) return;
 
@@ -64,6 +66,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (!token || !user) {
       if (!isAuthRoute) {
+        setIsRedirecting(true);
         router.push("/login");
       }
       return;
@@ -71,16 +74,20 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     // Enforce onboarding sequence
     if (!user.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
+      setIsRedirecting(true);
       router.push("/onboarding");
       return;
     }
     // Enforce role selection if multiple roles exist and on auth routes
     else if (isAuthRoute) {
+      setIsRedirecting(true);
       if (user.roles && user.roles.length > 1) {
         router.push("/role-select");
       } else {
         router.push("/dashboard");
       }
+    } else {
+      setIsRedirecting(false);
     }
   }, [pathname, token, user, isInitializing, router]);
 
@@ -94,7 +101,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (channel) {
       channel.listen('.session.revoked', (e: any) => {
         clearAuth();
-        router.push("/login");
+        router.push("/login?reason=expired");
       });
     }
 
@@ -111,15 +118,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 flex flex-col md:flex-row">
         {/* Sidebar Skeleton matching collapsed default layout (72px) */}
         <div className="hidden md:flex flex-col w-[72px] bg-surface border-r border-border p-3 items-center gap-4 shrink-0">
-          <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-md animate-pulse shrink-0" />
+          <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-[var(--radius)] animate-pulse shrink-0" />
           <div className="flex-1 space-y-3 w-full flex flex-col items-center pt-4">
-            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
-            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
-            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
-            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
-            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-[var(--radius)] animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-[var(--radius)] animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-[var(--radius)] animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-[var(--radius)] animate-pulse" />
+            <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-[var(--radius)] animate-pulse" />
           </div>
-          <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse mt-auto shrink-0" />
+          <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-800 rounded-[var(--radius)] animate-pulse mt-auto shrink-0" />
         </div>
         {/* Main Content Skeleton */}
         <div className="flex-1 flex flex-col">
@@ -141,6 +148,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  if (isRedirecting) {
+    return null; // Return null instead of a blank infinite spinner to prevent 403s on components mounting during redirect
   }
 
   return <>{children}</>;

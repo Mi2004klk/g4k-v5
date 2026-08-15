@@ -63,7 +63,7 @@ export function MetricWidget({
   }, [rawValue, isPending]);
 
   const colorStyles = {
-    violet: "bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300",
+    violet: "bg-primary-100 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300",
     emerald: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300",
     amber: "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300",
     rose: "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300",
@@ -78,7 +78,7 @@ export function MetricWidget({
     return (
       <Card className="h-full border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
         <div className="flex items-center gap-2 pb-3">
-          <Skeleton className="w-7 h-7 rounded-md" />
+          <Skeleton className="w-7 h-7 rounded-[var(--radius)]" />
           <Skeleton className="h-4 w-24" />
         </div>
         <Skeleton className="h-8 w-16 mb-2 mt-2" />
@@ -92,7 +92,7 @@ export function MetricWidget({
       <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-md ${colorStyles[color]} flex items-center justify-center`}>
+            <div className={`w-7 h-7 rounded-[var(--radius)] ${colorStyles[color]} flex items-center justify-center`}>
               <AppIcon name={icon} size="md" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
@@ -101,7 +101,7 @@ export function MetricWidget({
             {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-2 mt-2">
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-[var(--radius)] p-2 mt-2">
           <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
@@ -129,7 +129,7 @@ export function MetricWidget({
       <div>
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-md ${colorStyles[color]} flex items-center justify-center transition-transform group-hover:scale-110`}>
+            <div className={`w-7 h-7 rounded-[var(--radius)] ${colorStyles[color]} flex items-center justify-center transition-transform group-hover:scale-110`}>
               <AppIcon name={icon} size="md" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">

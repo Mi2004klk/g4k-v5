@@ -18,8 +18,16 @@ class NotificationController extends Controller
             $query->whereNull('read_at');
         }
 
+        if ($request->query('importantOnly') === 'true') {
+            $query->whereIn('priority', ['high', 'urgent']);
+        }
+
         if ($request->filled('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
         }
 
         if ($request->filled('search')) {
@@ -67,7 +75,15 @@ class NotificationController extends Controller
             ->whereNull('read_at')
             ->count();
             
-        return response()->json(['count' => $count]);
+        $highPriorityCount = Notification::where('user_id', $request->user()->id)
+            ->whereNull('read_at')
+            ->whereIn('priority', ['high', 'urgent'])
+            ->count();
+            
+        return response()->json([
+            'count' => $count,
+            'high_priority_count' => $highPriorityCount
+        ]);
     }
 
     public function markAllRead(Request $request)

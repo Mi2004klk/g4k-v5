@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Announcement extends Model
 {
-    protected $fillable = ['title', 'body', 'scope', 'team_id', 'created_by', 'pinned_at', 'reactions'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['title', 'body', 'scope', 'team_id', 'created_by', 'pinned_at', 'reactions', 'priority', 'demo_tag', 'is_demo'];
 
     protected $casts = [
         'pinned_at' => 'datetime',

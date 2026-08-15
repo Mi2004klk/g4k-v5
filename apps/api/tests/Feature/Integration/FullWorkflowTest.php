@@ -34,6 +34,13 @@ class FullWorkflowTest extends TestCase
         $this->assertNotNull($hr);
         $this->assertNotNull($employee);
 
+        if ($employee->department_id) {
+            \App\Models\Department::where('id', $employee->department_id)->update(['manager_id' => $hr->id]);
+        } else {
+            $dept = \App\Models\Department::create(['name' => 'HR Dept', 'manager_id' => $hr->id]);
+            $employee->update(['department_id' => $dept->id]);
+        }
+
         $empToken = $employee->createToken('emp-token', ['role:employee'])->plainTextToken;
         $hrToken = $hr->createToken('hr-token', ['role:hr'])->plainTextToken;
 
@@ -41,10 +48,7 @@ class FullWorkflowTest extends TestCase
         \App\Models\AttendanceEvent::where('user_id', $employee->id)->delete();
         \App\Models\AttendanceDay::where('user_id', $employee->id)->delete();
         
-        $punchInTime = now()->subHours(4)->setTime(9, 30, 0); // Past timestamp
-        if ($punchInTime->gt(now())) {
-            $punchInTime = now()->subHours(2);
-        }
+        $punchInTime = now()->subHours(10);
         
         $response = $this->withToken($empToken)
             ->postJson('/api/attendance/clock-in', [
@@ -53,7 +57,7 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-clock-in',
             ]);
             
-        $response->assertStatus(200);
+        if ($response->status() !== 200) { dump("Failed at: " . __LINE__); dump($response->content()); } $response->assertStatus(200);
         
         // 3. Employee Takes Break
         $breakStartTime = $punchInTime->copy()->addHours(4);
@@ -63,7 +67,7 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-break-start',
             ]);
         
-        $response->assertStatus(200);
+        if ($response->status() !== 200) { dump("Failed at: " . __LINE__); dump($response->content()); } $response->assertStatus(200);
 
         $breakEndTime = $breakStartTime->copy()->addMinutes(45);
         $response = $this->withToken($empToken)
@@ -72,7 +76,7 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-end-break',
             ]);
         
-        $response->assertStatus(200);
+        if ($response->status() !== 200) { dump("Failed at: " . __LINE__); dump($response->content()); } $response->assertStatus(200);
 
         // 5. Employee Clocks Out
         $punchOutTime = $breakEndTime->copy()->addHours(4);
@@ -82,7 +86,7 @@ class FullWorkflowTest extends TestCase
                 'client_id' => 'test-client-clock-out',
             ]);
         
-        $response->assertStatus(200);
+        if ($response->status() !== 200) { dump("Failed at: " . __LINE__); dump($response->content()); } $response->assertStatus(200);
         
         // Verify timesheet generation (assuming the clock_out creates or updates a timesheet)
         $this->assertDatabaseHas('attendance_days', [
@@ -109,7 +113,7 @@ class FullWorkflowTest extends TestCase
         
         $response = $this->withToken($hrToken)
             ->getJson('/api/leave-requests');
-        $response->assertStatus(200);
+        if ($response->status() !== 200) { dump("Failed at: " . __LINE__); dump($response->content()); } $response->assertStatus(200);
         
         // 9. HR Approves Leave Request
         $response = $this->withToken($hrToken)
@@ -118,7 +122,7 @@ class FullWorkflowTest extends TestCase
                 'reason' => 'Get well soon!',
             ]);
         
-        $response->assertStatus(200);
+        if ($response->status() !== 200) { dump("Failed at: " . __LINE__); dump($response->content()); } $response->assertStatus(200);
         
         $this->assertDatabaseHas('leave_requests', [
             'id' => $leaveRequestId,
@@ -128,6 +132,6 @@ class FullWorkflowTest extends TestCase
         // 10. HR views team attendance graph
         $response = $this->withToken($hrToken)
             ->getJson("/api/attendance/hr/graph?date=" . $punchInTime->format('Y-m-d'));
-        $response->assertStatus(200);
+        if ($response->status() !== 200) { dump("Failed at: " . __LINE__); dump($response->content()); } $response->assertStatus(200);
     }
 }

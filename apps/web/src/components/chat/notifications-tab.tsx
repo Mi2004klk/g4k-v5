@@ -15,6 +15,40 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys, STALE_TIME_NOTIFICATIONS } from "@/lib/query-keys";
 import { useReverb } from "@/hooks/use-reverb";
 
+/**
+ * Canonical notification type taxonomy emitted by the backend.
+ * Used for both the Type filter options and the human-readable row label
+ * (unknown types fall back to a prettified string instead of being hidden).
+ */
+const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
+  leave_request: "Leave Requests",
+  leave_decision: "Leave Decisions",
+  task_assigned: "Task Assigned",
+  task_submitted: "Task Submissions",
+  task_decision: "Task Decisions",
+  task_reminder: "Task Reminders",
+  project_submitted: "Project Submissions",
+  project_decision: "Project Decisions",
+  announcement: "Announcements",
+  holiday_reminder: "Holiday Reminders",
+  shift_reminder: "Shift Reminders",
+  missed_clock: "Missed Clock-ins",
+  session: "Sessions",
+  suspicious_login: "Suspicious Logins",
+  feedback: "Feedback",
+  mention: "Mentions",
+  export: "Exports",
+  system: "System",
+  // Legacy types still emitted by older notification rows
+  message: "Messages",
+  security: "Security",
+};
+
+function notificationTypeLabel(type?: string): string {
+  if (!type) return "General";
+  return NOTIFICATION_TYPE_LABELS[type] ?? type.replace(/_/g, " ");
+}
+
 export function NotificationsTab() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -72,13 +106,20 @@ export function NotificationsTab() {
       case "leave_decision":
         return <AppIcon name="success" className=" text-emerald-500" />;
       case "task_assigned":
-        return <AppIcon name="briefcase" className=" text-violet-500" />;
+      case "project_submission":
+        return <AppIcon name="briefcase" className=" text-primary-500" />;
       case "message":
         return <AppIcon name="chat" className=" text-blue-500" />;
       case "security":
         return <AppIcon name="error" className=" text-rose-600" />;
+      case "announcement":
+        return <AppIcon name="mailOpen" className=" text-amber-500" />;
+      case "holiday_reminder":
+        return <AppIcon name="clock" className=" text-green-500" />;
+      case "feedback":
+        return <AppIcon name="info" className=" text-cyan-500" />;
       default:
-        return <AppIcon name="error" className=" text-amber-500" />;
+        return <AppIcon name="error" className=" text-neutral-400" />;
     }
   };
 
@@ -90,7 +131,7 @@ export function NotificationsTab() {
         return (
           <div className="flex items-center gap-2">
             {getIcon(item.type)}
-            <span className="capitalize text-xs font-medium">{item.type ? item.type.replace("_", " ") : "General"}</span>
+            <span className="capitalize text-xs font-medium">{notificationTypeLabel(item.type)}</span>
           </div>
         );
       }
@@ -103,7 +144,7 @@ export function NotificationsTab() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               {item.link ? (
-                <Link href={item.link} className={`text-sm hover:underline hover:text-violet-600 dark:hover:text-violet-400 ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
+                <Link href={item.link} className={`text-sm hover:underline hover:text-primary-600 dark:hover:text-primary-400 ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}>
                   {item.title || "Notification"}
                 </Link>
               ) : (
@@ -193,12 +234,7 @@ export function NotificationsTab() {
               key: "type",
               label: "Type",
               type: "select",
-              options: [
-                { label: "Task", value: "task_assigned" },
-                { label: "Leave", value: "leave_decision" },
-                { label: "Message", value: "message" },
-                { label: "Security", value: "security" }
-              ],
+              options: Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => ({ label, value })),
               value: filter.type,
               onChange: (v) => setFilter(f => ({ ...f, type: v }))
             }

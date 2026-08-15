@@ -89,7 +89,7 @@ export default function RoleSelectPage() {
             </p>
             <button 
               onClick={() => { clearAuth(); router.push('/login'); }} 
-              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-lg shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all font-sans"
+              className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium rounded-[var(--radius)] shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all font-sans"
             >
               Sign out
             </button>

@@ -7,9 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
-    protected $fillable = [
-        'user_id', 'type', 'priority', 'title', 'body', 'data', 'read_at', 'link'
-    ];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id', 'type', 'priority', 'title', 'body', 'data', 'read_at', 'link', 'demo_tag'];
 
     protected $casts = [
         'data' => 'array',

@@ -171,7 +171,7 @@ export function HolidayCalendar() {
     <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <AppIcon name="calendar" className=" text-violet-600" />
+          <AppIcon name="calendar" className=" text-primary-600" />
           {format(currentDate, "MMMM yyyy")}
         </CardTitle>
         <div className="flex items-center gap-1">
@@ -224,16 +224,16 @@ export function HolidayCalendar() {
                 
                 const CellContent = (
                   <div
-                    className={`relative flex flex-col items-center justify-center p-1 rounded-md text-xs transition-all min-h-[40px]
+                    className={`relative flex flex-col items-center justify-center p-1 rounded-[var(--radius)] text-xs transition-all min-h-[40px]
                       ${isCurrentMonth ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-600 opacity-50"}
                       ${holiday ? 
                         isEvent ? "bg-blue-50 dark:bg-blue-900/20 font-semibold border border-blue-100 dark:border-blue-800/50 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40" 
-                                : "bg-violet-50 dark:bg-violet-900/20 font-semibold border border-violet-100 dark:border-violet-800/50 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900/40" 
+                                : "bg-primary-50 dark:bg-primary-900/20 font-semibold border border-primary-100 dark:border-primary-800/50 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/40" 
                         : ""}`}
                   >
                     <span>{format(day, "d")}</span>
                     {holiday && (
-                      <span className={`w-1 h-1 rounded-full mt-0.5 ${isEvent ? 'bg-blue-500' : 'bg-violet-500'}`} />
+                      <span className={`w-1 h-1 rounded-full mt-0.5 ${isEvent ? 'bg-blue-500' : 'bg-primary-500'}`} />
                     )}
                   </div>
                 );

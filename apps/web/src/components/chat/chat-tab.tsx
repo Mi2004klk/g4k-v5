@@ -11,19 +11,45 @@ import { useReverb } from "@/hooks/use-reverb";
 import { ConversationList } from "@/components/chat/conversation-list";
 import { MessageList } from "@/components/chat/message-list";
 import { MessageComposer } from "@/components/chat/message-composer";
+import { CreateGroupDialog } from "@/components/chat/create-group-dialog";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { QuickNotes } from "@/components/widgets/quick-notes";
-import { FeedbackForm } from "@/components/widgets/feedback-form";
 import { queryKeys } from "@/lib/query-keys";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { asArray } from "@/lib/utils";
 
 export function ChatTab() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
-  const { subscribe, leaveChannel } = useReverb();
-  
+  const { subscribe, leaveChannel, isConnected } = useReverb();
+  const { data: caps = [] } = useCapabilities();
+
+  // Mirrors the backend gate: only users.manage (HR) or projects.manage (Admin)
+  // may pin/unpin messages in conversations.
+  const canPinMessages = hasCapability(caps, "chat.manage") || hasCapability(caps, "projects.manage");
+
   const initialConvId = searchParams.get("conversation");
   const [selectedId, setSelectedId] = useState<number | null>(initialConvId ? parseInt(initialConvId) : null);
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+
+  // Mobile keyboard handling (T-47.9): keep the composer above the on-screen
+  // keyboard by shrinking the chat container by the hidden viewport height.
+  // visualViewport is undefined on desktop — no adjustment is applied there.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const onViewportResize = () => {
+      setKeyboardHeight(Math.max(0, Math.round(window.innerHeight - viewport.height)));
+    };
+
+    viewport.addEventListener("resize", onViewportResize);
+    onViewportResize();
+    return () => viewport.removeEventListener("resize", onViewportResize);
+  }, []);
 
   useEffect(() => {
     if (initialConvId) {
@@ -34,10 +60,9 @@ export function ChatTab() {
   const { data: rawConversations } = useQuery({
     queryKey: queryKeys.conversations,
     queryFn: () => apiFetch("/conversations"),
+    refetchInterval: isConnected ? false : 15_000,
   });
-  const conversations = Array.isArray(rawConversations) 
-    ? rawConversations 
-    : (Array.isArray(rawConversations?.data) ? rawConversations.data : []);
+  const conversations = asArray(rawConversations);
 
   const { 
     data: messageData,
@@ -50,6 +75,7 @@ export function ChatTab() {
     getNextPageParam: (lastPage: any) => lastPage.next_cursor || null,
     initialPageParam: null as string | null,
     enabled: !!selectedId,
+    refetchInterval: isConnected ? false : 15_000,
   });
 
   useEffect(() => {
@@ -99,6 +125,24 @@ export function ChatTab() {
     }
   }, [selectedId]);
 
+  const pinMutation = useMutation({
+    mutationFn: async (msgId: number) => {
+      return apiFetch(`/conversations/${selectedId}/messages/${msgId}/pin`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+    }
+  });
+
+  const unpinMutation = useMutation({
+    mutationFn: async (msgId: number) => {
+      return apiFetch(`/conversations/${selectedId}/messages/${msgId}/unpin`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+    }
+  });
+
   const sendMessageMutation = useMutation({
     mutationFn: async ({ body, mentions, attachment }: { body: string; mentions?: number[]; attachment?: File | null }) => {
       if (attachment) {
@@ -120,7 +164,43 @@ export function ChatTab() {
         });
       }
     },
-    onSuccess: () => {
+    onMutate: async (newMsg) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.messages(selectedId as number) });
+      const previousMessages = queryClient.getQueryData(queryKeys.messages(selectedId as number));
+      
+      const optimisticMessage = {
+        id: Date.now(),
+        conversation_id: selectedId,
+        user_id: user?.id,
+        body: newMsg.body,
+        created_at: new Date().toISOString(),
+        user: user,
+        pending: true
+      };
+
+      queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: any) => {
+        if (!old?.pages) return old;
+        const firstPage = old.pages[0];
+        return {
+          ...old,
+          pages: [
+            {
+              ...firstPage,
+              data: [...firstPage.data, optimisticMessage],
+            },
+            ...old.pages.slice(1),
+          ],
+        };
+      });
+
+      return { previousMessages };
+    },
+    onError: (err, newMsg, context) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(queryKeys.messages(selectedId as number), context.previousMessages);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
     },
@@ -133,11 +213,24 @@ export function ChatTab() {
     <div className="space-y-6 mt-4">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Chat Interface */}
-        <div className="lg:col-span-2 bg-card dark:bg-neutral-900 rounded-2xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-100 dark:border-neutral-800 flex h-[calc(100vh-200px)] min-h-[500px] overflow-hidden">
+        <div
+          className="lg:col-span-2 bg-card dark:bg-neutral-900 rounded-2xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-100 dark:border-neutral-800 flex h-[calc(100dvh-200px)] min-h-[500px] overflow-hidden"
+          style={keyboardHeight > 0 ? { height: `calc(100dvh - 200px - ${keyboardHeight}px)`, minHeight: 0 } : undefined}
+        >
           {/* Conversation sidebar */}
           <div className={`w-full md:w-1/3 border-r border-neutral-100 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
-            <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs">
-              Chats
+            <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs flex items-center justify-between">
+              <span>Chats</span>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-11 w-11 sm:h-7 sm:w-7 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
+                aria-label="New group chat"
+                title="New Group"
+                onClick={() => setGroupDialogOpen(true)}
+              >
+                <AppIcon name="plus" />
+              </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
               <ConversationList
@@ -154,7 +247,7 @@ export function ChatTab() {
             {selectedId ? (
               <>
                 <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-3">
-                  <Button variant="ghost" size="sm" className="md:hidden p-0 h-8 w-8" onClick={() => setSelectedId(null)}>
+                  <Button variant="ghost" size="sm" className="md:hidden p-0 h-11 w-11 sm:h-8 sm:w-8" onClick={() => setSelectedId(null)}>
                     <AppIcon name="arrowLeft" />
                   </Button>
                   <div>
@@ -164,6 +257,15 @@ export function ChatTab() {
                         : selectedConv?.name}
                     </h3>
                   </div>
+                  {!isConnected && (
+                    <span
+                      className="ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 text-[10px] font-semibold shrink-0"
+                      title="Real-time connection lost — falling back to periodic refresh"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Not connected
+                    </span>
+                  )}
                 </div>
 
                 <MessageList 
@@ -172,6 +274,9 @@ export function ChatTab() {
                   onFetchNextPage={() => fetchNextPage()}
                   hasNextPage={!!hasNextPage}
                   isFetchingNextPage={isFetchingNextPage}
+                  onPinMessage={(id) => pinMutation.mutate(id)}
+                  onUnpinMessage={(id) => unpinMutation.mutate(id)}
+                  canManage={canPinMessages}
                 />
 
                 <MessageComposer
@@ -193,9 +298,17 @@ export function ChatTab() {
         <div className="space-y-6">
           <AnnouncementBoard />
           <QuickNotes />
-          <FeedbackForm />
         </div>
       </div>
+
+      <CreateGroupDialog
+        open={groupDialogOpen}
+        onOpenChange={setGroupDialogOpen}
+        onSuccess={(convId) => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+          if (convId) setSelectedId(convId);
+        }}
+      />
     </div>
   );
 }

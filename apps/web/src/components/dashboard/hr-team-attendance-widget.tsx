@@ -26,7 +26,7 @@ export function HrTeamAttendanceWidget() {
     <Card className="h-full flex flex-col bg-card border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-[var(--radius)] bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
             <AppIcon name="directory" className=" text-emerald-600 dark:text-emerald-400" />
           </div>
           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -36,7 +36,7 @@ export function HrTeamAttendanceWidget() {
         </div>
         
         {totalCount > 0 && (
-          <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">
+          <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-[var(--radius)]">
             <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{presentCount}</span>
             <span className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
           </div>

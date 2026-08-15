@@ -144,10 +144,10 @@ export function HrAttendanceGraph() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-xl border border-border shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <div className="flex items-center gap-2 bg-secondary p-1 rounded-lg">
+        <div className="flex items-center gap-2 bg-secondary p-1 rounded-[var(--radius)]">
           <button
             onClick={() => setGroupBy("date")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               groupBy === "date" 
                 ? "bg-card text-foreground shadow-e1" 
                 : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -157,7 +157,7 @@ export function HrAttendanceGraph() {
           </button>
           <button
             onClick={() => setGroupBy("employee")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               groupBy === "employee" 
                 ? "bg-card text-foreground shadow-e1" 
                 : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -167,10 +167,10 @@ export function HrAttendanceGraph() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 bg-secondary p-1 rounded-lg">
+        <div className="flex items-center gap-2 bg-secondary p-1 rounded-[var(--radius)]">
           <button
             onClick={() => setMode("weekly")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               mode === "weekly" 
                 ? "bg-card text-foreground shadow-e1" 
                 : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -180,7 +180,7 @@ export function HrAttendanceGraph() {
           </button>
           <button
             onClick={() => setMode("monthly")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               mode === "monthly" 
                 ? "bg-card text-foreground shadow-e1" 
                 : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"

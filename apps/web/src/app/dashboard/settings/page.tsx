@@ -2,18 +2,20 @@
 
 import { SettingsTabs } from "@/components/settings/settings-tabs";
 import { ErrorBoundary } from "@g4k/ui/components";
+import { PageContainer } from "@/components/layout/page-container";
 
 export default function SettingsPage() {
   return (
-    <div className="space-y-6 max-w-5xl mx-auto w-full">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-white">System Settings</h1>
-        <p className="text-sm text-neutral-500 mt-1">Manage company profile, security policies, and global configuration.</p>
+    <PageContainer
+      title="System Settings"
+      description="Manage company profile, security policies, and global configuration."
+      breadcrumbs
+    >
+      <div className="max-w-5xl mx-auto w-full">
+        <ErrorBoundary>
+          <SettingsTabs />
+        </ErrorBoundary>
       </div>
-
-      <ErrorBoundary>
-        <SettingsTabs />
-      </ErrorBoundary>
-    </div>
+    </PageContainer>
   );
 }

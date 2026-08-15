@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Approval extends Model
 {
-    protected $fillable = [
-        'approvable_type', 'approvable_id', 'status', 'submitted_by',
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['approvable_type', 'approvable_id', 'status', 'submitted_by',
         'submitted_at', 'current_approver_role', 'decision', 'decision_reason',
-        'decided_by', 'decided_at', 'payload'
-    ];
+        'decided_by', 'decided_at', 'payload', 'demo_tag'];
 
     protected $casts = [
         'submitted_at' => 'datetime',

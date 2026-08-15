@@ -8,16 +8,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Task extends Model
 {
+    use \App\Traits\HasDemoTag;
     use SoftDeletes;
-    protected $fillable = [
-        'project_id', 'title', 'description', 'status', 'priority',
+    protected $fillable = ['project_id', 'title', 'description', 'status', 'priority',
         'scope', 'assignee_id', 'reporter_id', 'due_date', 'progress',
         'parent_id', 'blocked_by', 'qa_form_id', 'recurrence',
-        'submitted_at', 'submission_note'
-    ];
+        'submitted_at', 'submission_note', 'demo_tag'];
 
     protected $casts = [
         'due_date' => 'date',
@@ -34,6 +34,11 @@ class Task extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    public function assignees(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_assignees', 'task_id', 'user_id')->withTimestamps();
     }
 
     public function reporter(): BelongsTo

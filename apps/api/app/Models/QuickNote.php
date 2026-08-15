@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuickNote extends Model
 {
-    protected $fillable = ['user_id', 'body', 'pinned'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id', 'body', 'pinned', 'demo_tag'];
 
     protected $casts = [
         'pinned' => 'boolean',

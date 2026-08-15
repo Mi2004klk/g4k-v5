@@ -145,10 +145,10 @@ export function AdminAttendanceTrendsGraph() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
+        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-[var(--radius)]">
           <button
             onClick={() => setGroupBy("date")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               groupBy === "date" 
                 ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -158,7 +158,7 @@ export function AdminAttendanceTrendsGraph() {
           </button>
           <button
             onClick={() => setGroupBy("department")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               groupBy === "department" 
                 ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -168,10 +168,10 @@ export function AdminAttendanceTrendsGraph() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
+        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-[var(--radius)]">
           <button
             onClick={() => setMode("weekly")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               mode === "weekly" 
                 ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -181,7 +181,7 @@ export function AdminAttendanceTrendsGraph() {
           </button>
           <button
             onClick={() => setMode("monthly")}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
               mode === "monthly" 
                 ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"

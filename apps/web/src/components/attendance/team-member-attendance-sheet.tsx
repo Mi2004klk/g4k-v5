@@ -155,7 +155,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                   )}
                 </div>
                 {day?.late_minutes > 0 && (
-                  <div className="bg-amber-100/50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-3 rounded-lg border border-amber-200 dark:border-amber-800/50 text-sm font-medium flex items-center gap-2">
+                  <div className="bg-amber-100/50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-3 rounded-[var(--radius)] border border-amber-200 dark:border-amber-800/50 text-sm font-medium flex items-center gap-2">
                     <AppIcon name="error" />
                     Late by {day.late_minutes}m
                   </div>
@@ -204,7 +204,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                               </div>
                               
                               {event.device_meta && (
-                                <div className="flex items-center gap-1.5 mt-2 text-[10px] text-neutral-400 font-medium bg-neutral-50 dark:bg-neutral-950 px-2 py-1 rounded-md w-fit">
+                                <div className="flex items-center gap-1.5 mt-2 text-[10px] text-neutral-400 font-medium bg-neutral-50 dark:bg-neutral-950 px-2 py-1 rounded-[var(--radius)] w-fit">
                                   <AppIcon name="devices" size="xs" />
                                   {event.device_meta.platform} • {event.device_meta.ip}
                                 </div>

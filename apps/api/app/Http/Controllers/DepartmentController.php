@@ -24,9 +24,9 @@ class DepartmentController extends Controller
             if ($status === 'active') {
                 $query->where('is_active', true);
             } elseif ($status === 'archived') {
-                $query->whereNotNull('archived_at');
+                $query->onlyTrashed();
             } elseif ($status === 'inactive') {
-                $query->where('is_active', false)->whereNull('archived_at');
+                $query->where('is_active', false);
             }
         }
 
@@ -40,6 +40,12 @@ class DepartmentController extends Controller
         $perPage = $request->input('per_page', 20);
         $departments = $query->orderBy('id', 'desc')->paginate($perPage);
         return response()->json($departments);
+    }
+
+    public function teams(string $id)
+    {
+        $department = Department::withTrashed()->findOrFail($id);
+        return response()->json($department->teams);
     }
 
     public function export(Request $request)
@@ -56,7 +62,7 @@ class DepartmentController extends Controller
                     'Description' => $department->description,
                     'Members Count' => $department->users_count ?? 0,
                     'Is Active' => $department->is_active ? 'Yes' : 'No',
-                    'Archived At' => $department->archived_at ? $department->archived_at->format('Y-m-d H:i:s') : 'N/A',
+                    'Archived At' => $department->deleted_at ? $department->deleted_at->format('Y-m-d H:i:s') : 'N/A',
                     'Created At' => $department->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
@@ -80,13 +86,13 @@ class DepartmentController extends Controller
 
     public function show(string $id)
     {
-        $department = Department::with(['teams', 'users', 'users.designation', 'hrs'])->findOrFail($id);
+        $department = Department::withTrashed()->with(['teams', 'users', 'users.designation', 'hrs'])->findOrFail($id);
         return response()->json($department);
     }
 
     public function update(Request $request, string $id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $before = $department->toArray();
 
         $validated = $request->validate([
@@ -103,13 +109,10 @@ class DepartmentController extends Controller
 
     public function archive(Request $request, string $id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $before = $department->toArray();
 
-        $department->update([
-            'is_active' => false,
-            'archived_at' => now(),
-        ]);
+        $department->delete();
 
         AuditLogger::log($request, 'archive', 'department', $department->id, $before, $department->toArray());
 
@@ -118,13 +121,10 @@ class DepartmentController extends Controller
 
     public function restore(Request $request, string $id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $before = $department->toArray();
 
-        $department->update([
-            'is_active' => true,
-            'archived_at' => null,
-        ]);
+        $department->restore();
 
         AuditLogger::log($request, 'restore', 'department', $department->id, $before, $department->toArray());
 
@@ -133,7 +133,7 @@ class DepartmentController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         
         // In-use guard for hard delete
         if ($department->users()->exists()) {
@@ -150,7 +150,7 @@ class DepartmentController extends Controller
 
     public function storeTeam(Request $request, string $departmentId)
     {
-        $department = Department::findOrFail($departmentId);
+        $department = Department::withTrashed()->findOrFail($departmentId);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -180,7 +180,7 @@ class DepartmentController extends Controller
 
     public function syncHrs(Request $request, string $id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $validated = $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
@@ -194,7 +194,7 @@ class DepartmentController extends Controller
 
     public function addHr(Request $request, string $id, string $userId)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $department->hrs()->syncWithoutDetaching([$userId]);
         AuditLogger::log($request, 'create', 'department_hr', $department->id, null, ['user_id' => $userId]);
         return response()->json(['message' => 'HR added successfully.']);
@@ -202,7 +202,7 @@ class DepartmentController extends Controller
 
     public function removeHr(Request $request, string $id, string $userId)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $department->hrs()->detach($userId);
         AuditLogger::log($request, 'delete', 'department_hr', $department->id, ['user_id' => $userId], null);
         return response()->json(['message' => 'HR removed successfully.']);
@@ -210,7 +210,7 @@ class DepartmentController extends Controller
 
     public function syncEmployees(Request $request, string $id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $validated = $request->validate([
             'user_ids' => 'required|array',
             'user_ids.*' => 'exists:users,id',
@@ -224,7 +224,7 @@ class DepartmentController extends Controller
 
     public function removeEmployee(Request $request, string $id, string $userId)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withTrashed()->findOrFail($id);
         $user = \App\Models\User::where('department_id', $department->id)->findOrFail($userId);
         $user->update(['department_id' => null]);
         

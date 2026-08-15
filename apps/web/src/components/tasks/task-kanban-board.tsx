@@ -14,6 +14,13 @@ import {
   useDroppable,
   DragStartEvent,
 } from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
@@ -67,9 +74,23 @@ function TaskCard({
     >
       <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="text-xs font-semibold text-neutral-900 dark:text-white line-clamp-2">
-            {task.title}
-          </h4>
+          <div className="flex flex-col gap-1">
+            <h4 className="text-xs font-semibold text-neutral-900 dark:text-white line-clamp-2">
+              {task.title}
+            </h4>
+            <div className="flex gap-2">
+              {task.status === "review" && (
+                <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  In Review
+                </span>
+              )}
+              {task.blocked_by && (
+                <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                  <AppIcon name="error" size="xs" className="mr-1" /> Blocked
+                </span>
+              )}
+            </div>
+          </div>
           <StatusBadge status={getPriorityStatus(task.priority)} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0">
             {task.priority}
           </StatusBadge>
@@ -87,14 +108,24 @@ function TaskCard({
             <span>{task.due_date ? format(new Date(task.due_date), "MMM d") : "No due date"}</span>
           </div>
 
-          {task.assignee && (
-            <div className="flex items-center gap-1 text-neutral-600 dark:text-neutral-300 font-medium">
-              <Avatar className="w-4 h-4">
+          <div className="flex -space-x-1 z-0">
+            {task.assignees?.length > 0 ? (
+              task.assignees.slice(0, 3).map((a: any) => (
+                <Avatar key={a.id} className="w-5 h-5 border border-white dark:border-neutral-900 relative">
+                  <AvatarFallback name={a.name} className="text-[8px]" />
+                </Avatar>
+              ))
+            ) : task.assignee ? (
+              <Avatar className="w-5 h-5 border border-white dark:border-neutral-900 relative">
                 <AvatarFallback name={task.assignee.name} className="text-[8px]" />
               </Avatar>
-              <span className="truncate max-w-[80px]">{task.assignee.name}</span>
-            </div>
-          )}
+            ) : null}
+            {task.assignees?.length > 3 && (
+              <div className="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-white dark:border-neutral-900 flex items-center justify-center text-[8px] font-medium z-10 relative">
+                +{task.assignees.length - 3}
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -102,10 +133,15 @@ function TaskCard({
 }
 
 function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `task-${task.id}`,
     data: { task },
   });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
@@ -113,14 +149,15 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
     return (
       <div
         ref={setNodeRef}
-        className="opacity-40 border-2 border-dashed border-ring rounded-lg h-24"
+        style={style}
+        className="opacity-40 border-2 border-dashed border-ring rounded-[var(--radius)] h-24"
       />
     );
   }
 
   return (
     <>
-      <div ref={setNodeRef} {...listeners} {...attributes}>
+      <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
         <ContextMenu>
           <ContextMenuTrigger>
             <TaskCard task={task} onTaskSelect={onTaskSelect} />
@@ -163,7 +200,7 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
   );
 }
 
-function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove }: any) {
+function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, isLoading }: any) {
   const { setNodeRef, isOver } = useDroppable({
     id: col.id,
   });
@@ -190,20 +227,27 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove }:
       </div>
 
       <div className="flex-1 space-y-2.5 min-h-[300px]">
-        {tasks.length === 0 && (
-          <div className="flex items-center justify-center h-24 mt-2 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-lg text-xs font-semibold text-neutral-400">
-            No tasks
-          </div>
-        )}
-        {tasks.map((task: any) => (
-          <DraggableTask
-            key={task.id}
-            task={task}
-            onTaskSelect={onTaskSelect}
-            onDeleteTask={onDeleteTask}
-            onTaskMove={onTaskMove}
-          />
-        ))}
+        <SortableContext items={tasks.map((t: any) => `task-${t.id}`)} strategy={verticalListSortingStrategy}>
+          {isLoading ? (
+            <div className="flex flex-col gap-2">
+              <div className="h-24 bg-neutral-100 dark:bg-neutral-800 animate-pulse rounded-xl" />
+              <div className="h-24 bg-neutral-100 dark:bg-neutral-800 animate-pulse rounded-xl" />
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="flex items-center justify-center h-24 mt-2 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-[var(--radius)] text-xs font-semibold text-neutral-400">
+              No tasks
+            </div>
+          ) : null}
+          {tasks.map((task: any) => (
+            <DraggableTask
+              key={task.id}
+              task={task}
+              onTaskSelect={onTaskSelect}
+              onDeleteTask={onDeleteTask}
+              onTaskMove={onTaskMove}
+            />
+          ))}
+        </SortableContext>
       </div>
     </div>
   );
@@ -214,11 +258,15 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   onTaskMove,
   onTaskSelect,
   onDeleteTask,
+  onTaskReorder,
+  isLoading,
 }: {
   tasks: any[];
-  onTaskMove: (taskId: number, newStatus: string) => void;
+  onTaskMove?: (taskId: number, newStatus: string) => void;
   onTaskSelect: (task: any) => void;
-  onDeleteTask?: (taskId: number) => void;
+  onDeleteTask: (taskId: number) => void;
+  onTaskReorder?: (tasks: { id: number; status: string; order: number }[]) => void;
+  isLoading?: boolean;
 }) {
   const [activeTask, setActiveTask] = useState<any>(null);
 
@@ -236,12 +284,47 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
     const { active, over } = event;
     if (!over) return;
 
-    const taskId = Number(active.id.toString().replace("task-", ""));
-    const newStatus = over.id as string;
+    const activeId = active.id;
+    const overId = over.id;
 
-    const task = tasks.find((t) => t.id === taskId);
-    if (task && task.status !== newStatus) {
-      onTaskMove(taskId, newStatus);
+    if (activeId === overId) return;
+
+    const taskId = Number(activeId.toString().replace("task-", ""));
+    const activeTask = tasks.find(t => t.id === taskId);
+    if (!activeTask) return;
+
+    // Over a column?
+    const overColumn = COLUMNS.find(c => c.id === overId);
+    if (overColumn) {
+      if (activeTask.status !== overColumn.id) {
+        onTaskMove?.(taskId, overColumn.id);
+      }
+      return;
+    }
+
+    // Over a task?
+    const overTaskId = Number(overId.toString().replace("task-", ""));
+    const overTask = tasks.find(t => t.id === overTaskId);
+    if (overTask) {
+      if (activeTask.status !== overTask.status) {
+        // Move to new status
+        onTaskMove?.(taskId, overTask.status);
+      } else {
+        // Reorder within column
+        if (onTaskReorder) {
+          const colTasks = tasks.filter(t => t.status === activeTask.status);
+          const oldIndex = colTasks.findIndex(t => t.id === taskId);
+          const newIndex = colTasks.findIndex(t => t.id === overTaskId);
+          if (oldIndex !== -1 && newIndex !== -1) {
+            const newColTasks = arrayMove(colTasks, oldIndex, newIndex);
+            // assign updated orders
+            newColTasks.forEach((t, i) => { t.order = i; });
+            
+            const otherTasks = tasks.filter(t => t.status !== activeTask.status);
+            onTaskReorder([...otherTasks, ...newColTasks]);
+          }
+        }
+      }
     }
   };
 
@@ -253,19 +336,17 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:overflow-x-auto pb-4">
-        {COLUMNS.map((col) => {
-          const colTasks = tasks.filter((t) => t.status === col.id);
-          return (
-            <DroppableColumn
-              key={col.id}
-              col={col}
-              tasks={colTasks}
-              onTaskSelect={onTaskSelect}
-              onDeleteTask={onDeleteTask}
-              onTaskMove={onTaskMove}
-            />
-          );
-        })}
+        {COLUMNS.map((col) => (
+          <DroppableColumn
+            key={col.id}
+            col={col}
+            tasks={isLoading ? [] : tasks.filter((t) => t.status === col.id)}
+            onTaskSelect={onTaskSelect}
+            onDeleteTask={onDeleteTask}
+            onTaskMove={onTaskMove}
+            isLoading={isLoading}
+          />
+        ))}
       </div>
 
       <DragOverlay>

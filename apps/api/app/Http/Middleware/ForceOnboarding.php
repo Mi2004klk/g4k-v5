@@ -23,6 +23,7 @@ class ForceOnboarding
                 'api/auth/logout',
                 'api/auth/change-password',
                 'api/auth/role-select',
+                'api/auth/role',
                 'api/auth/sessions',
             ];
             

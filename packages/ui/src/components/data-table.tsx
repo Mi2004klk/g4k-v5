@@ -10,8 +10,8 @@ import {
   SortingState,
   VisibilityState,
   RowSelectionState,
+  RowData,
 } from "@tanstack/react-table"
-import { useVirtualizer } from "@tanstack/react-virtual"
 import { AppIcon } from "./icon/AppIcon";
 import { useIsMobile } from "../hooks/use-mobile"
 
@@ -29,6 +29,15 @@ import { Pagination } from "./pagination"
 import { EmptyState } from "./empty-state"
 import { Skeleton } from "./skeleton"
 
+// Module augmentation: extend ColumnMeta with custom fields used by DataTable
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    align?: "left" | "center" | "right"
+    editable?: boolean
+  }
+}
+
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
@@ -36,6 +45,13 @@ export interface DataTableProps<TData, TValue> {
   fetchNextPage?: () => void
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
+  /**
+   * Column Hierarchy Best Practice:
+   * 1. Identity (Name, ID, Avatar)
+   * 2. Status / State (Badges)
+   * 3. Dates / Metrics (Created At, Amounts)
+   * 4. Actions (Dropdown menu at the end)
+   */
   density?: "comfortable" | "compact"
   stickyHeader?: boolean
   stickyFirstCol?: boolean
@@ -47,7 +63,10 @@ export interface DataTableProps<TData, TValue> {
   totalPages?: number
   onPageChange?: (page: number) => void
   onPerPageChange?: (perPage: number) => void
+  sorting?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
   isLoading?: boolean
+  isError?: boolean
   skeletonRows?: number
   className?: string
 }
@@ -131,7 +150,7 @@ const MemoizedCell = React.memo(
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between">
+          <div className={cn("flex items-center", cell.column.columnDef.meta?.align === 'right' ? "justify-end" : "justify-between")}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
             {editable && (
               <Button
@@ -151,48 +170,6 @@ const MemoizedCell = React.memo(
 )
 MemoizedCell.displayName = "MemoizedCell"
 
-// Memoized individual row for 60FPS scrolling
-const MemoizedRow = React.memo(
-  ({
-    row,
-    virtualRow,
-    density,
-    stickyFirstCol,
-    onInlineEditSave,
-  }: {
-    row: any
-    virtualRow: any
-    density: string
-    stickyFirstCol: boolean
-    onInlineEditSave?: (rowId: string, columnId: string, value: any) => void
-  }) => {
-    return (
-      <tr
-        data-state={row.getIsSelected() && "selected"}
-        className="group absolute flex w-full border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-        style={{
-          top: 0,
-          left: 0,
-          transform: `translateY(${virtualRow.start}px)`,
-          height: `${virtualRow.size}px`,
-        }}
-      >
-        {row.getVisibleCells().map((cell: any, index: number) => (
-          <MemoizedCell
-            key={cell.id}
-            cell={cell}
-            density={density}
-            stickyFirstCol={stickyFirstCol}
-            isFirstCol={index === 0}
-            onInlineEditSave={onInlineEditSave}
-          />
-        ))}
-      </tr>
-    )
-  }
-)
-MemoizedRow.displayName = "MemoizedRow"
-
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -211,13 +188,17 @@ export function DataTable<TData, TValue>({
   totalPages,
   onPageChange,
   onPerPageChange,
+  sorting: externalSorting,
+  onSortingChange,
   isLoading,
+  isError,
   skeletonRows = 5,
   className,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [internalSorting, setInternalSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
+  const [densityMode, setDensityMode] = useState<"comfortable" | "compact">(density)
   const isMobile = useIsMobile()
 
   // Include checkbox column automatically if rowSelection is needed and not already present
@@ -256,7 +237,11 @@ export function DataTable<TData, TValue>({
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
+    onSortingChange: (updaterOrValue) => {
+      const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(externalSorting !== undefined ? externalSorting : internalSorting) : updaterOrValue;
+      setInternalSorting(newValue);
+      onSortingChange?.(newValue);
+    },
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: (updaterOrValue) => {
       const newValue = typeof updaterOrValue === 'function' ? updaterOrValue(internalRowSelection) : updaterOrValue;
@@ -265,11 +250,19 @@ export function DataTable<TData, TValue>({
     },
     getRowId: getRowId || defaultGetRowId,
     state: {
-      sorting,
+      sorting: externalSorting !== undefined ? externalSorting : internalSorting,
       columnVisibility,
       rowSelection: externalRowSelection !== undefined ? externalRowSelection : internalRowSelection,
     },
   })
+
+  // Expose sorting to parent initially if internal
+  useEffect(() => {
+    if (onSortingChange && externalSorting === undefined) {
+      onSortingChange(internalSorting);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [internalSorting, onSortingChange]);
 
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const { rows } = table.getRowModel()
@@ -291,7 +284,7 @@ export function DataTable<TData, TValue>({
   const effectiveColumnsCount = table.getVisibleFlatColumns().length
 
   return (
-    <div className={cn("space-y-3 w-full flex flex-col h-full", className)}>
+    <div className={cn("space-y-3 w-full flex flex-col h-full", className)} data-density={densityMode}>
       {/* Table Toolbar */}
       <div className="flex items-center justify-end shrink-0">
         <DropdownMenu>
@@ -302,6 +295,27 @@ export function DataTable<TData, TValue>({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[160px]">
+            <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Density
+            </div>
+            <DropdownMenuCheckboxItem
+              className="text-xs"
+              checked={densityMode === "comfortable"}
+              onCheckedChange={() => setDensityMode("comfortable")}
+            >
+              Comfortable
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              className="text-xs"
+              checked={densityMode === "compact"}
+              onCheckedChange={() => setDensityMode("compact")}
+            >
+              Compact
+            </DropdownMenuCheckboxItem>
+            <div className="my-1 h-px bg-border/50" />
+            <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Columns
+            </div>
             {table
               .getAllColumns()
               .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide())
@@ -313,7 +327,7 @@ export function DataTable<TData, TValue>({
                     checked={column.getIsVisible()}
                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
-                    {column.id}
+                    {typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id.replace(/_/g, " ")}
                   </DropdownMenuCheckboxItem>
                 )
               })}
@@ -326,10 +340,10 @@ export function DataTable<TData, TValue>({
         ref={tableContainerRef}
         onScroll={handleScroll}
         className="rounded-xl border border-border/80 bg-card shadow-2xs overflow-auto flex-1 min-h-0"
+        aria-busy={isLoading}
       >
         {!isMobile ? (
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-sm text-left border-collapse">
+            <table className="w-full min-w-[800px] text-sm text-left border-collapse">
               <thead
                 className={cn(
                   "border-b border-border/80 bg-muted/40 text-xs font-semibold text-muted-foreground uppercase tracking-wider",
@@ -339,18 +353,34 @@ export function DataTable<TData, TValue>({
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header, index) => {
+                      const isSortable = header.column.getCanSort();
+                      const sortedState = header.column.getIsSorted();
+                      
                       return (
                         <th
                           key={header.id}
                           className={cn(
-                            "h-10 px-4 align-middle text-muted-foreground whitespace-nowrap",
-                            stickyFirstCol && index === 0 ? "sticky left-0 z-30 bg-muted/60" : ""
+                            "h-[var(--density-row-height)] px-[var(--density-padding)] align-middle text-muted-foreground whitespace-nowrap",
+                            stickyFirstCol && index === 0 ? "sticky left-0 z-30 bg-muted/60" : "",
+                            isSortable ? "cursor-pointer select-none hover:text-foreground hover:bg-muted/60 transition-colors" : "",
+                            header.column.columnDef.meta?.align === 'right' ? "text-right" : ""
                           )}
                           style={header.getSize() !== 150 ? { width: header.getSize() } : undefined}
+                          onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
+                          aria-sort={sortedState === 'asc' ? 'ascending' : sortedState === 'desc' ? 'descending' : 'none'}
                         >
                           {header.isPlaceholder
                             ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
+                            : (
+                              <div className="flex items-center gap-1.5">
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                {isSortable && (
+                                  <span className="flex items-center justify-center text-[10px] w-3 opacity-70">
+                                    {sortedState === 'asc' ? '▲' : sortedState === 'desc' ? '▼' : '↕'}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                         </th>
                       )
                     })}
@@ -362,26 +392,47 @@ export function DataTable<TData, TValue>({
                   Array.from({ length: skeletonRows }).map((_, rIdx) => (
                     <tr key={`skel-row-${rIdx}`} className="animate-pulse">
                       {tableColumns.map((col, cIdx) => (
-                        <td key={`skel-cell-${cIdx}`} className={cn("p-4", density === "compact" ? "py-2 px-3" : "py-3.5 px-4")}>
+                        <td key={`skel-cell-${cIdx}`} className={cn("p-4", densityMode === "compact" ? "py-2 px-3" : "py-3.5 px-4")}>
                           <Skeleton className="h-4 w-3/4 rounded" />
                         </td>
                       ))}
                     </tr>
                   ))
+                ) : isError ? (
+                  <tr>
+                    <td colSpan={effectiveColumnsCount} className="py-12 px-4 text-center">
+                      <div className="flex justify-center w-full">
+                        <EmptyState
+                          title="Failed to load data"
+                          description="There was an error fetching the records. Please try again."
+                          icon={<AppIcon name="error" size="2xl" className="text-destructive" />}
+                          className="max-w-md mx-auto"
+                        />
+                      </div>
+                    </td>
+                  </tr>
                 ) : rows.length > 0 ? (
                   rows.map((row) => (
                     <tr
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
-                      className="group transition-colors hover:bg-muted/40 data-[state=selected]:bg-primary/5"
+                      className="group transition-colors hover:bg-muted/40 data-[state=selected]:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                      tabIndex={row.getCanSelect() ? 0 : undefined}
+                      onKeyDown={(e) => {
+                        if (row.getCanSelect() && (e.key === 'Enter' || e.key === ' ')) {
+                          e.preventDefault();
+                          row.toggleSelected();
+                        }
+                      }}
                     >
                       {row.getVisibleCells().map((cell, index) => (
                         <td
                           key={cell.id}
                           className={cn(
-                            "align-middle transition-colors",
-                            density === "compact" ? "py-2 px-3 text-xs" : "py-3.5 px-4 text-sm",
-                            stickyFirstCol && index === 0 ? "sticky left-0 z-10 bg-background group-hover:bg-muted/40" : ""
+                            "align-middle transition-colors h-[var(--density-row-height)] px-[var(--density-padding)]",
+                            densityMode === "compact" ? "text-xs" : "text-sm",
+                            stickyFirstCol && index === 0 ? "sticky left-0 z-10 bg-background group-hover:bg-muted/40" : "",
+                            cell.column.columnDef.meta?.align === 'right' ? "text-right" : ""
                           )}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -404,12 +455,11 @@ export function DataTable<TData, TValue>({
                 )}
               </tbody>
             </table>
-          </div>
         ) : (
           <div className="w-full p-3 space-y-3">
             {isLoading ? (
               Array.from({ length: skeletonRows }).map((_, rIdx) => (
-                <div key={`skel-m-row-${rIdx}`} className="rounded-lg border border-border bg-card p-4 space-y-2 animate-pulse">
+                <div key={`skel-m-row-${rIdx}`} className="rounded-[var(--radius)] border border-border bg-card p-4 space-y-2 animate-pulse">
                   <Skeleton className="h-4 w-1/2 rounded" />
                   <Skeleton className="h-3 w-3/4 rounded" />
                 </div>
@@ -418,7 +468,7 @@ export function DataTable<TData, TValue>({
               rows.map((row) => (
                 <div
                   key={row.id}
-                  className="rounded-lg border border-border bg-card p-4 text-card-foreground shadow-2xs space-y-2.5"
+                  className="rounded-[var(--radius)] border border-border bg-card p-4 text-card-foreground shadow-2xs space-y-2.5"
                 >
                   {row.getVisibleCells().map((cell) => {
                     const headerTitle = cell.column.id === "select" ? "" : cell.column.columnDef.header

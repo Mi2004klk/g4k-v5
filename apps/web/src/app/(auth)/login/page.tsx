@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
-// @ts-ignore - TS sometimes fails to resolve this module depending on moduleResolution setting
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
@@ -26,6 +25,7 @@ import { Input } from "@g4k/ui/components";
 import { PasswordInput } from "@g4k/ui/components";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
+import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/state-helpers";
 
 const loginSchema = z.object({
   identifier: z.string().min(1, "Email or Employee ID is required"),
@@ -71,7 +71,7 @@ export default function LoginPage() {
         body: JSON.stringify(data),
       });
 
-      setAuth(result.token, result.user, result.active_role, result.refresh_token);
+      setAuth(result.token, result.user, result.active_role, result.refresh_token, result.capabilities);
       toast.success("Login successful!");
 
       const targetRoute = !result.onboarded
@@ -113,8 +113,10 @@ export default function LoginPage() {
         <CardContent className="space-y-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <DisabledWhileSubmitting isSubmitting={isLoading}>
+                <ValidationSummary errors={form.formState.errors} />
               {form.formState.errors.root && (
-                <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-md text-sm font-medium text-center">
+                <div className="p-3 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 rounded-[var(--radius)] text-sm font-medium text-center">
                   {form.formState.errors.root.message}
                 </div>
               )}
@@ -124,11 +126,11 @@ export default function LoginPage() {
                 name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    <FormLabel htmlFor="identifier" className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                       Email or Employee ID
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. you@games4king.in or EMP-1042" {...field} disabled={lockoutSeconds > 0} autoComplete="username" />
+                      <Input id="identifier" placeholder="e.g. you@games4king.in or EMP-1042" {...field} disabled={lockoutSeconds > 0} autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,11 +142,11 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                    <FormLabel htmlFor="password" className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                       Password
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} autoComplete="current-password" />
+                      <PasswordInput id="password" placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} autoComplete="current-password" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,7 +180,8 @@ export default function LoginPage() {
                 >
                   Forgot password?
                 </Link>
-              </div>
+                </div>
+              </DisabledWhileSubmitting>
             </form>
           </Form>
 
@@ -193,7 +196,7 @@ export default function LoginPage() {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  Gen2k Conglomerate (2018) • Milestone 3 - Module wiring v2
+                  Gen2k Conglomerate (2018) • Milestone 1
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

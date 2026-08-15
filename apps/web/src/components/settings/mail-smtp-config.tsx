@@ -15,6 +15,7 @@ import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@g4k/ui/components";
 import { Input, PasswordInput } from "@g4k/ui/components";
+import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/state-helpers";
 
 const smtpSchema = z.object({
   from_address: z.string().email("Invalid email address").optional().or(z.literal('')),
@@ -123,6 +124,9 @@ export function MailSmtpConfig() {
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit((d) => updateMutation.mutate(d))} className="space-y-4 max-w-xl">
+          <DisabledWhileSubmitting isSubmitting={updateMutation.isPending}>
+          <div className="space-y-4">
+          <ValidationSummary errors={form.formState.errors} />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium mb-1 block">From Name</label>
@@ -186,6 +190,8 @@ export function MailSmtpConfig() {
             {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" />}
             {updateMutation.isPending ? "Saving..." : "Save Settings"}
           </Button>
+          </div>
+          </DisabledWhileSubmitting>
         </form>
       </CardContent>
     </Card>

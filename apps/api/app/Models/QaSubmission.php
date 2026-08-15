@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QaSubmission extends Model
 {
-    protected $fillable = ['task_id', 'qa_form_id', 'user_id', 'values', 'note'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['task_id', 'qa_form_id', 'user_id', 'values', 'note', 'demo_tag'];
 
     protected $casts = [
         'values' => 'array',

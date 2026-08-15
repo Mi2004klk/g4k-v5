@@ -38,7 +38,7 @@ class GenerateReportJob implements ShouldQueue
             $key = $this->exportJob->report_key;
             $format = $this->exportJob->format;
             $filename = "exports/report_{$key}_" . time() . ".{$format}";
-            $disk = Storage::disk('s3');
+            $disk = Storage::disk(config('filesystems.default'));
 
             if ($format === 'xlsx' || $format === 'csv') {
                 $tempPath = sys_get_temp_dir() . '/' . uniqid('exp_') . ".{$format}";
@@ -149,7 +149,7 @@ class GenerateReportJob implements ShouldQueue
                     ->withSum(['attendanceDays as total_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds');
 
                 if (!$hasManage) {
-                    $query->where('department_id', $departmentId);
+                    $query->where('id', $userId);
                 } elseif ($dept && $dept !== 'all') {
                     $query->where('department_id', $dept);
                 }
@@ -181,7 +181,7 @@ class GenerateReportJob implements ShouldQueue
                     ]);
 
                 if (!$hasManage) {
-                    $query->where('department_id', $departmentId);
+                    $query->where('id', $userId);
                 } elseif ($dept && $dept !== 'all') {
                     $query->where('department_id', $dept);
                 }
@@ -205,21 +205,21 @@ class GenerateReportJob implements ShouldQueue
                     $query->where('name', 'ilike', '%' . $search . '%');
                 }
                 if (!$hasManage) {
-                    $query->where('department_id', $departmentId);
+                    $query->where('id', $userId);
                 }
                 
                 if ($key === 'productivity') {
                     $query->withCount([
                         'assignedTasks as completed_tasks' => fn($q) => $q->where('status', 'done'),
                         'assignedTasks as total_tasks',
-                    ])->withSum('taskTimeLogs as total_seconds', 'duration_seconds');
+                    ])->withSum('taskTimeLogs as total_minutes', 'minutes_logged');
                 }
                 
                 $query->chunk(1000, function($chunk) use ($chunkCallback, $key) {
                     if ($key === 'productivity') {
                         $chunk->transform(function($u) {
                             $rate = $u->total_tasks > 0 ? ($u->completed_tasks / $u->total_tasks) : 0;
-                            $hours = ($u->total_seconds ?? 0) / 3600;
+                            $hours = ($u->total_minutes ?? 0) / 60;
                             $u->productivity_score = round($rate * $hours, 2);
                             return $u;
                         });

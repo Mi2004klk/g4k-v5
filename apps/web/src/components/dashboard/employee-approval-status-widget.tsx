@@ -20,7 +20,7 @@ export function EmployeeApprovalStatusWidget() {
       <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <Skeleton className="w-7 h-7 rounded-md" />
+            <Skeleton className="w-7 h-7 rounded-[var(--radius)]" />
             <Skeleton className="h-4 w-24" />
           </div>
         </div>
@@ -38,7 +38,7 @@ export function EmployeeApprovalStatusWidget() {
             <span className="text-sm font-bold">Approval Status</span>
           </div>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-[var(--radius)] p-4 mt-4">
           <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load status</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
@@ -56,7 +56,7 @@ export function EmployeeApprovalStatusWidget() {
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-[var(--radius)] bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
               <AppIcon name="clipboard" className=" text-blue-600 dark:text-blue-400" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
@@ -75,7 +75,7 @@ export function EmployeeApprovalStatusWidget() {
         ) : (
           <div className="space-y-2 overflow-y-auto thin-scrollbar">
             {tasks.map((task: any) => (
-              <div key={task.id} className="flex flex-col p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 gap-1.5">
+              <div key={task.id} className="flex flex-col p-2 rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 gap-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <AppIcon name="success" size="sm" className=" text-neutral-400 shrink-0" />

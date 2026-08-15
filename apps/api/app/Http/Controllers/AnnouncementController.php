@@ -16,7 +16,7 @@ class AnnouncementController extends Controller
             ->limit(100)
             ->get();
 
-        return response()->json($announcements);
+        return response()->json(['data' => $announcements]);
     }
 
     public function store(Request $request)
@@ -27,6 +27,7 @@ class AnnouncementController extends Controller
             'scope' => 'nullable|in:company,team',
             'team_id' => 'nullable|exists:teams,id',
             'pinned' => 'nullable|boolean',
+            'priority' => 'nullable|in:normal,high,urgent',
         ]);
 
         $announcement = Announcement::create([
@@ -36,6 +37,7 @@ class AnnouncementController extends Controller
             'team_id' => $validated['team_id'] ?? null,
             'created_by' => $request->user()->id,
             'pinned_at' => !empty($validated['pinned']) ? now() : null,
+            'priority' => $validated['priority'] ?? 'normal',
         ]);
 
         try {
@@ -43,10 +45,32 @@ class AnnouncementController extends Controller
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Failed to broadcast AnnouncementCreated event: " . $e->getMessage());
         }
+
+        if (in_array($announcement->priority, ['high', 'urgent'])) {
+            $userIds = [];
+            if ($announcement->scope === 'department' && $announcement->team_id) {
+                $userIds = \App\Models\User::where('department_id', $announcement->team_id)->where('status', 'active')->pluck('id')->toArray();
+            } else {
+                $userIds = \App\Models\User::where('status', 'active')->pluck('id')->toArray();
+            }
+            
+            foreach ($userIds as $uid) {
+                if ($uid === $request->user()->id) continue;
+                \App\Services\NotificationService::send(
+                    userId: $uid,
+                    type: 'system',
+                    title: "📢 New Announcement: {$announcement->title}",
+                    body: \Illuminate\Support\Str::limit($announcement->body, 100),
+                    data: ['announcement_id' => $announcement->id],
+                    link: "/dashboard/announcements",
+                    priority: $announcement->priority
+                );
+            }
+        }
         
         \Illuminate\Support\Facades\Cache::forget("announcements_all");
 
-        return response()->json($announcement->load(['creator', 'team']));
+        return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
 
     public function update(Request $request, $id)
@@ -64,6 +88,7 @@ class AnnouncementController extends Controller
             'scope' => 'nullable|in:company,team',
             'team_id' => 'nullable|exists:teams,id',
             'pinned' => 'nullable|boolean',
+            'priority' => 'nullable|in:normal,high,urgent',
         ]);
 
         if (array_key_exists('pinned', $validated)) {
@@ -75,7 +100,7 @@ class AnnouncementController extends Controller
         
         \Illuminate\Support\Facades\Cache::forget("announcements_all");
 
-        return response()->json($announcement->load(['creator', 'team']));
+        return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
 
     public function destroy(Request $request, $id)
@@ -122,6 +147,6 @@ class AnnouncementController extends Controller
 
         $announcement->update(['reactions' => $reactions]);
 
-        return response()->json($announcement->fresh()->load(['creator', 'team']));
+        return response()->json(['data' => $announcement->fresh()->load(['creator', 'team'])]);
     }
 }

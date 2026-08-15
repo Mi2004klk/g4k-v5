@@ -13,6 +13,8 @@ import { useAuthStore } from "@/lib/auth-store";
 // Offline mutation queueing is handled separately by the OfflineEngine.
 
 import { useUIStore } from "@/lib/ui-store";
+import { queryKeys } from "@/lib/query-keys";
+import { triggerInvalidation } from "@/lib/invalidation-map";
 
 function StoreHydration() {
   React.useEffect(() => {
@@ -79,11 +81,38 @@ export function Providers({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const handleSyncComplete = () => {
+      triggerInvalidation(queryClient, "attendance.punch"); // Simplification: assume most offline sync is punches
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     };
     window.addEventListener("offline-sync-complete", handleSyncComplete);
     return () => window.removeEventListener("offline-sync-complete", handleSyncComplete);
   }, [queryClient]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const token = useAuthStore.getState().token;
+        if (token) {
+          document.cookie = `g4k_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+        }
+      }
+    };
+    window.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => window.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleApiError = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      import("sonner").then(({ toast }) => {
+        toast.error(customEvent.detail || "Access Denied");
+      });
+    };
+    window.addEventListener("api-error", handleApiError);
+    return () => window.removeEventListener("api-error", handleApiError);
+  }, []);
 
   return (
     <NextThemesProvider
@@ -99,7 +128,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
-        <Toaster position="top-right" duration={4000} richColors closeButton />
+        <Toaster position="top-right" duration={4000} richColors closeButton expand={true} visibleToasts={3} />
         <OfflineBanner />
       </QueryClientProvider>
     </NextThemesProvider>

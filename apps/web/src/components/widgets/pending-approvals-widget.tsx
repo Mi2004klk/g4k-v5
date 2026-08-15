@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, ConfirmDialog, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
+import { triggerInvalidation } from "@/lib/invalidation-map";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
 import { WidgetInfo } from "./widget-info";
@@ -33,7 +34,7 @@ export function PendingApprovalsWidget() {
     },
     onSuccess: () => {
       toast.success("Action recorded successfully!");
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit, exact: true });
+      triggerInvalidation(queryClient, "approval.decision");
     },
   });
 
@@ -41,7 +42,7 @@ export function PendingApprovalsWidget() {
     <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-[var(--radius)] bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
             <AppIcon name="clipboard" className=" text-amber-600 dark:text-amber-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -65,8 +66,8 @@ export function PendingApprovalsWidget() {
                   <Skeleton className="h-3 w-20" />
                 </div>
                 <div className="flex gap-1">
-                  <Skeleton className="h-7 w-7 rounded-lg" />
-                  <Skeleton className="h-7 w-7 rounded-lg" />
+                  <Skeleton className="h-7 w-7 rounded-[var(--radius)]" />
+                  <Skeleton className="h-7 w-7 rounded-[var(--radius)]" />
                 </div>
               </div>
             ))}
@@ -116,7 +117,7 @@ export function PendingApprovalsWidget() {
                                 onClick={() => decisionMutation.mutate({ id: item.id, decision: "approved" })}
                                 disabled={decisionMutation.isPending}
                                 aria-label="Approve Request"
-                                className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-colors"
+                                className="p-1.5 rounded-[var(--radius)] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-colors"
                               >
                                 <AppIcon name="check" size="sm" />
                               </button>
@@ -131,7 +132,7 @@ export function PendingApprovalsWidget() {
                                 onClick={() => setRejectState({ isOpen: true, id: item.id })}
                                 disabled={decisionMutation.isPending}
                                 aria-label="Reject Request"
-                                className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900 transition-colors"
+                                className="p-1.5 rounded-[var(--radius)] bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900 transition-colors"
                               >
                                 <AppIcon name="close" size="sm" />
                               </button>

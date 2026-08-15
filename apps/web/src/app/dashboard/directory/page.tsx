@@ -14,6 +14,7 @@ export default function DirectoryModulePage() {
     <PageContainer
       title="Team Directory & Org"
       description="Browse corporate team members, roles, contact info, and departments."
+      breadcrumbs
     >
       <ErrorBoundary>
         <Tabs value={tab} onValueChange={setTab} className="w-full">

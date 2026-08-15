@@ -53,6 +53,10 @@ class ProjectController extends Controller
 
     public function store(Request $request)
     {
+        if (!$this->userHasManage($request)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -65,22 +69,38 @@ class ProjectController extends Controller
             'department_id' => 'nullable|exists:departments,id',
             'member_ids' => 'nullable|array',
             'member_ids.*' => 'exists:users,id',
+            'cover_image' => 'nullable|string',
+            'qa_form_id' => 'nullable|exists:qa_forms,id',
+            'allow_employee_tasks' => 'boolean',
         ]);
 
         $project = Project::create(array_merge($validated, [
             'created_by' => $request->user()->id,
+            'status' => $validated['status'] ?? 'active',
+            'qa_form_id' => $validated['qa_form_id'] ?? null,
+            'allow_employee_tasks' => $validated['allow_employee_tasks'] ?? false,
         ]));
 
-        if (!empty($validated['member_ids'])) {
-            $project->members()->sync($validated['member_ids']);
+        $memberIds = $validated['member_ids'] ?? [];
+        if (!empty($memberIds)) {
+            $project->members()->sync($memberIds);
         }
 
-        return response()->json($project->load(['team', 'department', 'creator', 'members']));
+        // T-21.3: Auto-create a project chat conversation with creator + all members
+        $conversationMembers = array_unique(array_merge([$request->user()->id], $memberIds));
+        $conversation = \App\Models\Conversation::create([
+            'name' => $project->name,
+            'scope' => 'project',
+            'project_id' => $project->id,
+        ]);
+        $conversation->users()->sync($conversationMembers);
+
+        return response()->json($project->load(['team', 'department', 'creator', 'members']), 201);
     }
 
     public function show(Request $request, $id)
     {
-        $project = Project::with(['team', 'department', 'creator', 'members', 'tasks.assignee', 'timeLogs'])->findOrFail($id);
+        $project = Project::with(['team', 'department', 'creator', 'members', 'tasks.assignee', 'timeLogs', 'qaForm', 'qaSubmission'])->findOrFail($id);
 
         if (!$this->userHasManage($request)) {
             $userId = $request->user()->id;
@@ -90,7 +110,36 @@ class ProjectController extends Controller
             }
         }
 
+        // T-46.14: Return real aggregates for project history/detail page
+        $totalTasksCount = $project->tasks->count();
+        $completedTasksCount = $project->tasks->where('status', 'done')->count();
+        $totalTimeMinutes = $project->timeLogs->sum('minutes_logged');
+        $totalTimeHours = round($totalTimeMinutes / 60, 1);
+
+        $project->setAttribute('total_tasks_count', $totalTasksCount);
+        $project->setAttribute('completed_tasks_count', $completedTasksCount);
+        $project->setAttribute('total_time_hours', $totalTimeHours);
+
         return response()->json($project);
+    }
+
+    public function history(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+
+        if (!$this->userHasManage($request)) {
+            $userId = $request->user()->id;
+            $isMember = $project->created_by === $userId || $project->members->contains('id', $userId);
+            if (!$isMember) {
+                return response()->json(['message' => 'Unauthorized access to project'], 403);
+            }
+        }
+
+        $activities = \App\Models\TaskActivity::whereHas('task', function ($q) use ($id) {
+            $q->where('project_id', $id);
+        })->with(['user', 'task'])->orderBy('created_at', 'desc')->get();
+
+        return response()->json(['data' => $activities]);
     }
 
     public function update(Request $request, $id)
@@ -107,9 +156,12 @@ class ProjectController extends Controller
             'deadline' => 'nullable|date',
             'team_id' => 'nullable|exists:teams,id',
             'department_id' => 'nullable|exists:departments,id',
+            'qa_form_id' => 'nullable|exists:qa_forms,id',
             'progress' => 'sometimes|integer|min:0|max:100',
             'member_ids' => 'nullable|array',
             'member_ids.*' => 'exists:users,id',
+            'allow_employee_tasks' => 'boolean',
+            'cover_image' => 'nullable|string'
         ]);
 
         $project->update($validated);
@@ -131,14 +183,40 @@ class ProjectController extends Controller
     public function submit(Request $request, $id)
     {
         $project = Project::findOrFail($id);
-        
-        $approval = \App\Services\ApprovalService::submit($project, $request->user()->id, [
-            'notes' => 'Project submission',
+
+        $validated = $request->validate([
+            'notes' => 'nullable|string',
+            'qa_values' => 'nullable|array',
         ]);
 
-        $project->update(['status' => 'completed']);
+        if ($project->qa_form_id && empty($validated['qa_values'])) {
+            return response()->json(['message' => 'QA Form values are required for this project.'], 422);
+        }
+
+        if ($project->qa_form_id && !empty($validated['qa_values'])) {
+            \App\Models\QaSubmission::updateOrCreate(
+                ['project_id' => $project->id],
+                [
+                    'qa_form_id' => $project->qa_form_id,
+                    'user_id' => $request->user()->id,
+                    'values' => $validated['qa_values'],
+                    'note' => $validated['notes'],
+                ]
+            );
+        }
+
+        // T-21.6: Set status to 'review' (pending-review) NOT completed.
+        // completed is only set when an HR/Admin approves the submission.
+        $project->update([
+            'status' => 'review',
+            'submission_note' => $request->input('notes'),
+        ]);
+
+        $approval = \App\Services\ApprovalService::submit($project, $request->user()->id, [
+            'notes' => $request->input('notes'),
+        ]);
         
-        return response()->json($project->load(['approval']));
+        return response()->json($project->fresh()->load(['approval']));
     }
 
     public function review(Request $request, $id)
@@ -155,16 +233,40 @@ class ProjectController extends Controller
             'reason' => 'nullable|string',
         ]);
 
-        if ($request->input('decision') === 'approved') {
-            \App\Services\ApprovalService::approve($approval, $request->user()->id, $request->input('reason'));
-        } elseif ($request->input('decision') === 'redo') {
-            \App\Services\ApprovalService::redo($approval, $request->user()->id, $request->input('reason') ?? 'Redo requested');
-            $project->update(['status' => 'active']); // Revert to active if redo requested
-        } else {
-            \App\Services\ApprovalService::reject($approval, $request->user()->id, $request->input('reason'));
-            $project->update(['status' => 'active']); // Revert to active if rejected
+        try {
+            if ($request->input('decision') === 'approved') {
+                \App\Services\ApprovalService::approve($approval, $request->user()->id, $request->input('reason'));
+                // T-21.6: Only set completed once HR/Admin approves
+                $project->update(['status' => 'completed', 'completed_at' => now()]);
+            } elseif ($request->input('decision') === 'redo') {
+                \App\Services\ApprovalService::redo($approval, $request->user()->id, $request->input('reason') ?? 'Redo requested');
+                $project->update(['status' => 'active']); // Revert to active if redo requested
+            } else {
+                \App\Services\ApprovalService::reject($approval, $request->user()->id, $request->input('reason'));
+                $project->update(['status' => 'active']); // Revert to active if rejected
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => $e->getMessage(), 'errors' => $e->errors()], 422);
         }
 
-        return response()->json($project->load(['approval']));
+        return response()->json($project->fresh()->load(['approval']));
+    }
+    public function uploadCover(Request $request)
+    {
+        if (!$this->userHasManage($request)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'cover_image' => 'required|image|max:5120',
+        ]);
+
+        $disk = config('filesystems.default');
+        $path = $request->file('cover_image')->store('projects/covers', $disk);
+
+        return response()->json([
+            'message' => 'Cover uploaded successfully',
+            'url' => \Illuminate\Support\Facades\Storage::disk($disk)->url($path)
+        ]);
     }
 }

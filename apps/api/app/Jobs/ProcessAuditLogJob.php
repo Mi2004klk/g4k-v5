@@ -50,28 +50,26 @@ class ProcessAuditLogJob implements ShouldQueue
 
     public function handle(): void
     {
-        DB::transaction(function () {
-            $exists = DB::table('audit_logs')
-                ->where('user_id', $this->userId)
-                ->where('action', $this->action)
-                ->where('subject_type', $this->subjectType)
-                ->where('subject_id', $this->subjectId)
-                ->where('at', $this->at)
-                ->exists();
+        $exists = DB::table('audit_logs')
+            ->where('user_id', $this->userId)
+            ->where('action', $this->action)
+            ->where('subject_type', $this->subjectType)
+            ->where('subject_id', $this->subjectId)
+            ->where('at', $this->at)
+            ->exists();
 
-            if (!$exists) {
-                DB::table('audit_logs')->insert([
-                    'user_id' => $this->userId,
-                    'action' => $this->action,
-                    'subject_type' => $this->subjectType,
-                    'subject_id' => $this->subjectId,
-                    'before' => $this->before ? json_encode($this->before) : null,
-                    'after' => $this->after ? json_encode($this->after) : null,
-                    'ip' => $this->ip,
-                    'meta' => $this->meta ? json_encode($this->meta) : null,
-                    'at' => $this->at,
-                ]);
-            }
-        });
+        if (!$exists) {
+            DB::table('audit_logs')->insert([
+                'user_id' => $this->userId,
+                'action' => $this->action,
+                'subject_type' => $this->subjectType,
+                'subject_id' => $this->subjectId,
+                'before' => $this->before ? json_encode($this->before) : null,
+                'after' => $this->after ? json_encode($this->after) : null,
+                'ip' => $this->ip,
+                'meta' => $this->meta ? json_encode($this->meta) : null,
+                'at' => is_object($this->at) && method_exists($this->at, 'toDateTimeString') ? $this->at->toDateTimeString() : (string) $this->at,
+            ]);
+        }
     }
 }

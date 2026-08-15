@@ -54,7 +54,7 @@ export async function apiFetch<T = any>(
     endpoint.includes("/auth/refresh");
 
   if (!isAuthEndpoint && !isGet && !bypassQueue && typeof navigator !== 'undefined' && !navigator.onLine) {
-    toast.success("You are offline. Action queued.");
+    toast.warning("You are offline. Action queued.");
     await offlineEngine.queueRequest(endpoint, options);
     return { queued: true } as any;
   }
@@ -116,6 +116,9 @@ export async function apiFetch<T = any>(
 
           // Refresh failed or retry still 401 → clear (AuthGuard will redirect).
           useAuthStore.getState().clearAuth();
+          if (typeof window !== "undefined") {
+            window.location.href = "/login?reason=expired";
+          }
           throw new Error("Session expired. Please log in again.");
         }
 
@@ -131,10 +134,21 @@ export async function apiFetch<T = any>(
           }
         }
 
-        const error = new Error(errorData.message || `Request failed with status ${response.status}`) as any;
+        let msg = errorData.message || `Request failed with status ${response.status}`;
+        if (response.status === 422 && errorData.errors) {
+          msg = Object.values(errorData.errors).flat().join(', ') || msg;
+        }
+        const error = new Error(msg) as any;
         error.status = response.status;
         error.data = errorData;
+        if (errorData.errors) {
+          error.errors = errorData.errors;
+        }
         throw error;
+      }
+
+      if (typeof window !== "undefined" && token && !isAuthEndpoint) {
+        document.cookie = `g4k_token=${token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
       const contentType = response.headers.get("content-type");
@@ -153,7 +167,7 @@ export async function apiFetch<T = any>(
       // Intercept offline / network failures for mutations (NOT 5xx server errors)
       const isNetworkError = error?.message?.includes("Failed to fetch") || (typeof navigator !== "undefined" && !navigator.onLine);
       if (!isAuthEndpoint && !isGet && !bypassQueue && isNetworkError) {
-        toast.success("Network error. Action queued for sync.");
+        toast.warning("Network error. Action queued for sync.");
         await offlineEngine.queueRequest(endpoint, options);
         return { queued: true } as any;
       }

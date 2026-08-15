@@ -25,7 +25,7 @@ export function OfflineBanner({ pendingItems = 0 }: { pendingItems?: number }) {
   if (!isOffline) return null
 
   return (
-    <div className="fixed left-0 right-0 top-0 z-[100] flex animate-in slide-in-from-top items-center justify-center gap-2 bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground shadow-lg duration-300">
+    <div className="fixed left-0 right-0 top-0 z-[100] flex animate-in slide-in-from-top items-center justify-center gap-2 bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground shadow-e3 duration-300">
       <AppIcon name="wifiOff" className=" shrink-0" />
       <span>
         You are currently offline. {pendingItems > 0 && `(${pendingItems} changes queued locally)`}

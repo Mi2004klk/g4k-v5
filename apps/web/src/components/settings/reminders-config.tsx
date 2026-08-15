@@ -67,7 +67,7 @@ export function RemindersConfig() {
             <input
               type="number"
               min={0}
-              className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+              className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
               value={formData["reminders.shift_offset"] || "15"}
               onChange={(e) => setFormData({ ...formData, "reminders.shift_offset": e.target.value })}
             />
@@ -79,7 +79,7 @@ export function RemindersConfig() {
             <input
               type="number"
               min={0}
-              className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+              className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
               value={formData["reminders.missed_clock_in_offset"] || "30"}
               onChange={(e) => setFormData({ ...formData, "reminders.missed_clock_in_offset": e.target.value })}
             />
@@ -90,7 +90,7 @@ export function RemindersConfig() {
             <label className="text-xs font-medium">Open Shift Flag Time</label>
             <input
               type="time"
-              className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+              className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
               value={formData["reminders.open_shift_flag_time"] || "20:00"}
               onChange={(e) => setFormData({ ...formData, "reminders.open_shift_flag_time": e.target.value })}
             />

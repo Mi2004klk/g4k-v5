@@ -37,4 +37,25 @@ class NotificationCreated implements ShouldBroadcastNow
     {
         return $this->notification->toArray();
     }
+
+    public function broadcastWhen(): bool
+    {
+        $user = \App\Models\User::find($this->notification->user_id);
+        
+        if (!$user) {
+            return false;
+        }
+
+        $prefs = $user->preferences ?? [];
+        $soundEnabled = $prefs['notifications']['sound'] ?? true;
+        
+        if (!$soundEnabled) {
+            return false;
+        }
+
+        // Ideally we would also check presence channel online status here to prevent duplicate Firebase/Pusher
+        // if they are actively using the app.
+
+        return true;
+    }
 }

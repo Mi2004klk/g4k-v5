@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QaFormField extends Model
 {
-    protected $fillable = ['qa_form_id', 'label', 'field_type', 'required', 'options', 'order'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['qa_form_id', 'label', 'field_type', 'required', 'options', 'order', 'demo_tag'];
 
     protected $casts = [
         'required' => 'boolean',

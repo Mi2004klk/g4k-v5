@@ -35,11 +35,14 @@ export function OfflineIndicator() {
   if (!isOffline) return null;
 
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 p-2",
-      "bg-amber-500 text-amber-950 font-medium text-sm text-center shadow-lg",
-      "flex items-center justify-center gap-2 animate-in slide-in-from-bottom"
-    )}>
+    <div 
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-50 p-2",
+        "bg-amber-500 text-amber-950 font-medium text-sm text-center shadow-e3",
+        "flex items-center justify-center gap-2 animate-in slide-in-from-bottom"
+      )}
+      aria-live="assertive"
+    >
       <AppIcon name="wifiOff" />
       <span>You're offline. Changes will be saved locally and synced when you reconnect.</span>
     </div>

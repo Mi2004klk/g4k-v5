@@ -27,6 +27,7 @@ export function AppIcon({
       icon={entry.icon}
       spin={spin ?? (name === "loading")}
       className={cn(SIZE_CLASS[size], TONE_CLASS[resolvedTone], "shrink-0", className)}
+      aria-hidden="true"
     />
   );
 }

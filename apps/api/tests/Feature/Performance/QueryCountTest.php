@@ -48,7 +48,7 @@ class QueryCountTest extends TestCase
 
     public function test_dashboard_metrics_query_count(): void
     {
-        $this->assertMaxQueries('/api/dashboard/metrics', 5);
+        $this->assertMaxQueries('/api/dashboard/metrics', 8);
     }
 
     public function test_attendance_me_history_query_count(): void

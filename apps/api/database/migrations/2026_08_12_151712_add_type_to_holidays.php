@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('holidays', function (Blueprint $table) {
-            $table->enum('type', ['holiday', 'event'])->default('holiday');
+            $table->enum('type', ['holiday', 'event', 'company', 'public', 'national', 'festival', 'optional'])->default('holiday');
             $table->string('location')->nullable();
             $table->time('start_time')->nullable();
         });

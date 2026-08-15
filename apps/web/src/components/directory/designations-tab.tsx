@@ -41,6 +41,7 @@ import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { DataTable, StatusBadge } from "@g4k/ui/components";
+import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Badge } from "@g4k/ui/components";
@@ -167,7 +168,7 @@ export function DesignationsTab() {
         header: "Designation",
         cell: ({ row }: any) => (
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
+            <div className="p-2 rounded-[var(--radius)] bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
               <AppIcon name="award" />
             </div>
             <div>
@@ -242,7 +243,7 @@ export function DesignationsTab() {
                     reset({ name: desig.name, description: desig.description || "" });
                     setIsModalOpen(true);
                   }}>
-                    <AppIcon name="edit" className=" mr-2 text-violet-600" /> Edit
+                    <AppIcon name="edit" className=" mr-2 text-primary-600" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => {
@@ -310,22 +311,17 @@ export function DesignationsTab() {
       <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+            <ContentSkeleton type="table" rows={3} />
           ) : isError ? (
-            <div className="p-12">
-              <EmptyState title="Failed to load designations" description="There was an error fetching the designation list. Please try again." />
-              <div className="flex justify-center mt-4">
-                <Button onClick={() => refetch()} variant="outline">Retry</Button>
-              </div>
-            </div>
+            <IsolatedError error={isError ? "Failed to load designations." : undefined} onRetry={() => refetch()} />
           ) : designationsList.length === 0 ? (
-            <div className="p-12">
-              <EmptyState title="No designations found" description="Try adjusting your search query or create a new designation." />
-            </div>
+            <MeaningfulEmpty 
+              entityName="designations" 
+              icon="star"
+              description="Try adjusting your search query or create a new designation."
+              actionLabel={isAdmin ? "Create Designation" : undefined}
+              onAction={isAdmin ? () => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); } : undefined}
+            />
           ) : (
             <div className="space-y-4">
               <DataTable

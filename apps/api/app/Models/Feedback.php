@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Feedback extends Model
 {
+    use \App\Traits\HasDemoTag;
     protected $table = 'feedback';
-    protected $fillable = ['user_id', 'body'];
+    protected $fillable = ['user_id', 'subject', 'category', 'body', 'demo_tag'];
 
     public function user(): BelongsTo
     {

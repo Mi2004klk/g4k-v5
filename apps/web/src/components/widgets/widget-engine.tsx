@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
+import { reconcileLayout } from "@/lib/reconcile-layout";
 import { queryKeys } from "@/lib/query-keys";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
@@ -42,6 +43,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   const startPosRef = useRef({ x: 0, y: 0 });
   const layoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const dragStopTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isDirtyRef = useRef(false);
 
   const { data: preferencesData } = useDashboardInit({
     select: (data: any) => data?.preferences ?? null,
@@ -98,37 +100,37 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     setMounted(true);
     if (!preferencesData) return;
 
-    const savedLayouts = preferencesData.dashboard_layout || preferencesData.preferences?.dashboard_layout;
-    if (savedLayouts && Object.keys(savedLayouts).length > 0) {
-      const mergedBreakpoints: any = {};
-      const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'];
-      
-      breakpoints.forEach(bp => {
-        const savedBp = Array.isArray(savedLayouts[bp]) ? savedLayouts[bp] : [];
-        const mergedBp = [...savedBp];
-        
-        if (Array.isArray(availableWidgets)) {
-          availableWidgets.forEach(w => {
-            const exists = mergedBp.find((item: any) => item.i === w.id);
-            if (!exists) {
-              mergedBp.push({ ...(w.defaultLayout?.[bp] || w.defaultLayout), i: w.id });
-            }
-          });
-        }
-        
-        // Filter out old/removed widgets
-        mergedBreakpoints[bp] = mergedBp.filter((item: any) => Array.isArray(availableWidgets) ? availableWidgets.find(w => w.id === item.i) : false);
-      });
-      
+    // T-33.3: Canonical read path + Schema versioning
+    let savedLayoutsRaw = preferencesData.dashboard_layout || preferencesData.preferences?.dashboard_layout;
+    
+    // Migrator for unversioned layouts
+    let savedLayouts = null;
+    if (savedLayoutsRaw) {
+      if (savedLayoutsRaw.version === 1 && savedLayoutsRaw.layouts) {
+        savedLayouts = savedLayoutsRaw.layouts;
+      } else if (!savedLayoutsRaw.version) {
+        // Legacy unversioned
+        savedLayouts = savedLayoutsRaw;
+      }
+    }
+
+    const colsMap = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
+    const mergedBreakpoints = reconcileLayout(savedLayouts, availableWidgets as any, colsMap);
+
+    if (mergedBreakpoints) {
       setLayouts((prev: any) => JSON.stringify(prev) === JSON.stringify(mergedBreakpoints) ? prev : mergedBreakpoints);
     }
-  }, [preferencesData]);
+  }, [preferencesData, availableWidgets]);
 
   const handleLayoutChange = (_currentLayout: any, allLayouts: any) => {
     const isDifferent = JSON.stringify(layouts) !== JSON.stringify(allLayouts);
     if (!isDifferent) return; // Prevent unnecessary re-renders (Fix for #2)
 
     setLayouts((prev: any) => (JSON.stringify(prev) === JSON.stringify(allLayouts) ? prev : allLayouts));
+    
+    // Suppress persistence until (a) preferences loaded AND (b) user interacted
+    if (!preferencesData || !isDirtyRef.current) return;
+
     if (layoutTimeoutRef.current) {
       clearTimeout(layoutTimeoutRef.current);
     }
@@ -138,19 +140,22 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         await apiFetch("/auth/preferences", {
           method: "PUT",
           body: JSON.stringify({
-            preferences: { dashboard_layout: allLayouts },
+            preferences: { 
+              dashboard_layout: { version: 1, layouts: allLayouts } 
+            },
           }),
         });
       } catch {
         // Ignore layout save errors silently
       }
-    }, 1000);
+    }, 500);
   };
 
   const handleDragStart = () => {
     if (dragStopTimerRef.current) clearTimeout(dragStopTimerRef.current);
     draggingRef.current = true;
     setIsDragging(true);
+    isDirtyRef.current = true;
   };
 
   const handleDragStop = () => {
@@ -158,6 +163,10 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
       draggingRef.current = false;
       setIsDragging(false);
     }, 150);
+  };
+
+  const handleResizeStart = () => {
+    isDirtyRef.current = true;
   };
 
   return (
@@ -180,15 +189,26 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         className="layout"
         layouts={computedLayouts}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+        cols={{ lg: 12, md: 10, sm: 6, xs: 1, xxs: 1 }}
         rowHeight={120}
         onLayoutChange={handleLayoutChange}
         onDragStart={handleDragStart}
         onDragStop={handleDragStop}
         margin={[16, 16] as [number, number]}
+        draggableHandle=".widget-drag-handle"
       >
         {availableWidgets.map((widget) => (
-          <div key={widget.id} className="h-full">
+          <div key={widget.id} className="h-full group/widget relative">
+            <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-10 widget-drag-handle cursor-grab active:cursor-grabbing p-1 bg-black/5 dark:bg-white/10 rounded flex items-center justify-center shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
+                <circle cx="9" cy="12" r="1" />
+                <circle cx="9" cy="5" r="1" />
+                <circle cx="9" cy="19" r="1" />
+                <circle cx="15" cy="12" r="1" />
+                <circle cx="15" cy="5" r="1" />
+                <circle cx="15" cy="19" r="1" />
+              </svg>
+            </div>
             <ErrorBoundary name={`Widget-${widget.id}`}>
               {widget.component}
             </ErrorBoundary>

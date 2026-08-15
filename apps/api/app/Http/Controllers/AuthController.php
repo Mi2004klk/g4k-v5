@@ -62,15 +62,47 @@ class AuthController extends Controller
             ], 423);
         }
 
-        $user = User::where('status', 'active')
-            ->where(function($query) use ($request) {
+        $user = User::where(function($query) use ($request) {
                 $query->where('email', $request->identifier)
                       ->orWhere('employee_id', $request->identifier)
                       ->orWhere('username', $request->identifier);
             })->first();
 
+        if ($user && $user->status === 'inactive') {
+            throw ValidationException::withMessages([
+                'identifier' => ['Account is inactive.'],
+            ]);
+        }
+
+        if ($user && $user->status === 'locked') {
+            if ($user->lockout_until && now()->gt($user->lockout_until)) {
+                $user->update([
+                    'status' => 'active',
+                    'failed_attempts' => 0,
+                    'lockout_until' => null,
+                ]);
+            } else {
+                $msg = $user->lockout_until 
+                    ? 'Account locked due to multiple failed login attempts. Try again in ' . $user->lockout_until->diffForHumans(syntax: \Carbon\CarbonInterface::DIFF_ABSOLUTE) . '.'
+                    : 'Account locked due to multiple failed login attempts. Please contact your administrator.';
+                throw ValidationException::withMessages([
+                    'identifier' => [$msg],
+                ]);
+            }
+        }
+
         if (! $user || ! Hash::check($request->password, $user->password)) {
             RateLimiter::hit($throttleKey, 600);
+            
+            if ($user) {
+                $user->increment('failed_attempts');
+                if ($user->failed_attempts >= 5) {
+                    $user->update([
+                        'status' => 'locked',
+                        'lockout_until' => now()->addMinutes(10)
+                    ]);
+                }
+            }
 
             defer(function () use ($request, $user) {
                 LoginAttempt::create([
@@ -83,12 +115,22 @@ class AuthController extends Controller
                 ]);
             });
 
+            if ($user && $user->status === 'locked') {
+                throw ValidationException::withMessages([
+                    'identifier' => ['Account locked due to multiple failed login attempts. Please contact your administrator.'],
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'identifier' => ['Invalid credentials.'],
             ]);
         }
 
         RateLimiter::clear($throttleKey);
+        
+        if ($user->failed_attempts > 0) {
+            $user->update(['failed_attempts' => 0]);
+        }
 
         // Check suspicious login (new IP vs last successful IP)
         $lastSuccessfulLogin = LoginAttempt::where('user_id', $user->id)
@@ -115,6 +157,16 @@ class AuthController extends Controller
                         'type' => 'security',
                         'priority' => 'urgent'
                     ]);
+                }
+                
+                if (\App\Support\SmtpSettings::isConfigured() && $user->email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($user->email)->send(
+                            new \App\Mail\SuspiciousLoginEmail($request->ip(), $request->header('User-Agent') ?? 'Unknown Device')
+                        );
+                    } catch (\Exception $e) {
+                        Log::error("Failed to send suspicious login email to {$user->email}: " . $e->getMessage());
+                    }
                 }
             });
         }
@@ -179,8 +231,8 @@ class AuthController extends Controller
         ])->saveQuietly();
         $refreshToken = $refreshTokenObj->plainTextToken;
 
-        // Enforce max concurrent sessions
-        $maxConcurrent = $settings['session.max_concurrent'] ?? null;
+        // Enforce max concurrent sessions/devices
+        $maxConcurrent = $settings['session.max_devices'] ?? null;
         if ($maxConcurrent !== null && $maxConcurrent !== 'null' && $maxConcurrent !== '') {
             // Because each "session" creates 2 tokens (access + refresh), max tokens = maxConcurrent * 2
             $maxTokens = (int)$maxConcurrent * 2;
@@ -356,37 +408,34 @@ class AuthController extends Controller
             ->orWhere('employee_id', $request->identifier)
             ->first();
 
-        if (! \App\Support\SmtpSettings::isConfigured()) {
-            return response()->json([
-                'message' => 'Email is not configured yet.',
-                'email_not_configured' => true,
-            ], 200);
-        }
-
         if ($user) {
             Log::info("Password reset request for User ID {$user->id}");
-            
-            \App\Support\SmtpSettings::apply();
 
-            $token = \Illuminate\Support\Str::random(60);
-            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $user->email],
-                ['token' => \Illuminate\Support\Facades\Hash::make($token), 'created_at' => now()]
+            // Create in-app approval request
+            \App\Models\PasswordResetRequest::updateOrCreate(
+                ['user_id' => $user->id, 'status' => 'pending'],
+                ['created_at' => now(), 'updated_at' => now()]
             );
-            
-            try {
-                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($token, $user->email));
-            } catch (\Throwable $e) {
-                Log::error("Failed to send password reset email to {$user->email}: " . $e->getMessage());
-                return response()->json([
-                    'message' => 'We could not send the email right now. Please try again later.',
-                    'email_send_failed' => true,
-                ], 200);
+
+            if (\App\Support\SmtpSettings::isConfigured()) {
+                \App\Support\SmtpSettings::apply();
+
+                $token = \Illuminate\Support\Str::random(60);
+                \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
+                    ['email' => $user->email],
+                    ['token' => \Illuminate\Support\Facades\Hash::make($token), 'created_at' => now()]
+                );
+                
+                try {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($token, $user->email));
+                } catch (\Throwable $e) {
+                    Log::error("Failed to send password reset email to {$user->email}: " . $e->getMessage());
+                }
             }
         }
 
         return response()->json([
-            'message' => 'If the account exists, password recovery instructions have been sent.'
+            'message' => 'If the account exists, password recovery instructions have been sent (via email and to your administrator).'
         ], 202);
     }
 
@@ -528,7 +577,7 @@ class AuthController extends Controller
             ];
         });
 
-        return response()->json($tokens);
+        return response()->json(['data' => $tokens]);
     }
 
     public function revokeSession(Request $request, $id)

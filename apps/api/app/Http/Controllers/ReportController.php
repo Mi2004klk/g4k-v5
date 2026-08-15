@@ -58,7 +58,8 @@ class ReportController extends Controller
             default:
                 $query = User::query();
                 if (!$hasManage) {
-                    $query->where('department_id', $user->department_id);
+                    // Employee: own data only (not department-wide)
+                    $query->where('id', $user->id);
                 }
                 
                 if ($key === 'productivity') {
@@ -67,7 +68,7 @@ class ReportController extends Controller
                             $q->where('status', 'done');
                         },
                         'assignedTasks as total_tasks'
-                    ])->withSum('taskTimeLogs as total_seconds', 'duration_seconds');
+                    ])->withSum('taskTimeLogs as total_minutes', 'minutes_logged');
                 }
 
                 if ($request->filled('search')) {
@@ -80,7 +81,7 @@ class ReportController extends Controller
                 if ($key === 'productivity') {
                     $data->getCollection()->transform(function($u) {
                         $taskCompletionRate = $u->total_tasks > 0 ? (($u->completed_tasks / $u->total_tasks) * 100) : 0;
-                        $loggedHours = ($u->total_seconds ?? 0) / 3600;
+                        $loggedHours = ($u->total_minutes ?? 0) / 60;
                         $timeScore = min(100, ($loggedHours / 160) * 100);
                         $u->productivity_score = round(($taskCompletionRate * 0.8) + ($timeScore * 0.2), 1);
                         return $u;
@@ -126,7 +127,7 @@ class ReportController extends Controller
             ->limit(20)
             ->get();
 
-        return response()->json($exports);
+        return response()->json(['data' => $exports]);
     }
 
     public function attendanceSummary(Request $request)
@@ -156,7 +157,7 @@ class ReportController extends Controller
                 ->withSum(['attendanceDays as overtime_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'overtime_seconds');
 
             if (!$hasManage) {
-                $query->where('department_id', $user->department_id);
+                $query->where('id', $user->id);
             } elseif ($dept && $dept !== 'all') {
                 $query->where('department_id', $dept);
             }
@@ -186,7 +187,7 @@ class ReportController extends Controller
             ]);
 
         if (!$hasManage) {
-            $query->where('department_id', $user->department_id);
+            $query->where('id', $user->id);
         } elseif ($dept && $dept !== 'all') {
             $query->where('department_id', $dept);
         }

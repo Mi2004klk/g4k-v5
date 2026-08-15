@@ -99,7 +99,7 @@ export function AnnouncementBoard() {
     <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-warning/20 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-[var(--radius)] bg-warning/20 flex items-center justify-center">
             <AppIcon name="announcement" className=" text-warning" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
@@ -131,7 +131,7 @@ export function AnnouncementBoard() {
                 id="title"
                 value={createData.title}
                 onChange={(e) => setCreateData({ ...createData, title: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
+                className="flex h-10 w-full rounded-[var(--radius)] border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
                 placeholder="Announcement title"
               />
             </div>
@@ -141,7 +141,7 @@ export function AnnouncementBoard() {
                 id="body"
                 value={createData.body}
                 onChange={(e) => setCreateData({ ...createData, body: e.target.value })}
-                className="flex min-h-[80px] w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
+                className="flex min-h-[80px] w-full rounded-[var(--radius)] border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
                 placeholder="Announcement body"
               />
             </div>

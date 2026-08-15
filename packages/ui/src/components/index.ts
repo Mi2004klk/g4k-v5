@@ -1,4 +1,5 @@
 export * from "./date-picker";
+export * from "./inline-edit";
 export * from "./button";
 export * from "./input";
 export * from "./password-input";
@@ -46,3 +47,6 @@ export * from "./calendar";
 export * from "./truncate";
 export * from './icon/AppIcon';
 export type { IconName } from './icon/registry';
+export * from "./state-helpers";
+export * from "./draft-banner";
+export * from "./breadcrumb";

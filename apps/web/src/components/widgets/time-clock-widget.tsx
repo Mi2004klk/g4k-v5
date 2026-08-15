@@ -159,8 +159,8 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-violet-100 dark:bg-violet-950 flex items-center justify-center">
-            <AppIcon name="teamAttendance" className=" text-violet-600 dark:text-violet-400" />
+          <div className="w-7 h-7 rounded-[var(--radius)] bg-primary-100 dark:bg-primary-950 flex items-center justify-center">
+            <AppIcon name="teamAttendance" className=" text-primary-600 dark:text-primary-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
             Time Clock

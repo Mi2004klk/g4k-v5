@@ -7,16 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CompanyProfile extends Model
 {
+    use \App\Traits\HasDemoTag;
     protected $table = 'company_profile';
 
-    protected $fillable = [
-        'name',
+    protected $fillable = ['name',
         'short_name',
         'logo_url',
         'timezone',
         'branding',
-        'updated_by',
-    ];
+        'updated_by', 'demo_tag'];
 
     protected $casts = [
         'branding' => 'array',

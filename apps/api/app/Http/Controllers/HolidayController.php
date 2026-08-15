@@ -48,7 +48,7 @@ class HolidayController extends Controller
             return $baseArray->concat($expanded)->sortBy('date')->values()->all();
         });
 
-        return response()->json($holidays);
+        return response()->json(['data' => $holidays]);
     }
 
     public function store(StoreHolidayRequest $request)

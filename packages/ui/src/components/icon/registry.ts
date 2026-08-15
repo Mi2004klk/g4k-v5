@@ -97,5 +97,6 @@ export const iconRegistry = {
   home: { icon: faHouse }, trendingUp: { icon: faArrowTrendUp }, history: { icon: faClockRotateLeft },
   mailOpen: { icon: faEnvelopeOpen }, read: { icon: faCheckDouble }, hash: { icon: faHashtag },
   density: { icon: faTableList }, command: { icon: faKeyboard }, announcement: { icon: faBullhorn },
-  login: { icon: faRightToBracket }, logout: { icon: faRightFromBracket }
+  login: { icon: faRightToBracket }, logout: { icon: faRightFromBracket },
+  map: { icon: faMap }, circle: { icon: faCircle }
 } as const satisfies Record<string, IconEntry>;

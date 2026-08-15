@@ -28,9 +28,13 @@ class RBACMatrixTest extends TestCase
         $hr = User::where('username', 'aravind')->first(); // role: hr
         $admin = User::where('username', 'karthik')->first(); // role: super_admin
 
-        $employee->update(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'employee']);
-        $hr->update(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'hr']);
-        $admin->update(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'super_admin']);
+        $employee->forceFill(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'employee'])->save();
+        $hr->forceFill(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'hr'])->save();
+        $admin->forceFill(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'super_admin'])->save();
+
+        \App\Services\CapabilityMatrix::clearCache();
+        Cache::flush();
+        // dump(\App\Services\CapabilityMatrix::getCapabilitiesForRole('hr'));
 
         $empToken = $employee->createToken('emp', ['role:employee'])->plainTextToken;
         $hrToken = $hr->createToken('hr', ['role:hr'])->plainTextToken;
@@ -39,24 +43,22 @@ class RBACMatrixTest extends TestCase
         // 1. Employee tries to access HR dashboard (Should be 403)
         $this->withToken($empToken)
             ->getJson("/api/attendance/hr/graph?date=" . now()->format('Y-m-d'))
-            ->assertStatus(403);
+            ->assertStatus(403, 'Step 1 failed');
 
         app('auth')->forgetGuards();
+        $this->app->forgetInstance('auth');
 
         // 2. HR tries to access HR dashboard (Should be 200)
         $response = $this->withToken($hrToken)
             ->getJson("/api/attendance/hr/graph?date=" . now()->format('Y-m-d'));
-        if ($response->status() !== 200) {
-            dump($response->json());
-        }
-        $response->assertStatus(200);
+        $this->assertEquals(200, $response->status(), 'Step 2 failed: ' . json_encode($response->json()));
 
         app('auth')->forgetGuards();
 
         // 3. Admin tries to access HR dashboard (Should be 200)
-        $this->withToken($adminToken)
-            ->getJson("/api/attendance/hr/graph?date=" . now()->format('Y-m-d'))
-            ->assertStatus(200);
+        $response = $this->withToken($adminToken)
+            ->getJson("/api/attendance/hr/graph?date=" . now()->format('Y-m-d'));
+        $this->assertEquals(200, $response->status(), 'Step 3 failed: ' . json_encode($response->json()));
 
         app('auth')->forgetGuards();
 
@@ -81,22 +83,20 @@ class RBACMatrixTest extends TestCase
 
         // 4. Employee tries to approve their own leave (Should be 403 or exception thrown as 403/500)
         $response = $this->withToken($empToken)
-            ->postJson("/api/approvals/{$leave->id}/decision", [
+            ->postJson("/api/approvals/{$approval->id}/decision", [
                 'decision' => 'approved'
             ]);
-        // Because of ApprovalService throwing an Exception, it might return 500 in test, 
-        // but let's assert it is not 200.
-        $this->assertNotEquals(200, $response->status());
+        $this->assertNotEquals(200, $response->status(), 'Step 4 failed');
 
         app('auth')->forgetGuards();
 
         // 5. Admin tries to approve the leave (Should be 200)
         $response = $this->withToken($adminToken)
-            ->postJson("/api/approvals/{$leave->id}/decision", [
+            ->postJson("/api/approvals/{$approval->id}/decision", [
                 'decision' => 'approved',
                 'reason' => 'Admin override'
             ]);
-        $response->assertStatus(200);
+        $this->assertEquals(200, $response->status(), 'Step 5 failed: ' . json_encode($response->json()));
 
         app('auth')->forgetGuards();
 
@@ -112,11 +112,11 @@ class RBACMatrixTest extends TestCase
                 'client_id' => 'test-emp'
             ]);
         if ($resp->status() !== 200) dump("Employee ID in test: " . $employee->id, $resp->json());
-        $resp->assertStatus(200);
+        $this->assertEquals(200, $resp->status(), 'Step 6 failed: ' . json_encode($resp->json()));
 
         app('auth')->forgetGuards();
 
-        // 7. Admin tests clock in (Should be 200, Admins can punch in too)
+        // 7. Admin tests clock in (Should be 403 as self-service clock is excluded for super_admin)
         \App\Models\AttendanceEvent::where('user_id', $admin->id)->delete();
         \App\Models\AttendanceDay::where('user_id', $admin->id)->delete();
         $this->withToken($adminToken)
@@ -125,6 +125,6 @@ class RBACMatrixTest extends TestCase
                 'ip_address' => '127.0.0.1',
                 'client_id' => 'test-admin'
             ])
-            ->assertStatus(200);
+            ->assertStatus(403);
     }
 }

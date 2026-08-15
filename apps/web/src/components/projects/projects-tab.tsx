@@ -10,7 +10,10 @@ import { queryKeys, STALE_TIME_PROJECTS } from "@/lib/query-keys";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 import { ProjectCard } from "@/components/projects/project-card";
-import { Button, Skeleton, EmptyState, FilterBar } from "@g4k/ui/components";
+import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
+import { Button, FilterBar } from "@g4k/ui/components";
+import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 export function ProjectsTab() {
   const router = useRouter();
@@ -19,11 +22,14 @@ export function ProjectsTab() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useUrlState("p_page", "1");
+  const [createOpen, setCreateOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 250);
+  const { data: caps = [] } = useCapabilities();
+  const canManageProjects = hasCapability(caps, "projects.manage");
 
-  const { data, isPending } = useQuery({
-    queryKey: queryKeys.projects(debouncedSearch, sort, page),
-    queryFn: () => apiFetch(`/projects?search=${debouncedSearch || ""}&sort=${sort || "created_at"}&page=${page || 1}`),
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: [...queryKeys.projects(debouncedSearch, sort, page), sortDirection, status],
+    queryFn: () => apiFetch(`/projects?search=${debouncedSearch || ""}&sort=${sort || "created_at"}&direction=${sortDirection}&status=${status === "all" ? "" : status}&page=${page || 1}`),
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_PROJECTS,
   });
@@ -69,19 +75,26 @@ export function ProjectsTab() {
             setStatus("all");
           }}
         />
+        {canManageProjects && (
+          <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto h-11">
+            <AppIcon name="plus" className="w-4 h-4 mr-2" />
+            Create Project
+          </Button>
+        )}
       </div>
 
+      <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
+
       {isPending ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
-        </div>
+        <ContentSkeleton type="card-grid" rows={6} />
+      ) : isError ? (
+        <IsolatedError error={error} onRetry={() => refetch()} />
       ) : projects.length === 0 ? (
-        <EmptyState
-          icon={<AppIcon name="plus" />}
-          title="No projects found"
-          description="Get started by creating your first project."
+        <MeaningfulEmpty 
+          entityName="projects" 
+          icon="folder"
+          actionLabel={canManageProjects ? "Create Project" : undefined}
+          onAction={canManageProjects ? () => setCreateOpen(true) : undefined}
         />
       ) : (
         <div className="space-y-6">
@@ -95,7 +108,7 @@ export function ProjectsTab() {
             ))}
           </div>
           
-          {data?.meta?.last_page > 1 && (
+          {(data?.last_page || data?.meta?.last_page) > 1 && (
             <div className="flex justify-center items-center gap-2 pt-4">
               <Button
                 variant="outline"
@@ -105,11 +118,11 @@ export function ProjectsTab() {
               >
                 Previous
               </Button>
-              <span className="text-xs text-neutral-500">Page {page} of {data.meta.last_page}</span>
+              <span className="text-xs text-neutral-500">Page {page} of {data?.last_page || data?.meta?.last_page || 1}</span>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page === data.meta.last_page.toString()}
+                disabled={page === (data?.last_page || data?.meta?.last_page || 1).toString()}
                 onClick={() => setPage((Number(page) + 1).toString())}
               >
                 Next

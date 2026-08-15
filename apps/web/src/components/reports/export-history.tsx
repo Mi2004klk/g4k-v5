@@ -40,7 +40,7 @@ export function ExportHistory() {
     <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-bold flex items-center gap-2">
-          <AppIcon name="teamAttendance" className=" text-violet-600" />
+          <AppIcon name="teamAttendance" className=" text-primary-600" />
           Export Job Queue
         </CardTitle>
       </CardHeader>

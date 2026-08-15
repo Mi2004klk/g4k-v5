@@ -10,7 +10,7 @@ class PinController extends Controller
     public function index(Request $request)
     {
         $pins = $request->user()->pins()->latest()->limit(100)->get();
-        return response()->json($pins);
+        return response()->json(['data' => $pins]);
     }
 
     public function store(Request $request)
@@ -34,7 +34,7 @@ class PinController extends Controller
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("user_pins_{$user->id}");
 
-        return response()->json($pin, 201);
+        return response()->json(['data' => $pin], 201);
     }
 
     public function destroy(Request $request, string $id)

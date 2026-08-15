@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceEvent extends Model
 {
-    protected $fillable = [
-        'user_id',
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id',
         'type',
         'timestamp',
         'device_meta',
         'source',
-        'client_id'
-    ];
+        'client_id', 'demo_tag'];
 
     protected $casts = [
         'timestamp' => 'datetime',

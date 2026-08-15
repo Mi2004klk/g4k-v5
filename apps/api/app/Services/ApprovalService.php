@@ -58,7 +58,7 @@ class ApprovalService
             }
         }
         if (!$hasCap) {
-            throw new Exception("Lacking required capability ({$requiredCap}) to approve request.");
+            abort(403, "Lacking required capability ({$requiredCap}) to approve request.");
         }
     }
 
@@ -68,7 +68,7 @@ class ApprovalService
     public static function approve(Approval $approval, int $decidedBy, ?string $reason = null): Approval
     {
         if ($approval->status !== 'pending') {
-            throw new Exception("Approval is not in a pending state.");
+            abort(400, "Approval is not in a pending state.");
         }
 
         if ($approval->submitted_by === $decidedBy) {
@@ -76,11 +76,11 @@ class ApprovalService
             if (in_array('super_admin', $deciderRoles)) {
                 $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
                 if ($superAdminCount > 1) {
-                    throw new Exception("You cannot approve your own request. Another Super Admin must approve it.");
+                    abort(403, "You cannot approve your own request. Another Super Admin must approve it.");
                 }
                 // Allowed because they are the sole super_admin
             } else {
-                throw new Exception("You cannot approve your own request.");
+                abort(403, "You cannot approve your own request.");
             }
         }
 
@@ -122,7 +122,7 @@ class ApprovalService
     public static function reject(Approval $approval, int $decidedBy, string $reason): Approval
     {
         if ($approval->status !== 'pending') {
-            throw new Exception("Approval is not in a pending state.");
+            abort(400, "Approval is not in a pending state.");
         }
 
         if ($approval->submitted_by === $decidedBy) {
@@ -130,11 +130,11 @@ class ApprovalService
             if (in_array('super_admin', $deciderRoles)) {
                 $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
                 if ($superAdminCount > 1) {
-                    throw new Exception("You cannot reject your own request. Another Super Admin must review it.");
+                    abort(403, "You cannot reject your own request. Another Super Admin must review it.");
                 }
                 // Allowed because they are the sole super_admin
             } else {
-                throw new Exception("You cannot reject your own request.");
+                abort(403, "You cannot reject your own request.");
             }
         }
 
@@ -182,11 +182,11 @@ class ApprovalService
     public static function redo(Approval $approval, int $decidedBy, string $reason): Approval
     {
         if ($approval->status !== 'pending') {
-            throw new Exception("Approval is not in a pending state.");
+            abort(400, "Approval is not in a pending state.");
         }
 
         if ($approval->submitted_by === $decidedBy) {
-            throw new Exception("You cannot request a redo on your own request.");
+            abort(403, "You cannot request a redo on your own request.");
         }
 
         self::checkRoleGating($approval, $decidedBy);

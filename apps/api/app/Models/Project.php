@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Project extends Model
 {
+    use \App\Traits\HasDemoTag;
     use SoftDeletes;
-    protected $fillable = [
-        'name', 'description', 'status', 'priority', 'start_date',
-        'end_date', 'deadline', 'team_id', 'department_id', 'progress', 'created_by'
-    ];
+    protected $fillable = ['name', 'description', 'status', 'priority', 'start_date',
+        'end_date', 'deadline', 'team_id', 'department_id', 'progress', 'created_by',
+        'submission_note', 'completed_at', 'demo_tag', 'is_demo', 'qa_form_id', 
+        'allow_employee_tasks', 'cover_image'];
 
     protected $casts = [
         'start_date' => 'date',
@@ -59,5 +60,15 @@ class Project extends Model
     public function approval(): MorphOne
     {
         return $this->morphOne(Approval::class, 'approvable');
+    }
+
+    public function qaForm(): BelongsTo
+    {
+        return $this->belongsTo(QaForm::class);
+    }
+
+    public function qaSubmission(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(QaSubmission::class);
     }
 }

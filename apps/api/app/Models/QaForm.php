@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class QaForm extends Model
 {
-    protected $fillable = ['title', 'description', 'created_by'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['title', 'description', 'created_by', 'demo_tag', 'is_demo'];
 
     public function creator(): BelongsTo
     {

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,18 +26,18 @@ export function AuditLogTable() {
   const [isExporting, setIsExporting] = useState(false);
   
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(50);
+  const [perPage, setPerPage] = useState(20);
 
   const { data: usersResponse } = useQuery({
     queryKey: queryKeys.usersList,
-    queryFn: () => apiFetch("/users?per_page=1000"),
+    queryFn: () => apiFetch("/users?per_page=100"),
   });
   const users = usersResponse?.data || [];
   const userOptions = [{ label: "All Users", value: "" }, { label: "System", value: "system" }].concat(
     users.map((u: any) => ({ label: u.name, value: String(u.id) }))
   );
   
-  const { data: logsData, isLoading } = useQuery({
+  const { data: logsData, isLoading, isError } = useQuery({
     queryKey: [...queryKeys.auditLogs(filters), page, perPage],
     queryFn: () => {
       const params = new URLSearchParams();
@@ -93,8 +94,24 @@ export function AuditLogTable() {
     },
     {
       accessorKey: "subject_type",
-      header: "Target",
-      cell: ({ row }: any) => row.original.subject_type ? `${row.original.subject_type.split('\\').pop()} #${row.original.subject_id}` : "-"
+      cell: ({ row }: any) => {
+        if (!row.original.subject_type) return "-";
+        const t = row.original.subject_type.split('\\').pop();
+        const id = row.original.subject_id;
+        
+        let href = "";
+        if (t === "User") href = `/dashboard/users`; // no user detail page yet, just list
+        else if (t === "Project") href = `/dashboard/projects/${id}`;
+        else if (t === "Department") href = `/dashboard/settings?tab=departments`;
+        else if (t === "WorkSchedule") href = `/dashboard/settings?tab=schedules`;
+        else if (t === "QaForm") href = `/dashboard/settings?tab=qa`;
+        
+        const label = `${t} #${id}`;
+        if (href) {
+          return <Link href={href} className="text-primary-600 hover:underline">{label}</Link>;
+        }
+        return label;
+      }
     },
     {
       accessorKey: "ip",
@@ -148,20 +165,20 @@ export function AuditLogTable() {
         </Button>
       </div>
 
-      <CardContent className="p-0">
-        {isLoading ? (
-          <div className="p-12 text-center text-sm text-neutral-500">Loading audit logs...</div>
-        ) : (
+      <CardContent className="p-0 overflow-x-auto w-full">
           <DataTable
             columns={columns}
             data={logs}
+            isLoading={isLoading}
+            isError={isError}
+            stickyHeader={true}
+            stickyFirstCol={true}
             page={page}
             perPage={perPage}
             totalPages={totalPages}
             onPageChange={setPage}
             onPerPageChange={setPerPage}
           />
-        )}
       </CardContent>
     </Card>
   );

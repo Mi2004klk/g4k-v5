@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Team extends Model
 {
-    protected $fillable = ['company_id', 'department_id', 'name', 'description'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['company_id', 'department_id', 'name', 'description', 'demo_tag', 'is_demo'];
 
     public function department()
     {

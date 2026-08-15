@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TaskActivity extends Model
 {
+    use \App\Traits\HasDemoTag;
     protected $table = 'task_activity';
     public $timestamps = false;
 
-    protected $fillable = ['task_id', 'user_id', 'event', 'metadata', 'created_at'];
+    protected $fillable = ['task_id', 'user_id', 'event', 'metadata', 'created_at', 'demo_tag'];
 
     protected $casts = [
         'metadata' => 'array',

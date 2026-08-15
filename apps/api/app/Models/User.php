@@ -11,15 +11,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable([
-    'company_id', 'employee_id', 'name', 'username', 'email',
+#[Fillable(['company_id', 'employee_id', 'name', 'username', 'email', 'password', 'must_change_password', 'active_role',
     'department_id', 'team_id', 'designation_id', 'phone', 'alternate_mobile',
     'emergency_contact', 'joining_date', 'blood_group', 'working_hours',
-    'avatar_url', 'preferences', 'work_schedule_id'
-])]
+    'avatar_url', 'preferences', 'work_schedule_id', 'demo_tag', 'is_demo'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    use \App\Traits\HasDemoTag;
     /** @use HasFactory, SoftDeletes<UserFactory> */
     use HasFactory, SoftDeletes, Notifiable, \Laravel\Sanctum\HasApiTokens, \App\Traits\GeneratesAutoNumber;
 

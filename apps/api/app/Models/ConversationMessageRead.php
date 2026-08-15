@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ConversationMessageRead extends Model
 {
-    protected $fillable = ['message_id', 'user_id', 'read_at'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['message_id', 'user_id', 'read_at', 'demo_tag'];
 
     protected $casts = [
         'read_at' => 'datetime',

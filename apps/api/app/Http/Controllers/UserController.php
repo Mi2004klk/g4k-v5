@@ -25,6 +25,14 @@ class UserController extends Controller
     {
         $query = User::with(['department', 'team', 'designation', 'roleAssignments']);
         
+        $isHR = $this->hasCapability($request, 'users.hr.manage');
+        $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
+        
+        if ($isHR && !$isSuperAdmin) {
+            $managedDeptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+            $query->whereIn('department_id', $managedDeptIds);
+        }
+
         $query->when($request->boolean('only_trashed'), fn($q) => $q->onlyTrashed());
 
         if ($request->filled('search')) {
@@ -144,7 +152,7 @@ class UserController extends Controller
             }
             return $user;
         });
-        \Illuminate\Support\Facades\Cache::forget("user.{$user->id}.roles");
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'create', 'user', $user->id, null, $user->toArray());
@@ -194,7 +202,7 @@ class UserController extends Controller
         });
         
         if (isset($validated['roles']) && count($validated['roles']) > 0) {
-            \Illuminate\Support\Facades\Cache::forget("user.{$user->id}.roles");
+            \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
         }
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
@@ -439,7 +447,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
         
-        $isHR = $request->user()->roleAssignments->pluck('role')->contains('hr');
+        $isHR = $this->hasCapability($request, 'users.hr.manage');
         $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
         
         if ($isHR && !$isSuperAdmin && !in_array($user->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
@@ -465,7 +473,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
         
-        $isHR = $request->user()->roleAssignments->pluck('role')->contains('hr');
+        $isHR = $this->hasCapability($request, 'users.hr.manage');
         $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
         
         if ($isHR && !$isSuperAdmin && !in_array($user->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {

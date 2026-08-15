@@ -43,19 +43,19 @@ export default function AdminAttendancePage() {
       </div>
       <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
         <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 overflow-x-auto">
-          <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+          <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-[var(--radius)] data-[state=active]:bg-primary-50 dark:data-[state=active]:bg-primary-900/30 data-[state=active]:text-primary-700 dark:data-[state=active]:text-primary-300">
             <AppIcon name="calendar" />
             Calendar Heatmap
           </TabsTrigger>
-          <TabsTrigger value="today" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+          <TabsTrigger value="today" className="flex items-center gap-2 rounded-[var(--radius)] data-[state=active]:bg-primary-50 dark:data-[state=active]:bg-primary-900/30 data-[state=active]:text-primary-700 dark:data-[state=active]:text-primary-300">
             <AppIcon name="directory" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+          <TabsTrigger value="analytics" className="flex items-center gap-2 rounded-[var(--radius)] data-[state=active]:bg-primary-50 dark:data-[state=active]:bg-primary-900/30 data-[state=active]:text-primary-700 dark:data-[state=active]:text-primary-300">
             <AppIcon name="chart" />
             Analytics & Trends
           </TabsTrigger>
-          <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-lg data-[state=active]:bg-violet-50 dark:data-[state=active]:bg-violet-900/30 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300">
+          <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-[var(--radius)] data-[state=active]:bg-primary-50 dark:data-[state=active]:bg-primary-900/30 data-[state=active]:text-primary-700 dark:data-[state=active]:text-primary-300">
             <AppIcon name="activity" />
             Open Shifts
           </TabsTrigger>

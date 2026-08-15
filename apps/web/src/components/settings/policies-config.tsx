@@ -24,6 +24,7 @@ const passwordSchema = z.object({
 const sessionSchema = z.object({
   access_token_ttl: z.coerce.number().min(5, "Minimum 5 mins").max(1440, "Maximum 1440 mins"),
   refresh_token_ttl: z.coerce.number().min(1, "Minimum 1 day").max(90, "Maximum 90 days"),
+  max_devices: z.coerce.number().min(1, "Minimum 1 device").max(10, "Maximum 10 devices"),
 });
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
@@ -55,6 +56,7 @@ export function PoliciesConfig() {
     defaultValues: {
       access_token_ttl: 15,
       refresh_token_ttl: 7,
+      max_devices: 3,
     },
     mode: "onTouched",
     delayError: 400,
@@ -76,6 +78,7 @@ export function PoliciesConfig() {
       sessionForm.reset({
         access_token_ttl: parseInt(securityMap["session.access_token_ttl"]) || 15,
         refresh_token_ttl: parseInt(securityMap["session.refresh_token_ttl"]) || 7,
+        max_devices: parseInt(securityMap["session.max_devices"]) || 3,
       });
     }
   }, [settingsGrouped, passwordForm, sessionForm]);
@@ -107,6 +110,7 @@ export function PoliciesConfig() {
     const updates = [
       { category: "security", key: "session.access_token_ttl", value: data.access_token_ttl.toString() },
       { category: "security", key: "session.refresh_token_ttl", value: data.refresh_token_ttl.toString() },
+      { category: "security", key: "session.max_devices", value: data.max_devices.toString() },
     ];
     updateMutation.mutate(updates);
   };
@@ -128,7 +132,7 @@ export function PoliciesConfig() {
             <input
               type="number"
               {...passwordForm.register("min_length")}
-              className={`w-full text-sm rounded-lg border ${passwordForm.formState.errors.min_length ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
+              className={`w-full text-sm rounded-[var(--radius)] border ${passwordForm.formState.errors.min_length ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
             />
             {passwordForm.formState.errors.min_length && <p className="text-[10px] text-red-500 mt-1">{passwordForm.formState.errors.min_length.message}</p>}
           </div>
@@ -160,7 +164,7 @@ export function PoliciesConfig() {
             <label htmlFor="require_symbol" className="text-sm">Require at least one symbol</label>
           </div>
 
-          <div className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20 mt-4">
+          <div className="flex items-center justify-between p-3 rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20 mt-4">
             <div>
               <h4 className="text-sm font-medium">Force password change</h4>
               <p className="text-xs text-neutral-500">Require users to change password on first login or after admin reset</p>
@@ -168,7 +172,7 @@ export function PoliciesConfig() {
             <input
               type="checkbox"
               {...passwordForm.register("force_password_change")}
-              className="h-4 w-4 rounded border-neutral-300 text-violet-600 focus:ring-violet-500"
+              className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
             />
           </div>
 
@@ -191,7 +195,7 @@ export function PoliciesConfig() {
               <input
                 type="number"
                 {...sessionForm.register("access_token_ttl")}
-                className={`w-full text-sm rounded-lg border ${sessionForm.formState.errors.access_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
+                className={`w-full text-sm rounded-[var(--radius)] border ${sessionForm.formState.errors.access_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
               />
               {sessionForm.formState.errors.access_token_ttl && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.access_token_ttl.message}</p>}
               {!sessionForm.formState.errors.access_token_ttl && <p className="text-[10px] text-neutral-500 mt-1">Short-lived token for API access.</p>}
@@ -202,10 +206,21 @@ export function PoliciesConfig() {
               <input
                 type="number"
                 {...sessionForm.register("refresh_token_ttl")}
-                className={`w-full text-sm rounded-lg border ${sessionForm.formState.errors.refresh_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
+                className={`w-full text-sm rounded-[var(--radius)] border ${sessionForm.formState.errors.refresh_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
               />
               {sessionForm.formState.errors.refresh_token_ttl && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.refresh_token_ttl.message}</p>}
               {!sessionForm.formState.errors.refresh_token_ttl && <p className="text-[10px] text-neutral-500 mt-1">Long-lived token used to obtain new access tokens.</p>}
+            </div>
+
+            <div>
+              <label className="text-xs font-medium">Max Allowed Devices <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                {...sessionForm.register("max_devices")}
+                className={`w-full text-sm rounded-[var(--radius)] border ${sessionForm.formState.errors.max_devices ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
+              />
+              {sessionForm.formState.errors.max_devices && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.max_devices.message}</p>}
+              {!sessionForm.formState.errors.max_devices && <p className="text-[10px] text-neutral-500 mt-1">Maximum number of active sessions/devices allowed per user. Oldest will be revoked when exceeded.</p>}
             </div>
 
             <Button type="submit" disabled={updateMutation.isPending || !sessionForm.formState.isValid} className="mt-4">

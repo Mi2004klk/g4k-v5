@@ -7,10 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TaskTimeLog extends Model
 {
-    protected $fillable = [
-        'task_id', 'project_id', 'user_id', 'minutes_logged',
-        'started_at', 'ended_at', 'description', 'log_date'
-    ];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['task_id', 'project_id', 'user_id', 'minutes_logged',
+        'started_at', 'ended_at', 'description', 'log_date', 'demo_tag'];
 
     protected $casts = [
         'minutes_logged' => 'integer',

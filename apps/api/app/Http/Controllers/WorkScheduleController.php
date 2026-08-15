@@ -23,13 +23,27 @@ class WorkScheduleController extends Controller
             'standard_seconds' => 'required|integer',
             'grace_minutes' => 'required|integer|min:0|max:120',
             'working_days' => 'required|array',
+            'is_default' => 'nullable|boolean',
         ]);
 
         $validated['working_days'] = json_encode($validated['working_days']);
-
-        DB::table('work_schedules')
-            ->where('id', $id)
-            ->update(array_merge($validated, ['updated_at' => now()]));
+        $isDefault = $validated['is_default'] ?? false;
+        
+        DB::beginTransaction();
+        try {
+            if ($isDefault) {
+                DB::table('work_schedules')->update(['is_default' => false]);
+            }
+            
+            DB::table('work_schedules')
+                ->where('id', $id)
+                ->update(array_merge($validated, ['updated_at' => now(), 'is_default' => $isDefault]));
+                
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         \Illuminate\Support\Facades\Cache::forget('default_work_schedule');
         \Illuminate\Support\Facades\Cache::forget("work_schedule_{$id}");
@@ -47,15 +61,73 @@ class WorkScheduleController extends Controller
             'standard_seconds' => 'required|integer',
             'grace_minutes' => 'required|integer|min:0|max:120',
             'working_days' => 'required|array',
+            'is_default' => 'nullable|boolean',
         ]);
 
         $validated['working_days'] = json_encode($validated['working_days']);
+        $isDefault = $validated['is_default'] ?? false;
 
-        $id = DB::table('work_schedules')->insertGetId(array_merge($validated, [
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]));
+        DB::beginTransaction();
+        try {
+            if ($isDefault) {
+                DB::table('work_schedules')->update(['is_default' => false]);
+            }
+            
+            $id = DB::table('work_schedules')->insertGetId(array_merge($validated, [
+                'is_default' => $isDefault,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]));
+            
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+        if ($isDefault) {
+            \Illuminate\Support\Facades\Cache::forget('default_work_schedule');
+        }
 
         return response()->json(['message' => 'Work schedule created successfully', 'id' => $id], 201);
+    }
+
+    public function setDefault(int $id)
+    {
+        DB::beginTransaction();
+        try {
+            DB::table('work_schedules')->update(['is_default' => false]);
+            DB::table('work_schedules')->where('id', $id)->update(['is_default' => true, 'updated_at' => now()]);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+        \Illuminate\Support\Facades\Cache::forget('default_work_schedule');
+        \Illuminate\Support\Facades\Cache::forget("work_schedule_{$id}");
+
+        return response()->json(['message' => 'Default work schedule updated']);
+    }
+
+    public function destroy(int $id)
+    {
+        $schedule = DB::table('work_schedules')->where('id', $id)->first();
+        if (!$schedule) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+        if ($schedule->is_default) {
+            return response()->json(['message' => 'Cannot delete default schedule'], 400);
+        }
+
+        $usersCount = DB::table('users')->where('work_schedule_id', $id)->count();
+        if ($usersCount > 0) {
+            return response()->json(['message' => "Cannot delete schedule used by {$usersCount} users"], 400);
+        }
+
+        DB::table('work_schedules')->where('id', $id)->delete();
+        \Illuminate\Support\Facades\Cache::forget("work_schedule_{$id}");
+
+        return response()->json(['message' => 'Work schedule deleted']);
     }
 }

@@ -22,7 +22,7 @@ export function WebVitals() {
           }
         });
       } else {
-        console.log(`[Web Vitals] ${name}: ${Math.round(value)} (${metric.rating})`);
+        // Metrics handled in background
       }
     }
   });

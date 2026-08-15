@@ -46,6 +46,7 @@ import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { DataTable, StatusBadge } from "@g4k/ui/components";
+import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
@@ -233,7 +234,7 @@ export function DepartmentsTab() {
         header: "Department",
         cell: ({ row }: any) => (
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+            <div className="p-2 rounded-[var(--radius)] bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300">
               <AppIcon name="building" />
             </div>
             <div>
@@ -279,7 +280,7 @@ export function DepartmentsTab() {
             <div className="flex flex-wrap gap-1">
               {teams.length > 0 ? (
                 teams.map((team: any) => (
-                  <span key={team.id} className="px-2 py-0.5 rounded-md text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
+                  <span key={team.id} className="px-2 py-0.5 rounded-[var(--radius)] text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
                     <AppIcon name="directory" size="xs" className=" text-neutral-400" />
                     {team.name}
                   </span>
@@ -335,7 +336,7 @@ export function DepartmentsTab() {
                     reset({ name: dept.name, description: dept.description || "" });
                     setIsDeptModalOpen(true);
                   }}>
-                    <AppIcon name="edit" className=" mr-2 text-violet-600" /> Edit
+                    <AppIcon name="edit" className=" mr-2 text-primary-600" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {isArchived ? (
@@ -402,22 +403,17 @@ export function DepartmentsTab() {
       <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+            <ContentSkeleton type="table" rows={3} />
           ) : isError ? (
-            <div className="p-12">
-              <EmptyState title="Failed to load departments" description="There was an error fetching the department list. Please try again." />
-              <div className="flex justify-center mt-4">
-                <Button onClick={() => refetch()} variant="outline">Retry</Button>
-              </div>
-            </div>
+            <IsolatedError error={isError ? "Failed to load departments." : undefined} onRetry={() => refetch()} />
           ) : deptList.length === 0 ? (
-            <div className="p-12">
-              <EmptyState title="No departments found" description="Try adjusting your search query or create a new department." />
-            </div>
+            <MeaningfulEmpty 
+              entityName="departments" 
+              icon="building"
+              description="Try adjusting your search query or create a new department."
+              actionLabel={isAdmin ? "Create Department" : undefined}
+              onAction={isAdmin ? () => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); } : undefined}
+            />
           ) : (
             <div className="space-y-4">
               <DataTable
@@ -476,7 +472,7 @@ export function DepartmentsTab() {
       />
 
       <Sheet open={!!selectedDeptMembers} onOpenChange={(open: boolean) => { if (!open) { setSelectedDeptMembers(null); setSelectedNewHr(""); setSelectedNewEmployee(""); } }}>
-        <SheetContent className="w-[400px] sm:w-[540px] flex flex-col h-full">
+        <SheetContent className="w-full sm:w-[540px] flex flex-col h-full">
           <SheetHeader>
             <SheetTitle>{selectedDeptMembers?.name} Members</SheetTitle>
             <SheetDescription>Manage HRs and employees assigned to this department.</SheetDescription>
@@ -493,7 +489,7 @@ export function DepartmentsTab() {
 
                 <TabsContent value="employees" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
                   {isAdmin && (
-                    <div className="flex items-center gap-2 mb-4 p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+                    <div className="flex items-center gap-2 mb-4 p-3 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
                       <Combobox
                         options={allUsers.map((u: any) => ({ label: u.name, value: u.id.toString() }))}
                         value={selectedNewEmployee}
@@ -520,7 +516,7 @@ export function DepartmentsTab() {
                   ) : (
                     <div className="space-y-3">
                       {deptDetails.users.map((user: any) => (
-                        <div key={user.id} className="p-3 border rounded-lg bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
+                        <div key={user.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-10 h-10">
                               <AvatarImage src={user.avatar_url || ""} />
@@ -550,7 +546,7 @@ export function DepartmentsTab() {
 
                 <TabsContent value="hrs" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
                   {isAdmin && (
-                    <div className="flex items-center gap-2 mb-4 p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+                    <div className="flex items-center gap-2 mb-4 p-3 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
                       <Combobox
                         options={allUsers.filter((u: any) => u.roles?.includes('hr') || u.roles?.includes('super_admin')).map((u: any) => ({ label: u.name, value: u.id.toString() }))}
                         value={selectedNewHr}
@@ -577,7 +573,7 @@ export function DepartmentsTab() {
                   ) : (
                     <div className="space-y-3">
                       {deptDetails.hrs.map((hr: any) => (
-                        <div key={hr.id} className="p-3 border rounded-lg bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
+                        <div key={hr.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-10 h-10">
                               <AvatarImage src={hr.avatar_url || ""} />

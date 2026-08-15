@@ -10,7 +10,7 @@ class QaController extends Controller
 {
     public function index()
     {
-        return response()->json(QaForm::with('fields')->latest()->limit(100)->get());
+        return response()->json(['data' => QaForm::with('fields')->latest()->limit(100)->get()]);
     }
 
     public function store(Request $request)
@@ -42,12 +42,12 @@ class QaController extends Controller
             ]);
         }
 
-        return response()->json($qaForm->load('fields'));
+        return response()->json(['data' => $qaForm->load('fields')]);
     }
 
     public function show($id)
     {
-        return response()->json(QaForm::with('fields')->findOrFail($id));
+        return response()->json(['data' => QaForm::with('fields')->findOrFail($id)]);
     }
 
     public function update(Request $request, $id)
@@ -82,7 +82,7 @@ class QaController extends Controller
             }
         }
 
-        return response()->json($qaForm->load('fields'));
+        return response()->json(['data' => $qaForm->load('fields')]);
     }
 
     public function destroy($id)

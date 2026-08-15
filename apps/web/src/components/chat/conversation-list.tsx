@@ -28,7 +28,7 @@ export function ConversationList({
   const getIcon = (scope: string) => {
     switch (scope) {
       case "global":
-        return <AppIcon name="globe" className=" text-violet-500" />;
+        return <AppIcon name="globe" className=" text-primary-500" />;
       case "project":
         return <AppIcon name="hash" className=" text-blue-500" />;
       case "group":
@@ -52,9 +52,12 @@ export function ConversationList({
 
           const currentUserData = conv.users?.find((u: any) => u.id === currentUserId);
           const lastReadAt = currentUserData?.pivot?.last_read_at;
-          const isUnread = conv.latestMessage &&
+
+          const isUnread = (conv.unread_count && conv.unread_count > 0) || (conv.latestMessage &&
             conv.latestMessage.sender_id !== currentUserId &&
-            (!lastReadAt || new Date(conv.latestMessage.created_at) > new Date(lastReadAt));
+            (!lastReadAt || new Date(conv.latestMessage.created_at) > new Date(lastReadAt)));
+          
+          const unreadCount = conv.unread_count || (isUnread ? 1 : 0);
 
           const title = conv.name || (conv.scope === "direct" ? conv.users?.find((u: any) => u.id !== currentUserId)?.name || "Direct Message" : "Chat");
 
@@ -66,25 +69,31 @@ export function ConversationList({
               onClick={() => onSelect(conv.id)}
               className={`absolute top-0 left-0 w-full p-3 flex items-start gap-3 cursor-pointer transition-all ${
                 isSelected
-                  ? "bg-violet-50/60 dark:bg-violet-950/40 border-l-2 border-violet-600"
-                  : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
+                  ? "bg-primary-50/60 dark:bg-primary-950/40 border-l-2 border-primary-600"
+                  : isUnread 
+                    ? "bg-primary-50/30 dark:bg-primary-900/20 border-l-2 border-primary-500 hover:bg-primary-50/50" 
+                    : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50 border-l-2 border-transparent"
               }`}
               style={{
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <div className="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 shrink-0 mt-0.5">
+              <div className="p-2 rounded-[var(--radius)] bg-neutral-100 dark:bg-neutral-800 shrink-0 mt-0.5">
                 {getIcon(conv.scope)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className={`text-xs truncate ${isUnread ? "font-black text-violet-700 dark:text-violet-400" : "font-bold text-neutral-900 dark:text-white"}`}>
+                  <h4 className={`text-xs truncate ${isUnread ? "font-black text-primary-700 dark:text-primary-400" : "font-bold text-neutral-900 dark:text-white"}`}>
                     {title}
                   </h4>
                   {conv.latestMessage && (
                     <div className="flex items-center gap-1.5">
-                      {isUnread && <span className="w-1.5 h-1.5 rounded-full bg-violet-600" />}
-                      <span className={`text-[10px] ${isUnread ? "text-violet-600 font-bold" : "text-neutral-400"}`}>
+                      {isUnread && (
+                        <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[1rem] px-1 rounded-full shadow-sm">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                      <span className={`text-[10px] ${isUnread ? "text-primary-600 font-bold" : "text-neutral-400"}`}>
                         {format(new Date(conv.latestMessage.created_at), "h:mm a")}
                       </span>
                     </div>

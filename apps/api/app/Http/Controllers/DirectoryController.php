@@ -90,4 +90,45 @@ class DirectoryController extends Controller
             
         return response()->json($this->applyVisibilityRules($user));
     }
+
+    public function sendMessage(Request $request, $id)
+    {
+        $request->validate(['message' => 'required|string']);
+        $recipient = User::findOrFail($id);
+        $senderId = $request->user()->id;
+
+        $conversation = \App\Models\Conversation::where('scope', 'direct')
+            ->whereHas('users', function ($q) use ($senderId) {
+                $q->where('users.id', $senderId);
+            })
+            ->whereHas('users', function ($q) use ($recipient) {
+                $q->where('users.id', $recipient->id);
+            })
+            ->first();
+
+        if (!$conversation) {
+            $conversation = \App\Models\Conversation::create(['scope' => 'direct']);
+            $conversation->users()->attach([$senderId, $recipient->id]);
+        }
+
+        $msg = \App\Models\Message::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $senderId,
+            'body' => $request->input('message')
+        ]);
+
+        broadcast(new \App\Events\MessageSent($msg))->toOthers();
+
+        \App\Services\NotificationService::send(
+            userId: $recipient->id,
+            type: 'chat_message',
+            title: 'New Direct Message',
+            body: "{$request->user()->name} sent you a message: " . \Illuminate\Support\Str::limit($request->input('message'), 50),
+            data: ['conversation_id' => $conversation->id],
+            link: '/dashboard/chat',
+            priority: 'normal'
+        );
+
+        return response()->json($msg, 201);
+    }
 }

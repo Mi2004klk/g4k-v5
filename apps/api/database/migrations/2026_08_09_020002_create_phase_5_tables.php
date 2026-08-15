@@ -48,7 +48,7 @@ return new class extends Migration
             $table->integer('break_seconds')->default(0);
             $table->integer('overtime_seconds')->default(0);
             $table->integer('late_minutes')->default(0);
-            $table->enum('status', ['present', 'absent', 'late', 'leave'])->default('absent');
+            $table->enum('status', ['present', 'absent', 'late', 'leave', 'on_leave', 'holiday', 'pending', 'half_day'])->default('absent');
             $table->foreignId('corrected_by')->nullable()->constrained('users')->nullOnDelete();
             $table->enum('source', ['local', 'manual', 'server'])->default('server');
             $table->integer('version')->default(1);

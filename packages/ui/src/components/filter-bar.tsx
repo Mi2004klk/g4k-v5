@@ -40,6 +40,7 @@ export interface FilterBarProps {
   sortDirection?: "asc" | "desc"
   onSortChange?: (sortBy: string, direction: "asc" | "desc") => void
   sortOptions?: { label: string; value: string }[]
+  searchInputId?: string
 }
 
 function useDebounce<T>(value: T, delay?: number): T {
@@ -61,6 +62,7 @@ export function FilterBar({
   sortDirection = "asc",
   onSortChange,
   sortOptions = [],
+  searchInputId,
 }: FilterBarProps): React.JSX.Element | null {
   const [localSearch, setLocalSearch] = useState(searchQuery)
   const debouncedSearch = useDebounce(localSearch, 250)
@@ -248,18 +250,25 @@ export function FilterBar({
         <div className="relative flex-1 w-full sm:max-w-sm">
           <AppIcon name="search" className="absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input
+            id={searchInputId}
             placeholder={searchPlaceholder}
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="pl-9 h-9"
+            className="w-full sm:w-[280px] lg:w-[320px] h-9 pl-9 pr-8"
           />
           {localSearch && (
-            <button
-              onClick={() => setLocalSearch("")}
-              className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full"
+              onClick={() => {
+                setLocalSearch("")
+                onSearchChange("")
+              }}
+              aria-label="Clear search"
             >
-              <AppIcon name="close" size="xs" />
-            </button>
+              <AppIcon name="close" size="sm" />
+            </Button>
           )}
         </div>
 
@@ -288,6 +297,7 @@ export function FilterBar({
                 className="h-9 w-9 text-muted-foreground"
                 onClick={() => onSortChange(sortBy || sortOptions[0].value, sortDirection === "asc" ? "desc" : "asc")}
                 title={`Sort ${sortDirection === "asc" ? "Descending" : "Ascending"}`}
+                aria-label={`Sort ${sortDirection === "asc" ? "Descending" : "Ascending"}`}
               >
                 {sortDirection === "asc" ? <AppIcon name="arrowUp" /> : <AppIcon name="arrowDown" />}
               </Button>

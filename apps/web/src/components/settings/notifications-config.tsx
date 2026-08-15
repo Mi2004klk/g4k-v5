@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle, CardContent, Button, Switch } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, Button, Switch, Skeleton } from "@g4k/ui/components";
 
 export function NotificationsConfig() {
   const queryClient = useQueryClient();
@@ -124,7 +124,7 @@ export function NotificationsConfig() {
 
 function NotificationRow({ title, description, settingKey, channels, onToggle }: any) {
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg border-neutral-200 dark:border-neutral-800">
+    <div className="flex items-center justify-between p-4 border rounded-[var(--radius)] border-neutral-200 dark:border-neutral-800">
       <div>
         <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">{title}</h4>
         <p className="text-xs text-neutral-500 mt-1">{description}</p>

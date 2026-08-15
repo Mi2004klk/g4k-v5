@@ -7,16 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class LoginAttempt extends Model
 {
+    use \App\Traits\HasDemoTag;
     use HasFactory;
 
-    protected $fillable = [
-        'identifier',
+    protected $fillable = ['identifier',
         'user_id',
         'ip_address',
         'user_agent',
         'success',
-        'is_suspicious',
-    ];
+        'is_suspicious', 'demo_tag'];
 
     protected $casts = [
         'success' => 'boolean',

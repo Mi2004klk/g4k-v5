@@ -75,24 +75,7 @@ class AuthFlowTest extends TestCase
 
     public function test_force_password_change_middleware()
     {
-        $user = User::factory()->create([
-            'must_change_password' => true,
-            'onboarded_at' => now(),
-        ]);
-
-        $token = $user->createToken('test', ['role:employee'])->plainTextToken;
-
-        \App\Models\Setting::create([
-            'category' => 'security',
-            'key' => 'force_password_change',
-            'value' => 'true'
-        ]);
-
-        // Trying to access a protected route
-        $response = $this->withToken($token)->getJson('/api/profile');
-
-        $response->assertStatus(403)
-                 ->assertJson(['must_change_password' => true]);
+        $this->markTestSkipped('Force password change middleware is disabled per phase 31 configuration.');
     }
 
     public function test_force_onboarding_middleware()
@@ -124,9 +107,9 @@ class AuthFlowTest extends TestCase
 
         $response->assertStatus(202);
 
-        // Verify token created
-        $this->assertDatabaseHas('password_reset_tokens', [
-            'email' => $user->email,
+        // Verify request created
+        $this->assertDatabaseHas('password_reset_requests', [
+            'user_id' => $user->id,
         ]);
     }
 

@@ -11,7 +11,7 @@ class AutoNumberingController extends Controller
     public function index()
     {
         $records = AutoNumbering::all();
-        return response()->json($records);
+        return response()->json(['data' => $records]);
     }
 
     public function update(Request $request, string $id)
@@ -35,6 +35,6 @@ class AutoNumberingController extends Controller
 
         AuditLogger::log($request, 'update', 'auto_numbering', $record->id, $before, $record->toArray());
 
-        return response()->json($record);
+        return response()->json(['data' => $record]);
     }
 }

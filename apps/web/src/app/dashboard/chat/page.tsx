@@ -17,10 +17,10 @@ export default function ChatModulePage() {
     >
       <ErrorBoundary>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="chat">Chat</TabsTrigger>
-            <TabsTrigger value="announcements">Announcements</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsList className="mb-4 overflow-x-auto">
+            <TabsTrigger value="chat" className="shrink-0">Chat</TabsTrigger>
+            <TabsTrigger value="announcements" className="shrink-0">Announcements</TabsTrigger>
+            <TabsTrigger value="notifications" className="shrink-0">Notifications</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="mt-0">

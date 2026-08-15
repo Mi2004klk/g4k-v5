@@ -25,6 +25,37 @@ Games4King Workplace OS replaces scattered spreadsheets and punch machines with 
 
 ---
 
+## 💻 Developer Setup & Architecture
+
+### Prerequisites
+- Node.js 24.x
+- PHP 8.4
+- pnpm 9.x
+- Composer
+
+### Local Setup
+1. Clone the repository
+2. Frontend setup: `cd apps/web && pnpm install`
+3. Backend setup: `cd apps/api && composer install`
+4. Copy `.env.example` to `.env` in both directories and fill in the required values
+5. Run migrations: `cd apps/api && php artisan migrate`
+6. Start local servers:
+   - Backend: `php artisan serve`
+   - Frontend: `cd apps/web && pnpm dev`
+
+### Architecture
+- **Backend API**: Laravel 11 running on Google Cloud Run (containerized)
+- **Frontend**: Next.js 14 running on Vercel
+- **Database**: PostgreSQL hosted on Supabase (connection pooling enabled)
+- **Real-time**: Pusher WebSocket integration for live chat and notifications
+
+### Deployment Flow
+- Push to `main` branch triggers:
+  1. **Google Cloud Build** (`cloudbuild.yaml`): Builds backend Docker image, runs migrations, verifies endpoints, and deploys `g4k-api`, `g4k-worker`, and `g4k-scheduler` to Cloud Run.
+  2. **Vercel**: Automatically pulls, builds, and deploys the Next.js web application.
+
+---
+
 
 ROLES AT A GLANCE
 

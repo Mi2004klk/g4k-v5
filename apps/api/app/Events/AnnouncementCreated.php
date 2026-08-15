@@ -23,7 +23,7 @@ class AnnouncementCreated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('public-announcements'),
+            new \Illuminate\Broadcasting\PrivateChannel('org.announcements'),
         ];
     }
 

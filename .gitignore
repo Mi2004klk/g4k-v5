@@ -38,6 +38,14 @@ routes.txt
 error_log.json
 remote.log
 tests_output.log
+scratch/
+User-avatar-image/
+projects/
+walkthrough.md
+finalization-report.md
+apps/api/dump3.txt
+apps/api/public/avatars/
+*.bak
 test_sigint.php
 **/test.php
 
@@ -73,6 +81,9 @@ skills-lock.json
 fix-*.md
 fix_*.md
 final-fix-*.md
+check_*.php
+fix_*.php
+patch_*.php
 build-summary.md
 context.md
 access.md

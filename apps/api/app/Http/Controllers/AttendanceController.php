@@ -141,12 +141,14 @@ class AttendanceController extends Controller
         $schedule = null;
         if ($user->work_schedule_id) {
             $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$user->work_schedule_id}", 86400, function() use ($user) {
-                return \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
+                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
+                return $res ? (array)$res : null;
             });
         }
         if (!$schedule) {
             $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
-                return \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
+                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
+                return $res ? (array)$res : null;
             });
         }
 
@@ -179,15 +181,17 @@ class AttendanceController extends Controller
         $schedule = null;
         if ($scheduleId) {
             $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$scheduleId}", 86400, function() use ($scheduleId) {
-                return DB::table('work_schedules')->where('id', $scheduleId)->first();
+                $res = DB::table('work_schedules')->where('id', $scheduleId)->first();
+                return $res ? (array)$res : null;
             });
         }
         if (!$schedule) {
             $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
-                return DB::table('work_schedules')->where('is_default', true)->first();
+                $res = DB::table('work_schedules')->where('is_default', true)->first();
+                return $res ? (array)$res : null;
             });
         }
-        $standardSeconds = $schedule ? $schedule->standard_seconds : 31500;
+        $standardSeconds = $schedule ? ($schedule['standard_seconds'] ?? 31500) : 31500;
 
         $lastMod = max(($day?->updated_at) ?? '', ($events->max('updated_at')) ?? '');
         $response = response()->json([
@@ -262,7 +266,7 @@ class AttendanceController extends Controller
     private function applyHrScoping($query, $user)
     {
         $activeRole = $user->active_role ?? 'employee';
-        $isAdmin = $activeRole === 'super_admin';
+        $isAdmin = \App\Services\CapabilityMatrix::hasCapability($activeRole, '*');
         
         if (!$isAdmin) {
             $query->whereIn('users.department_id', \App\Support\HrScope::managedDepartmentIds($user));
@@ -282,7 +286,7 @@ class AttendanceController extends Controller
         $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($date, $isAdmin, $user) {
             $usersQuery = \App\Models\User::select('users.id', 'users.name as user_name', 'users.avatar_url', 'departments.name as department_name')
                 ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-                ->where('users.is_active', true);
+                ->where('users.status', 'active');
                 
             if (!$isAdmin) {
                 $usersQuery->whereIn('users.department_id', \App\Support\HrScope::managedDepartmentIds($user));
@@ -743,7 +747,7 @@ class AttendanceController extends Controller
             
         if (!$isAdmin) {
             $targetUser = User::where('id', $day->user_id)->first();
-            if (!in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($actor))) {
+            if (!$targetUser || !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($actor))) {
                 return response()->json(['message' => 'Forbidden. HR users can only correct attendance within their assigned department/team.'], 403);
             }
         }

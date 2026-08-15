@@ -22,7 +22,8 @@ class NotificationService
         }
 
         // Determine user channels override, else fallback to global
-        $userChannels = $user->preferences['notifications'][$type]['channels'] ?? null;
+        $userPrefs = $user?->preferences ?? [];
+        $userChannels = $userPrefs['notifications'][$type]['channels'] ?? null;
         $channels = $userChannels ?: $globalChannels;
 
         if (in_array('in_app', $channels)) {
@@ -40,9 +41,9 @@ class NotificationService
         if (in_array('email', $channels) && $user && \App\Support\SmtpSettings::isConfigured()) {
             \App\Support\SmtpSettings::apply();
             try {
-                // Here we would dispatch an email notification job
-                // For now, just log that we would have sent it, since we don't have a generic NotificationMail class
-                \Illuminate\Support\Facades\Log::info("Would send email notification to {$user->email}: {$title}");
+                \Illuminate\Support\Facades\Mail::to($user)->queue(
+                    new \App\Mail\GenericNotificationEmail($title, $body, $link)
+                );
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to send email notification to {$user->email}: " . $e->getMessage());
             }

@@ -22,16 +22,22 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
   return (
     <Card
       onClick={onClick}
-      className="hover:shadow-md transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
+      className="hover:shadow-e2 transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
+      <CardHeader className="pb-2 relative z-10">
+        {project.cover_image && (
+          <div className="absolute inset-0 h-24 w-full">
+            <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent dark:from-neutral-900/90 z-10" />
+            <img src={project.cover_image} alt="Project Cover" className="w-full h-full object-cover opacity-60" />
+          </div>
+        )}
+        <div className={`flex items-start justify-between ${project.cover_image ? 'pt-8' : ''} relative z-20`}>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400">
+            <div className="p-2 rounded-[var(--radius)] bg-primary-50 text-primary-600 dark:bg-primary-950 dark:text-primary-400">
               <AppIcon name="projects" />
             </div>
             <div>
-              <CardTitle className="text-sm font-bold group-hover:text-violet-600 transition-colors">
+              <CardTitle className="text-sm font-bold group-hover:text-primary-600 transition-colors">
                 {project.name}
               </CardTitle>
               <p className="text-[11px] text-neutral-400 line-clamp-1 mt-0.5">
@@ -53,7 +59,7 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
           </div>
           <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-violet-600 rounded-full transition-all duration-500"
+              className="h-full bg-primary-600 rounded-full transition-all duration-500"
               style={{ width: `${project.progress}%` }}
             />
           </div>

@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class LeaveRequest extends Model
 {
-    protected $fillable = [
-        'user_id', 'start_date', 'end_date', 'reason', 'type', 'approval_id', 'status'
-    ];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['user_id', 'start_date', 'end_date', 'reason', 'type', 'approval_id', 'status', 'demo_tag'];
 
     protected $casts = [
         'start_date' => 'date',
@@ -20,11 +19,6 @@ class LeaveRequest extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function approvalModel(): BelongsTo
-    {
-        return $this->belongsTo(Approval::class, 'approval_id');
     }
 
     public function approval(): MorphOne

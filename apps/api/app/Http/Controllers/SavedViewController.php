@@ -22,7 +22,7 @@ class SavedViewController extends Controller
                     'filters' => $view->config,
                 ];
             });
-        return response()->json($views);
+        return response()->json(['data' => $views]);
     }
 
     public function store(Request $request)
@@ -41,10 +41,12 @@ class SavedViewController extends Controller
         ]);
 
         return response()->json([
-            'id' => $view->id,
-            'name' => $view->name,
-            'module' => $view->entity,
-            'filters' => $view->config,
+            'data' => [
+                'id' => $view->id,
+                'name' => $view->name,
+                'module' => $view->entity,
+                'filters' => $view->config,
+            ]
         ]);
     }
 

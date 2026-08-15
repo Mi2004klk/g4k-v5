@@ -69,206 +69,211 @@ class AttendanceService
      */
     public static function reconcileDay(int $userId, string $date, bool $forceRecompute = false, ?User $cachedUser = null, $cachedSchedule = null): array
     {
-        $startWindow = Carbon::parse($date)->startOfDay();
-        $endWindow = Carbon::parse($date)->addHours(48);
+        try {
+            $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+            
+            $startWindow = Carbon::parse($date, $tz)->startOfDay();
+            $endWindow = Carbon::parse($date, $tz)->addHours(48);
 
-        $allEvents = AttendanceEvent::where('user_id', $userId)
-            ->whereBetween('timestamp', [$startWindow, $endWindow])
-            ->orderBy('timestamp', 'asc')
-            ->get();
+            $allEvents = AttendanceEvent::where('user_id', $userId)
+                ->whereBetween('timestamp', [$startWindow, $endWindow])
+                ->orderBy('timestamp', 'asc')
+                ->get();
 
-        $events = [];
-        $hasStartedOnDate = false;
+            $events = [];
+            $hasStartedOnDate = false;
 
-        foreach ($allEvents as $ev) {
-            $evDate = $ev->timestamp->toDateString();
-            if ($ev->type === 'clock_in' && $evDate === $date) {
-                $hasStartedOnDate = true;
+            foreach ($allEvents as $ev) {
+                $evDate = $ev->timestamp->toDateString();
+                if ($ev->type === 'clock_in' && $evDate === $date) {
+                    $hasStartedOnDate = true;
+                }
+                if ($hasStartedOnDate) {
+                    $events[] = $ev;
+                }
             }
-            if ($hasStartedOnDate) {
-                $events[] = $ev;
-            }
-        }
 
-        $user = $cachedUser ?? User::find($userId);
-        $schedule = $cachedSchedule;
-        if (!$schedule) {
-            if ($user && $user->work_schedule_id) {
-                $schedule = \App\Models\WorkSchedule::find($user->work_schedule_id);
-            }
+            $user = $cachedUser ?? User::find($userId);
+            $schedule = $cachedSchedule;
             if (!$schedule) {
-                $schedule = \App\Models\WorkSchedule::where('is_default', true)->first();
+                if ($user && $user->work_schedule_id) {
+                    $schedule = \App\Models\WorkSchedule::find($user->work_schedule_id);
+                }
+                if (!$schedule) {
+                    $schedule = \App\Models\WorkSchedule::where('is_default', true)->first();
+                }
             }
-        }
-        $startTimeStr = '09:00:00';
-        $standardSeconds = 31500;
-        $graceMinutes = 10;
+            $startTimeStr = '09:00:00';
+            $standardSeconds = 31500;
+            $graceMinutes = 10;
 
-        if (is_object($schedule)) {
-            $startTimeStr = $schedule->start_time ?? '09:00:00';
-            $standardSeconds = (int)($schedule->standard_seconds ?? 31500);
-            $graceMinutes = (int)($schedule->grace_minutes ?? 10);
-        } elseif (is_array($schedule)) {
-            $startTimeStr = $schedule['start_time'] ?? '09:00:00';
-            $standardSeconds = (int)($schedule['standard_seconds'] ?? 31500);
-            $graceMinutes = (int)($schedule['grace_minutes'] ?? 10);
-        }
+            if (is_object($schedule)) {
+                $startTimeStr = $schedule->start_time ?? '09:00:00';
+                $standardSeconds = (int)($schedule->standard_seconds ?? 31500);
+                $graceMinutes = (int)($schedule->grace_minutes ?? 10);
+            } elseif (is_array($schedule)) {
+                $startTimeStr = $schedule['start_time'] ?? '09:00:00';
+                $standardSeconds = (int)($schedule['standard_seconds'] ?? 31500);
+                $graceMinutes = (int)($schedule['grace_minutes'] ?? 10);
+            }
 
-        $firstClockIn = null;
-        $lastClockOut = null;
-        $firstEvent = null;
-        $lastEvent = null;
+            $firstClockIn = null;
+            $lastClockOut = null;
+            $firstEvent = null;
+            $lastEvent = null;
 
-        $totalSeconds = 0;
-        $breakSeconds = 0;
-        $unapprovedBreakSeconds = 0;
+            $totalSeconds = 0;
+            $breakSeconds = 0;
+            $unapprovedBreakSeconds = 0;
 
-        $currentWorkStart = null;
-        $currentBreakStart = null;
-        $currentBreakIsApproved = false;
+            $currentWorkStart = null;
+            $currentBreakStart = null;
+            $currentBreakIsApproved = false;
 
-        foreach ($events as $event) {
-            $ts = $event->timestamp;
-            if (!$firstEvent) $firstEvent = $ts;
-            $lastEvent = $ts;
+            foreach ($events as $event) {
+                $ts = $event->timestamp;
+                if (!$firstEvent) $firstEvent = $ts;
+                $lastEvent = $ts;
 
-            switch ($event->type) {
-                case 'clock_in':
-                    if (!$firstClockIn) $firstClockIn = $ts;
-                    if (!$currentWorkStart) $currentWorkStart = $ts;
-                    break;
+                switch ($event->type) {
+                    case 'clock_in':
+                        if (!$firstClockIn) $firstClockIn = $ts;
+                        if (!$currentWorkStart) $currentWorkStart = $ts;
+                        break;
 
-                case 'break_start':
-                    if ($currentWorkStart) {
-                        $totalSeconds += abs($ts->diffInSeconds($currentWorkStart));
-                        $currentWorkStart = null;
-                    }
-                    $currentBreakStart = $ts;
-                    $currentBreakIsApproved = $event->is_approved ?? false;
-                    break;
-
-                case 'break_end':
-                    if ($currentBreakStart) {
-                        $duration = abs($ts->diffInSeconds($currentBreakStart));
-                        $breakSeconds += $duration;
-                        if (!$currentBreakIsApproved) {
-                            $unapprovedBreakSeconds += $duration;
+                    case 'break_start':
+                        if ($currentWorkStart) {
+                            $totalSeconds += abs($ts->diffInSeconds($currentWorkStart));
+                            $currentWorkStart = null;
                         }
-                        $currentBreakStart = null;
-                    }
-                    $currentWorkStart = $ts;
-                    break;
+                        $currentBreakStart = $ts;
+                        $currentBreakIsApproved = $event->is_approved ?? false;
+                        break;
 
-                case 'clock_out':
-                    $lastClockOut = $ts;
-                    if ($currentWorkStart) {
-                        $totalSeconds += abs($ts->diffInSeconds($currentWorkStart));
-                        $currentWorkStart = null;
-                    }
-                    if ($currentBreakStart) {
-                        $duration = abs($ts->diffInSeconds($currentBreakStart));
-                        $breakSeconds += $duration;
-                        if (!$currentBreakIsApproved) {
-                            $unapprovedBreakSeconds += $duration;
+                    case 'break_end':
+                        if ($currentBreakStart) {
+                            $duration = abs($ts->diffInSeconds($currentBreakStart));
+                            $breakSeconds += $duration;
+                            if (!$currentBreakIsApproved) {
+                                $unapprovedBreakSeconds += $duration;
+                            }
+                            $currentBreakStart = null;
                         }
-                        $currentBreakStart = null;
-                    }
-                    break;
+                        $currentWorkStart = $ts;
+                        break;
+
+                    case 'clock_out':
+                        $lastClockOut = $ts;
+                        if ($currentWorkStart) {
+                            $totalSeconds += abs($ts->diffInSeconds($currentWorkStart));
+                            $currentWorkStart = null;
+                        }
+                        if ($currentBreakStart) {
+                            $duration = abs($ts->diffInSeconds($currentBreakStart));
+                            $breakSeconds += $duration;
+                            if (!$currentBreakIsApproved) {
+                                $unapprovedBreakSeconds += $duration;
+                            }
+                            $currentBreakStart = null;
+                        }
+                        break;
+                }
             }
-        }
 
-        // Removed the active now()->diffInSeconds calculation to prevent drift.
-        // total_seconds now accurately reflects closed time segments only.
-
-        $hasOpenShift = false;
-        $lastEventType = $lastEvent ? $events[count($events) - 1]->type : null;
-        if ($lastEventType === 'clock_in' || $lastEventType === 'break_end') {
-            $hasOpenShift = true;
-        }
-
-        // Get existing to check for manual overrides
-        $existingDay = AttendanceDay::where('user_id', $userId)->where('date', $date)->first();
-        
-        if (!$forceRecompute && $existingDay && $existingDay->source === 'manual') {
-            // Do not override manually corrected total_seconds or break_seconds.
-            // Just update structural things if needed, or skip.
-            // For safety, we will just update has_open_shift and last_event.
-            $existingDay->update([
-                'first_event' => $firstEvent ?? $existingDay->first_event,
-                'last_event' => $lastEvent ?? $existingDay->last_event,
-                'clock_out' => $lastClockOut ?? $existingDay->clock_out,
-                'has_open_shift' => $hasOpenShift,
-                'updated_at' => now(),
-            ]);
-            return $existingDay->toArray();
-        }
-
-        $overtimeSeconds = max(0, $totalSeconds - $standardSeconds);
-        $lateMinutes = 0;
-        
-        $grace = (int) ($schedule->grace_minutes ?? 10);
-        $graceSeconds = $grace * 60;
-
-        if ($firstClockIn) {
-            $companyTz = \App\Models\CompanyProfile::first()?->timezone ?? 'Asia/Kolkata';
-            $scheduledStart = Carbon::createFromFormat('Y-m-d H:i:s', $date . ' ' . $startTimeStr, $companyTz);
-            if ($firstClockIn->timestamp > $scheduledStart->timestamp + $graceSeconds) {
-                $lateSeconds = $firstClockIn->timestamp - $scheduledStart->timestamp;
-                $lateMinutes = (int) floor($lateSeconds / 60);
+            $hasOpenShift = false;
+            $lastEventType = $lastEvent ? $events[count($events) - 1]->type : null;
+            if ($lastEventType === 'clock_in' || $lastEventType === 'break_end') {
+                $hasOpenShift = true;
             }
-        }
 
-        $monthDay = Carbon::parse($date)->format('m-d');
-        $driver = DB::connection()->getDriverName();
-        $dateExpr = $driver === 'sqlite' ? "strftime('%m-%d', date)" : "TO_CHAR(date, 'MM-DD')";
-
-        $isHoliday = DB::table('holidays')->where(function($q) use ($date, $monthDay, $dateExpr) {
-            $q->where('date', $date);
-            if ($monthDay === '02-28' && !Carbon::parse($date)->isLeapYear()) {
-                $q->orWhere(function($q2) use ($dateExpr) {
-                    $q2->where('recurring', true)->whereRaw("{$dateExpr} IN ('02-28', '02-29')");
-                });
-            } else {
-                $q->orWhere(function($q2) use ($monthDay, $dateExpr) {
-                    $q2->where('recurring', true)->whereRaw("{$dateExpr} = ?", [$monthDay]);
-                });
+            $existingDay = AttendanceDay::where('user_id', $userId)->where('date', $date)->first();
+            
+            if (!$forceRecompute && $existingDay && $existingDay->source === 'manual') {
+                $existingDay->update([
+                    'first_event' => $firstEvent ?? $existingDay->first_event,
+                    'last_event' => $lastEvent ?? $existingDay->last_event,
+                    'clock_out' => $lastClockOut ?? $existingDay->clock_out,
+                    'has_open_shift' => $hasOpenShift,
+                    'updated_at' => now(),
+                ]);
+                return $existingDay->toArray();
             }
-        })->exists();
 
-        $status = 'absent';
-        if ($isHoliday) {
-            $status = 'holiday';
+            $overtimeSeconds = max(0, $totalSeconds - $standardSeconds);
             $lateMinutes = 0;
-        } elseif ($firstClockIn !== null) {
-            $status = ($lateMinutes > 0) ? 'late' : 'present';
+            
+            $grace = $graceMinutes;
+            $graceSeconds = $grace * 60;
+
+            if ($firstClockIn) {
+                $scheduledStart = Carbon::parse($date . ' ' . $startTimeStr, $tz);
+                if ($firstClockIn->timestamp > $scheduledStart->timestamp + $graceSeconds) {
+                    $lateSeconds = $firstClockIn->timestamp - $scheduledStart->timestamp;
+                    $lateMinutes = (int) floor($lateSeconds / 60);
+                }
+            }
+
+            $monthDay = Carbon::parse($date)->format('m-d');
+            $allHolidays = DB::table('holidays')->get();
+            $isHoliday = $allHolidays->contains(function ($h) use ($date, $monthDay) {
+                if (!empty($h->date) && str_starts_with((string)$h->date, $date)) return true;
+                if (!empty($h->recurring) && !empty($h->date)) {
+                    $hMonthDay = Carbon::parse($h->date)->format('m-d');
+                    if ($hMonthDay === $monthDay) return true;
+                    if ($monthDay === '02-28' && $hMonthDay === '02-29') return true;
+                }
+                return false;
+            });
+
+            $status = 'absent';
+            if ($isHoliday) {
+                $status = 'holiday';
+                $lateMinutes = 0;
+            } elseif ($firstClockIn !== null) {
+                $status = ($lateMinutes > 0) ? 'late' : 'present';
+            }
+
+            $existingSource = $existingDay ? $existingDay->source : 'server';
+            $source = ($existingSource === 'manual' || $forceRecompute && $existingSource === 'manual') ? 'manual' : 'server';
+            $version = $existingDay ? $existingDay->version + 1 : 1;
+
+            $dayRecord = AttendanceDay::updateOrCreate(
+                ['user_id' => $userId, 'date' => $date],
+                [
+                    'clock_in' => $firstClockIn,
+                    'clock_out' => $lastClockOut,
+                    'first_event' => $firstEvent,
+                    'last_event' => $lastEvent,
+                    'total_seconds' => $totalSeconds,
+                    'break_seconds' => $breakSeconds,
+                    'unapproved_break_seconds' => $unapprovedBreakSeconds,
+                    'overtime_seconds' => $overtimeSeconds,
+                    'late_minutes' => $lateMinutes,
+                    'has_open_shift' => $hasOpenShift,
+                    'status' => $status,
+                    'source' => $source,
+                    'version' => $version,
+                    'updated_at' => now(),
+                ]
+            );
+
+            return $dayRecord->fresh()->toArray();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("reconcileDay failed for user {$userId} on {$date}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            if (app()->environment('testing')) {
+                throw $e;
+            }
+            return [
+                'user_id' => $userId,
+                'date' => $date,
+                'status' => 'error',
+                'first_event' => null,
+                'last_event' => null,
+                'total_seconds' => 0,
+                'break_seconds' => 0,
+                'has_open_shift' => false,
+            ];
         }
-
-        $existingSource = $existingDay ? $existingDay->source : 'server';
-        $source = ($existingSource === 'manual' || $forceRecompute && $existingSource === 'manual') ? 'manual' : 'server';
-        $version = $existingDay ? $existingDay->version + 1 : 1;
-
-        $dayRecord = AttendanceDay::updateOrCreate(
-            ['user_id' => $userId, 'date' => $date],
-            [
-                'clock_in' => $firstClockIn,
-                'clock_out' => $lastClockOut,
-                'first_event' => $firstEvent,
-                'last_event' => $lastEvent,
-                'total_seconds' => $totalSeconds,
-                'break_seconds' => $breakSeconds,
-                'unapproved_break_seconds' => $unapprovedBreakSeconds,
-                'overtime_seconds' => $overtimeSeconds,
-                'late_minutes' => $lateMinutes,
-                'has_open_shift' => $hasOpenShift,
-                'status' => $status,
-                'source' => $source,
-                'version' => $version,
-                'updated_at' => now(),
-            ]
-        );
-
-        // Fetch fresh to get evaluated raw expressions
-        return $dayRecord->fresh()->toArray();
     }
 }
 

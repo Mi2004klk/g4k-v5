@@ -19,7 +19,7 @@ export function EmployeeTaskProgressWidget() {
     return (
       <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
         <div className="flex items-center gap-2 pb-3">
-          <Skeleton className="w-7 h-7 rounded-md" />
+          <Skeleton className="w-7 h-7 rounded-[var(--radius)]" />
           <Skeleton className="h-4 w-32" />
         </div>
         <Skeleton className="h-14 w-full" />
@@ -35,7 +35,7 @@ export function EmployeeTaskProgressWidget() {
             <span className="text-sm font-bold">Task Progress</span>
           </div>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-lg p-4 mt-4">
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-[var(--radius)] p-4 mt-4">
           <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load tasks</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
@@ -53,7 +53,7 @@ export function EmployeeTaskProgressWidget() {
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-[var(--radius)] bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
               <AppIcon name="success" className=" text-purple-600 dark:text-purple-400" />
             </div>
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">

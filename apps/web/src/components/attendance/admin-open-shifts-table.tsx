@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
-import {  Input, Button, Checkbox, DataTable , Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker } from "@g4k/ui/components";
+import {  Input, Button, Checkbox, DataTable , Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, FilterBar } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
@@ -46,7 +46,7 @@ export function AdminOpenShiftsTable() {
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: [...queryKeys.adminAttendance(selectedDate, deptFilter), "open", debouncedSearch, page, perPage],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -166,34 +166,25 @@ export function AdminOpenShiftsTable() {
         <div className="absolute top-0 left-0 w-1 h-full bg-warning" />
         
         {/* Search & Dept */}
-        <div className="flex w-full xl:w-auto items-center gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <AppIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input 
-              type="search"
-              placeholder="Search company..." 
-              className="pl-9 h-10 w-full border-border focus-visible:ring-warning"
-              value={search || ""}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="relative shrink-0">
-            <AppIcon name="building" className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <Select value={deptFilter} onValueChange={setDeptFilter}>
-<SelectTrigger className="w-full h-9">
-<SelectValue placeholder="Select..." />
-</SelectTrigger>
-<SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
-              {departments.map((d: any) => (
-                <SelectItem value={d.id.toString()}>{d.name}</SelectItem>
-              ))}
-            
-      </SelectContent>
-    </Select>
-          </div>
-        </div>
+        <FilterBar
+          searchQuery={search || ""}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search company..."
+          filters={[
+            {
+              key: "department",
+              label: "Department",
+              type: "select",
+              value: deptFilter,
+              onChange: setDeptFilter,
+              options: departments.map((d: any) => ({ label: d.name, value: d.id.toString() }))
+            }
+          ]}
+          onClearAll={() => {
+            setSearch("");
+            setDeptFilter("all");
+          }}
+        />
 
         <div className="flex-1 flex justify-start xl:justify-end items-center gap-2 w-full xl:w-auto overflow-x-auto">
           {Object.keys(rowSelection).length > 0 && (
@@ -210,7 +201,7 @@ export function AdminOpenShiftsTable() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border border-border overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="bg-card rounded-xl border border-border overflow-x-auto overflow-y-hidden w-full shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {openShifts.length === 0 && !isLoading ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
@@ -225,6 +216,10 @@ export function AdminOpenShiftsTable() {
           <DataTable 
             columns={columns} 
             data={openShifts}
+            isLoading={isLoading}
+            isError={!!error}
+            stickyHeader={true}
+            stickyFirstCol={true}
             onRowSelectionChange={setRowSelection}
             rowSelection={rowSelection}
             getRowId={(row: any) => String(row.user_id || row.id)}

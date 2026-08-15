@@ -51,7 +51,7 @@ export default function PersonalAttendancePage() {
 
   return (
     <PageContainer
-      title="Attendance & Time Off"
+      title="Attendance"
       description="Track daily shift punches, request leave, and view time off history."
       actions={
         <Dialog>
@@ -96,7 +96,7 @@ export default function PersonalAttendancePage() {
             <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <AppIcon name="calendar" className=" text-violet-600" />
+                  <AppIcon name="calendar" className=" text-primary-600" />
                   Recent Shift Log
                 </CardTitle>
                 <Dialog>
@@ -105,7 +105,7 @@ export default function PersonalAttendancePage() {
                       View Full Calendar
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="sm:max-w-[800px] max-h-[90dvh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Attendance History</DialogTitle>
                       <DialogDescription className="sr-only">Full calendar view of your attendance history.</DialogDescription>
@@ -134,9 +134,9 @@ export default function PersonalAttendancePage() {
                       {recentHistory.map((day: any) => (
                         <Dialog key={day.date}>
                           <DialogTrigger asChild>
-                            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800 cursor-pointer">
+                            <div className="flex items-center justify-between p-3 rounded-[var(--radius)] hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800 cursor-pointer">
                               <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full shrink-0 ${day.status === 'present' || day.status === 'overtime' ? 'bg-emerald-500' : day.status === 'late' ? 'bg-amber-500' : day.status === 'leave' ? 'bg-violet-500' : 'bg-neutral-300'}`} />
+                                <div className={`w-2 h-2 rounded-full shrink-0 ${day.status === 'present' || day.status === 'overtime' ? 'bg-emerald-500' : day.status === 'late' ? 'bg-amber-500' : day.status === 'leave' ? 'bg-primary-500' : 'bg-neutral-300'}`} />
                                 <div>
                                   <p className="text-sm font-semibold text-neutral-900 dark:text-white">
                                     {format(new Date(day.date), "EEE, MMM d")}
@@ -162,7 +162,7 @@ export default function PersonalAttendancePage() {
                               <DialogDescription>{format(new Date(day.date), "EEEE, MMMM do, yyyy")}</DialogDescription>
                             </DialogHeader>
                             <div className="mt-4 space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800">
                                   <div className="text-xs text-neutral-500 mb-1 font-semibold uppercase tracking-wider">Worked Hours</div>
                                   <div className="text-2xl font-mono font-bold text-neutral-900 dark:text-white">

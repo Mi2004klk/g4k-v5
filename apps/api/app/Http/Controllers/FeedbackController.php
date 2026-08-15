@@ -12,11 +12,15 @@ class FeedbackController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'category' => 'required|in:suggestion,complaint',
             'body' => 'required|string',
         ]);
 
         $feedback = Feedback::create([
             'user_id' => $request->user()->id,
+            'subject' => $validated['subject'],
+            'category' => $validated['category'],
             'body' => $validated['body'],
         ]);
 
@@ -27,11 +31,13 @@ class FeedbackController extends Controller
 
         foreach ($hrUsers as $hr) {
             NotificationService::send(
-                $hr->id,
-                'feedback',
-                'New Feedback / Complaint Submitted',
-                "User {$request->user()->name} submitted feedback: {$validated['body']}",
-                '/dashboard/org/feedback'
+                userId: $hr->id,
+                type: 'feedback',
+                title: 'New Feedback / Complaint Submitted',
+                body: "User {$request->user()->name} submitted feedback: " . \Illuminate\Support\Str::limit($validated['body'], 100),
+                data: ['feedback_id' => $feedback->id],
+                link: '/dashboard/org/feedback',
+                priority: 'high'
             );
         }
 

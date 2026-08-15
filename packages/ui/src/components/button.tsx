@@ -50,8 +50,8 @@ const RainbowBorder = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
         {...props}
       >
         <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3B82F6_0%,#14B8A6_25%,#F97316_50%,#EF4444_75%,#3B82F6_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:hidden" />
-        <span className="absolute inset-0 rounded-md ring-1 ring-inset ring-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:opacity-100 hidden motion-reduce:block" />
-        <div className="relative inline-flex h-full w-full rounded-md bg-primary">
+        <span className="absolute inset-0 rounded-[var(--radius)] ring-1 ring-inset ring-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:opacity-100 hidden motion-reduce:block" />
+        <div className="relative inline-flex h-full w-full rounded-[var(--radius)] bg-primary">
           {children}
         </div>
       </div>

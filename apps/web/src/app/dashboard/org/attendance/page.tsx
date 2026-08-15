@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { HrAttendanceTable } from '@/components/attendance/hr-attendance-table';
 import { HrAttendanceAnalytics } from '@/components/attendance/hr-attendance-analytics';
 import dynamic from 'next/dynamic';
-import { PageContainer } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 
 const HrAttendanceGraph = dynamic(() => import('@/components/attendance/hr-attendance-graph').then(mod => mod.HrAttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
@@ -23,11 +22,11 @@ export default function HrAttendancePage() {
       </div>
       <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
         <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-          <TabsTrigger value="today" className="rounded-lg data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300">
+          <TabsTrigger value="today" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300">
             <AppIcon name="directory" className=" mr-2" />
             Today's Status
           </TabsTrigger>
-          <TabsTrigger value="graph" className="rounded-lg data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300">
+          <TabsTrigger value="graph" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300">
             <AppIcon name="chart" className=" mr-2" />
             Trends & Graphs
           </TabsTrigger>

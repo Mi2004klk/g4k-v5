@@ -132,7 +132,7 @@ export default function EmployeeDetailPage() {
           <Button 
             onClick={() => sendMessageMutation.mutate(Number(userId))}
             variant="outline" 
-            className="gap-2 text-violet-600 border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+            className="gap-2 text-primary-600 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20"
             disabled={sendMessageMutation.isPending}
           >
             <AppIcon name="chat" /> Send Message
@@ -181,7 +181,7 @@ export default function EmployeeDetailPage() {
               </Avatar>
               <div className="text-center sm:text-left flex-1">
                 <h2 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">{user.name}</h2>
-                <p className="text-violet-600 font-medium mb-4">{user.designation?.name || "Employee"} • {user.department?.name || "No Department"}</p>
+                <p className="text-primary-600 font-medium mb-4">{user.designation?.name || "Employee"} • {user.department?.name || "No Department"}</p>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-neutral-500">
                   <div className="flex items-center gap-2"><AppIcon name="mail" /> {user.email}</div>
                   {user.phone && <div className="flex items-center gap-2"><AppIcon name="phone" /> {user.phone}</div>}
@@ -214,7 +214,7 @@ export default function EmployeeDetailPage() {
 
           <TabsContent value="attendance" className="mt-0">
             <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Attendance</CardTitle></CardHeader><CardContent>
-                <div className="flex justify-between items-center bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-lg border mb-4">
+                <div className="flex justify-between items-center bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-[var(--radius)] border mb-4">
                   <div>
                     <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">Attendance Record</h4>
                     <p className="text-sm text-neutral-500">View detailed attendance history, timesheets, and daily logs for this user.</p>
@@ -235,7 +235,7 @@ export default function EmployeeDetailPage() {
                {leaves?.data?.length ? (
                  <div className="space-y-4">
                    {leaves.data.map((l: any) => (
-                      <div key={l.id} className="p-4 border rounded-lg bg-neutral-50 dark:bg-neutral-900/50">
+                      <div key={l.id} className="p-4 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
                         <div className="flex justify-between items-start mb-2">
                           <span className="font-medium capitalize">{l.type.replace('_', ' ')} Leave</span>
                           <span className={`px-2 py-1 text-[10px] uppercase font-bold rounded-full ${l.approval?.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : l.approval?.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>{l.approval?.status || 'pending'}</span>
@@ -254,7 +254,7 @@ export default function EmployeeDetailPage() {
                <h3 className="font-bold mb-3">Projects ({assignments?.projects?.length || 0})</h3>
                {assignments?.projects?.length > 0 ? (
                  <div className="flex flex-wrap gap-2 mb-6">
-                   {assignments.projects.map((p: any) => <span key={p.id} className="px-3 py-1 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 rounded-md text-sm">{p.name}</span>)}
+                   {assignments.projects.map((p: any) => <span key={p.id} className="px-3 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-[var(--radius)] text-sm">{p.name}</span>)}
                  </div>
                ) : <p className="text-sm text-neutral-500 mb-6">No active projects.</p>}
                
@@ -262,7 +262,7 @@ export default function EmployeeDetailPage() {
                {assignments?.tasks?.length > 0 ? (
                  <div className="space-y-2">
                    {assignments.tasks.map((t: any) => (
-                     <div key={t.id} className="flex items-center justify-between p-3 border rounded-lg text-sm">
+                     <div key={t.id} className="flex items-center justify-between p-3 border rounded-[var(--radius)] text-sm">
                        <div><span className="font-medium">{t.title}</span><span className="text-neutral-500 block text-xs">{t.project?.name}</span></div>
                        <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded text-xs capitalize">{t.status.replace('_', ' ')}</span>
                      </div>
@@ -277,7 +277,7 @@ export default function EmployeeDetailPage() {
                {activity?.data?.length ? (
                  <div className="space-y-3">
                    {activity.data.map((log: any) => (
-                      <div key={log.id} className="p-3 border rounded-lg text-sm bg-neutral-50 dark:bg-neutral-900/50">
+                      <div key={log.id} className="p-3 border rounded-[var(--radius)] text-sm bg-neutral-50 dark:bg-neutral-900/50">
                         <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type || log.entity_type}</span>
                         <span className="text-xs text-neutral-500 block mt-1">{new Date(log.at || log.created_at).toLocaleString()} - IP: {log.ip || 'N/A'}</span>
                       </div>

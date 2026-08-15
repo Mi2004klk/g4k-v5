@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversation extends Model
 {
-    protected $fillable = ['scope', 'name', 'project_id'];
+    use \App\Traits\HasDemoTag;
+    protected $fillable = ['scope', 'name', 'project_id', 'demo_tag', 'is_demo'];
 
     public function project(): BelongsTo
     {

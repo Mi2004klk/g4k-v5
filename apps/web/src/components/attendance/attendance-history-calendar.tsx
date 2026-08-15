@@ -102,7 +102,7 @@ const STATUS_STYLES: Record<DayStatus, string> = {
   late: "bg-amber-300 dark:bg-amber-500",
   present: "bg-emerald-300 dark:bg-emerald-500",
   overtime: "bg-indigo-400 dark:bg-indigo-500",
-  leave: "bg-violet-300 dark:bg-violet-500",
+  leave: "bg-primary-300 dark:bg-primary-500",
   holiday: "bg-blue-300 dark:bg-blue-500",
 };
 
@@ -241,7 +241,7 @@ function MonthCalendarGrid({
                   className={`
                     relative p-1 md:p-2 min-h-[4rem] md:min-h-[5.5rem] border-r border-b border-border/50
                     hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors
-                    flex flex-col items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500
+                    flex flex-col items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
                     ${!isCurrMonth ? "opacity-30 bg-neutral-50/50 dark:bg-neutral-900/50" : ""}
                     ${isFuture ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
                   `}
@@ -250,7 +250,7 @@ function MonthCalendarGrid({
                   <div className="flex items-center justify-between w-full">
                     <span
                       className={`text-xs md:text-sm font-semibold flex items-center justify-center
-                      ${isCurrDay ? "bg-violet-600 text-white w-6 h-6 rounded-full" : "text-neutral-700 dark:text-neutral-300 w-6 h-6"}
+                      ${isCurrDay ? "bg-primary-600 text-white w-6 h-6 rounded-full" : "text-neutral-700 dark:text-neutral-300 w-6 h-6"}
                     `}
                     >
                       {format(date, "d")}
@@ -268,12 +268,12 @@ function MonthCalendarGrid({
                       <div className="h-1.5 w-full bg-neutral-200 dark:bg-neutral-700 rounded-sm overflow-hidden flex">
                         {record.break_seconds > 0 ? (
                           <div className="flex w-full h-full">
-                            <div className="h-full bg-violet-400" style={{ width: "45%" }} />
+                            <div className="h-full bg-primary-400" style={{ width: "45%" }} />
                             <div className="h-full bg-amber-400" style={{ width: "10%" }} />
-                            <div className="h-full bg-violet-400" style={{ width: "45%" }} />
+                            <div className="h-full bg-primary-400" style={{ width: "45%" }} />
                           </div>
                         ) : (
-                          <div className="h-full bg-violet-400 w-full" />
+                          <div className="h-full bg-primary-400 w-full" />
                         )}
                       </div>
                     </div>
@@ -496,7 +496,7 @@ export function AttendanceHistoryCalendar({
           }
         }}
       >
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[90dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <span>
@@ -575,7 +575,7 @@ function DayDetailContent({
           <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
             Total Worked
           </p>
-          <p className="font-mono font-bold text-violet-600">{formatSecs(day.total_seconds)}</p>
+          <p className="font-mono font-bold text-primary-600">{formatSecs(day.total_seconds)}</p>
           {day.overtime_seconds > 0 && (
             <p className="text-[10px] font-bold text-indigo-600 font-mono">
               +{formatSecs(day.overtime_seconds)} OT
@@ -589,8 +589,8 @@ function DayDetailContent({
         <h4 className="text-sm font-bold mb-3">Punch Timeline</h4>
         {isLoading ? (
           <div className="space-y-2">
-            <Skeleton className="h-12 w-full rounded-lg" />
-            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-[var(--radius)]" />
+            <Skeleton className="h-12 w-full rounded-[var(--radius)]" />
           </div>
         ) : events.length === 0 ? (
           <p className="text-xs text-neutral-500 italic">No punches recorded for this day.</p>
@@ -599,9 +599,9 @@ function DayDetailContent({
             {events.map((evt: AttendanceEvent) => (
               <div
                 key={evt.id}
-                className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg p-3 border border-neutral-100 dark:border-neutral-800"
+                className="flex items-center gap-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-[var(--radius)] p-3 border border-neutral-100 dark:border-neutral-800"
               >
-                <div className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />
+                <div className="w-2 h-2 rounded-full bg-primary-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="text-[10px] font-bold uppercase text-neutral-500 tracking-wider">
                     {evt.type.replace(/_/g, " ")}
@@ -646,7 +646,7 @@ function DayDetailContent({
             {data.tasks.map((t: string, i: number) => (
               <span
                 key={i}
-                className="text-[10px] bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 px-2 py-1 rounded-full"
+                className="text-[10px] bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 px-2 py-1 rounded-full"
               >
                 {t}
               </span>

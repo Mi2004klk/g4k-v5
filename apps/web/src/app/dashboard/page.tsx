@@ -35,7 +35,7 @@ import { EmployeeTaskProgressWidget } from "@/components/dashboard/employee-task
 import { UpcomingHolidaysWidget } from "@/components/widgets/upcoming-holidays-widget";
 
 const EMPTY_CAPABILITIES: any[] = [];
-const cols = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
+const cols = { lg: 12, md: 10, sm: 6, xs: 1, xxs: 1 };
 
 function responsiveLayout(base: { x: number, y: number, w: number, h: number }) {
   return {
@@ -196,7 +196,7 @@ export default function DashboardPage() {
 
   if (!mounted || isLoading || (!activeRole && !isError)) {
     return (
-      <div className="flex items-center justify-center h-[50vh]">
+      <div className="flex items-center justify-center h-[50dvh]">
         <div className="flex flex-col items-center justify-center gap-4">
           <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
           <p className="text-sm text-neutral-500 font-medium">Loading dashboard...</p>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+      <div className="flex flex-col items-center justify-center h-[50dvh] space-y-4">
         <p className="text-sm text-neutral-500 font-medium">Failed to load dashboard data.</p>
         <Button onClick={() => refetch()} variant="outline">
           Retry
