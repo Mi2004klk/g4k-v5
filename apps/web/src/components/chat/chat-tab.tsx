@@ -186,14 +186,14 @@ export function ChatTab() {
     },
   });
 
+  const selectedConv = conversations.find((c: any) => c.id === selectedId);
+  const unreadCount = selectedConv?.unread_count || 0;
+
   useEffect(() => {
-    if (selectedId) {
-      const conv = conversations.find((c: any) => c.id === selectedId);
-      if (conv && conv.unread_count > 0) {
-        markReadMutation.mutate();
-      }
+    if (selectedId && unreadCount > 0 && !markReadMutation.isPending) {
+      markReadMutation.mutate();
     }
-  }, [selectedId, conversations]);
+  }, [selectedId, unreadCount]);
 
   const pinMutation = useMutation({
     mutationFn: async (msgId: number) => {
