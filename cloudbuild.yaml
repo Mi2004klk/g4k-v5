@@ -172,21 +172,8 @@ steps:
         test_role "employee" "$$SMOKE_EMP_EMAIL" "$$SMOKE_EMP_PASSWORD"
         
         echo "All smoke tests passed."
-    secretEnv: ['SMOKE_ADMIN_EMAIL', 'SMOKE_ADMIN_PASSWORD', 'SMOKE_HR_EMAIL', 'SMOKE_HR_PASSWORD', 'SMOKE_EMP_EMAIL', 'SMOKE_EMP_PASSWORD']
 
 availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_ID/secrets/DB_PASSWORD/versions/latest
     env: 'DB_PASSWORD'
-  - versionName: projects/$PROJECT_ID/secrets/SMOKE_ADMIN_EMAIL/versions/latest
-    env: 'SMOKE_ADMIN_EMAIL'
-  - versionName: projects/$PROJECT_ID/secrets/SMOKE_ADMIN_PASSWORD/versions/latest
-    env: 'SMOKE_ADMIN_PASSWORD'
-  - versionName: projects/$PROJECT_ID/secrets/SMOKE_HR_EMAIL/versions/latest
-    env: 'SMOKE_HR_EMAIL'
-  - versionName: projects/$PROJECT_ID/secrets/SMOKE_HR_PASSWORD/versions/latest
-    env: 'SMOKE_HR_PASSWORD'
-  - versionName: projects/$PROJECT_ID/secrets/SMOKE_EMP_EMAIL/versions/latest
-    env: 'SMOKE_EMP_EMAIL'
-  - versionName: projects/$PROJECT_ID/secrets/SMOKE_EMP_PASSWORD/versions/latest
-    env: 'SMOKE_EMP_PASSWORD'
