@@ -46,22 +46,20 @@ export function ExportHistory() {
     }
   });
 
-  const handleDownload = async (item: any) => {
-    try {
-      // Use apiFetch to automatically attach the Auth token if it hits our API,
-      // and get the response as raw so we can extract the blob.
-      const url = item.file_path.startsWith('http') ? item.file_path : `/${item.file_path.replace(/^\/+/, '')}`;
-      const blob = await apiFetch(url, { method: "GET" }) as Blob;
-      
-      const objectUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = `export-${item.report_key}-${item.id}.${item.format}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(objectUrl);
-    } catch (e) {
+    const handleDownload = async (item: any) => {
+      try {
+        const url = `/reports/exports/${item.id}/download`;
+        const blob = await apiFetch(url, { method: "GET" }) as Blob;
+        
+        const objectUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = `export-${item.report_key}-${item.id}.${item.format}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(objectUrl);
+      } catch (e) {
       toast.error("Failed to download export file. It may be expired or inaccessible.");
     }
   };

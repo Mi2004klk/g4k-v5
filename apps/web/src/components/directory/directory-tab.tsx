@@ -33,7 +33,6 @@ export function DirectoryTab() {
   const [deptFilter, setDeptFilter] = useUrlState("department", "all");
   const [desigFilter, setDesigFilter] = useUrlState("designation", "all");
   const [visFilter, setVisFilter] = useUrlState("visibility", "all");
-  const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   const { data: capabilities } = useCapabilities();
@@ -210,26 +209,6 @@ export function DirectoryTab() {
               ]}
             />
           </div>
-          <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-[var(--radius)] shrink-0">
-            <Button
-              variant={viewMode === "grid" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("grid")}
-              className={`h-8 px-3 ${viewMode === "grid" ? "shadow-e1" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
-            >
-              <AppIcon name="grid" size="sm" className={viewMode === "grid" ? "mr-1" : ""} />
-              {viewMode === "grid" && <span>Grid</span>}
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className={`h-8 px-3 ${viewMode === "list" ? "shadow-e1" : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"}`}
-            >
-              <AppIcon name="list" size="sm" className={viewMode === "list" ? "mr-1" : ""} />
-              {viewMode === "list" && <span>List</span>}
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
@@ -244,19 +223,6 @@ export function DirectoryTab() {
           icon="users"
           description="Try broadening your search term."
         />
-      ) : viewMode === "list" ? (
-        <Card className="border-none shadow-e1">
-          <CardContent className="p-0">
-            <DataTable
-              columns={columns}
-              data={users}
-              fetchNextPage={fetchNextPage}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-              isLoading={isPending}
-            />
-          </CardContent>
-        </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {users.map((user: any) => (

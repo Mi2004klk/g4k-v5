@@ -66,7 +66,7 @@ import { FormError } from "@/components/forms/form-error";
 
 import { DataTable } from "@g4k/ui/components";
 
-export default function UsersPage() {
+export function DirectoryList() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: capabilities } = useCapabilities();
@@ -414,73 +414,72 @@ export default function UsersPage() {
         );
       }
     }
-  ], []);
+  ], [canManageUsers]);
 
   const deptOptions = (Array.isArray(departments) ? departments : []).map((d: any) => ({ label: d.name, value: d.id.toString() }));
 
   return (
-    <PageContainer
-      title="Employee Directory"
-      description="Manage organization users, roles, and master data."
-      actions={
-        <>
-          <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-            {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
-            Export
-          </Button>
-          {canManageUsers && (
-            <Button onClick={() => {
-              if (!hasDraft) clearDraft();
-              setIsCreateOpen(true);
-            }} className="gap-2 shadow">
-              <AppIcon name="plus" />
-              Add Employee
+    <div className="space-y-6 mt-4">
+      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 mb-6">
+        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
+          <div className="flex-1 w-full">
+            <FilterBar
+              searchQuery={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search by name, email, code..."
+              filters={[
+                {
+                  type: "select",
+                  key: "role",
+                  label: "Role",
+                  value: roleFilter,
+                  onChange: setRoleFilter,
+                  options: [
+                    { label: "Super Admin", value: "super_admin" },
+                    { label: "HR", value: "hr" },
+                    { label: "Employee", value: "employee" },
+                  ],
+                },
+                {
+                  type: "select",
+                  key: "status",
+                  label: "Status",
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  options: [
+                    { label: "Active", value: "active" },
+                    { label: "Inactive", value: "inactive" },
+                    { label: "Deleted", value: "trashed" },
+                  ],
+                },
+                {
+                  type: "select",
+                  key: "dept",
+                  label: "Department",
+                  value: deptFilter,
+                  onChange: setDeptFilter,
+                  options: [...deptOptions],
+                },
+              ]}
+            />
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="h-9 gap-2 shadow-sm">
+              {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
+              Export
             </Button>
-          )}
-        </>
-      }
-      filterBar={
-          <FilterBar
-            searchQuery={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search by name, email, code..."
-            filters={[
-              {
-                type: "select",
-                key: "role",
-                label: "Role",
-                value: roleFilter,
-                onChange: setRoleFilter,
-                options: [
-                  { label: "Super Admin", value: "super_admin" },
-                  { label: "HR", value: "hr" },
-                  { label: "Employee", value: "employee" },
-                ],
-              },
-              {
-                type: "select",
-                key: "status",
-                label: "Status",
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: [
-                  { label: "Active", value: "active" },
-                  { label: "Inactive", value: "inactive" },
-                  { label: "Deleted", value: "trashed" },
-                ],
-              },
-              {
-                type: "select",
-                key: "dept",
-                label: "Department",
-                value: deptFilter,
-                onChange: setDeptFilter,
-                options: [...deptOptions],
-              },
-            ]}
-          />
-        }
-    >
+            {canManageUsers && (
+              <Button onClick={() => {
+                if (!hasDraft) clearDraft();
+                setIsCreateOpen(true);
+              }} className="h-9 gap-2 shadow-sm">
+                <AppIcon name="plus" />
+                Add Employee
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       {selectedCount > 0 && (
         <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-900/50 rounded-[var(--radius)] p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
           <span className="text-sm font-medium text-primary-700 dark:text-primary-300">{selectedCount} users selected</span>
@@ -630,7 +629,7 @@ export default function UsersPage() {
         }}
         isLoading={deleteMutation.isPending || statusMutation.isPending || bulkMutation.isPending || resetPasswordMutation.isPending || restoreMutation.isPending}
       />
-    </PageContainer>
+    </div>
   );
 }
 

@@ -126,13 +126,13 @@ class DashboardController extends Controller
                     // Projects
                     if (Schema::hasTable('projects')) {
                         $projectsQuery = DB::table('projects')
-                            ->leftJoin('users', 'projects.owner_id', '=', 'users.id')
+                            ->leftJoin('users', 'projects.created_by', '=', 'users.id')
                             ->where('projects.status', 'review')
                             ->select('projects.id', 'projects.created_at', 'users.name as user_name', 'projects.name as title');
                             
                         if ($activeRole === 'employee') {
                             $projectsQuery->where(function($q) use ($user) {
-                                $q->where('projects.owner_id', $user->id)
+                                $q->where('projects.created_by', $user->id)
                                   ->orWhereExists(function ($q2) use ($user) {
                                       $q2->select(DB::raw(1))
                                          ->from('project_members')
@@ -144,7 +144,7 @@ class DashboardController extends Controller
                             $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
                             $deptUserIds = empty($deptIds) ? [] : \App\Models\User::whereIn('department_id', $deptIds)->pluck('id')->toArray();
                             $projectsQuery->where(function($q) use ($deptUserIds) {
-                                $q->whereIn('projects.owner_id', $deptUserIds)
+                                $q->whereIn('projects.created_by', $deptUserIds)
                                   ->orWhereExists(function ($q2) use ($deptUserIds) {
                                       $q2->select(DB::raw(1))
                                          ->from('project_members')

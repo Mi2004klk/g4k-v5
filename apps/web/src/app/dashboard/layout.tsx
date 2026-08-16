@@ -51,7 +51,6 @@ export const navGroups = [
   ]},
   { label: "Organization", items: [
     { name: "Directory", href: "/dashboard/directory", icon: "directory", capability: "directory.view" },
-    { name: "Employee Management", href: "/dashboard/org/users", icon: "directory", capability: "users.employee.manage" },
     { name: "Team Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
     { name: "Admin Attendance", href: "/dashboard/admin/attendance", icon: "teamAttendance", capability: "admin.view-all-attendance" },
     { name: "Reports & Analytics", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },

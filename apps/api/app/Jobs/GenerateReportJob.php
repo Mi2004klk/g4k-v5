@@ -51,7 +51,7 @@ class GenerateReportJob implements ShouldQueue
                 });
 
                 $writer->close();
-                $disk->put($filename, file_get_contents($tempPath));
+                $fileData = base64_encode(file_get_contents($tempPath));
                 @unlink($tempPath);
             } else if ($format === 'pdf') {
                 $rows = [];
@@ -59,14 +59,13 @@ class GenerateReportJob implements ShouldQueue
                     $rows = array_merge($rows, $chunk);
                 });
                 $pdf = Pdf::loadView('reports.pdf', ['key' => $key, 'rows' => $rows]);
-                $disk->put($filename, $pdf->output());
+                $fileData = base64_encode($pdf->output());
             }
-
-            $url = $disk->url($filename);
 
             $this->exportJob->update([
                 'status' => 'completed',
-                'file_path' => $url,
+                'file_data' => $fileData ?? null,
+                'file_path' => $filename,
             ]);
 
             broadcast(new ExportCompleted($this->exportJob))->toOthers();

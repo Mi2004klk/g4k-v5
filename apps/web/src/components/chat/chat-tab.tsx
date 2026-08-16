@@ -277,7 +277,6 @@ export function ChatTab() {
   });
 
   const messages = messageData?.pages?.flatMap((page: any) => Array.isArray(page?.data) ? page.data : []).reverse() || [];
-  const selectedConv = conversations.find((c: any) => c.id === selectedId);
 
   return (
     <div className="space-y-6 mt-4">

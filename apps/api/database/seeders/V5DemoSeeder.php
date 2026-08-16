@@ -145,7 +145,7 @@ class V5DemoSeeder extends Seeder
                                 'status' => $status,
                                 'clock_in' => $start,
                                 'clock_out' => $end,
-                                'total_seconds' => $start && $end ? $end->diffInSeconds($start) : 0,
+                                'total_seconds' => $start && $end ? abs($end->diffInSeconds($start)) : 0,
                                 'created_at' => now(),
                                 'updated_at' => now()
                             ]

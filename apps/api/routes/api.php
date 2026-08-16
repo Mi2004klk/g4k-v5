@@ -258,6 +258,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/reports/data', [\App\Http\Controllers\ReportController::class, 'data']);
         Route::post('/reports/export', [\App\Http\Controllers\ReportController::class, 'export']);
         Route::get('/reports/exports', [\App\Http\Controllers\ReportController::class, 'exports']);
+        Route::get('/reports/exports/{id}/download', [\App\Http\Controllers\ReportController::class, 'downloadExport']);
         Route::get('/reports/attendance-summary', [\App\Http\Controllers\ReportController::class, 'attendanceSummary']);
         Route::get('/reports/leave-summary', [\App\Http\Controllers\ReportController::class, 'leaveSummary']);
     });

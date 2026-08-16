@@ -130,6 +130,31 @@ class ReportController extends Controller
         return response()->json($exports);
     }
 
+    public function downloadExport(Request $request, $id)
+    {
+        $exportJob = ExportJob::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        if ($exportJob->status !== 'completed' || !$exportJob->file_data) {
+            abort(404, 'Export not ready or file missing');
+        }
+
+        $decoded = base64_decode($exportJob->file_data);
+
+        $contentType = 'application/octet-stream';
+        if ($exportJob->format === 'pdf') $contentType = 'application/pdf';
+        if ($exportJob->format === 'csv') $contentType = 'text/csv';
+        if ($exportJob->format === 'xlsx') $contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+        $filename = "export-{$exportJob->report_key}-{$exportJob->id}.{$exportJob->format}";
+
+        return response($decoded, 200, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
     public function attendanceSummary(Request $request)
     {
         $start = $request->query('start', now()->subDays(30)->toDateString());
