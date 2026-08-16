@@ -37,10 +37,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   }));
   const [mounted, setMounted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const { widgetStates, dismissedWidgets, dismissWidget } = useUIStore(useShallow((s) => ({
+  const { widgetStates } = useUIStore(useShallow((s) => ({
     widgetStates: s.widgetStates,
-    dismissedWidgets: s.dismissedWidgets,
-    dismissWidget: s.dismissWidget,
   })));
   
   const draggingRef = useRef(false);
@@ -200,16 +198,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         margin={[16, 16] as [number, number]}
         draggableHandle=".widget-drag-handle"
       >
-        {availableWidgets.filter(w => !dismissedWidgets.includes(w.id)).map((widget) => (
+        {availableWidgets.map((widget) => (
           <div key={widget.id} className="h-full group/widget relative">
             <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-10 flex items-center gap-1">
-              <button 
-                onClick={(e) => { e.stopPropagation(); dismissWidget(widget.id); }}
-                className="p-1 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded shadow-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                title="Dismiss Widget"
-              >
-                <AppIcon name="close" size="xs" />
-              </button>
               <div className="widget-drag-handle cursor-grab active:cursor-grabbing p-1 bg-black/5 dark:bg-white/10 rounded flex items-center justify-center shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
                   <circle cx="9" cy="12" r="1" />

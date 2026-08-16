@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
-import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 import { Button } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
@@ -26,7 +25,7 @@ import {
 } from "@g4k/ui/components";
 import { DataTable } from "@g4k/ui/components";
 import { useTrackRecent } from "@/hooks/use-track-recent";
-export function DirectoryTab() {
+export function CorporateDirectoryTab() {
   const router = useRouter();
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
@@ -35,8 +34,6 @@ export function DirectoryTab() {
   const [visFilter, setVisFilter] = useUrlState("visibility", "all");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
-  const { data: capabilities } = useCapabilities();
-  const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
 
   useTrackRecent(
     selectedUser
@@ -161,19 +158,7 @@ export function DirectoryTab() {
           >
             Message
           </Button>
-          {canManageUsers && (
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/dashboard/org/users/${row.original.id}`);
-              }}
-              variant="ghost"
-              size="sm"
-              className="text-neutral-600 hover:text-neutral-900 ml-2"
-            >
-              Manage
-            </Button>
-          )}
+
         </div>
       ),
     },
@@ -277,20 +262,7 @@ export function DirectoryTab() {
                       ID: {user.employee_code || user.employee_id || "N/A"}
                     </div>
                     <div className="flex gap-1">
-                      {canManageUsers && (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/dashboard/org/users/${user.id}`);
-                          }}
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Manage ${user.name}`}
-                          className="h-11 w-11 sm:h-8 sm:w-8 text-neutral-600 hover:bg-neutral-100 rounded-full"
-                        >
-                          <AppIcon name="edit" size="sm" />
-                        </Button>
-                      )}
+
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();

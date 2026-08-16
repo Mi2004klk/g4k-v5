@@ -51,10 +51,8 @@ export const navGroups = [
   ]},
   { label: "Organization", items: [
     { name: "Directory", href: "/dashboard/directory", icon: "directory", capability: "directory.view" },
-    { name: "Team Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
-    { name: "Admin Attendance", href: "/dashboard/admin/attendance", icon: "teamAttendance", capability: "admin.view-all-attendance" },
+    { name: "Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
     { name: "Reports & Analytics", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },
-    { name: "Admin Reports", href: "/dashboard/admin/reports", icon: "spreadsheet", capability: "admin.view-reports" },
   ]},
   { label: "Account", items: [
     { name: "Settings & Profile", href: "/dashboard/profile", icon: "settings" },

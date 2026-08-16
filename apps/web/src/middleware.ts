@@ -9,8 +9,6 @@ const PROTECTED: Record<string, string> = {
   "/dashboard/org/designations": "designations.manage",
   "/dashboard/settings": "settings.manage",
   "/dashboard/audit": "audit.view",
-  "/dashboard/admin/attendance": "admin.view-all-attendance",
-  "/dashboard/admin/reports": "reports.manage",
   "/dashboard/reports": "reports.view",
 };
 

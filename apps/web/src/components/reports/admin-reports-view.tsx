@@ -10,7 +10,7 @@ import { SavedReportViews } from "@/components/reports/saved-report-views";
 import { toast } from "sonner";
 import { STALE_TIME_DEPARTMENTS, queryKeys } from "@/lib/query-keys";
 
-export default function ReportsPage() {
+export function AdminReportsView() {
   const [reportType, setReportType] = useState<"attendance-summary" | "leave-summary">("attendance-summary");
   const [filters, setFilters] = useState({
     start: format(subDays(new Date(), 30), "yyyy-MM-dd"),

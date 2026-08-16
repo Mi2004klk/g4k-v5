@@ -12,35 +12,11 @@ import { AdminAttendanceAnalytics } from '@/components/attendance/admin-attendan
 import { AdminAttendanceTrendsGraph } from '@/components/attendance/admin-attendance-trends-graph';
 import { AdminOpenShiftsTable } from '@/components/attendance/admin-open-shifts-table';
 import { AdminAttendanceCalendar } from '@/components/attendance/admin-attendance-calendar';
-
-export default function AdminAttendancePage() {
+export function AdminAttendanceView() {
   const [tab, setTab] = useUrlState('tab', 'calendar');
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto w-full">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">Company Attendance Console</h1>
-          <p className="text-sm text-neutral-500 mt-1">Global overview of employee attendance, historical analytics, and open shift management.</p>
-        </div>
-        <div className="flex items-center gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link href="/dashboard/org/attendance">
-                <Button variant="outline" size="sm" className="gap-2 bg-card">
-                  <AppIcon name="users" />
-                  View HR Console
-                </Button>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Switch to team-level view</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        </div>
-      </div>
+    <div className="space-y-6 w-full">
       <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
         <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 overflow-x-auto">
           <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-[var(--radius)] data-[state=active]:bg-primary-50 dark:data-[state=active]:bg-primary-900/30 data-[state=active]:text-primary-700 dark:data-[state=active]:text-primary-300">

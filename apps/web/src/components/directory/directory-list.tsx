@@ -66,7 +66,7 @@ import { FormError } from "@/components/forms/form-error";
 
 import { DataTable } from "@g4k/ui/components";
 
-export function DirectoryList() {
+export function EmployeeManagementTab() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: capabilities } = useCapabilities();

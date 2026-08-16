@@ -647,7 +647,7 @@ function DayDetailContent({
       </div>
 
       {/* Projects */}
-      {data?.projects && data.projects.length > 0 && (
+      {Array.isArray(data?.projects) && data.projects.length > 0 && (
         <div>
           <h4 className="text-sm font-bold mb-2">Projects Worked</h4>
           <div className="flex flex-wrap gap-2">
@@ -664,7 +664,7 @@ function DayDetailContent({
       )}
 
       {/* Tasks */}
-      {data?.tasks && data.tasks.length > 0 && (
+      {Array.isArray(data?.tasks) && data.tasks.length > 0 && (
         <div>
           <h4 className="text-sm font-bold mb-2">Tasks Completed</h4>
           <div className="flex flex-wrap gap-2">

@@ -1,44 +1,47 @@
 "use client";
 
-import { useUrlState } from '@/hooks/use-url-state';
+import { HrAttendanceView } from "@/components/attendance/hr-attendance-view";
+import { AdminAttendanceView } from "@/components/attendance/admin-attendance-view";
+import { useAuthStore } from "@/lib/auth-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
-import { HrAttendanceTable } from '@/components/attendance/hr-attendance-table';
-import { HrAttendanceAnalytics } from '@/components/attendance/hr-attendance-analytics';
-import dynamic from 'next/dynamic';
-import { AppIcon } from "@g4k/ui/components";
 
-const HrAttendanceGraph = dynamic(() => import('@/components/attendance/hr-attendance-graph').then(mod => mod.HrAttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
+export default function AttendanceHubPage() {
+  const { hasCapability } = useAuthStore();
+  const isAdmin = hasCapability("admin.view-all-attendance");
 
-export default function HrAttendancePage() {
-  const [tab, setTab] = useUrlState('tab', 'today');
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6 max-w-[1400px] mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">Team Attendance</h1>
+            <p className="text-sm text-neutral-500 mt-1">Monitor today's attendance and view historical trends for your team.</p>
+          </div>
+        </div>
+        <HrAttendanceView />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto w-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">Team Attendance</h1>
-          <p className="text-sm text-neutral-500 mt-1">Monitor today's attendance and view historical trends for your team.</p>
+          <h1 className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">Attendance Console</h1>
+          <p className="text-sm text-neutral-500 mt-1">Manage global company attendance or focus on your direct reports.</p>
         </div>
       </div>
-      <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
-        <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 overflow-x-auto flex-nowrap thin-scrollbar flex">
-          <TabsTrigger value="today" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 whitespace-nowrap">
-            <AppIcon name="directory" className=" mr-2" />
-            Today's Status
-          </TabsTrigger>
-          <TabsTrigger value="graph" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 whitespace-nowrap">
-            <AppIcon name="chart" className=" mr-2" />
-            Trends & Graphs
-          </TabsTrigger>
+
+      <Tabs defaultValue="admin" className="w-full space-y-6">
+        <TabsList className="mb-4">
+          <TabsTrigger value="admin">Global Company (Admin)</TabsTrigger>
+          <TabsTrigger value="team">My Team (HR)</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0 space-y-6">
-          <HrAttendanceAnalytics />
-          <HrAttendanceTable />
+        <TabsContent value="admin" className="mt-0 outline-none">
+          <AdminAttendanceView />
         </TabsContent>
-        
-        <TabsContent value="graph" className="outline-none m-0 focus-visible:ring-0">
-          <HrAttendanceGraph />
+        <TabsContent value="team" className="mt-0 outline-none">
+          <HrAttendanceView />
         </TabsContent>
       </Tabs>
     </div>
