@@ -3,12 +3,12 @@
 import { ReportBuilder } from "@/components/reports/report-builder";
 import { ExportHistory } from "@/components/reports/export-history";
 import { AdminReportsView } from "@/components/reports/admin-reports-view";
-import { useAuthStore } from "@/lib/auth-store";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 
 export default function ReportsPage() {
-  const { hasCapability } = useAuthStore();
-  const isAdmin = hasCapability("admin.view-reports");
+  const { data: capabilities } = useCapabilities();
+  const isAdmin = hasCapability(capabilities, "admin.view-reports");
 
   if (!isAdmin) {
     return (
