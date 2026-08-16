@@ -172,12 +172,11 @@ class V5DemoSeeder extends Seeder
             DB::table('audit_logs')->insert([
                 'user_id' => $users->random()->id,
                 'action' => 'login',
-                'entity_type' => 'auth',
-                'entity_id' => null,
-                'ip_address' => '192.168.1.' . rand(1, 255),
+                'subject_type' => 'auth',
+                'subject_id' => null,
+                'ip' => '192.168.1.' . rand(1, 255),
                 'meta' => json_encode(['browser' => 'Chrome']),
-                'created_at' => now()->subHours(rand(1, 48)),
-                'updated_at' => now()
+                'at' => now()->subHours(rand(1, 48))
             ]);
         }
     }
