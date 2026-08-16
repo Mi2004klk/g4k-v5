@@ -11,11 +11,11 @@ class Message extends Model
 {
     use \App\Traits\HasDemoTag;
     protected $fillable = ['conversation_id', 'sender_id', 'type', 'body',
-        'attachment_url', 'reply_to_id', 'edited_at', 'pinned_at', 'demo_tag'];
+        'attachment_url', 'reply_to_id', 'edited_at', 'pinned', 'demo_tag'];
 
     protected $casts = [
         'edited_at' => 'datetime',
-        'pinned_at' => 'datetime',
+        'pinned' => 'boolean',
     ];
 
     public function conversation(): BelongsTo

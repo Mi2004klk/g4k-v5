@@ -12,6 +12,7 @@ class NotificationController extends Controller
         $user = $request->user();
         
         $query = Notification::where('user_id', $user->id)
+            ->orderByRaw('CASE WHEN read_at IS NULL THEN 0 ELSE 1 END')
             ->orderBy('created_at', 'desc');
             
         if ($request->query('unreadOnly') === 'true') {

@@ -6,18 +6,16 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { toast } from "sonner";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { asArray } from "@/lib/utils";
+
 import {
   queryKeys,
   STALE_TIME_DIRECTORY,
   STALE_TIME_DEPARTMENTS,
   STALE_TIME_DESIGNATIONS
 } from "@/lib/query-keys";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useExport } from "@/hooks/use-export";
+import { useIsMobile } from "@g4k/ui/hooks/use-mobile";
 
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -50,6 +48,7 @@ import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
+import Link from "next/link";
 import { getAuthToken } from "@/lib/auth-store";
 import { EmptyState } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
@@ -61,30 +60,18 @@ import { Combobox } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
+import { UserForm, UserFormValues } from "@/components/users/user-form";
 import { PageContainer } from "@/components/layout/page-container";
+import { FormError } from "@/components/forms/form-error";
 
 import { DataTable } from "@g4k/ui/components";
-
-const userSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  username: z.string().optional(),
-  phone: z.string().optional(),
-  department_id: z.string().optional(),
-  designation_id: z.string().optional(),
-  team_id: z.string().optional(),
-  employee_id: z.string().optional(),
-  work_schedule_id: z.string().optional(),
-  roles: z.array(z.string()).min(1, "At least one role is required"),
-});
-
-type UserFormValues = z.infer<typeof userSchema>;
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
+  const isMobile = useIsMobile();
 
   const [search, setSearch] = useUrlState("search", "");
   const [roleFilter, setRoleFilter] = useUrlState("role", "all");
@@ -138,42 +125,18 @@ export default function UsersPage() {
     roles: ["employee"],
   });
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    reset: resetEdit,
-    watch,
-    setValue,
-    formState: { errors, isValid }
-  } = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema),
-    defaultValues: draftData,
-    mode: "onTouched",
-    delayError: 400,
-  });
-
-  // Watch for drafting using subscription to avoid re-renders
-  useEffect(() => {
-    const subscription = watch((value) => {
-      setDraftData(value as UserFormValues);
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, setDraftData]);
-
   // Context-aware Ctrl+N shortcut
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "n" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        if (!hasDraft) reset({ name: "", email: "", username: "", phone: "", department_id: "", team_id: "", designation_id: "", employee_id: "", roles: ["employee"] });
+        if (!hasDraft) clearDraft();
         setIsCreateOpen(true);
       }
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [hasDraft, reset, setIsCreateOpen]);
+  }, [hasDraft, clearDraft, setIsCreateOpen]);
 
   // Queries
   const { data, isPending, isError, refetch } = useQuery({
@@ -201,10 +164,10 @@ export default function UsersPage() {
     queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     staleTime: STALE_TIME_DEPARTMENTS,
-    enabled: hasCapability(capabilities, "departments.manage"),
+    enabled: canManageUsers,
   });
 
-  const watchDept = watch("department_id");
+  const watchDept = draftData.department_id;
   const selectedDept = (Array.isArray(departments) ? departments : []).find((d: any) => d.id === Number(watchDept));
   const availableTeams = selectedDept?.teams || [];
 
@@ -214,13 +177,13 @@ export default function UsersPage() {
     queryKey: queryKeys.designations,
     queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : []),
     staleTime: STALE_TIME_DESIGNATIONS,
-    enabled: hasCapability(capabilities, "designations.manage"),
+    enabled: canManageUsers,
   });
 
   const { data: work_schedules = [] } = useQuery({
     queryKey: ["work_schedules"],
     queryFn: () => apiFetch("/work-schedules").then((res: any) => Array.isArray(res?.data) ? res.data : []),
-    enabled: hasCapability(capabilities, "settings.manage"),
+    enabled: hasCapability(capabilities, "settings.manage") || hasCapability(capabilities, "users.hr.manage"),
   });
 
   const { data: activityData, isLoading: isLoadingActivity } = useQuery({
@@ -243,11 +206,12 @@ export default function UsersPage() {
     onSuccess: () => {
       toast.success("User created successfully!");
       setIsCreateOpen(false);
-      reset();
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to create user."),
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to create user.");
+    },
   });
 
   const bulkMutation = useMutation({
@@ -270,7 +234,7 @@ export default function UsersPage() {
     await triggerExport(`/users/export?${params.toString()}`, "users_export.csv");
   };
 
-  const usersList = asArray(data);
+  const usersList = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const totalPages = data?.last_page || data?.data?.last_page || 1;
   const selectedCount = Object.keys(rowSelection).length;
 
@@ -302,19 +266,7 @@ export default function UsersPage() {
         return (
           <button className={`flex items-center gap-3 w-full text-left transition-opacity ${canManageUsers ? 'hover:opacity-80' : ''}`} onClick={() => {
             if (!canManageUsers) return;
-            setEditingUser(user);
-            resetEdit({
-              name: user.name || "",
-              email: user.email || "",
-              username: user.username || "",
-              phone: user.phone || "",
-              department_id: user.department_id?.toString() || "",
-              team_id: user.team_id?.toString() || "",
-              designation_id: user.designation_id?.toString() || "",
-              employee_id: user.employee_code || user.employee_id || "",
-              roles: user.role_assignments?.map((r: any) => r.role) || ["employee"],
-            });
-            setIsEditOpen(true);
+            router.push(`/dashboard/org/users/${user.id}`);
           }}>
             <Avatar className="w-9 h-9">
               {user.avatar_url && <AvatarImage src={user.avatar_url} alt={user.name} />}
@@ -478,7 +430,7 @@ export default function UsersPage() {
           </Button>
           {canManageUsers && (
             <Button onClick={() => {
-              if (!hasDraft) reset({ name: "", email: "", username: "", phone: "", department_id: "", team_id: "", designation_id: "", employee_id: "", roles: ["employee"] });
+              if (!hasDraft) clearDraft();
               setIsCreateOpen(true);
             }} className="gap-2 shadow">
               <AppIcon name="plus" />
@@ -558,6 +510,11 @@ export default function UsersPage() {
           ) : usersList.length === 0 ? (
             <div className="p-12">
               <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." icon={<AppIcon name="userX" className="w-8 h-8 text-neutral-400" />} />
+              <div className="flex justify-center mt-4">
+                <Link href="/dashboard/directory">
+                  <Button variant="outline" className="gap-2"><AppIcon name="users" /> View Directory</Button>
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -578,154 +535,22 @@ export default function UsersPage() {
       </Card>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent aria-describedby={undefined}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Employee</DialogTitle>
-            <DialogDescription className="sr-only">Create a new employee record.</DialogDescription>
+            <DialogTitle>Create New Employee</DialogTitle>
+            <DialogDescription>Add a new employee to the directory.</DialogDescription>
           </DialogHeader>
-
-          {hasDraft && (
-            <div className="bg-blue-50 border border-blue-100 p-3 rounded-[var(--radius)] flex items-center justify-between mt-2">
-              <span className="text-sm text-blue-700">You have an unsaved draft.</span>
-              <Button size="sm" variant="outline" className="h-7 text-xs bg-surface text-blue-700 hover:bg-blue-50" onClick={() => {
-                restoreDraft();
-                reset(draftData);
-              }}>
-                Restore
-              </Button>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit(onSubmitCreate)}>
-            <div className="space-y-4 py-2 text-xs max-h-[60dvh] overflow-y-auto px-1 mt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="user-name" className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
-                  <Input id="user-name" {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} />
-                  {errors.name && <p className="text-red-500 text-[10px] mt-1">{errors.name.message}</p>}
-                </div>
-                <div>
-                  <label htmlFor="user-username" className="block mb-1 font-semibold">Username</label>
-                  <Input id="user-username" {...register("username")} placeholder="janedoe" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="user-email" className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
-                  <Input id="user-email" type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} />
-                  {errors.email && <p className="text-red-500 text-[10px] mt-1">{errors.email.message}</p>}
-                </div>
-                <div>
-                  <label htmlFor="user-phone" className="block mb-1 font-semibold">Phone</label>
-                  <Input id="user-phone" {...register("phone")} placeholder="+91 98765 43210" />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="user-employee_id" className="block mb-1 font-semibold">Employee ID</label>
-                  <Input id="user-employee_id" {...register("employee_id")} placeholder="Auto-generated if blank" />
-                </div>
-                <div>
-                  <label className="block mb-1 font-semibold">Department</label>
-                  <Controller
-                    name="department_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Combobox
-                        options={departments?.map((d: any) => ({ label: d.name, value: d.id.toString() })) || []}
-                        value={field.value}
-                        onChange={(val) => { field.onChange(val); setValue("team_id", ""); }}
-                        placeholder="Select Department"
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-1 font-semibold">Team</label>
-                  <Controller
-                    name="team_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Combobox
-                        options={availableTeams.map((t: any) => ({ label: t.name, value: t.id.toString() }))}
-                        value={field.value}
-                        onChange={field.onChange}
-                        disabled={!watchDept}
-                        placeholder="Select Team"
-                      />
-                    )}
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 font-semibold">Designation</label>
-                  <Controller
-                    name="designation_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Combobox
-                        options={designations?.map((d: any) => ({ label: d.name, value: d.id.toString() })) || []}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select Designation"
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-1 font-semibold">Work Schedule</label>
-                  <Controller
-                    name="work_schedule_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Combobox
-                        options={work_schedules?.map((ws: any) => ({ label: ws.name, value: ws.id.toString() })) || []}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select Schedule (Default)"
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block mb-2 font-semibold">Roles <span className="text-red-500">*</span></label>
-                <Controller
-                  name="roles"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="flex gap-4">
-                      {['employee', 'hr', 'super_admin'].map((role) => (
-                        <label key={role} className="flex items-center gap-2 cursor-pointer">
-                          <Checkbox
-                            checked={field.value?.includes(role)}
-                            onCheckedChange={(checked: boolean) => {
-                              const newRoles = checked
-                                ? [...(field.value || []), role]
-                                : (field.value || []).filter((r: string) => r !== role);
-                              field.onChange(newRoles);
-                            }}
-                          />
-                          <span className="capitalize">{role.replace('_', ' ')}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                />
-                {errors.roles && <p className="text-red-500 text-[10px] mt-1">{errors.roles.message}</p>}
-              </div>
-            </div>
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={createMutation.isPending || !isValid}>
-                {createMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
-                {createMutation.isPending ? "Saving..." : "Create User"}
-              </Button>
-            </DialogFooter>
-          </form>
+          <UserForm
+            defaultValues={draftData}
+            onValuesChange={setDraftData}
+            departments={departments}
+            designations={designations}
+            work_schedules={work_schedules}
+            onSubmit={onSubmitCreate}
+            onCancel={() => setIsCreateOpen(false)}
+            isPending={createMutation.isPending}
+            submitLabel="Create User"
+          />
         </DialogContent>
       </Dialog>
 
@@ -757,7 +582,7 @@ export default function UsersPage() {
               activityData?.data?.map((log: any) => (
                 <div key={log.id} className="p-3 border rounded-[var(--radius)] text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">
                   <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type}</span>
-                  <span className="text-xs text-neutral-500">{new Date(log.at).toLocaleString()} - IP: {log.ip || 'N/A'}</span>
+                  <span className="text-xs text-neutral-500">{new Date(log.at).toLocaleString()} - IP: {log.ip_address || 'N/A'}</span>
                 </div>
               ))
             )}

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 import { Button } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
@@ -34,6 +35,9 @@ export function DirectoryTab() {
   const [visFilter, setVisFilter] = useUrlState("visibility", "all");
   const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+
+  const { data: capabilities } = useCapabilities();
+  const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
 
   useTrackRecent(
     selectedUser
@@ -158,6 +162,19 @@ export function DirectoryTab() {
           >
             Message
           </Button>
+          {canManageUsers && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/dashboard/org/users/${row.original.id}`);
+              }}
+              variant="ghost"
+              size="sm"
+              className="text-neutral-600 hover:text-neutral-900 ml-2"
+            >
+              Manage
+            </Button>
+          )}
         </div>
       ),
     },
@@ -293,18 +310,34 @@ export function DirectoryTab() {
                     <div className="text-[10px] uppercase font-bold tracking-wider text-neutral-400">
                       ID: {user.employee_code || user.employee_id || "N/A"}
                     </div>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        sendMessageMutation.mutate(user.id);
-                      }}
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Message ${user.name}`}
-                      className="h-11 w-11 sm:h-8 sm:w-8 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10 hover:bg-primary-100 dark:hover:bg-primary-500/20 rounded-full"
-                    >
-                      <AppIcon name="chat" size="sm" />
-                    </Button>
+                    <div className="flex gap-1">
+                      {canManageUsers && (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/dashboard/org/users/${user.id}`);
+                          }}
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Manage ${user.name}`}
+                          className="h-11 w-11 sm:h-8 sm:w-8 text-neutral-600 hover:bg-neutral-100 rounded-full"
+                        >
+                          <AppIcon name="edit" size="sm" />
+                        </Button>
+                      )}
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sendMessageMutation.mutate(user.id);
+                        }}
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Message ${user.name}`}
+                        className="h-11 w-11 sm:h-8 sm:w-8 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10 hover:bg-primary-100 dark:hover:bg-primary-500/20 rounded-full"
+                      >
+                        <AppIcon name="chat" size="sm" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>

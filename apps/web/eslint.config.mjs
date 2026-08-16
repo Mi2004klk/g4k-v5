@@ -5,6 +5,17 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          "selector": "CallExpression[callee.object.name='URL'][callee.property.name='createObjectURL']",
+          "message": "Direct use of URL.createObjectURL is restricted. Please use the useExport hook instead."
+        }
+      ]
+    }
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

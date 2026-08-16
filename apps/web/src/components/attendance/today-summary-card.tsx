@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, StatusBadge } from "@g4k/ui/components";
@@ -20,6 +21,14 @@ export function TodaySummaryCard() {
     staleTime: STALE_TIME_ATTENDANCE,
     placeholderData: keepPreviousData,
   });
+
+  const setStandardSeconds = useTimerStore((s) => s.setStandardSeconds);
+  
+  useEffect(() => {
+    if (data?.standard_seconds) {
+      setStandardSeconds(data.standard_seconds);
+    }
+  }, [data?.standard_seconds, setStandardSeconds]);
 
   if (isPending) {
     return (
@@ -65,8 +74,8 @@ export function TodaySummaryCard() {
       if (event.type === "break_start") {
         currentBreakStart = event;
       } else if (event.type === "break_end" && currentBreakStart) {
-        const start = new Date(currentBreakStart.time);
-        const end = new Date(event.time);
+        const start = new Date(currentBreakStart.timestamp);
+        const end = new Date(event.timestamp);
         const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
         breaks.push({ start, end, duration: durationSecs });
         currentBreakStart = null;
@@ -74,7 +83,7 @@ export function TodaySummaryCard() {
     }
     // Handle ongoing break
     if (currentBreakStart) {
-      const start = new Date(currentBreakStart.time);
+      const start = new Date(currentBreakStart.timestamp);
       const end = new Date();
       const durationSecs = Math.floor((end.getTime() - start.getTime()) / 1000);
       breaks.push({ start, end: null, duration: durationSecs, isOngoing: true });

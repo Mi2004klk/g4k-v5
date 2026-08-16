@@ -35,6 +35,7 @@ import {
 } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
+import { EmptyState } from "@g4k/ui/components";
 
 const COLUMNS = [
   { id: "todo", title: "To Do", color: "bg-neutral-400" },
@@ -327,6 +328,18 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
       }
     }
   };
+
+  if (!isLoading && tasks.length === 0) {
+    return (
+      <div className="py-12">
+        <EmptyState
+          icon="layout"
+          title="No tasks yet"
+          description="There are no tasks for the selected filters. Change filters or create a new task to get started."
+        />
+      </div>
+    );
+  }
 
   return (
     <DndContext

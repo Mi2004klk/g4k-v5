@@ -10,6 +10,7 @@ import { Card, CardContent, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { WidgetInfo } from "./widget-info";
+import { useRouter } from "next/navigation";
 
 interface MetricWidgetProps {
   title: string;
@@ -21,6 +22,7 @@ interface MetricWidgetProps {
   hasModule?: boolean;
   info?: React.ReactNode;
   breakdown?: boolean;
+  href?: string;
 }
 
 export function MetricWidget({
@@ -33,10 +35,13 @@ export function MetricWidget({
   hasModule = true,
   info,
   breakdown = false,
+  href,
 }: MetricWidgetProps) {
   const [displayValue, setDisplayValue] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
   const isFirstRender = useRef(true);
   const prevValueRef = useRef<number | null>(null);
+  const router = useRouter();
 
   const { data, isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => data?.metrics || {},
@@ -44,7 +49,6 @@ export function MetricWidget({
   });
 
   const rawValue = data?.[metricKey] ?? 0;
-  const isModuleAvailable = data?.[`has_${metricKey.split('_')[1] || metricKey}_module`] ?? hasModule;
 
   // breakdown logic
   const activeCount = data?.active_employees ?? 0;
@@ -73,6 +77,8 @@ export function MetricWidget({
     cyan: "bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300",
     teal: "bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300",
   };
+
+  if (!isVisible) return null;
 
   if (isPending) {
     return (
@@ -112,20 +118,11 @@ export function MetricWidget({
     );
   }
 
-  if (isModuleAvailable === false) {
-    return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
-        <EmptyState
-          title={title}
-          description="Module pending release in upcoming phase."
-          icon={<AppIcon name={icon} size="2xl" className="text-neutral-300" />}
-        />
-      </Card>
-    );
-  }
-
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 group">
+    <Card 
+      onClick={() => href && router.push(href)}
+      className={`h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 group ${href ? 'cursor-pointer' : ''}`}
+    >
       <div>
         <div className="flex items-center justify-between pb-3">
           <div className="flex items-center gap-2">
@@ -136,7 +133,19 @@ export function MetricWidget({
               {title}
               {dynamicInfo && <WidgetInfo summary={dynamicInfo} />}
             </span>
-            {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+            <div className="flex items-center gap-1">
+              {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+              {!isFetching && (
+                <>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); refetch(); }}>
+                    <AppIcon name="refresh" size="xs" className="text-neutral-400" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setIsVisible(false); }}>
+                    <AppIcon name="close" size="sm" className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

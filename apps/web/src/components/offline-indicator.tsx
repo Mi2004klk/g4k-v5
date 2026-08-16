@@ -41,7 +41,7 @@ export function OfflineIndicator() {
         "bg-amber-500 text-amber-950 font-medium text-sm text-center shadow-e3",
         "flex items-center justify-center gap-2 animate-in slide-in-from-bottom"
       )}
-      aria-live="assertive"
+      aria-live="polite"
     >
       <AppIcon name="wifiOff" />
       <span>You're offline. Changes will be saved locally and synced when you reconnect.</span>

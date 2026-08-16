@@ -14,19 +14,19 @@ class MessageRead implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $message;
+    public $conversationId;
     public $userId;
 
-    public function __construct(Message $message, int $userId)
+    public function __construct(int $conversationId, int $userId)
     {
-        $this->message = $message;
+        $this->conversationId = $conversationId;
         $this->userId = $userId;
     }
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('conversation.' . $this->message->conversation_id),
+            new PrivateChannel('conversation.' . $this->conversationId),
         ];
     }
 

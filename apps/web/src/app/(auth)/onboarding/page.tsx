@@ -269,15 +269,17 @@ export default function OnboardingPage() {
                   />
 
                   <div className="flex gap-3 mt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-11"
-                      onClick={() => setStep("tour")}
-                      disabled={isLoading}
-                    >
-                      Skip for now
-                    </Button>
+                    {!user?.must_change_password && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-11"
+                        onClick={() => setStep("tour")}
+                        disabled={isLoading}
+                      >
+                        Skip for now
+                      </Button>
+                    )}
                     <Button
                       type="submit"
                       className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all duration-300 active:scale-[0.98] relative overflow-hidden group font-sans disabled:opacity-50 disabled:cursor-not-allowed border-none"

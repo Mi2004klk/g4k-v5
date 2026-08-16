@@ -13,17 +13,39 @@ export function AdminAttendanceAnalytics() {
   const [deptFilter] = useUrlState("dept", "all");
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.adminAttendance(selectedDate, deptFilter),
+    queryKey: ['attendance-analytics', selectedDate, deptFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      return apiFetch(`/attendance/admin/overview?${params.toString()}`);
+      
+      try {
+        // Try the new analytics endpoint first
+        return await apiFetch(`/attendance/admin/analytics?${params.toString()}`);
+      } catch (e) {
+        // Fallback to overview if analytics endpoint doesn't exist yet
+        params.append("per_page", "1000"); // Try to get all records for stats
+        return await apiFetch(`/attendance/admin/overview?${params.toString()}`);
+      }
     },
     staleTime: STALE_TIME_ATTENDANCE,
   });
 
   const stats = useMemo(() => {
+    // If backend returns the new dedicated analytics object shape
+    if (data && !Array.isArray(data) && !data.data && data.present !== undefined) {
+      return {
+        present: data.present || 0,
+        absent: data.absent || 0,
+        late: data.late || 0,
+        leave: data.leave || 0,
+        total: data.total || 0,
+        avgClockIn: data.avg_clock_in || "—",
+        totalOvertime: data.total_overtime_formatted || "—",
+      };
+    }
+
+    // Fallback: calculate from records
     const records = data?.data || [];
     let present = 0;
     let absent = 0;

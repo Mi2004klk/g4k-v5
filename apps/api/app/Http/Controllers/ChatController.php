@@ -27,10 +27,20 @@ class ChatController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $search = $request->input('search');
+
         $conversations = Conversation::where(function ($query) use ($user) {
             $query->whereHas('users', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             })->orWhere('scope', 'global');
+        })
+        ->when($search, function($q) use ($search) {
+            $q->where(function($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhereHas('users', function($q2) use ($search) {
+                          $q2->where('name', 'like', "%{$search}%");
+                      });
+            });
         })
         ->with(['users', 'latestMessage.sender', 'project'])
         ->withCount(['messages as unread_count' => function ($query) use ($user) {
@@ -51,7 +61,7 @@ class ChatController extends Controller
 
         $messages = Message::where('conversation_id', $conversation->id)
             ->with(['sender', 'replyTo', 'reads'])
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc')
             ->cursorPaginate(50);
 
         return response()->json($messages);
@@ -102,11 +112,12 @@ class ChatController extends Controller
                 if ($userId !== $request->user()->id) {
                     NotificationService::send(
                         $userId,
-                        'high',
+                        'chat',
                         'You were mentioned',
                         $request->user()->name . ' mentioned you in a message: "' . \Illuminate\Support\Str::limit($validated['body'] ?? '', 50) . '"',
                         ['conversation_id' => $conversation->id, 'message_id' => $message->id],
-                        '/dashboard/chat?conversation=' . $conversation->id
+                        '/dashboard/chat?conversation=' . $conversation->id,
+                        'high'
                     );
                 }
             }
@@ -127,19 +138,19 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
-        $unreadMessages = Message::where('conversation_id', $conversation->id)
+        Message::where('conversation_id', $conversation->id)
             ->where('sender_id', '!=', $request->user()->id)
             ->whereDoesntHave('reads', function ($q) use ($request) {
                 $q->where('user_id', $request->user()->id);
             })
-            ->cursorPaginate(50);
-
-        foreach ($unreadMessages as $msg) {
-            \Illuminate\Support\Facades\DB::table('conversation_message_reads')->updateOrInsert(
-                ['message_id' => $msg->id, 'user_id' => $request->user()->id],
-                ['read_at' => now(), 'updated_at' => now(), 'created_at' => now()]
-            );
-        }
+            ->chunkById(200, function ($messages) use ($request) {
+                foreach ($messages as $msg) {
+                    \Illuminate\Support\Facades\DB::table('conversation_message_reads')->updateOrInsert(
+                        ['message_id' => $msg->id, 'user_id' => $request->user()->id],
+                        ['read_at' => now(), 'updated_at' => now(), 'created_at' => now()]
+                    );
+                }
+            });
 
         if ($conversation->scope !== 'global') {
             $conversation->users()->updateExistingPivot($request->user()->id, ['last_read_at' => now()]);
@@ -198,9 +209,9 @@ class ChatController extends Controller
 
     public function createGroup(Request $request)
     {
-        $role = $request->user()->active_role ?? 'employee';
-        if (!CapabilityMatrix::hasCapability($role, 'chat.manage') && !CapabilityMatrix::hasCapability($role, 'projects.manage')) {
-            abort(403, 'Only HR or Admin can create custom groups');
+        $role = $request->user()->resolveActiveRole();
+        if (!CapabilityMatrix::hasCapability($role, 'chat.group')) {
+            abort(403, 'Unauthorized to create groups.');
         }
 
         $validated = $request->validate([
@@ -225,14 +236,14 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($conversationId);
         $this->checkAccess($conversation, $request->user());
 
-        $role = $request->user()->active_role ?? 'employee';
+        $role = $request->user()->resolveActiveRole();
         if (!CapabilityMatrix::hasCapability($role, 'chat.manage') && !CapabilityMatrix::hasCapability($role, 'projects.manage')) {
             abort(403, 'Only HR or Admin can pin messages');
         }
 
         $message = Message::where('conversation_id', $conversationId)->findOrFail($messageId);
         $message->update([
-            'pinned_at' => now()
+            'pinned' => true
         ]);
 
         return response()->json($message);
@@ -243,16 +254,17 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($conversationId);
         $this->checkAccess($conversation, $request->user());
 
-        $role = $request->user()->active_role ?? 'employee';
+        $role = $request->user()->resolveActiveRole();
         if (!CapabilityMatrix::hasCapability($role, 'chat.manage') && !CapabilityMatrix::hasCapability($role, 'projects.manage')) {
             abort(403, 'Only HR or Admin can unpin messages');
         }
 
         $message = Message::where('conversation_id', $conversationId)->findOrFail($messageId);
         $message->update([
-            'pinned_at' => null
+            'pinned' => false
         ]);
 
         return response()->json($message);
     }
 }
+

@@ -33,7 +33,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             headers: rt ? { "X-Refresh-Token": rt } : {},
           });
           if (isMounted) {
-            setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
+            setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities, false);
           }
         } catch {
           if (isMounted) {
@@ -71,6 +71,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         setIsRedirecting(true);
         router.push("/login");
       }
+      return;
+    }
+
+    // Enforce must_change_password
+    if (user.must_change_password && pathname !== "/change-password") {
+      setIsRedirecting(true);
+      router.push("/change-password");
       return;
     }
 

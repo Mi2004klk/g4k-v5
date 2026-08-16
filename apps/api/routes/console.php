@@ -17,6 +17,7 @@ Schedule::command('sanctum:prune-expired --hours=24')->daily()->withoutOverlappi
 Schedule::command('passwords:expire-flag')->daily()->withoutOverlapping()->onOneServer()->timezone('Asia/Kolkata');
 Schedule::command('reminders:holidays')->daily()->withoutOverlapping()->onOneServer()->timezone('Asia/Kolkata');
 Schedule::command('notifications:cleanup')->daily()->withoutOverlapping()->onOneServer()->timezone('Asia/Kolkata');
+Schedule::command('tasks:reminders')->everyMinute()->withoutOverlapping()->onOneServer()->timezone('Asia/Kolkata');
 
 Schedule::call(function () {
     \Illuminate\Support\Facades\Log::info('Scheduler heartbeat - alive');

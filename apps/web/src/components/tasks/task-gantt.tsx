@@ -18,9 +18,10 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
     if (!ganttRef.current || tasks.length === 0) return;
 
     const formattedTasks = tasks.map(task => {
-      const start = task.created_at ? new Date(task.created_at) : new Date();
+      const parseDate = (d: string) => d.includes('T') ? new Date(d) : new Date(`${d}T00:00:00`);
+      const start = task.created_at ? parseDate(task.created_at) : new Date();
       // Ensure end date is at least 1 day after start to show up on the chart
-      const end = task.due_date ? new Date(task.due_date) : new Date(start.getTime() + 86400000);
+      const end = task.due_date ? parseDate(task.due_date) : new Date(start.getTime() + 86400000);
       
       const isMilestone = isSameDay(start, end);
 

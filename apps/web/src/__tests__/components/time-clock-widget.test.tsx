@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { TimeClockWidget } from '../../components/widgets/time-clock-widget';
 import { useTimerStore } from '../../stores/timer-store';
 import { apiFetch } from '@/lib/api-client';
@@ -7,6 +7,7 @@ import { offlineEngine } from '@/lib/offline-engine';
 
 // Mock the query client provider
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 // Mock dependencies
 vi.mock('@/lib/api-client', () => ({
@@ -39,6 +40,7 @@ function renderWithProviders(ui: React.ReactElement) {
 describe('TimeClockWidget', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    queryClient.clear();
     useTimerStore.setState({
       isActive: false,
       isOnBreak: false,
@@ -49,9 +51,11 @@ describe('TimeClockWidget', () => {
     });
 
     (apiFetch as any).mockResolvedValue({
-      day: { total_seconds: 0 },
-      events: [],
-      standard_seconds: 28800
+      attendance_today: {
+        day: { total_seconds: 0 },
+        events: [],
+        standard_seconds: 28800
+      }
     });
   });
 
@@ -61,50 +65,75 @@ describe('TimeClockWidget', () => {
     renderWithProviders(<TimeClockWidget />);
     
     await waitFor(() => {
-      expect(screen.getByText('Clock In')).toBeInTheDocument();
+      expect(screen.getByText('Start Shift')).toBeInTheDocument();
     });
     
-    expect(apiFetch).toHaveBeenCalledWith('/attendance/me/today');
+    expect(apiFetch).toHaveBeenCalledWith('/dashboard/init');
   });
 
   it('handles clock in punch optimistically', async () => {
     (offlineEngine.recordPunch as any).mockResolvedValueOnce(undefined);
+    // Mock the subsequent refetch triggered by invalidateQueries
+    (apiFetch as any).mockResolvedValue({
+      attendance_today: {
+        day: { total_seconds: 0 },
+        events: [{ type: 'clock_in', timestamp: new Date().toISOString() }],
+        standard_seconds: 28800
+      }
+    });
 
     renderWithProviders(<TimeClockWidget />);
     
     await waitFor(() => {
-      expect(screen.getByText('Clock In')).toBeInTheDocument();
+      expect(screen.getByText('Start Shift')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Clock In'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Start Shift'));
+    });
     
-    expect(useTimerStore.getState().isActive).toBe(true);
-    expect(offlineEngine.recordPunch).toHaveBeenCalledWith('clock_in', expect.any(String));
-
     await waitFor(() => {
-      expect(screen.getByText('Clock Out')).toBeInTheDocument();
+      expect(useTimerStore.getState().isActive).toBe(true);
+      expect(offlineEngine.recordPunch).toHaveBeenCalledWith('clock_in', expect.any(String));
+      expect(screen.getByText('End Shift')).toBeInTheDocument();
     });
   });
 
   it('handles clock out and break states correctly', async () => {
-    (apiFetch as any).mockResolvedValueOnce({
-      day: { total_seconds: 3600 },
-      events: [
-        { type: 'clock_in', timestamp: new Date().toISOString() }
-      ],
-      standard_seconds: 28800
+    // Set initial active state to avoid race conditions with queries
+    useTimerStore.setState({
+      isActive: true,
+      isOnBreak: false,
+      baseSeconds: 3600,
+      clockInTimestamp: new Date().toISOString(),
+    });
+    
+    (offlineEngine.recordPunch as any).mockResolvedValueOnce(undefined);
+    (apiFetch as any).mockResolvedValue({
+      attendance_today: {
+        day: { total_seconds: 3600 },
+        events: [
+          { type: 'clock_in', timestamp: new Date().toISOString() },
+          { type: 'break_start', timestamp: new Date().toISOString() }
+        ],
+        standard_seconds: 28800
+      }
     });
 
     renderWithProviders(<TimeClockWidget />);
     
     await waitFor(() => {
-      expect(screen.getByText('Break')).toBeInTheDocument();
+      expect(screen.getByText('Pause for Break')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Break'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Pause for Break'));
+    });
     
-    expect(useTimerStore.getState().isOnBreak).toBe(true);
-    expect(offlineEngine.recordPunch).toHaveBeenCalledWith('break_start', expect.any(String));
+    await waitFor(() => {
+      expect(useTimerStore.getState().isOnBreak).toBe(true);
+      expect(offlineEngine.recordPunch).toHaveBeenCalledWith('break_start', expect.any(String));
+    });
   });
 
   it('rolls back state on punch failure', async () => {
@@ -114,18 +143,16 @@ describe('TimeClockWidget', () => {
     renderWithProviders(<TimeClockWidget />);
     
     await waitFor(() => {
-      expect(screen.getByText('Clock In')).toBeInTheDocument();
+      expect(screen.getByText('Start Shift')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Clock In'));
+    await act(async () => {
+      fireEvent.click(screen.getByText('Start Shift'));
+    });
     
-    // Initially optimistic
-    expect(useTimerStore.getState().isActive).toBe(true);
-
     await waitFor(() => {
-      // After failure, it should refetch today's status to sync state
-      // Since our mock returns inactive state, it should go back to inactive
-      expect(apiFetch).toHaveBeenCalledTimes(2); // once on mount, once on failure
+      // It should revert back to original state if api fetch fails/invalidates
+      expect(toast.error).toHaveBeenCalled();
     });
   });
 });

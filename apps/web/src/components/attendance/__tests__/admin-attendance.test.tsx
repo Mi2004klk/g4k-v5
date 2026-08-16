@@ -6,9 +6,14 @@ import { AdminTodayAttendanceWidget } from "../../dashboard/admin-today-attendan
 
 // Mock dependencies
 vi.mock("@tanstack/react-query", () => ({
-  useQuery: vi.fn().mockReturnValue({
-    data: { data: [{ id: 1, user_id: 1, user_name: "Test User", status: "present" }] },
-    isLoading: false,
+  useQuery: vi.fn().mockImplementation(({ queryKey }) => {
+    if (queryKey && queryKey.includes("departments")) {
+      return { data: [{ id: 1, name: "HR" }], isLoading: false };
+    }
+    return {
+      data: { data: [{ id: 1, user_id: 1, user_name: "Test User", status: "present" }] },
+      isLoading: false,
+    };
   }),
   useQueryClient: vi.fn().mockReturnValue({
     invalidateQueries: vi.fn(),
@@ -16,7 +21,8 @@ vi.mock("@tanstack/react-query", () => ({
   useMutation: vi.fn().mockReturnValue({
     mutate: vi.fn(),
     isPending: false,
-  })
+  }),
+  keepPreviousData: vi.fn()
 }));
 
 vi.mock("@/hooks/use-url-state", () => ({
@@ -37,14 +43,18 @@ vi.mock("@/lib/api-client", () => ({
 describe("Admin Attendance Components", () => {
   it("renders AdminAttendanceTable correctly", () => {
     render(<AdminAttendanceTable />);
-    expect(screen.getByText("All Departments")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Search company/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search by name, ID, location.../i)).toBeInTheDocument();
   });
 
   it("renders AdminOpenShiftsTable correctly", () => {
     render(<AdminOpenShiftsTable />);
     // Checking for filters
     expect(screen.getByPlaceholderText(/Search company/i)).toBeInTheDocument();
+  });
+
+  it("renders AdminAttendanceTable correctly", () => {
+    render(<AdminAttendanceTable />);
+    expect(screen.getByPlaceholderText(/Search by name, ID, location\.\.\./i)).toBeInTheDocument();
   });
 
   it("renders AdminTodayAttendanceWidget correctly", () => {

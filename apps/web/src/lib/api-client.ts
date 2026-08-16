@@ -11,11 +11,6 @@ export function getToken(): string | null {
   return getAuthToken();
 }
 
-export function asArray<T = any>(res: any): T[] {
-  if (Array.isArray(res?.data)) return res.data;
-  if (Array.isArray(res)) return res;
-  return [];
-}
 
 
 let refreshPromise: Promise<string> | null = null;
@@ -90,7 +85,7 @@ export async function apiFetch<T = any>(
                 }
 
                 const data = await refreshRes.json();
-                useAuthStore.getState().setAuth(data.token, data.user, data.active_role, data.refresh_token);
+                useAuthStore.getState().setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
                 return data.token as string;
               })().finally(() => {
                 refreshPromise = null;
@@ -126,11 +121,19 @@ export async function apiFetch<T = any>(
 
         const errorData = await response.json().catch(() => ({}));
 
-        if (response.status === 403 && errorData.needs_onboarding) {
-          const curUser = useAuthStore.getState().user;
-          const curToken = getAuthToken();
-          if (curUser && curToken) {
-            useAuthStore.getState().setAuth(curToken, { ...curUser, onboarded_at: null }, curUser.active_role || 'employee');
+        if (response.status === 403) {
+          if (errorData.needs_onboarding) {
+            const curUser = useAuthStore.getState().user;
+            const curToken = getAuthToken();
+            if (curUser && curToken) {
+              useAuthStore.getState().setAuth(curToken, { ...curUser, onboarded_at: null }, curUser.active_role || 'employee');
+            }
+          } else if (errorData.must_change_password) {
+            const curUser = useAuthStore.getState().user;
+            const curToken = getAuthToken();
+            if (curUser && curToken) {
+              useAuthStore.getState().setAuth(curToken, { ...curUser, must_change_password: true }, curUser.active_role || 'employee');
+            }
           }
         }
 

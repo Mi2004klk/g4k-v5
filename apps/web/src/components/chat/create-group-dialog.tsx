@@ -16,8 +16,10 @@ export function CreateGroupDialog({
   onOpenChange: (open: boolean) => void;
   onSuccess?: (convId: number) => void;
 }) {
+  const [tab, setTab] = useState<"dm" | "group">("dm");
   const [name, setName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
 
@@ -28,40 +30,54 @@ export function CreateGroupDialog({
   });
 
   const users = Array.isArray(usersData?.data) ? usersData.data : (usersData?.data?.data || []);
-  const otherUsers = users.filter((u: any) => u.id !== currentUser?.id);
+  const otherUsers = users.filter((u: any) => 
+    u.id !== currentUser?.id && 
+    (u.name.toLowerCase().includes(search.toLowerCase()) || u.department?.name?.toLowerCase().includes(search.toLowerCase()))
+  );
 
   const mutation = useMutation({
     mutationFn: async () => {
-      return apiFetch("/conversations/group", {
-        method: "POST",
-        body: JSON.stringify({ name, user_ids: selectedUsers }),
-      });
+      if (tab === "dm") {
+        return apiFetch("/conversations/dm", {
+          method: "POST",
+          body: JSON.stringify({ recipient_id: selectedUsers[0] }),
+        });
+      } else {
+        return apiFetch("/conversations/group", {
+          method: "POST",
+          body: JSON.stringify({ name, member_ids: selectedUsers }),
+        });
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-      toast.success("Group created successfully");
+      toast.success(tab === "dm" ? "Direct message started" : "Group created successfully");
       onOpenChange(false);
       setName("");
       setSelectedUsers([]);
       if (onSuccess) onSuccess(data.id);
     },
     onError: () => {
-      toast.error("Failed to create group");
+      toast.error(tab === "dm" ? "Failed to start direct message" : "Failed to create group");
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return toast.error("Name is required");
+    if (tab === "group" && !name.trim()) return toast.error("Name is required");
     if (selectedUsers.length === 0) return toast.error("Select at least one user");
     mutation.mutate();
   };
 
   const toggleUser = (userId: number) => {
-    if (selectedUsers.includes(userId)) {
-      setSelectedUsers(selectedUsers.filter(id => id !== userId));
+    if (tab === "dm") {
+      setSelectedUsers([userId]);
     } else {
-      setSelectedUsers([...selectedUsers, userId]);
+      if (selectedUsers.includes(userId)) {
+        setSelectedUsers(selectedUsers.filter(id => id !== userId));
+      } else {
+        setSelectedUsers([...selectedUsers, userId]);
+      }
     }
   };
 
@@ -69,22 +85,48 @@ export function CreateGroupDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Group Chat</DialogTitle>
+          <DialogTitle>New Chat</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Group Name</Label>
-            <Input
-              id="name"
-              placeholder="e.g. Project Alpha Team"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={mutation.isPending}
-            />
-          </div>
+        
+        <div className="flex gap-2 mb-2 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+          <button 
+            type="button" 
+            onClick={() => { setTab("dm"); setSelectedUsers([]); }}
+            className={`flex-1 py-1 text-xs font-medium rounded ${tab === "dm" ? "bg-white dark:bg-neutral-700 shadow-sm" : "text-neutral-500"}`}
+          >
+            Direct Message
+          </button>
+          <button 
+            type="button" 
+            onClick={() => { setTab("group"); setSelectedUsers([]); }}
+            className={`flex-1 py-1 text-xs font-medium rounded ${tab === "group" ? "bg-white dark:bg-neutral-700 shadow-sm" : "text-neutral-500"}`}
+          >
+            Group
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {tab === "group" && (
+            <div className="space-y-2">
+              <Label htmlFor="name">Group Name</Label>
+              <Input
+                id="name"
+                placeholder="e.g. Project Alpha Team"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={mutation.isPending}
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
-            <Label>Select Members</Label>
+            <Label>Select {tab === "dm" ? "User" : "Members"}</Label>
+            <Input 
+              placeholder="Search users..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 text-xs"
+            />
             <ScrollArea className="h-48 border rounded-[var(--radius)] p-2 border-neutral-200 dark:border-neutral-800">
               {isLoading ? (
                 <div className="p-4 text-center text-xs text-neutral-500">Loading users...</div>
@@ -112,8 +154,8 @@ export function CreateGroupDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending || !name.trim() || selectedUsers.length === 0}>
-              {mutation.isPending ? "Creating..." : "Create Group"}
+            <Button type="submit" disabled={mutation.isPending || (tab === "group" && !name.trim()) || selectedUsers.length === 0}>
+              {mutation.isPending ? "Starting..." : (tab === "dm" ? "Start Chat" : "Create Group")}
             </Button>
           </div>
         </form>

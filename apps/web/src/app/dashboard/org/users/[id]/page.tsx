@@ -10,13 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@g4k/ui/components";
-import { Skeleton, ConfirmDialog } from "@g4k/ui/components";
+import { Skeleton, ConfirmDialog, EmptyState } from "@g4k/ui/components";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import Link from "next/link";
 import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
+import { usePins } from "@/hooks/use-pins";
 
 export default function EmployeeDetailPage() {
   const params = useParams();
@@ -56,24 +57,44 @@ export default function EmployeeDetailPage() {
     onError: (err: any) => toast.error(err.message || "Failed to start chat."),
   });
 
+  const { pins, pin, unpin, isPinning, isUnpinning } = usePins();
+  const pinnedItem = pins?.find(p => p.type === 'user' && p.target_id === String(userId));
+  const isPinned = !!pinnedItem;
+
+  const handlePinClick = () => {
+    if (isPinned && pinnedItem) {
+      unpin(pinnedItem.id);
+    } else {
+      pin({
+        type: 'user',
+        target_id: String(userId),
+        label: user?.name || "Employee",
+        href: `/dashboard/org/users/${userId}`,
+        icon: 'userCheck'
+      });
+    }
+  };
+
   // Removed blocking isPending return to allow layout to handle loading
+
+  const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
     queryFn: () => apiFetch("/departments").then((res: any) => Array.isArray(res?.data) ? res.data : []),
-    enabled: hasCapability(capabilities, "departments.manage"),
+    enabled: canManageUsers,
   });
 
   const { data: designations = [] } = useQuery({
     queryKey: queryKeys.designations,
     queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : []),
-    enabled: hasCapability(capabilities, "designations.manage"),
+    enabled: canManageUsers,
   });
 
   const { data: workSchedules = [] } = useQuery({
     queryKey: queryKeys.workSchedules,
     queryFn: () => apiFetch("/work-schedules").then((res: any) => Array.isArray(res?.data) ? res.data : []),
-    enabled: hasCapability(capabilities, "settings.manage"),
+    enabled: hasCapability(capabilities, "settings.manage") || hasCapability(capabilities, "users.hr.manage"),
   });
 
   const {
@@ -82,8 +103,6 @@ export default function EmployeeDetailPage() {
     editingUser, setEditingUser,
     updateMutation, statusMutation, deleteMutation, restoreMutation, resetPasswordMutation
   } = useUserActions();
-
-  const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
 
   if (isPending) {
     return (
@@ -180,7 +199,18 @@ export default function EmployeeDetailPage() {
                 <AvatarFallback name={user.name} className="text-2xl" />
               </Avatar>
               <div className="text-center sm:text-left flex-1">
-                <h2 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">{user.name}</h2>
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <h2 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">{user.name}</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isPinned ? "text-amber-500" : "text-neutral-300 dark:text-neutral-600"}`}
+                    onClick={handlePinClick}
+                    disabled={isPinning || isUnpinning}
+                  >
+                    <AppIcon name="star" className="h-5 w-5 shrink-0" />
+                  </Button>
+                </div>
                 <p className="text-primary-600 font-medium mb-4">{user.designation?.name || "Employee"} • {user.department?.name || "No Department"}</p>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-sm text-neutral-500">
                   <div className="flex items-center gap-2"><AppIcon name="mail" /> {user.email}</div>
@@ -219,11 +249,13 @@ export default function EmployeeDetailPage() {
                     <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">Attendance Record</h4>
                     <p className="text-sm text-neutral-500">View detailed attendance history, timesheets, and daily logs for this user.</p>
                   </div>
-                  <Link href={`/dashboard/admin/attendance?search=${user.name}`}>
-                    <Button variant="outline" className="gap-2">
-                      <AppIcon name="calendar" /> Go to Admin Attendance
-                    </Button>
-                  </Link>
+                  {hasCapability(capabilities, "admin.view-all-attendance") && (
+                    <Link href={`/dashboard/admin/attendance?search=${user.name}`}>
+                      <Button variant="outline" className="gap-2">
+                        <AppIcon name="calendar" /> Go to Admin Attendance
+                      </Button>
+                    </Link>
+                  )}
                 </div>
                 
                 <UserAttendanceView userId={Number(userId)} />
@@ -245,7 +277,9 @@ export default function EmployeeDetailPage() {
                       </div>
                    ))}
                  </div>
-               ) : <div className="text-sm text-neutral-500">No leave requests found.</div>}
+               ) : (
+                 <EmptyState title="No Leave Requests" description="This user has not submitted any leave requests." icon="calendar" />
+               )}
             </CardContent></Card>
           </TabsContent>
 
@@ -256,7 +290,9 @@ export default function EmployeeDetailPage() {
                  <div className="flex flex-wrap gap-2 mb-6">
                    {assignments.projects.map((p: any) => <span key={p.id} className="px-3 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-[var(--radius)] text-sm">{p.name}</span>)}
                  </div>
-               ) : <p className="text-sm text-neutral-500 mb-6">No active projects.</p>}
+               ) : (
+                 <EmptyState title="No Projects" description="No active projects assigned." icon="folder" className="mb-6 p-4" />
+               )}
                
                <h3 className="font-bold mb-3">Tasks ({assignments?.tasks?.length || 0})</h3>
                {assignments?.tasks?.length > 0 ? (
@@ -268,7 +304,9 @@ export default function EmployeeDetailPage() {
                      </div>
                    ))}
                  </div>
-               ) : <p className="text-sm text-neutral-500">No assigned tasks.</p>}
+               ) : (
+                 <EmptyState title="No Tasks" description="No assigned tasks." icon="checkCircle" className="p-4" />
+               )}
             </CardContent></Card>
           </TabsContent>
 
@@ -279,11 +317,13 @@ export default function EmployeeDetailPage() {
                    {activity.data.map((log: any) => (
                       <div key={log.id} className="p-3 border rounded-[var(--radius)] text-sm bg-neutral-50 dark:bg-neutral-900/50">
                         <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type || log.entity_type}</span>
-                        <span className="text-xs text-neutral-500 block mt-1">{new Date(log.at || log.created_at).toLocaleString()} - IP: {log.ip || 'N/A'}</span>
+                        <span className="text-xs text-neutral-500 block mt-1">{new Date(log.at || log.created_at).toLocaleString()} - IP: {log.ip_address || 'N/A'}</span>
                       </div>
                    ))}
                  </div>
-               ) : <div className="text-sm text-neutral-500">No recent activity.</div>}
+               ) : (
+                 <EmptyState title="No Activity" description="No recent activity logged for this user." icon="activity" />
+               )}
             </CardContent></Card>
           </TabsContent>
 
@@ -331,14 +371,28 @@ export default function EmployeeDetailPage() {
 }
 
 function UserAttendanceView({ userId }: { userId: number }) {
-  const { data: historyData, isLoading } = useQuery({
+  const { data: historyData, isLoading, isError, error } = useQuery({
     queryKey: queryKeys.memberHistory(userId),
     queryFn: () => apiFetch(`/attendance/hr/history/${userId}`),
     enabled: !!userId,
+    retry: false,
   });
 
   if (isLoading) {
     return <div className="p-4 flex justify-center"><Skeleton className="w-full h-64" /></div>;
+  }
+
+  if (isError) {
+    const isForbidden = (error as any)?.status === 403 || (error as any)?.message?.toLowerCase().includes("unauthorized");
+    return (
+      <div className="p-8 mt-4 text-center border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
+        <AppIcon name="key" size="2xl" className="text-neutral-400 mx-auto mb-2" />
+        <h4 className="font-medium text-neutral-800 dark:text-neutral-200">Access Denied</h4>
+        <p className="text-sm text-neutral-500 mt-1">
+          {isForbidden ? "You do not have permission to view attendance history for this user." : "Failed to load attendance history."}
+        </p>
+      </div>
+    );
   }
 
   const days = historyData?.data || [];

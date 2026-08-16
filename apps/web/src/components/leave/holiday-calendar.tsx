@@ -9,6 +9,15 @@ import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent, DatePicker } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { toast } from "sonner";
+import { z } from "zod";
+import { FormError } from "@/components/forms/form-error";
+
+const holidaySchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  date: z.string().min(1, "Date is required"),
+  description: z.string().optional(),
+  recurring: z.boolean(),
+});
 
 export function HolidayCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -27,10 +36,8 @@ export function HolidayCalendar() {
     date: format(new Date(), "yyyy-MM-dd"),
     description: "",
     recurring: false,
-    type: "holiday",
-    location: "",
-    start_time: "",
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const { data: holidays, isLoading } = useQuery({
     queryKey: queryKeys.holidays(currentYear),
@@ -81,6 +88,17 @@ export function HolidayCalendar() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldErrors({});
+    const result = holidaySchema.safeParse(formData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err: any) => {
+        if (err.path[0]) errors[err.path[0].toString()] = err.message;
+      });
+      setFieldErrors(errors);
+      return;
+    }
+
     if (editingHoliday) {
       editHoliday.mutate({ id: editingHoliday.id, data: formData });
     } else {
@@ -95,10 +113,8 @@ export function HolidayCalendar() {
       date: h.date,
       description: h.description || "",
       recurring: h.recurring || false,
-      type: h.type || "holiday",
-      location: h.location || "",
-      start_time: h.start_time || "",
     });
+    setFieldErrors({});
     setIsEditOpen(true);
   };
 
@@ -109,53 +125,27 @@ export function HolidayCalendar() {
       date: format(currentDate, "yyyy-MM-dd"),
       description: "",
       recurring: false,
-      type: "holiday",
-      location: "",
-      start_time: "",
     });
+    setFieldErrors({});
     setIsAddOpen(true);
   };
 
   const HolidayFormFields = () => (
     <>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Type</Label>
-          <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="holiday">Holiday</SelectItem>
-              <SelectItem value="event">Company Event</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2 flex flex-col">
-          <Label>Date</Label>
-          <DatePicker 
-            value={formData.date ? new Date(formData.date) : undefined} 
-            onChange={(date) => setFormData({ ...formData, date: date ? format(date, "yyyy-MM-dd") : "" })} 
-            className="w-full"
-          />
-        </div>
+      <div className="space-y-2 flex flex-col">
+        <Label>Date</Label>
+        <DatePicker 
+          value={formData.date ? new Date(formData.date) : undefined} 
+          onChange={(date) => setFormData({ ...formData, date: date ? format(date, "yyyy-MM-dd") : "" })} 
+          className="w-full"
+        />
+        <FormError errors={fieldErrors.date} />
       </div>
       <div className="space-y-2">
         <Label>Name</Label>
-        <Input required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+        <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+        <FormError errors={fieldErrors.name} />
       </div>
-      {formData.type === 'event' && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Start Time</Label>
-            <Input type="time" value={formData.start_time} onChange={(e) => setFormData({ ...formData, start_time: e.target.value })} />
-          </div>
-          <div className="space-y-2">
-            <Label>Location</Label>
-            <Input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
-          </div>
-        </div>
-      )}
       <div className="space-y-2">
         <Label>Description</Label>
         <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
@@ -220,20 +210,18 @@ export function HolidayCalendar() {
               {days.map((day, idx) => {
                 const isCurrentMonth = isSameMonth(day, monthStart);
                 const holiday = holidayList.find((h: any) => isSameDay(new Date(h.date), day));
-                const isEvent = holiday?.type === 'event';
                 
                 const CellContent = (
                   <div
-                    className={`relative flex flex-col items-center justify-center p-1 rounded-[var(--radius)] text-xs transition-all min-h-[40px]
+                    className={`relative flex flex-col items-center justify-center p-1 rounded-[var(--radius)] text-xs transition-all min-h-[50px] sm:min-h-[70px]
                       ${isCurrentMonth ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-600 opacity-50"}
                       ${holiday ? 
-                        isEvent ? "bg-blue-50 dark:bg-blue-900/20 font-semibold border border-blue-100 dark:border-blue-800/50 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40" 
-                                : "bg-primary-50 dark:bg-primary-900/20 font-semibold border border-primary-100 dark:border-primary-800/50 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/40" 
+                        "bg-primary-50 dark:bg-primary-900/20 font-semibold border border-primary-100 dark:border-primary-800/50 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/40" 
                         : ""}`}
                   >
                     <span>{format(day, "d")}</span>
                     {holiday && (
-                      <span className={`w-1 h-1 rounded-full mt-0.5 ${isEvent ? 'bg-blue-500' : 'bg-primary-500'}`} />
+                      <span className={`w-1 h-1 rounded-full mt-1 bg-primary-500`} />
                     )}
                   </div>
                 );
@@ -247,19 +235,16 @@ export function HolidayCalendar() {
                       <PopoverContent className="w-64 p-3 z-50">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">{isEvent ? 'Event' : 'Holiday'}</span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">Holiday</span>
                           </div>
-                          <h4 className="font-semibold text-sm leading-none">{holiday.name}</h4>
-                          {isEvent && (holiday.start_time || holiday.location) && (
-                            <div className="flex flex-col gap-1 text-[11px] text-neutral-600 font-medium my-1">
-                              {holiday.start_time && (
-                                <div className="flex items-center gap-1.5"><AppIcon name="teamAttendance" size="xs" className=" text-neutral-400" /> {holiday.start_time}</div>
-                              )}
-                              {holiday.location && (
-                                <div className="flex items-center gap-1.5"><AppIcon name="location" size="xs" className=" text-neutral-400" /> {holiday.location}</div>
-                              )}
+                          <div>
+                            <div className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
+                              {holiday.name}
                             </div>
-                          )}
+                            <div className="text-xs text-neutral-500 mt-1">
+                              {format(new Date(holiday.date), "MMMM d, yyyy")} {holiday.recurring && "(Recurring)"}
+                            </div>
+                          </div>
                           {holiday.description && (
                             <p className="text-xs text-neutral-500">{holiday.description}</p>
                           )}
@@ -312,7 +297,7 @@ export function HolidayCalendar() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit {formData.type === 'event' ? 'Event' : 'Holiday'}</DialogTitle>
+            <DialogTitle>Edit {(formData as any).type === 'event' ? 'Event' : 'Holiday'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
             <HolidayFormFields />

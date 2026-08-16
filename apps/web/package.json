@@ -10,7 +10,6 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:bundle": "node scripts/check-bundle-size.js",
-    "test:lhci": "lhci autorun",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -78,10 +77,6 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.10"
-  },
-  "optionalDependencies": {
-    "@lhci/cli": "^0.15.1",
-    "puppeteer": "^25.5.0"
   },
   "engines": {
     "node": "24.x"

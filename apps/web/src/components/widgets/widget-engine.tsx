@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { apiFetch } from "@/lib/api-client";
-import { reconcileLayout } from "@/lib/reconcile-layout";
+import { reconcileLayout, GRID_COLS } from "@/lib/reconcile-layout";
 import { queryKeys } from "@/lib/query-keys";
-import { ErrorBoundary } from "@g4k/ui/components";
+import { ErrorBoundary, AppIcon } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
@@ -37,7 +37,11 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   }));
   const [mounted, setMounted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const widgetStates = useUIStore(useShallow((s) => s.widgetStates));
+  const { widgetStates, dismissedWidgets, dismissWidget } = useUIStore(useShallow((s) => ({
+    widgetStates: s.widgetStates,
+    dismissedWidgets: s.dismissedWidgets,
+    dismissWidget: s.dismissWidget,
+  })));
   
   const draggingRef = useRef(false);
   const startPosRef = useRef({ x: 0, y: 0 });
@@ -114,8 +118,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
       }
     }
 
-    const colsMap = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
-    const mergedBreakpoints = reconcileLayout(savedLayouts, availableWidgets as any, colsMap);
+    const mergedBreakpoints = reconcileLayout(savedLayouts, availableWidgets as any, GRID_COLS);
 
     if (mergedBreakpoints) {
       setLayouts((prev: any) => JSON.stringify(prev) === JSON.stringify(mergedBreakpoints) ? prev : mergedBreakpoints);
@@ -189,7 +192,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         className="layout"
         layouts={computedLayouts}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 1, xxs: 1 }}
+        cols={GRID_COLS}
         rowHeight={120}
         onLayoutChange={handleLayoutChange}
         onDragStart={handleDragStart}
@@ -197,17 +200,26 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         margin={[16, 16] as [number, number]}
         draggableHandle=".widget-drag-handle"
       >
-        {availableWidgets.map((widget) => (
+        {availableWidgets.filter(w => !dismissedWidgets.includes(w.id)).map((widget) => (
           <div key={widget.id} className="h-full group/widget relative">
-            <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-10 widget-drag-handle cursor-grab active:cursor-grabbing p-1 bg-black/5 dark:bg-white/10 rounded flex items-center justify-center shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
-                <circle cx="9" cy="12" r="1" />
-                <circle cx="9" cy="5" r="1" />
-                <circle cx="9" cy="19" r="1" />
-                <circle cx="15" cy="12" r="1" />
-                <circle cx="15" cy="5" r="1" />
-                <circle cx="15" cy="19" r="1" />
-              </svg>
+            <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-10 flex items-center gap-1">
+              <button 
+                onClick={(e) => { e.stopPropagation(); dismissWidget(widget.id); }}
+                className="p-1 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded shadow-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                title="Dismiss Widget"
+              >
+                <AppIcon name="close" size="xs" />
+              </button>
+              <div className="widget-drag-handle cursor-grab active:cursor-grabbing p-1 bg-black/5 dark:bg-white/10 rounded flex items-center justify-center shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
+                  <circle cx="9" cy="12" r="1" />
+                  <circle cx="9" cy="5" r="1" />
+                  <circle cx="9" cy="19" r="1" />
+                  <circle cx="15" cy="12" r="1" />
+                  <circle cx="15" cy="5" r="1" />
+                  <circle cx="15" cy="19" r="1" />
+                </svg>
+              </div>
             </div>
             <ErrorBoundary name={`Widget-${widget.id}`}>
               {widget.component}

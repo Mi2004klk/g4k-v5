@@ -21,7 +21,7 @@ class TaskController extends Controller
     {
         try {
             $conv = Conversation::where('scope', 'project')
-                ->where('entity_id', $task->project_id)
+                ->where('project_id', $task->project_id)
                 ->first();
             
             if ($conv) {
@@ -39,7 +39,7 @@ class TaskController extends Controller
     }
     private function userHasManage(Request $request): bool
     {
-        $role = $request->user()->active_role ?? 'employee';
+        $role = $request->user()->resolveActiveRole();
         return CapabilityMatrix::hasCapability($role, 'tasks.manage');
     }
 
@@ -92,6 +92,10 @@ class TaskController extends Controller
 
         if ($request->filled('priority')) {
             $query->where('priority', $request->query('priority'));
+        }
+
+        if ($request->filled('scope')) {
+            $query->where('scope', $request->query('scope'));
         }
 
         if ($request->filled('search')) {
@@ -372,7 +376,7 @@ class TaskController extends Controller
             if ($form) {
                 $qaValues = $validated['qa_values'] ?? [];
                 foreach ($form->fields as $field) {
-                    if ($field->is_required && (!isset($qaValues[$field->id]) || $qaValues[$field->id] === '' || $qaValues[$field->id] === null)) {
+                    if ($field->required && (!isset($qaValues[$field->id]) || $qaValues[$field->id] === '' || $qaValues[$field->id] === null)) {
                         return response()->json(['message' => "QA Field '{$field->label}' is required."], 422);
                     }
                 }
@@ -470,6 +474,23 @@ class TaskController extends Controller
             'metadata' => [],
         ]);
 
+        $today = \Carbon\Carbon::now()->toDateString();
+        $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+        foreach ($admins as $adminId) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+        }
+        if ($task->assignee_id) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$task->assignee_id}_employee");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$task->assignee_id}_employee_{$today}");
+        }
+        foreach ($task->assignees as $assignee) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$assignee->id}_employee");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$assignee->id}_employee_{$today}");
+        }
+
         return response()->json($task->fresh(['approval']));
     }
 
@@ -496,6 +517,23 @@ class TaskController extends Controller
             'event' => 'redo',
             'metadata' => ['reason' => $validated['reason']],
         ]);
+
+        $today = \Carbon\Carbon::now()->toDateString();
+        $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+        foreach ($admins as $adminId) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+        }
+        if ($task->assignee_id) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$task->assignee_id}_employee");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$task->assignee_id}_employee_{$today}");
+        }
+        foreach ($task->assignees as $assignee) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$assignee->id}_employee");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$assignee->id}_employee_{$today}");
+        }
 
         return response()->json($task->fresh(['approval']));
     }
@@ -541,3 +579,4 @@ class TaskController extends Controller
         return response()->json(['data' => $tasks]);
     }
 }
+

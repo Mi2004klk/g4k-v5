@@ -8,10 +8,13 @@ import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { AppIcon, IconName } from "@g4k/ui/components";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 
 export default function RoleSelectPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -40,6 +43,7 @@ export default function RoleSelectPage() {
       });
 
       setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
+      queryClient.setQueryData(queryKeys.capabilities(), data.capabilities);
       router.push("/dashboard");
     } catch (error: any) {
       if (error.status === 429) {

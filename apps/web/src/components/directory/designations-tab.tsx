@@ -12,7 +12,8 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { asArray } from "@/lib/utils";
+
+import { useIsMobile } from "@g4k/ui/hooks/use-mobile";
 
 const desigSchema = z.object({
   name: z.string().min(1, "Title is required"),
@@ -73,6 +74,7 @@ export function DesignationsTab() {
 
   const { data: caps } = useCapabilities();
   const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
+  const isMobile = useIsMobile();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
@@ -118,12 +120,34 @@ export function DesignationsTab() {
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: any) => apiFetch(`/designations/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.designationsPaginated() });
+      const previousData = queryClient.getQueriesData({ queryKey: queryKeys.designationsPaginated() });
+      
+      queryClient.setQueriesData({ queryKey: queryKeys.designationsPaginated() }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data?.map((d: any) => d.id === id ? { ...d, is_active: status === 'active' } : d)
+        };
+      });
+      return { previousData };
+    },
     onSuccess: () => {
       toast.success("Designation status updated.");
       setConfirmState({ isOpen: false, type: "" });
-      queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update status."),
+    onError: (err: any, variables, context: any) => {
+      if (context?.previousData) {
+        context.previousData.forEach(([key, data]: any) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      toast.error(err.message || "Failed to update status.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
+    }
   });
 
   const deleteMutation = useMutation({
@@ -160,7 +184,7 @@ export function DesignationsTab() {
     }
   };
 
-  const designationsList = asArray(data);
+  const designationsList = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const totalPages = data?.last_page || data?.data?.last_page || 1;
   const columns = useMemo<any[]>(() => {
     const baseColumns: any[] = [

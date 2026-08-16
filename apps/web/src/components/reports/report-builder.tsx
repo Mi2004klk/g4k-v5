@@ -20,7 +20,7 @@ export function ReportBuilder() {
   });
 
   const exportMutation = useMutation({
-    mutationFn: async (format: "xlsx" | "pdf") => {
+    mutationFn: async (format: "xlsx" | "csv" | "pdf") => {
       return apiFetch("/reports/export", {
         method: "POST",
         body: JSON.stringify({ key: reportKey, format, filters: { search } }),
@@ -86,8 +86,18 @@ export function ReportBuilder() {
             disabled={exportMutation.isPending}
             className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
           >
-            {exportMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="spreadsheet" size="sm" />}
+            {exportMutation.isPending && exportMutation.variables === "xlsx" ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="spreadsheet" size="sm" />}
             Excel
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={() => exportMutation.mutate("csv")}
+            disabled={exportMutation.isPending}
+            className="h-8 text-xs bg-neutral-600 hover:bg-neutral-700 text-white gap-1.5"
+          >
+            {exportMutation.isPending && exportMutation.variables === "csv" ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="spreadsheet" size="sm" />}
+            CSV
           </Button>
 
           <Button
@@ -96,7 +106,7 @@ export function ReportBuilder() {
             disabled={exportMutation.isPending}
             className="h-8 text-xs bg-rose-600 hover:bg-rose-700 text-white gap-1.5"
           >
-            {exportMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="fileText" size="sm" />}
+            {exportMutation.isPending && exportMutation.variables === "pdf" ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="fileText" size="sm" />}
             PDF
           </Button>
         </div>

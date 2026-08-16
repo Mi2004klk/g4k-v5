@@ -6,6 +6,7 @@ export * from "./password-input";
 export * from "./empty-state";
 export * from "./dialog";
 export * from "./alert-dialog";
+export * from "./alert";
 export * from "./sheet";
 export * from "./tooltip";
 export * from "./dropdown-menu";

@@ -11,7 +11,7 @@ class ProjectController extends Controller
 {
     private function userHasManage(Request $request): bool
     {
-        $role = $request->user()->active_role ?? 'employee';
+        $role = $request->user()->resolveActiveRole();
         return CapabilityMatrix::hasCapability($role, 'projects.manage');
     }
 
@@ -182,7 +182,15 @@ class ProjectController extends Controller
 
     public function submit(Request $request, $id)
     {
-        $project = Project::findOrFail($id);
+        $project = Project::with(['members'])->findOrFail($id);
+
+        if (!$this->userHasManage($request)) {
+            $userId = $request->user()->id;
+            $isMember = $project->created_by === $userId || $project->members->contains('id', $userId);
+            if (!$isMember) {
+                return response()->json(['message' => 'Unauthorized access to project'], 403);
+            }
+        }
 
         $validated = $request->validate([
             'notes' => 'nullable|string',
@@ -194,7 +202,7 @@ class ProjectController extends Controller
             if ($form) {
                 $qaValues = $validated['qa_values'] ?? [];
                 foreach ($form->fields as $field) {
-                    if ($field->is_required && (!isset($qaValues[$field->id]) || $qaValues[$field->id] === '' || $qaValues[$field->id] === null)) {
+                    if ($field->required && (!isset($qaValues[$field->id]) || $qaValues[$field->id] === '' || $qaValues[$field->id] === null)) {
                         return response()->json(['message' => "QA Field '{$field->label}' is required."], 422);
                     }
                 }
@@ -278,3 +286,4 @@ class ProjectController extends Controller
         ]);
     }
 }
+

@@ -6,18 +6,29 @@ import { AppIcon } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { Input } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { hasCapability, useCapabilities } from "@/lib/capabilities";
+import { useTimerStore } from "@/stores/timer-store";
 
 export function ProjectTimerWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [projectId, setProjectId] = useState<string>("");
-  const [taskId, setTaskId] = useState<string>("none");
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [logDescription, setLogDescription] = useState("");
+  const { 
+    isProjectTimerRunning, 
+    projectTimerAccumulatedSeconds, 
+    projectTimerStartedAt,
+    activeTaskId,
+    startProjectTimer,
+    pauseProjectTimer,
+    resumeProjectTimer,
+    stopProjectTimer
+  } = useTimerStore();
 
+  const [taskId, setTaskId] = useState<string>("none");
   const queryClient = useQueryClient();
   const { data: caps = [] } = useCapabilities();
   const canTrack = hasCapability(caps, "timer.track");
@@ -34,15 +45,27 @@ export function ProjectTimerWidget() {
     enabled: !!projectId && canTrack
   });
 
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  // Sync elapsed seconds
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setElapsedSeconds(s => s + 1);
-      }, 1000);
+    
+    const updateElapsed = () => {
+      let total = projectTimerAccumulatedSeconds;
+      if (isProjectTimerRunning && projectTimerStartedAt) {
+        total += Math.floor((Date.now() - projectTimerStartedAt) / 1000);
+      }
+      setElapsedSeconds(total);
+    };
+
+    updateElapsed(); // Initial update
+
+    if (isProjectTimerRunning) {
+      interval = setInterval(updateElapsed, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerRunning]);
+  }, [isProjectTimerRunning, projectTimerAccumulatedSeconds, projectTimerStartedAt]);
 
   const timerMutation = useMutation({
     mutationFn: async (minutes: number) => {
@@ -52,6 +75,7 @@ export function ProjectTimerWidget() {
           project_id: projectId,
           task_id: taskId === "none" ? null : taskId,
           minutes_logged: minutes,
+          description: logDescription || undefined,
         }),
       });
     },
@@ -67,19 +91,28 @@ export function ProjectTimerWidget() {
   });
 
   const handleStop = () => {
-    setIsTimerRunning(false);
-    const mins = Math.ceil(elapsedSeconds / 60);
-    if (mins > 0) {
+    const { elapsedSeconds: total, taskId: stoppedTaskId, projectId: stoppedProjectId } = stopProjectTimer();
+    const mins = Math.ceil(total / 60);
+    if (mins > 0 && stoppedProjectId) {
       timerMutation.mutate(mins);
     }
     setElapsedSeconds(0);
     setProjectId("");
     setTaskId("none");
+    setLogDescription("");
     setIsOpen(false);
   };
 
   const handlePauseResume = () => {
-    setIsTimerRunning(!isTimerRunning);
+    if (isProjectTimerRunning) {
+      pauseProjectTimer();
+    } else {
+      resumeProjectTimer();
+    }
+  };
+
+  const handleStart = () => {
+    startProjectTimer(projectId, taskId, "Project Tracking");
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -91,13 +124,13 @@ export function ProjectTimerWidget() {
 
   if (!canTrack) return null;
 
-  const isActive = isTimerRunning || elapsedSeconds > 0;
+  const isActive = isProjectTimerRunning || elapsedSeconds > 0;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant={isActive ? "primary" : "ghost"} size="sm" className="gap-2 h-9 px-3 rounded-full">
-          <AppIcon name="timer" size="sm" className={isActive && isTimerRunning ? "animate-pulse" : ""} />
+          <AppIcon name="timer" size="sm" className={isActive && isProjectTimerRunning ? "animate-pulse" : ""} />
           {isActive ? formatTime(elapsedSeconds) : "Track Time"}
         </Button>
       </PopoverTrigger>
@@ -140,13 +173,25 @@ export function ProjectTimerWidget() {
                 </Select>
               </div>
             )}
+
+            {isActive && (
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-neutral-500">Log Description (Optional)</label>
+                <Input
+                  value={logDescription}
+                  onChange={(e) => setLogDescription(e.target.value)}
+                  placeholder="What did you work on?"
+                  className="h-8 text-xs"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2">
             {!isActive ? (
               <Button 
                 className="w-full bg-green-600 hover:bg-green-700 text-white" 
-                onClick={() => setIsTimerRunning(true)}
+                onClick={handleStart}
                 disabled={!projectId}
               >
                 <AppIcon name="play" className="mr-2" size="sm" /> Start Timer
@@ -154,12 +199,12 @@ export function ProjectTimerWidget() {
             ) : (
               <>
                 <Button 
-                  variant={isTimerRunning ? "outline" : "primary"} 
+                  variant={isProjectTimerRunning ? "outline" : "primary"} 
                   className="flex-1"
                   onClick={handlePauseResume}
                 >
-                  <AppIcon name={isTimerRunning ? "pause" : "play"} className="mr-2" size="sm" />
-                  {isTimerRunning ? "Pause" : "Resume"}
+                  <AppIcon name={isProjectTimerRunning ? "pause" : "play"} className="mr-2" size="sm" />
+                  {isProjectTimerRunning ? "Pause" : "Resume"}
                 </Button>
                 <Button 
                   variant="destructive"

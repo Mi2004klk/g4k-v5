@@ -11,11 +11,24 @@ interface TimerState {
   standardSeconds: number; // Standard working hours in seconds for the day
   
   // Actions
+  setStandardSeconds: (seconds: number) => void;
   startTimer: (clockInTime: string, initialTotalSeconds: number) => void;
   stopTimer: () => void;
   startBreak: (breakStartTime: string) => void;
   endBreak: (endBreakTime: string) => void;
-  syncWithServer: (day: any, events: any[]) => void;
+  syncWithServer: (day: any, events: any[], standardSeconds?: number) => void;
+  // Project/Task Timer
+  activeProjectId: string | null;
+  activeTaskId: string | null;
+  activeTaskTitle: string | null;
+  projectTimerStartedAt: number | null;
+  projectTimerAccumulatedSeconds: number;
+  isProjectTimerRunning: boolean;
+
+  startProjectTimer: (projectId: string, taskId: string, title: string) => void;
+  pauseProjectTimer: () => void;
+  resumeProjectTimer: () => void;
+  stopProjectTimer: () => { elapsedSeconds: number; taskId: string | null; projectId: string | null };
 }
 
 export const useTimerStore = create<TimerState>()(
@@ -28,6 +41,8 @@ export const useTimerStore = create<TimerState>()(
   baseSeconds: 0,
   lastActiveTimestamp: null,
   standardSeconds: 28800, // Default to 8 hours
+
+  setStandardSeconds: (seconds: number) => set({ standardSeconds: seconds }),
 
   startTimer: (clockInTime: string, initialTotalSeconds: number) => {
     set({
@@ -73,7 +88,7 @@ export const useTimerStore = create<TimerState>()(
     });
   },
 
-  syncWithServer: (day: any, events: any[]) => {
+  syncWithServer: (day: any, events: any[], providedStandardSeconds?: number) => {
     if (!day || events.length === 0) {
       get().stopTimer();
       set({ baseSeconds: 0, lastActiveTimestamp: null });
@@ -81,7 +96,7 @@ export const useTimerStore = create<TimerState>()(
     }
 
     const initialTotalSeconds = day.total_seconds || 0;
-    const standardSeconds = day.standard_seconds || 28800;
+    const standardSeconds = providedStandardSeconds || day.standard_seconds || 28800;
     
     // Determine active state based on events
     let isActive = false;
@@ -125,4 +140,75 @@ export const useTimerStore = create<TimerState>()(
       set({ baseSeconds: initialTotalSeconds, standardSeconds: standardSeconds });
     }
   },
-}), { name: 'g4k-timer' }));
+
+  // Project Timer Implementation
+  activeProjectId: null,
+  activeTaskId: null,
+  activeTaskTitle: null,
+  projectTimerStartedAt: null,
+  projectTimerAccumulatedSeconds: 0,
+  isProjectTimerRunning: false,
+
+  startProjectTimer: (projectId: string, taskId: string, title: string) => {
+    set({
+      activeProjectId: projectId,
+      activeTaskId: taskId,
+      activeTaskTitle: title,
+      projectTimerStartedAt: Date.now(),
+      projectTimerAccumulatedSeconds: 0,
+      isProjectTimerRunning: true,
+    });
+  },
+
+  pauseProjectTimer: () => {
+    const { isProjectTimerRunning, projectTimerStartedAt, projectTimerAccumulatedSeconds } = get();
+    if (!isProjectTimerRunning || !projectTimerStartedAt) return;
+    const elapsed = Math.floor((Date.now() - projectTimerStartedAt) / 1000);
+    set({
+      isProjectTimerRunning: false,
+      projectTimerStartedAt: null,
+      projectTimerAccumulatedSeconds: projectTimerAccumulatedSeconds + elapsed,
+    });
+  },
+
+  resumeProjectTimer: () => {
+    const { activeTaskId, isProjectTimerRunning } = get();
+    if (!activeTaskId || isProjectTimerRunning) return;
+    set({
+      isProjectTimerRunning: true,
+      projectTimerStartedAt: Date.now(),
+    });
+  },
+
+  stopProjectTimer: () => {
+    const {
+      isProjectTimerRunning,
+      projectTimerStartedAt,
+      projectTimerAccumulatedSeconds,
+      activeTaskId,
+      activeProjectId,
+    } = get();
+    
+    let totalSeconds = projectTimerAccumulatedSeconds;
+    if (isProjectTimerRunning && projectTimerStartedAt) {
+      totalSeconds += Math.floor((Date.now() - projectTimerStartedAt) / 1000);
+    }
+    
+    const tId = activeTaskId;
+    const pId = activeProjectId;
+    
+    set({
+      activeProjectId: null,
+      activeTaskId: null,
+      activeTaskTitle: null,
+      projectTimerStartedAt: null,
+      projectTimerAccumulatedSeconds: 0,
+      isProjectTimerRunning: false,
+    });
+
+    return { elapsedSeconds: totalSeconds, taskId: tId, projectId: pId };
+  },
+}), {  
+  name: 'g4k-timer',
+  skipHydration: true,
+}));

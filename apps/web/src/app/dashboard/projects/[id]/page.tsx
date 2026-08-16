@@ -2,15 +2,18 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format } from "date-fns";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { safeFormat } from "@/lib/format";
 import { AppIcon, IconName } from "@g4k/ui/components";
+import { QAFieldRenderer } from "@/components/projects/qa-field-renderer";
 import { toast } from "sonner";
-import { apiFetch, asArray } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
-import { Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox, Avatar, AvatarFallback, FileUploadPopup, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@g4k/ui/components";
+import { Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox, Avatar, AvatarFallback, FileUploadPopup, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, ConfirmDialog } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
+import { TasksTab } from "@/components/projects/tasks-tab";
 import { queryKeys } from "@/lib/query-keys";
 
 export default function ProjectDetailPage() {
@@ -20,7 +23,9 @@ export default function ProjectDetailPage() {
   const { data: caps } = useCapabilities();
   const projectId = params.id as string;
   const [submissionNote, setSubmissionNote] = useState("");
+  const [activeTab, setActiveTab] = useState<"overview" | "tasks">("overview");
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editForm, setEditForm] = useState<any>({ name: "", description: "", priority: "", department_id: "none", qa_form_id: "none", deadline: "", member_ids: [], allow_employee_tasks: false, cover_image: null });
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [qaValues, setQaValues] = useState<any>({});
@@ -30,9 +35,9 @@ export default function ProjectDetailPage() {
   const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
   const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch("/users") });
   // /departments, /users and /qa-forms may return Laravel paginators ({ data: [...] }) — unwrap to plain arrays
-  const departments = asArray(deptsData);
-  const qaForms = asArray(qaFormsData);
-  const users = asArray(usersData);
+  const departments = (Array.isArray(deptsData?.data) ? deptsData.data : (Array.isArray(deptsData) ? deptsData : []));
+  const qaForms = (Array.isArray(qaFormsData?.data) ? qaFormsData.data : (Array.isArray(qaFormsData) ? qaFormsData : []));
+  const users = (Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []));
   const { data: projectResponse, isLoading } = useQuery({
     queryKey: queryKeys.project(projectId),
     queryFn: () => apiFetch(`/projects/${projectId}`),
@@ -43,12 +48,20 @@ export default function ProjectDetailPage() {
   });
   const projectHistory = Array.isArray(historyResponse) ? historyResponse : (historyResponse?.data || []);
 
-  const project = projectResponse?.data;
+  const historyParentRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: projectHistory.length,
+    getScrollElement: () => historyParentRef.current,
+    estimateSize: () => 50,
+    overscan: 5,
+  });
+
+  const project = (projectResponse?.data ?? projectResponse);
   const submitProjectMutation = useMutation({
     mutationFn: async () => {
       // QA enforcement: every field marked required in the qa_form must have a non-empty value
       const missingQaLabels = (project?.qa_form?.fields || [])
-        .filter((field: any) => field.is_required && !String(qaValues[field.id] ?? "").trim())
+        .filter((field: any) => field.required && !String(qaValues[field.id] ?? "").trim())
         .map((field: any) => field.label);
         
       if (project?.qa_form_id && missingQaLabels.length > 0) {
@@ -202,7 +215,7 @@ export default function ProjectDetailPage() {
                   <AppIcon name="archive" className="mr-2 h-4 w-4" />
                   Archive Project
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => { if(confirm("Are you sure? This cannot be undone.")) deleteProjectMutation.mutate(); }} disabled={deleteProjectMutation.isPending}>
+                <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setIsDeleteConfirmOpen(true)} disabled={deleteProjectMutation.isPending}>
                   <AppIcon name="trash" className="mr-2 h-4 w-4" />
                   Delete Project
                 </DropdownMenuItem>
@@ -390,6 +403,14 @@ export default function ProjectDetailPage() {
         maxSizeMB={5}
       />
 
+      <div className="flex bg-neutral-100/80 dark:bg-neutral-900/50 p-1 rounded-[var(--radius)] w-fit mb-2">
+        <Button variant={activeTab === "overview" ? "primary" : "ghost"} size="sm" onClick={() => setActiveTab("overview")} className="h-8 text-xs px-4">Overview</Button>
+        <Button variant={activeTab === "tasks" ? "primary" : "ghost"} size="sm" onClick={() => setActiveTab("tasks")} className="h-8 text-xs px-4">Tasks</Button>
+      </div>
+
+      {activeTab === "tasks" ? (
+        <TasksTab defaultProjectId={projectId} />
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <Card className="border-none shadow-e1">
@@ -426,17 +447,40 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2 mt-4">
-                  <h3 className="font-semibold text-sm">Activity Log</h3>
-                  {projectHistory?.length > 0 ? projectHistory.map((h: any, i: number) => (
-                    <div key={i} className="flex gap-3 text-xs p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-[var(--radius)]">
-                      <AppIcon name="teamAttendance" className=" text-neutral-400 shrink-0" />
-                      <div>
-                        <p><span className="font-semibold">{h.user?.name}</span> {h.event}</p>
-                        <span className="text-neutral-400 text-[10px]">{format(new Date(h.created_at), "MMM d, yyyy h:mm a")}</span>
+                <div className="space-y-2 mt-4 flex flex-col h-[300px]">
+                  <h3 className="font-semibold text-sm shrink-0">Activity Log</h3>
+                  <div ref={historyParentRef} className="flex-1 overflow-auto thin-scrollbar relative pr-2">
+                    {projectHistory?.length > 0 ? (
+                      <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+                        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                          const h = projectHistory[virtualItem.index];
+                          return (
+                            <div 
+                              key={virtualItem.key}
+                              data-index={virtualItem.index}
+                              ref={rowVirtualizer.measureElement}
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                transform: `translateY(${virtualItem.start}px)`
+                              }}
+                              className="flex gap-3 text-xs p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-[var(--radius)]"
+                            >
+                              <AppIcon name="teamAttendance" className=" text-neutral-400 shrink-0 mt-0.5" />
+                              <div>
+                                <p><span className="font-semibold">{h.user?.name}</span> {h.event}</p>
+                                <span className="text-neutral-400 text-[10px]">{format(new Date(h.created_at), "MMM d, yyyy h:mm a")}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </div>
-                  )) : <p className="text-xs text-neutral-400">No history yet.</p>}
+                    ) : (
+                      <p className="text-xs text-neutral-400 mt-2">No history yet.</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -495,10 +539,10 @@ export default function ProjectDetailPage() {
                           <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-300">
                             {field.label} {field.required && "*"}
                           </label>
-                          <Input
-                            className="h-8 text-xs"
-                            value={qaValues[field.id] || ""}
-                            onChange={(e) => setQaValues({ ...qaValues, [field.id]: e.target.value })}
+                          <QAFieldRenderer
+                            field={field}
+                            value={qaValues[field.id]}
+                            onChange={(val) => setQaValues({ ...qaValues, [field.id]: val })}
                           />
                         </div>
                       ))}
@@ -580,6 +624,16 @@ export default function ProjectDetailPage() {
           </Card>
         </div>
       </div>
+      )}
+
+      <ConfirmDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title="Delete Project"
+        description="Are you sure you want to delete this project? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={() => deleteProjectMutation.mutate()}
+      />
     </div>
   );
 }

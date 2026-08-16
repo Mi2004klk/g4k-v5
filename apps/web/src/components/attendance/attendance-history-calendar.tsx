@@ -37,6 +37,7 @@ import { safeFormat } from "@/lib/format";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useIsMobile } from "@g4k/ui/hooks";
+import { useTimerStore } from "@/stores/timer-store";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -394,11 +395,40 @@ export function AttendanceHistoryCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<AttendanceDay | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [viewMode, setViewMode] = useState<"month" | "year">("month");
   const isMobile = useIsMobile();
 
   const prevMonth = () => setCurrentDate((prev) => subMonths(prev, 1));
   const nextMonth = () => setCurrentDate((prev) => addMonths(prev, 1));
+
+  // FE-ATT-02: Month-scoped fetching
+  const { data: monthData } = useQuery({
+    queryKey: ['attendanceMonth', userId || 'me', format(currentDate, "yyyy-MM")],
+    queryFn: async () => {
+      const monthStr = format(currentDate, "yyyy-MM");
+      if (userId) {
+        return apiFetch(`/attendance/hr/history/${userId}?month=${monthStr}&per_page=100`).then(res => res.data || []);
+      }
+      return apiFetch(`/attendance/me/history?month=${monthStr}&per_page=100`).then(res => res.data || []);
+    },
+  });
+
+  // Merge parent days (initial load) with our fetched monthData
+  const allDays = useMemo(() => {
+    const combined = [...days];
+    if (monthData && Array.isArray(monthData)) {
+      monthData.forEach((d: AttendanceDay) => {
+        if (!combined.find(c => c.date === d.date)) {
+          combined.push(d);
+        }
+      });
+    }
+    return combined;
+  }, [days, monthData]);
+
+  // Count records for this specific month
+  const recordsThisMonth = useMemo(() => {
+    return allDays.filter(d => d.date.startsWith(format(currentDate, "yyyy-MM"))).length;
+  }, [allDays, currentDate]);
 
   const { data: holidaysData } = useQuery({
     queryKey: queryKeys.holidays(currentDate.getFullYear()),
@@ -442,46 +472,40 @@ export function AttendanceHistoryCalendar({
             {format(currentDate, "MMMM yyyy")}
           </h3>
           <p className="text-[10px] text-neutral-400 mt-0.5">
-            {days.length} record{days.length !== 1 ? "s" : ""} this month
+            {recordsThisMonth} record{recordsThisMonth !== 1 ? "s" : ""} this month
           </p>
         </div>
-        {/* Show nav only on desktop or when in month view */}
-        {!isMobile && (
-          <div className="flex items-center gap-1.5">
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={prevMonth}
-              aria-label="Previous month"
-            >
-              <AppIcon name="chevronLeft" size="sm" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              onClick={nextMonth}
-              aria-label="Next month"
-            >
-              <AppIcon name="chevronRight" size="sm" />
-            </Button>
-          </div>
-        )}
+        
+        {/* Navigation available on both desktop and mobile now */}
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={prevMonth}
+            aria-label="Previous month"
+          >
+            <AppIcon name="chevronLeft" size="sm" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={nextMonth}
+            aria-label="Next month"
+          >
+            <AppIcon name="chevronRight" size="sm" />
+          </Button>
+        </div>
       </div>
 
       {/* ── Calendar / Strip ───────────────────────────── */}
-      {isMobile ? (
-        <ContributionHeatmap days={days} holidays={holidays} />
-      ) : (
-        <MonthCalendarGrid
-          days={days}
-          holidays={holidays}
-          currentDate={currentDate}
-          onDayClick={handleDayClick}
-        />
-      )}
+      <MonthCalendarGrid
+        days={allDays}
+        holidays={holidays}
+        currentDate={currentDate}
+        onDayClick={handleDayClick}
+      />
 
       {/* ── Legend ─────────────────────────────────────── */}
       <CalendarLegend compact={isMobile} />
@@ -547,7 +571,8 @@ function DayDetailContent({
 
   const events: AttendanceEvent[] = data?.events || [];
   const day: AttendanceDay = data?.day || summaryDay;
-  const standardSeconds: number = data?.standard_seconds || 31500;
+  const timerStandard = useTimerStore((s) => s.standardSeconds);
+  const standardSeconds: number = data?.standard_seconds || (userId ? 31500 : timerStandard);
 
   if (summaryDay.id === 0) {
     return (

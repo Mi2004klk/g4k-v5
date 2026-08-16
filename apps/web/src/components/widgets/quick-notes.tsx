@@ -19,9 +19,11 @@ export function QuickNotes() {
   const toggleWidgetCollapse = useUIStore((s) => s.toggleWidgetCollapse);
   const isCollapsed = widgetStates["quick-notes"]?.collapsed ?? false;
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editBody, setEditBody] = useState("");
 
   const { data: notes = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => Array.isArray(data.quick_notes) ? data.quick_notes : [],
+    select: (data: any) => (Array.isArray(data.quick_notes?.data) ? data.quick_notes.data : (Array.isArray(data.quick_notes) ? data.quick_notes : [])),
     placeholderData: keepPreviousData,
   });
 
@@ -55,6 +57,20 @@ export function QuickNotes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: async ({ id, body }: { id: number; body: string }) => {
+      return apiFetch(`/quick-notes/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ body }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      setEditingNoteId(null);
+      setEditBody("");
     },
   });
 
@@ -111,49 +127,85 @@ export function QuickNotes() {
                 notes.map((n: any) => (
                   <div
                     key={n.id}
-                    className={`p-2.5 rounded-[var(--radius)] text-xs flex items-start justify-between gap-2 border transition-colors ${
+                    className={`p-2.5 rounded-[var(--radius)] text-xs flex flex-col justify-between gap-2 border transition-colors group ${
                       n.pinned 
                         ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50' 
                         : 'bg-secondary border-border'
                     }`}
                   >
-                    <div className="flex-1 min-w-0 flex items-start gap-2">
-                      {n.pinned && <AppIcon name="pin" size="xs" className="mt-1 text-amber-500 shrink-0" />}
-                      <Truncate text={n.body} className="text-secondary-foreground" />
-                    </div>
-                    <TooltipProvider delayDuration={150}>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => togglePinMutation.mutate({ id: n.id, pinned: !n.pinned })}
-                              className={`h-5 w-5 ${n.pinned ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50' : 'text-neutral-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50'}`}
-                              aria-label={n.pinned ? "Unpin note" : "Pin note"}
-                            >
-                              <AppIcon name="pin" size="sm" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent className="text-xs">{n.pinned ? "Unpin" : "Pin to top"}</TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setConfirmState({ isOpen: true, id: n.id })}
-                              className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
-                              aria-label="Delete note"
-                            >
-                              <AppIcon name="trash" size="sm" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent className="text-xs">Delete note</TooltipContent>
-                        </Tooltip>
+                    {editingNoteId === n.id ? (
+                      <div className="w-full flex flex-col gap-2">
+                        <textarea
+                          className="w-full text-xs p-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 resize-none outline-none focus:ring-1 focus:ring-primary-500"
+                          value={editBody}
+                          onChange={(e) => setEditBody(e.target.value)}
+                          rows={2}
+                          autoFocus
+                        />
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="outline" size="sm" className="h-6 text-[10px] px-2" onClick={() => setEditingNoteId(null)}>Cancel</Button>
+                          <Button variant="primary" size="sm" className="h-6 text-[10px] px-2" onClick={() => editMutation.mutate({ id: n.id, body: editBody })} disabled={!editBody.trim() || editMutation.isPending}>Save</Button>
+                        </div>
                       </div>
-                    </TooltipProvider>
+                    ) : (
+                      <div className="flex items-start justify-between w-full gap-2">
+                        <div className="flex-1 min-w-0 flex items-start gap-2">
+                          {n.pinned && <AppIcon name="pin" size="xs" className="mt-1 text-amber-500 shrink-0" />}
+                          <Truncate text={n.body} className="text-secondary-foreground" />
+                        </div>
+                        <TooltipProvider delayDuration={150}>
+                          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setEditingNoteId(n.id);
+                                    setEditBody(n.body);
+                                  }}
+                                  className="h-5 w-5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                                  aria-label="Edit note"
+                                >
+                                  <AppIcon name="edit" size="sm" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">Edit note</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => togglePinMutation.mutate({ id: n.id, pinned: !n.pinned })}
+                                  className={`h-5 w-5 ${n.pinned ? 'text-amber-500 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50' : 'text-neutral-400 hover:text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50'}`}
+                                  aria-label={n.pinned ? "Unpin note" : "Pin note"}
+                                >
+                                  <AppIcon name="pin" size="sm" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">{n.pinned ? "Unpin" : "Pin to top"}</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setConfirmState({ isOpen: true, id: n.id })}
+                                  className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10"
+                                  aria-label="Delete note"
+                                >
+                                  <AppIcon name="trash" size="sm" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="text-xs">Delete note</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TooltipProvider>
+                      </div>
+                    )}
                   </div>
                 ))
               )}

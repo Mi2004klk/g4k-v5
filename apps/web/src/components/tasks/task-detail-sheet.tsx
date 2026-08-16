@@ -9,9 +9,12 @@ import { apiFetch } from "@/lib/api-client";
 import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
+import { QAFieldRenderer } from "@/components/projects/qa-field-renderer";
+import { useTimerStore } from "@/stores/timer-store";
 import { Input, Slider, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, DatePicker, Checkbox, Textarea, InlineEdit } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { usePins } from "@/hooks/use-pins";
 
 export function TaskDetailSheet({
   task: taskPreview,
@@ -26,14 +29,47 @@ export function TaskDetailSheet({
   const { data: caps = [] } = useCapabilities();
   const canManage = hasCapability(caps, "tasks.manage");
 
+  const { pins, pin, unpin, isPinning, isUnpinning } = usePins();
+  const pinnedItem = pins?.find(p => p.type === 'task' && p.target_id === String(taskPreview?.id));
+  const isPinned = !!pinnedItem;
+
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!taskPreview) return;
+    if (isPinned && pinnedItem) {
+      unpin(pinnedItem.id);
+    } else {
+      pin({
+        type: 'task',
+        target_id: String(taskPreview.id),
+        label: `Task #${taskPreview.id}: ${taskPreview.title}`,
+        href: `/dashboard/tasks?highlight=${taskPreview.id}`,
+        icon: 'tasks'
+      });
+    }
+  };
+
   const [comment, setComment] = useState("");
   const [submissionNote, setSubmissionNote] = useState("");
   const [qaValues, setQaValues] = useState<Record<string, any>>({});
   const [minutesLogged, setMinutesLogged] = useState("");
+  const [logDescription, setLogDescription] = useState("");
   const [progress, setProgress] = useState(taskPreview?.progress || 0);
   const [redoReason, setRedoReason] = useState("");
 
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const {
+    isProjectTimerRunning,
+    projectTimerAccumulatedSeconds,
+    projectTimerStartedAt,
+    activeTaskId,
+    startProjectTimer,
+    pauseProjectTimer,
+    resumeProjectTimer,
+    stopProjectTimer
+  } = useTimerStore();
+
+  const isCurrentTaskTimerRunning = isProjectTimerRunning && activeTaskId === String(taskPreview?.id);
+
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -68,17 +104,30 @@ export function TaskDetailSheet({
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setElapsedSeconds(s => s + 1);
-      }, 1000);
+    
+    const updateElapsed = () => {
+      let total = projectTimerAccumulatedSeconds;
+      if (isProjectTimerRunning && projectTimerStartedAt) {
+        total += Math.floor((Date.now() - projectTimerStartedAt) / 1000);
+      }
+      setElapsedSeconds(total);
+    };
+
+    if (activeTaskId === String(taskPreview?.id)) {
+      updateElapsed(); // Initial update
+      if (isProjectTimerRunning) {
+        interval = setInterval(updateElapsed, 1000);
+      }
+    } else {
+      setElapsedSeconds(0);
     }
+    
     return () => clearInterval(interval);
-  }, [isTimerRunning]);
+  }, [isProjectTimerRunning, projectTimerAccumulatedSeconds, projectTimerStartedAt, activeTaskId, taskPreview?.id]);
 
   const handleStopTimer = () => {
-    setIsTimerRunning(false);
-    const mins = Math.ceil(elapsedSeconds / 60);
+    const { elapsedSeconds: total } = stopProjectTimer();
+    const mins = Math.ceil(total / 60);
     if (mins > 0) {
       setMinutesLogged(mins.toString());
     }
@@ -86,7 +135,19 @@ export function TaskDetailSheet({
   };
 
   const handlePauseResume = () => {
-    setIsTimerRunning(!isTimerRunning);
+    if (!activeTaskId || activeTaskId !== String(taskPreview?.id)) {
+      // Start a new timer for this task
+      const projectId = taskDetail?.project_id || taskPreview?.project_id;
+      if (projectId) {
+        startProjectTimer(String(projectId), String(taskPreview?.id), taskPreview?.title || "Task");
+      }
+    } else {
+      if (isProjectTimerRunning) {
+        pauseProjectTimer();
+      } else {
+        resumeProjectTimer();
+      }
+    }
   };
 
   // T-46.2: Drop exact: true everywhere so parameterized task list keys are also invalidated
@@ -117,7 +178,7 @@ export function TaskDetailSheet({
       if (qaForm) {
         for (const field of qaForm.fields || []) {
           const val = qaValues[field.id];
-          if (field.is_required && (val === undefined || val === '' || (Array.isArray(val) && val.length === 0))) {
+          if (field.required && (val === undefined || val === '' || (Array.isArray(val) && val.length === 0))) {
             throw new Error(`Field "${field.label}" is required.`);
           }
         }
@@ -161,11 +222,13 @@ export function TaskDetailSheet({
           task_id: task.id,
           project_id: task.project_id,
           minutes_logged: minutes,
+          description: logDescription || undefined,
         }),
       });
     },
     onSuccess: () => {
       setMinutesLogged("");
+      setLogDescription("");
       toast.success("Time logged successfully.");
       invalidateTasks();
     },
@@ -252,6 +315,15 @@ export function TaskDetailSheet({
               {task.status?.replace("_", " ")}
             </span>
             <span className="text-xs font-semibold text-neutral-400">Task #{task.id}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-6 w-6 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isPinned ? "text-amber-500" : "text-neutral-300 dark:text-neutral-600"}`}
+              onClick={handlePinClick}
+              disabled={isPinning || isUnpinning}
+            >
+              <AppIcon name="star" className="h-4 w-4 shrink-0" />
+            </Button>
             {isLoadingDetail && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
           <SheetTitle className="text-base font-bold mt-2 flex justify-between items-center w-full">
@@ -419,10 +491,10 @@ export function TaskDetailSheet({
                     <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-300">
                       {field.label} {field.required && "*"}
                     </label>
-                    <Input
-                      className="h-8 text-xs"
-                      value={qaValues[field.id] || ""}
-                      onChange={(e) => setQaValues({ ...qaValues, [field.id]: e.target.value })}
+                    <QAFieldRenderer
+                      field={field}
+                      value={qaValues[field.id]}
+                      onChange={(val) => setQaValues({ ...qaValues, [field.id]: val })}
                     />
                   </div>
                 ))}
@@ -541,17 +613,17 @@ export function TaskDetailSheet({
               <div className="flex justify-between items-center mb-2">
                 <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">Log Time</h4>
                 <div className="flex items-center gap-2">
-                  {(isTimerRunning || elapsedSeconds > 0) && (
+                  {(isCurrentTaskTimerRunning || elapsedSeconds > 0) && (
                     <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                       {Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
                     </span>
                   )}
-                  {(!isTimerRunning && elapsedSeconds === 0) ? (
+                  {(!isCurrentTaskTimerRunning && elapsedSeconds === 0) ? (
                     <Button 
                       size="sm" 
                       variant="outline"
                       className="h-7 px-2"
-                      onClick={() => setIsTimerRunning(true)}
+                      onClick={handlePauseResume}
                     >
                       <AppIcon name="play" size="sm" className=" mr-1" />
                       Start Timer
@@ -560,12 +632,12 @@ export function TaskDetailSheet({
                     <>
                       <Button 
                         size="sm" 
-                        variant={isTimerRunning ? "outline" : "primary"}
+                        variant={isCurrentTaskTimerRunning ? "outline" : "primary"}
                         className="h-7 px-2"
                         onClick={handlePauseResume}
                       >
-                        <AppIcon name={isTimerRunning ? "pause" : "play"} size="sm" className=" mr-1" />
-                        {isTimerRunning ? "Pause" : "Resume"}
+                        <AppIcon name={isCurrentTaskTimerRunning ? "pause" : "play"} size="sm" className=" mr-1" />
+                        {isCurrentTaskTimerRunning ? "Pause" : "Resume"}
                       </Button>
                       <Button 
                         size="sm" 
@@ -581,24 +653,32 @@ export function TaskDetailSheet({
                 </div>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    min="1"
+                    placeholder="Minutes spent..."
+                    value={minutesLogged}
+                    onChange={(e) => setMinutesLogged(e.target.value)}
+                    className="h-8 text-xs flex-1"
+                  />
+                  <Button 
+                    size="sm" 
+                    className="h-8 shrink-0" 
+                    disabled={timerMutation.isPending || !minutesLogged}
+                    onClick={() => timerMutation.mutate(parseInt(minutesLogged))}
+                  >
+                    <AppIcon name="teamAttendance" size="sm" className=" mr-1" />
+                    Log Time
+                  </Button>
+                </div>
                 <Input
-                  type="number"
-                  min="1"
-                  placeholder="Minutes spent..."
-                  value={minutesLogged}
-                  onChange={(e) => setMinutesLogged(e.target.value)}
-                  className="h-8 text-xs flex-1"
+                  placeholder="What did you work on? (Optional description)..."
+                  value={logDescription}
+                  onChange={(e) => setLogDescription(e.target.value)}
+                  className="h-8 text-xs w-full"
                 />
-                <Button 
-                  size="sm" 
-                  className="h-8 shrink-0" 
-                  disabled={timerMutation.isPending || !minutesLogged}
-                  onClick={() => timerMutation.mutate(parseInt(minutesLogged))}
-                >
-                  <AppIcon name="teamAttendance" size="sm" className=" mr-1" />
-                  Log Time
-                </Button>
               </div>
             </div>
 

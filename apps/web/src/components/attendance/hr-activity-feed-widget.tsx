@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent, AppIcon, Avatar, AvatarFallback, AvatarImage, Badge, Skeleton, EmptyState } from "@g4k/ui/components";
-import { asArray } from "@/lib/utils";
+
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { safeFromNow } from "@/lib/format";
@@ -31,7 +31,7 @@ export function HrActivityFeedWidget() {
   });
 
   const activities = useMemo(() => {
-    const items = asArray(data) as MemberDay[];
+    const items = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])) as MemberDay[];
     const acts: any[] = [];
     
     items.forEach((member: MemberDay) => {

@@ -15,6 +15,9 @@ import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { usePaginatedList } from "@/lib/pagination";
+import { useExport } from "@/hooks/use-export";
+import { LEAVE_TYPES } from "@/lib/constants";
 
 export function ApprovalsTab() {
   const [subTab, setSubTab] = useUrlState("sub", "approvals");
@@ -22,6 +25,7 @@ export function ApprovalsTab() {
   const [historyStatusFilter, setHistoryStatusFilter] = useUrlState("h_status", "all");
   const [historyTypeFilter, setHistoryTypeFilter] = useUrlState("h_type", "all");
   const [search, setSearch] = useUrlState("search", "");
+  const { triggerExport, isExporting } = useExport();
 
   const [userIdFilter, setUserIdFilter] = useUrlState("user_id", "");
 
@@ -63,11 +67,9 @@ export function ApprovalsTab() {
     placeholderData: keepPreviousData,
   });
 
-  const records = useMemo(() => {
-    return data?.data?.data || [];
-  }, [data]);
-  
-  const approvalsTotalPages = data?.data?.last_page || 1;
+  const paginatedData = usePaginatedList<any>(data);
+  const records = paginatedData.data;
+  const approvalsTotalPages = paginatedData.last_page || 1;
 
   const pendingCount = records.filter((r: any) => r.approval?.status === "pending").length;
 
@@ -139,26 +141,19 @@ export function ApprovalsTab() {
 
   const handleExport = async () => {
     try {
-      const blob = await apiFetch(`/leave-requests/export?status=${statusFilter}`);
-      const blobUrl = window.URL.createObjectURL(blob as Blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = `leave_export_${statusFilter}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(blobUrl);
+      await triggerExport(
+        `/leave-requests/export?status=${statusFilter}`,
+        `leave_export_${statusFilter}.xlsx`
+      );
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || "Failed to export");
     }
   };
 
-  const historyRecords = useMemo(() => {
-    return historyData?.data?.data || [];
-  }, [historyData]);
-  
-  const historyTotalPages = historyData?.data?.last_page || 1;
+  const paginatedHistory = usePaginatedList<any>(historyData);
+  const historyRecords = paginatedHistory.data;
+  const historyTotalPages = paginatedHistory.last_page || 1;
 
   return (
     <div className="space-y-6 mt-4">
@@ -207,9 +202,9 @@ export function ApprovalsTab() {
                   },
                 ]}
               />
-              <Button variant="outline" size="sm" onClick={handleExport} className="h-8 text-xs font-semibold">
+              <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-8 text-xs font-semibold">
                 <AppIcon name="download" size="sm" className=" mr-1.5" />
-                Export
+                {isExporting ? "Exporting..." : "Export"}
               </Button>
             </div>
             <div className="flex-1 min-h-[300px] flex flex-col">
@@ -252,12 +247,7 @@ export function ApprovalsTab() {
                     type: "select",
                     value: historyTypeFilter,
                     onChange: setHistoryTypeFilter,
-                    options: [
-                      { label: "Annual", value: "annual" },
-                      { label: "Sick", value: "sick" },
-                      { label: "Casual", value: "casual" },
-                      { label: "Unpaid", value: "unpaid" },
-                    ],
+                    options: LEAVE_TYPES,
                   },
                 ]}
               />

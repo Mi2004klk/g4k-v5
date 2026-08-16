@@ -97,4 +97,34 @@ class User extends Authenticatable
     {
         return $this->hasMany(LeaveRequest::class);
     }
+
+    public function taskReminders()
+    {
+        return $this->hasMany(TaskReminder::class);
+    }
+
+    public function resolveActiveRole(): string
+    {
+        $token = $this->currentAccessToken();
+        if ($token) {
+            $abilities = $token->abilities ?? [];
+            if (is_array($abilities) || is_object($abilities)) {
+                foreach ($abilities as $ability) {
+                    if (str_starts_with($ability, 'role:')) {
+                        return substr($ability, 5);
+                    }
+                }
+            }
+        }
+
+        if ($this->active_role) {
+            return $this->active_role;
+        }
+
+        $roles = $this->getCachedRoles();
+        if (in_array('super_admin', $roles)) return 'super_admin';
+        if (in_array('hr', $roles)) return 'hr';
+
+        return 'employee';
+    }
 }

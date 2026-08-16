@@ -8,10 +8,12 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['e2e/**', 'node_modules/**'],
     alias: {
-      '@': resolve(__dirname, './src'),
-      'react': resolve(__dirname, 'node_modules/react'),
-      'react-dom': resolve(__dirname, 'node_modules/react-dom'),
+      '@': resolve(import.meta.dirname, './src'),
+      'react': resolve(import.meta.dirname, 'node_modules/react'),
+      'react-dom': resolve(import.meta.dirname, 'node_modules/react-dom'),
     },
   },
 });

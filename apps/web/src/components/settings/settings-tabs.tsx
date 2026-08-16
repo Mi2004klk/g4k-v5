@@ -21,6 +21,8 @@ import { NotificationsConfig } from "./notifications-config";
 import { AutoNumberingConfig } from "./auto-numbering-config";
 import { RemindersConfig } from "./reminders-config";
 import { SecurityRequestsConfig } from "./security-requests-config";
+import { DemoDataConfig } from "./demo-data-config";
+import { SystemJobsConfig } from "./system-jobs-config";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/state-helpers";
@@ -133,6 +135,8 @@ export function SettingsTabs() {
             <TabsTrigger value="reminders">Reminders</TabsTrigger>
             <TabsTrigger value="security">Security Requests</TabsTrigger>
             <TabsTrigger value="audit">Audit Log</TabsTrigger>
+            <TabsTrigger value="demo">Demo Data</TabsTrigger>
+            <TabsTrigger value="jobs">System Jobs</TabsTrigger>
           </>
         )}
       </TabsList>
@@ -256,6 +260,14 @@ export function SettingsTabs() {
 
       <TabsContent value="audit">
         <AuditLogTable />
+      </TabsContent>
+
+      <TabsContent value="demo">
+        <DemoDataConfig />
+      </TabsContent>
+
+      <TabsContent value="jobs">
+        <SystemJobsConfig />
       </TabsContent>
         </>
       )}

@@ -36,7 +36,7 @@ export default function ReportsPage() {
     }
   });
 
-  const handleExport = async (format: "csv" | "xlsx") => {
+  const handleExport = async (format: "csv" | "xlsx" | "pdf") => {
     try {
       const payload = {
         key: reportType,
@@ -96,6 +96,9 @@ export default function ReportsPage() {
           </Button>
           <Button variant="outline" onClick={() => handleExport("xlsx")}>
             <AppIcon name="download" className=" mr-2" /> Excel
+          </Button>
+          <Button variant="outline" onClick={() => handleExport("pdf")}>
+            <AppIcon name="download" className=" mr-2" /> PDF
           </Button>
         </div>
       </div>

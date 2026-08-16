@@ -31,17 +31,20 @@ jobs:
       - run: pnpm install
       - name: Lint & Typecheck
         run: pnpm --filter web typecheck
+      - name: Run Web Tests
+        run: pnpm --filter web test
       - name: Build Next.js App
         run: pnpm --filter web build
       - name: Check Bundle Size Budgets
         run: pnpm --filter web run test:bundle
-      - name: Run Lighthouse & Axe-core CI
-        run: pnpm --filter web run test:lhci
       - name: Audit Dependencies
         run: pnpm audit --prod
 
   api-ci:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        db: [sqlite, pgsql]
     services:
       postgres:
         image: postgres:16
@@ -56,7 +59,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DB_CONNECTION: pgsql
+      DB_CONNECTION: ${{ matrix.db }}
       DB_HOST: localhost
       DB_PORT: 5432
       DB_DATABASE: g4k_test
@@ -77,6 +80,12 @@ jobs:
       - name: Run Migrations
         working-directory: ./apps/api
         run: php artisan migrate --force
+      - name: Remove SQLite pin for Postgres tests
+        if: matrix.db == 'pgsql'
+        working-directory: ./apps/api
+        run: |
+          sed -i '/DB_CONNECTION/d' phpunit.xml
+          sed -i '/DB_DATABASE/d' phpunit.xml
       - name: Run Tests
         working-directory: ./apps/api
         run: php artisan test

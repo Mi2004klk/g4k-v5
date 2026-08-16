@@ -22,7 +22,7 @@ class LeaveRequestController extends Controller
         $query = LeaveRequest::with(['approval', 'user']);
 
         $isAdmin = in_array('super_admin', $roles);
-        $isHR = \App\Services\CapabilityMatrix::hasCapability($user->active_role ?? 'employee', 'leave.approve-employee');
+        $isHR = \App\Services\CapabilityMatrix::hasCapability($user->resolveActiveRole(), 'leave.approve-employee');
 
         // Scope
         if ($isAdmin) {
@@ -54,6 +54,17 @@ class LeaveRequestController extends Controller
             if ($isAdmin || $isHR) {
                 $query->where('user_id', $request->query('user_id'));
             }
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('reason', 'ilike', "%{$search}%")
+                  ->orWhereHas('user', function($q2) use ($search) {
+                      $q2->where('name', 'ilike', "%{$search}%")
+                         ->orWhere('email', 'ilike', "%{$search}%");
+                  });
+            });
         }
 
         $query->orderBy('created_at', 'desc');
@@ -222,6 +233,11 @@ class LeaveRequestController extends Controller
             $query->where('start_date', '>=', $request->query('start_date'));
         }
 
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where('reason', 'ilike', "%{$search}%");
+        }
+
         $query->orderBy('start_date', 'desc');
 
         $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
@@ -261,9 +277,12 @@ class LeaveRequestController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->query('search');
-            $query->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('reason', 'ilike', "%{$search}%")
+                  ->orWhereHas('user', function($q2) use ($search) {
+                      $q2->where('name', 'ilike', "%{$search}%")
+                         ->orWhere('email', 'ilike', "%{$search}%");
+                  });
             });
         }
 
@@ -325,3 +344,4 @@ class LeaveRequestController extends Controller
         ]);
     }
 }
+

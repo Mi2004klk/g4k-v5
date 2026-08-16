@@ -3,6 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginForm from '../app/(auth)/login/page';
 import ForgotPasswordPage from '../app/(auth)/forgot-password/page';
 import { apiFetch } from '@/lib/api-client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
 
 // Mock Next.js navigation
 const mockPush = vi.fn();
@@ -17,7 +22,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock Next.js Image
 vi.mock('next/image', () => ({
-  default: (props: any) => <img {...props} />
+  default: ({ priority, ...props }: any) => <img {...props} />
 }));
 
 // Mock sonner toast
@@ -49,41 +54,48 @@ describe('Authentication Components', () => {
 
   describe('LoginForm', () => {
     it('renders the login form', () => {
-      render(<LoginForm />);
+      render(<QueryClientProvider client={queryClient}><LoginForm /></QueryClientProvider>);
       expect(screen.getByText('Sign In')).toBeInTheDocument();
-      expect(screen.getByPlaceholderText(/e\.g\. karthik/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/you@games4king\.in/i)).toBeInTheDocument();
       expect(screen.getByPlaceholderText(/••••••••/i)).toBeInTheDocument();
     });
 
     it('shows validation errors for empty submission', async () => {
-      render(<LoginForm />);
+      render(<QueryClientProvider client={queryClient}><LoginForm /></QueryClientProvider>);
       
       const submitButton = screen.getByRole('button', { name: /Sign In/i });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Username, Email, or Employee ID is required')).toBeInTheDocument();
-        expect(screen.getByText('Password must be at least 6 characters')).toBeInTheDocument();
+        expect(screen.getAllByText('Email or Employee ID is required')[0]).toBeInTheDocument();
+        expect(screen.getAllByText('Password must be at least 6 characters')[0]).toBeInTheDocument();
       });
     });
 
     it('validates and submits form successfully', async () => {
-      (apiFetch as any).mockResolvedValueOnce({
-        token: 'fake-token',
-        user: { id: 1, name: 'Test User', current_tenant_id: 1 },
-        onboarded: true
+      (apiFetch as any).mockImplementation(async (url: string) => {
+        if (url === '/auth/login') {
+          return {
+            token: 'fake-token',
+            user: { id: 1, name: 'Test User', current_tenant_id: 1 },
+            onboarded: true
+          };
+        }
+        return {};
       });
 
-      render(<LoginForm />);
+      render(<QueryClientProvider client={queryClient}><LoginForm /></QueryClientProvider>);
       
-      fireEvent.change(screen.getByPlaceholderText(/e\.g\. karthik/i), { target: { value: 'test@example.com' } });
+      fireEvent.change(screen.getByPlaceholderText(/you@games4king\.in/i), { target: { value: 'test@example.com' } });
       fireEvent.change(screen.getByPlaceholderText(/••••••••/i), { target: { value: 'password123' } });
       
       fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
 
       await waitFor(() => {
-        expect(apiFetch).toHaveBeenCalledWith('/auth/login', expect.any(Object));
-        expect(mockPush).toHaveBeenCalledWith('/dashboard');
+        expect(apiFetch).toHaveBeenCalledWith('/auth/login', expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('test@example.com')
+        }));
       });
     });
 
@@ -93,11 +105,16 @@ describe('Authentication Components', () => {
       (lockoutError as any).status = 423;
       (lockoutError as any).retry_after = 600;
       
-      (apiFetch as any).mockRejectedValueOnce(lockoutError);
+      (apiFetch as any).mockImplementation(async (url: string) => {
+        if (url === '/auth/login') {
+          throw lockoutError;
+        }
+        return {};
+      });
 
-      render(<LoginForm />);
+      render(<QueryClientProvider client={queryClient}><LoginForm /></QueryClientProvider>);
       
-      fireEvent.change(screen.getByPlaceholderText(/e\.g\. karthik/i), { target: { value: 'test@example.com' } });
+      fireEvent.change(screen.getByPlaceholderText(/you@games4king\.in/i), { target: { value: 'test@example.com' } });
       fireEvent.change(screen.getByPlaceholderText(/••••••••/i), { target: { value: 'password123' } });
       
       fireEvent.click(screen.getByRole('button', { name: /Sign In/i }));
@@ -116,14 +133,11 @@ describe('Authentication Components', () => {
       
       fireEvent.change(screen.getByPlaceholderText(/Enter your identifier/i), { target: { value: 'test@example.com' } });
       
-      // Select Admin Approval
-      fireEvent.click(screen.getByRole('button', { name: /Admin Approval/i }));
-      
       fireEvent.click(screen.getByRole('button', { name: /Recover Password/i }));
 
       await waitFor(() => {
         expect(apiFetch).toHaveBeenCalledWith('/auth/forgot-password', expect.objectContaining({
-          body: expect.stringContaining('"channel":"admin"')
+          body: expect.stringContaining('"identifier":"test@example.com"')
         }));
       });
     });

@@ -12,6 +12,9 @@ use App\Http\Controllers\DirectoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserPreferenceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\TaskReminderController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\HolidayController;
@@ -194,6 +197,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::post('/tasks/{id}/approve', [TaskController::class, 'approve']);
         Route::post('/tasks/{id}/redo', [TaskController::class, 'redo']);
         Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
+        Route::post('/tasks/{id}/reminders', [TaskReminderController::class, 'store']);
+        Route::delete('/tasks/reminders/{id}', [TaskReminderController::class, 'destroy']);
     });
 
     Route::middleware('capability:qa.view|qa.manage')->group(function () {
@@ -221,13 +226,15 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
         Route::middleware('throttle:30,1')->group(function () {
             Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
-            Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroup']);
             Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
-            Route::post('/conversations/{id}/messages/{msgId}/pin', [\App\Http\Controllers\ChatController::class, 'pinMessage']);
-            Route::post('/conversations/{id}/messages/{msgId}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinMessage']);
         });
         Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
         Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
+    });
+    Route::middleware('capability:chat.manage')->group(function () {
+        Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroup']);
+        Route::post('/conversations/{id}/messages/{msgId}/pin', [\App\Http\Controllers\ChatController::class, 'pinMessage']);
+        Route::post('/conversations/{id}/messages/{msgId}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinMessage']);
     });
 
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
@@ -310,7 +317,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     Route::get('/departments', [DepartmentController::class, 'index']);
     Route::get('/departments/{id}/teams', [DepartmentController::class, 'teams']);
     Route::post('/departments/{id}/teams', [DepartmentController::class, 'storeTeam']);
-    Route::delete('/departments/{id}/teams/{teamId}', [DepartmentController::class, 'removeTeam']);
+    Route::delete('/departments/{id}/teams/{teamId}', [DepartmentController::class, 'destroyTeam']);
     Route::middleware('capability:departments.manage')->group(function () {
         Route::get('/departments/export', [DepartmentController::class, 'export']);
         Route::patch('/departments/{id}/archive', [DepartmentController::class, 'archive']);
@@ -334,8 +341,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     // Admin Jobs
     Route::middleware('capability:settings.manage')->group(function () {
-        Route::get('/admin/jobs', [SettingsController::class, 'jobs']);
-        Route::post('/admin/jobs/retry', [SettingsController::class, 'retryJobs']);
+        Route::get('/admin/jobs', [\App\Http\Controllers\SettingsController::class, 'jobs']);
+        Route::post('/admin/jobs/retry', [\App\Http\Controllers\SettingsController::class, 'retryJobs']);
     });
 });
 

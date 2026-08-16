@@ -15,10 +15,11 @@ import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const TaskGantt = dynamic(() => import("@/components/tasks/task-gantt").then(mod => mod.TaskGantt), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, ConfirmDialog, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox } from "@g4k/ui/components";
+import { Button, Input, Skeleton, Checkbox, Avatar, AvatarFallback, Badge, StatusBadge, Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker } from "@g4k/ui/components";
+import { FormError } from "@/components/forms/form-error";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
-export function TasksTab() {
+export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa" | "list">("kanban");
   const [selectedTask, setSelectedTask] = useState<any>(null);
@@ -29,9 +30,11 @@ export function TasksTab() {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [dueDate, setDueDate] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(defaultProjectId || "");
+  const [scope, setScope] = useState("global");
   const [qaFormId, setQaFormId] = useState("");
   const [blockedBy, setBlockedBy] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
@@ -45,6 +48,7 @@ export function TasksTab() {
   
   const searchParams = useSearchParams();
   const isMe = searchParams.get("me") === "1";
+  const isReview = searchParams.get("review") === "1";
   const [assigneeFilter, setAssigneeFilter] = useState(isMe ? "me" : "all");
   const user = useAuthStore(s => s.user);
 
@@ -54,7 +58,8 @@ export function TasksTab() {
   const availableProjects = canManageTasks ? projectsData?.data : projectsData?.data?.filter((p: any) => p.allow_employee_tasks);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(isReview ? "review" : "all");
+  const [scopeFilter, setScopeFilter] = useUrlState("scope", "all");
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("desc");
   const [rowSelection, setRowSelection] = useState({});
@@ -64,18 +69,20 @@ export function TasksTab() {
   const [perPage, setPerPage] = useState(20);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: [...queryKeys.tasks, statusFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder],
+    queryKey: [...queryKeys.tasks, statusFilter, scopeFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder],
     queryFn: () => {
       const p = new URLSearchParams();
       p.append("per_page", viewMode === "list" ? perPage.toString() : "100");
       p.append("page", viewMode === "list" ? page : "1");
       if (statusFilter !== "all") p.append("status", statusFilter);
+      if (scopeFilter !== "all") p.append("scope", scopeFilter);
       if (searchQuery) p.append("search", searchQuery);
       if (assigneeFilter === "me") {
         if (user?.id) p.append("assignee_id", user.id.toString());
       } else if (assigneeFilter !== "all") {
         p.append("assignee_id", assigneeFilter);
       }
+      if (defaultProjectId) p.append("project_id", defaultProjectId);
       p.append("sort_by", sortBy);
       p.append("sort_order", sortOrder);
       return apiFetch(`/tasks?${p.toString()}`);
@@ -156,7 +163,11 @@ export function TasksTab() {
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (taskIds: number[]) => {
-      await Promise.all(taskIds.map(id => apiFetch(`/tasks/${id}`, { method: "DELETE" })));
+      let completed = 0;
+      for (const id of taskIds) {
+        await apiFetch(`/tasks/${id}`, { method: "DELETE" });
+        completed++;
+      }
     },
     onSuccess: () => {
       toast.success("Tasks deleted successfully.");
@@ -168,7 +179,11 @@ export function TasksTab() {
 
   const bulkStatusMutation = useMutation({
     mutationFn: async ({ taskIds, status }: { taskIds: number[], status: string }) => {
-      await Promise.all(taskIds.map(id => apiFetch(`/tasks/${id}`, { method: "PUT", body: JSON.stringify({ status }) })));
+      let completed = 0;
+      for (const id of taskIds) {
+        await apiFetch(`/tasks/${id}`, { method: "PUT", body: JSON.stringify({ status }) });
+        completed++;
+      }
     },
     onSuccess: () => {
       toast.success("Tasks status updated.");
@@ -215,6 +230,7 @@ export function TasksTab() {
           due_date: dueDate || null,
           assignees: resolvedAssigneeIds,
           project_id: resolvedProjectId ? parseInt(resolvedProjectId) : null,
+          scope,
           qa_form_id: resolvedQaFormId ? parseInt(resolvedQaFormId) : null,
           blocked_by: resolvedBlockedBy ? parseInt(resolvedBlockedBy) : null,
           recurrence,
@@ -229,6 +245,12 @@ export function TasksTab() {
       toast.success("Task created successfully.");
       // Drop exact:true so the parameterized list key is also invalidated (T-46.2)
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to create task.");
+      if (err.errors) {
+        setFieldErrors(err.errors);
+      }
     },
   });
 
@@ -260,12 +282,17 @@ export function TasksTab() {
         const task = row.original;
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Badge 
-              variant="secondary" 
-              className={`capitalize ${s === 'review' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-200 dark:border-amber-800' : ''}`}
+            <StatusBadge 
+              status={s === 'completed' ? 'success' : s === 'review' ? 'warning' : s === 'redo' || s === 'overdue' ? 'danger' : s === 'in_progress' ? 'info' : 'neutral'} 
+              className="capitalize"
             >
               {s.replace("_", " ")}
-            </Badge>
+            </StatusBadge>
+            {task.scope && (
+              <Badge variant="outline" className="capitalize text-[10px] text-neutral-500 border-neutral-200">
+                {task.scope}
+              </Badge>
+            )}
             {task.blocked_by && (
               <Badge variant="secondary" className="bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-200 dark:border-rose-800">
                 <AppIcon name="error" size="xs" className="mr-1" /> Blocked
@@ -314,12 +341,46 @@ export function TasksTab() {
           </Button>
         </div>
         
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-              <AppIcon name="plus" /> New Task
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {canManageTasks && (
+            <Button 
+              variant={statusFilter === "review" ? "secondary" : "outline"} 
+              size="sm" 
+              onClick={() => setStatusFilter(statusFilter === "review" ? "all" : "review")} 
+              className={`h-9 text-xs px-3 ${statusFilter === "review" ? "bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200" : ""}`}
+            >
+              <AppIcon name="clipboard" size="sm" className="mr-1.5" />
+              Needs Review
             </Button>
-          </DialogTrigger>
+          )}
+          {canManageTasks && (
+            <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+              <SelectTrigger className="w-[120px] h-9 text-xs">
+                <SelectValue placeholder="Tasks" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="me">My Tasks</SelectItem>
+                <SelectItem value="all">All Tasks</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          <Select value={scopeFilter} onValueChange={setScopeFilter}>
+            <SelectTrigger className="w-[130px] h-9 text-xs">
+              <SelectValue placeholder="All Scopes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Scopes</SelectItem>
+              <SelectItem value="global">Global</SelectItem>
+              <SelectItem value="department">Department</SelectItem>
+              <SelectItem value="role">Role</SelectItem>
+            </SelectContent>
+          </Select>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full sm:w-auto bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-9">
+                <AppIcon name="plus" /> New Task
+              </Button>
+            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Task</DialogTitle>
@@ -332,8 +393,9 @@ export function TasksTab() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Task title..."
-                    className="text-xs"
+                    className={`text-xs ${fieldErrors.title ? "border-red-500" : ""}`}
                   />
+                  <FormError errors={fieldErrors.title} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-neutral-500">Description</label>
@@ -341,9 +403,10 @@ export function TasksTab() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Provide context..."
-                    className="w-full p-2 text-xs rounded border border-input bg-background resize-none"
+                    className={`w-full p-2 text-xs rounded border bg-background resize-none ${fieldErrors.description ? "border-red-500" : "border-input"}`}
                     rows={3}
                   />
+                  <FormError errors={fieldErrors.description} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
@@ -385,29 +448,53 @@ export function TasksTab() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-neutral-500">Assignees</label>
-                    <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-2 space-y-1 bg-white dark:bg-neutral-900">
-                      {availableUsers?.map((u: any) => (
-                        <label key={u.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded">
-                          <Checkbox 
-                            checked={assigneeIds.includes(u.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setAssigneeIds([...assigneeIds, u.id]);
-                              } else {
-                                setAssigneeIds(assigneeIds.filter(id => id !== u.id));
-                              }
-                            }}
-                          />
-                          <span className="text-xs">{u.name}</span>
-                        </label>
-                      ))}
+                  {canManageTasks ? (
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-neutral-500">Assignees</label>
+                      <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-2 space-y-1 bg-white dark:bg-neutral-900">
+                        {availableUsers?.map((u: any) => (
+                          <label key={u.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded">
+                            <Checkbox 
+                              checked={assigneeIds.includes(u.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setAssigneeIds([...assigneeIds, u.id]);
+                                } else {
+                                  setAssigneeIds(assigneeIds.filter(id => id !== u.id));
+                                }
+                              }}
+                            />
+                            <span className="text-xs">{u.name}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-1 flex flex-col justify-center bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-md p-3">
+                      <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
+                        <AppIcon name="info" size="xs" className="mr-1 inline-block -mt-0.5" />
+                        You will be assigned to this task automatically.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
+                  {canManageTasks && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-neutral-500">Scope</label>
+                      <Select value={scope} onValueChange={setScope}>
+                        <SelectTrigger className="w-full h-9 text-xs">
+                          <SelectValue placeholder="Global" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="global">Global</SelectItem>
+                          <SelectItem value="department">Department</SelectItem>
+                          <SelectItem value="role">Role</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-neutral-500">QA Form</label>
                     <Select value={qaFormId} onValueChange={setQaFormId}>
@@ -416,7 +503,7 @@ export function TasksTab() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
-                        {qaFormsData?.map((q: any) => (
+                        {(Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : []).map((q: any) => (
                           <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>
                         ))}
                       </SelectContent>
@@ -502,7 +589,10 @@ export function TasksTab() {
                 </div>
 
                 <Button
-                  onClick={() => createMutation.mutate()}
+                  onClick={() => {
+                    setFieldErrors({});
+                    createMutation.mutate();
+                  }}
                   disabled={createMutation.isPending || !title}
                   className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold mt-4"
                 >
@@ -512,6 +602,7 @@ export function TasksTab() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
       
       {viewMode === "list" && (
         <div className="space-y-4">
@@ -543,6 +634,19 @@ export function TasksTab() {
                   { label: "In Progress", value: "in_progress" },
                   { label: "In Review", value: "review" },
                   { label: "Done", value: "done" },
+                ]
+              },
+              {
+                key: "scope",
+                label: "Scope",
+                type: "select",
+                value: scopeFilter,
+                onChange: setScopeFilter,
+                options: [
+                  { label: "All Scopes", value: "all" },
+                  { label: "Global", value: "global" },
+                  { label: "Department", value: "department" },
+                  { label: "Role", value: "role" },
                 ]
               },
               {

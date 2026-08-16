@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -10,20 +10,41 @@ export function ConversationList({
   selectedId,
   currentUserId,
   onSelect,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
 }: {
   conversations: any[];
   selectedId: number | null;
   currentUserId: number;
   onSelect: (id: number) => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  fetchNextPage?: () => void;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const rowVirtualizer = useVirtualizer({
-    count: conversations.length,
+    count: hasNextPage ? conversations.length + 1 : conversations.length,
     getScrollElement: () => parentRef.current,
     estimateSize: useCallback(() => 64, []),
     overscan: 5,
   });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
+  useEffect(() => {
+    if (!virtualItems.length) return;
+    const lastItem = virtualItems[virtualItems.length - 1];
+    
+    if (
+      lastItem.index >= conversations.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
+      fetchNextPage?.();
+    }
+  }, [virtualItems, conversations.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const getIcon = (scope: string) => {
     switch (scope) {
@@ -44,8 +65,24 @@ export function ConversationList({
         className="w-full relative divide-y divide-neutral-100 dark:divide-neutral-800"
         style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
       >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        {virtualItems.map((virtualRow) => {
+          const isLoaderRow = virtualRow.index > conversations.length - 1;
           const conv = conversations[virtualRow.index];
+          
+          if (isLoaderRow) {
+            return (
+              <div
+                key="loader"
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                className="absolute top-0 left-0 w-full p-3 flex items-center justify-center text-xs text-neutral-400"
+                style={{ transform: `translateY(${virtualRow.start}px)` }}
+              >
+                Loading older chats...
+              </div>
+            );
+          }
+
           if (!conv) return null;
           
           const isSelected = selectedId === conv.id;

@@ -32,21 +32,25 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
     onMutate: async ({ decision }) => {
       // Optimistic Update
       await queryClient.cancelQueries({ queryKey: queryKeys.orgLeaveRequests });
-      const previousLeaves = queryClient.getQueryData(queryKeys.orgLeaveRequests);
+      const previousLeaves = queryClient.getQueriesData({ queryKey: queryKeys.orgLeaveRequests });
       
-      queryClient.setQueryData(queryKeys.orgLeaveRequests, (old: any) => {
-        return old ? {
-          ...old,
-          data: (old.data ?? []).map((item: any) => {
-            if (item.approval?.id === approvalId) {
-              return {
-                ...item,
-                approval: { ...item.approval, status: decision },
-              };
-            }
-            return item;
-          }),
-        } : old;
+      queryClient.setQueriesData({ queryKey: queryKeys.orgLeaveRequests }, (old: any) => {
+        // Handle unwrapped paginator arrays or standard paginators
+        if (!old) return old;
+        
+        let targetArray = Array.isArray(old) ? old : (old.data ?? []);
+        const newData = targetArray.map((item: any) => {
+          if (item.approval?.id === approvalId) {
+            return {
+              ...item,
+              approval: { ...item.approval, status: decision },
+            };
+          }
+          return item;
+        });
+
+        if (Array.isArray(old)) return newData;
+        return { ...old, data: newData };
       });
       return { previousLeaves };
     },
@@ -56,7 +60,9 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
       setRejectReason("");
     },
     onError: (err: any, newTodo, context) => {
-      queryClient.setQueryData(queryKeys.orgLeaveRequests, context?.previousLeaves);
+      context?.previousLeaves?.forEach(([key, data]: [any, any]) => {
+        queryClient.setQueryData(key, data);
+      });
       toast.error(err.message || "Failed to process decision.");
     },
     onSettled: () => {

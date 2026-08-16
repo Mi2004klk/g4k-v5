@@ -14,7 +14,7 @@ class ReportController extends Controller
 {
     private function userHasManage(Request $request): bool
     {
-        $role = $request->user()->active_role ?? 'employee';
+        $role = $request->user()->resolveActiveRole();
         return CapabilityMatrix::hasCapability($role, 'reports.manage');
     }
 
@@ -127,7 +127,7 @@ class ReportController extends Controller
             ->limit(20)
             ->get();
 
-        return response()->json(['data' => $exports]);
+        return response()->json($exports);
     }
 
     public function attendanceSummary(Request $request)
@@ -202,3 +202,4 @@ class ReportController extends Controller
         return response()->json($results);
     }
 }
+

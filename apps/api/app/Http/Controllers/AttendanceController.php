@@ -82,7 +82,7 @@ class AttendanceController extends Controller
             ->orderBy('timestamp', 'asc')
             ->get();
 
-        $activeRole = $user->active_role ?? 'employee';
+        $activeRole = $user->resolveActiveRole();
         $today = Carbon::now()->toDateString();
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$user->id}_{$activeRole}_{$today}");
@@ -195,6 +195,10 @@ class AttendanceController extends Controller
         }
         $standardSeconds = $schedule ? ($schedule['standard_seconds'] ?? 31500) : 31500;
 
+        if ($day) {
+            $day->standard_seconds = $standardSeconds;
+        }
+
         $lastMod = max(($day?->updated_at) ?? '', ($events->max('updated_at')) ?? '');
         $response = response()->json([
             'day' => $day,
@@ -211,13 +215,26 @@ class AttendanceController extends Controller
     public function meHistory(Request $request)
     {
         $user = $request->user();
-        $days = AttendanceDay::where('user_id', $user->id)
+        $month = $request->query('month');
+        
+        $query = AttendanceDay::where('user_id', $user->id)
             ->orderByDesc('date')
-            ->orderByDesc('id')
-            ->cursorPaginate(30);
+            ->orderByDesc('id');
+
+        if ($month && preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth()->toDateString();
+            $end = \Carbon\Carbon::parse($month . '-01')->endOfMonth()->toDateString();
+            $days = $query->whereBetween('date', [$start, $end])->get();
+            $items = $days;
+        } else {
+            $limit = $request->query('limit', 30);
+            $limit = is_numeric($limit) ? (int)$limit : 30;
+            $days = $query->cursorPaginate($limit);
+            $items = collect($days->items());
+        }
 
         // Fetch task_time_logs for the paginated dates
-        $dates = collect($days->items())->pluck('date')->toArray();
+        $dates = collect($items)->pluck('date')->toArray();
         $logs = \App\Models\TaskTimeLog::with(['project', 'task'])
             ->where('user_id', $user->id)
             ->whereIn('log_date', $dates)
@@ -225,13 +242,20 @@ class AttendanceController extends Controller
 
         $logsByDate = $logs->groupBy('log_date');
 
-        foreach ($days->items() as $day) {
+        foreach ($items as $day) {
             $dayLogs = $logsByDate->get($day->date, collect());
             $projects = $dayLogs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
             $tasks = $dayLogs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
             
             $day->projects = $projects;
             $day->tasks = $tasks;
+        }
+
+        if ($month) {
+            return response()->json([
+                'data' => $items,
+                'next_cursor' => null,
+            ]);
         }
 
         return response()->json($days);
@@ -257,6 +281,26 @@ class AttendanceController extends Controller
         $projects = $logs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
         $tasks = $logs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
 
+        $scheduleId = $user->work_schedule_id;
+        $schedule = null;
+        if ($scheduleId) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$scheduleId}", 86400, function() use ($scheduleId) {
+                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $scheduleId)->first();
+                return $res ? (array)$res : null;
+            });
+        }
+        if (!$schedule) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
+                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
+                return $res ? (array)$res : null;
+            });
+        }
+        $standardSeconds = $schedule ? ($schedule['standard_seconds'] ?? 31500) : 31500;
+        
+        if ($day) {
+            $day->standard_seconds = $standardSeconds;
+        }
+
         return response()->json([
             'day' => $day,
             'events' => $events,
@@ -267,7 +311,7 @@ class AttendanceController extends Controller
 
     private function applyHrScoping($query, $user)
     {
-        $activeRole = $user->active_role ?? 'employee';
+        $activeRole = $user->resolveActiveRole();
         $isAdmin = \App\Services\CapabilityMatrix::hasCapability($activeRole, '*');
         
         if (!$isAdmin) {
@@ -281,7 +325,7 @@ class AttendanceController extends Controller
         $date = $request->query('date', \Carbon\Carbon::today()->toDateString());
         $user = $request->user();
         
-        $activeRole = $user->active_role ?? 'employee';
+        $activeRole = $user->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
         
         $cacheKey = "team_today_{$activeRole}_{$user->department_id}_{$date}";
@@ -362,7 +406,30 @@ class AttendanceController extends Controller
         return response()->json($data);
     }
 
+    public function hrToday(Request $request)
+    {
+        return $this->overview($request);
+    }
+
     public function overview(Request $request)
+    {
+        $query = $this->buildOverviewQuery($request);
+        
+        $request->validate([
+            'per_page' => 'nullable|integer|in:20,50,100'
+        ]);
+        $perPage = $request->input('per_page', 20);
+        $results = $query->paginate($perPage);
+        $response = response()->json($results);
+        $lastModified = collect($results->items())->max('updated_at') ?? '';
+        $response->setEtag(md5($results->count() . $lastModified . $request->fullUrl()));
+        $response->header('Cache-Control', 'private, max-age=30');
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    private function buildOverviewQuery(Request $request)
     {
         $isTodayNoStatusFilter = $request->query('date') === now()->toDateString() && !$request->filled('status');
         
@@ -383,14 +450,12 @@ class AttendanceController extends Controller
                     'departments.name as department_name',
                     DB::raw("COALESCE(attendance_days.status, 'absent') as status")
                 )
-                ->where('users.status', 'active')
-                ->orderBy('users.name', 'asc');
+                ->where('users.status', 'active');
         } else {
             $query = DB::table('attendance_days')
                 ->join('users', 'users.id', '=', 'attendance_days.user_id')
                 ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-                ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name')
-                ->orderBy('date', 'desc');
+                ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name');
                 
             if ($request->filled('date') && $request->query('date') !== 'all') {
                 $query->where('date', $request->query('date'));
@@ -425,26 +490,39 @@ class AttendanceController extends Controller
                   ->orWhere('users.email', 'like', $searchTerm);
             });
         }
+        $sortBy = $request->query('sort_by');
+        $sortDir = strtolower($request->query('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        $request->validate([
-            'per_page' => 'nullable|integer|in:20,50,100'
-        ]);
-        $perPage = $request->input('per_page', 20);
-        $results = $query->paginate($perPage);
-        $response = response()->json($results);
-        $lastModified = collect($results->items())->max('updated_at') ?? '';
-        $response->setEtag(md5($results->count() . $lastModified . $request->fullUrl()));
-        $response->header('Cache-Control', 'private, max-age=30');
-        $response->isNotModified($request);
+        if ($sortBy === 'user_name') {
+            $query->orderBy('users.name', $sortDir);
+        } elseif ($sortBy === 'date') {
+            if (!$isTodayNoStatusFilter) {
+                $query->orderBy('attendance_days.date', $sortDir);
+            }
+        } elseif ($sortBy === 'status') {
+            if ($isTodayNoStatusFilter) {
+                $query->orderBy(DB::raw("COALESCE(attendance_days.status, 'absent')"), $sortDir);
+            } else {
+                $query->orderBy('attendance_days.status', $sortDir);
+            }
+        } elseif ($sortBy === 'clock_in') {
+            $query->orderBy('attendance_days.clock_in', $sortDir);
+        } else {
+            if ($isTodayNoStatusFilter) {
+                $query->orderBy('users.name', 'asc');
+            } else {
+                $query->orderBy('attendance_days.date', 'desc');
+            }
+        }
 
-        return $response;
+        return $query;
     }
 
     public function hrDay(Request $request, string $date, int $userId)
     {
         // First verify they have access to this user (same department or admin)
         $targetUser = \App\Models\User::findOrFail($userId);
-        $activeRole = $request->user()->active_role ?? 'employee';
+        $activeRole = $request->user()->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin && !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
@@ -468,6 +546,27 @@ class AttendanceController extends Controller
         $projects = $logs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
         $tasks = $logs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
 
+        // Calculate standard seconds for hrDay and meDay
+        $scheduleId = $targetUser->work_schedule_id;
+        $schedule = null;
+        if ($scheduleId) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$scheduleId}", 86400, function() use ($scheduleId) {
+                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $scheduleId)->first();
+                return $res ? (array)$res : null;
+            });
+        }
+        if (!$schedule) {
+            $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
+                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
+                return $res ? (array)$res : null;
+            });
+        }
+        $standardSeconds = $schedule ? ($schedule['standard_seconds'] ?? 31500) : 31500;
+        
+        if ($day) {
+            $day->standard_seconds = $standardSeconds;
+        }
+
         return response()->json([
             'day' => $day,
             'events' => $events,
@@ -485,19 +584,29 @@ class AttendanceController extends Controller
     {
         // First verify they have access to this user
         $targetUser = \App\Models\User::findOrFail($userId);
-        $activeRole = $request->user()->active_role ?? 'employee';
+        $activeRole = $request->user()->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
             
         if (!$isAdmin && !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
             return response()->json(['message' => 'Unauthorized access to this user\'s history.'], 403);
         }
 
-        $days = AttendanceDay::where('user_id', $userId)
-            ->orderBy('date', 'desc')
-            ->cursorPaginate(30);
+        $month = $request->query('month');
+        $query = AttendanceDay::where('user_id', $userId)
+            ->orderBy('date', 'desc');
+
+        if ($month && preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $start = \Carbon\Carbon::parse($month . '-01')->startOfMonth()->toDateString();
+            $end = \Carbon\Carbon::parse($month . '-01')->endOfMonth()->toDateString();
+            $days = $query->whereBetween('date', [$start, $end])->get();
+            $items = $days;
+        } else {
+            $days = $query->cursorPaginate(30);
+            $items = collect($days->items());
+        }
 
         // Fetch task_time_logs for the paginated dates
-        $dates = collect($days->items())->pluck('date')->toArray();
+        $dates = collect($items)->pluck('date')->toArray();
         $logs = \App\Models\TaskTimeLog::with(['project', 'task'])
             ->where('user_id', $userId)
             ->whereIn('log_date', $dates)
@@ -505,7 +614,7 @@ class AttendanceController extends Controller
 
         $logsByDate = $logs->groupBy('log_date');
 
-        foreach ($days->items() as $day) {
+        foreach ($items as $day) {
             $dayLogs = $logsByDate->get($day->date, collect());
             $projects = $dayLogs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
             $tasks = $dayLogs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
@@ -515,95 +624,16 @@ class AttendanceController extends Controller
         }
 
         return response()->json([
-            'data' => collect($days->items())->map(function($day) {
+            'data' => collect($items)->map(function($day) {
                 return $day;
             }),
-            'next_cursor' => $days->nextCursor()?->encode(),
+            'next_cursor' => $month ? null : $days->nextCursor()?->encode(),
             'user' => [
                 'id' => $targetUser->id,
                 'name' => $targetUser->name,
                 'email' => $targetUser->email,
             ]
         ]);
-    }
-
-    public function hrToday(Request $request)
-    {
-        $reqDate = $request->query('date');
-        $isAll = $reqDate === 'all';
-        $date = ($reqDate && !$isAll) ? $reqDate : now()->toDateString();
-
-        if ($isAll) {
-            $query = DB::table('attendance_days')
-                ->join('users', 'users.id', '=', 'attendance_days.user_id')
-                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-                ->select('attendance_days.*', 'users.id as user_id', 'users.name as user_name', 'users.email as user_email', 'users.department_id', 'departments.name as department_name', 'attendance_days.status as computed_status')
-                ->orderBy('date', 'desc');
-        } else {
-            $query = DB::table('users')
-                ->leftJoin('attendance_days', function ($join) use ($date) {
-                    $join->on('users.id', '=', 'attendance_days.user_id')
-                         ->where('attendance_days.date', '=', $date);
-                })
-                ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
-                ->select(
-                    'attendance_days.*', 
-                    'users.id as user_id',
-                    'users.name as user_name', 
-                    'users.email as user_email', 
-                    'users.department_id', 
-                    'departments.name as department_name',
-                    DB::raw("COALESCE(attendance_days.status, 'absent') as computed_status")
-                )
-                ->where('users.status', 'active')
-                ->orderBy('users.name', 'asc');
-        }
-
-        $this->applyHrScoping($query, $request->user());
-
-        if ($request->filled('department_id')) {
-            $query->where('users.department_id', $request->query('department_id'));
-        }
-        if ($request->filled('status')) {
-            $status = $request->query('status');
-            if ($status === 'absent') {
-                $query->where(function($q) {
-                    $q->whereNull('attendance_days.status')
-                      ->orWhere('attendance_days.status', 'absent');
-                });
-            } else {
-                $query->where('attendance_days.status', $status);
-            }
-        }
-        if ($request->filled('search')) {
-            $searchTerm = '%' . $request->query('search') . '%';
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('users.name', 'like', $searchTerm)
-                  ->orWhere('users.email', 'like', $searchTerm);
-            });
-        }
-
-        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
-        $perPage = $request->input('per_page', 20);
-        $results = $query->paginate($perPage);
-        
-        // Ensure status defaults to absent for true absentees in the output
-        $results->getCollection()->transform(function ($item) {
-            if (!$item->status) {
-                $item->status = 'absent';
-            }
-            return $item;
-        });
-
-        $paginator = $results;
-
-        $response = response()->json($paginator);
-        $lastModified = collect($paginator->items())->max('updated_at') ?? '';
-        $response->setEtag(md5(collect($paginator->items())->count() . $lastModified . $request->fullUrl()));
-        $response->header('Cache-Control', 'private, max-age=30');
-        $response->isNotModified($request);
-
-        return $response;
     }
 
     public function hrGraph(Request $request)
@@ -744,7 +774,7 @@ class AttendanceController extends Controller
         $actor = $request->user();
 
         // HR-CORRECT: HR may only correct attendance within their own team/department.
-        $activeRole = $actor->active_role ?? 'employee';
+        $activeRole = $actor->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
             
         $targetUser = User::where('id', $day->user_id)->first();
@@ -920,4 +950,5 @@ class AttendanceController extends Controller
         return response()->json(['message' => 'Notifications sent successfully.']);
     }
 }
+
 

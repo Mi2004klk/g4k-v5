@@ -130,6 +130,7 @@ export function HrCorrectionDialog({
     onSuccess: () => {
       toast.success("Attendance record corrected and audited.");
       queryClient.invalidateQueries({ queryKey: [queryKeys.hrAttendance(date, "all")[0]] });
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'admin-list'] });
       queryClient.invalidateQueries({ queryKey: [queryKeys.memberAttendanceDay(userId, date)[0]] });
       queryClient.invalidateQueries({ queryKey: queryKeys.orgAttendance }); // generic cache
       onOpenChange(false);
@@ -149,7 +150,9 @@ export function HrCorrectionDialog({
 
     const payload: any = {
       action,
-      attendance_day_id: dayId,
+      day_id: dayId,
+      user_id: userId,
+      date,
       reason,
     };
 

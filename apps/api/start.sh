@@ -2,8 +2,8 @@
 set -e
 cd /var/www/html
 
-# 1. Migrations (idempotent). Runs once per cold start; with min-instances=1 cold starts are rare.
-php artisan migrate --force --isolated || echo "WARN: migrate failed (see logs); starting Octane anyway"
+# 1. Migrations are now handled strictly in Cloud Build (CI pipeline).
+# Removed php artisan migrate --force from cold-start to prevent swallowed errors.
 
 # 2. config:cache is INTENTIONALLY skipped — Cloud Run injects env/secrets at runtime, so baking them
 #    at build time would be wrong. route:cache + view:cache already ran at build (Dockerfile).

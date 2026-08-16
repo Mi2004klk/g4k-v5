@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
+import { GRID_COLS } from "@/lib/reconcile-layout";
 import { queryKeys } from "@/lib/query-keys";
 import { apiFetch } from "@/lib/api-client";
 import { format } from "date-fns";
@@ -22,20 +23,19 @@ import { HrActivityFeedWidget } from "@/components/attendance/hr-activity-feed-w
 
 import Link from "next/link";
 import { RecentActivityWidget } from "@/components/widgets/recent-activity-widget";
-import { EmptyState } from "@g4k/ui/components";
+import { Skeleton } from "@g4k/ui/components";
 import { Card } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 
 import { AdminTodayAttendanceWidget } from "@/components/dashboard/admin-today-attendance-widget";
+import { QuickTaskWidget } from "@/components/dashboard/quick-task-widget";
+import { UpcomingHolidaysWidget } from "@/components/widgets/upcoming-holidays-widget";
+import { EmployeeTaskProgressWidget } from "@/components/dashboard/employee-task-progress-widget";
 import { PendingApprovalsWidget } from "@/components/widgets/pending-approvals-widget";
 import { EmployeeApprovalStatusWidget } from "@/components/dashboard/employee-approval-status-widget";
-import { QuickTaskWidget } from "@/components/dashboard/quick-task-widget";
-import { TeamAttendanceWidget } from "@/components/dashboard/team-attendance-widget";
-import { EmployeeTaskProgressWidget } from "@/components/dashboard/employee-task-progress-widget";
-import { UpcomingHolidaysWidget } from "@/components/widgets/upcoming-holidays-widget";
 
 const EMPTY_CAPABILITIES: any[] = [];
-const cols = { lg: 12, md: 10, sm: 6, xs: 1, xxs: 1 };
+const cols = GRID_COLS;
 
 function responsiveLayout(base: { x: number, y: number, w: number, h: number }) {
   return {
@@ -83,14 +83,14 @@ export default function DashboardPage() {
         {
           id: "total-employees",
           component: (
-            <MetricWidget title="Total Employees" metricKey="total_employees" icon={"directory"} color="indigo" breakdown={true} />
+            <MetricWidget title="Total Employees" metricKey="total_employees" icon={"directory"} color="indigo" breakdown={true} href="/dashboard/org/users" />
           ),
           defaultLayout: responsiveLayout({ x: 0, y: 0, w: 3, h: 2 }),
         },
         {
           id: "active-projects",
           component: (
-            <MetricWidget title="Active Projects" metricKey="active_projects" icon={"projects"} color="emerald" subtitle="In progress" />
+            <MetricWidget title="Active Projects" metricKey="active_projects" icon={"projects"} color="emerald" subtitle="In progress" href="/dashboard/projects" />
           ),
           defaultLayout: responsiveLayout({ x: 3, y: 0, w: 3, h: 2 }),
         },
@@ -139,6 +139,16 @@ export default function DashboardPage() {
           component: <QuickTaskWidget />,
           defaultLayout: responsiveLayout({ x: 6, y: 3, w: 6, h: 3 }),
         },
+        {
+          id: "announcements",
+          component: <AnnouncementBoard />,
+          defaultLayout: responsiveLayout({ x: 0, y: 6, w: 8, h: 3 }),
+        },
+        {
+          id: "upcoming-holidays",
+          component: <UpcomingHolidaysWidget />,
+          defaultLayout: responsiveLayout({ x: 8, y: 6, w: 4, h: 3 }),
+        },
       ];
       
       if (hasCapability(userCapabilities, "attendance.clock-self")) {
@@ -160,12 +170,12 @@ export default function DashboardPage() {
       },
       {
         id: "active-projects",
-        component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={"clipboard"} color="blue" subtitle="Projects you're in" />,
+        component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={"clipboard"} color="blue" subtitle="Projects you're in" href="/dashboard/projects" />,
         defaultLayout: responsiveLayout({ x: 0, y: 3, w: 2, h: 2 }),
       },
       {
         id: "pending-tasks",
-        component: <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={"clipboard"} color="amber" subtitle="Tasks assigned to you" />,
+        component: <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={"clipboard"} color="amber" subtitle="Tasks assigned to you" href="/dashboard/tasks" />,
         defaultLayout: responsiveLayout({ x: 2, y: 3, w: 2, h: 2 }),
       },
       {
@@ -177,6 +187,16 @@ export default function DashboardPage() {
         id: "recent-task-progress",
         component: <EmployeeTaskProgressWidget />,
         defaultLayout: responsiveLayout({ x: 0, y: 5, w: 4, h: 3 }),
+      },
+      {
+        id: "upcoming-holidays",
+        component: <UpcomingHolidaysWidget />,
+        defaultLayout: responsiveLayout({ x: 4, y: 5, w: 4, h: 3 }),
+      },
+      {
+        id: "quick-notes",
+        component: <QuickNotes />,
+        defaultLayout: responsiveLayout({ x: 8, y: 5, w: 4, h: 3 }),
       },
     ];
 
@@ -196,10 +216,24 @@ export default function DashboardPage() {
 
   if (!mounted || isLoading || (!activeRole && !isError)) {
     return (
-      <div className="flex items-center justify-center h-[50dvh]">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
-          <p className="text-sm text-neutral-500 font-medium">Loading dashboard...</p>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card dark:bg-neutral-900 p-6 rounded-2xl shadow-e1 border border-border">
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-24 rounded-full" />
+            <Skeleton className="h-10 w-24 rounded-full" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-32 rounded-xl hidden lg:block" />
+          <Skeleton className="h-64 rounded-xl md:col-span-2 lg:col-span-1" />
+          <Skeleton className="h-64 rounded-xl md:col-span-2" />
         </div>
       </div>
     );
@@ -207,11 +241,22 @@ export default function DashboardPage() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50dvh] space-y-4">
-        <p className="text-sm text-neutral-500 font-medium">Failed to load dashboard data.</p>
-        <Button onClick={() => refetch()} variant="outline">
-          Retry
-        </Button>
+      <div className="flex flex-col items-center justify-center h-[50dvh] space-y-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-8">
+        <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mb-2">
+          <AppIcon name="warning" className="text-rose-600 text-xl" />
+        </div>
+        <h3 className="font-semibold text-lg">Dashboard Unavailable</h3>
+        <p className="text-sm text-neutral-500 font-medium text-center max-w-md">
+          We couldn't load your dashboard data. This might be due to a network issue or an expired session.
+        </p>
+        <div className="flex items-center gap-3 mt-4">
+          <Button onClick={() => refetch()} variant="primary" className="shadow-e1">
+            <AppIcon name="refresh" className="mr-2" /> Retry Connection
+          </Button>
+          <Button onClick={() => useAuthStore.getState().clearAuth()} variant="outline">
+            Sign Out
+          </Button>
+        </div>
       </div>
     );
   }

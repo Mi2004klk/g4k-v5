@@ -12,7 +12,9 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
+import { usePaginatedList } from "@/lib/pagination";
 import { useReverb } from "@/hooks/use-reverb";
+import { useExport } from "@/hooks/use-export";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input, Button, Checkbox, DataTable, StatusBadge, Combobox, FilterBar } from "@g4k/ui/components";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
@@ -27,6 +29,8 @@ export function AdminAttendanceTable() {
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
   const [userFilter, setUserFilter] = useUrlState("user", "all");
   const [search, setSearch] = useUrlState("search", "");
+  const { triggerExport, isExporting } = useExport();
+
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -65,7 +69,7 @@ export function AdminAttendanceTable() {
     const channel = subscribe("presence-org");
     if (channel) {
       channel.listen(".attendance.updated", () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.adminAttendance(dateFrom, deptFilter) });
+        queryClient.invalidateQueries({ queryKey: ['attendance', 'admin-list'] });
       });
     }
   }, [subscribe, dateFrom, deptFilter, queryClient]);
@@ -86,7 +90,7 @@ export function AdminAttendanceTable() {
     ...users.map((u: any) => ({ label: u.name, value: u.id.toString() }))
   ];
 
-  const { data, isLoading, error } = useQuery({
+  const { data: queryData, isLoading, error } = useQuery({
     queryKey: ['attendance', 'admin-list', dateFrom, dateTo, deptFilter, userFilter, statusFilter, debouncedSearch, page, perPage, sortBy, sortOrder],
     queryFn: () => apiFetch(`/attendance/admin/overview?from=${dateFrom}&to=${dateTo}&department_id=${deptFilter === "all" ? "" : deptFilter}&user_id=${userFilter === "all" ? "" : userFilter}&status=${statusFilter === "all" ? "" : statusFilter}&search=${debouncedSearch}&page=${page}&per_page=${perPage}&sort_by=${sortBy}&sort_dir=${sortOrder}`),
     placeholderData: keepPreviousData,
@@ -94,8 +98,9 @@ export function AdminAttendanceTable() {
     refetchInterval: isConnected ? false : 60_000,
   });
 
-  const records = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const paginatedData = usePaginatedList<any>(queryData);
+  const records = paginatedData.data;
+  const totalPages = paginatedData.last_page || 1;
 
   const handleExport = async (all: boolean = true) => {
     try {
@@ -117,15 +122,10 @@ export function AdminAttendanceTable() {
         if (debouncedSearch) params.append("search", debouncedSearch);
       }
 
-      const blob = await apiFetch(`/attendance/export?${params.toString()}`);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `attendance_export_admin_${dateFrom}_to_${dateTo}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await triggerExport(
+        `/attendance/export?${params.toString()}`,
+        `attendance_export_admin_${dateFrom}_to_${dateTo}.xlsx`
+      );
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Failed to export attendance");
@@ -157,10 +157,20 @@ export function AdminAttendanceTable() {
       enableHiding: false,
     },
     {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ row }: any) => {
+        return <span className="text-xs text-neutral-600 dark:text-neutral-400">{row.original.date ? format(new Date(row.original.date), "MMM d, yyyy") : "—"}</span>;
+      }
+    },
+    {
       accessorKey: "user_name",
       header: "Employee",
       cell: ({ row }: any) => {
-        const isOpenShift = row.original.clock_in && !row.original.clock_out;
+        const isToday = dateFrom === format(new Date(), "yyyy-MM-dd");
+        const isClockedIn = row.original.clock_in && !row.original.clock_out;
+        const isLive = isToday && isClockedIn;
+        const isMissingClockOut = !isToday && isClockedIn;
         
         return (
           <div className="flex items-center gap-3 group">
@@ -184,7 +194,15 @@ export function AdminAttendanceTable() {
             >
               <AppIcon name="trendingUp" />
             </button>
-            {isOpenShift && (
+            {isLive && (
+              <div className="flex items-center justify-center w-5 h-5" title="Active right now">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+              </div>
+            )}
+            {isMissingClockOut && (
               <StatusBadge
                 status="warning"
                 onClick={(e) => {

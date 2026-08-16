@@ -1,3 +1,5 @@
+export const GRID_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
+
 export function reconcileLayout(savedLayouts: any, availableWidgets: Array<any>, colsMap: { [key: string]: number }) {
   if (!savedLayouts || Object.keys(savedLayouts).length === 0) return null;
   

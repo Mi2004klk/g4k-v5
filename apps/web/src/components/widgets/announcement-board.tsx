@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
+import { useReverb } from "@/hooks/use-reverb";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
@@ -11,34 +12,43 @@ import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, ConfirmDial
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
+import { hasCapability, useCapabilities } from "@/lib/capabilities";
 
 export function AnnouncementBoard() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  const isAdminOrHr = user?.active_role === "super_admin" || user?.active_role === "hr";
+  const caps = useCapabilities();
+  const canManage = hasCapability(caps.data, "announcements.manage");
 
   const [showCreate, setShowCreate] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   const { data: announcements = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => Array.isArray(data.announcements) ? data.announcements : [],
+    select: (data: any) => (Array.isArray(data.announcements?.data) ? data.announcements.data : (Array.isArray(data.announcements) ? data.announcements : [])),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
 
+  const { subscribe, leaveChannel } = useReverb();
+
   // Reverb real-time subscription
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).Echo) {
-      const channel = (window as any).Echo.channel("public-announcements");
+    const channelName = "org.announcements";
+    const channel = subscribe(channelName, true);
+    if (channel) {
       channel.listen(".AnnouncementPosted", () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       });
-      return () => {
-        channel.stopListening(".AnnouncementPosted");
-      };
     }
-  }, [queryClient]);
+    return () => {
+      if (channel) {
+        channel.stopListening(".AnnouncementPosted");
+      }
+      leaveChannel(channelName);
+    };
+  }, [subscribe, leaveChannel, queryClient]);
 
   const reactMutation = useMutation({
     mutationFn: async ({ id, emoji }: { id: number; emoji: string }) => {
@@ -81,15 +91,18 @@ export function AnnouncementBoard() {
   ];
 
   const createMutation = useMutation({
-    mutationFn: async (data: typeof createData) => {
-      return apiFetch("/announcements", {
-        method: "POST",
+    mutationFn: async (data: typeof createData & { id?: number }) => {
+      const url = data.id ? `/announcements/${data.id}` : "/announcements";
+      const method = data.id ? "PUT" : "POST";
+      return apiFetch(url, {
+        method,
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       setShowCreate(false);
+      setEditingId(null);
       setCreateData({ title: "", body: "", scope: "company", pinned: false });
       toast.success("Announcement posted");
     },
@@ -107,22 +120,22 @@ export function AnnouncementBoard() {
           </span>
           {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
-        {isAdminOrHr && (
+        {canManage && (
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Refresh
             </Button>
-            <Button variant="primary" size="sm" onClick={() => setShowCreate(true)} className="h-6 text-[10px] px-2">
+            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setCreateData({ title: "", body: "", scope: "company", pinned: false }); setShowCreate(true); }} className="h-6 text-[10px] px-2">
               Post
             </Button>
           </div>
         )}
       </div>
       
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+      <Dialog open={showCreate} onOpenChange={(open) => { setShowCreate(open); if (!open) setEditingId(null); }}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Post Announcement</DialogTitle>
+            <DialogTitle>{editingId ? "Edit Announcement" : "Post Announcement"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -145,18 +158,16 @@ export function AnnouncementBoard() {
                 placeholder="Announcement body"
               />
             </div>
-            {user?.active_role === "super_admin" && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="scope"
-                  checked={createData.scope === "company"}
-                  onChange={(e) => setCreateData({ ...createData, scope: e.target.checked ? "company" : "team" })}
-                  className="rounded border-neutral-300 text-orange-600 focus:ring-orange-500"
-                />
-                <label htmlFor="scope" className="text-sm font-medium">Company-wide (vs Team-only)</label>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="scope"
+                checked={createData.scope === "company"}
+                onChange={(e) => setCreateData({ ...createData, scope: e.target.checked ? "company" : "team" })}
+                className="rounded border-neutral-300 text-orange-600 focus:ring-orange-500"
+              />
+              <label htmlFor="scope" className="text-sm font-medium">Company-wide (vs Team-only)</label>
+            </div>
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -173,11 +184,11 @@ export function AnnouncementBoard() {
               Cancel
             </Button>
             <Button 
-              onClick={() => createMutation.mutate(createData)} 
+              onClick={() => createMutation.mutate({ ...createData, id: editingId || undefined })} 
               disabled={createMutation.isPending || !createData.title || !createData.body}
             >
               {createMutation.isPending && <AppIcon name="loading" className="mr-2 animate-spin" />}
-              Post
+              {editingId ? "Save" : "Post"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -224,8 +235,28 @@ export function AnnouncementBoard() {
                     <span className="text-[10px] text-neutral-400">
                       {safeFormat(item.created_at, "MMM d")}
                     </span>
-                    {isAdminOrHr && (
+                    {canManage && (
                       <div className="flex items-center gap-1">
+                        <TooltipProvider delayDuration={150}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingId(item.id);
+                                  setCreateData({ title: item.title, body: item.body, scope: item.scope || "company", pinned: isPinned });
+                                  setShowCreate(true);
+                                }}
+                                aria-label="Edit Announcement"
+                                className="h-5 w-5 text-neutral-400 hover:text-neutral-600 transition-colors"
+                              >
+                                <AppIcon name="edit" size="xs" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-xs">Edit Announcement</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         <TooltipProvider delayDuration={150}>
                           <Tooltip>
                             <TooltipTrigger asChild>

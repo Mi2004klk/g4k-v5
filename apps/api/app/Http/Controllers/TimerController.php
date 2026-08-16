@@ -32,7 +32,7 @@ class TimerController extends Controller
     {
         $query = TaskTimeLog::with(['task', 'project', 'user']);
 
-        $role = $request->user()->active_role ?? 'employee';
+        $role = $request->user()->resolveActiveRole();
         $canViewAll = CapabilityMatrix::hasCapability($role, 'hr.view-team-attendance') || CapabilityMatrix::hasCapability($role, 'admin.view-all-attendance');
 
         if (!$canViewAll) {
@@ -50,3 +50,4 @@ class TimerController extends Controller
         return response()->json($query->cursorPaginate(20));
     }
 }
+

@@ -32,7 +32,7 @@ class QuickNoteController extends Controller
         ]);
 
         $user = $request->user();
-        $activeRole = $user->active_role ?? 'employee';
+        $activeRole = $user->resolveActiveRole();
         $today = \Carbon\Carbon::now()->toDateString();
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("quick_notes_{$user->id}");
@@ -52,7 +52,7 @@ class QuickNoteController extends Controller
         $note->update($validated);
 
         $user = $request->user();
-        $activeRole = $user->active_role ?? 'employee';
+        $activeRole = $user->resolveActiveRole();
         $today = \Carbon\Carbon::now()->toDateString();
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("quick_notes_{$user->id}");
@@ -65,7 +65,7 @@ class QuickNoteController extends Controller
         $note = QuickNote::where('user_id', $request->user()->id)->findOrFail($id);
         $note->delete();
         $user = $request->user();
-        $activeRole = $user->active_role ?? 'employee';
+        $activeRole = $user->resolveActiveRole();
         $today = \Carbon\Carbon::now()->toDateString();
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("quick_notes_{$user->id}");
@@ -73,3 +73,4 @@ class QuickNoteController extends Controller
         return response()->json(['message' => 'Note deleted']);
     }
 }
+

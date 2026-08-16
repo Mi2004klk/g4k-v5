@@ -17,7 +17,7 @@ class UserController extends Controller
 {
     private function hasCapability(Request $request, string $capability): bool
     {
-        $activeRole = $request->user()->active_role ?? 'employee';
+        $activeRole = $request->user()->resolveActiveRole();
         return CapabilityMatrix::hasCapability($activeRole, $capability);
     }
 
@@ -26,7 +26,7 @@ class UserController extends Controller
         $query = User::with(['department', 'team', 'designation', 'roleAssignments']);
         
         $isHR = $this->hasCapability($request, 'users.hr.manage');
-        $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
+        $isSuperAdmin = $request->user()->resolveActiveRole() === 'super_admin';
         
         if ($isHR && !$isSuperAdmin) {
             $managedDeptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
@@ -93,6 +93,7 @@ class UserController extends Controller
                 'department_id' => $request->input('department_id'),
                 'status' => $request->input('status'),
                 'role' => $request->input('role'),
+                'ids' => $request->input('ids'),
                 '_has_manage' => $this->hasCapability($request, 'users.hr.manage') || $request->user()->roleAssignments->pluck('role')->contains('super_admin'),
                 '_user_id' => $request->user()->id,
             ],
@@ -499,3 +500,4 @@ class UserController extends Controller
         ]);
     }
 }
+

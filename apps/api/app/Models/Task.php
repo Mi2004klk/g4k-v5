@@ -90,4 +90,9 @@ class Task extends Model
     {
         return $this->morphOne(Approval::class, 'approvable');
     }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(TaskReminder::class);
+    }
 }

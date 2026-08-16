@@ -15,6 +15,8 @@ class Announcement extends Model
         'pinned_at' => 'datetime',
     ];
 
+    protected $appends = ['reactions'];
+
     public function getReactionsAttribute($value)
     {
         if ($this->relationLoaded('reactionsList')) {

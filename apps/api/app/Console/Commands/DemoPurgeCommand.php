@@ -118,8 +118,12 @@ class DemoPurgeCommand extends Command
         Cache::forget('settings:mail');
 
         // Cleanup demo files
-        \Illuminate\Support\Facades\Storage::disk('public')->deleteDirectory('avatars');
-        
+        $disk = config('filesystems.default', 'public');
+        try {
+            \Illuminate\Support\Facades\Storage::disk($disk)->deleteDirectory('avatars');
+        } catch (\Exception $e) {
+            $this->warn("Skipped avatar deletion on [{$disk}]: " . $e->getMessage());
+        }
         // Audit Log teardown event (un-tagged so it survives)
         \App\Models\AuditLog::create([
             'user_id' => null,

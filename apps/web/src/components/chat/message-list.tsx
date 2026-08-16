@@ -4,30 +4,56 @@ import { useEffect, useRef, memo, useCallback } from "react";
 import { format } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button } from "@g4k/ui/components";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button, Dialog, DialogContent, DialogTrigger } from "@g4k/ui/components";
 
 const MessageItem = memo(function MessageItem({
   msg,
   isMe,
+  isConsecutive = false,
   onPinMessage,
   onUnpinMessage,
   canManage,
+  onMarkRead,
 }: {
   msg: any;
   isMe: boolean;
+  isConsecutive?: boolean;
   onPinMessage?: (msgId: number) => void;
   onUnpinMessage?: (msgId: number) => void;
   canManage?: boolean;
+  onMarkRead?: () => void;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isMe || !onMarkRead) return;
+    
+    // Only trigger if this is an unread direct message
+    const hasRead = msg.reads && msg.reads.length > 0;
+    if (hasRead) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        onMarkRead();
+        observer.disconnect();
+      }
+    }, { threshold: 0.5 });
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [isMe, onMarkRead, msg.reads]);
+
   return (
-    <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-      <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
-        <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-          {isMe ? "You" : msg.sender?.name}
-        </span>
-        <span>•</span>
-        <span>{format(new Date(msg.created_at), "h:mm a")}</span>
-      </div>
+    <div ref={ref} className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${isConsecutive ? "mt-1" : "mt-4"}`}>
+      {!isConsecutive && (
+        <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
+          <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+            {isMe ? "You" : msg.sender?.name}
+          </span>
+          <span>•</span>
+          <span>{format(new Date(msg.created_at), "h:mm a")}</span>
+        </div>
+      )}
 
       <div
         className={`max-w-[75%] p-3 rounded-xl text-xs space-y-1 ${
@@ -55,22 +81,70 @@ const MessageItem = memo(function MessageItem({
 
         {msg.attachment_url && (
           <div className="mt-2">
-            {/\.(jpe?g|png|gif|webp)$/i.test(msg.attachment_url) ? (
-              <a href={msg.attachment_url} target="_blank" rel="noreferrer">
-                <img 
-                  src={msg.attachment_url} 
-                  alt="Attachment" 
-                  className="max-w-full max-h-48 rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity border border-neutral-200 dark:border-neutral-700"
-                />
-              </a>
+            {/\.(jpe?g|png|gif|webp|pdf)$/i.test(msg.attachment_url) ? (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="text-left w-full max-w-full">
+                    {/\.(pdf)$/i.test(msg.attachment_url) ? (
+                      <div className="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:opacity-80 transition-opacity">
+                        <AppIcon name="fileText" className="w-8 h-8 text-rose-500" />
+                        <div className="flex flex-col truncate">
+                          <span className="text-xs font-semibold truncate">View PDF Document</span>
+                          <span className="text-[10px] text-neutral-500 uppercase">PDF File</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <img 
+                          src={msg.attachment_url} 
+                          alt="Attachment" 
+                          onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+                          className="max-w-full max-h-48 rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity border border-neutral-200 dark:border-neutral-700"
+                        />
+                        <div className="hidden flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:opacity-80 transition-opacity">
+                          <AppIcon name="fileText" className="w-8 h-8 text-neutral-400" />
+                          <div className="flex flex-col truncate text-left">
+                            <span className="text-xs font-semibold truncate">Open Attachment</span>
+                            <span className="text-[10px] text-neutral-500 uppercase">File</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl w-[90vw] h-[80vh] p-0 overflow-hidden flex flex-col bg-neutral-950 border-neutral-800">
+                  <div className="flex-1 w-full h-full relative flex items-center justify-center p-4">
+                    {/\.(pdf)$/i.test(msg.attachment_url) ? (
+                      <iframe src={msg.attachment_url} className="w-full h-full rounded-md bg-white" />
+                    ) : (
+                      <img 
+                        src={msg.attachment_url} 
+                        className="max-w-full max-h-full object-contain rounded-md" 
+                        alt="Preview" 
+                        onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
+                      />
+                    )}
+                    <div className="hidden text-white flex flex-col items-center gap-4">
+                       <AppIcon name="fileText" className="w-16 h-16 text-neutral-500" />
+                       <span>Preview not available</span>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-neutral-900 border-t border-neutral-800 flex justify-end gap-2">
+                    <a href={msg.attachment_url} target="_blank" rel="noreferrer" download className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4">
+                      Download Original
+                    </a>
+                  </div>
+                </DialogContent>
+              </Dialog>
             ) : (
               <a
                 href={msg.attachment_url}
                 target="_blank"
                 rel="noreferrer"
+                download
                 className={`flex items-center gap-1.5 underline text-[10px] ${isMe ? "text-primary-200" : "text-primary-600"}`}
               >
-                <AppIcon name="paperclip" size="xs" /> Attachment
+                <AppIcon name="paperclip" size="xs" /> Download File
               </a>
             )}
           </div>
@@ -79,7 +153,7 @@ const MessageItem = memo(function MessageItem({
 
       <div className="flex items-center justify-between mt-0.5">
         <div className="flex gap-1">
-          {msg.pinned_at && (
+          {msg.pinned && (
             <span className="text-[10px] text-amber-500 flex items-center gap-1 font-medium bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded">
               <AppIcon name="pin" size="xs" /> Pinned
             </span>
@@ -106,7 +180,7 @@ const MessageItem = memo(function MessageItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={isMe ? "end" : "start"}>
-              {msg.pinned_at ? (
+              {msg.pinned ? (
                 <DropdownMenuItem onClick={() => onUnpinMessage?.(msg.id)}>
                   <AppIcon name="pin" className=" mr-2 text-neutral-400" /> Unpin Message
                 </DropdownMenuItem>
@@ -132,6 +206,7 @@ export function MessageList({
   onPinMessage,
   onUnpinMessage,
   canManage,
+  onMarkRead,
 }: {
   messages: any[];
   currentUserId: number;
@@ -141,8 +216,11 @@ export function MessageList({
   onPinMessage?: (msgId: number) => void;
   onUnpinMessage?: (msgId: number) => void;
   canManage?: boolean;
+  onMarkRead?: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const previousScrollHeight = useRef<number>(0);
+  const isScrolledToBottom = useRef<boolean>(true);
 
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
@@ -152,18 +230,34 @@ export function MessageList({
   });
 
   useEffect(() => {
-    if (scrollRef.current && !isFetchingNextPage) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current) {
+      if (isFetchingNextPage) {
+        // We're loading older messages; save scroll height
+        previousScrollHeight.current = scrollRef.current.scrollHeight;
+      } else {
+        const currentScrollHeight = scrollRef.current.scrollHeight;
+        if (previousScrollHeight.current > 0 && currentScrollHeight > previousScrollHeight.current) {
+          // Older messages just loaded, restore scroll position to avoid jump
+          scrollRef.current.scrollTop += (currentScrollHeight - previousScrollHeight.current);
+          previousScrollHeight.current = 0;
+        } else if (isScrolledToBottom.current) {
+          // New message came in and we were already at bottom, scroll to bottom
+          scrollRef.current.scrollTop = currentScrollHeight;
+        }
+      }
     }
   }, [messages.length, isFetchingNextPage]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (e.currentTarget.scrollTop === 0 && hasNextPage && !isFetchingNextPage && onFetchNextPage) {
+    const target = e.currentTarget;
+    isScrolledToBottom.current = Math.abs(target.scrollHeight - target.clientHeight - target.scrollTop) < 10;
+    
+    if (target.scrollTop === 0 && hasNextPage && !isFetchingNextPage && onFetchNextPage) {
       onFetchNextPage();
     }
   };
 
-  const pinnedMessages = messages.filter(m => m.pinned_at);
+  const pinnedMessages = messages.filter(m => m.pinned);
 
   return (
     <div className="flex flex-col h-full w-full relative">
@@ -186,7 +280,7 @@ export function MessageList({
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto p-4 space-y-3 relative ${pinnedMessages.length > 0 ? "pt-24" : ""}`}
+        className={`flex-1 overflow-y-auto p-4 space-y-3 relative ${pinnedMessages.length > 0 ? "pt-[110px]" : ""}`}
       >
         {isFetchingNextPage && (
           <div className="text-center text-xs text-neutral-400 py-1">Loading older messages...</div>
@@ -199,6 +293,14 @@ export function MessageList({
           const msg = messages[virtualRow.index];
           if (!msg) return null;
           
+          const prevMsg = virtualRow.index > 0 ? messages[virtualRow.index - 1] : null;
+          
+          const msgDate = new Date(msg.created_at);
+          const prevDate = prevMsg ? new Date(prevMsg.created_at) : null;
+          
+          const isNewDay = !prevDate || msgDate.toDateString() !== prevDate.toDateString();
+          const isConsecutive = !isNewDay && prevMsg && prevMsg.sender_id === msg.sender_id && (msgDate.getTime() - prevDate.getTime() < 5 * 60 * 1000);
+
           const isMe = msg.sender_id === currentUserId;
 
           return (
@@ -206,17 +308,26 @@ export function MessageList({
               key={msg.id || virtualRow.index}
               data-index={virtualRow.index}
               ref={rowVirtualizer.measureElement}
-              className="absolute top-0 left-0 w-full group"
+              className="absolute top-0 left-0 w-full group flex flex-col"
               style={{
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
+              {isNewDay && (
+                <div className="flex justify-center my-4">
+                  <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-500 text-[10px] font-bold px-2 py-1 rounded-full">
+                    {format(msgDate, "MMMM d, yyyy")}
+                  </span>
+                </div>
+              )}
               <MessageItem 
                 msg={msg} 
                 isMe={isMe} 
+                isConsecutive={isConsecutive}
                 onPinMessage={onPinMessage} 
                 onUnpinMessage={onUnpinMessage}
                 canManage={canManage}
+                onMarkRead={onMarkRead}
               />
             </div>
           );

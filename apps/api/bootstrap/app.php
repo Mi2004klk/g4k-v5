@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(\App\Http\Middleware\WrapBareArrays::class);
         $middleware->alias([
             'capability' => \App\Http\Middleware\RequireCapability::class,
         ]);
@@ -26,7 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        \Sentry\Laravel\Integration::handles($exceptions);
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );

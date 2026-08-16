@@ -27,7 +27,7 @@ class CapabilityMatrix
         ],
         'employee' => [
             'attendance.clock-self', 'leave.request-self', 'profile.edit',
-            'directory.view', 'directory.send-message', 'chat.access', 'reports.view',
+            'directory.view', 'directory.send-message', 'chat.access',
             'tasks.view', 'tasks.create-own', 'projects.view', 'timer.track'
         ]
     ];

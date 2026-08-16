@@ -6,7 +6,7 @@ import { AppIcon, IconName } from "@g4k/ui/components";
 import Link from "next/link";
 
 import { Card, Skeleton, Button, StatusBadge, Avatar, AvatarFallback } from "@g4k/ui/components";
-import { asArray } from "@/lib/utils";
+
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 
@@ -18,7 +18,7 @@ export function HrTeamAttendanceWidget() {
     placeholderData: keepPreviousData,
   });
 
-  const records = asArray(data);
+  const records = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const presentCount = records.filter((r: any) => r.status === "present" || r.status === "late").length;
   const totalCount = records.length;
   const topRecords = records.slice(0, 3);

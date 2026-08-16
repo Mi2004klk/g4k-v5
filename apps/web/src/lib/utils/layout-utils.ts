@@ -1,4 +1,4 @@
-import { asArray } from "@/lib/api-client";
+
 export function reconcileLayout(saved: any, availableWidgets: any[], colsMap: Record<string, number>) {
   if (!saved || typeof saved !== "object") return null;
 
@@ -12,7 +12,7 @@ export function reconcileLayout(saved: any, availableWidgets: any[], colsMap: Re
   const result = {
     version: layoutData.version || 1,
     layouts: {} as Record<string, any[]>,
-    dismissed: asArray(layoutData.dismissed),
+    dismissed: (Array.isArray(layoutData.dismissed?.data) ? layoutData.dismissed.data : (Array.isArray(layoutData.dismissed) ? layoutData.dismissed : [])),
   };
 
   const widgetMap = new Map();

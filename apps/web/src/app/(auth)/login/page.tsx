@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 import { Button } from "@g4k/ui/components";
 import {
@@ -36,6 +38,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
@@ -72,9 +75,12 @@ export default function LoginPage() {
       });
 
       setAuth(result.token, result.user, result.active_role, result.refresh_token, result.capabilities);
+      queryClient.setQueryData(queryKeys.capabilities(), result.capabilities);
       toast.success("Login successful!");
 
-      const targetRoute = !result.onboarded
+      const targetRoute = result.user?.must_change_password
+        ? "/change-password"
+        : !result.onboarded
         ? "/onboarding"
         : (result.user?.roles?.length > 1 || result.user?.role_assignments?.length > 1)
         ? "/role-select"
@@ -85,6 +91,8 @@ export default function LoginPage() {
       if (error.status === 423 && error.data?.retry_after) {
         setLockoutSeconds(error.data.retry_after);
         form.setError("root", { type: "manual", message: `Account locked. Try again in ${Math.ceil(error.data.retry_after / 60)} minutes.` });
+      } else if (error.status === 429) {
+        form.setError("root", { type: "manual", message: "Too many login attempts. Please try again later." });
       } else {
         form.setError("root", { type: "manual", message: error.message || "Invalid credentials. Please try again." });
       }

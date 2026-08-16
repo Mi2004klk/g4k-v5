@@ -61,26 +61,20 @@ export default function ChangePasswordPage() {
   async function onSubmit(data: FormValues) {
     setIsLoading(true);
     try {
-      await apiFetch("/auth/change-password", {
+      const result = await apiFetch("/auth/change-password", {
         method: "POST",
         body: JSON.stringify(data),
       });
 
       toast.success("Password changed successfully!");
       
-      // We must silently refresh the user object to clear the `must_change_password` flag
-      if (token) {
-         try {
-            const result = await apiFetch("/auth/refresh");
-            setAuth(result.token, result.user, result.active_role, result.refresh_token);
-            if (!result.user.onboarded_at) {
-               router.push("/onboarding");
-            } else if (result.user.roles?.length > 1) {
-               router.push("/role-select");
-            } else {
-               router.push("/dashboard");
-            }
-         } catch {
+      if (result.token && result.user) {
+         setAuth(result.token, result.user, result.user.active_role || 'employee', result.refresh_token);
+         if (!result.user.onboarded_at) {
+            router.push("/onboarding");
+         } else if (result.user.roles?.length > 1) {
+            router.push("/role-select");
+         } else {
             router.push("/dashboard");
          }
       } else {

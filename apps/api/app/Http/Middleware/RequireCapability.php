@@ -22,23 +22,7 @@ class RequireCapability
             abort(401, 'Unauthenticated');
         }
 
-        $activeRole = $user->active_role;
-
-        if (!$activeRole && $user->currentAccessToken()) {
-            $abilities = $user->currentAccessToken()->abilities ?? [];
-            if (is_array($abilities) || is_object($abilities)) {
-                foreach ($abilities as $ability) {
-                    if (str_starts_with($ability, 'role:')) {
-                        $activeRole = substr($ability, 5);
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (!$activeRole) {
-            $activeRole = 'employee';
-        }
+        $activeRole = $user->resolveActiveRole();
 
         $allCaps = [];
         foreach ($capabilities as $c) {

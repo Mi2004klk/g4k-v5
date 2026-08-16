@@ -63,6 +63,60 @@ class RoleMatrixTest extends TestCase
         }
     }
 
+    public function test_resolver_token_super_admin_overrides_db()
+    {
+        $user = User::factory()->create(['active_role' => 'employee', 'onboarded_at' => now()]);
+        $tokenAdmin = $user->createToken('Test', ['role:super_admin'])->plainTextToken;
+        $resAdmin = $this->withHeaders(['Authorization' => 'Bearer ' . $tokenAdmin])->get('/api/me/capabilities');
+        $resAdmin->assertStatus(200);
+        $this->assertContains('*', $resAdmin->json('capabilities')); 
+    }
+
+    public function test_resolver_token_hr_overrides_db()
+    {
+        $user = User::factory()->create(['active_role' => 'employee', 'onboarded_at' => now()]);
+        $tokenHr = $user->createToken('Test', ['role:hr'])->plainTextToken;
+        $resHr = $this->withHeaders(['Authorization' => 'Bearer ' . $tokenHr])->get('/api/me/capabilities');
+        $resHr->assertStatus(200);
+        $this->assertContains('users.employee.manage', $resHr->json('capabilities')); 
+    }
+
+    public function test_resolver_token_employee_overrides_db()
+    {
+        $user = User::factory()->create(['active_role' => 'super_admin', 'onboarded_at' => now()]);
+        $tokenEmp = $user->createToken('Test', ['role:employee'])->plainTextToken;
+        $resEmp = $this->withHeaders(['Authorization' => 'Bearer ' . $tokenEmp])->get('/api/me/capabilities');
+        $resEmp->assertStatus(200);
+        $this->assertNotContains('*', $resEmp->json('capabilities')); 
+        $this->assertContains('profile.edit', $resEmp->json('capabilities')); 
+    }
+
+    public function test_second_device_cannot_change_first_session_role()
+    {
+        $user = User::factory()->create(['active_role' => 'super_admin', 'onboarded_at' => now()]);
+        RoleAssignment::create(['user_id' => $user->id, 'role' => 'super_admin']);
+        RoleAssignment::create(['user_id' => $user->id, 'role' => 'employee']);
+
+        // Device A logs in as admin and gets an access token
+        $tokenA = $user->createToken('Device A', ['role:super_admin'])->plainTextToken;
+
+        // Device B logs in as employee, or uses /auth/role to switch role.
+        // This updates the database column.
+        $user->active_role = 'employee';
+        $user->save();
+
+        // Device A makes a request using its original token
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $tokenA,
+        ])->get('/api/me/capabilities');
+
+        $response->assertStatus(200);
+        
+        // Device A should STILL be resolved as super_admin because its token has role:super_admin
+        // A super_admin will have '*' capability, while an employee will not.
+        $this->assertContains('*', $response->json('capabilities'));
+    }
+
     private function checkEndpointAccess(User $user, string $role, string $method, string $uri, array $requiredCapabilities)
     {
         \Laravel\Sanctum\Sanctum::actingAs($user, ['*']);

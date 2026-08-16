@@ -35,7 +35,7 @@ const ReverbContext = createContext<ReverbContextType>({
  */
 function isReverbAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY; // Only connect if explicitly configured
+  return !!process.env.NEXT_PUBLIC_REVERB_HOST && !!process.env.NEXT_PUBLIC_REVERB_APP_KEY; // Only connect if explicitly configured
 }
 
 export function ReverbProvider({ children }: { children: ReactNode }) {
@@ -63,10 +63,13 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     window.Pusher = Pusher;
 
     const echo = new Echo({
-      broadcaster: 'pusher',
-      key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || 'pusher_key',
-      cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || 'ap2',
-      forceTLS: true,
+      broadcaster: 'reverb',
+      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || '',
+      wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || undefined,
+      wsPort: process.env.NEXT_PUBLIC_REVERB_PORT ? parseInt(process.env.NEXT_PUBLIC_REVERB_PORT, 10) : 80,
+      wssPort: process.env.NEXT_PUBLIC_REVERB_PORT ? parseInt(process.env.NEXT_PUBLIC_REVERB_PORT, 10) : 443,
+      forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'https') === 'https',
+      enabledTransports: ['ws', 'wss'],
       authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
       auth: {
         headers: {

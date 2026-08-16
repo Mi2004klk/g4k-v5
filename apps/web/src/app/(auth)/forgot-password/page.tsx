@@ -97,7 +97,11 @@ export default function ForgotPasswordPage() {
           {isSubmitted ? (
             <div className="text-center space-y-4 py-4 font-sans">
               <div className="p-4 rounded-xl bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20 text-sm font-medium">
-                If an account matching your identifier exists, a password-reset link has been sent.
+                If an account matching your identifier exists, a password-reset link has been sent to your email.
+              </div>
+              <div className="p-4 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-sm font-medium mt-4">
+                <p><strong>Email unavailable?</strong></p>
+                <p className="mt-1">An approval request has also been sent to the system administrator. If email delivery is not configured, they can manually approve your reset request.</p>
               </div>
               <Link href="/login" className="block w-full">
                 <Button variant="outline" className="w-full h-11 gap-2 mt-2 font-sans shadow-e1 hover:shadow-e2 transition-shadow duration-150 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">

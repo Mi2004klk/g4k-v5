@@ -2,7 +2,7 @@
 import Link from "next/link";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
@@ -18,6 +18,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
 
 export function AuditLogTable() {
+  const queryClient = useQueryClient();
   const [action, setAction] = useUrlState("action", "");
   const [userId, setUserId] = useUrlState("user_id", "");
   const [startDate, setStartDate] = useUrlState("start_date", "");
@@ -65,6 +66,7 @@ export function AuditLogTable() {
       
       await apiFetch(`/audit-logs/export?${params.toString()}`, { method: "POST" });
       toast.success("Export queued. You will be notified when it's ready.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
     } catch (err: any) {
       toast.error(err.message || "Failed to start export.");
     } finally {

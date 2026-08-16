@@ -47,7 +47,8 @@ class FullWorkflowTest extends TestCase
         \App\Models\AttendanceEvent::where('user_id', $employee->id)->delete();
         \App\Models\AttendanceDay::where('user_id', $employee->id)->delete();
         
-        $punchInTime = now()->subHours(10);
+        \Carbon\Carbon::setTestNow('2026-08-15 18:00:00');
+        $punchInTime = now()->subHours(8);
         
         $response = $this->withToken($empToken)
             ->postJson('/api/attendance/clock-in', [

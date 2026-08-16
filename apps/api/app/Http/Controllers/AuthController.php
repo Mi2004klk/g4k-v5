@@ -187,7 +187,7 @@ class AuthController extends Controller
         // Load roles and settings efficiently
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
-        $primaryRole = $user->active_role ?? $rolesCollection->first() ?? 'employee';
+        $primaryRole = $user->resolveActiveRole();
 
         $deviceName = $request->device_name ?? 'Unknown Device';
 
@@ -290,7 +290,7 @@ class AuthController extends Controller
         // Load roles and settings
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
-        $primaryRole = $user->active_role ?? $rolesCollection->first() ?? 'employee';
+        $primaryRole = $user->resolveActiveRole();
 
         $deviceName = $request->device_name ?? 'Unknown Device';
 
@@ -531,7 +531,7 @@ class AuthController extends Controller
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
         $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
 
-        $activeRole = $user->active_role ?? 'employee';
+        $activeRole = $user->resolveActiveRole();
         $accessToken = $user->createToken($deviceName, ['role:' . $activeRole], now()->addMinutes($accessTtl))->plainTextToken;
         $refreshToken = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl))->plainTextToken;
         
@@ -625,29 +625,15 @@ class AuthController extends Controller
     public function profile(Request $request)
     {
         $user = $request->user()->load(['department', 'designation', 'company', 'roleAssignments']);
-        $user->active_role = $user->active_role ?? 'employee';
+        $user->active_role = $user->resolveActiveRole();
         return response()->json($user);
     }
 
     public function capabilities(Request $request)
     {
-        $activeRole = $request->user()->active_role ?? 'employee';
+        $activeRole = $request->user()->resolveActiveRole();
         $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($activeRole);
         return response()->json(['capabilities' => $capabilities]);
     }
 
-    public function switchRole(Request $request)
-    {
-        $request->validate([
-            'role' => 'required|string',
-        ]);
-        $user = $request->user();
-        $roles = \App\Services\CapabilityMatrix::getAssignedRoles($user->id);
-        if (!in_array($request->role, $roles)) {
-            return response()->json(['message' => 'Role not assigned to user'], 403);
-        }
-        $user->active_role = $request->role;
-        $user->save();
-        return response()->json(['message' => 'Role updated', 'active_role' => $user->active_role]);
-    }
 }

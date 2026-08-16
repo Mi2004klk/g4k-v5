@@ -16,7 +16,7 @@ import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
-import { asArray } from "@/lib/utils";
+
 
 export function ChatTab() {
   const queryClient = useQueryClient();
@@ -24,6 +24,7 @@ export function ChatTab() {
   const user = useAuthStore((s) => s.user);
   const { subscribe, leaveChannel, isConnected } = useReverb();
   const { data: caps = [] } = useCapabilities();
+  const canManageChat = hasCapability(caps, "chat.manage");
 
   // Mirrors the backend gate: only users.manage (HR) or projects.manage (Admin)
   // may pin/unpin messages in conversations.
@@ -57,12 +58,49 @@ export function ChatTab() {
     }
   }, [initialConvId]);
 
-  const { data: rawConversations } = useQuery({
-    queryKey: queryKeys.conversations,
-    queryFn: () => apiFetch("/conversations"),
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { 
+    data: rawConversationsData,
+    fetchNextPage: fetchNextConversations,
+    hasNextPage: hasNextConversations,
+    isFetchingNextPage: isFetchingNextConversations
+  } = useInfiniteQuery({
+    queryKey: [...queryKeys.conversations, searchQuery],
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams();
+      if (pageParam) params.append("cursor", pageParam as string);
+      if (searchQuery) params.append("search", searchQuery);
+      return apiFetch(`/conversations?${params.toString()}`);
+    },
+    getNextPageParam: (lastPage: any) => lastPage.next_cursor || null,
+    initialPageParam: null as string | null,
     refetchInterval: isConnected ? false : 15_000,
   });
-  const conversations = asArray(rawConversations);
+
+  const allConversations = rawConversationsData?.pages?.flatMap((page: any) => (Array.isArray(page?.data) ? page.data : (Array.isArray(page) ? page : []))) || [];
+  
+  // Sort conversations: unread first, then by latest message date
+  const conversations = [...allConversations].sort((a: any, b: any) => {
+    const aCurrentUserData = a.users?.find((u: any) => u.id === user?.id);
+    const aLastReadAt = aCurrentUserData?.pivot?.last_read_at;
+    const aIsUnread = (a.unread_count && a.unread_count > 0) || (a.latestMessage &&
+      a.latestMessage.sender_id !== user?.id &&
+      (!aLastReadAt || new Date(a.latestMessage.created_at) > new Date(aLastReadAt)));
+
+    const bCurrentUserData = b.users?.find((u: any) => u.id === user?.id);
+    const bLastReadAt = bCurrentUserData?.pivot?.last_read_at;
+    const bIsUnread = (b.unread_count && b.unread_count > 0) || (b.latestMessage &&
+      b.latestMessage.sender_id !== user?.id &&
+      (!bLastReadAt || new Date(b.latestMessage.created_at) > new Date(bLastReadAt)));
+
+    if (aIsUnread && !bIsUnread) return -1;
+    if (!aIsUnread && bIsUnread) return 1;
+
+    const aTime = a.latestMessage ? new Date(a.latestMessage.created_at).getTime() : 0;
+    const bTime = b.latestMessage ? new Date(b.latestMessage.created_at).getTime() : 0;
+    return bTime - aTime;
+  });
 
   const { 
     data: messageData,
@@ -90,7 +128,7 @@ export function ChatTab() {
           const firstPage = old.pages[0];
           const updatedFirstPage = {
             ...firstPage,
-            data: [...firstPage.data, e.message],
+            data: [e.message, ...firstPage.data],
           };
           return {
             ...old,
@@ -101,8 +139,37 @@ export function ChatTab() {
 
       channel.listen(".message-sent", handler);
 
+      const readHandler = (e: any) => {
+        // Optimistically update cache to mark messages as read
+        if (e.userId) {
+          queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: any) => {
+            if (!old?.pages) return old;
+            
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                data: page.data.map((msg: any) => {
+                  // Mark as read if the message was sent by someone other than the reader
+                  if (msg.sender_id !== e.userId) {
+                    const currentReads = msg.reads || [];
+                    if (!currentReads.find((r: any) => r.user_id === e.userId)) {
+                      return { ...msg, reads: [...currentReads, { user_id: e.userId }] };
+                    }
+                  }
+                  return msg;
+                })
+              }))
+            };
+          });
+        }
+      };
+
+      channel.listen(".message-read", readHandler);
+
       return () => {
         channel.stopListening(".message-sent");
+        channel.stopListening(".message-read");
         leaveChannel(channelName);
       };
     }
@@ -121,9 +188,12 @@ export function ChatTab() {
 
   useEffect(() => {
     if (selectedId) {
-      markReadMutation.mutate();
+      const conv = conversations.find((c: any) => c.id === selectedId);
+      if (conv && conv.unread_count > 0) {
+        markReadMutation.mutate();
+      }
     }
-  }, [selectedId]);
+  }, [selectedId, conversations]);
 
   const pinMutation = useMutation({
     mutationFn: async (msgId: number) => {
@@ -171,10 +241,10 @@ export function ChatTab() {
       const optimisticMessage = {
         id: Date.now(),
         conversation_id: selectedId,
-        user_id: user?.id,
+        sender_id: user?.id,
         body: newMsg.body,
         created_at: new Date().toISOString(),
-        user: user,
+        sender: user,
         pending: true
       };
 
@@ -186,7 +256,7 @@ export function ChatTab() {
           pages: [
             {
               ...firstPage,
-              data: [...firstPage.data, optimisticMessage],
+              data: [optimisticMessage, ...firstPage.data],
             },
             ...old.pages.slice(1),
           ],
@@ -206,7 +276,7 @@ export function ChatTab() {
     },
   });
 
-  const messages = messageData?.pages?.flatMap((page: any) => Array.isArray(page?.data) ? page.data : []) || [];
+  const messages = messageData?.pages?.flatMap((page: any) => Array.isArray(page?.data) ? page.data : []).reverse() || [];
   const selectedConv = conversations.find((c: any) => c.id === selectedId);
 
   return (
@@ -219,18 +289,32 @@ export function ChatTab() {
         >
           {/* Conversation sidebar */}
           <div className={`w-full md:w-1/3 border-r border-neutral-100 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
-            <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs flex items-center justify-between">
-              <span>Chats</span>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-11 w-11 sm:h-7 sm:w-7 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
-                aria-label="New group chat"
-                title="New Group"
-                onClick={() => setGroupDialogOpen(true)}
-              >
-                <AppIcon name="plus" />
-              </Button>
+            <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span>Chats</span>
+                {canManageChat && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-11 w-11 sm:h-7 sm:w-7 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
+                    aria-label="New group chat"
+                    title="New Group"
+                    onClick={() => setGroupDialogOpen(true)}
+                  >
+                    <AppIcon name="plus" />
+                  </Button>
+                )}
+              </div>
+              <div className="relative">
+                <AppIcon name="search" size="xs" className="absolute left-2.5 top-2.5 text-neutral-400" />
+                <input
+                  type="text"
+                  placeholder="Search chats..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-8 pl-8 pr-3 text-xs bg-neutral-100 dark:bg-neutral-800 border-transparent focus:border-primary-500 rounded-md outline-none transition-colors"
+                />
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto">
               <ConversationList
@@ -238,6 +322,9 @@ export function ChatTab() {
                 conversations={conversations}
                 selectedId={selectedId}
                 onSelect={(id) => setSelectedId(id)}
+                hasNextPage={hasNextConversations}
+                isFetchingNextPage={isFetchingNextConversations}
+                fetchNextPage={fetchNextConversations}
               />
             </div>
           </div>
@@ -274,9 +361,10 @@ export function ChatTab() {
                   onFetchNextPage={() => fetchNextPage()}
                   hasNextPage={!!hasNextPage}
                   isFetchingNextPage={isFetchingNextPage}
-                  onPinMessage={(id) => pinMutation.mutate(id)}
-                  onUnpinMessage={(id) => unpinMutation.mutate(id)}
+                  onPinMessage={(msgId) => pinMutation.mutate(msgId)}
+                  onUnpinMessage={(msgId) => unpinMutation.mutate(msgId)}
                   canManage={canPinMessages}
+                  onMarkRead={() => markReadMutation.mutate()}
                 />
 
                 <MessageComposer
@@ -296,7 +384,6 @@ export function ChatTab() {
 
         {/* Sidebar Widgets */}
         <div className="space-y-6">
-          <AnnouncementBoard />
           <QuickNotes />
         </div>
       </div>

@@ -305,6 +305,9 @@ class GenerateReportJob implements ShouldQueue
                 if (!$hasManage) {
                     $query->where('id', $userId);
                 }
+                if (!empty($filters['ids'])) {
+                    $query->whereIn('id', is_array($filters['ids']) ? $filters['ids'] : explode(',', $filters['ids']));
+                }
                 
                 if ($key === 'productivity') {
                     $query->withCount([

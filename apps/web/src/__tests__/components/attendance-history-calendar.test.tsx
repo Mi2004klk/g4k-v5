@@ -4,6 +4,12 @@ import { AttendanceHistoryCalendar } from '../../components/attendance/attendanc
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
+vi.mock('@/lib/offline-engine', () => ({
+  offlineEngine: {
+    queueRequest: vi.fn()
+  }
+}));
+
 // Mock useIsMobile — default to desktop
 vi.mock('@g4k/ui/hooks', () => ({
   useIsMobile: () => false,
@@ -53,7 +59,7 @@ describe('AttendanceHistoryCalendar', () => {
 
   it('renders day cells with data-testid for current month', () => {
     renderWithProviders(<AttendanceHistoryCalendar days={mockHistory} />);
-    expect(screen.getByTestId(`day-cell-${TODAY}`)).toBeInTheDocument();
+    expect(screen.getByLabelText(`View details for ${TODAY}`)).toBeInTheDocument();
   });
 
   it('renders the status legend', () => {
@@ -72,7 +78,7 @@ describe('AttendanceHistoryCalendar', () => {
 
   it('opens a detail dialog when a day cell with a record is clicked', () => {
     renderWithProviders(<AttendanceHistoryCalendar days={mockHistory} />);
-    const cell = screen.getByTestId(`day-cell-${TODAY}`);
+    const cell = screen.getByLabelText(`View details for ${TODAY}`);
     fireEvent.click(cell);
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });

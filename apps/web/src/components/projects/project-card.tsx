@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Avatar, AvatarFallback } from "@g4k/ui/components";
 import { Badge } from "@g4k/ui/components";
+import { usePins } from "@/hooks/use-pins";
+import { Button } from "@g4k/ui/components";
 
 export function ProjectCard({ project, onClick }: { project: any; onClick?: () => void }) {
   const getPriorityColor = (priority: string) => {
@@ -16,6 +18,25 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
         return "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300";
       default:
         return "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400";
+    }
+  };
+
+  const { pins, pin, unpin, isPinning, isUnpinning } = usePins();
+  const pinnedItem = pins?.find(p => p.type === 'project' && p.target_id === String(project.id));
+  const isPinned = !!pinnedItem;
+
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPinned && pinnedItem) {
+      unpin(pinnedItem.id);
+    } else {
+      pin({
+        type: 'project',
+        target_id: String(project.id),
+        label: project.name,
+        href: `/dashboard/projects/${project.id}`,
+        icon: 'projects'
+      });
     }
   };
 
@@ -45,9 +66,20 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
               </p>
             </div>
           </div>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getPriorityColor(project.priority)}`}>
-            {project.priority}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getPriorityColor(project.priority)}`}>
+              {project.priority}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-6 w-6 mt-1 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isPinned ? "text-amber-500" : "text-neutral-300 dark:text-neutral-600"}`}
+              onClick={handlePinClick}
+              disabled={isPinning || isUnpinning}
+            >
+              <AppIcon name="star" className="h-4 w-4 shrink-0" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-2 space-y-3">

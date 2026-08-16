@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { asArray } from "@/lib/utils";
+
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useDebounce } from "@/hooks/use-debounce";
+import { usePaginatedList } from "@/lib/pagination";
 
 export function LeaveTab() {
   const [subTab, setSubTab] = useUrlState("sub", "my-leave");
@@ -35,7 +36,9 @@ export function LeaveTab() {
     placeholderData: keepPreviousData,
   });
 
-  const records = asArray(data);
+  const paginatedData = usePaginatedList<any>(data);
+  const records = paginatedData.data;
+  const totalPages = paginatedData.last_page || 1;
 
   return (
     <ErrorBoundary>
@@ -69,7 +72,7 @@ export function LeaveTab() {
                     search={search}
                     setSearch={(val) => { setSearch(val); setPage("1"); }}
                     page={parseInt(page)}
-                    totalPages={data?.meta?.last_page || 1}
+                    totalPages={totalPages}
                     onPageChange={(p) => setPage(p.toString())}
                   />
                 </CardContent>

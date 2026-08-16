@@ -28,6 +28,7 @@ import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
 import { ProjectTimerWidget } from "@/components/app-shell/project-timer-widget";
 import { NavGroup, NavItem } from "@/components/app-shell/nav-group";
+import { PinnedItems } from "@/components/layout/pinned-items";
 import { ReverbProvider } from "@/hooks/use-reverb";
 import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
 import {
@@ -116,7 +117,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (initData?.attendance_today) {
-      syncWithServer(initData.attendance_today.day, initData.attendance_today.events || []);
+      syncWithServer(initData.attendance_today.day, initData.attendance_today.events || [], initData.attendance_today.standard_seconds);
     }
   }, [initData, syncWithServer]);
 
@@ -183,9 +184,7 @@ export default function DashboardLayout({
   return (
     <ReverbProvider>
       <AuthGuard>
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:p-4 focus:bg-background focus:text-foreground">
-          Skip to content
-        </a>
+
         <TooltipProvider>
         <HelpOverlay />
         <CommandPalette />
@@ -217,6 +216,7 @@ export default function DashboardLayout({
                   getAccent={getAccent}
                 />
               ))}
+              <PinnedItems isCollapsed={isCollapsed} />
             </div>
 
             <div className="mt-auto p-4 border-t border-border flex flex-col gap-2">
@@ -283,6 +283,7 @@ export default function DashboardLayout({
                             getAccent={getAccent}
                           />
                         ))}
+                        <PinnedItems isCollapsed={false} />
                       </div>
                       <div className="mt-auto p-4 border-t border-border">
                         <Button

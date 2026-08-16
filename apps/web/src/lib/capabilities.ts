@@ -7,7 +7,7 @@ export function useCapabilities() {
   const token = useAuthStore((state) => state.token);
 
   return useQuery({
-    queryKey: queryKeys.capabilities(token || ""),
+    queryKey: queryKeys.capabilities(),
     queryFn: async () => {
       if (!token) return [];
       try {
@@ -16,7 +16,7 @@ export function useCapabilities() {
           return [];
         }
         if (typeof window !== "undefined") {
-          document.cookie = `g4k_capabilities=${encodeURIComponent(JSON.stringify(res.capabilities))}; path=/; max-age=86400; SameSite=Lax`;
+          document.cookie = `g4k_capabilities=${encodeURIComponent(JSON.stringify(res.capabilities))}; path=/; max-age=604800; SameSite=Lax`;
         }
         return res.capabilities;
       } catch (err) {

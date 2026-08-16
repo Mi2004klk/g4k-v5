@@ -9,11 +9,12 @@ import { toast } from "sonner";
 import { safeFormat } from "@/lib/format";
 
 import { useUrlState } from "@/hooks/use-url-state";
-import { asArray } from "@/lib/utils";
+
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { getAuthToken } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
+import { useExport } from "@/hooks/use-export";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Input, Button, Checkbox, DataTable, StatusBadge, FilterBar } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
@@ -25,7 +26,9 @@ export function HrAttendanceTable() {
   const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
+  const [userFilter, setUserFilter] = useUrlState("user", "all");
   const [search, setSearch] = useUrlState("search", "");
+  const { triggerExport, isExporting } = useExport();
 
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [page, setPage] = useState(1);
@@ -92,7 +95,7 @@ export function HrAttendanceTable() {
     refetchInterval: isConnected ? false : 60_000,
   });
 
-  const records = asArray(data);
+  const records = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const handleExport = async (all: boolean = true) => {
@@ -103,12 +106,6 @@ export function HrAttendanceTable() {
         return;
       }
       
-      if (!all) {
-        toast.info(`Exporting ${selectedIds.length} selected records...`);
-      } else {
-        toast.info("Exporting team attendance...");
-      }
-
       const params = new URLSearchParams();
       if (selectedDate) params.append("date", selectedDate);
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
@@ -118,18 +115,11 @@ export function HrAttendanceTable() {
       if (!all && selectedIds.length > 0) {
         params.append("ids", selectedIds.join(","));
       }
-      
-      const blob = await apiFetch(`/attendance/hr/export?${params.toString()}`);
-      
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `team_attendance_${selectedDate}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success("Export successful.");
+
+      await triggerExport(
+        `/attendance/export?${params.toString()}`,
+        `team_attendance_${selectedDate}.xlsx`
+      );
     } catch (e: any) {
       toast.error(e?.message || "Failed to export attendance");
     }
@@ -165,7 +155,10 @@ export function HrAttendanceTable() {
         header: "Employee",
         size: 200,
         cell: ({ row }: any) => {
-          const isOpenShift = row.original.clock_in && !row.original.clock_out;
+          const isToday = selectedDate === format(new Date(), "yyyy-MM-dd");
+          const isClockedIn = row.original.clock_in && !row.original.clock_out;
+          const isLive = isToday && isClockedIn;
+          const isMissingClockOut = !isToday && isClockedIn;
   
           return (
             <div className="flex items-center gap-3 group">
@@ -179,7 +172,15 @@ export function HrAttendanceTable() {
                 <span className="font-semibold text-foreground underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
                 <span className="text-[11px] text-muted-foreground font-normal">{row.original.user_email}</span>
               </button>
-              {isOpenShift && (
+              {isLive && (
+                <div className="flex items-center justify-center w-5 h-5 ml-2" title="Active right now">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  </span>
+                </div>
+              )}
+              {isMissingClockOut && (
                 <button
                   onClick={() => setCorrectionData({
                     dayId: row.original.id,
@@ -325,13 +326,13 @@ export function HrAttendanceTable() {
         />
 
         <div className="flex items-center gap-2 mt-4 sm:mt-0">
-          {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-9 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
-              Export Selected
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-9 whitespace-nowrap shrink-0" aria-label="Export team report for selected date">
-            Export Team List
+          <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0}>
+            <AppIcon name="download" size="sm" className="mr-2" />
+            {isExporting ? "Exporting..." : "Export"}
+          </Button>
+          <Button variant="outline" onClick={() => handleExport(true)} disabled={isExporting}>
+            <AppIcon name="download" size="sm" className="mr-2" />
+            {isExporting ? "Exporting All..." : "Export All"}
           </Button>
         </div>
       </div>

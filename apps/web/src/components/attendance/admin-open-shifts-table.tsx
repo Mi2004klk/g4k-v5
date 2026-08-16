@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { usePaginatedList } from "@/lib/pagination";
 import {  Input, Button, Checkbox, DataTable , Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, FilterBar } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { ColumnDef } from "@tanstack/react-table";
@@ -46,7 +47,7 @@ export function AdminOpenShiftsTable() {
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data: queryData, isLoading, error, refetch } = useQuery({
     queryKey: [...queryKeys.adminAttendance(selectedDate, deptFilter), "open", debouncedSearch, page, perPage],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -61,8 +62,9 @@ export function AdminOpenShiftsTable() {
     staleTime: STALE_TIME_ATTENDANCE,
   });
 
-  const openShifts = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const paginatedData = usePaginatedList<any>(queryData);
+  const openShifts = paginatedData.data;
+  const totalPages = paginatedData.last_page || 1;
 
   const notifyMutation = useMutation({
     mutationFn: (ids: string[]) => apiFetch('/attendance/admin/notify-open-shifts', { method: 'POST', body: JSON.stringify({ ids }) }),
@@ -222,7 +224,7 @@ export function AdminOpenShiftsTable() {
             stickyFirstCol={true}
             onRowSelectionChange={setRowSelection}
             rowSelection={rowSelection}
-            getRowId={(row: any) => String(row.user_id || row.id)}
+            getRowId={(row: any) => String(row.id)}
             page={page}
             perPage={perPage}
             totalPages={totalPages}

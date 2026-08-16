@@ -14,7 +14,7 @@ export const STALE_TIME_TASKS = 30_000;             // 30s (kanban needs freshne
 
 export const queryKeys = {
   // --- App & Core ---
-  capabilities: (token: string) => ["capabilities", token] as const,
+  capabilities: () => ["capabilities"] as const,
   dashboardInit: ["dashboard-init"] as const,
   dashboardMetrics: ["dashboard-metrics"] as const,
   dashboardLayout: ["dashboard-layout"] as const,

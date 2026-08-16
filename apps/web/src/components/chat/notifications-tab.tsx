@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
-import { asArray } from "@/lib/utils";
+
 import { DataTable, Skeleton, ErrorBoundary } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
@@ -79,7 +79,7 @@ export function NotificationsTab() {
     refetchInterval: isConnected ? false : 30_000,
   });
 
-  const notificationsData = asArray(data);
+  const notificationsData = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const markReadMutation = useMutation({
@@ -159,7 +159,13 @@ export function NotificationsTab() {
                 </span>
               )}
               {item.priority === 'urgent' && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">Urgent</span>
+                <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 uppercase">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                  </span>
+                  Urgent
+                </div>
               )}
             </div>
             <span className="text-xs text-neutral-500 mt-1">{item.body || ""}</span>

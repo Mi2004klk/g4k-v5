@@ -6,35 +6,65 @@ import { AppIcon, IconName } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { useReverb } from "@/hooks/use-reverb";
+import { useAuthStore } from "@/lib/auth-store";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
+import { toast } from "sonner";
 
 export function ExportHistory() {
   const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
   const { subscribe, leaveChannel } = useReverb();
   
   useEffect(() => {
-    const channelName = "exports";
-    const channel = subscribe(channelName);
+    if (!user?.id) return;
+    
+    const channelName = `user.${user.id}`;
+    const channel = subscribe(channelName, true);
     if (channel) {
-      channel.listen(".ExportCompleted", () => {
+      channel.listen(".export-completed", () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
       });
     }
 
     return () => {
       if (channel) {
-        channel.stopListening(".ExportCompleted");
+        channel.stopListening(".export-completed");
       }
       leaveChannel(channelName);
     };
-  }, [subscribe, leaveChannel, queryClient]);
+  }, [subscribe, leaveChannel, queryClient, user?.id]);
 
   const { data: exports = [], isLoading } = useQuery({
     queryKey: queryKeys.exportHistory,
-    queryFn: () => apiFetch("/reports/exports"),
+    queryFn: () => apiFetch("/reports/exports").then(res => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []))),
+    refetchInterval: (query) => {
+      const currentData = query.state.data as any[] | undefined;
+      const isProcessing = currentData?.some((e) => e.status === "processing");
+      return isProcessing ? 5000 : false;
+    }
   });
+
+  const handleDownload = async (item: any) => {
+    try {
+      // Use apiFetch to automatically attach the Auth token if it hits our API,
+      // and get the response as raw so we can extract the blob.
+      const url = item.file_path.startsWith('http') ? item.file_path : `/${item.file_path.replace(/^\/+/, '')}`;
+      const blob = await apiFetch(url, { method: "GET" }) as Blob;
+      
+      const objectUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `export-${item.report_key}-${item.id}.${item.format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (e) {
+      toast.error("Failed to download export file. It may be expired or inaccessible.");
+    }
+  };
 
   return (
     <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
@@ -73,7 +103,7 @@ export function ExportHistory() {
                     </span>
                   )}
                   {item.status === "failed" && (
-                    <span className="flex items-center gap-1 text-[10px] text-rose-600 font-semibold">
+                    <span className="flex items-center gap-1 text-[10px] text-rose-600 font-semibold" title={item.error || "Job failed"}>
                       <AppIcon name="error" size="xs" /> Failed
                     </span>
                   )}
@@ -87,12 +117,10 @@ export function ExportHistory() {
                 <Button
                   size="sm"
                   variant="outline"
-                  asChild
+                  onClick={() => handleDownload(item)}
                   className="h-7 text-[11px] gap-1"
                 >
-                  <a href={item.file_path} target="_blank" rel="noreferrer">
-                    <AppIcon name="download" size="xs" /> Download
-                  </a>
+                  <AppIcon name="download" size="xs" /> Download
                 </Button>
               )}
             </div>

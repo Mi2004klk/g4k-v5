@@ -5,10 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch , asArray } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@g4k/ui/components";
+import { FormError } from "@/components/forms/form-error";
 
 const scheduleSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -28,7 +29,7 @@ export function WorkSchedulesConfig() {
 
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: queryKeys.workSchedules,
-    queryFn: () => apiFetch("/work-schedules").then((res: any) => asArray(res.data)),
+    queryFn: () => apiFetch("/work-schedules").then((res: any) => (Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []))),
   });
 
   const form = useForm<ScheduleFormValues>({
@@ -57,6 +58,14 @@ export function WorkSchedulesConfig() {
       queryClient.invalidateQueries({ queryKey: queryKeys.workSchedules });
       setIsDialogOpen(false);
       setEditingId(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to save schedule.");
+      if (err.errors) {
+        Object.entries(err.errors).forEach(([key, val]: [string, any]) => {
+          form.setError(key as any, { type: 'server', message: val[0] });
+        });
+      }
     },
   });
 
@@ -166,23 +175,28 @@ export function WorkSchedulesConfig() {
             <div>
               <label htmlFor="ws-name" className="text-xs font-medium">Schedule Name</label>
               <input id="ws-name" type="text" {...form.register("name")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+              <FormError errors={form.formState.errors.name?.message} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="ws-start" className="text-xs font-medium">Start Time</label>
                 <input id="ws-start" type="time" {...form.register("start_time")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+                <FormError errors={form.formState.errors.start_time?.message} />
               </div>
               <div>
                 <label htmlFor="ws-end" className="text-xs font-medium">End Time</label>
                 <input id="ws-end" type="time" {...form.register("end_time")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+                <FormError errors={form.formState.errors.end_time?.message} />
               </div>
               <div>
                 <label htmlFor="ws-break" className="text-xs font-medium">Break (mins)</label>
                 <input id="ws-break" type="number" {...form.register("break_minutes")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+                <FormError errors={form.formState.errors.break_minutes?.message} />
               </div>
               <div>
                 <label htmlFor="ws-grace" className="text-xs font-medium">Grace (mins)</label>
                 <input id="ws-grace" type="number" {...form.register("grace_minutes")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+                <FormError errors={form.formState.errors.grace_minutes?.message} />
               </div>
             </div>
             
@@ -209,6 +223,7 @@ export function WorkSchedulesConfig() {
                   </label>
                 ))}
               </div>
+              <FormError errors={form.formState.errors.working_days?.message} />
             </div>
 
             <div className="flex justify-end gap-2 pt-4">

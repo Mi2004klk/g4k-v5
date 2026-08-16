@@ -12,7 +12,8 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { asArray } from "@/lib/utils";
+
+import { useIsMobile } from "@g4k/ui/hooks/use-mobile";
 import {
   queryKeys,
   STALE_TIME_DEPARTMENTS
@@ -75,6 +76,7 @@ export function DepartmentsTab() {
 
   const { data: caps } = useCapabilities();
   const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
+  const isMobile = useIsMobile();
 
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
@@ -86,8 +88,9 @@ export function DepartmentsTab() {
   const [editingDept, setEditingDept] = useState<any>(null);
 
   const [selectedDeptMembers, setSelectedDeptMembers] = useState<any>(null);
-  const [selectedNewHr, setSelectedNewHr] = useState<string>("");
-  const [selectedNewEmployee, setSelectedNewEmployee] = useState<string>("");
+  const [selectedNewHr, setSelectedNewHr] = useState("");
+  const [selectedNewEmployee, setSelectedNewEmployee] = useState("");
+  const [newTeamName, setNewTeamName] = useState("");
 
   const { data: deptDetails, isLoading: isDeptLoading } = useQuery({
     queryKey: queryKeys.department(selectedDeptMembers?.id),
@@ -204,6 +207,26 @@ export function DepartmentsTab() {
     onError: (err: any) => toast.error(err.message || "Failed to remove employee."),
   });
 
+  const addTeamMutation = useMutation({
+    mutationFn: ({ deptId, name }: { deptId: number, name: string }) => apiFetch(`/departments/${deptId}/teams`, { method: "POST", body: JSON.stringify({ name }) }),
+    onSuccess: () => {
+      toast.success("Team added successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to add team."),
+  });
+
+  const removeTeamMutation = useMutation({
+    mutationFn: ({ deptId, teamId }: { deptId: number, teamId: number }) => apiFetch(`/departments/${deptId}/teams/${teamId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      toast.success("Team removed successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to remove team."),
+  });
+
   const bulkExport = async () => {
     try {
       const params = new URLSearchParams();
@@ -225,7 +248,7 @@ export function DepartmentsTab() {
     }
   };
 
-  const deptList = asArray(data);
+  const deptList = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const totalPages = data?.last_page || data?.data?.last_page || 1;
 
   const columns: any[] = useMemo<any[]>(() => {
@@ -483,9 +506,10 @@ export function DepartmentsTab() {
               <div className="space-y-2"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
             ) : (
               <Tabs defaultValue="employees" className="w-full flex-1 flex flex-col">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="employees" className="gap-2"><AppIcon name="profile" /> Employees</TabsTrigger>
                   <TabsTrigger value="hrs" className="gap-2"><AppIcon name="shieldCheck" /> HRs</TabsTrigger>
+                  <TabsTrigger value="teams" className="gap-2"><AppIcon name="directory" /> Teams</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="employees" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
@@ -594,6 +618,69 @@ export function DepartmentsTab() {
                               disabled={removeHrMutation.isPending}
                             >
                               {removeHrMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="teams" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
+                  {isAdmin && (
+                    <div className="flex items-center gap-2 mb-4 p-3 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
+                      <Input
+                        value={newTeamName}
+                        onChange={(e) => setNewTeamName(e.target.value)}
+                        placeholder="Team name..."
+                        className="flex-1"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newTeamName) {
+                            e.preventDefault();
+                            addTeamMutation.mutate({ deptId: selectedDeptMembers.id, name: newTeamName }, {
+                              onSuccess: () => setNewTeamName("")
+                            });
+                          }
+                        }}
+                      />
+                      <Button
+                        disabled={!newTeamName || addTeamMutation.isPending}
+                        onClick={() => {
+                          if (newTeamName) {
+                            addTeamMutation.mutate({ deptId: selectedDeptMembers.id, name: newTeamName }, {
+                              onSuccess: () => setNewTeamName("")
+                            });
+                          }
+                        }}
+                      >
+                        {addTeamMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Add Team"}
+                      </Button>
+                    </div>
+                  )}
+
+                  {!deptDetails?.teams?.length ? (
+                    <EmptyState title="No sub-teams" description="Create sub-teams to organize employees within this department." />
+                  ) : (
+                    <div className="space-y-3">
+                      {deptDetails.teams.map((team: any) => (
+                        <div key={team.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-[var(--radius)]">
+                              <AppIcon name="directory" size="sm" className="text-neutral-500" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm text-neutral-900 dark:text-white">{team.name}</p>
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50"
+                              onClick={() => removeTeamMutation.mutate({ deptId: selectedDeptMembers.id, teamId: team.id })}
+                              disabled={removeTeamMutation.isPending}
+                            >
+                              {removeTeamMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
                             </Button>
                           )}
                         </div>

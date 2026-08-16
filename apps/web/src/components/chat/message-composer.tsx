@@ -20,6 +20,7 @@ export function MessageComposer({
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionIndex, setMentionIndex] = useState(-1);
   const [selectedMentions, setSelectedMentions] = useState<number[]>([]);
+  const [mentionNavIndex, setMentionNavIndex] = useState(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -33,6 +34,7 @@ export function MessageComposer({
       setMentionQuery(match[1]);
       setMentionIndex(text.lastIndexOf("@"));
       setShowMentions(true);
+      setMentionNavIndex(0);
     } else {
       setShowMentions(false);
     }
@@ -64,7 +66,17 @@ export function MessageComposer({
     if (showMentions && filteredUsers.length > 0) {
       if (e.key === "Enter") {
         e.preventDefault();
-        handleMentionSelect(filteredUsers[0]);
+        handleMentionSelect(filteredUsers[mentionNavIndex]);
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionNavIndex((prev) => Math.min(prev + 1, filteredUsers.length - 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionNavIndex((prev) => Math.max(prev - 1, 0));
         return;
       }
       if (e.key === "Escape") {
@@ -76,6 +88,9 @@ export function MessageComposer({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     }
   };
 
@@ -84,11 +99,12 @@ export function MessageComposer({
       {/* Mentions Dropdown */}
       {showMentions && filteredUsers.length > 0 && (
         <div className="absolute bottom-full left-12 mb-2 w-48 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[var(--radius)] shadow-e3 z-50 overflow-hidden">
-          {filteredUsers.map((u: any) => (
+          {filteredUsers.map((u: any, idx: number) => (
             <button
               key={u.id}
               onClick={() => handleMentionSelect(u)}
-              className="w-full text-left px-3 py-2 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center gap-2"
+              onMouseEnter={() => setMentionNavIndex(idx)}
+              className={`w-full text-left px-3 py-2 text-xs flex items-center gap-2 ${mentionNavIndex === idx ? "bg-neutral-100 dark:bg-neutral-700" : "hover:bg-neutral-100 dark:hover:bg-neutral-700"}`}
             >
               <AppIcon name="profile" size="xs" className=" text-neutral-400" />
               {u.name}
@@ -102,7 +118,7 @@ export function MessageComposer({
         open={showUploadPopup} 
         onOpenChange={setShowUploadPopup} 
         title="Share File" 
-        description="Select a file to share in this conversation."
+        description="Select a file to share in this conversation. Maximum size is 10MB."
         maxSizeMB={10}
         acceptedTypes={[]} 
         onUpload={async (file) => {
@@ -126,10 +142,14 @@ export function MessageComposer({
       <textarea
         ref={textareaRef}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          e.target.style.height = 'auto';
+          e.target.style.height = e.target.scrollHeight + 'px';
+        }}
         onKeyDown={handleKeyDown}
         placeholder="Type a message... (use @ to mention)"
-        className="flex-1 text-xs bg-neutral-50 dark:bg-neutral-800 p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-primary-500 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
+        className="flex-1 text-xs bg-neutral-50 dark:bg-neutral-800 p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-primary-500 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl max-h-[120px] thin-scrollbar"
         rows={1}
       />
 

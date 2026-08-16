@@ -108,7 +108,7 @@ export function PendingApprovalsWidget() {
                 </div>
 
                 <div className="flex items-center gap-1">
-                  {item.type === 'leave' ? (
+                  {item.type === 'leave' && item.route?.includes('tab=approvals') ? (
                       <>
                         <TooltipProvider delayDuration={150}>
                           <Tooltip>
@@ -143,7 +143,7 @@ export function PendingApprovalsWidget() {
                       </>
                   ) : (
                     <Button variant="outline" size="sm" asChild className="h-7 text-[10px] px-2 font-medium">
-                      <a href={item.route}>Review</a>
+                      <a href={item.route || item.action_url}>{(item.route?.includes('tab=leave') || item.type === 'task') ? 'View' : 'Review'}</a>
                     </Button>
                   )}
                 </div>

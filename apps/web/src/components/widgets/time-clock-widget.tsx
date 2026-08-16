@@ -53,7 +53,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
       if (todayData.standard_seconds) {
         setStandardSeconds(todayData.standard_seconds);
       }
-      syncWithServer(todayData.day, todayData.events || []);
+      syncWithServer(todayData.day, todayData.events || [], todayData.standard_seconds);
     }
   }, [todayData, syncWithServer]);
 
@@ -88,7 +88,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const handlePunch = async (type: string) => {
     // If local state is not_started, but todayData has a clock_in, reconcile instead of punching
     if (type === "clock_in" && activeState === "not_started" && todayData?.day?.clock_in) {
-      syncWithServer(todayData.day, todayData.events || []);
+      syncWithServer(todayData.day, todayData.events || [], todayData.standard_seconds);
       return;
     }
 
@@ -129,6 +129,9 @@ export function TimeClockWidget({ className }: { className?: string }) {
         toast.warning(msg);
       } else {
         toast.error(msg);
+      }
+      if (todayData) {
+        syncWithServer(todayData.day, todayData.events || [], todayData.standard_seconds);
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit }); // Re-sync store state
     } finally {

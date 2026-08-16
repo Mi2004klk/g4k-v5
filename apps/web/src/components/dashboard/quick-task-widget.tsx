@@ -9,11 +9,13 @@ import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 
 import { WidgetInfo } from "../widgets/widget-info";
+import { FormError } from "@/components/forms/form-error";
 
 export function QuickTaskWidget() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: queryKeys.usersSelectList,
@@ -37,11 +39,15 @@ export function QuickTaskWidget() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create task");
+      if (err.errors) {
+        setFieldErrors(err.errors);
+      }
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldErrors({});
     if (!title.trim()) return toast.error("Please enter a task title");
     if (!assigneeId) return toast.error("Please select an assignee");
     createTaskMutation.mutate({ title, assignee_id: assigneeId, notify_global_chat: true });
@@ -64,25 +70,31 @@ export function QuickTaskWidget() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-2.5">
-          <Input 
-            placeholder="Task title..." 
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)}
-            className="h-8 text-xs"
-          />
+          <div>
+            <Input 
+              placeholder="Task title..." 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)}
+              className={`h-8 text-xs ${fieldErrors.title ? "border-red-500" : ""}`}
+            />
+            <FormError errors={fieldErrors.title} />
+          </div>
 
-          <Select value={assigneeId} onValueChange={setAssigneeId}>
-            <SelectTrigger className="h-8 text-xs w-full">
-              <SelectValue placeholder="Select Assignee" />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map((u: any) => (
-                <SelectItem key={u.id} value={u.id.toString()} className="text-xs">
-                  {u.name} ({u.email})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div>
+            <Select value={assigneeId} onValueChange={setAssigneeId}>
+              <SelectTrigger className={`h-8 text-xs w-full ${fieldErrors.assignee_id ? "border-red-500" : ""}`}>
+                <SelectValue placeholder="Select Assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((u: any) => (
+                  <SelectItem key={u.id} value={u.id.toString()} className="text-xs">
+                    {u.name} ({u.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormError errors={fieldErrors.assignee_id} />
+          </div>
 
           <Button 
             type="submit" 

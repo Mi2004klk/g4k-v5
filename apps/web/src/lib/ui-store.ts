@@ -8,6 +8,7 @@ interface UIState {
   sidebarState: SidebarState;
   isInitialized: boolean;
   dismissedNotificationIds: number[];
+  dismissedWidgets: string[];
   widgetStates: Record<string, { collapsed?: boolean }>;
   setSidebarState: (state: SidebarState) => void;
   setSidebarStateSilent: (state: SidebarState) => void;
@@ -15,6 +16,7 @@ interface UIState {
   dismissNotification: (id: number) => void;
   clearPopupNotifications: (ids: number[]) => void;
   toggleWidgetCollapse: (widgetId: string) => void;
+  dismissWidget: (widgetId: string) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -23,6 +25,7 @@ export const useUIStore = create<UIState>()(
       sidebarState: "collapsed", // Default as per requirements
       isInitialized: false,
       dismissedNotificationIds: [],
+      dismissedWidgets: [],
       widgetStates: {},
 
       setSidebarState: (state) => {
@@ -72,6 +75,12 @@ export const useUIStore = create<UIState>()(
         });
       },
 
+      dismissWidget: (widgetId: string) => {
+        set((state) => ({
+          dismissedWidgets: [...new Set([...state.dismissedWidgets, widgetId])],
+        }));
+      },
+
     }),
     {
       name: "g4k-ui-storage",
@@ -79,6 +88,7 @@ export const useUIStore = create<UIState>()(
       partialize: (state) => ({
         sidebarState: state.sidebarState,
         dismissedNotificationIds: state.dismissedNotificationIds,
+        dismissedWidgets: state.dismissedWidgets,
         widgetStates: state.widgetStates,
       }),
     }
