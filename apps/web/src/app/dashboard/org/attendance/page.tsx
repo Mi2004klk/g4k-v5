@@ -2,12 +2,12 @@
 
 import { HrAttendanceView } from "@/components/attendance/hr-attendance-view";
 import { AdminAttendanceView } from "@/components/attendance/admin-attendance-view";
-import { useAuthStore } from "@/lib/auth-store";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 
 export default function AttendanceHubPage() {
-  const { hasCapability } = useAuthStore();
-  const isAdmin = hasCapability("admin.view-all-attendance");
+  const { data: capabilities } = useCapabilities();
+  const isAdmin = hasCapability(capabilities, "admin.view-all-attendance");
 
   if (!isAdmin) {
     return (
