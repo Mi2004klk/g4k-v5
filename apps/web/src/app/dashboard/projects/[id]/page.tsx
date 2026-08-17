@@ -453,7 +453,7 @@ export default function ProjectDetailPage() {
                     {projectHistory?.length > 0 ? (
                       <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
                         {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                          const h = projectHistory[virtualItem.index];
+                          const h: any = projectHistory[virtualItem.index];
                           return (
                             <div 
                               key={virtualItem.key}

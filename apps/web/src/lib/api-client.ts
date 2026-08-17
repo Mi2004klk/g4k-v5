@@ -16,7 +16,7 @@ export function getToken(): string | null {
  * @param res The API response
  * @returns The unwrapped resource
  */
-export function unwrapOne<T>(res: any): T {
+export function unwrapOne<T = any>(res: any): T {
   if (res && typeof res === "object" && "data" in res) {
     if (res.data && typeof res.data === "object" && !Array.isArray(res.data) && "id" in res.data) {
       return res.data as T;
@@ -30,7 +30,7 @@ export function unwrapOne<T>(res: any): T {
  * @param res The API response
  * @returns The unwrapped array
  */
-export function unwrapList<T>(res: any): T[] {
+export function unwrapList<T = any>(res: any): T[] {
   if (!res) return [];
   if (Array.isArray(res)) return res;
   if (Array.isArray(res.data)) return res.data;
