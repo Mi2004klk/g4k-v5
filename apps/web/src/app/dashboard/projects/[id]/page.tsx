@@ -56,7 +56,7 @@ export default function ProjectDetailPage() {
     overscan: 5,
   });
 
-  const project = unwrapOne(projectResponse);
+  const project: any = unwrapOne(projectResponse);
   const submitProjectMutation = useMutation({
     mutationFn: async () => {
       // QA enforcement: every field marked required in the qa_form must have a non-empty value
