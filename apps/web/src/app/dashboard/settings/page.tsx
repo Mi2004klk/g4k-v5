@@ -9,7 +9,6 @@ export default function SettingsPage() {
     <PageContainer
       title="System Settings"
       description="Manage company profile, security policies, and global configuration."
-      breadcrumbs
     >
       <div className="max-w-5xl mx-auto w-full">
         <ErrorBoundary>

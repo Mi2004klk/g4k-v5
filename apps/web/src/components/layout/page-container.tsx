@@ -1,5 +1,5 @@
 import React from "react";
-import { Breadcrumb, type BreadcrumbOverrides } from "@g4k/ui/components";
+
 
 export interface PageContainerProps {
   title: string;
@@ -7,17 +7,13 @@ export interface PageContainerProps {
   children: React.ReactNode;
   actions?: React.ReactNode;
   filterBar?: React.ReactNode;
-  breadcrumbs?: boolean;
-  breadcrumbOverrides?: BreadcrumbOverrides;
 }
 
-export function PageContainer({ title, description, children, actions, filterBar, breadcrumbs, breadcrumbOverrides }: PageContainerProps) {
+export function PageContainer({ title, description, children, actions, filterBar }: PageContainerProps) {
   return (
     <div className="flex flex-col gap-page-sections page-padding">
       <div className="flex flex-col gap-4">
-        {breadcrumbs && (
-          <Breadcrumb overrides={breadcrumbOverrides} className="mb-1" />
-        )}
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-display font-bold text-primary tracking-tight">

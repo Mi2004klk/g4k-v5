@@ -13,7 +13,6 @@ export default function ProjectsModulePage() {
     <PageContainer
       title="Projects & Tasks"
       description="Manage all organizational projects and track your personal task list."
-      breadcrumbs
     >
       <ErrorBoundary>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
