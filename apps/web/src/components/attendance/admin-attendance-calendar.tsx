@@ -73,7 +73,7 @@ export function AdminAttendanceCalendar() {
         </div>
       ) : (
         <TooltipProvider delayDuration={100}>
-          <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full max-w-lg mx-auto">
             <div className="grid grid-cols-7 mb-2">
               {WEEKDAY_LABELS.map((d) => (
                 <div key={d} className="text-center text-xs font-semibold text-neutral-400 py-2">
@@ -81,7 +81,7 @@ export function AdminAttendanceCalendar() {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-2 sm:gap-3">
+            <div className="grid grid-cols-7 gap-2 sm:gap-2.5">
               {calendarDays.map((date, idx) => {
                 const dateStr = format(date, "yyyy-MM-dd");
                 const stat = statsByDate[dateStr];
@@ -116,18 +116,18 @@ export function AdminAttendanceCalendar() {
                         onClick={() => handleDayClick(date)}
                         disabled={isFutureFlag && !stat}
                         className={[
-                          "relative flex flex-col items-center justify-center rounded-[var(--radius)] sm:rounded-xl aspect-square w-full transition-all duration-200",
+                          "relative flex flex-col items-center justify-center rounded-md sm:rounded-lg aspect-square w-full transition-all duration-200",
                           inCurrentMonth ? "opacity-100" : "opacity-30",
                           isFutureFlag && !stat ? "cursor-default" : "cursor-pointer hover:scale-105 hover:shadow-e2",
                           bgColor,
                           isTodayFlag ? "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-neutral-900" : ""
                         ].join(" ")}
                       >
-                        <span className={`text-sm sm:text-base font-semibold ${textColor}`}>
+                        <span className={`text-xs sm:text-sm font-semibold ${textColor}`}>
                           {format(date, "d")}
                         </span>
                         {stat && stat.total > 0 && inCurrentMonth && (
-                          <span className={`text-[10px] sm:text-xs mt-0.5 sm:mt-1 font-medium ${textColor} opacity-90`}>
+                          <span className={`text-[9px] sm:text-[10px] mt-0.5 font-medium ${textColor} opacity-90`}>
                             {Math.round((stat.present / stat.total) * 100)}%
                           </span>
                         )}
