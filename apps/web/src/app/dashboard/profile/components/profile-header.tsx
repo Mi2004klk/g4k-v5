@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
+import { getAuthToken } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 
 import { Card, CardContent, Avatar, AvatarFallback, Button, Input } from "@g4k/ui/components";
@@ -23,32 +24,97 @@ export function ProfileHeader() {
   const queryClient = useQueryClient();
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: queryKeys.profile,
     queryFn: async () => apiFetch("/profile"),
   });
 
+  const handleOpenChange = (open: boolean) => {
+    setIsAvatarOpen(open);
+    if (!open) {
+      setAvatarFile(null);
+      setPreviewUrl(null);
+      setIsDragging(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      return apiFetch("/profile/avatar", {
+      const token = getAuthToken();
+      let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+      if (API_BASE_URL.startsWith("http") && !API_BASE_URL.endsWith("/api")) {
+        API_BASE_URL = `${API_BASE_URL.replace(/\/$/, "")}/api`;
+      }
+      const baseUrl = API_BASE_URL.startsWith("http")
+        ? API_BASE_URL.replace(/\/$/, "")
+        : `${window.location.origin}${API_BASE_URL}`;
+
+      const res = await fetch(`${baseUrl}/profile/avatar`, {
         method: "POST",
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          "Accept": "application/json",
+        },
         body: formData,
       });
+
+      if (!res.ok) {
+        let errMessage = "Failed to upload avatar.";
+        try {
+          const errorData = await res.json();
+          errMessage = errorData.message || errMessage;
+        } catch (e) {}
+        throw new Error(errMessage);
+      }
+      return res.json();
     },
     onSuccess: () => {
       toast.success("Avatar updated!");
-      setIsAvatarOpen(false);
-      setAvatarFile(null);
+      handleOpenChange(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to upload avatar.");
     },
   });
+
+  const handleFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/jpg", "image/gif", "image/svg+xml"].includes(file.type)) {
+      toast.error("Please select a valid image file (JPEG, PNG, WEBP, GIF, SVG).");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File size must be 2MB or less.");
+      return;
+    }
+    setAvatarFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const onDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFile(e.dataTransfer.files?.[0]);
+  }, []);
 
   return (
     <>
@@ -121,36 +187,76 @@ export function ProfileHeader() {
       </Card>
 
       {/* Avatar Upload Dialog */}
-      <Dialog open={isAvatarOpen} onOpenChange={setIsAvatarOpen}>
+      <Dialog open={isAvatarOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md font-sans">
           <DialogHeader>
             <DialogTitle className="font-display">Upload Profile Photo</DialogTitle>
-            <DialogDescription className="sr-only">Confirm this action.</DialogDescription>
             <DialogDescription className="text-xs font-sans">
-              Select an image file (JPEG, PNG, WEBP, max 2MB).
+              Choose a clear photo so your team can easily recognize you.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4 text-xs">
-            <Input
+          <div className="py-2">
+            {!previewUrl ? (
+              <div
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                  isDragging ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                }`}
+              >
+                <div className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-full mb-3">
+                  <AppIcon name="upload" className="text-neutral-500 w-6 h-6" />
+                </div>
+                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Click or drag and drop</p>
+                <p className="text-xs text-neutral-500 mt-1">SVG, PNG, JPG or GIF (max. 2MB)</p>
+              </div>
+            ) : (
+              <div className="w-full flex flex-col items-center py-4 relative">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-neutral-950 shadow-lg relative group">
+                  <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-white hover:text-white hover:bg-white/20"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fileInputRef.current?.click();
+                      }}
+                    >
+                      <AppIcon name="edit" size="sm" className="mr-1" /> Change
+                    </Button>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    setAvatarFile(null);
+                    setPreviewUrl(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                >
+                  <AppIcon name="trash" size="sm" className="mr-1" /> Remove Photo
+                </Button>
+              </div>
+            )}
+            
+            <input
               type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  if (file.size > 2 * 1024 * 1024) {
-                    toast.error("File size must be 2MB or less.");
-                    return;
-                  }
-                  setAvatarFile(file);
-                }
-              }}
-              className="font-sans file:bg-neutral-100 file:text-neutral-700 file:border-0 file:mr-4 file:py-2 file:px-4 file:rounded-[var(--radius)] hover:file:bg-neutral-200 cursor-pointer text-sm"
+              ref={fileInputRef}
+              accept="image/jpeg,image/png,image/webp,image/jpg,image/gif,image/svg+xml"
+              className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0])}
             />
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAvatarOpen(false)} className="font-sans">
+            <Button variant="outline" onClick={() => handleOpenChange(false)} className="font-sans">
               Cancel
             </Button>
             <Button
@@ -159,9 +265,11 @@ export function ProfileHeader() {
               className="bg-neutral-900 hover:bg-neutral-800 text-white font-sans shadow-e1"
             >
               {uploadAvatarMutation.isPending ? (
-                <AppIcon name="loading" className=" animate-spin animate-spin" />
+                <>
+                  <AppIcon name="loading" className="mr-2 animate-spin" /> Uploading...
+                </>
               ) : (
-                "Upload Photo"
+                "Save Photo"
               )}
             </Button>
           </DialogFooter>
