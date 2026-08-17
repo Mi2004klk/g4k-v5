@@ -350,13 +350,11 @@ export function HrAttendanceTable() {
           stickyHeader={true}
           stickyFirstCol={true}
           density="compact"
-          pageCount={totalPages}
-          pageIndex={page - 1}
-          pageSize={perPage}
-          onPaginationChange={({ pageIndex, pageSize }) => {
-            setPage(pageIndex + 1);
-            setPerPage(pageSize);
-          }}
+          totalPages={totalPages}
+          page={page}
+          perPage={perPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
           sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
