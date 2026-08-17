@@ -11,6 +11,33 @@ export function getToken(): string | null {
   return getAuthToken();
 }
 
+/**
+ * Standardize single resource responses.
+ * @param res The API response
+ * @returns The unwrapped resource
+ */
+export function unwrapOne<T>(res: any): T {
+  if (res && typeof res === "object" && "data" in res) {
+    if (res.data && typeof res.data === "object" && !Array.isArray(res.data) && "id" in res.data) {
+      return res.data as T;
+    }
+  }
+  return res as T;
+}
+
+/**
+ * Standardize list responses.
+ * @param res The API response
+ * @returns The unwrapped array
+ */
+export function unwrapList<T>(res: any): T[] {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.data)) return res.data;
+  if (res.data && Array.isArray(res.data.data)) return res.data.data;
+  return [];
+}
+
 
 
 let refreshPromise: Promise<string> | null = null;

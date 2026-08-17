@@ -31,6 +31,8 @@ export function HrAttendanceTable() {
   const { triggerExport, isExporting } = useExport();
 
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [sortBy, setSortBy] = useState("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
@@ -88,6 +90,8 @@ export function HrAttendanceTable() {
       if (debouncedSearch) params.append("search", debouncedSearch);
       params.append("page", page.toString());
       params.append("per_page", perPage.toString());
+      params.append("sort_by", sortBy);
+      params.append("sort_dir", sortOrder);
       return apiFetch(`/attendance/hr/today?${params.toString()}`);
     },
     placeholderData: keepPreviousData,
@@ -346,14 +350,29 @@ export function HrAttendanceTable() {
           stickyHeader={true}
           stickyFirstCol={true}
           density="compact"
-          onRowSelectionChange={setRowSelection}
+          pageCount={totalPages}
+          pageIndex={page - 1}
+          pageSize={perPage}
+          onPaginationChange={({ pageIndex, pageSize }) => {
+            setPage(pageIndex + 1);
+            setPerPage(pageSize);
+          }}
           rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+          sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
+          onSortingChange={(sorting) => {
+            if (sorting.length > 0) {
+              setSortBy(sorting[0].id);
+              setSortOrder(sorting[0].desc ? "desc" : "asc");
+            } else {
+              setSortBy("date");
+              setSortOrder("desc");
+            }
+          }}
+          onRowClick={(row) => {
+            setSelectedUser(row.original.user_id);
+          }}
           getRowId={(row: any) => String(row.user_id || row.id)}
-          page={page}
-          perPage={perPage}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          onPerPageChange={setPerPage}
         />
       </div>
 

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapOne } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 
@@ -18,7 +18,7 @@ export default function TaskPage() {
     enabled: !!taskId,
   });
 
-  const task = taskResponse?.data || taskResponse;
+  const task = unwrapOne(taskResponse);
 
   if (isLoading) {
     return <div className="p-8 text-center text-sm text-neutral-500">Loading task...</div>;

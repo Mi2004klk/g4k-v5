@@ -95,4 +95,11 @@ class Task extends Model
     {
         return $this->hasMany(TaskReminder::class);
     }
+
+    public function personalReminder(): HasOne
+    {
+        return $this->hasOne(TaskReminder::class)
+            ->where('user_id', auth()->id())
+            ->where('type', 'personal');
+    }
 }

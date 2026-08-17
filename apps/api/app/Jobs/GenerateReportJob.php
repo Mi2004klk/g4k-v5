@@ -6,6 +6,8 @@ use App\Models\ExportJob;
 use App\Models\User;
 use App\Models\Task;
 use App\Models\Project;
+use App\Models\Department;
+use App\Models\Designation;
 use App\Events\ExportCompleted;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -129,6 +131,57 @@ class GenerateReportJob implements ShouldQueue
                         'Owner' => $p->creator?->name ?? 'N/A',
                         'Status' => $p->status,
                         'Budget' => $p->budget,
+                    ])->toArray());
+                });
+                break;
+
+            case 'departments':
+                $query = Department::withCount('users')->with('teams');
+                if ($search) {
+                    $query->where('name', 'ilike', '%' . $search . '%');
+                }
+                $status = $filters['status'] ?? null;
+                if ($status === 'active') {
+                    $query->where('is_active', true);
+                } elseif ($status === 'archived') {
+                    $query->onlyTrashed();
+                } elseif ($status === 'inactive') {
+                    $query->where('is_active', false);
+                }
+                
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(fn($d) => [
+                        'ID' => $d->id,
+                        'Name' => $d->name,
+                        'Description' => $d->description,
+                        'Members Count' => $d->users_count ?? 0,
+                        'Is Active' => $d->is_active ? 'Yes' : 'No',
+                        'Archived At' => $d->deleted_at ? $d->deleted_at->format('Y-m-d H:i:s') : 'N/A',
+                        'Created At' => $d->created_at->format('Y-m-d H:i:s'),
+                    ])->toArray());
+                });
+                break;
+
+            case 'designations':
+                $query = Designation::withCount('users');
+                if ($search) {
+                    $query->where('name', 'ilike', '%' . $search . '%');
+                }
+                $status = $filters['status'] ?? null;
+                if ($status === 'active') {
+                    $query->where('is_active', true);
+                } elseif ($status === 'inactive') {
+                    $query->where('is_active', false);
+                }
+
+                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                    $chunkCallback($chunk->map(fn($d) => [
+                        'ID' => $d->id,
+                        'Name' => $d->name,
+                        'Description' => $d->description,
+                        'Members Count' => $d->users_count ?? 0,
+                        'Status' => $d->is_active ? 'Active' : 'Inactive',
+                        'Created At' => $d->created_at->format('Y-m-d H:i:s'),
                     ])->toArray());
                 });
                 break;

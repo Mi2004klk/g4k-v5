@@ -9,7 +9,7 @@ import { safeFormat } from "@/lib/format";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { QAFieldRenderer } from "@/components/projects/qa-field-renderer";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapOne, unwrapList } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox, Avatar, AvatarFallback, FileUploadPopup, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, ConfirmDialog } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
@@ -35,9 +35,9 @@ export default function ProjectDetailPage() {
   const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
   const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch("/users") });
   // /departments, /users and /qa-forms may return Laravel paginators ({ data: [...] }) — unwrap to plain arrays
-  const departments = (Array.isArray(deptsData?.data) ? deptsData.data : (Array.isArray(deptsData) ? deptsData : []));
-  const qaForms = (Array.isArray(qaFormsData?.data) ? qaFormsData.data : (Array.isArray(qaFormsData) ? qaFormsData : []));
-  const users = (Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []));
+  const departments = unwrapList(deptsData);
+  const qaForms = unwrapList(qaFormsData);
+  const users = unwrapList(usersData);
   const { data: projectResponse, isLoading } = useQuery({
     queryKey: queryKeys.project(projectId),
     queryFn: () => apiFetch(`/projects/${projectId}`),
@@ -46,7 +46,7 @@ export default function ProjectDetailPage() {
     queryKey: [...queryKeys.project(projectId), "history"],
     queryFn: () => apiFetch(`/projects/${projectId}/history`),
   });
-  const projectHistory = Array.isArray(historyResponse) ? historyResponse : (historyResponse?.data || []);
+  const projectHistory = unwrapList(historyResponse);
 
   const historyParentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useVirtualizer({
@@ -56,7 +56,7 @@ export default function ProjectDetailPage() {
     overscan: 5,
   });
 
-  const project = (projectResponse?.data ?? projectResponse);
+  const project = unwrapOne(projectResponse);
   const submitProjectMutation = useMutation({
     mutationFn: async () => {
       // QA enforcement: every field marked required in the qa_form must have a non-empty value

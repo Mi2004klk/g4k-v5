@@ -25,13 +25,21 @@ class TaskController extends Controller
                 ->first();
             
             if ($conv) {
-                $msg = Message::create([
-                    'conversation_id' => $conv->id,
-                    'sender_id' => auth()->id() ?? 1, // System fallback if no auth
-                    'body' => $body,
-                    'type' => 'system',
-                ]);
-                broadcast(new MessageSent($msg))->toOthers();
+                // Find a valid sender to satisfy foreign key (auth user, or first user in chat, or project creator)
+                $senderId = auth()->id();
+                if (!$senderId) {
+                    $senderId = $conv->users()->first()?->id ?? \App\Models\User::first()?->id;
+                }
+
+                if ($senderId) {
+                    $msg = Message::create([
+                        'conversation_id' => $conv->id,
+                        'sender_id' => $senderId,
+                        'body' => $body,
+                        'type' => 'text', // Avoid 'system' as it is not in the DB enum ['text', 'image', 'file']
+                    ]);
+                    broadcast(new MessageSent($msg))->toOthers();
+                }
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning("Failed to notify project chat: " . $e->getMessage());
@@ -63,7 +71,7 @@ class TaskController extends Controller
 
     public function index(Request $request)
     {
-        $query = Task::with(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']);
+        $query = Task::with(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm', 'personalReminder']);
 
         if (!$this->userHasManage($request)) {
             $userId = $request->user()->id;
@@ -219,7 +227,7 @@ class TaskController extends Controller
 
     public function show(Request $request, $id)
     {
-        $task = Task::with(['project.members', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm', 'qaSubmission', 'comments.user', 'activities.user', 'timeLogs.user', 'approval'])->findOrFail($id);
+        $task = Task::with(['project.members', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm', 'qaSubmission', 'comments.user', 'activities.user', 'timeLogs.user', 'approval', 'personalReminder'])->findOrFail($id);
 
         if (!$this->userHasManage($request)) {
             $userId = $request->user()->id;

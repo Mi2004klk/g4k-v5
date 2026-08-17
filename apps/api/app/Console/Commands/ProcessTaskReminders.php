@@ -38,10 +38,11 @@ class ProcessTaskReminders extends Command
                 $notificationService->send(
                     $reminder->user_id,
                     'task_reminder',
+                    "Task Due Soon",
                     "Reminder: Task '{$reminder->task->title}' is due soon or requires attention.",
+                    ['task_id' => $reminder->task_id],
                     $reminder->task->project_id ? "/dashboard/projects/{$reminder->task->project_id}" : "/dashboard",
-                    "task-{$reminder->task_id}",
-                    'normal'
+                    'high'
                 );
             }
             

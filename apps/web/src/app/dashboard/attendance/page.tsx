@@ -33,7 +33,7 @@ export default function PersonalAttendancePage() {
 
   const { data: historyData, isPending } = useQuery({
     queryKey: queryKeys.myAttendanceHistory(),
-    queryFn: () => apiFetch("/attendance/me/history"),
+    queryFn: () => apiFetch("/attendance/me/history?limit=365"),
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_ATTENDANCE,
   });

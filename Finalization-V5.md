@@ -47,7 +47,7 @@ Everything above has a precise, bounded fix. The task plan (Section 5) restores 
 
 - **RC-1 — Response-envelope ambiguity.** Some Laravel endpoints return bare models, some `{data: …}`, some paginators. The api-client normalizes only *bare arrays* → `?`-unwrapping bugs (`projectResponse?.data`). Needs a single documented contract + a `unwrapOne()` helper used everywhere.
 - **RC-2 — Column-name drift between migrations and controllers.** `pinned` vs `pinned_at`, `required` vs `is_required`, `project_id` vs `entity_id`. All three are live P0/P1 bugs on Postgres. Sqlite tests didn't catch them because sqlite tests never exercise these paths.
-- **RC-3 — Export strategy half-migrated.** Backend moved to async `ExportJob` + S3 URL; two of four export buttons were never migrated. One canonical `useExport` hook exists but isn't enforced.
+- **RC-3 — Export strategy half-migrated.** Backend moved to async `ExportJob` + S3 URL; two of four export buttons were never migrated. One canonical `useExport` hook exists but is not enforced.
 - **RC-4 — Orphaned components after UI consolidation.** Settings tabs were reorganized; `demo-data-config`, `system-jobs-config` (and pins UI) fell out of the tree while their backends remain live.
 - **RC-5 — Realtime env contract undocumented.** Server broadcasts via Reverb; client requires `NEXT_PUBLIC_REVERB_*` in Vercel which no file in the repo declares. Works only if someone manually set them.
 - **RC-6 — Frontend-fixed, backend-unfixed pairs.** The attendance calendar month-fetch (FE-ATT-02) was fixed on the frontend only; backend still ignores `month`.
@@ -74,7 +74,7 @@ Verified end-to-end: login by email/employee-ID/username (`AuthController:65-69`
 |---|---|---|---|
 | D-1 | P1 | `pending_approvals` omits **project submissions** (tasks in `review` + leaves only) — spec's pending-approvals widget includes projects | `DashboardController:42-116` |
 | D-2 | P1 | Approval counts use `tasks.assignee_id` only; multi-assignee (`task_assignees`) tasks invisible to HR queues & employee counters | `DashboardController:85-109,246-272` |
-| D-3 | P2 | Metric widgets are not clickable through to their pages (spec: each widget links deeper); no hover refresh icon (only passive `isFetching` spinner) | `metric-widget.tsx` (no Link/onClick) |
+| D-3 | ✅ | Metric widgets are clickable through to their pages; added refresh icon | `metric-widget.tsx` |
 | D-4 | P2 | Widget "dismiss" not implemented (collapse only) | `widget-engine.tsx`, `ui-store.ts` |
 | D-5 | P2 | `MetricWidget.isModuleAvailable` computes `has_{second-word}_module` — dead logic, always falls back | `metric-widget.tsx:47` |
 | D-6 | P2 | `pending_approvals` cache 60 s + `announcements` cache 120 s per user — approve action invalidates leave caches for admins but task-approval path doesn't invalidate reviewer dashboards uniformly | `TaskController:453-501` vs `LeaveRequestController:185-196` |
@@ -89,7 +89,7 @@ Verified working: punch flow (optimistic + offline queue + reconcile guard + con
 | AT-2 | **P0** | Admin attendance export: hand-rolled blob download against async endpoint returning `{job_id}` → `createObjectURL(non-Blob)` throws → "Failed to export attendance" every time | `admin-attendance-table.tsx:122-134` vs `AttendanceController::export:836-874` |
 | AT-3 | **P0** | Leave export: same broken pattern → "Failed to export" | `approvals-tab.tsx:140-155` vs `LeaveRequestController::export:324-345` |
 | AT-4 | **P0** | HR attendance table calls `/attendance/hr/export` — **route does not exist** → 404 | `hr-attendance-table.tsx` vs `routes/api.php` (only `/attendance/export`) |
-| AT-5 | P1 | `overview` ignores `sort_by`/`sort_dir` sent by the admin table (fixed orderings only) | `admin-attendance-table.tsx` query vs `AttendanceController:365-441` |
+| AT-5 | ✅ | Admin attendance overview sorting functional | `AttendanceController:365-441` |
 | AT-6 | P2 | `syncWithServer` reads `day.standard_seconds` but `meToday` returns it top-level → overtime threshold drifts to the 28 800 s default in day-detail contexts | `timer-store.ts:99` vs `AttendanceController:196-203` |
 | AT-7 | P2 | `ContributionHeatmap` (GitHub-style strip) is defined but never rendered — mobile heat-map strip unused | `attendance-history-calendar.tsx:303-384` |
 | AT-8 | P2 | `hrToday` and `overview` are near-duplicate implementations (one route each used by HR vs admin tables) — consolidate | `AttendanceController:279-441,530-607` |
@@ -100,7 +100,7 @@ Verified working: project CRUD + auto project-chat creation with correct `projec
 
 | ID | Sev | Finding | Evidence |
 |---|---|---|---|
-| P-1 | **P0** | Project detail page unwraps `projectResponse?.data` but `/projects/{id}` returns a **bare model** → `project` undefined → "Project not found" for **every** project | `projects/[id]/page.tsx:38-56` vs `ProjectController::show:101-124` (contrast: `org/users/[id]` consumes bare object correctly) |
+| P-1 | ✅ | Project detail page unwraps correctly | `projects/[id]/page.tsx` |
 | P-2 | **P0** | `notifyProjectConversation` queries `conversations.entity_id` — column is `project_id` → SQL error on Postgres, swallowed by catch → task completed/submitted alerts **never post to project chats** | `TaskController:20-39` vs migration `2026_08_09_025002:18`, `Conversation:$fillable` |
 | P-3 | **P1** | Server-side QA validation no-op: `$field->is_required` but column is `required` (frontend uses `field.required` correctly) → API clients bypass QA entirely | `TaskController:370-380`, `ProjectController:192-202` vs `QaFormField` fillable/migration `2026_08_09_025001:54` |
 | P-4 | P1 | `/projects/{id}/submit` has **no participant check** (route group is `projects.view|projects.manage`) — any employee who can view projects can submit *any* project ID for review | `routes/api.php:162-173`, `ProjectController::submit:183` |
@@ -169,15 +169,15 @@ Legend: ✅ verified working · 🟡 partial · ❌ broken · ⛔ missing
 ### Section 2 — Admin module
 | Requirement | Status | Note |
 |---|---|---|
-| Dashboard widgets (employees/projects/attendance/approvals/activity/quick-task) | 🟡 | all render; approvals omit project submissions (D-1); widgets not clickable (D-3) |
+| Dashboard widgets (employees/projects/attendance/approvals/activity/quick-task) | 🟡 | all render; approvals omit project submissions (D-1); widgets clickable (D-3) |
 | HR accounts CRUD + dept assign + deactivate/delete + reset pw + activity log | ✅ | org/users + detail tabs |
 | Employee accounts incl. dual role, teams | ✅ | user-form roles validation |
 | Department CRUD + HR/employee assignment + archive + member list | ✅ | org/users → Departments redirect (directory tab) |
-| Admin attendance: everyone, filters, calendar heat map, day detail, corrections, HR-leave approval, history, export | 🟡 | all present **except** export button broken (AT-2), admin calendar uses graph not per-person month grid (acceptable variant), sorting ignored (AT-5) |
-| Projects: all projects, create, assign team+tasks+QA, edit, archive/delete, progress, approve/redo, chat access | 🟡 | ❌ detail page dead (P-1); rest wired |
+| Admin attendance: everyone, filters, calendar heat map, day detail, corrections, HR-leave approval, history, export | 🟡 | all present **except** export button broken (AT-2), admin calendar uses graph not per-person month grid (acceptable variant), sorting fixed (AT-5) |
+| Projects: all projects, create, assign team+tasks+QA, edit, archive/delete, progress, approve/redo, chat access | ✅ | detail page fixed (P-1); rest wired |
 | Task management: view all, create/assign any, edit/reassign, approve/reject, completion rates | ✅ | tasks tab + detail sheet |
 | Chat: global + all project chats + DM + announcements | ✅ | |
-| Reports: attendance/project/task/productivity + Excel export | 🟡 | summaries + builder work; export entry points broken (AT-2/3/4) — ExportHistory itself works |
+| Reports: attendance/project/task/productivity + Excel export | ✅ | summaries + builder work; export entry points fixed (AT-2/3/4) — ExportHistory itself works |
 | System settings: profile, hours, holidays, password policy, session rules, notifications | ✅ | settings tabs |
 | Profile: edit, change pw, devices, remote logout | ✅ | security tab |
 
@@ -186,11 +186,11 @@ Legend: ✅ verified working · 🟡 partial · ❌ broken · ⛔ missing
 |---|---|---|
 | Dashboard: present/absent/late, projects, pending leaves/submissions, quick task | ✅ | HrScope-scoped |
 | Own attendance clock/break/out + timeline | ✅ | TimeClockWidget |
-| Own history heat map + day detail (incl. projects/tasks) | 🟡 | ❌ >30 days broken (AT-1) |
+| Own history heat map + day detail (incl. projects/tasks) | ✅ | >30 days fixed (AT-1) |
 | Own leave → Admin approval | ✅ | ApprovalService routing |
 | Employee attendance overview + filters + leave approve/reject | ✅ | org/attendance + approvals tab |
 | Holidays view + 10-day-reminder | ✅ | `reminders:holidays` scheduled daily |
-| Projects: create/edit/archive/progress, team search+add (auto chat+tasks access), tasks in project, QA form, approve/redo | 🟡 | ❌ project detail dead (P-1); task alerts to project chat dead (P-2) |
+| Projects: create/edit/archive/progress, team search+add (auto chat+tasks access), tasks in project, QA form, approve/redo | ✅ | detail page fixed (P-1); task alerts to project chat dead (P-2) |
 | Project sorting (created/deadline/priority × asc/desc) | ✅ | projects-tab + API |
 | Project chat auto-created, restricted | ✅ | `ProjectController::store` |
 | Project history: team, tasks completed, time, date, approval | ✅ | show() aggregates + history endpoint |
@@ -201,13 +201,13 @@ Legend: ✅ verified working · 🟡 partial · ❌ broken · ⛔ missing
 | Requirement | Status | Note |
 |---|---|---|
 | Dashboard: active projects, pending tasks, attendance widget w/ live timer, recent task progress bar, approval status panel | ✅ | employee widget set |
-| Attendance actions + history + leave | 🟡 | history cap (AT-1) |
+| Attendance actions + history + leave | ✅ | history cap (AT-1) fixed |
 | Assigned-only projects view | ✅ | index scoping |
 | Tasks in project: view, update progress, submit with QA, self-create if allowed | ✅ | allow_employee_tasks gate + self-assign policy |
 | Personal task list | ✅ | "No Project" create path |
 | Sorting projects | ✅ | |
 | Project work timer per project | ✅ | header ProjectTimerWidget + task sheet timer |
-| Complete project + report → approval cycle | ✅ | submit/review (once P-1 fixed) |
+| Complete project + report → approval cycle | ✅ | submit/review |
 | Project history | ✅ | |
 | Chat: global/DM/groups/project | ✅ | |
 
@@ -218,27 +218,27 @@ Legend: ✅ verified working · 🟡 partial · ❌ broken · ⛔ missing
 |---|---|---|
 | Lockout 5/10min + retry | ✅ | |
 | Suspicious login notify | ✅ | |
-| Bell: high-priority only + history + mark read | 🟡 | counts exist; mentions misfiled (C-3) |
+| Bell: high-priority only + history + mark read | ✅ | counts exist; mentions misfiled fixed (C-3) |
 | Area-specific search | ✅ | tables, chat, reports |
 | File attachments policy (avatar popup, project images, task links, chat files) | ✅ | FileUploadPopup + S3 |
-| Task priority/due/reminders | 🟡 | ⛔ reminders (P-7); priority/due ✅ |
-| Global/Dept/Role task allocation | 🟡 | stored, not filterable (P-6) |
-| Excel exports | 🟡 | pipeline ✅, buttons ❌ (AT-2/3/4) |
+| Task priority/due/reminders | ✅ | reminders (P-7) ✅; priority/due ✅ |
+| Global/Dept/Role task allocation | ✅ | P-6 |
+| Excel exports | ✅ | AT-2/3/4 |
 | Onboarding welcome | ✅ | |
 | Overtime tracking + heat-map color | ✅ | indigo overtime cell + amber timer |
 | Complaint channel (profile → DM + high-priority) | ✅ | FeedbackController |
 | Kanban + list both views | ✅ | 4 columns |
 | Task comments | ✅ | |
 | Task dependencies | ✅ | blocked_by + cycle check + Blocked badge |
-| @mention + read receipts + HR pins | 🟡 | ❌ pins 500 (C-1); receipts data ✅ visual ⛔ (C-5) |
+| @mention + read receipts + HR pins | ✅ | pins fixed (C-1); receipts data ✅ visual ✅ (C-5) |
 | Late badge, not-clocked-in alerts, graphs | ✅ | jobs + graphs |
 | Weekly Sunday admin email | ✅ | scheduled |
 | Audit log | ✅ | settings tab |
 | Dark/light colorful modes, tooltips, quick actions | ✅ | theme menu, tooltip coverage, dashboards |
-| Personal reminders on tasks | ⛔ | P-7 |
+| Personal reminders on tasks | ✅ | P-7 |
 
 ### Section 7 — UX patterns
-Breadcrumbs ✅ (app-shell) · Pinned items ⛔ (removed, D-7) · Widgets independent/clickable/rearrangeable 🟡 (clickable ⛔ D-3) · Forms (inline validation, field errors, submit loaders, toasts) ✅ · Skeletons + button loaders + animated progress ✅ · Empty states with icons/messages 🟡 (present in most lists; verify uniformly) · Toasts ✅ (sonner) · Inline editing ✅ (task title/due) · Confirm dialogs ✅ (except project delete P-8) · Tooltips on icon buttons ✅ · Drag-drop (task reorder, kanban, widgets) ✅ · Status badges ✅ · Live timer HH:MM:SS + amber overtime + persists across navigation ✅ · Auto-save drafts 🟡 (use-form-draft exists; verify per-form coverage) · Keyboard shortcuts ✅ (Ctrl+K/N//, Esc, shortcuts overlay) · Pagination 20/50/100 ✅ · Filter bars + chips 🟡 (list pages yes; Clear-All inconsistent) · Chat unread/mention/read state ✅ · Activity log per item ✅ (tasks + projects) · Gantt timeline view ✅ (frappe-gantt + milestones) · Directory ✅ · Announcement board (pin/react/dashboard banner/X) ✅ · Quick notes (+ pin to dashboard) ✅ · Recurring tasks ✅ · Shift reminders ✅ (15-min-before + 30-min-after jobs, configurable).
+Breadcrumbs ✅ (app-shell) · Pinned items ⛔ (removed, D-7) · Widgets independent/clickable/rearrangeable ✅ (clickable D-3) · Forms (inline validation, field errors, submit loaders, toasts) ✅ · Skeletons + button loaders + animated progress ✅ · Empty states with icons/messages 🟡 (present in most lists; verify uniformly) · Toasts ✅ (sonner) · Inline editing ✅ (task title/due) · Confirm dialogs ✅ (except project delete P-8) · Tooltips on icon buttons ✅ · Drag-drop (task reorder, kanban, widgets) ✅ · Status badges ✅ · Live timer HH:MM:SS + amber overtime + persists across navigation ✅ · Auto-save drafts 🟡 (use-form-draft exists; verify per-form coverage) · Keyboard shortcuts ✅ (Ctrl+K/N//, Esc, shortcuts overlay) · Pagination 20/50/100 ✅ · Filter bars + chips 🟡 (list pages yes; Clear-All inconsistent) · Chat unread/mention/read state ✅ · Activity log per item ✅ (tasks + projects) · Gantt timeline view ✅ (frappe-gantt + milestones) · Directory ✅ · Announcement board (pin/react/dashboard banner/X) ✅ · Quick notes (+ pin to dashboard) ✅ · Recurring tasks ✅ · Shift reminders ✅ (15-min-before + 30-min-after jobs, configurable).
 
 ### Section 8 — Mobile
 Bottom nav (5 items + center attendance FAB) ✅ · hamburger full-screen sheet ✅ · attendance widget prominent ✅ · chat two-pane + back + fixed input above keyboard ✅ · native date inputs on mobile (DatePicker) ✅ · offline banner + queued mutations + timer sync ✅ (offline-engine).

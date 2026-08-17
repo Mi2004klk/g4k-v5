@@ -41,23 +41,23 @@ class DesignationController extends Controller
 
     public function export(Request $request)
     {
-        $query = $this->buildIndexQuery($request);
-        // get() removed for streaming
+        $job = \App\Models\ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => 'designations',
+            'format' => 'csv',
+            'status' => 'pending',
+            'filters' => [
+                'search' => $request->input('search'),
+                'status' => $request->input('status'),
+            ],
+        ]);
 
-        return response()->streamDownload(function () use ($query) {
-            $writer = SimpleExcelWriter::streamDownload('designations.csv');
-            foreach ($query->cursor() as $designation) {
-                $writer->addRow([
-                    'ID' => $designation->id,
-                    'Name' => $designation->name,
-                    'Description' => $designation->description,
-                    'Members Count' => $designation->users_count ?? 0,
-                    'Status' => $designation->is_active ? 'Active' : 'Inactive',
-                    'Created At' => $designation->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-            $writer->close();
-        }, 'designations.csv', ['Content-Type' => 'text/csv']);
+        dispatch(new \App\Jobs\GenerateReportJob($job));
+
+        return response()->json([
+            'message' => 'Export started. You will be notified when it is ready.',
+            'job_id' => $job->id,
+        ]);
     }
 
     public function store(Request $request)

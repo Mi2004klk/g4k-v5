@@ -402,6 +402,18 @@ class AttendanceController extends Controller
                 })->values()->all(),
             ];
         });
+        $sortBy = $request->query('sort_by');
+        $sortDir = strtolower($request->query('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy === 'user_name') {
+            $data['employees'] = collect($data['employees'])->sortBy('user_name', SORT_REGULAR, $sortDir === 'desc')->values()->all();
+        } elseif ($sortBy === 'clock_in') {
+            $data['employees'] = collect($data['employees'])->sortBy('clock_in', SORT_REGULAR, $sortDir === 'desc')->values()->all();
+        } elseif ($sortBy === 'status' || $sortBy === 'category') {
+            $data['employees'] = collect($data['employees'])->sortBy('category', SORT_REGULAR, $sortDir === 'desc')->values()->all();
+        } elseif ($sortBy) {
+            $data['employees'] = collect($data['employees'])->sortBy($sortBy, SORT_REGULAR, $sortDir === 'desc')->values()->all();
+        }
         
         return response()->json($data);
     }
@@ -601,7 +613,9 @@ class AttendanceController extends Controller
             $days = $query->whereBetween('date', [$start, $end])->get();
             $items = $days;
         } else {
-            $days = $query->cursorPaginate(30);
+            $limit = $request->query('limit', 30);
+            $limit = is_numeric($limit) ? (int)$limit : 30;
+            $days = $query->cursorPaginate($limit);
             $items = collect($days->items());
         }
 

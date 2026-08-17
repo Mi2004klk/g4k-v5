@@ -117,7 +117,7 @@ class ChatController extends Controller
                         $request->user()->name . ' mentioned you in a message: "' . \Illuminate\Support\Str::limit($validated['body'] ?? '', 50) . '"',
                         ['conversation_id' => $conversation->id, 'message_id' => $message->id],
                         '/dashboard/chat?conversation=' . $conversation->id,
-                        'high'
+                        'normal'
                     );
                 }
             }

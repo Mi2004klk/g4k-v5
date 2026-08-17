@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { QAFieldRenderer } from "@/components/projects/qa-field-renderer";
 import { useTimerStore } from "@/stores/timer-store";
-import { Input, Slider, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, DatePicker, Checkbox, Textarea, InlineEdit } from "@g4k/ui/components";
+import { Input, Slider, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, DatePicker, Checkbox, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { usePins } from "@/hooks/use-pins";
@@ -71,6 +71,8 @@ export function TaskDetailSheet({
   const isCurrentTaskTimerRunning = isProjectTimerRunning && activeTaskId === String(taskPreview?.id);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const [customReminderDate, setCustomReminderDate] = useState("");
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
@@ -304,6 +306,34 @@ export function TaskDetailSheet({
     onError: (err: any) => toast.error(err.message || "Failed to update task."),
   });
 
+  const setReminderMutation = useMutation({
+    mutationFn: async (dateStr: string) => {
+      return apiFetch(`/tasks/${task.id}/reminders`, {
+        method: "POST",
+        body: JSON.stringify({ remind_at: dateStr, type: "personal" }),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Reminder set.");
+      setCustomReminderDate("");
+      invalidateTasks();
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to set reminder."),
+  });
+
+  const deleteReminderMutation = useMutation({
+    mutationFn: async (reminderId: string | number) => {
+      return apiFetch(`/tasks/reminders/${reminderId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Reminder cleared.");
+      invalidateTasks();
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to clear reminder."),
+  });
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
@@ -470,6 +500,71 @@ export function TaskDetailSheet({
                   )}
                 </span>
               </div>
+              
+              <div>
+                <span className="text-neutral-400 block flex items-center gap-1">
+                  Reminder
+                  {task.personal_reminder && <AppIcon name="bell" size="xs" className="text-amber-500" />}
+                </span>
+                <span className="font-semibold">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-6 p-0 text-xs font-semibold hover:bg-transparent">
+                        {task.personal_reminder 
+                          ? format(new Date(task.personal_reminder.remind_at), "MMM d, yyyy HH:mm") 
+                          : "None"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3 space-y-2">
+                      <h4 className="font-semibold text-xs">Set Reminder</h4>
+                      {task.due_date && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full justify-start text-xs h-8"
+                          onClick={() => setReminderMutation.mutate(task.due_date)}
+                          disabled={setReminderMutation.isPending}
+                        >
+                          <AppIcon name="calendar" size="xs" className="mr-2" />
+                          At Due Date
+                        </Button>
+                      )}
+                      <div className="flex gap-2 items-center">
+                        <Input 
+                          type="datetime-local" 
+                          className="text-xs h-8 flex-1"
+                          value={customReminderDate}
+                          onChange={(e) => setCustomReminderDate(e.target.value)}
+                        />
+                        <Button 
+                          size="sm" 
+                          className="h-8"
+                          disabled={!customReminderDate || setReminderMutation.isPending}
+                          onClick={() => {
+                            if (customReminderDate) {
+                              setReminderMutation.mutate(new Date(customReminderDate).toISOString());
+                            }
+                          }}
+                        >
+                          Set
+                        </Button>
+                      </div>
+                      {task.personal_reminder && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-rose-500 text-xs h-8 hover:bg-rose-50 mt-2"
+                          onClick={() => deleteReminderMutation.mutate(task.personal_reminder.id)}
+                          disabled={deleteReminderMutation.isPending}
+                        >
+                          Clear Reminder
+                        </Button>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                </span>
+              </div>
+
               {task.blocker && (
                 <div className="col-span-2">
                   <span className="text-rose-500 font-semibold flex items-center gap-1">

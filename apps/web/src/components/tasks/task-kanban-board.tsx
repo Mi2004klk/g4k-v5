@@ -86,6 +86,11 @@ function TaskCard({
               {task.title}
             </h4>
             <div className="flex gap-2">
+              {task.scope && task.scope !== "global" && (
+                <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded text-[9px] font-bold capitalize bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                  {task.scope}
+                </span>
+              )}
               {task.status === "review" && (
                 <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                   In Review

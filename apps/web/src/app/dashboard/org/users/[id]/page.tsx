@@ -373,7 +373,7 @@ export default function EmployeeDetailPage() {
 function UserAttendanceView({ userId }: { userId: number }) {
   const { data: historyData, isLoading, isError, error } = useQuery({
     queryKey: queryKeys.memberHistory(userId),
-    queryFn: () => apiFetch(`/attendance/hr/history/${userId}`),
+    queryFn: () => apiFetch(`/attendance/hr/history/${userId}?limit=365`),
     enabled: !!userId,
     retry: false,
   });

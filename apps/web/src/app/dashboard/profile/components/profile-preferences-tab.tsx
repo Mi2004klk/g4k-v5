@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
+import { useUIStore } from "@/lib/ui-store";
 
 import {
   Button,
@@ -22,6 +23,9 @@ export function ProfilePreferencesTab() {
   const router = useRouter();
   const authUser = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
+  
+  const restoreWidgets = useUIStore((s) => s.restoreWidgets);
+  const dismissedWidgetsCount = useUIStore((s) => s.dismissedWidgets?.length ?? 0);
 
   const [visibility, setVisibility] = useState(authUser?.preferences?.directory_visibility || "internal");
 
@@ -93,6 +97,38 @@ export function ProfilePreferencesTab() {
               <div className="font-semibold text-foreground mb-0.5">Private</div>
               <div className="text-muted-foreground text-[11px]">Contact info completely hidden from directory.</div>
             </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dashboard Preferences */}
+      <Card className="border border-border shadow-e1 bg-card rounded-xl">
+        <CardHeader>
+          <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
+            <AppIcon name="dashboard" className=" text-brand-violet" />
+            Dashboard Preferences
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground font-sans">
+            Manage your dashboard widgets and layout.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-xs font-sans space-y-4">
+          <div className="flex items-center justify-between p-3 border border-border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-800/50">
+            <div>
+              <div className="font-semibold text-foreground mb-0.5">Hidden Widgets</div>
+              <div className="text-muted-foreground text-[11px]">You have {dismissedWidgetsCount} hidden widget(s) on your dashboard.</div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                restoreWidgets();
+                toast.success("Dashboard widgets restored to default.");
+              }}
+              disabled={dismissedWidgetsCount === 0}
+            >
+              Restore Defaults
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api-client";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 import { getAuthToken } from "@/lib/auth-store";
+import { useExport } from "@/hooks/use-export";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -227,22 +228,15 @@ export function DepartmentsTab() {
     onError: (err: any) => toast.error(err.message || "Failed to remove team."),
   });
 
+  const { triggerExport } = useExport();
+
   const bulkExport = async () => {
     try {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
 
-      const blob = await apiFetch(`/departments/export?${params.toString()}`);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "departments_export.csv";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      toast.success("Export downloaded.");
+      await triggerExport(`/departments/export?${params.toString()}`, "departments_export.csv");
     } catch (e: any) {
       toast.error(e.message || "Failed to export");
     }

@@ -50,24 +50,23 @@ class DepartmentController extends Controller
 
     public function export(Request $request)
     {
-        $query = $this->buildIndexQuery($request);
-        // get() removed for streaming
+        $job = \App\Models\ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => 'departments',
+            'format' => 'csv',
+            'status' => 'pending',
+            'filters' => [
+                'search' => $request->input('search'),
+                'status' => $request->input('status'),
+            ],
+        ]);
 
-        return response()->streamDownload(function () use ($query) {
-            $writer = SimpleExcelWriter::streamDownload('departments.csv');
-            foreach ($query->cursor() as $department) {
-                $writer->addRow([
-                    'ID' => $department->id,
-                    'Name' => $department->name,
-                    'Description' => $department->description,
-                    'Members Count' => $department->users_count ?? 0,
-                    'Is Active' => $department->is_active ? 'Yes' : 'No',
-                    'Archived At' => $department->deleted_at ? $department->deleted_at->format('Y-m-d H:i:s') : 'N/A',
-                    'Created At' => $department->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-            $writer->close();
-        }, 'departments.csv', ['Content-Type' => 'text/csv']);
+        dispatch(new \App\Jobs\GenerateReportJob($job));
+
+        return response()->json([
+            'message' => 'Export started. You will be notified when it is ready.',
+            'job_id' => $job->id,
+        ]);
     }
 
     public function store(Request $request)

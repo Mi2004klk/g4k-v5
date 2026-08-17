@@ -188,9 +188,9 @@ export function NotificationsBell() {
               <AppIcon name="bell" size="lg" />
               {/* T-47.6: bell badge shows high-priority unread only; the full
                   unread count remains visible in the panel header and tooltip. */}
-              {unreadCount > 0 ? (
-                <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-surface ${highPriorityCount > 0 ? "bg-rose-500" : "bg-primary-500"}`}>
-                  {unreadCount > 99 ? "99+" : unreadCount}
+              {highPriorityCount > 0 ? (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-surface bg-rose-500">
+                  {highPriorityCount > 99 ? "99+" : highPriorityCount}
                 </span>
               ) : null}
             </button>

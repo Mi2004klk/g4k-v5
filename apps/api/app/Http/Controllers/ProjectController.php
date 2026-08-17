@@ -232,6 +232,13 @@ class ProjectController extends Controller
             'notes' => $request->input('notes'),
         ]);
         
+        // T-52: Clear pending approvals cache for HR/Admin
+        $adminIds = \App\Models\User::whereIn('role', ['hr', 'super_admin'])->pluck('id');
+        foreach ($adminIds as $adminId) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+        }
+
         return response()->json($project->fresh()->load(['approval']));
     }
 
@@ -263,6 +270,13 @@ class ProjectController extends Controller
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['message' => $e->getMessage(), 'errors' => $e->errors()], 422);
+        }
+
+        // T-52: Clear pending approvals cache for HR/Admin
+        $adminIds = \App\Models\User::whereIn('role', ['hr', 'super_admin'])->pluck('id');
+        foreach ($adminIds as $adminId) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
         }
 
         return response()->json($project->fresh()->load(['approval']));
