@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import {
   DndContext,
   closestCorners,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   useDraggable,
   useDroppable,
@@ -69,9 +72,12 @@ function TaskCard({
   return (
     <Card
       onClick={() => onTaskSelect?.(task)}
-      className={`border-neutral-200/60 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 transition-all bg-card dark:bg-neutral-900 ${
-        isOverlay ? "scale-105 rotate-2 cursor-grabbing shadow-xl ring-2 ring-ring" : "hover:shadow cursor-grab"
-      }`}
+      className={cn(
+        "border-neutral-200/60 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900",
+        isOverlay 
+          ? "scale-[1.02] rotate-2 cursor-grabbing shadow-2xl ring-1 ring-primary/20" 
+          : "shadow-e1 hover:shadow-md hover:-translate-y-0.5 cursor-grab"
+      )}
     >
       <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
@@ -151,8 +157,10 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
       <div
         ref={setNodeRef}
         style={style}
-        className="opacity-40 border-2 border-dashed border-ring rounded-[var(--radius)] h-24"
-      />
+        className="opacity-30"
+      >
+        <TaskCard task={task} />
+      </div>
     );
   }
 
@@ -209,7 +217,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-3 w-full md:min-w-[260px] p-3 rounded-xl border transition-colors ${
+      className={`flex flex-col gap-3 w-[85vw] md:w-auto md:min-w-[260px] flex-shrink-0 snap-center p-3 rounded-xl border transition-colors ${
         isOver
           ? "bg-secondary/50 border-ring/50"
           : "bg-neutral-50/50 border-neutral-100 dark:bg-neutral-900/40 dark:border-neutral-800"
@@ -227,7 +235,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
         </span>
       </div>
 
-      <div className="flex-1 space-y-2.5 min-h-[300px]">
+      <div className="flex-1 flex flex-col gap-3 min-h-[300px]">
         <SortableContext items={tasks.map((t: any) => `task-${t.id}`)} strategy={verticalListSortingStrategy}>
           {isLoading ? (
             <div className="flex flex-col gap-2">
@@ -270,14 +278,58 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   isLoading?: boolean;
 }) {
   const [activeTask, setActiveTask] = useState<any>(null);
+  const [localTasks, setLocalTasks] = useState<any[]>(tasks);
+
+  useEffect(() => {
+    setLocalTasks(tasks);
+  }, [tasks]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor)
   );
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveTask(event.active.data.current?.task);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    if (activeId === overId) return;
+
+    const isActiveTask = activeId.toString().startsWith("task-");
+    const isOverTask = overId.toString().startsWith("task-");
+
+    if (!isActiveTask) return;
+
+    const activeTaskId = Number(activeId.toString().replace("task-", ""));
+    const activeTaskData = localTasks.find((t: any) => t.id === activeTaskId);
+    if (!activeTaskData) return;
+
+    // Moving over a column directly (e.g. empty column)
+    if (!isOverTask) {
+      if (activeTaskData.status !== overId) {
+        setLocalTasks((prev: any[]) =>
+          prev.map((t) => (t.id === activeTaskId ? { ...t, status: overId as string } : t))
+        );
+      }
+      return;
+    }
+
+    // Moving over another task
+    const overTaskId = Number(overId.toString().replace("task-", ""));
+    const overTaskData = localTasks.find((t: any) => t.id === overTaskId);
+    if (overTaskData && activeTaskData.status !== overTaskData.status) {
+      setLocalTasks((prev: any[]) =>
+        prev.map((t) => (t.id === activeTaskId ? { ...t, status: overTaskData.status } : t))
+      );
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -288,44 +340,31 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
     const activeId = active.id;
     const overId = over.id;
 
-    if (activeId === overId) return;
-
     const taskId = Number(activeId.toString().replace("task-", ""));
-    const activeTask = tasks.find(t => t.id === taskId);
-    if (!activeTask) return;
+    
+    // Check local tasks for where it landed
+    const finalTask = localTasks.find(t => t.id === taskId);
+    const originalTask = tasks.find(t => t.id === taskId);
+    
+    if (!finalTask || !originalTask) return;
 
-    // Over a column?
-    const overColumn = COLUMNS.find(c => c.id === overId);
-    if (overColumn) {
-      if (activeTask.status !== overColumn.id) {
-        onTaskMove?.(taskId, overColumn.id);
-      }
-      return;
-    }
-
-    // Over a task?
-    const overTaskId = Number(overId.toString().replace("task-", ""));
-    const overTask = tasks.find(t => t.id === overTaskId);
-    if (overTask) {
-      if (activeTask.status !== overTask.status) {
-        // Move to new status
-        onTaskMove?.(taskId, overTask.status);
-      } else {
-        // Reorder within column
-        if (onTaskReorder) {
-          const colTasks = tasks.filter(t => t.status === activeTask.status);
+    if (finalTask.status !== originalTask.status) {
+       onTaskMove?.(taskId, finalTask.status);
+    } else {
+       if (onTaskReorder && activeId !== overId) {
+          const colTasks = localTasks.filter(t => t.status === finalTask.status);
           const oldIndex = colTasks.findIndex(t => t.id === taskId);
+          const overTaskId = Number(overId.toString().replace("task-", ""));
           const newIndex = colTasks.findIndex(t => t.id === overTaskId);
+          
           if (oldIndex !== -1 && newIndex !== -1) {
-            const newColTasks = arrayMove(colTasks, oldIndex, newIndex);
-            // assign updated orders
-            newColTasks.forEach((t, i) => { t.order = i; });
-            
-            const otherTasks = tasks.filter(t => t.status !== activeTask.status);
-            onTaskReorder([...otherTasks, ...newColTasks]);
+             const newColTasks = arrayMove(colTasks, oldIndex, newIndex);
+             newColTasks.forEach((t, i) => { t.order = i; });
+             const otherTasks = localTasks.filter(t => t.status !== finalTask.status);
+             onTaskReorder([...otherTasks, ...newColTasks]);
+             setLocalTasks([...otherTasks, ...newColTasks]);
           }
-        }
-      }
+       }
     }
   };
 
@@ -346,14 +385,15 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:overflow-x-auto pb-4">
+      <div className="flex flex-nowrap md:grid md:grid-cols-4 gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
         {COLUMNS.map((col) => (
           <DroppableColumn
             key={col.id}
             col={col}
-            tasks={isLoading ? [] : tasks.filter((t) => t.status === col.id)}
+            tasks={isLoading ? [] : localTasks.filter((t: any) => t.status === col.id)}
             onTaskSelect={onTaskSelect}
             onDeleteTask={onDeleteTask}
             onTaskMove={onTaskMove}
