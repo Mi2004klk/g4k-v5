@@ -57,6 +57,7 @@ export interface DataTableProps<TData, TValue> {
   stickyFirstCol?: boolean
   rowSelection?: RowSelectionState
   onRowSelectionChange?: (rowSelection: RowSelectionState) => void
+  onRowClick?: (row: any) => void
   onInlineEditSave?: (rowId: string, columnId: string, value: any) => void
   page?: number
   perPage?: number
@@ -182,6 +183,7 @@ export function DataTable<TData, TValue>({
   stickyFirstCol = true,
   rowSelection: externalRowSelection,
   onRowSelectionChange,
+  onRowClick,
   onInlineEditSave,
   page,
   perPage,
@@ -416,12 +418,19 @@ export function DataTable<TData, TValue>({
                     <tr
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
-                      className="group transition-colors hover:bg-muted/40 data-[state=selected]:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                      className={cn(
+                        "group transition-colors hover:bg-muted/40 data-[state=selected]:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
+                        onRowClick ? "cursor-pointer" : ""
+                      )}
                       tabIndex={row.getCanSelect() ? 0 : undefined}
+                      onClick={onRowClick ? () => onRowClick(row) : undefined}
                       onKeyDown={(e) => {
                         if (row.getCanSelect() && (e.key === 'Enter' || e.key === ' ')) {
                           e.preventDefault();
                           row.toggleSelected();
+                        } else if (onRowClick && e.key === 'Enter') {
+                          e.preventDefault();
+                          onRowClick(row);
                         }
                       }}
                     >
