@@ -1,9 +1,23 @@
 "use client";
 
 import { useRef, useCallback, useEffect } from "react";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
+
+interface ChatUser { id: number; name?: string; pivot?: { last_read_at?: string } }
+interface ChatMessage { id: number; sender_id: number; created_at: string; body?: string }
+export interface ChatConversation {
+  id: number | string;
+  unread_count?: number;
+  latestMessage?: ChatMessage;
+  users?: ChatUser[];
+  name?: string;
+  scope?: string;
+  is_pinned?: boolean;
+  is_divider?: boolean;
+  title?: string;
+}
 
 export function ConversationList({
   conversations,
@@ -14,16 +28,17 @@ export function ConversationList({
   isFetchingNextPage,
   fetchNextPage,
 }: {
-  conversations: any[];
-  selectedId: number | null;
+  conversations: ChatConversation[];
+  selectedId: number | string | null;
   currentUserId: number;
-  onSelect: (id: number) => void;
+  onSelect: (id: number | string) => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   fetchNextPage?: () => void;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line react-compiler/react-compiler
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? conversations.length + 1 : conversations.length,
     getScrollElement: () => parentRef.current,
@@ -46,7 +61,7 @@ export function ConversationList({
     }
   }, [virtualItems, conversations.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const getIcon = (scope: string) => {
+  const getIcon = (scope?: string) => {
     switch (scope) {
       case "global":
         return <AppIcon name="globe" className=" text-primary-500" />;
@@ -85,9 +100,23 @@ export function ConversationList({
 
           if (!conv) return null;
           
+          if (conv.is_divider) {
+            return (
+              <div
+                key={conv.id || virtualRow.index}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                className="absolute top-0 left-0 w-full px-3 py-1.5 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-100 dark:border-neutral-800"
+                style={{ transform: `translateY(${virtualRow.start}px)` }}
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">{conv.title}</span>
+              </div>
+            );
+          }
+          
           const isSelected = selectedId === conv.id;
 
-          const currentUserData = conv.users?.find((u: any) => u.id === currentUserId);
+          const currentUserData = conv.users?.find((u: ChatUser) => u.id === currentUserId);
           const lastReadAt = currentUserData?.pivot?.last_read_at;
 
           const isUnread = (conv.unread_count && conv.unread_count > 0) || (conv.latestMessage &&
@@ -96,7 +125,7 @@ export function ConversationList({
           
           const unreadCount = conv.unread_count || (isUnread ? 1 : 0);
 
-          const title = conv.name || (conv.scope === "direct" ? conv.users?.find((u: any) => u.id !== currentUserId)?.name || "Direct Message" : "Chat");
+          const title = conv.name || (conv.scope === "direct" ? conv.users?.find((u: ChatUser) => u.id !== currentUserId)?.name || "Direct Message" : "Chat");
 
           return (
             <div

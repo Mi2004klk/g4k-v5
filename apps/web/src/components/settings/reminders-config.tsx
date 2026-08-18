@@ -7,12 +7,13 @@ import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
+import { SettingItem } from "./notifications-config";
 
 export function RemindersConfig() {
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
 
   const { data: settingsGrouped, isLoading } = useQuery({
     queryKey: queryKeys.settings,
@@ -21,16 +22,17 @@ export function RemindersConfig() {
 
   useEffect(() => {
     if (settingsGrouped?.reminders) {
-      const remindersMap: any = {};
-      settingsGrouped.reminders.forEach((s: any) => {
+      const remindersMap: Record<string, string> = {};
+      settingsGrouped.reminders.forEach((s: SettingItem) => {
         remindersMap[s.key] = s.value;
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(remindersMap);
     }
   }, [settingsGrouped]);
 
   const updateMutation = useMutation({
-    mutationFn: (updates: any[]) =>
+    mutationFn: (updates: Omit<SettingItem, 'id'>[]) =>
       apiFetch("/settings/bulk", {
         method: "POST",
         body: JSON.stringify({ settings: updates }),

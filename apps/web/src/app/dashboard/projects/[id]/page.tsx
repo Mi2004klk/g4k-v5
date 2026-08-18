@@ -6,8 +6,8 @@ import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { safeFormat } from "@/lib/format";
-import { AppIcon, IconName } from "@g4k/ui/components";
-import { QAFieldRenderer } from "@/components/projects/qa-field-renderer";
+import { AppIcon } from "@g4k/ui/components";
+import { QAFormViewer } from "@/components/projects/qa-form-viewer";
 import { toast } from "sonner";
 import { apiFetch, unwrapOne, unwrapList } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -15,6 +15,57 @@ import { Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, S
 import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
 import { TasksTab } from "@/components/projects/tasks-tab";
 import { queryKeys } from "@/lib/query-keys";
+
+interface ProjectMember {
+  id: number;
+  name: string;
+  avatar_url?: string;
+  active_role?: string;
+}
+
+interface QAField {
+  id: string | number;
+  label: string;
+  required?: boolean;
+}
+
+interface QAForm {
+  id: string | number;
+  title: string;
+  fields?: QAField[];
+}
+
+interface ProjectData {
+  id?: number | string;
+  name?: string;
+  description?: string;
+  priority?: string;
+  department_id?: number | string;
+  qa_form_id?: number | string;
+  deadline?: string;
+  allow_employee_tasks?: boolean;
+  cover_image?: string | null;
+  qa_form?: QAForm;
+  members?: ProjectMember[];
+  total_time_hours?: number;
+  completed_tasks_count?: number;
+  total_tasks_count?: number;
+  status?: string;
+  submission_note?: string;
+  qa_submission?: { values?: Record<string, string> };
+  completed_at?: string;
+}
+interface EditForm {
+  name: string;
+  description: string;
+  priority: string;
+  department_id: string;
+  qa_form_id: string;
+  deadline: string;
+  member_ids: number[];
+  allow_employee_tasks: boolean;
+  cover_image: string | null;
+}
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -26,10 +77,9 @@ export default function ProjectDetailPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "tasks">("overview");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [editForm, setEditForm] = useState<any>({ name: "", description: "", priority: "", department_id: "none", qa_form_id: "none", deadline: "", member_ids: [], allow_employee_tasks: false, cover_image: null });
+  const [editForm, setEditForm] = useState<EditForm>({ name: "", description: "", priority: "", department_id: "none", qa_form_id: "none", deadline: "", member_ids: [], allow_employee_tasks: false, cover_image: null });
   const [showUploadPopup, setShowUploadPopup] = useState(false);
-  const [qaValues, setQaValues] = useState<any>({});
-  const [showQaErrors, setShowQaErrors] = useState(false);
+  const [qaValues, setQaValues] = useState<Record<string, unknown>>({});
 
   const { data: deptsData } = useQuery({ queryKey: ["departments"], queryFn: () => apiFetch("/departments") });
   const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
@@ -49,6 +99,7 @@ export default function ProjectDetailPage() {
   const projectHistory = unwrapList(historyResponse);
 
   const historyParentRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: projectHistory.length,
     getScrollElement: () => historyParentRef.current,
@@ -56,13 +107,13 @@ export default function ProjectDetailPage() {
     overscan: 5,
   });
 
-  const project: any = unwrapOne(projectResponse);
+  const project: ProjectData = unwrapOne(projectResponse) as ProjectData;
   const submitProjectMutation = useMutation({
     mutationFn: async () => {
       // QA enforcement: every field marked required in the qa_form must have a non-empty value
       const missingQaLabels = (project?.qa_form?.fields || [])
-        .filter((field: any) => field.required && !String(qaValues[field.id] ?? "").trim())
-        .map((field: any) => field.label);
+        .filter((field) => field.required && !String(qaValues[field.id] ?? "").trim())
+        .map((field) => field.label);
         
       if (project?.qa_form_id && missingQaLabels.length > 0) {
         throw new Error(`Please fill in the required QA fields: ${missingQaLabels.join(", ")}.`);
@@ -80,7 +131,7 @@ export default function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
       setSubmissionNote("");
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to submit project.");
     },
   });
@@ -102,7 +153,7 @@ export default function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to update project.");
     },
   });
@@ -116,7 +167,7 @@ export default function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       router.push("/dashboard/projects");
     },
-    onError: (err: any) => toast.error(err.message || "Failed to delete project."),
+    onError: (err: { message?: string }) => toast.error(err.message || "Failed to delete project."),
   });
 
   const archiveProjectMutation = useMutation({
@@ -131,7 +182,7 @@ export default function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to archive project."),
+    onError: (err: { message?: string }) => toast.error(err.message || "Failed to archive project."),
   });
 
   const reviewProjectMutation = useMutation({
@@ -148,7 +199,7 @@ export default function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Review failed.");
     },
   });
@@ -162,6 +213,7 @@ export default function ProjectDetailPage() {
       {project?.cover_image && (
         <div className="w-full h-48 rounded-xl overflow-hidden mb-6 border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent dark:from-background/90 z-10" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={project.cover_image} alt="Project Cover" className="w-full h-full object-cover" />
         </div>
       )}
@@ -189,13 +241,13 @@ export default function ProjectDetailPage() {
               className="h-8"
               onClick={() => {
                 setEditForm({ 
-                  name: project.name, 
+                  name: project.name || "", 
                   description: project.description || "", 
-                  priority: project.priority,
+                  priority: project.priority || "",
                   department_id: project.department_id?.toString() || "none",
                   qa_form_id: project.qa_form_id?.toString() || "none",
                   deadline: project.deadline || "",
-                  member_ids: project.members?.map((m: any) => m.id) || [],
+                  member_ids: project.members?.map((m) => m.id) || [],
                   allow_employee_tasks: project.allow_employee_tasks || false,
                   cover_image: project.cover_image || null,
                 });
@@ -211,7 +263,7 @@ export default function ProjectDetailPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => archiveProjectMutation.mutate()} disabled={archiveProjectMutation.isPending || project.status === "archived"}>
+                <DropdownMenuItem onClick={() => archiveProjectMutation.mutate()} disabled={archiveProjectMutation.isPending || project?.status === "archived"}>
                   <AppIcon name="archive" className="mr-2 h-4 w-4" />
                   Archive Project
                 </DropdownMenuItem>
@@ -245,7 +297,7 @@ export default function ProjectDetailPage() {
               <label className="text-xs font-medium">Description</label>
               <Textarea 
                 value={editForm.description} 
-                onChange={(e: any) => setEditForm({ ...editForm, description: e.target.value })} 
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} 
                 placeholder="Project description"
                 className="text-xs resize-none"
                 rows={3} 
@@ -277,7 +329,7 @@ export default function ProjectDetailPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">-- Global / No Dept --</SelectItem>
-                    {departments?.map((dept: any) => (
+                    {departments?.map((dept: { id: number | string, name: string }) => (
                       <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -302,7 +354,7 @@ export default function ProjectDetailPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">-- None --</SelectItem>
-                    {qaForms?.map((qa: any) => (
+                    {qaForms?.map((qa: { id: number | string, title: string }) => (
                       <SelectItem key={qa.id} value={qa.id.toString()}>{qa.title}</SelectItem>
                     ))}
                   </SelectContent>
@@ -315,7 +367,7 @@ export default function ProjectDetailPage() {
                 <span>Manage Team Members</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-input rounded-[var(--radius)] p-2 max-h-[150px] overflow-y-auto">
-                {users?.map((u: any) => (
+                {users?.map((u: { id: number, avatar_url?: string, name: string }) => (
                   <label key={u.id} className="flex items-center gap-2 p-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded cursor-pointer text-xs">
                     <Checkbox
                       checked={editForm.member_ids.includes(u.id)}
@@ -328,6 +380,7 @@ export default function ProjectDetailPage() {
                       }}
                     />
                     <Avatar className="w-5 h-5">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       {u.avatar_url && <img src={u.avatar_url} alt={u.name} />}
                       <AvatarFallback name={u.name} className="text-[9px]" />
                     </Avatar>
@@ -352,6 +405,7 @@ export default function ProjectDetailPage() {
               <label className="text-xs font-semibold text-neutral-500 mb-2 block">Project Cover Image</label>
               {editForm.cover_image ? (
                 <div className="relative w-full h-24 rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-800">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={editForm.cover_image} alt="Cover" className="w-full h-full object-cover" />
                   <Button
                     size="sm"
@@ -388,15 +442,16 @@ export default function ProjectDetailPage() {
             const res = await apiFetch("/projects/cover", {
               method: "POST",
               body: formData, // let browser set multipart/form-data boundary
-              headers: { "Content-Type": undefined } as any
+              headers: { "Content-Type": undefined } as unknown as HeadersInit
             });
             if (res.url) {
               setEditForm({ ...editForm, cover_image: res.url });
               setShowUploadPopup(false);
               toast.success("Cover image uploaded");
             }
-          } catch (e: any) {
-            toast.error(e.message || "Failed to upload cover");
+          } catch (e) {
+            const err = e as { message?: string };
+            toast.error(err.message || "Failed to upload cover");
           }
         }}
         acceptedTypes={["image/png", "image/jpeg", "image/webp"]}
@@ -453,7 +508,7 @@ export default function ProjectDetailPage() {
                     {projectHistory?.length > 0 ? (
                       <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
                         {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                          const h: any = projectHistory[virtualItem.index];
+                          const h = projectHistory[virtualItem.index] as { user?: { name: string }, event?: string, created_at: string };
                           return (
                             <div 
                               key={virtualItem.key}
@@ -499,10 +554,11 @@ export default function ProjectDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-3">
-                {project?.members?.length > 0 ? (
-                  project.members.map((member: any) => (
+                {project?.members && project.members.length > 0 ? (
+                  project.members.map((member) => (
                     <div key={member.id} className="flex items-center gap-3">
                       <Avatar className="w-8 h-8 border border-neutral-200 dark:border-neutral-800">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         {member.avatar_url && <img src={member.avatar_url} alt={member.name} />}
                         <AvatarFallback name={member.name} className="text-xs" />
                       </Avatar>
@@ -534,18 +590,11 @@ export default function ProjectDetailPage() {
                         <AppIcon name="success" size="sm" />
                         QA Form Required: {project.qa_form.title}
                       </h4>
-                      {project.qa_form.fields?.map((field: any) => (
-                        <div key={field.id} className="space-y-1">
-                          <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-300">
-                            {field.label} {field.required && "*"}
-                          </label>
-                          <QAFieldRenderer
-                            field={field}
-                            value={qaValues[field.id]}
-                            onChange={(val) => setQaValues({ ...qaValues, [field.id]: val })}
-                          />
-                        </div>
-                      ))}
+                      <QAFormViewer
+                        qaForm={project.qa_form}
+                        qaValues={qaValues}
+                        setQaValues={setQaValues}
+                      />
                     </div>
                   )}
 
@@ -571,19 +620,19 @@ export default function ProjectDetailPage() {
                   <div className="flex items-center gap-2 text-amber-600 font-bold text-sm">
                     <AppIcon name="error" /> Pending HR Review
                   </div>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400">"{project.submission_note}"</p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">&quot;{project.submission_note}&quot;</p>
                   
-                  {project.qa_submission && project.qa_form && (
+                  {project.qa_submission?.values && project.qa_form && (
                     <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-950 rounded border border-neutral-200 dark:border-neutral-800">
                       <h4 className="text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-2 border-b border-neutral-200 dark:border-neutral-800 pb-1">
                         QA Form Answers: {project.qa_form.title}
                       </h4>
                       <dl className="space-y-2">
-                        {project.qa_form.fields?.map((field: any) => (
+                        {project.qa_form.fields?.map((field) => (
                           <div key={field.id}>
                             <dt className="text-[10px] font-semibold text-neutral-500">{field.label}</dt>
                             <dd className="text-xs text-neutral-800 dark:text-neutral-200">
-                              {project.qa_submission.values?.[field.id] || "—"}
+                              {project.qa_submission?.values?.[field.id] || "—"}
                             </dd>
                           </div>
                         ))}

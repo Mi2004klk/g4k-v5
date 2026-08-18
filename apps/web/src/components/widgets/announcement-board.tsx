@@ -4,15 +4,26 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { useReverb } from "@/hooks/use-reverb";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
+import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 import { hasCapability, useCapabilities } from "@/lib/capabilities";
+
+export interface Announcement {
+  id: number;
+  title: string;
+  body: string;
+  scope?: string;
+  pinned_at?: string | null;
+  created_at: string;
+  creator?: { name: string };
+  reactions?: Record<string, number[]>;
+}
 
 export function AnnouncementBoard() {
   const queryClient = useQueryClient();
@@ -26,7 +37,7 @@ export function AnnouncementBoard() {
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   const { data: announcements = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => (Array.isArray(data.announcements?.data) ? data.announcements.data : (Array.isArray(data.announcements) ? data.announcements : [])),
+    select: (data: any) => (Array.isArray(data?.announcements?.data) ? data.announcements.data : (Array.isArray(data?.announcements) ? data.announcements : [])),
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
@@ -106,6 +117,9 @@ export function AnnouncementBoard() {
       setCreateData({ title: "", body: "", scope: "company", pinned: false });
       toast.success("Announcement posted");
     },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to post announcement");
+    }
   });
 
   return (
@@ -217,7 +231,7 @@ export function AnnouncementBoard() {
             <p className="text-xs font-medium text-neutral-400">No announcements yet</p>
           </div>
         ) : (
-          announcements.map((item: any) => {
+          announcements.map((item: Announcement) => {
             const reactions = item.reactions || {};
             const isPinned = Boolean(item.pinned_at);
 

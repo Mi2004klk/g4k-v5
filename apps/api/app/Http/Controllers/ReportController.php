@@ -15,7 +15,7 @@ class ReportController extends Controller
     private function userHasManage(Request $request): bool
     {
         $role = $request->user()->resolveActiveRole();
-        return CapabilityMatrix::hasCapability($role, 'reports.manage');
+        return CapabilityMatrix::hasCapability($role, 'reports.manage') || CapabilityMatrix::hasCapability($role, 'reports.view');
     }
 
     public function data(Request $request)

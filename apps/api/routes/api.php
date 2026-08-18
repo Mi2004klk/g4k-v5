@@ -230,6 +230,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         });
         Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
         Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
+        Route::post('/conversations/{id}/pin', [\App\Http\Controllers\ChatController::class, 'pinChat']);
+        Route::post('/conversations/{id}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinChat']);
     });
     Route::middleware('capability:chat.manage')->group(function () {
         Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroup']);

@@ -7,6 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle, Skeleton, Avatar, AvatarFallb
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { AppIcon } from "@g4k/ui/components";
 
+interface TeamAttendanceRecord {
+  user_id: string | number;
+  user_name: string;
+  avatar_url?: string;
+  department_name?: string;
+  category: 'present' | 'late' | 'leave' | 'leave_pending' | 'absent' | string;
+  clock_in?: string;
+  late_minutes?: number;
+  leave_type?: string;
+}
+
 export function TeamAttendanceWidget() {
   const date = format(new Date(), "yyyy-MM-dd");
   
@@ -53,7 +64,7 @@ export function TeamAttendanceWidget() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="text-base font-bold flex items-center gap-2">
             <AppIcon name="directory" className=" text-primary-600" />
-            Today's Team Attendance
+            Today&apos;s Team Attendance
           </CardTitle>
           {isLoading ? (
             <Skeleton className="h-6 w-48" />
@@ -77,7 +88,7 @@ export function TeamAttendanceWidget() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-secondary">
-            {employees.map((emp: any) => {
+            {employees.map((emp: TeamAttendanceRecord) => {
               const statusColor = 
                 emp.category === 'present' ? 'bg-emerald-500' :
                 emp.category === 'late' ? 'bg-amber-500' :
@@ -108,7 +119,7 @@ export function TeamAttendanceWidget() {
                         {format(new Date(emp.clock_in), "hh:mm a")}
                       </p>
                     )}
-                    {emp.late_minutes > 0 && (
+                    {(emp.late_minutes || 0) > 0 && (
                       <p className="text-[10px] text-amber-600 font-bold">
                         {emp.late_minutes}m late
                       </p>

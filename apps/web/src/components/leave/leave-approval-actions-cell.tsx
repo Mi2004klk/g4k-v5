@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
@@ -12,7 +12,19 @@ import { queryKeys } from "@/lib/query-keys";
 
 import { useAuthStore } from "@/lib/auth-store";
 
-export function LeaveApprovalActionsCell({ record }: { record: any }) {
+interface LeaveRecord {
+  user_id: number;
+  approval?: {
+    id: number;
+    status: string;
+  };
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
+
+export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
@@ -38,8 +50,8 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
         // Handle unwrapped paginator arrays or standard paginators
         if (!old) return old;
         
-        let targetArray = Array.isArray(old) ? old : (old.data ?? []);
-        const newData = targetArray.map((item: any) => {
+        const targetArray = Array.isArray(old) ? old : (old.data ?? []);
+        const newData = targetArray.map((item: LeaveRecord) => {
           if (item.approval?.id === approvalId) {
             return {
               ...item,
@@ -59,9 +71,9 @@ export function LeaveApprovalActionsCell({ record }: { record: any }) {
       setIsRejectOpen(false);
       setRejectReason("");
     },
-    onError: (err: any, newTodo, context) => {
-      context?.previousLeaves?.forEach(([key, data]: [any, any]) => {
-        queryClient.setQueryData(key, data);
+    onError: (err: ApiError, newTodo, context) => {
+      context?.previousLeaves?.forEach(([key, data]: [unknown, unknown]) => {
+        queryClient.setQueryData(key as any, data);
       });
       toast.error(err.message || "Failed to process decision.");
     },

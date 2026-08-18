@@ -3,8 +3,8 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { format, parseISO } from "date-fns";
-import { Card, CardHeader, CardTitle, CardContent, AppIcon, Avatar, AvatarFallback, AvatarImage, Badge, Skeleton, EmptyState } from "@g4k/ui/components";
+import { format } from "date-fns";
+import { AppIcon, IconName, Avatar, AvatarFallback, AvatarImage, Skeleton, EmptyState } from "@g4k/ui/components";
 
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
@@ -21,6 +21,17 @@ interface MemberDay {
   has_open_shift?: boolean;
 }
 
+interface ActivityItem {
+  id: string;
+  user: { id: number; name: string };
+  type: string;
+  message: string;
+  timestamp: string;
+  icon: IconName;
+  color: string;
+  bg: string;
+}
+
 export function HrActivityFeedWidget() {
   const todayDate = format(new Date(), "yyyy-MM-dd");
   const { data, isLoading, error } = useQuery({
@@ -32,7 +43,7 @@ export function HrActivityFeedWidget() {
 
   const activities = useMemo(() => {
     const items = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : [])) as MemberDay[];
-    const acts: any[] = [];
+    const acts: ActivityItem[] = [];
     
     items.forEach((member: MemberDay) => {
       const userObj = {
@@ -122,11 +133,11 @@ export function HrActivityFeedWidget() {
           <div key={act.id} className="flex gap-3 items-start group">
             <div className="relative">
               <Avatar className="w-8 h-8 border border-neutral-200 dark:border-neutral-800">
-                <AvatarImage src={act.user.avatar_url} />
+                <AvatarImage src={(act.user as any).avatar_url} />
                 <AvatarFallback name={act.user.name} />
               </Avatar>
               <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center ${act.bg} border border-white dark:border-neutral-900`}>
-                <act.icon className={`w-2.5 h-2.5 ${act.color}`} />
+                <AppIcon name={act.icon} className={`w-2.5 h-2.5 ${act.color}`} />
               </div>
             </div>
             

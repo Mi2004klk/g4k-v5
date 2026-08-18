@@ -15,6 +15,17 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePaginatedList } from "@/lib/pagination";
 
+interface LeaveRecord {
+  id: number;
+  user_id: number;
+  user_name?: string;
+  type: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+}
+
 export function LeaveTab() {
   const [subTab, setSubTab] = useUrlState("sub", "my-leave");
   const [typeFilter, setTypeFilter] = useUrlState("type", "all");
@@ -36,7 +47,7 @@ export function LeaveTab() {
     placeholderData: keepPreviousData,
   });
 
-  const paginatedData = usePaginatedList<any>(data);
+  const paginatedData = usePaginatedList<LeaveRecord>(data);
   const records = paginatedData.data;
   const totalPages = paginatedData.last_page || 1;
 
@@ -63,14 +74,8 @@ export function LeaveTab() {
                 </CardHeader>
                 <CardContent className="p-0 flex-1 flex flex-col min-h-0">
                   <LeaveHistoryTable 
-                    records={records} 
+                    records={records as any} 
                     isLoading={isPending} 
-                    typeFilter={typeFilter}
-                    setTypeFilter={setTypeFilter}
-                    statusFilter={statusFilter}
-                    setStatusFilter={setStatusFilter}
-                    search={search}
-                    setSearch={(val) => { setSearch(val); setPage("1"); }}
                     page={parseInt(page)}
                     totalPages={totalPages}
                     onPageChange={(p) => setPage(p.toString())}

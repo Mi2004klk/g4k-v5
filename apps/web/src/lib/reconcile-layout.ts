@@ -1,14 +1,24 @@
 export const GRID_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- grid layout items are dynamic
 export function reconcileLayout(savedLayouts: any, availableWidgets: Array<any>, colsMap: { [key: string]: number }) {
   if (!savedLayouts || Object.keys(savedLayouts).length === 0) return null;
   
-  const mergedBreakpoints: any = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mergedBreakpoints: Record<string, any[]> = {};
   const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'];
   
   breakpoints.forEach(bp => {
     const savedBp = Array.isArray(savedLayouts[bp]) ? savedLayouts[bp] : [];
-    let mergedBp = [...savedBp];
+    const mergedBp: any[] = [];
+    const seen = new Set();
+    
+    savedBp.forEach((item: any) => {
+      if (!seen.has(item.i)) {
+        seen.add(item.i);
+        mergedBp.push(item);
+      }
+    });
     
     if (Array.isArray(availableWidgets)) {
       availableWidgets.forEach(w => {

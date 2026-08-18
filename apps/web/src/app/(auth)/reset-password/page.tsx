@@ -53,15 +53,13 @@ function ResetPasswordForm() {
     mode: "onChange"
   });
 
-  const [missingDetails, setMissingDetails] = useState(false);
+  const isMissingDetails = !searchParams.get("token") || !searchParams.get("email");
 
   useEffect(() => {
     const token = searchParams.get("token");
     const email = searchParams.get("email");
     
-    if (!token || !email) {
-      setMissingDetails(true);
-    } else {
+    if (token && email) {
       form.setValue("token", token);
       form.setValue("identifier", email);
     }
@@ -77,15 +75,16 @@ function ResetPasswordForm() {
 
       toast.success("Password reset successfully! Please sign in with your new password.");
       router.push("/login");
-    } catch (error: any) {
-      if (error.errors) {
-        if (error.errors.identifier) form.setError("identifier", { message: error.errors.identifier[0] });
-        if (error.errors.password) form.setError("password", { message: error.errors.password[0] });
-        if (error.errors.token) form.setError("root", { message: error.errors.token[0] });
+    } catch (error) {
+      const e = error as { errors?: { identifier?: string[], password?: string[], token?: string[] }, message?: string };
+      if (e.errors) {
+        if (e.errors.identifier) form.setError("identifier", { message: e.errors.identifier[0] });
+        if (e.errors.password) form.setError("password", { message: e.errors.password[0] });
+        if (e.errors.token) form.setError("root", { message: e.errors.token[0] });
       } else {
-        form.setError("root", { type: "manual", message: error.message || "Failed to reset password." });
+        form.setError("root", { type: "manual", message: e.message || "Failed to reset password." });
       }
-      toast.error(error.message || "Failed to reset password.");
+      toast.error(e.message || "Failed to reset password.");
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +114,7 @@ function ResetPasswordForm() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {missingDetails ? (
+          {isMissingDetails ? (
             <div className="text-center space-y-4 font-sans">
               <div className="p-4 rounded-xl bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20 text-sm font-medium">
                 Invalid or missing reset link. Please request a new password reset.

@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { cn } from "@/lib/utils";
 
 export function OfflineIndicator() {
-  const [isOffline, setIsOffline] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !navigator.onLine;
+    }
+    return false;
+  });
 
   useEffect(() => {
-    // Initial check
-    if (typeof window !== "undefined") {
-      setIsOffline(!navigator.onLine);
-    }
-
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
 
@@ -44,7 +44,7 @@ export function OfflineIndicator() {
       aria-live="polite"
     >
       <AppIcon name="wifiOff" />
-      <span>You're offline. Changes will be saved locally and synced when you reconnect.</span>
+      <span>You&apos;re offline. Changes will be saved locally and synced when you reconnect.</span>
     </div>
   );
 }

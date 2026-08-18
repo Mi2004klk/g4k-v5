@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { Profiler, Suspense } from 'react';
 import { AdminAttendanceTable } from '@/components/attendance/admin-attendance-table';
@@ -48,7 +48,7 @@ describe('Performance - AdminAttendanceTable', () => {
       status: 'present',
     }));
 
-    (apiClient.apiFetch as any).mockResolvedValue({
+    (apiClient.apiFetch as Mock).mockResolvedValue({
       data: mockRows,
       meta: {
         current_page: 1,
@@ -60,12 +60,8 @@ describe('Performance - AdminAttendanceTable', () => {
 
     let renderCount = 0;
     const onRender = (
-      id: string,
-      phase: string,
-      actualDuration: number,
-      baseDuration: number,
-      startTime: number,
-      commitTime: number
+      _id: string,
+      phase: string
     ) => {
       // Ignore initial mounting phase as that usually triggers Suspense fallbacks
       if (phase === 'update' || phase === 'mount') {

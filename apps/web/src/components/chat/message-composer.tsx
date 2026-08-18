@@ -1,7 +1,15 @@
-import { useState, useRef, useEffect } from "react";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { useState, useRef } from "react";
+import { AppIcon } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { FileUploadPopup } from "@g4k/ui/components";
+
+interface ComposerUser {
+  id: number;
+  name?: string;
+}
+interface ComposerConversation {
+  users?: ComposerUser[];
+}
 
 export function MessageComposer({
   onSend,
@@ -10,10 +18,9 @@ export function MessageComposer({
 }: {
   onSend: (body: string, mentions?: number[], attachment?: File | null) => void;
   disabled?: boolean;
-  conversation?: any;
+  conversation?: ComposerConversation;
 }) {
   const [text, setText] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Mentions state
   const [showMentions, setShowMentions] = useState(false);
@@ -27,8 +34,9 @@ export function MessageComposer({
   const [showUploadPopup, setShowUploadPopup] = useState(false);
 
 
-  useEffect(() => {
-    // Detect @ typing
+  const [prevText, setPrevText] = useState(text);
+  if (text !== prevText) {
+    setPrevText(text);
     const match = text.match(/@(\w*)$/);
     if (match) {
       setMentionQuery(match[1]);
@@ -38,16 +46,16 @@ export function MessageComposer({
     } else {
       setShowMentions(false);
     }
-  }, [text]);
+  }
 
-  const filteredUsers = conversation?.users?.filter((u: any) => 
-    u.name.toLowerCase().includes(mentionQuery.toLowerCase())
+  const filteredUsers = conversation?.users?.filter((u: ComposerUser) => 
+    (u.name || "").toLowerCase().includes(mentionQuery.toLowerCase())
   ) || [];
 
-  const handleMentionSelect = (user: any) => {
+  const handleMentionSelect = (user: ComposerUser) => {
     if (mentionIndex !== -1) {
       const before = text.substring(0, mentionIndex);
-      setText(before + `@${user.name} `);
+      setText(before + `@${user.name || "user"} `);
       setSelectedMentions([...selectedMentions, user.id]);
     }
     setShowMentions(false);
@@ -99,7 +107,7 @@ export function MessageComposer({
       {/* Mentions Dropdown */}
       {showMentions && filteredUsers.length > 0 && (
         <div className="absolute bottom-full left-12 mb-2 w-48 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[var(--radius)] shadow-e3 z-50 overflow-hidden">
-          {filteredUsers.map((u: any, idx: number) => (
+          {filteredUsers.map((u: ComposerUser, idx: number) => (
             <button
               key={u.id}
               onClick={() => handleMentionSelect(u)}

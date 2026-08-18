@@ -22,6 +22,7 @@ export function useWorker<T, R>(workerFn: WorkerFunction<T, R>) {
       }
     `;
     const blob = new Blob([code], { type: 'application/javascript' });
+    // eslint-disable-next-line no-restricted-syntax
     const workerUrl = URL.createObjectURL(blob);
     urlRef.current = workerUrl;
 

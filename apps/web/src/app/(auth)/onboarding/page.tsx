@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -43,7 +42,7 @@ export default function OnboardingPage() {
     if (!token && !user) {
       router.replace("/login");
     }
-  }, [token, user]);
+  }, [token, user, router]);
 
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
@@ -73,9 +72,10 @@ export default function OnboardingPage() {
       });
       toast.success("Password updated successfully!");
       setStep("tour");
-    } catch (error: any) {
-      passwordForm.setError("root", { type: "manual", message: error.message || "Failed to change password." });
-      toast.error(error.message || "Failed to change password.");
+    } catch (error) {
+      const e = error as Error;
+      passwordForm.setError("root", { type: "manual", message: e.message || "Failed to change password." });
+      toast.error(e.message || "Failed to change password.");
     } finally {
       setIsLoading(false);
     }
@@ -109,8 +109,9 @@ export default function OnboardingPage() {
       } else {
           router.push("/dashboard");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Could not complete onboarding.");
+    } catch (error) {
+      const e = error as Error;
+      toast.error(e.message || "Could not complete onboarding.");
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +153,7 @@ export default function OnboardingPage() {
                 Welcome to Games4King
               </CardTitle>
               <CardDescription className="text-sm font-sans text-neutral-500 dark:text-neutral-400">
-                Let's confirm your workspace details
+                Let&apos;s confirm your workspace details
               </CardDescription>
             </CardHeader>
 
@@ -174,7 +175,7 @@ export default function OnboardingPage() {
                     </div>
                     <div>
                       <div className="text-neutral-500 dark:text-neutral-400 text-xs font-semibold mb-1 uppercase tracking-wider">Department</div>
-                      <div className="font-medium text-neutral-900 dark:text-white">{user.department?.name || 'N/A'}</div>
+                      <div className="font-medium text-neutral-900 dark:text-white">{(user as any).department?.name || 'N/A'}</div>
                     </div>
                   </div>
                 </div>

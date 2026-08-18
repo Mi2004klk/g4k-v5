@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { TimeClockWidget } from '../../components/widgets/time-clock-widget';
 import { useTimerStore } from '../../stores/timer-store';
@@ -50,7 +50,7 @@ describe('TimeClockWidget', () => {
       lastActiveTimestamp: null,
     });
 
-    (apiFetch as any).mockResolvedValue({
+    (apiFetch as Mock).mockResolvedValue({
       attendance_today: {
         day: { total_seconds: 0 },
         events: [],
@@ -72,9 +72,9 @@ describe('TimeClockWidget', () => {
   });
 
   it('handles clock in punch optimistically', async () => {
-    (offlineEngine.recordPunch as any).mockResolvedValueOnce(undefined);
+    (offlineEngine.recordPunch as Mock).mockResolvedValueOnce(undefined);
     // Mock the subsequent refetch triggered by invalidateQueries
-    (apiFetch as any).mockResolvedValue({
+    (apiFetch as Mock).mockResolvedValue({
       attendance_today: {
         day: { total_seconds: 0 },
         events: [{ type: 'clock_in', timestamp: new Date().toISOString() }],
@@ -108,8 +108,8 @@ describe('TimeClockWidget', () => {
       clockInTimestamp: new Date().toISOString(),
     });
     
-    (offlineEngine.recordPunch as any).mockResolvedValueOnce(undefined);
-    (apiFetch as any).mockResolvedValue({
+    (offlineEngine.recordPunch as Mock).mockResolvedValueOnce(undefined);
+    (apiFetch as Mock).mockResolvedValue({
       attendance_today: {
         day: { total_seconds: 3600 },
         events: [
@@ -138,7 +138,7 @@ describe('TimeClockWidget', () => {
 
   it('rolls back state on punch failure', async () => {
     const error = new Error('Network failure');
-    (offlineEngine.recordPunch as any).mockRejectedValueOnce(error);
+    (offlineEngine.recordPunch as Mock).mockRejectedValueOnce(error);
 
     renderWithProviders(<TimeClockWidget />);
     

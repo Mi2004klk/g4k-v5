@@ -1,24 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 
 import {
   queryKeys,
-  STALE_TIME_DIRECTORY,
   STALE_TIME_DEPARTMENTS,
   STALE_TIME_DESIGNATIONS
 } from "@/lib/query-keys";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useExport } from "@/hooks/use-export";
-import { useIsMobile } from "@g4k/ui/hooks/use-mobile";
 
 import { Button } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
 import { Checkbox } from "@g4k/ui/components";
 import {
   Card,
@@ -32,7 +29,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@g4k/ui/components";
@@ -40,38 +36,64 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
-import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 import Link from "next/link";
-import { getAuthToken } from "@/lib/auth-store";
 import { EmptyState } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
-import { Combobox } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
 import { UserForm, UserFormValues } from "@/components/users/user-form";
-import { PageContainer } from "@/components/layout/page-container";
-import { FormError } from "@/components/forms/form-error";
 
 import { DataTable } from "@g4k/ui/components";
+import { ColumnDef } from "@tanstack/react-table";
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  avatar_url?: string;
+  employee_code?: string;
+  employee_id?: string;
+  department?: { name: string };
+  designation?: { name: string };
+  role_assignments?: { role: string }[];
+  roles?: (string | { role: string })[];
+  active_role?: string;
+  status?: string;
+  deleted_at?: string | null;
+}
+
+interface ActivityLog {
+  id: number;
+  action: string;
+  subject_type: string;
+  at: string;
+  ip_address?: string;
+}
+
+interface Department {
+  id: number;
+  name: string;
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
 
 export function EmployeeManagementTab() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
-  const isMobile = useIsMobile();
 
   const [search, setSearch] = useUrlState("search", "");
   const [roleFilter, setRoleFilter] = useUrlState("role", "all");
@@ -91,9 +113,15 @@ export function EmployeeManagementTab() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  useEffect(() => {
+  const prevFiltersRef = useRef({ roleFilter, statusFilter, deptFilter });
+  if (
+    prevFiltersRef.current.roleFilter !== roleFilter ||
+    prevFiltersRef.current.statusFilter !== statusFilter ||
+    prevFiltersRef.current.deptFilter !== deptFilter
+  ) {
     setPage(1);
-  }, [roleFilter, statusFilter, deptFilter]);
+    prevFiltersRef.current = { roleFilter, statusFilter, deptFilter };
+  }
 
   const { triggerExport, isExporting } = useExport();
 
@@ -102,7 +130,7 @@ export function EmployeeManagementTab() {
   // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
-  const [activityUser, setActivityUser] = useState<any>(null);
+  const [activityUser, setActivityUser] = useState<User | null>(null);
 
   const {
     confirmState, setConfirmState,
@@ -112,7 +140,7 @@ export function EmployeeManagementTab() {
   } = useUserActions();
 
   // Forms
-  const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft<UserFormValues>("create_user", {
+  const { formData: draftData, setFormData: setDraftData, hasDraft, clearDraft } = useFormDraft<UserFormValues>("create_user", {
     name: "",
     email: "",
     username: "",
@@ -162,33 +190,33 @@ export function EmployeeManagementTab() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/departments").then((res: { data?: Department[] }) => Array.isArray(res?.data) ? res.data : []),
     staleTime: STALE_TIME_DEPARTMENTS,
     enabled: canManageUsers,
   });
 
   const watchDept = draftData.department_id;
   const selectedDept = (Array.isArray(departments) ? departments : []).find((d: any) => d.id === Number(watchDept));
-  const availableTeams = selectedDept?.teams || [];
+  const availableTeams = (selectedDept as any)?.teams || [];
 
 
 
   const { data: designations = [] } = useQuery({
     queryKey: queryKeys.designations,
-    queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/designations").then((res: { data?: any[] }) => Array.isArray(res?.data) ? res.data : []),
     staleTime: STALE_TIME_DESIGNATIONS,
     enabled: canManageUsers,
   });
 
   const { data: work_schedules = [] } = useQuery({
     queryKey: ["work_schedules"],
-    queryFn: () => apiFetch("/work-schedules").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/work-schedules").then((res: { data?: any[] }) => Array.isArray(res?.data) ? res.data : []),
     enabled: hasCapability(capabilities, "settings.manage") || hasCapability(capabilities, "users.hr.manage"),
   });
 
   const { data: activityData, isLoading: isLoadingActivity } = useQuery({
-    queryKey: queryKeys.userActivity(activityUser?.id),
-    queryFn: () => apiFetch(`/users/${activityUser.id}/activity`),
+    queryKey: queryKeys.userActivity(activityUser?.id as number),
+    queryFn: () => apiFetch(`/users/${activityUser?.id}/activity`),
     enabled: !!activityUser && isActivityOpen,
   });
 
@@ -198,18 +226,18 @@ export function EmployeeManagementTab() {
   };
 
   const onSubmitEdit = (data: UserFormValues) => {
-    updateMutation.mutate({ id: editingUser.id, payload: data });
+    updateMutation.mutate({ id: (editingUser as any).id, payload: data });
   };
 
   const createMutation = useMutation({
-    mutationFn: (payload: any) => apiFetch("/users", { method: "POST", body: JSON.stringify(payload) }),
+    mutationFn: (payload: UserFormValues) => apiFetch("/users", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("User created successfully!");
       setIsCreateOpen(false);
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       toast.error(err.message || "Failed to create user.");
     },
   });
@@ -221,7 +249,7 @@ export function EmployeeManagementTab() {
       toast.success("Bulk action completed.");
       setRowSelection({});
     },
-    onError: (err: any) => toast.error(err.message || "Bulk action failed."),
+    onError: (err: ApiError) => toast.error(err.message || "Bulk action failed."),
   });
 
   const bulkExport = async () => {
@@ -238,20 +266,20 @@ export function EmployeeManagementTab() {
   const totalPages = data?.last_page || data?.data?.last_page || 1;
   const selectedCount = Object.keys(rowSelection).length;
 
-  const columns: any[] = useMemo<any[]>(() => [
+  const columns = useMemo<ColumnDef<User>[]>(() => [
     {
       id: "select",
-      header: ({ table }: any) => canManageUsers ? (
+      header: ({ table }) => canManageUsers ? (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
       ) : null,
-      cell: ({ row }: any) => canManageUsers ? (
+      cell: ({ row }) => canManageUsers ? (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
           aria-label="Select row"
         />
       ) : null,
@@ -261,7 +289,7 @@ export function EmployeeManagementTab() {
     {
       accessorKey: "name",
       header: "Employee",
-      cell: ({ row }: any) => {
+      cell: ({ row }) => {
         const user = row.original;
         return (
           <button className={`flex items-center gap-3 w-full text-left transition-opacity ${canManageUsers ? 'hover:opacity-80' : ''}`} onClick={() => {
@@ -287,7 +315,7 @@ export function EmployeeManagementTab() {
     {
       accessorKey: "employee_id",
       header: "Code",
-      cell: ({ row }: any) => {
+      cell: ({ row }) => {
         const code = row.original.employee_code || row.original.employee_id || "N/A";
         return <span className="font-mono font-medium text-neutral-600 dark:text-neutral-300">{code}</span>;
       }
@@ -295,7 +323,7 @@ export function EmployeeManagementTab() {
     {
       accessorKey: "department.name",
       header: "Department",
-      cell: ({ row }: any) => {
+      cell: ({ row }) => {
         const dept = row.original.department;
         const desig = row.original.designation;
         return (
@@ -314,9 +342,9 @@ export function EmployeeManagementTab() {
     {
       accessorKey: "roles",
       header: "Role",
-      cell: ({ row }: any) => {
-        const rawRoles = row.original.role_assignments?.map((r: any) => r.role)
-          || (Array.isArray(row.original.roles) ? row.original.roles.map((r: any) => typeof r === 'string' ? r : r.role) : [])
+      cell: ({ row }) => {
+        const rawRoles = row.original.role_assignments?.map((r) => r.role)
+          || (Array.isArray(row.original.roles) ? row.original.roles.map((r) => typeof r === 'string' ? r : r.role) : [])
           || (row.original.active_role ? [row.original.active_role] : []);
         const activeRoles = Array.from(new Set(rawRoles.filter(Boolean))) as string[];
         return (
@@ -337,7 +365,7 @@ export function EmployeeManagementTab() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }: any) => {
+      cell: ({ row }) => {
         const isInactive = row.original.status === "inactive";
         return (
           <StatusBadge status={isInactive ? "danger" : "success"} dot className="uppercase">
@@ -349,7 +377,7 @@ export function EmployeeManagementTab() {
     {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }: any) => {
+      cell: ({ row }) => {
         const user = row.original;
         const isInactive = user.status === "inactive";
         if (!canManageUsers) return null;
@@ -414,9 +442,9 @@ export function EmployeeManagementTab() {
         );
       }
     }
-  ], [canManageUsers]);
+  ], [canManageUsers, router, setConfirmState, setEditingUser, setIsEditOpen, statusMutation]);
 
-  const deptOptions = (Array.isArray(departments) ? departments : []).map((d: any) => ({ label: d.name, value: d.id.toString() }));
+  const deptOptions = (Array.isArray(departments) ? departments : []).map((d: Department) => ({ label: d.name, value: d.id.toString() }));
 
   return (
     <div className="space-y-6 mt-4">
@@ -542,9 +570,9 @@ export function EmployeeManagementTab() {
           <UserForm
             defaultValues={draftData}
             onValuesChange={setDraftData}
-            departments={departments}
-            designations={designations}
-            work_schedules={work_schedules}
+            departments={departments as any}
+            designations={designations as any}
+            work_schedules={work_schedules as any}
             onSubmit={onSubmitCreate}
             onCancel={() => setIsCreateOpen(false)}
             isPending={createMutation.isPending}
@@ -553,14 +581,14 @@ export function EmployeeManagementTab() {
         </DialogContent>
       </Dialog>
 
-      {isEditOpen && editingUser && (
+      {isEditOpen && !!editingUser && (
         <UserEditDialog
           isOpen={isEditOpen}
           onOpenChange={setIsEditOpen}
-          user={editingUser}
-          departments={departments}
-          designations={designations}
-          work_schedules={work_schedules}
+          user={editingUser as any}
+          departments={departments as any}
+          designations={designations as any}
+          work_schedules={work_schedules as any}
           onSubmit={onSubmitEdit}
           isPending={updateMutation.isPending}
         />
@@ -578,7 +606,7 @@ export function EmployeeManagementTab() {
             ) : activityData?.data?.length === 0 ? (
               <EmptyState title="No activity" description="No recent actions recorded." icon={<AppIcon name="history" size="2xl" className=" text-neutral-400" />} />
             ) : (
-              activityData?.data?.map((log: any) => (
+              activityData?.data?.map((log: ActivityLog) => (
                 <div key={log.id} className="p-3 border rounded-[var(--radius)] text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">
                   <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type}</span>
                   <span className="text-xs text-neutral-500">{new Date(log.at).toLocaleString()} - IP: {log.ip_address || 'N/A'}</span>
@@ -600,11 +628,11 @@ export function EmployeeManagementTab() {
           "Reset Password"
         }
         description={
-          confirmState.type === "delete" ? `Are you sure you want to delete ${confirmState.payload?.name}? This will archive their record but preserve historical data.` :
-          confirmState.type === "restore" ? `Are you sure you want to restore ${confirmState.payload?.name}? Their account will be reactivated.` :
-          confirmState.type === "deactivate" ? `Deactivating ${confirmState.payload?.name} will prevent them from logging in.` :
-          confirmState.type === "bulk-deactivate" ? `Are you sure you want to deactivate ${confirmState.payload?.ids?.length} users?` :
-          `Are you sure you want to reset the password for ${confirmState.payload?.name}? It will be reset to the default "Password@123".`
+          confirmState.type === "delete" ? `Are you sure you want to delete ${(confirmState.payload as any)?.name}? This will archive their record but preserve historical data.` :
+          confirmState.type === "restore" ? `Are you sure you want to restore ${(confirmState.payload as any)?.name}? Their account will be reactivated.` :
+          confirmState.type === "deactivate" ? `Deactivating ${(confirmState.payload as any)?.name} will prevent them from logging in.` :
+          confirmState.type === "bulk-deactivate" ? `Are you sure you want to deactivate ${(confirmState.payload as any)?.ids?.length} users?` :
+          `Are you sure you want to reset the password for ${(confirmState.payload as any)?.name}? It will be reset to the default "Password@123".`
         }
         confirmText={
           confirmState.type === "delete" ? "Delete" :
@@ -615,16 +643,17 @@ export function EmployeeManagementTab() {
         }
         isDestructive={confirmState.type !== "restore"}
         onConfirm={() => {
+          const payload = confirmState.payload as any;
           if (confirmState.type === "delete") {
-            deleteMutation.mutate(confirmState.payload.id);
+            deleteMutation.mutate(payload.id);
           } else if (confirmState.type === "restore") {
-            restoreMutation.mutate(confirmState.payload.id);
+            restoreMutation.mutate(payload.id);
           } else if (confirmState.type === "deactivate") {
-            statusMutation.mutate({ id: confirmState.payload.id, status: 'inactive' });
+            statusMutation.mutate({ id: payload.id, status: 'inactive' });
           } else if (confirmState.type === "bulk-deactivate") {
-            bulkMutation.mutate({ ids: confirmState.payload.ids, action: 'deactivate' });
+            bulkMutation.mutate({ ids: payload.ids, action: 'deactivate' });
           } else if (confirmState.type === "reset-password") {
-            resetPasswordMutation.mutate(confirmState.payload.id);
+            resetPasswordMutation.mutate(payload.id);
           }
         }}
         isLoading={deleteMutation.isPending || statusMutation.isPending || bulkMutation.isPending || resetPasswordMutation.isPending || restoreMutation.isPending}

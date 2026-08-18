@@ -4,12 +4,18 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { Card, CardTitle, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { Card, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 
 import { WidgetInfo } from "../widgets/widget-info";
 import { FormError } from "@/components/forms/form-error";
+
+interface QuickTaskUser {
+  id: string | number;
+  name: string;
+  email: string;
+}
 
 export function QuickTaskWidget() {
   const queryClient = useQueryClient();
@@ -22,7 +28,7 @@ export function QuickTaskWidget() {
     queryFn: () => apiFetch("/users?limit=50"),
   });
 
-  const users = Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []);
+  const users = Array.isArray(usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData) ? (usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData as QuickTaskUser[]) : [];
 
   const createTaskMutation = useMutation({
     mutationFn: (payload: { title: string; assignee_id: string; notify_global_chat: boolean }) =>
@@ -37,7 +43,7 @@ export function QuickTaskWidget() {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => {
+    onError: (err: Error & { errors?: Record<string, string[]> }) => {
       toast.error(err.message || "Failed to create task");
       if (err.errors) {
         setFieldErrors(err.errors);
@@ -86,7 +92,7 @@ export function QuickTaskWidget() {
                 <SelectValue placeholder="Select Assignee" />
               </SelectTrigger>
               <SelectContent>
-                {users.map((u: any) => (
+                {users.map((u: QuickTaskUser) => (
                   <SelectItem key={u.id} value={u.id.toString()} className="text-xs">
                     {u.name} ({u.email})
                   </SelectItem>

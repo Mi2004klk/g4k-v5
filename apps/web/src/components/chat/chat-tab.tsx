@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
@@ -12,11 +12,15 @@ import { ConversationList } from "@/components/chat/conversation-list";
 import { MessageList } from "@/components/chat/message-list";
 import { MessageComposer } from "@/components/chat/message-composer";
 import { CreateGroupDialog } from "@/components/chat/create-group-dialog";
-import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
+interface ChatUser { id: number; name?: string; pivot?: { last_read_at?: string } }
+interface ChatMessage { id: number; sender_id: number; created_at: string; reads?: {user_id: number}[]; conversation_id?: number; sender?: ChatUser; pending?: boolean; body?: string; }
+interface ChatConversation { id: number | string; unread_count?: number; latestMessage?: ChatMessage; users?: ChatUser[]; scope?: string; name?: string; is_divider?: boolean; title?: string; }
+interface PaginatedResponse<T> { next_cursor?: string; data: T[] }
+interface InfiniteQueryData<T> { pages: PaginatedResponse<T>[] }
 
 export function ChatTab() {
   const queryClient = useQueryClient();
@@ -31,8 +35,16 @@ export function ChatTab() {
   const canPinMessages = hasCapability(caps, "chat.manage") || hasCapability(caps, "projects.manage");
 
   const initialConvId = searchParams.get("conversation");
-  const [selectedId, setSelectedId] = useState<number | null>(initialConvId ? parseInt(initialConvId) : null);
+  const [selectedId, setSelectedId] = useState<number | string | null>(initialConvId ? parseInt(initialConvId) : null);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+  
+  const [prevInitialConvId, setPrevInitialConvId] = useState(initialConvId);
+  if (initialConvId !== prevInitialConvId) {
+    setPrevInitialConvId(initialConvId);
+    if (initialConvId) {
+      setSelectedId(parseInt(initialConvId));
+    }
+  }
 
   // Mobile keyboard handling (T-47.9): keep the composer above the on-screen
   // keyboard by shrinking the chat container by the hidden viewport height.
@@ -53,12 +65,48 @@ export function ChatTab() {
   }, []);
 
   useEffect(() => {
-    if (initialConvId) {
-      setSelectedId(parseInt(initialConvId));
-    }
-  }, [initialConvId]);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+        if (selectedId) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.messages(Number(selectedId)) });
+        }
+      }
+    };
+    window.addEventListener("visibilitychange", handleVisibility);
+    return () => window.removeEventListener("visibilitychange", handleVisibility);
+  }, [selectedId, queryClient]);
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: searchUsersData } = useQuery({
+    queryKey: queryKeys.directory(searchQuery),
+    queryFn: () => apiFetch(`/directory?search=${searchQuery}`).then(r => r.data || []),
+    enabled: searchQuery.length > 2,
+  });
+
+  const startDirectMutation = useMutation({
+    mutationFn: async (recipientId: number) => {
+      return apiFetch("/conversations/dm", {
+        method: "POST",
+        body: JSON.stringify({ recipient_id: recipientId }),
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      setSelectedId(data.id);
+      setSearchQuery("");
+    }
+  });
+
+  const handleSelectConversation = (id: number | string) => {
+    if (typeof id === 'string' && id.startsWith('user-')) {
+      const userId = parseInt(id.replace('user-', ''));
+      startDirectMutation.mutate(userId);
+    } else {
+      setSelectedId(id as number);
+    }
+  };
 
   const { 
     data: rawConversationsData,
@@ -73,26 +121,51 @@ export function ChatTab() {
       if (searchQuery) params.append("search", searchQuery);
       return apiFetch(`/conversations?${params.toString()}`);
     },
-    getNextPageParam: (lastPage: any) => lastPage.next_cursor || null,
+    getNextPageParam: (lastPage: PaginatedResponse<ChatConversation>) => lastPage.next_cursor || null,
     initialPageParam: null as string | null,
     refetchInterval: isConnected ? false : 15_000,
   });
 
-  const allConversations = rawConversationsData?.pages?.flatMap((page: any) => (Array.isArray(page?.data) ? page.data : (Array.isArray(page) ? page : []))) || [];
+  const allConversations = rawConversationsData?.pages?.flatMap((page: PaginatedResponse<ChatConversation>) => (Array.isArray(page?.data) ? page.data : (Array.isArray(page) ? page : []))) || [];
   
-  // Sort conversations: unread first, then by latest message date
-  const conversations = [...allConversations].sort((a: any, b: any) => {
-    const aCurrentUserData = a.users?.find((u: any) => u.id === user?.id);
+  const conversationUserIds = new Set(
+    allConversations
+      .filter((c) => c.scope === "direct")
+      .flatMap((c) => c.users?.map((u: ChatUser) => u.id) || [])
+  );
+  
+  const searchUsers: ChatConversation[] = (searchUsersData || [])
+    .filter((u: any) => !conversationUserIds.has(u.id) && u.id !== user?.id)
+    .map((u: any) => ({
+      id: `user-${u.id}` as any,
+      is_user: true,
+      name: u.name,
+      scope: "direct",
+      latestMessage: { sender_id: 0, body: "Click to start chatting", created_at: new Date().toISOString() },
+      users: [u],
+      original_user_id: u.id,
+    }));
+
+  const allItems = [...allConversations, ...searchUsers];
+
+  // Sort conversations: pinned first, then unread first, then by latest message date
+  const sortedItems = [...allItems].sort((a: ChatConversation, b: ChatConversation) => {
+    const aCurrentUserData = a.users?.find((u: ChatUser) => u.id === user?.id);
     const aLastReadAt = aCurrentUserData?.pivot?.last_read_at;
+    const aIsPinned = (aCurrentUserData as any)?.pivot?.is_pinned === 1 || (aCurrentUserData as any)?.pivot?.is_pinned === true;
     const aIsUnread = (a.unread_count && a.unread_count > 0) || (a.latestMessage &&
-      a.latestMessage.sender_id !== user?.id &&
+      a.latestMessage.sender_id !== 0 && a.latestMessage.sender_id !== user?.id &&
       (!aLastReadAt || new Date(a.latestMessage.created_at) > new Date(aLastReadAt)));
 
-    const bCurrentUserData = b.users?.find((u: any) => u.id === user?.id);
+    const bCurrentUserData = b.users?.find((u: ChatUser) => u.id === user?.id);
     const bLastReadAt = bCurrentUserData?.pivot?.last_read_at;
+    const bIsPinned = (bCurrentUserData as any)?.pivot?.is_pinned === 1 || (bCurrentUserData as any)?.pivot?.is_pinned === true;
     const bIsUnread = (b.unread_count && b.unread_count > 0) || (b.latestMessage &&
-      b.latestMessage.sender_id !== user?.id &&
+      b.latestMessage.sender_id !== 0 && b.latestMessage.sender_id !== user?.id &&
       (!bLastReadAt || new Date(b.latestMessage.created_at) > new Date(bLastReadAt)));
+
+    if (aIsPinned && !bIsPinned) return -1;
+    if (!aIsPinned && bIsPinned) return 1;
 
     if (aIsUnread && !bIsUnread) return -1;
     if (!aIsUnread && bIsUnread) return 1;
@@ -102,6 +175,24 @@ export function ChatTab() {
     return bTime - aTime;
   });
 
+  const pinnedCount = sortedItems.filter(c => {
+    const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
+    return (uData as any)?.pivot?.is_pinned === 1 || (uData as any)?.pivot?.is_pinned === true;
+  }).length;
+
+  const conversations: ChatConversation[] = [];
+  if (pinnedCount > 0 && !searchQuery) {
+    conversations.push({ id: 'divider-pinned', is_divider: true, title: 'Pinned' });
+    conversations.push(...sortedItems.slice(0, pinnedCount));
+    
+    if (pinnedCount < sortedItems.length) {
+      conversations.push({ id: 'divider-recent', is_divider: true, title: 'Recent' });
+      conversations.push(...sortedItems.slice(pinnedCount));
+    }
+  } else {
+    conversations.push(...sortedItems);
+  }
+
   const { 
     data: messageData,
     fetchNextPage,
@@ -110,7 +201,7 @@ export function ChatTab() {
   } = useInfiniteQuery({
     queryKey: queryKeys.messages(selectedId as number),
     queryFn: ({ pageParam }) => apiFetch(`/conversations/${selectedId}/messages${pageParam ? `?cursor=${pageParam}` : ''}`),
-    getNextPageParam: (lastPage: any) => lastPage.next_cursor || null,
+    getNextPageParam: (lastPage: PaginatedResponse<ChatMessage>) => lastPage.next_cursor || null,
     initialPageParam: null as string | null,
     enabled: !!selectedId,
     refetchInterval: isConnected ? false : 15_000,
@@ -122,8 +213,8 @@ export function ChatTab() {
     const channelName = `conversation.${selectedId}`;
     const channel = subscribe(channelName, true);
     if (channel) {
-      const handler = (e: any) => {
-        queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: any) => {
+      const handler = (e: { message: ChatMessage }) => {
+        queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: InfiniteQueryData<ChatMessage> | undefined) => {
           if (!old?.pages) return old;
           const firstPage = old.pages[0];
           const updatedFirstPage = {
@@ -139,21 +230,21 @@ export function ChatTab() {
 
       channel.listen(".message-sent", handler);
 
-      const readHandler = (e: any) => {
+      const readHandler = (e: { userId: number }) => {
         // Optimistically update cache to mark messages as read
         if (e.userId) {
-          queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: any) => {
+          queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: InfiniteQueryData<ChatMessage> | undefined) => {
             if (!old?.pages) return old;
             
             return {
               ...old,
-              pages: old.pages.map((page: any) => ({
+              pages: old.pages.map((page: PaginatedResponse<ChatMessage>) => ({
                 ...page,
-                data: page.data.map((msg: any) => {
+                data: page.data.map((msg: ChatMessage) => {
                   // Mark as read if the message was sent by someone other than the reader
                   if (msg.sender_id !== e.userId) {
                     const currentReads = msg.reads || [];
-                    if (!currentReads.find((r: any) => r.user_id === e.userId)) {
+                    if (!currentReads.find((r: { user_id: number }) => r.user_id === e.userId)) {
                       return { ...msg, reads: [...currentReads, { user_id: e.userId }] };
                     }
                   }
@@ -186,14 +277,15 @@ export function ChatTab() {
     },
   });
 
-  const selectedConv = conversations.find((c: any) => c.id === selectedId);
+  const selectedConv = conversations.find((c: ChatConversation) => c.id === selectedId);
+  const messages = messageData?.pages?.flatMap((page: PaginatedResponse<ChatMessage>) => Array.isArray(page?.data) ? page.data : []).reverse() || [];
   const unreadCount = selectedConv?.unread_count || 0;
 
   useEffect(() => {
     if (selectedId && unreadCount > 0 && !markReadMutation.isPending) {
       markReadMutation.mutate();
     }
-  }, [selectedId, unreadCount]);
+  }, [selectedId, messages, user?.id, markReadMutation]);
 
   const pinMutation = useMutation({
     mutationFn: async (msgId: number) => {
@@ -211,6 +303,16 @@ export function ChatTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
     }
+  });
+
+  const pinChatMutation = useMutation({
+    mutationFn: async () => apiFetch(`/conversations/${selectedId}/pin`, { method: "POST" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.conversations }),
+  });
+
+  const unpinChatMutation = useMutation({
+    mutationFn: async () => apiFetch(`/conversations/${selectedId}/unpin`, { method: "POST" }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.conversations }),
   });
 
   const sendMessageMutation = useMutation({
@@ -238,17 +340,17 @@ export function ChatTab() {
       await queryClient.cancelQueries({ queryKey: queryKeys.messages(selectedId as number) });
       const previousMessages = queryClient.getQueryData(queryKeys.messages(selectedId as number));
       
-      const optimisticMessage = {
+      const optimisticMessage: ChatMessage = {
         id: Date.now(),
-        conversation_id: selectedId,
-        sender_id: user?.id,
+        conversation_id: selectedId as number,
+        sender_id: user?.id as number,
         body: newMsg.body,
         created_at: new Date().toISOString(),
-        sender: user,
+        sender: user || undefined,
         pending: true
       };
 
-      queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: any) => {
+      queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: InfiniteQueryData<ChatMessage> | undefined) => {
         if (!old?.pages) return old;
         const firstPage = old.pages[0];
         return {
@@ -276,7 +378,7 @@ export function ChatTab() {
     },
   });
 
-  const messages = messageData?.pages?.flatMap((page: any) => Array.isArray(page?.data) ? page.data : []).reverse() || [];
+
 
   return (
     <div className="space-y-6 mt-4">
@@ -320,7 +422,7 @@ export function ChatTab() {
                 currentUserId={user?.id as number}
                 conversations={conversations}
                 selectedId={selectedId}
-                onSelect={(id) => setSelectedId(id)}
+                onSelect={handleSelectConversation}
                 hasNextPage={hasNextConversations}
                 isFetchingNextPage={isFetchingNextConversations}
                 fetchNextPage={fetchNextConversations}
@@ -339,19 +441,45 @@ export function ChatTab() {
                   <div>
                     <h3 className="font-bold text-neutral-900 dark:text-white">
                       {selectedConv?.scope === 'direct' 
-                        ? selectedConv?.users?.find((p: any) => p.id !== user?.id)?.name 
+                        ? selectedConv?.users?.find((p: ChatUser) => p.id !== user?.id)?.name 
                         : selectedConv?.name}
                     </h3>
                   </div>
-                  {!isConnected && (
-                    <span
-                      className="ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 text-[10px] font-semibold shrink-0"
-                      title="Real-time connection lost — falling back to periodic refresh"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      Not connected
-                    </span>
-                  )}
+
+                  <div className="ml-auto flex items-center gap-2">
+                    {!isConnected && (
+                      <span
+                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 text-[10px] font-semibold shrink-0"
+                        title="Real-time connection lost — falling back to periodic refresh"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        Not connected
+                      </span>
+                    )}
+                    {selectedConv?.scope !== 'global' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 ${
+                          ((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned)
+                            ? "text-primary-500 hover:text-primary-600 bg-primary-50 dark:bg-primary-950/30"
+                            : "text-neutral-400 hover:text-neutral-600"
+                        }`}
+                        onClick={() => {
+                          const isPinned = (selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned;
+                          if (isPinned) {
+                            unpinChatMutation.mutate();
+                          } else {
+                            pinChatMutation.mutate();
+                          }
+                        }}
+                        title={((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned) ? "Unpin chat" : "Pin chat"}
+                        disabled={pinChatMutation.isPending || unpinChatMutation.isPending}
+                      >
+                        <AppIcon name="pin" size="sm" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <MessageList 

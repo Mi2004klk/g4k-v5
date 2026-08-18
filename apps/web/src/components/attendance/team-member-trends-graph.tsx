@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Skeleton } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { safeFormat } from "@/lib/format";
 
@@ -16,15 +16,21 @@ import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([BarChart, LineChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]);
 
-const ReactECharts = dynamic(() => import("echarts-for-react/lib/core").then((mod) => {
-  const Core = mod.default || (mod as any);
-  return function EChartsWrapper(props: any) {
-    return <Core echarts={echarts} {...props} />;
-  };
-}), { 
-  ssr: false,
-  loading: () => <Skeleton className="w-full h-[400px]" />
-}) as any;
+import type { EChartsReactProps } from "echarts-for-react";
+
+const ReactECharts = dynamic(
+  () => import("echarts-for-react/lib/core").then((mod: any) => {
+    const Core = ('default' in mod && mod.default) ? mod.default : mod;
+    
+    return function EChartsWrapper(props: Omit<EChartsReactProps, 'echarts'>) {
+      return <Core echarts={echarts} {...props} />;
+    };
+  }),
+  { 
+    ssr: false,
+    loading: () => <Skeleton className="w-full h-[400px]" />
+  }
+);
 
 export function TeamMemberTrendsGraph({ userId }: { userId: number }) {
   const [mode, setMode] = useState<"weekly" | "monthly">("weekly");
@@ -39,11 +45,11 @@ export function TeamMemberTrendsGraph({ userId }: { userId: number }) {
   const chartData = useMemo(() => {
     if (!data?.stats) return { labels: [], hours: [], overtime: [] };
     
-    const stats = data.stats;
-    const labels = stats.map((d: any) => safeFormat(d.date, "MMM d"));
+    const stats = data.stats as Array<{ date: string; total_seconds?: number; overtime_seconds?: number }>;
+    const labels = stats.map((d) => safeFormat(d.date, "MMM d"));
     // Convert seconds to hours
-    const hours = stats.map((d: any) => parseFloat(((d.total_seconds || 0) / 3600).toFixed(2)));
-    const overtime = stats.map((d: any) => parseFloat(((d.overtime_seconds || 0) / 3600).toFixed(2)));
+    const hours = stats.map((d) => parseFloat(((d.total_seconds || 0) / 3600).toFixed(2)));
+    const overtime = stats.map((d) => parseFloat(((d.overtime_seconds || 0) / 3600).toFixed(2)));
     
     return { labels, hours, overtime };
   }, [data]);

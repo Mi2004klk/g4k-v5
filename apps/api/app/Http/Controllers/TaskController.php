@@ -222,7 +222,7 @@ class TaskController extends Controller
             }
         }
 
-        return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']));
+        return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']), 201);
     }
 
     public function show(Request $request, $id)
@@ -412,8 +412,6 @@ class TaskController extends Controller
         $approval = ApprovalService::submit($task, $request->user()->id, [
             'submission_note' => $validated['submission_note'],
         ]);
-
-        $task->update(['approval_id' => $approval->id]);
 
         TaskActivity::create([
             'task_id' => $task->id,

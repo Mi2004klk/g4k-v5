@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, differenceInSeconds } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import {
   Dialog,
@@ -51,7 +51,7 @@ export function HrCorrectionDialog({
     enabled: isOpen && !!userId && !!date,
   });
 
-  const events = dayData?.events || [];
+  const events = useMemo(() => dayData?.events || [], [dayData?.events]);
   
   // Predict reconciled totals
   const predictedTotals = useMemo(() => {
@@ -82,7 +82,7 @@ export function HrCorrectionDialog({
 
     let totalSeconds = 0;
     let currentIn = null;
-    let currentBreak = null;
+    
     
     for (const ev of simulatedEvents) {
       if (ev.type === "clock_in") {
@@ -92,9 +92,9 @@ export function HrCorrectionDialog({
           totalSeconds += differenceInSeconds(new Date(ev.timestamp), currentIn);
           currentIn = null;
         }
-        currentBreak = new Date(ev.timestamp);
+        
       } else if (ev.type === "break_end") {
-        currentBreak = null;
+        
         currentIn = new Date(ev.timestamp);
       } else if (ev.type === "clock_out") {
         if (currentIn) {
@@ -121,7 +121,7 @@ export function HrCorrectionDialog({
   }, [events, action, eventId, type, timestamp, date, dayData]);
 
   const correctMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: Record<string, unknown>) => {
       return apiFetch("/attendance/correct", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -136,7 +136,7 @@ export function HrCorrectionDialog({
       onOpenChange(false);
       setReason("");
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to correct record.");
     },
   });
@@ -148,7 +148,7 @@ export function HrCorrectionDialog({
       return;
     }
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       action,
       day_id: dayId,
       user_id: userId,
@@ -201,7 +201,7 @@ export function HrCorrectionDialog({
             <div className="space-y-4 py-4">
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Action</label>
-                <Select value={action} onValueChange={(val: any) => setAction(val)}>
+                <Select value={action} onValueChange={(val: string) => setAction(val as "add_event" | "edit_event" | "remove_event")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select action" />
                   </SelectTrigger>
@@ -221,7 +221,7 @@ export function HrCorrectionDialog({
                       <SelectValue placeholder="Select event to modify" />
                     </SelectTrigger>
                     <SelectContent>
-                      {events.map((ev: any) => (
+                      {events.map((ev: { id: number; type: string; timestamp: string }) => (
                         <SelectItem key={ev.id} value={ev.id.toString()}>
                           {ev.type.replace('_', ' ')} at {safeFormat(ev.timestamp, "hh:mm a")}
                         </SelectItem>
@@ -235,7 +235,7 @@ export function HrCorrectionDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <label className="text-sm font-medium">Event Type</label>
-                    <Select value={type} onValueChange={(val: any) => setType(val)}>
+                    <Select value={type} onValueChange={(val: string) => setType(val as "clock_in" | "clock_out" | "break_start" | "break_end")}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -306,3 +306,4 @@ export function HrCorrectionDialog({
     </Dialog>
   );
 }
+

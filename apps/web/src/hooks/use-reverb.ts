@@ -9,15 +9,15 @@ import { getToken } from '@/lib/api-client';
 declare global {
   interface Window {
     Pusher: typeof Pusher;
-    Echo: any;
+    Echo: unknown;
   }
 }
 
 interface ReverbContextType {
-  subscribe: (channelName: string, isPrivate?: boolean) => any;
+  subscribe: (channelName: string, isPrivate?: boolean) => ReturnType<Echo<'reverb'>['channel']> | null;
   leaveChannel: (channelName: string) => void;
   isConnected: boolean;
-  echo: any;
+  echo: Echo<'reverb'> | null;
 }
 
 const ReverbContext = createContext<ReverbContextType>({
@@ -41,7 +41,7 @@ function isReverbAvailable(): boolean {
 export function ReverbProvider({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
-  const [echoInstance, setEchoInstance] = useState<any>(null);
+  const [echoInstance, setEchoInstance] = useState<Echo<'reverb'> | null>(null);
   // Real pusher socket state — NOT mere Echo-instance existence. Drives the
   // polling fallbacks in consumers (chat/notifications) when the socket drops.
   const [socketConnected, setSocketConnected] = useState(false);
@@ -53,9 +53,11 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     // Only connect if we have a logged in user, token, AND Reverb is reachable
     if (!user || !token || !isReverbAvailable()) {
       if (typeof window !== 'undefined' && window.Echo) {
-        window.Echo.disconnect();
+        (window.Echo as Echo<'reverb'>).disconnect();
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEchoInstance(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSocketConnected(false);
       return;
     }
@@ -82,9 +84,9 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     window.Echo = echo;
     setEchoInstance(echo);
 
-    // Track the underlying pusher-js socket state so isConnected reflects the
     // actual connection, not just the Echo instance existing.
-    const connection = (echo.connector as any)?.pusher?.connection;
+    const pusherInstance = ((echo.connector as unknown) as { pusher: { connection: Pusher['connection'], connect: () => void } })?.pusher;
+    const connection = pusherInstance?.connection;
     const handleConnected = () => setSocketConnected(true);
     const handleDisconnected = () => setSocketConnected(false);
     if (connection) {
@@ -96,7 +98,18 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
       connection.bind('failed', handleDisconnected);
     }
 
+    const handleVisibilityOrOnline = () => {
+      if (document.visibilityState === 'visible' && connection && connection.state !== 'connected') {
+        pusherInstance?.connect();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityOrOnline);
+    window.addEventListener('online', handleVisibilityOrOnline);
+
     return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityOrOnline);
+      window.removeEventListener('online', handleVisibilityOrOnline);
       if (connection) {
         connection.unbind('connected', handleConnected);
         connection.unbind('disconnected', handleDisconnected);
@@ -106,6 +119,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
       setSocketConnected(false);
       echo.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, token]); // Reconnect if user changes
 
   const subscribe = useCallback((channelName: string, isPrivate: boolean = false) => {
@@ -114,7 +128,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     const count = subscriptions.get(channelName) || 0;
     subscriptions.set(channelName, count + 1);
     
-    return isPrivate ? echoInstance.private(channelName) : echoInstance.channel(channelName);
+    return isPrivate ? (echoInstance as Echo<'reverb'>).private(channelName) : (echoInstance as Echo<'reverb'>).channel(channelName);
   }, [echoInstance, subscriptions]);
 
   const leaveChannel = useCallback((channelName: string) => {
@@ -123,7 +137,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     const count = (subscriptions.get(channelName) || 0) - 1;
     if (count <= 0) {
       subscriptions.delete(channelName);
-      echoInstance.leave(channelName);
+      (echoInstance as Echo<'reverb'>).leave(channelName);
     } else {
       subscriptions.set(channelName, count);
     }

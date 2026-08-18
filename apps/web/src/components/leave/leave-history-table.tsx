@@ -1,23 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { DataTable, EmptyState } from "@g4k/ui/components";
-import { FilterBar } from "@g4k/ui/components";
+
+interface LeaveRecord {
+  user?: { name: string };
+  start_date: string;
+  end_date: string;
+  type: string;
+  reason: string;
+  approval?: {
+    status: string;
+    decision_reason?: string;
+  };
+}
 
 interface LeaveHistoryTableProps {
-  records: any[];
+  records: LeaveRecord[];
   isLoading: boolean;
-  typeFilter?: string;
-  setTypeFilter?: (val: string) => void;
-  statusFilter?: string;
-  setStatusFilter?: (val: string) => void;
-  search?: string;
-  setSearch?: (val: string) => void;
   showEmployee?: boolean;
-  hideFilters?: boolean;
   page?: number;
   perPage?: number;
   totalPages?: number;
@@ -28,22 +32,15 @@ interface LeaveHistoryTableProps {
 export function LeaveHistoryTable({ 
   records, 
   isLoading,
-  typeFilter = "all",
-  setTypeFilter = () => {},
-  statusFilter = "all",
-  setStatusFilter = () => {},
-  search,
-  setSearch,
   showEmployee = false,
-  hideFilters = false,
   page,
   perPage,
   totalPages,
   onPageChange,
   onPerPageChange
 }: LeaveHistoryTableProps) {
-  const columns = useMemo<ColumnDef<any>[]>(() => {
-    const cols: ColumnDef<any>[] = [];
+  const columns = useMemo<ColumnDef<LeaveRecord>[]>(() => {
+    const cols: ColumnDef<LeaveRecord>[] = [];
     
     if (showEmployee) {
       cols.push({

@@ -8,5 +8,5 @@ export function useTrackRecent(item: Omit<RecentItem, "timestamp"> | null | unde
     if (item && item.id) {
       addItem(item);
     }
-  }, [item?.id, item?.title, addItem]);
+  }, [item?.id, item?.title, addItem, item]);
 }

@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { queryKeys } from "@/lib/query-keys";
+import { SettingItem } from "./notifications-config";
 
 const passwordSchema = z.object({
   min_length: z.coerce.number().min(8, "Minimum 8 characters required").max(32, "Maximum 32 characters allowed"),
@@ -39,7 +40,7 @@ export function PoliciesConfig() {
   });
 
   const passwordForm = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema) as any,
+    resolver: zodResolver(passwordSchema) as unknown as import('react-hook-form').Resolver<PasswordFormValues>,
     defaultValues: {
       min_length: 8,
       require_mixed: true,
@@ -52,7 +53,7 @@ export function PoliciesConfig() {
   });
 
   const sessionForm = useForm<SessionFormValues>({
-    resolver: zodResolver(sessionSchema) as any,
+    resolver: zodResolver(sessionSchema) as unknown as import('react-hook-form').Resolver<SessionFormValues>,
     defaultValues: {
       access_token_ttl: 15,
       refresh_token_ttl: 7,
@@ -63,9 +64,10 @@ export function PoliciesConfig() {
   });
 
   useEffect(() => {
-    if (settingsGrouped?.security) {
-      const securityMap: any = {};
-      settingsGrouped.security.forEach((s: any) => {
+    const groupedData = settingsGrouped as Record<string, SettingItem[]> | undefined;
+    if (groupedData?.security) {
+      const securityMap: Record<string, string> = {};
+      groupedData.security.forEach((s: SettingItem) => {
         securityMap[s.key] = s.value;
       });
       passwordForm.reset({
@@ -73,7 +75,7 @@ export function PoliciesConfig() {
         require_mixed: securityMap["password.require_mixed"] === "true",
         require_number: securityMap["password.require_number"] === "true",
         require_symbol: securityMap["password.require_symbol"] === "true",
-        force_password_change: securityMap["force_password_change"] === "true" || securityMap["force_password_change"] === true,
+        force_password_change: securityMap["force_password_change"] === "true" || (securityMap["force_password_change"] as unknown as boolean) === true,
       });
       sessionForm.reset({
         access_token_ttl: parseInt(securityMap["session.access_token_ttl"]) || 15,
@@ -84,7 +86,7 @@ export function PoliciesConfig() {
   }, [settingsGrouped, passwordForm, sessionForm]);
 
   const updateMutation = useMutation({
-    mutationFn: (updates: any[]) =>
+    mutationFn: (updates: Omit<SettingItem, 'id'>[]) =>
       apiFetch("/settings/bulk", {
         method: "POST",
         body: JSON.stringify({ settings: updates }),
@@ -95,7 +97,7 @@ export function PoliciesConfig() {
     },
   });
 
-  const handlePasswordSubmit = (data: any) => {
+  const handlePasswordSubmit = (data: PasswordFormValues) => {
     const updates = [
       { category: "security", key: "password.min_length", value: data.min_length.toString() },
       { category: "security", key: "password.require_mixed", value: data.require_mixed.toString() },
@@ -106,7 +108,7 @@ export function PoliciesConfig() {
     updateMutation.mutate(updates);
   };
 
-  const handleSessionSubmit = (data: any) => {
+  const handleSessionSubmit = (data: SessionFormValues) => {
     const updates = [
       { category: "security", key: "session.access_token_ttl", value: data.access_token_ttl.toString() },
       { category: "security", key: "session.refresh_token_ttl", value: data.refresh_token_ttl.toString() },
@@ -126,7 +128,7 @@ export function PoliciesConfig() {
           <CardTitle className="text-base">Password Policy</CardTitle>
         </CardHeader>
       <CardContent>
-        <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-4 max-w-md">
+        <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit as any)} className="space-y-4 max-w-md">
           <div>
             <label className="text-xs font-medium">Minimum Length <span className="text-red-500">*</span></label>
             <input
@@ -189,7 +191,7 @@ export function PoliciesConfig() {
           <CardTitle className="text-base">Session & Device Rules</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={sessionForm.handleSubmit(handleSessionSubmit)} className="space-y-4 max-w-md">
+          <form onSubmit={sessionForm.handleSubmit(handleSessionSubmit as any)} className="space-y-4 max-w-md">
             <div>
               <label className="text-xs font-medium">Access Token Expiration (Minutes) <span className="text-red-500">*</span></label>
               <input

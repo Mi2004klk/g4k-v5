@@ -30,11 +30,26 @@ export function usePins() {
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: () => {
+    onMutate: async (newPin) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.pins });
+      const previousPins = queryClient.getQueryData<Pin[]>(queryKeys.pins);
+      queryClient.setQueryData<Pin[]>(queryKeys.pins, (old) => {
+        return [...(old || []), { ...newPin, id: `temp-${Date.now()}` }];
+      });
+      return { previousPins };
+    },
+    onError: (err, newPin, context) => {
+      if (context?.previousPins) {
+        queryClient.setQueryData(queryKeys.pins, context.previousPins);
+      }
+      toast.error("Failed to pin item");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pins });
+    },
+    onSuccess: () => {
       toast.success("Pinned to sidebar");
     },
-    onError: () => toast.error("Failed to pin item"),
   });
 
   const unpinMutation = useMutation({
@@ -43,11 +58,26 @@ export function usePins() {
         method: "DELETE",
       });
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.pins });
+      const previousPins = queryClient.getQueryData<Pin[]>(queryKeys.pins);
+      queryClient.setQueryData<Pin[]>(queryKeys.pins, (old) => {
+        return (old || []).filter((pin) => pin.id !== id);
+      });
+      return { previousPins };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousPins) {
+        queryClient.setQueryData(queryKeys.pins, context.previousPins);
+      }
+      toast.error("Failed to unpin item");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pins });
+    },
+    onSuccess: () => {
       toast.success("Removed from pins");
     },
-    onError: () => toast.error("Failed to unpin item"),
   });
 
   return {

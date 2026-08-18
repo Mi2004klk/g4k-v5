@@ -3,9 +3,17 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Skeleton, StatusBadge, Button } from "@g4k/ui/components";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import { safeFromNow } from "@/lib/format";
+
+interface ApprovalTask {
+  id: number;
+  title: string;
+  submitted_at: string;
+  approval_state: "approved" | "pending_approval" | "rejected" | "redo_required" | string;
+  feedback?: string;
+}
 
 export function EmployeeApprovalStatusWidget() {
   const { data, isLoading, isError, refetch } = useQuery({
@@ -74,7 +82,7 @@ export function EmployeeApprovalStatusWidget() {
           </div>
         ) : (
           <div className="space-y-2 overflow-y-auto thin-scrollbar">
-            {tasks.map((task: any) => (
+            {tasks.map((task: ApprovalTask) => (
               <div key={task.id} className="flex flex-col p-2 rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-100 dark:border-neutral-800 gap-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 overflow-hidden">

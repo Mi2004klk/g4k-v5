@@ -43,7 +43,7 @@ const mockHistory = [
     total_seconds: 30600, break_seconds: 0, overtime_seconds: 0,
     late_minutes: 30, status: 'late', has_open_shift: false,
   },
-] as any;
+] as React.ComponentProps<typeof AttendanceHistoryCalendar>['days'];
 
 describe('AttendanceHistoryCalendar', () => {
   it('renders the month calendar grid on desktop', () => {

@@ -3,13 +3,35 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@g4k/ui/components";
 import { UserForm, UserFormValues } from "./user-form";
 
+export interface OptionType {
+  id: number;
+  name: string;
+  [key: string]: unknown;
+}
+
+export interface User {
+  id?: number;
+  name: string;
+  email: string;
+  username?: string;
+  phone?: string;
+  department_id?: number | string;
+  designation_id?: number | string;
+  team_id?: number | string;
+  employee_code?: string;
+  employee_id?: string;
+  work_schedule_id?: number | string;
+  roles?: string[];
+  role_assignments?: { role: string }[];
+}
+
 interface UserEditDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  user: any;
-  departments: any[];
-  designations: any[];
-  work_schedules: any[];
+  user: User | null;
+  departments: OptionType[];
+  designations: OptionType[];
+  work_schedules: OptionType[];
   onSubmit: (data: UserFormValues) => void;
   isPending: boolean;
 }
@@ -33,7 +55,7 @@ export function UserEditDialog({ isOpen, onOpenChange, user, departments, design
             team_id: user.team_id?.toString() || "",
             employee_id: user.employee_code || user.employee_id || "",
             work_schedule_id: user.work_schedule_id?.toString() || "",
-            roles: user.roles || user.role_assignments?.map((r: any) => r.role) || ["employee"],
+            roles: user.roles || user.role_assignments?.map((r: { role: string }) => r.role) || ["employee"],
           } : undefined}
           departments={departments}
           designations={designations}

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import {
   Tooltip,
   TooltipContent,

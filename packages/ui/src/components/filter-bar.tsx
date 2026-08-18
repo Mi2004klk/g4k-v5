@@ -31,8 +31,9 @@ export interface FilterOption {
 }
 
 export interface FilterBarProps {
-  searchQuery: string
-  onSearchChange: (value: string) => void
+  searchQuery?: string
+  onSearchChange?: (value: string) => void
+  hideSearch?: boolean
   searchPlaceholder?: string
   filters?: FilterOption[]
   onClearAll?: () => void
@@ -53,8 +54,9 @@ function useDebounce<T>(value: T, delay?: number): T {
 }
 
 export function FilterBar({
-  searchQuery,
-  onSearchChange,
+  searchQuery = "",
+  onSearchChange = () => {},
+  hideSearch = false,
   searchPlaceholder = "Search...",
   filters = [],
   onClearAll,
@@ -247,7 +249,8 @@ export function FilterBar({
   return (
     <div className="space-y-3 w-full">
       <div className="flex items-center gap-3 w-full">
-        <div className="relative flex-1 w-full sm:max-w-sm">
+        {!hideSearch && (
+          <div className="relative flex-1 w-full sm:max-w-sm">
           <AppIcon name="search" className="absolute left-2.5 top-2.5 text-muted-foreground" />
           <Input
             id={searchInputId}
@@ -271,6 +274,7 @@ export function FilterBar({
             </Button>
           )}
         </div>
+        )}
 
         {/* Desktop Filters */}
         <div className="hidden md:flex items-center gap-3">

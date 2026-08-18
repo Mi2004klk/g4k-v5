@@ -4,11 +4,10 @@ import { useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, StatusBadge } from "@g4k/ui/components";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
-import { Badge } from "@g4k/ui/components";
 import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 
 export function TodaySummaryCard() {
@@ -95,7 +94,7 @@ export function TodaySummaryCard() {
       <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800 flex flex-row items-center justify-between">
         <CardTitle className="text-base font-bold flex items-center gap-2">
           <AppIcon name="info" className=" text-emerald-600" />
-          Today's Summary
+          Today&apos;s Summary
         </CardTitle>
         {getStatusBadge()}
       </CardHeader>
@@ -104,7 +103,7 @@ export function TodaySummaryCard() {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
             <AppIcon name="teamAttendance" size="xl" className="text-neutral-300 dark:text-neutral-700 mb-3" />
             <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
-              You haven't clocked in yet
+              You haven&apos;t clocked in yet
             </p>
             <p className="text-xs text-neutral-500 mt-1">
               Start your shift using the Time Clock widget.

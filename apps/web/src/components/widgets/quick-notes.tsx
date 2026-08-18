@@ -3,15 +3,20 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
+import { Card, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { OneFieldForm } from "@/components/one-field-form";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
 import { queryKeys } from "@/lib/query-keys";
+
+export interface Note {
+  id: number;
+  body: string;
+  pinned: boolean;
+}
 
 export function QuickNotes() {
   const queryClient = useQueryClient();
@@ -23,7 +28,7 @@ export function QuickNotes() {
   const [editBody, setEditBody] = useState("");
 
   const { data: notes = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => (Array.isArray(data.quick_notes?.data) ? data.quick_notes.data : (Array.isArray(data.quick_notes) ? data.quick_notes : [])),
+    select: (data: any) => (Array.isArray(data?.quick_notes?.data) ? data.quick_notes.data : (Array.isArray(data?.quick_notes) ? data.quick_notes : [])),
     placeholderData: keepPreviousData,
   });
 
@@ -124,7 +129,7 @@ export function QuickNotes() {
                   <p className="text-xs font-medium text-neutral-400">No notes yet</p>
                 </div>
               ) : (
-                notes.map((n: any) => (
+                notes.map((n: Note) => (
                   <div
                     key={n.id}
                     className={`p-2.5 rounded-[var(--radius)] text-xs flex flex-col justify-between gap-2 border transition-colors group ${

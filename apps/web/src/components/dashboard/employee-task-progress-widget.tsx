@@ -1,17 +1,28 @@
 "use client";
 
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { apiFetch } from "@/lib/api-client";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
-import { queryKeys } from "@/lib/query-keys";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import { safeFromNow } from "@/lib/format";
 
+interface ProgressTask {
+  id: number;
+  title: string;
+  progress: number;
+  updated_at: string;
+}
+
+interface DashboardMetrics {
+  metrics?: {
+    recent_task_progress?: ProgressTask[];
+  };
+}
+
 export function EmployeeTaskProgressWidget() {
   const { data, isLoading, isError, refetch } = useDashboardInit({
-    select: (data: any) => Array.isArray(data.metrics?.recent_task_progress) ? data.metrics.recent_task_progress : [],
+    select: (data: DashboardMetrics) => Array.isArray(data.metrics?.recent_task_progress) ? data.metrics.recent_task_progress : [],
     placeholderData: keepPreviousData,
   });
 
@@ -68,7 +79,7 @@ export function EmployeeTaskProgressWidget() {
           </div>
         ) : (
           <div className="space-y-3 overflow-y-auto thin-scrollbar">
-            {tasks.map((task: any) => (
+            {tasks.map((task: ProgressTask) => (
               <Link 
                 key={task.id} 
                 href={`/dashboard/tasks/${task.id}`}

@@ -1,13 +1,24 @@
 "use client";
 
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Avatar, AvatarFallback } from "@g4k/ui/components";
-import { Badge } from "@g4k/ui/components";
 import { usePins } from "@/hooks/use-pins";
 import { Button } from "@g4k/ui/components";
+import Image from "next/image";
 
-export function ProjectCard({ project, onClick }: { project: any; onClick?: () => void }) {
+interface Project {
+  id: number;
+  name: string;
+  description?: string;
+  priority: string;
+  progress: number;
+  deadline?: string;
+  cover_image?: string;
+  members?: { id: number; name: string }[];
+}
+
+export function ProjectCard({ project, onClick }: { project: Project; onClick?: () => void }) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
@@ -49,7 +60,7 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
         {project.cover_image && (
           <div className="absolute inset-0 h-24 w-full">
             <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent dark:from-neutral-900/90 z-10" />
-            <img src={project.cover_image} alt="Project Cover" className="w-full h-full object-cover opacity-60" />
+            <Image src={project.cover_image} alt="Project Cover" fill className="object-cover opacity-60" />
           </div>
         )}
         <div className={`flex items-start justify-between ${project.cover_image ? 'pt-8' : ''} relative z-20`}>
@@ -105,7 +116,7 @@ export function ProjectCard({ project, onClick }: { project: any; onClick?: () =
           </div>
           <div className="flex -space-x-1.5 overflow-hidden">
             {project.members && project.members.length > 0 ? (
-              project.members.slice(0, 3).map((m: any) => (
+              project.members.slice(0, 3).map((m: { id: number; name: string }) => (
                   <Avatar 
                     key={m.id} 
                     className="inline-block h-5 w-5 rounded-full ring-1 ring-white dark:ring-neutral-900"

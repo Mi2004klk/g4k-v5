@@ -210,7 +210,7 @@ class ChatController extends Controller
     public function createGroup(Request $request)
     {
         $role = $request->user()->resolveActiveRole();
-        if (!CapabilityMatrix::hasCapability($role, 'chat.group')) {
+        if (!CapabilityMatrix::hasCapability($role, 'chat.manage')) {
             abort(403, 'Unauthorized to create groups.');
         }
 
@@ -265,6 +265,30 @@ class ChatController extends Controller
         ]);
 
         return response()->json($message);
+    }
+
+    public function pinChat(Request $request, $id)
+    {
+        $conversation = Conversation::findOrFail($id);
+        $this->checkAccess($conversation, $request->user());
+
+        if ($conversation->scope !== 'global') {
+            $conversation->users()->updateExistingPivot($request->user()->id, ['is_pinned' => true]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function unpinChat(Request $request, $id)
+    {
+        $conversation = Conversation::findOrFail($id);
+        $this->checkAccess($conversation, $request->user());
+
+        if ($conversation->scope !== 'global') {
+            $conversation->users()->updateExistingPivot($request->user()->id, ['is_pinned' => false]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }
 

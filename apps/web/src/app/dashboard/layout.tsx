@@ -1,18 +1,16 @@
 "use client";
 
 import { AuthGuard } from "@/components/auth-guard";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 
-const EMPTY_CAPABILITIES: any[] = [];
+const EMPTY_CAPABILITIES: string[] = [];
 import Link from "next/link";
 import Image from "next/image";
-import { format } from "date-fns";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { AppIcon, IconName } from "@g4k/ui/components";
-import { toast } from "sonner";
+import { AppIcon } from "@g4k/ui/components";
 import { SheetDescription, Button } from "@g4k/ui/components";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
@@ -27,7 +25,7 @@ import { CommandPalette } from "@/components/app-shell/command-palette";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
 import { ProjectTimerWidget } from "@/components/app-shell/project-timer-widget";
-import { NavGroup, NavItem } from "@/components/app-shell/nav-group";
+import { NavGroup } from "@/components/app-shell/nav-group";
 import { PinnedItems } from "@/components/layout/pinned-items";
 import { ReverbProvider } from "@/hooks/use-reverb";
 import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
@@ -100,17 +98,28 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { data: userCapabilities = EMPTY_CAPABILITIES, isLoading: isLoadingCapabilities, isError: isErrorCapabilities, refetch: refetchCapabilities } = useCapabilities();
+  const { data: userCapabilities = EMPTY_CAPABILITIES, isError: isErrorCapabilities, refetch: refetchCapabilities } = useCapabilities();
   const authUser = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const density = useAuthStore((s) => s.density);
   const setDensity = useAuthStore((s) => s.setDensity);
   const { theme, setTheme } = useTheme();
+  
+  const [showError, setShowError] = useState(false);
 
-  const { data: initData, refetch: refetchPins } = useDashboardInit({
+  useEffect(() => {
+    if (isErrorCapabilities) {
+      const timer = setTimeout(() => setShowError(true), 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowError(false);
+    }
+  }, [isErrorCapabilities]);
+
+  const { data: initData } = useDashboardInit({
     staleTime: 5 * 60_000,
   });
-  const preferencesData = initData?.preferences ? { preferences: initData.preferences } : null;
+  const preferencesData = useMemo(() => initData?.preferences ? { preferences: initData.preferences } : null, [initData]);
 
   useEffect(() => {
     if (initData?.attendance_today) {
@@ -135,6 +144,7 @@ export default function DashboardLayout({
 
   // Close mobile menu on navigate
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
@@ -163,12 +173,23 @@ export default function DashboardLayout({
   const isCollapsed = sidebarState === "collapsed";
 
   if (isErrorCapabilities) {
+    if (!showError) {
+      return (
+        <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
+          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-600 rounded-full animate-spin"></div>
+          <div className="text-center space-y-1">
+            <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Verifying session...</h2>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
         <AppIcon name="audit" size="hero" className=" text-rose-500" />
         <div className="text-center space-y-1">
           <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Session could not load</h2>
-          <p className="text-sm text-neutral-500">We couldn't verify your permissions.</p>
+          <p className="text-sm text-neutral-500">We couldn&apos;t verify your permissions.</p>
         </div>
         <div className="flex items-center gap-3 mt-2">
           <Button variant="outline" onClick={() => refetchCapabilities()}>Retry</Button>

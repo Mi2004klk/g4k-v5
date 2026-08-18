@@ -6,7 +6,6 @@ import { useReverb } from "./use-reverb";
 export function useExport() {
   const [isExporting, setIsExporting] = useState(false);
   const [downloadUrls, setDownloadUrls] = useState<string[]>([]);
-  const { subscribe } = useReverb();
 
   // Cleanup object URLs on unmount
   useEffect(() => {
@@ -19,7 +18,7 @@ export function useExport() {
   }, [downloadUrls]);
 
   const triggerExport = useCallback(
-    async (endpoint: string, filename: string, options?: any) => {
+    async (endpoint: string, filename: string, options?: RequestInit) => {
       setIsExporting(true);
       const toastId = toast.loading(`Generating export for ${filename}...`);
       
@@ -67,8 +66,8 @@ export function useExport() {
           toast.success(`Export completed.`, { id: toastId });
           setIsExporting(false);
         }
-      } catch (error: any) {
-        toast.error(error.message || "Failed to start export.", { id: toastId });
+      } catch (error: unknown) {
+        toast.error(error instanceof Error ? error.message : "Failed to start export.", { id: toastId });
         setIsExporting(false);
       }
     },

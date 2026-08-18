@@ -1,22 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
-import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { queryKeys, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { usePaginatedList } from "@/lib/pagination";
-import {  Input, Button, Checkbox, DataTable , Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, FilterBar } from "@g4k/ui/components";
+import { Button, Checkbox, DataTable, FilterBar, DatePicker } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
-import { ColumnDef } from "@tanstack/react-table";
+import { Row, Table } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 
+interface OpenShiftRecord {
+  id: number;
+  user_id: number;
+  date: string;
+  user_name?: string;
+  user_email?: string;
+  department_name?: string;
+  clock_in?: string;
+}
+
 export function AdminOpenShiftsTable() {
-  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
   const [search, setSearch] = useUrlState("search", "");
@@ -38,6 +47,7 @@ export function AdminOpenShiftsTable() {
   }, [search]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [selectedDate, deptFilter]);
 
@@ -47,7 +57,7 @@ export function AdminOpenShiftsTable() {
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
-  const { data: queryData, isLoading, error, refetch } = useQuery({
+  const { data: queryData, isLoading, error } = useQuery({
     queryKey: [...queryKeys.adminAttendance(selectedDate, deptFilter), "open", debouncedSearch, page, perPage],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -62,7 +72,7 @@ export function AdminOpenShiftsTable() {
     staleTime: STALE_TIME_ATTENDANCE,
   });
 
-  const paginatedData = usePaginatedList<any>(queryData);
+  const paginatedData = usePaginatedList<OpenShiftRecord>(queryData);
   const openShifts = paginatedData.data;
   const totalPages = paginatedData.last_page || 1;
 
@@ -72,7 +82,7 @@ export function AdminOpenShiftsTable() {
       toast.success("Notified HR about open shifts.");
       setRowSelection({});
     },
-    onError: (err: any) => toast.error(err.message || "Failed to notify HR."),
+    onError: (err: { message?: string }) => toast.error(err.message || "Failed to notify HR."),
   });
 
   const handleBulkNotify = async () => {
@@ -81,21 +91,21 @@ export function AdminOpenShiftsTable() {
     notifyMutation.mutate(selectedIds);
   };
 
-  const columns: any[] = [
+  const columns = [
     {
       id: "select",
-      header: ({ table }: any) => (
+      header: ({ table }: { table: Table<OpenShiftRecord> }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+          onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
           className="ml-2"
         />
       ),
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+          onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
           aria-label="Select row"
           className="ml-2"
         />
@@ -106,7 +116,7 @@ export function AdminOpenShiftsTable() {
     {
       accessorKey: "user_name",
       header: "Employee",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
         return (
           <div className="flex flex-col text-left">
             <span className="font-semibold text-foreground">{row.original.user_name || "Employee"}</span>
@@ -118,14 +128,14 @@ export function AdminOpenShiftsTable() {
     {
       accessorKey: "department",
       header: "Department",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
         return <span className="text-xs font-medium text-muted-foreground">{row.original.department_name || "—"}</span>;
       },
     },
     {
       accessorKey: "clock_in",
       header: "Clock In",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
         const val = row.getValue("clock_in") as string;
         return (
           <div className="flex items-center gap-2">
@@ -141,7 +151,7 @@ export function AdminOpenShiftsTable() {
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
         return (
           <Button 
             variant="outline" 
@@ -179,7 +189,7 @@ export function AdminOpenShiftsTable() {
               type: "select",
               value: deptFilter,
               onChange: setDeptFilter,
-              options: departments.map((d: any) => ({ label: d.name, value: d.id.toString() }))
+              options: departments.map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))
             }
           ]}
           onClearAll={() => {
@@ -196,8 +206,9 @@ export function AdminOpenShiftsTable() {
             </Button>
           )}
           <DatePicker 
-            value={selectedDate ? new Date(selectedDate) : undefined} 
-            onChange={(date) => setSelectedDate(date ? format(date, "yyyy-MM-dd") : "")}
+            value={selectedDate ? new Date(selectedDate) : undefined}
+            onChange={(d: Date | undefined) => setSelectedDate(d ? format(d, "yyyy-MM-dd") : "")}
+            placeholder="Select date"
             className="w-auto min-w-[140px] h-10 shrink-0 border-amber-100 dark:border-amber-900/30 focus-visible:ring-amber-500"
           />
         </div>
@@ -224,7 +235,7 @@ export function AdminOpenShiftsTable() {
             stickyFirstCol={true}
             onRowSelectionChange={setRowSelection}
             rowSelection={rowSelection}
-            getRowId={(row: any) => String(row.id)}
+            getRowId={(row) => String(row.id)}
             page={page}
             perPage={perPage}
             totalPages={totalPages}
@@ -240,8 +251,8 @@ export function AdminOpenShiftsTable() {
         dayId={correctionData?.dayId || 0}
         userId={correctionData?.userId || 0}
         date={correctionData?.date || ""}
-        defaultAction={correctionData?.action as any}
-        defaultType={correctionData?.type as any}
+        defaultAction={correctionData?.action as "add_event" | "edit_event" | "remove_event" | undefined}
+        defaultType={correctionData?.type as "clock_in" | "clock_out" | "break_start" | "break_end" | undefined}
       />
     </div>
   );

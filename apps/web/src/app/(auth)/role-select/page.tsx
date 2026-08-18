@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -21,20 +21,9 @@ export default function RoleSelectPage() {
   const token = useAuthStore((s) => s.token);
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
-  const autoSelectedRef = useState({ done: false })[0];
+  const autoSelectedRef = useRef(false);
 
-  useEffect(() => {
-    if (!token && !user) {
-      router.replace("/login");
-      return;
-    }
-    if (user && user.roles && user.roles.length === 1 && !autoSelectedRef.done) {
-      autoSelectedRef.done = true;
-      handleSelectRole(user.roles[0]);
-    }
-  }, [token, user?.id, user?.roles?.length]);
-
-  async function handleSelectRole(role: string) {
+  const handleSelectRole = useCallback(async (role: string) => {
     setIsLoading(role);
     try {
       const data = await apiFetch("/auth/role-select", {
@@ -45,16 +34,28 @@ export default function RoleSelectPage() {
       setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
       queryClient.setQueryData(queryKeys.capabilities(), data.capabilities);
       router.push("/dashboard");
-    } catch (error: any) {
-      if (error.status === 429) {
+    } catch (error) {
+      const e = error as { status?: number; message?: string };
+      if (e.status === 429) {
         toast.error("Too many requests. Please try again later.");
       } else {
-        toast.error(error.message || "Failed to select role.");
+        toast.error(e.message || "Failed to select role.");
       }
     } finally {
       setIsLoading(null);
     }
-  }
+  }, [setAuth, queryClient, router]);
+
+  useEffect(() => {
+    if (!token && !user) {
+      router.replace("/login");
+      return;
+    }
+    if (user && user.roles && user.roles.length === 1 && !autoSelectedRef.current) {
+      autoSelectedRef.current = true;
+      handleSelectRole(user.roles[0]);
+    }
+  }, [token, user, autoSelectedRef, handleSelectRole, router]);
 
   const getRoleInfo = (role: string) => {
     switch (role) {

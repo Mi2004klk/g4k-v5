@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class QaFormField extends Model
 {
     use \App\Traits\HasDemoTag;
-    protected $fillable = ['qa_form_id', 'label', 'field_type', 'required', 'options', 'order', 'demo_tag'];
+    protected $fillable = ['qa_form_id', 'label', 'field_type', 'required', 'options', 'order', 'demo_tag', 'section_id', 'branching_logic'];
 
     protected $casts = [
         'required' => 'boolean',
         'options' => 'array',
+        'branching_logic' => 'array',
         'order' => 'integer',
     ];
 

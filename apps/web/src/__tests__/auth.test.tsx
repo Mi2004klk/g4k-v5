@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import LoginForm from '../app/(auth)/login/page';
 import ForgotPasswordPage from '../app/(auth)/forgot-password/page';
 import { apiFetch } from '@/lib/api-client';
@@ -21,9 +22,11 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock Next.js Image
+/* eslint-disable @next/next/no-img-element */
 vi.mock('next/image', () => ({
-  default: ({ priority, ...props }: any) => <img {...props} />
+  default: ({ priority, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & { priority?: boolean | string }) => <img alt={props.alt || ''} {...props} />
 }));
+/* eslint-enable @next/next/no-img-element */
 
 // Mock sonner toast
 vi.mock('sonner', () => ({
@@ -41,7 +44,7 @@ vi.mock('@/lib/api-client', () => ({
 // Mock auth store
 const mockSetAuth = vi.fn();
 vi.mock('@/lib/auth-store', () => ({
-  useAuthStore: (selector?: any) => {
+  useAuthStore: (selector?: (state: { setAuth: Mock; user: unknown; setSession: Mock; token: unknown }) => unknown) => {
     const state = { setAuth: mockSetAuth, user: null, setSession: vi.fn(), token: null };
     return selector ? selector(state) : state;
   }
@@ -73,7 +76,7 @@ describe('Authentication Components', () => {
     });
 
     it('validates and submits form successfully', async () => {
-      (apiFetch as any).mockImplementation(async (url: string) => {
+      (apiFetch as Mock).mockImplementation(async (url: string) => {
         if (url === '/auth/login') {
           return {
             token: 'fake-token',
@@ -101,11 +104,15 @@ describe('Authentication Components', () => {
 
     it('displays lockout message when receiving a 423 status', async () => {
       // Mock 423 response
-      const lockoutError = new Error('Too many login attempts.');
-      (lockoutError as any).status = 423;
-      (lockoutError as any).retry_after = 600;
+      interface FetchError extends Error {
+        status?: number;
+        retry_after?: number;
+      }
+      const lockoutError = new Error('Too many login attempts.') as FetchError;
+      lockoutError.status = 423;
+      lockoutError.retry_after = 600;
       
-      (apiFetch as any).mockImplementation(async (url: string) => {
+      (apiFetch as Mock).mockImplementation(async (url: string) => {
         if (url === '/auth/login') {
           throw lockoutError;
         }
@@ -127,7 +134,7 @@ describe('Authentication Components', () => {
 
   describe('ForgotPasswordPage', () => {
     it('renders channel selection and submits correctly', async () => {
-      (apiFetch as any).mockResolvedValueOnce({});
+      (apiFetch as Mock).mockResolvedValueOnce({});
 
       render(<ForgotPasswordPage />);
       

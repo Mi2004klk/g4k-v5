@@ -1,12 +1,18 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent, Button, Switch, Skeleton } from "@g4k/ui/components";
+
+export interface SettingItem {
+  category: string;
+  key: string;
+  value: string;
+}
 
 export function NotificationsConfig() {
   const queryClient = useQueryClient();
@@ -14,33 +20,34 @@ export function NotificationsConfig() {
 
   const { data: settings = [], isLoading, isError, refetch } = useQuery({
     queryKey: [...queryKeys.settings, "notifications"],
-    queryFn: () => apiFetch("/settings/grouped").then((res: any) => res["notifications"] || []),
+    queryFn: () => apiFetch("/settings/grouped").then((res: Record<string, SettingItem[]>) => res["notifications"] || []),
   });
 
   useEffect(() => {
     if (settings) {
       const initial: Record<string, string[]> = {};
-      settings.forEach((s: any) => {
+      settings.forEach((s: SettingItem) => {
         try {
           initial[s.key] = JSON.parse(s.value);
-        } catch (e) {
+        } catch (_) {
           initial[s.key] = [];
         }
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(initial);
     }
   }, [settings]);
 
   const updateMutation = useMutation({
-    mutationFn: (settings: any[]) => apiFetch("/settings/bulk", {
+    mutationFn: (settingsArr: SettingItem[]) => apiFetch("/settings/bulk", {
       method: "POST",
-      body: JSON.stringify({ settings }),
+      body: JSON.stringify({ settings: settingsArr }),
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...queryKeys.settings, "notifications"] });
       toast.success("Notification preferences updated");
     },
-    onError: (e: any) => toast.error(e.message || "Update failed"),
+    onError: (e: Error) => toast.error(e.message || "Update failed"),
   });
 
   const handleSave = () => {
@@ -122,7 +129,15 @@ export function NotificationsConfig() {
   );
 }
 
-function NotificationRow({ title, description, settingKey, channels, onToggle }: any) {
+interface NotificationRowProps {
+  title: string;
+  description: string;
+  settingKey: string;
+  channels: string[];
+  onToggle: (key: string, channel: string, checked: boolean) => void;
+}
+
+function NotificationRow({ title, description, settingKey, channels, onToggle }: NotificationRowProps) {
   return (
     <div className="flex items-center justify-between p-4 border rounded-[var(--radius)] border-neutral-200 dark:border-neutral-800">
       <div>

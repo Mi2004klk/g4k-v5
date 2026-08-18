@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
-import { useAuthStore } from "@/lib/auth-store";
+import { useAuthStore, UserProfile } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 
 import {
@@ -35,7 +35,7 @@ export function ProfileGeneralTab() {
   const [phone, setPhone] = useState("");
   const [designationId, setDesignationId] = useState("");
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: queryKeys.profile,
     queryFn: async () => {
       const data = await apiFetch("/profile");
@@ -48,29 +48,29 @@ export function ProfileGeneralTab() {
 
   const { data: designations } = useQuery({
     queryKey: ["designations"],
-    queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])),
+    queryFn: () => apiFetch("/designations").then((res: { data?: unknown[] }) => Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])),
   });
 
   const { data: companyProfile, isLoading: isCompanyLoading } = useQuery({
     queryKey: queryKeys.companyProfile,
-    queryFn: () => apiFetch("/company-profile"),
+    queryFn: () => apiFetch("/companies"),
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: Record<string, unknown>) => {
       return apiFetch("/profile", {
         method: "PUT",
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: (res: any) => {
+    onSuccess: (res: Record<string, unknown>) => {
       toast.success("Profile updated successfully!");
       if (authUser) {
-        setAuth(useAuthStore.getState().token!, res, authUser.active_role);
+        setAuth(useAuthStore.getState().token!, res as unknown as UserProfile, authUser.active_role);
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to update profile.");
     },
   });
@@ -112,7 +112,7 @@ export function ProfileGeneralTab() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unset">Select Designation</SelectItem>
-                    {designations?.map((d: any) => (
+                    {(designations as Array<{ id: number, name: string }> | undefined)?.map((d) => (
                       <SelectItem key={d.id} value={String(d.id)}>
                         {d.name}
                       </SelectItem>

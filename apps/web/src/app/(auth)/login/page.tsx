@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,15 +86,16 @@ export default function LoginPage() {
         ? "/role-select"
         : "/dashboard";
 
-      window.location.href = targetRoute;
-    } catch (error: any) {
-      if (error.status === 423 && error.data?.retry_after) {
-        setLockoutSeconds(error.data.retry_after);
-        form.setError("root", { type: "manual", message: `Account locked. Try again in ${Math.ceil(error.data.retry_after / 60)} minutes.` });
-      } else if (error.status === 429) {
+      router.push(targetRoute);
+    } catch (error) {
+      const e = error as { status?: number; data?: { retry_after?: number }; message?: string };
+      if (e.status === 423 && e.data?.retry_after) {
+        setLockoutSeconds(e.data.retry_after);
+        form.setError("root", { type: "manual", message: `Account locked. Try again in ${Math.ceil(e.data.retry_after / 60)} minutes.` });
+      } else if (e.status === 429) {
         form.setError("root", { type: "manual", message: "Too many login attempts. Please try again later." });
       } else {
-        form.setError("root", { type: "manual", message: error.message || "Invalid credentials. Please try again." });
+        form.setError("root", { type: "manual", message: e.message || "Invalid credentials. Please try again." });
       }
     } finally {
       setIsLoading(false);

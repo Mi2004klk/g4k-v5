@@ -7,12 +7,15 @@ export interface Paginator<T> {
   per_page?: number;
   total?: number;
   next_cursor?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- API meta is dynamic
   meta?: any;
 }
 
 export interface LaravelResponse<T> {
   data?: Paginator<T> | T[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- API meta is dynamic
   meta?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Laravel responses have dynamic keys
   [key: string]: any;
 }
 
@@ -46,7 +49,7 @@ export function unwrapPaginator<T>(response: LaravelResponse<T> | Paginator<T> |
 /**
  * Hook to memoize and safely access paginated lists
  */
-export function usePaginatedList<T>(queryData: any) {
+export function usePaginatedList<T>(queryData: LaravelResponse<T> | Paginator<T> | null | undefined) {
   return useMemo(() => {
     return unwrapPaginator<T>(queryData);
   }, [queryData]);

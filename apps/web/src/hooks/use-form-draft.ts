@@ -14,7 +14,7 @@ const initDB = async () => {
   });
 };
 
-export function useFormDraft<T extends Record<string, any>>(key: string, initialValues: T) {
+export function useFormDraft<T extends Record<string, unknown>>(key: string, initialValues: T) {
   const [formData, setFormData] = useState<T>(initialValues);
   const [hasDraft, setHasDraft] = useState(false);
   const dataRef = useRef(formData);

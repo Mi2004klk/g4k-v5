@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 
 import { Button } from "@g4k/ui/components";
@@ -59,11 +59,12 @@ export default function ForgotPasswordPage() {
       }
 
       setIsSubmitted(true);
-    } catch (error: any) {
-      if (error.status === 429) {
+    } catch (error) {
+      const e = error as { status?: number; message?: string };
+      if (e.status === 429) {
         form.setError("root", { type: "manual", message: "Too many requests. Please try again later." });
       } else {
-        form.setError("root", { type: "manual", message: error.message || "Failed to submit request." });
+        form.setError("root", { type: "manual", message: e.message || "Failed to submit request." });
       }
     } finally {
       setIsLoading(false);

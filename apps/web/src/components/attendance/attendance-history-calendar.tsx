@@ -14,10 +14,8 @@ import {
   isToday,
   subWeeks,
   eachWeekOfInterval,
-  isSameDay,
-  parseISO,
 } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import {
   Button,
   Skeleton,
@@ -41,12 +39,18 @@ import { useTimerStore } from "@/stores/timer-store";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+interface HolidayRecord {
+  date: string;
+  name?: string;
+  type?: string;
+}
+
 interface AttendanceEvent {
   id: number;
   user_id: number;
   type: string;
   timestamp: string;
-  device_meta: any;
+  device_meta: Record<string, unknown>;
   source: string;
 }
 
@@ -78,7 +82,7 @@ function formatSecs(secs: number): string {
   return `${h}h ${m}m`;
 }
 
-function getStatus(days: AttendanceDay[], holidays: any[], dateStr: string): DayStatus {
+function getStatus(days: AttendanceDay[], holidays: HolidayRecord[], dateStr: string): DayStatus {
   const day = days.find((d) => d.date === dateStr);
   const isHoliday = holidays.find((h) => h.date === dateStr);
   
@@ -150,7 +154,7 @@ function CalendarLegend({ compact = false }: { compact?: boolean }) {
 
 // ─── Day Tooltip Content ──────────────────────────────────────────────────────
 
-function DayTooltipContent({ date, record, holiday }: { date: Date; record?: AttendanceDay; holiday?: any }) {
+function DayTooltipContent({ date, record, holiday }: { date: Date; record?: AttendanceDay; holiday?: HolidayRecord }) {
   const dateStr = format(date, "yyyy-MM-dd");
   const status = getStatus(record ? [record] : [], holiday ? [holiday] : [], dateStr);
   return (
@@ -195,7 +199,7 @@ function MonthCalendarGrid({
   onDayClick,
 }: {
   days: AttendanceDay[];
-  holidays: any[];
+  holidays: HolidayRecord[];
   currentDate: Date;
   onDayClick: (day: AttendanceDay | null, date: Date) => void;
 }) {
@@ -300,88 +304,7 @@ function MonthCalendarGrid({
 
 // ─── Activity Strip (Mobile — GitHub-style) ──────────────────────────────────
 
-function ContributionHeatmap({ days, holidays }: { days: AttendanceDay[]; holidays: any[] }) {
-  const isMobile = useIsMobile();
-  const weeksToShow = isMobile ? 26 : 52; 
-  
-  const calendarWeeks = useMemo(() => {
-    const end = endOfWeek(new Date(), { weekStartsOn: 1 });
-    const start = startOfWeek(subWeeks(end, weeksToShow - 1), { weekStartsOn: 1 });
-    return eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
-  }, [weeksToShow]);
 
-  return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex items-start gap-2 overflow-x-auto pb-2 scrollbar-hide" data-testid="contribution-heatmap">
-        {/* Days of week labels */}
-        <div className="flex flex-col gap-[3px] text-[10px] text-neutral-400 font-medium pr-1 pt-[14px]">
-          <span className="h-[10px] flex items-center leading-none">M</span>
-          <span className="h-[10px] flex items-center leading-none"></span>
-          <span className="h-[10px] flex items-center leading-none">W</span>
-          <span className="h-[10px] flex items-center leading-none"></span>
-          <span className="h-[10px] flex items-center leading-none">F</span>
-          <span className="h-[10px] flex items-center leading-none"></span>
-          <span className="h-[10px] flex items-center leading-none">S</span>
-        </div>
-
-        {/* Grid cells */}
-        <div className="flex gap-[3px]">
-          {calendarWeeks.map((weekStart, wIdx) => {
-            const weekDays = eachDayOfInterval({
-              start: weekStart,
-              end: endOfWeek(weekStart, { weekStartsOn: 1 }),
-            });
-            return (
-              <div key={wIdx} className="flex flex-col gap-[3px]">
-                {weekDays.map((date) => {
-                  const dateStr = format(date, "yyyy-MM-dd");
-                  const record = getDayRecord(days, dateStr);
-                  const holiday = holidays.find(h => h.date === dateStr);
-                  const status = getStatus(days, holidays, dateStr);
-                  const isFuture = date > new Date();
-
-                  // Hide future days
-                  if (isFuture && !holiday) {
-                    return <div key={dateStr} className="w-[10px] h-[10px] rounded-[2px]" />;
-                  }
-                  if (isFuture && holiday) {
-                      return (
-                      <Tooltip key={dateStr}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`w-[10px] h-[10px] rounded-[2px] transition-colors ${STATUS_STYLES[status]}`}
-                            aria-label={`Holiday on ${dateStr}`}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <DayTooltipContent date={date} holiday={holiday} />
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  }
-
-                  return (
-                    <Tooltip key={dateStr}>
-                      <TooltipTrigger asChild>
-                        <div
-                          className={`w-[10px] h-[10px] rounded-[2px] transition-all hover:ring-1 hover:ring-offset-1 hover:ring-neutral-400 ${STATUS_STYLES[status]}`}
-                          aria-label={`${STATUS_LABEL[status]} on ${dateStr}`}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <DayTooltipContent date={date} record={record} holiday={holiday} />
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </TooltipProvider>
-  );
-}
 
 // ─── Main Export ─────────────────────────────────────────────────────────────
 
@@ -572,7 +495,6 @@ function DayDetailContent({
   const events: AttendanceEvent[] = data?.events || [];
   const day: AttendanceDay = data?.day || summaryDay;
   const timerStandard = useTimerStore((s) => s.standardSeconds);
-  const standardSeconds: number = data?.standard_seconds || (userId ? 31500 : timerStandard);
 
   if (summaryDay.id === 0) {
     return (
@@ -635,9 +557,9 @@ function DayDetailContent({
                     {safeFormat(evt.timestamp, "hh:mm a")}
                   </div>
                 </div>
-                {evt.device_meta?.platform && (
+                {!!(evt.device_meta as any)?.platform && (
                   <span className="text-[9px] text-neutral-400 shrink-0 hidden sm:block">
-                    {evt.device_meta.platform}
+                    {evt.device_meta.platform as string}
                   </span>
                 )}
               </div>

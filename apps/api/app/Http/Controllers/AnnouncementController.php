@@ -61,7 +61,7 @@ class AnnouncementController extends Controller
             'title' => $validated['title'],
             'body' => $validated['body'],
             'scope' => $validated['scope'] ?? 'company',
-            'team_id' => $validated['team_id'] ?? null,
+            'team_id' => $validated['team_id'] ?? ($validated['scope'] === 'team' ? $request->user()->team_id : null),
             'created_by' => $request->user()->id,
             'pinned_at' => !empty($validated['pinned']) ? now() : null,
             'priority' => $validated['priority'] ?? 'normal',
@@ -122,6 +122,10 @@ class AnnouncementController extends Controller
         if (array_key_exists('pinned', $validated)) {
             $validated['pinned_at'] = $validated['pinned'] ? now() : null;
             unset($validated['pinned']);
+        }
+
+        if (isset($validated['scope']) && $validated['scope'] === 'team' && !isset($validated['team_id'])) {
+            $validated['team_id'] = $request->user()->team_id;
         }
 
         $announcement->update($validated);

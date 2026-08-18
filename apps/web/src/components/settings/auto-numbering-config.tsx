@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
@@ -10,6 +10,21 @@ import { Input } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
+
+export interface AutoNumberingData {
+  prefix: string;
+  format: string;
+  start_number: number;
+}
+
+export interface AutoNumberingRecord {
+  id: number;
+  entity_type: string;
+  prefix?: string;
+  format?: string;
+  current_number?: number;
+  start_number: number;
+}
 
 export function AutoNumberingConfig() {
   const queryClient = useQueryClient();
@@ -23,13 +38,13 @@ export function AutoNumberingConfig() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: number; data: AutoNumberingData }) =>
       apiFetch(`/auto-numberings/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     onSuccess: () => {
       toast.success("Settings saved");
       queryClient.invalidateQueries({ queryKey: queryKeys.autoNumberings });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to update format");
     },
   });
@@ -45,14 +60,14 @@ export function AutoNumberingConfig() {
 
   return (
     <div className="space-y-6">
-      {records.map((record: any) => (
+      {records.map((record: AutoNumberingRecord) => (
         <NumberingRow key={record.id} record={record} onSave={(data) => updateMutation.mutate({ id: record.id, data })} isPending={updateMutation.isPending} />
       ))}
     </div>
   );
 }
 
-function NumberingRow({ record, onSave, isPending }: { record: any; onSave: (data: any) => void; isPending: boolean }) {
+function NumberingRow({ record, onSave, isPending }: { record: AutoNumberingRecord; onSave: (data: AutoNumberingData) => void; isPending: boolean }) {
   const [formData, setFormData] = useState({
     prefix: record.prefix || "",
     format: record.format || "",

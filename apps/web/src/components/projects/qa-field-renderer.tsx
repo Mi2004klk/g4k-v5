@@ -3,12 +3,21 @@ import { Textarea } from "@g4k/ui/components";
 import { Checkbox } from "@g4k/ui/components";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 
-export function QAFieldRenderer({ field, value, onChange }: { field: any, value: any, onChange: (val: any) => void }) {
+export interface QAField {
+  id: string | number;
+  type: string;
+  label?: string;
+  options?: string[];
+  min?: number;
+  max?: number;
+}
+
+export function QAFieldRenderer({ field, value, onChange }: { field: QAField, value: string | boolean | number, onChange: (val: string) => void }) {
   if (field.type === "textarea") {
     return (
       <Textarea
         className="w-full text-xs resize-y"
-        value={value || ""}
+        value={(value as string) || ""}
         onChange={(e) => onChange(e.target.value)}
         rows={3}
       />
@@ -33,7 +42,7 @@ export function QAFieldRenderer({ field, value, onChange }: { field: any, value:
   if (field.type === "select") {
     const options = field.options || [];
     return (
-      <Select value={value || ""} onValueChange={onChange}>
+      <Select value={(value as string) || ""} onValueChange={onChange}>
         <SelectTrigger className="h-8 text-xs">
           <SelectValue placeholder="Select..." />
         </SelectTrigger>
@@ -55,7 +64,7 @@ export function QAFieldRenderer({ field, value, onChange }: { field: any, value:
           type="range"
           min={field.min || 0}
           max={field.max || 100}
-          value={value || field.min || 0}
+          value={(value as any) || field.min || 0}
           onChange={(e) => onChange(e.target.value)}
           className="flex-1 accent-primary-600"
         />
@@ -69,7 +78,7 @@ export function QAFieldRenderer({ field, value, onChange }: { field: any, value:
     <Input
       className="h-8 text-xs"
       type={field.type === "number" ? "number" : "text"}
-      value={value || ""}
+      value={(value as any) || ""}
       onChange={(e) => onChange(e.target.value)}
     />
   );

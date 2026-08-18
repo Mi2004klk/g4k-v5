@@ -24,6 +24,16 @@ import {
 } from "@g4k/ui/components";
 import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 
+interface SessionRecord {
+  id: string;
+  device_name?: string;
+  user_agent?: string;
+  ip_address?: string;
+  created_at?: string;
+  last_used_at?: string;
+  is_current?: boolean;
+}
+
 export function ProfileSecurityTab() {
   const queryClient = useQueryClient();
   const authUser = useAuthStore((s) => s.user);
@@ -64,7 +74,7 @@ export function ProfileSecurityTab() {
       setNewPassword("");
       setConfirmPassword("");
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to change password.");
     },
   });
@@ -79,12 +89,12 @@ export function ProfileSecurityTab() {
       setIsRevokeOpen(false);
       setRevokeId(null);
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to revoke session.");
     },
   });
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<SessionRecord>[] = [
     {
       accessorKey: "device_name",
       header: "Device / Browser",
@@ -259,8 +269,9 @@ export function ProfileSecurityTab() {
                 await apiFetch("/auth/logout", { method: "POST" });
                 toast.success("Logged out successfully");
                 window.location.href = "/login";
-              } catch (e: any) {
-                toast.error(e.message || "Logout failed");
+              } catch (e) {
+                const err = e as { message?: string };
+                toast.error(err.message || "Logout failed");
               }
             }}
             className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 shrink-0"

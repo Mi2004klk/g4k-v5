@@ -36,8 +36,9 @@ import { VersionGuard } from "./version-guard";
 export function Providers({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
-      import('@axe-core/react').then((axe) => {
-        axe.default(React, require('react-dom'), 1000);
+      import('@axe-core/react').then(async (axe) => {
+        const reactDom = await import('react-dom');
+        axe.default(React, reactDom.default, 1000);
       }).catch(() => {});
     }
   }, []);
@@ -59,15 +60,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
         },
         mutationCache: new MutationCache({
-          onError: (error: any, variables: any, context: any, mutation: any) => {
-            if (mutation?.meta?.suppressToast) return;
-            const status = error?.status;
-            if (status >= 500) {
+          onError: (error: unknown, variables: unknown, context: unknown, mutation: unknown) => {
+            const mut = mutation as { meta?: { suppressToast?: boolean }; execute: (vars: unknown) => void };
+            if (mut?.meta?.suppressToast) return;
+            const err = error as { status?: number };
+            const status = err?.status;
+            if (status && status >= 500) {
               import("sonner").then(({ toast }) => 
                 toast.error("Server error. Please try again later.", {
                   action: {
                     label: "Retry",
-                    onClick: () => mutation.execute(variables),
+                    onClick: () => mut.execute(variables),
                   },
                 })
               );

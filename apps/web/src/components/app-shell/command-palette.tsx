@@ -188,12 +188,10 @@ export function CommandPalette() {
               <AppIcon name="directory" className=" mr-2 text-emerald-500" />
               <span>View Company Attendance</span>
             </CommandItem>
-            {hasCapability(capabilities, "admin.view-all-attendance") && (
-              <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/admin/attendance"))}>
-                <AppIcon name="teamAttendance" className=" mr-2 text-blue-500" />
-                <span>Admin Attendance Overview</span>
-              </CommandItem>
-            )}
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/attendance"))}>
+              <AppIcon name="teamAttendance" className=" mr-2 text-blue-500" />
+              <span>Admin Attendance Overview</span>
+            </CommandItem>
             {hasCapability(capabilities, "reports.view") && (
               <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/reports"))}>
                 <AppIcon name="spreadsheet" className=" mr-2 text-primary-500" />
@@ -213,15 +211,15 @@ export function CommandPalette() {
             <AppIcon name="directory" className=" mr-2" />
             <span>Employee Directory</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/directory?tab=management"))}>
             <AppIcon name="directory" className=" mr-2" />
             <span>User Accounts Management</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users?tab=departments"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/directory?tab=departments"))}>
             <AppIcon name="building" className=" mr-2" />
             <span>Departments & Teams</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/users?tab=designations"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/directory?tab=designations"))}>
             <AppIcon name="briefcase" className=" mr-2" />
             <span>Designations Master</span>
           </CommandItem>

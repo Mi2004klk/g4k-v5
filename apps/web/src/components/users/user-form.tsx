@@ -23,11 +23,18 @@ export const userSchema = z.object({
 
 export type UserFormValues = z.infer<typeof userSchema>;
 
+export interface FormOption {
+  id: number;
+  name: string;
+  teams?: { id: number; name: string }[];
+  [key: string]: unknown;
+}
+
 interface UserFormProps {
   defaultValues?: Partial<UserFormValues>;
-  departments: any[];
-  designations: any[];
-  work_schedules: any[];
+  departments: FormOption[];
+  designations: FormOption[];
+  work_schedules: FormOption[];
   onSubmit: (data: UserFormValues) => void;
   onCancel: () => void;
   onValuesChange?: (values: UserFormValues) => void;
@@ -61,11 +68,12 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
   });
 
   const watchDept = watch("department_id");
-  const selectedDept = departments?.find((d: any) => d.id === Number(watchDept));
+  const selectedDept = departments?.find((d: FormOption) => d.id === Number(watchDept));
   const availableTeams = selectedDept?.teams || [];
 
   useEffect(() => {
     if (onValuesChange) {
+      // eslint-disable-next-line react-hooks/incompatible-library
       const subscription = watch((value) => onValuesChange(value as UserFormValues));
       return () => subscription.unsubscribe();
     }
@@ -108,7 +116,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
               control={control}
               render={({ field }) => (
                 <Combobox
-                  options={departments?.map((d: any) => ({ label: d.name, value: d.id.toString() })) || []}
+                  options={departments?.map((d: FormOption) => ({ label: d.name, value: d.id.toString() })) || []}
                   value={field.value}
                   onChange={(val) => { field.onChange(val); setValue("team_id", ""); }}
                   placeholder="Select Department"
@@ -125,7 +133,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
               control={control}
               render={({ field }) => (
                 <Combobox
-                  options={availableTeams.map((t: any) => ({ label: t.name, value: t.id.toString() }))}
+                  options={availableTeams.map((t: { id: number; name: string }) => ({ label: t.name, value: t.id.toString() }))}
                   value={field.value}
                   onChange={field.onChange}
                   disabled={!watchDept}
@@ -141,7 +149,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
               control={control}
               render={({ field }) => (
                 <Combobox
-                  options={designations?.map((d: any) => ({ label: d.name, value: d.id.toString() })) || []}
+                  options={designations?.map((d: FormOption) => ({ label: d.name, value: d.id.toString() })) || []}
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select Designation"
@@ -158,7 +166,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
               control={control}
               render={({ field }) => (
                 <Combobox
-                  options={work_schedules?.map((ws: any) => ({ label: ws.name, value: ws.id.toString() })) || []}
+                  options={work_schedules?.map((ws: FormOption) => ({ label: ws.name, value: ws.id.toString() })) || []}
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Select Schedule (Default)"

@@ -9,6 +9,8 @@ export function useDashboardInit<TData = any>(options?: Omit<UseQueryOptions<any
     staleTime: 5 * 60_000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
     ...options,
   });
 }

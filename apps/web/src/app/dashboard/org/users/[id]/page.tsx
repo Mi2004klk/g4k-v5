@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@g4k/ui/components";
 import { Skeleton, ConfirmDialog, EmptyState } from "@g4k/ui/components";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -51,10 +51,10 @@ export default function EmployeeDetailPage() {
       method: "POST",
       body: JSON.stringify({ recipient_id: recipientId }),
     }),
-    onSuccess: (conversation: any) => {
+    onSuccess: (conversation: { conversation_id?: string | number, id?: string | number }) => {
       router.push(`/dashboard/chat?conversation=${conversation.conversation_id || conversation.id}`);
     },
-    onError: (err: any) => toast.error(err.message || "Failed to start chat."),
+    onError: (err: { message?: string }) => toast.error(err.message || "Failed to start chat."),
   });
 
   const { pins, pin, unpin, isPinning, isUnpinning } = usePins();
@@ -81,19 +81,19 @@ export default function EmployeeDetailPage() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/departments").then((res: { data?: unknown[] }) => Array.isArray(res?.data) ? res.data : []),
     enabled: canManageUsers,
   });
 
   const { data: designations = [] } = useQuery({
     queryKey: queryKeys.designations,
-    queryFn: () => apiFetch("/designations").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/designations").then((res: { data?: unknown[] }) => Array.isArray(res?.data) ? res.data : []),
     enabled: canManageUsers,
   });
 
   const { data: workSchedules = [] } = useQuery({
     queryKey: queryKeys.workSchedules,
-    queryFn: () => apiFetch("/work-schedules").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/work-schedules").then((res: { data?: unknown[] }) => Array.isArray(res?.data) ? res.data : []),
     enabled: hasCapability(capabilities, "settings.manage") || hasCapability(capabilities, "users.hr.manage"),
   });
 
@@ -121,7 +121,7 @@ export default function EmployeeDetailPage() {
         <div className="p-8 text-center bg-card dark:bg-neutral-900 border rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150">
           <AppIcon name="audit" size="2xl" className=" text-rose-500 mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">Failed to load user</h3>
-          <p className="text-xs text-neutral-500 mb-4">The user could not be found or you don't have permission.</p>
+          <p className="text-xs text-neutral-500 mb-4">The user could not be found or you don&apos;t have permission.</p>
           <div className="flex justify-center gap-3">
             <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
             <Button onClick={() => refetch()}>Retry</Button>
@@ -135,8 +135,8 @@ export default function EmployeeDetailPage() {
     return <div className="p-8">User not found</div>;
   }
 
-  const onSubmitEdit = (data: any) => {
-    updateMutation.mutate({ id: editingUser.id, payload: data });
+  const onSubmitEdit = (data: Record<string, unknown>) => {
+    updateMutation.mutate({ id: (editingUser as any).id, payload: data });
   };
 
   return (
@@ -250,7 +250,7 @@ export default function EmployeeDetailPage() {
                     <p className="text-sm text-neutral-500">View detailed attendance history, timesheets, and daily logs for this user.</p>
                   </div>
                   {hasCapability(capabilities, "admin.view-all-attendance") && (
-                    <Link href={`/dashboard/admin/attendance?search=${user.name}`}>
+                    <Link href={`/dashboard/org/attendance?search=${user.name}`}>
                       <Button variant="outline" className="gap-2">
                         <AppIcon name="calendar" /> Go to Admin Attendance
                       </Button>
@@ -266,13 +266,13 @@ export default function EmployeeDetailPage() {
             <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Leave History</CardTitle></CardHeader><CardContent>
                {leaves?.data?.length ? (
                  <div className="space-y-4">
-                   {leaves.data.map((l: any) => (
+                   {leaves.data.map((l: { id: number; type: string; start_date: string; end_date: string; reason?: string; approval?: { status: string } }) => (
                       <div key={l.id} className="p-4 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
                         <div className="flex justify-between items-start mb-2">
                           <span className="font-medium capitalize">{l.type.replace('_', ' ')} Leave</span>
                           <span className={`px-2 py-1 text-[10px] uppercase font-bold rounded-full ${l.approval?.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : l.approval?.status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>{l.approval?.status || 'pending'}</span>
                         </div>
-                        <div className="text-sm text-neutral-500">From {new Date(l.start_date).toLocaleDateString()} to {new Date(l.end_date).toLocaleDateString()}</div>
+                        <div className="text-sm text-neutral-500">From {l.start_date ? new Date(l.start_date).toLocaleDateString() : 'N/A'} to {l.end_date ? new Date(l.end_date).toLocaleDateString() : 'N/A'}</div>
                         {l.reason && <div className="text-xs mt-2 text-neutral-600">Reason: {l.reason}</div>}
                       </div>
                    ))}
@@ -288,7 +288,7 @@ export default function EmployeeDetailPage() {
                <h3 className="font-bold mb-3">Projects ({assignments?.projects?.length || 0})</h3>
                {assignments?.projects?.length > 0 ? (
                  <div className="flex flex-wrap gap-2 mb-6">
-                   {assignments.projects.map((p: any) => <span key={p.id} className="px-3 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-[var(--radius)] text-sm">{p.name}</span>)}
+                   {assignments.projects.map((p: { id: number; name: string }) => <span key={p.id} className="px-3 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-[var(--radius)] text-sm">{p.name}</span>)}
                  </div>
                ) : (
                  <EmptyState title="No Projects" description="No active projects assigned." icon="folder" className="mb-6 p-4" />
@@ -297,7 +297,7 @@ export default function EmployeeDetailPage() {
                <h3 className="font-bold mb-3">Tasks ({assignments?.tasks?.length || 0})</h3>
                {assignments?.tasks?.length > 0 ? (
                  <div className="space-y-2">
-                   {assignments.tasks.map((t: any) => (
+                   {assignments.tasks.map((t: { id: number; title: string; project?: { name: string }; status: string }) => (
                      <div key={t.id} className="flex items-center justify-between p-3 border rounded-[var(--radius)] text-sm">
                        <div><span className="font-medium">{t.title}</span><span className="text-neutral-500 block text-xs">{t.project?.name}</span></div>
                        <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded text-xs capitalize">{t.status.replace('_', ' ')}</span>
@@ -314,10 +314,10 @@ export default function EmployeeDetailPage() {
             <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150"><CardHeader><CardTitle>Recent Activity</CardTitle></CardHeader><CardContent>
                {activity?.data?.length ? (
                  <div className="space-y-3">
-                   {activity.data.map((log: any) => (
+                   {activity.data.map((log: { id: number; action: string; subject_type?: string; entity_type?: string; at?: string; created_at?: string; ip_address?: string }) => (
                       <div key={log.id} className="p-3 border rounded-[var(--radius)] text-sm bg-neutral-50 dark:bg-neutral-900/50">
                         <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type || log.entity_type}</span>
-                        <span className="text-xs text-neutral-500 block mt-1">{new Date(log.at || log.created_at).toLocaleString()} - IP: {log.ip_address || 'N/A'}</span>
+                        <span className="text-xs text-neutral-500 block mt-1">{new Date(log.at || log.created_at || "").toLocaleString()} - IP: {log.ip_address || 'N/A'}</span>
                       </div>
                    ))}
                  </div>
@@ -330,14 +330,14 @@ export default function EmployeeDetailPage() {
         </Tabs>
       </div>
 
-      {isEditOpen && editingUser && (
+      {isEditOpen && !!editingUser && (
         <UserEditDialog
           isOpen={isEditOpen}
           onOpenChange={setIsEditOpen}
-          user={editingUser}
-          departments={departments}
-          designations={designations}
-          work_schedules={workSchedules}
+          user={editingUser as any}
+          departments={departments as any}
+          designations={designations as any}
+          work_schedules={workSchedules as any}
           onSubmit={onSubmitEdit}
           isPending={updateMutation.isPending}
         />
@@ -349,19 +349,19 @@ export default function EmployeeDetailPage() {
         title={confirmState.type === "delete" ? "Delete User" : confirmState.type === "restore" ? "Restore User" : confirmState.type === "status" ? "Change Status" : "Reset Password"}
         description={
           confirmState.type === "delete"
-            ? `Are you sure you want to delete ${confirmState.payload?.name}? This action cannot be undone.`
+            ? `Are you sure you want to delete ${(confirmState.payload as any)?.name}? This action cannot be undone.`
             : confirmState.type === "restore"
-            ? `Are you sure you want to restore ${confirmState.payload?.name}? Their account will be reactivated.`
+            ? `Are you sure you want to restore ${(confirmState.payload as any)?.name}? Their account will be reactivated.`
             : confirmState.type === "status"
-            ? `Are you sure you want to ${confirmState.payload?.status === 'active' ? 'deactivate' : 'activate'} ${confirmState.payload?.name}?`
-            : `Are you sure you want to reset the password for ${confirmState.payload?.name} to the system default?`
+            ? `Are you sure you want to ${(confirmState.payload as any)?.status === 'active' ? 'deactivate' : 'activate'} ${(confirmState.payload as any)?.name}?`
+            : `Are you sure you want to reset the password for ${(confirmState.payload as any)?.name} to the system default?`
         }
         confirmText={confirmState.type === "delete" ? "Delete" : confirmState.type === "restore" ? "Restore" : "Confirm"}
         onConfirm={() => {
-          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
-          else if (confirmState.type === "restore") restoreMutation.mutate(confirmState.payload.id);
-          else if (confirmState.type === "status") statusMutation.mutate({ id: confirmState.payload.id, status: confirmState.payload.status === "active" ? "inactive" : "active" });
-          else if (confirmState.type === "reset-password") resetPasswordMutation.mutate(confirmState.payload.id);
+          if (confirmState.type === "delete") deleteMutation.mutate((confirmState.payload as any).id);
+          else if (confirmState.type === "restore") restoreMutation.mutate((confirmState.payload as any).id);
+          else if (confirmState.type === "status") statusMutation.mutate({ id: (confirmState.payload as any).id, status: (confirmState.payload as any).status === "active" ? "inactive" : "active" });
+          else if (confirmState.type === "reset-password") resetPasswordMutation.mutate((confirmState.payload as any).id);
         }}
         isLoading={deleteMutation.isPending || statusMutation.isPending || restoreMutation.isPending || resetPasswordMutation.isPending}
         isDestructive={confirmState.type === "delete"}
@@ -383,7 +383,8 @@ function UserAttendanceView({ userId }: { userId: number }) {
   }
 
   if (isError) {
-    const isForbidden = (error as any)?.status === 403 || (error as any)?.message?.toLowerCase().includes("unauthorized");
+    const e = error as { status?: number, message?: string };
+    const isForbidden = e?.status === 403 || e?.message?.toLowerCase().includes("unauthorized");
     return (
       <div className="p-8 mt-4 text-center border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
         <AppIcon name="key" size="2xl" className="text-neutral-400 mx-auto mb-2" />

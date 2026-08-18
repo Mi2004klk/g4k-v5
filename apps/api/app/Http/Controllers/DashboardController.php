@@ -273,7 +273,7 @@ class DashboardController extends Controller
                 $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
                 
                 $deptUserIds = empty($deptIds) 
-                    ? User::select('id') 
+                    ? User::select('id')->whereRaw('1 = 0') 
                     : User::select('id')->whereIn('department_id', $deptIds);
 
                 $data['total_employees'] = $deptUserIds->count();

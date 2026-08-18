@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { safeFormat } from "@/lib/format";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import {
   Sheet,
@@ -28,16 +27,24 @@ interface TeamMemberAttendanceSheetProps {
 }
 import { queryKeys } from "@/lib/query-keys";
 
-import { useEffect } from "react";
+interface BreakRecord {
+  start: Date;
+  end: Date | null;
+  duration: number;
+  isApproved?: boolean;
+  isOngoing?: boolean;
+}
 
 export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", onClose }: TeamMemberAttendanceSheetProps) {
   const [tab, setTab] = useState(initialTab);
+  const [prevUserId, setPrevUserId] = useState(userId);
 
-  useEffect(() => {
+  if (userId !== prevUserId) {
+    setPrevUserId(userId);
     if (userId) {
       setTab(initialTab);
     }
-  }, [userId, initialTab]);
+  }
 
   const { data: dayData, isLoading: isLoadingDay } = useQuery({
     queryKey: userId !== null ? queryKeys.memberAttendanceDay(userId, date) : [],
@@ -56,7 +63,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
   const user = dayData?.user;
 
   // Process breaks from events
-  const breaks = [];
+  const breaks: BreakRecord[] = [];
   if (events) {
     let currentBreakStart = null;
     for (const event of events) {
@@ -133,12 +140,12 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                     </div>
                     <span className="text-sm font-bold text-neutral-900 dark:text-white">
                       {day?.unapproved_break_seconds ? `${Math.floor(day.unapproved_break_seconds / 3600)}h ${Math.floor((day.unapproved_break_seconds % 3600) / 60)}m` : "0h 0m"}
-                      {breaks.length > 0 && <span className="text-xs text-neutral-400 font-normal ml-1">({breaks.filter((b: any) => !b.isApproved).length})</span>}
+                      {breaks.length > 0 && <span className="text-xs text-neutral-400 font-normal ml-1">({breaks.filter((b) => !b.isApproved).length})</span>}
                     </span>
                   </div>
                   {breaks.length > 0 && (
                     <div className="pl-6 space-y-2 mt-1 border-l-2 border-neutral-100 dark:border-neutral-800 ml-1.5 py-1">
-                      {breaks.map((b: any, i: number) => (
+                      {breaks.map((b, i: number) => (
                         <div key={i} className="flex justify-between items-center text-xs text-neutral-500">
                           <div className="flex items-center gap-2">
                             <span>

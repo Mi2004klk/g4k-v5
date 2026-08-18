@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { reconcileLayout } from "../lib/utils/layout-utils";
 
+interface LayoutItem {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 describe("reconcileLayout", () => {
   const availableWidgets = [
     { id: "w1", defaultLayout: { lg: { w: 4, h: 2, x: 0, y: 0 } } },
@@ -93,7 +101,7 @@ describe("reconcileLayout", () => {
 
     const result = reconcileLayout(savedNested, availableWidgets, colsMap);
     const w1 = result?.layouts.lg.find((i: any) => i.i === "w1");
-    expect(w1.x).toBe(5);
+    expect((w1 as any)?.x).toBe(5);
   });
   
   it("respects dismissed widgets and does not re-add them", () => {

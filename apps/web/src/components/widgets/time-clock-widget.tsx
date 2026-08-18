@@ -6,9 +6,8 @@ import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
-import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { offlineEngine } from "@/lib/offline-engine";
 import {
@@ -23,6 +22,12 @@ import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
 
+export interface AttendanceToday {
+  day: unknown;
+  events: unknown[];
+  standard_seconds: number;
+}
+
 export function TimeClockWidget({ className }: { className?: string }) {
 
   const [showConfirmOut, setShowConfirmOut] = useState(false);
@@ -36,7 +41,6 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const isActive = useTimerStore((s) => s.isActive);
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
   const baseSeconds = useTimerStore((s) => s.baseSeconds);
-  const lastActiveTimestamp = useTimerStore((s) => s.lastActiveTimestamp);
   const syncWithServer = useTimerStore((s) => s.syncWithServer);
   const startTimer = useTimerStore((s) => s.startTimer);
   const stopTimer = useTimerStore((s) => s.stopTimer);
@@ -44,7 +48,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const endBreak = useTimerStore((s) => s.endBreak);
 
   const { data: todayData, isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => data?.attendance_today ?? null,
+    select: (data: { attendance_today?: AttendanceToday } & Record<string, unknown>) => data?.attendance_today ?? null,
     placeholderData: keepPreviousData,
   });
 
@@ -87,8 +91,8 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   const handlePunch = async (type: string) => {
     // If local state is not_started, but todayData has a clock_in, reconcile instead of punching
-    if (type === "clock_in" && activeState === "not_started" && todayData?.day?.clock_in) {
-      syncWithServer(todayData.day, todayData.events || [], todayData.standard_seconds);
+    if (type === "clock_in" && activeState === "not_started" && (todayData as any)?.day?.clock_in) {
+      syncWithServer((todayData as any).day, (todayData as any).events || [], (todayData as any).standard_seconds);
       return;
     }
 
@@ -122,9 +126,9 @@ export function TimeClockWidget({ className }: { className?: string }) {
         queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       }
       toast.success(`Recorded: ${type.replace("_", " ").toUpperCase()}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Revert optimistic state on fatal error
-      const msg = err.message || "Failed to record punch. Syncing with server...";
+      const msg = err instanceof Error ? err.message : "Failed to record punch. Syncing with server...";
       if (msg.toLowerCase().includes("already")) {
         toast.warning(msg);
       } else {

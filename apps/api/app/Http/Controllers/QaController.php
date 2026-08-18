@@ -18,16 +18,20 @@ class QaController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'is_template' => 'boolean',
             'fields' => 'required|array|min:1',
             'fields.*.label' => 'required|string',
-            'fields.*.field_type' => 'required|in:input,textarea,checkbox,slider,select',
+            'fields.*.field_type' => 'required|string',
             'fields.*.required' => 'boolean',
             'fields.*.options' => 'nullable|array',
+            'fields.*.section_id' => 'nullable|string',
+            'fields.*.branching_logic' => 'nullable|array',
         ]);
 
         $qaForm = QaForm::create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            'is_template' => $validated['is_template'] ?? true,
             'created_by' => $request->user()->id,
         ]);
 
@@ -38,6 +42,8 @@ class QaController extends Controller
                 'field_type' => $field['field_type'],
                 'required' => $field['required'] ?? false,
                 'options' => $field['options'] ?? null,
+                'section_id' => $field['section_id'] ?? null,
+                'branching_logic' => $field['branching_logic'] ?? null,
                 'order' => $index,
             ]);
         }
@@ -57,15 +63,19 @@ class QaController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
+            'is_template' => 'boolean',
             'fields' => 'nullable|array',
             'fields.*.label' => 'required_with:fields|string',
-            'fields.*.field_type' => 'required_with:fields|in:input,textarea,checkbox,slider,select',
+            'fields.*.field_type' => 'required_with:fields|string',
             'fields.*.required' => 'boolean',
             'fields.*.options' => 'nullable|array',
+            'fields.*.section_id' => 'nullable|string',
+            'fields.*.branching_logic' => 'nullable|array',
         ]);
 
         if (isset($validated['title'])) $qaForm->title = $validated['title'];
         if (array_key_exists('description', $validated)) $qaForm->description = $validated['description'];
+        if (array_key_exists('is_template', $validated)) $qaForm->is_template = $validated['is_template'];
         $qaForm->save();
 
         if (!empty($validated['fields'])) {
@@ -77,6 +87,8 @@ class QaController extends Controller
                     'field_type' => $field['field_type'],
                     'required' => $field['required'] ?? false,
                     'options' => $field['options'] ?? null,
+                    'section_id' => $field['section_id'] ?? null,
+                    'branching_logic' => $field['branching_logic'] ?? null,
                     'order' => $index,
                 ]);
             }

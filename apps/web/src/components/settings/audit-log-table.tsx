@@ -4,18 +4,30 @@ import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { DataTable } from "@g4k/ui/components";
 import { FilterBar, DatePicker } from "@g4k/ui/components";
-import { getAuthToken } from "@/lib/auth-store";
-import { safeFormat } from "@/lib/format";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
+
+export interface AuditLogUser {
+  id: number;
+  name: string;
+}
+
+export interface AuditLogRow {
+  at: string;
+  user?: AuditLogUser;
+  action: string;
+  subject_type?: string;
+  subject_id?: number | string;
+  ip?: string;
+}
 
 export function AuditLogTable() {
   const queryClient = useQueryClient();
@@ -35,7 +47,7 @@ export function AuditLogTable() {
   });
   const users = usersResponse?.data || [];
   const userOptions = [{ label: "All Users", value: "" }, { label: "System", value: "system" }].concat(
-    users.map((u: any) => ({ label: u.name, value: String(u.id) }))
+    users.map((u: AuditLogUser) => ({ label: u.name, value: String(u.id) }))
   );
   
   const { data: logsData, isLoading, isError } = useQuery({
@@ -52,8 +64,8 @@ export function AuditLogTable() {
     }
   });
 
-  const logs = logsData?.data?.data || [];
-  const totalPages = logsData?.data?.last_page || 1;
+  const logs = logsData?.data || [];
+  const totalPages = logsData?.last_page || 1;
 
   const handleExport = async () => {
     try {
@@ -64,11 +76,11 @@ export function AuditLogTable() {
       if (filters.start_date) params.append("start_date", filters.start_date);
       if (filters.end_date) params.append("end_date", filters.end_date);
       
-      await apiFetch(`/audit-logs/export?${params.toString()}`, { method: "POST" });
+      await apiFetch(`/audit-logs/export?${params.toString()}`, { method: "GET" });
       toast.success("Export queued. You will be notified when it's ready.");
       queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
-    } catch (err: any) {
-      toast.error(err.message || "Failed to start export.");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Failed to start export.");
     } finally {
       setIsExporting(false);
     }
@@ -78,17 +90,17 @@ export function AuditLogTable() {
     {
       accessorKey: "at",
       header: "Timestamp",
-      cell: ({ row }: any) => format(new Date(row.original.at), "MMM d, yyyy HH:mm:ss")
+      cell: ({ row }: { row: { original: AuditLogRow } }) => format(new Date(row.original.at), "MMM d, yyyy HH:mm:ss")
     },
     {
       accessorKey: "user.name",
       header: "User",
-      cell: ({ row }: any) => row.original.user ? row.original.user.name : "System"
+      cell: ({ row }: { row: { original: AuditLogRow } }) => row.original.user ? row.original.user.name : "System"
     },
     {
       accessorKey: "action",
       header: "Action",
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: AuditLogRow } }) => (
         <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-[10px] font-mono">
           {row.original.action}
         </span>
@@ -96,17 +108,17 @@ export function AuditLogTable() {
     },
     {
       accessorKey: "subject_type",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: AuditLogRow } }) => {
         if (!row.original.subject_type) return "-";
         const t = row.original.subject_type.split('\\').pop();
         const id = row.original.subject_id;
         
         let href = "";
-        if (t === "User") href = `/dashboard/users`; // no user detail page yet, just list
+        if (t === "User") href = `/dashboard/directory`; // no user detail page yet, just list
         else if (t === "Project") href = `/dashboard/projects/${id}`;
-        else if (t === "Department") href = `/dashboard/settings?tab=departments`;
-        else if (t === "WorkSchedule") href = `/dashboard/settings?tab=schedules`;
-        else if (t === "QaForm") href = `/dashboard/settings?tab=qa`;
+        else if (t === "Department") href = `/dashboard/directory?tab=departments`;
+        else if (t === "WorkSchedule") href = `/dashboard/settings?tab=schedule`;
+        else if (t === "QaForm") href = "";
         
         const label = `${t} #${id}`;
         if (href) {
@@ -118,9 +130,9 @@ export function AuditLogTable() {
     {
       accessorKey: "ip",
       header: "IP Address",
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: AuditLogRow } }) => (
         <span className="text-neutral-400 font-mono text-[10px]">
-          {row.original.ip || "127.0.0.1"}
+          {row.original.ip || "—"}
         </span>
       )
     }
@@ -131,10 +143,23 @@ export function AuditLogTable() {
       <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex justify-between gap-4 bg-neutral-50/50 dark:bg-neutral-800/30">
         <div className="flex-1 max-w-xl">
           <FilterBar
-            searchQuery={filters.action}
-            onSearchChange={(val) => setAction(val)}
-            searchPlaceholder="Filter by action (e.g. login, update)..."
+            hideSearch={true}
             filters={[
+              {
+                key: "action",
+                label: "Action",
+                type: "select",
+                options: [
+                  { label: "All Actions", value: "" },
+                  { label: "login", value: "login" },
+                  { label: "logout", value: "logout" },
+                  { label: "create", value: "create" },
+                  { label: "update", value: "update" },
+                  { label: "delete", value: "delete" },
+                ],
+                value: filters.action,
+                onChange: (v) => setAction(v)
+              },
               {
                 key: "user_id",
                 label: "User",

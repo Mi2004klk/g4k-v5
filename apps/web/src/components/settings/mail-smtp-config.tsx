@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -40,7 +40,7 @@ export function MailSmtpConfig() {
   });
 
   const form = useForm<SmtpFormValues>({
-    resolver: zodResolver(smtpSchema) as any,
+    resolver: zodResolver(smtpSchema) as unknown as import('react-hook-form').Resolver<SmtpFormValues>,
     defaultValues: {
       from_address: "",
       from_name: "",
@@ -54,21 +54,22 @@ export function MailSmtpConfig() {
   });
 
   useEffect(() => {
-    if (settingsData && settingsData.mail) {
-      const mailSettings = settingsData.mail.reduce((acc: any, curr: any) => {
+    const rawData = settingsData as Record<string, { key: string, value: string }[]> | undefined;
+    if (rawData && rawData.mail) {
+      const mailSettings = rawData.mail.reduce((acc: Record<string, string>, curr: { key: string, value: string }) => {
         acc[curr.key] = curr.value;
         return acc;
-      }, {});
+      }, {} as Record<string, string>);
 
       form.reset({
         from_address: mailSettings.from_address || "",
         from_name: mailSettings.from_name || "",
         host: mailSettings.host || "",
-        port: mailSettings.port || 587,
-        encryption: mailSettings.encryption || "tls",
+        port: Number(mailSettings.port) || 587,
+        encryption: (mailSettings.encryption as "tls" | "ssl" | "none") || "tls",
         username: mailSettings.username || "",
         password: mailSettings.password || "",
-        timeout: mailSettings.timeout || 30,
+        timeout: Number(mailSettings.timeout) || 30,
       });
     }
   }, [settingsData, form]);
@@ -89,7 +90,7 @@ export function MailSmtpConfig() {
       toast.success("SMTP settings saved.");
       queryClient.invalidateQueries({ queryKey: queryKeys.settings });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to save settings");
     }
   });
@@ -99,8 +100,8 @@ export function MailSmtpConfig() {
     try {
       await apiFetch("/settings/mail/test", { method: "POST" });
       toast.success("Test email sent successfully.");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send test email.");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Failed to send test email.");
     } finally {
       setIsTesting(false);
     }

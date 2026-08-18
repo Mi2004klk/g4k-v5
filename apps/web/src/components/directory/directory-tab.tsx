@@ -4,13 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
 
 import { Button } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -23,16 +22,49 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@g4k/ui/components";
-import { DataTable } from "@g4k/ui/components";
 import { useTrackRecent } from "@/hooks/use-track-recent";
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar_url?: string;
+  employee_code?: string;
+  employee_id?: string;
+  department?: { name: string };
+  designation?: { name: string };
+}
+
+interface Department {
+  id: number;
+  name: string;
+}
+
+interface Designation {
+  id: number;
+  name: string;
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
+
+interface PageData {
+  data?: User[] | { data: User[] };
+  current_page?: number;
+  last_page?: number;
+  meta?: { current_page: number; last_page: number };
+}
+
 export function CorporateDirectoryTab() {
   const router = useRouter();
   const [search, setSearch] = useUrlState("search", "");
   const debouncedSearch = useDebounce(search, 250);
   const [deptFilter, setDeptFilter] = useUrlState("department", "all");
   const [desigFilter, setDesigFilter] = useUrlState("designation", "all");
-  const [visFilter, setVisFilter] = useUrlState("visibility", "all");
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [visFilter] = useUrlState("visibility", "all");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
 
   useTrackRecent(
@@ -70,7 +102,7 @@ export function CorporateDirectoryTab() {
       params.append("page", String(pageParam));
       return apiFetch(`/directory?${params.toString()}`);
     },
-    getNextPageParam: (lastPage: any) => {
+    getNextPageParam: (lastPage: PageData) => {
       const currentPage = lastPage?.current_page || lastPage?.meta?.current_page;
       const lastPageNum = lastPage?.last_page || lastPage?.meta?.last_page;
       if (currentPage && lastPageNum && currentPage < lastPageNum) {
@@ -88,81 +120,18 @@ export function CorporateDirectoryTab() {
       method: "POST",
       body: JSON.stringify({ recipient_id: recipientId }),
     }),
-    onSuccess: (conversation: any) => {
+    onSuccess: (conversation: { conversation_id?: number; id: number }) => {
       router.push(`/dashboard/chat?conversation=${conversation.conversation_id || conversation.id}`);
     },
-    onError: (err: any) => toast.error(err.message || "Failed to start chat."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to start chat."),
   });
 
-  const users = data?.pages.flatMap((page: any) => {
+  const users = data?.pages.flatMap((page: PageData) => {
     if (Array.isArray(page?.data)) return page.data;
     if (Array.isArray(page?.data?.data)) return page.data.data;
-    if (Array.isArray(page)) return page;
+    if (Array.isArray(page)) return page as User[];
     return [];
   }) || [];
-
-  const columns: any[] = [
-    {
-      accessorKey: "name",
-      header: "Name",
-      cell: ({ row }: any) => (
-        <button className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left w-full" onClick={() => setSelectedUser(row.original)}>
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={row.original.avatar_url} />
-            <AvatarFallback name={row.original.name} />
-          </Avatar>
-          <div className="font-semibold text-neutral-900 dark:text-white">{row.original.name}</div>
-        </button>
-      ),
-    },
-    {
-      accessorKey: "designation.name",
-      header: "Designation",
-      cell: ({ row }: any) => (
-        <span className="text-neutral-600 dark:text-neutral-300 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
-          {row.original.designation?.name || "—"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "department.name",
-      header: "Department",
-      cell: ({ row }: any) => (
-        <span className="text-neutral-600 dark:text-neutral-300 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
-          {row.original.department?.name || "—"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "email",
-      header: "Contact",
-      cell: ({ row }: any) => (
-        <span className="text-neutral-500 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
-          {row.original.email}
-        </span>
-      ),
-    },
-    {
-      id: "actions",
-      header: () => <div className="text-right">Action</div>,
-      cell: ({ row }: any) => (
-        <div className="text-right">
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              sendMessageMutation.mutate(row.original.id);
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-primary-600 hover:text-primary-700"
-          >
-            Message
-          </Button>
-
-        </div>
-      ),
-    },
-  ];
 
   return (
     <div className="space-y-6 mt-4">
@@ -181,7 +150,7 @@ export function CorporateDirectoryTab() {
                   type: "select",
                   value: deptFilter,
                   onChange: setDeptFilter,
-                  options: (deptsData?.data || deptsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
+                  options: (deptsData?.data || deptsData || []).map((d: Department) => ({ label: d.name, value: d.id.toString() }))
                 },
                 {
                   key: "designation",
@@ -189,7 +158,7 @@ export function CorporateDirectoryTab() {
                   type: "select",
                   value: desigFilter,
                   onChange: setDesigFilter,
-                  options: (desigsData?.data || desigsData || []).map((d: any) => ({ label: d.name, value: d.id.toString() }))
+                  options: (desigsData?.data || desigsData || []).map((d: Designation) => ({ label: d.name, value: d.id.toString() }))
                 }
               ]}
             />
@@ -210,7 +179,7 @@ export function CorporateDirectoryTab() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {users.map((user: any) => (
+          {users.map((user: User) => (
             <Card
               key={user.id}
               onClick={() => setSelectedUser(user)}

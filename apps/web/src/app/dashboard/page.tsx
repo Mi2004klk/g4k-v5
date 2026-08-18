@@ -1,30 +1,24 @@
 "use client";
-
 import { useAuthStore } from "@/lib/auth-store";
+import { keepPreviousData } from "@tanstack/react-query";
 import { WidgetEngine } from "@/components/widgets/widget-engine";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { GRID_COLS } from "@/lib/reconcile-layout";
-import { queryKeys } from "@/lib/query-keys";
-import { apiFetch } from "@/lib/api-client";
-import { format } from "date-fns";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { getGreeting } from "@/lib/greeting";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { HrTeamAttendanceWidget } from "@/components/dashboard/hr-team-attendance-widget";
 import { HrActivityFeedWidget } from "@/components/attendance/hr-activity-feed-widget";
 
-import Link from "next/link";
 import { RecentActivityWidget } from "@/components/widgets/recent-activity-widget";
 import { Skeleton } from "@g4k/ui/components";
-import { Card } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 
 import { AdminTodayAttendanceWidget } from "@/components/dashboard/admin-today-attendance-widget";
@@ -34,7 +28,7 @@ import { EmployeeTaskProgressWidget } from "@/components/dashboard/employee-task
 import { PendingApprovalsWidget } from "@/components/widgets/pending-approvals-widget";
 import { EmployeeApprovalStatusWidget } from "@/components/dashboard/employee-approval-status-widget";
 
-const EMPTY_CAPABILITIES: any[] = [];
+const EMPTY_CAPABILITIES: string[] = [];
 const cols = GRID_COLS;
 
 function responsiveLayout(base: { x: number, y: number, w: number, h: number }) {
@@ -50,17 +44,15 @@ function responsiveLayout(base: { x: number, y: number, w: number, h: number }) 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const router = useRouter();
-  const queryClient = useQueryClient();
 
-  const token = useAuthStore((s) => s.token);
-
-  const { data: initData, isLoading, isError, refetch } = useDashboardInit();
+  const { data: initData, isLoading, isError, refetch } = useDashboardInit({ placeholderData: keepPreviousData });
 
   // Role determined by initData?.role or user?.active_role, falling back to employee
   const activeRole = initData?.role || user?.active_role || "employee";
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -83,7 +75,7 @@ export default function DashboardPage() {
         {
           id: "total-employees",
           component: (
-            <MetricWidget title="Total Employees" metricKey="total_employees" icon={"directory"} color="indigo" breakdown={true} href="/dashboard/org/users" />
+            <MetricWidget title="Total Employees" metricKey="total_employees" icon={"directory"} color="indigo" breakdown={true} href="/dashboard/directory?tab=management" />
           ),
           defaultLayout: responsiveLayout({ x: 0, y: 0, w: 3, h: 2 }),
         },
@@ -247,7 +239,7 @@ export default function DashboardPage() {
         </div>
         <h3 className="font-semibold text-lg">Dashboard Unavailable</h3>
         <p className="text-sm text-neutral-500 font-medium text-center max-w-md">
-          We couldn't load your dashboard data. This might be due to a network issue or an expired session.
+          We couldn&apos;t load your dashboard data. This might be due to a network issue or an expired session.
         </p>
         <div className="flex items-center gap-3 mt-4">
           <Button onClick={() => refetch()} variant="primary" className="shadow-e1">

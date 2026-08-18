@@ -36,8 +36,7 @@ class PurgeDemoDataJob implements ShouldQueue
                 \App\Services\NotificationService::sendGlobalNotification(
                     $user,
                     "Demo dataset has been successfully removed.",
-                    "/dashboard/settings",
-                    "high"
+                    "/dashboard/settings"
                 );
             }
         }

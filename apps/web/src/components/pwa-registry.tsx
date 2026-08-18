@@ -7,7 +7,7 @@ export function PWARegistry() {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       window.addEventListener("load", function () {
         navigator.serviceWorker.register("/sw.js").then(
-          function (registration) {
+          function () {
             // Service Worker registration successful
           },
           function (err) {

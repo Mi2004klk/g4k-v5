@@ -6,12 +6,12 @@ import { useState } from "react";
 
 export function useUserActions() {
   const queryClient = useQueryClient();
-  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: unknown }>({ isOpen: false, type: "" });
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<unknown>(null);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: any }) => apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+    mutationFn: ({ id, payload }: { id: number; payload: unknown }) => apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
     onSuccess: (_, variables) => {
       toast.success("User updated successfully!");
       setIsEditOpen(false);
@@ -19,11 +19,11 @@ export function useUserActions() {
       queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update user."),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to update user."),
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }: any) => apiFetch(`/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    mutationFn: ({ id, status }: { id: number, status: unknown }) => apiFetch(`/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
     onSuccess: (_, variables) => {
       toast.success("User status updated.");
       setConfirmState({ isOpen: false, type: "" });
@@ -31,7 +31,7 @@ export function useUserActions() {
       queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update status."),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to update status."),
   });
 
   const deleteMutation = useMutation({
@@ -43,7 +43,7 @@ export function useUserActions() {
       queryClient.invalidateQueries({ queryKey: ["user", variables] });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to delete user."),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to delete user."),
   });
 
   const restoreMutation = useMutation({
@@ -55,16 +55,17 @@ export function useUserActions() {
       queryClient.invalidateQueries({ queryKey: ["user", variables] });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to restore user."),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to restore user."),
   });
 
   const resetPasswordMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/users/${id}/reset-password`, { method: "POST" }),
-    onSuccess: (res: any) => {
-      toast.success(res.message || "Password reset to default.");
+    onSuccess: (res: { message?: string } | unknown) => {
+      const msg = res && typeof res === 'object' && 'message' in res ? (res as { message: string }).message : "Password reset to default.";
+      toast.success(msg);
       setConfirmState({ isOpen: false, type: "" });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to reset password."),
+    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to reset password."),
   });
 
   return {

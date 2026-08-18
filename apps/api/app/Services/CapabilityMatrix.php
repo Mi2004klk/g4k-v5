@@ -23,12 +23,12 @@ class CapabilityMatrix
             'attendance.clock-self', 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
             'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access', 'chat.manage',
             'profile.edit', 'leave.request-self', 'timer.track',
-            'reports.view', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'projects.view', 'projects.manage', 'qa.view', 'qa.manage'
+            'reports.view', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'projects.view', 'projects.manage', 'qa.view', 'qa.manage',
+            'departments.manage', 'designations.manage'
         ],
         'employee' => [
             'attendance.clock-self', 'leave.request-self', 'profile.edit',
-            'directory.view', 'directory.send-message', 'chat.access',
-            'tasks.view', 'tasks.create-own', 'projects.view', 'timer.track'
+            'chat.access', 'tasks.view', 'tasks.create-own', 'projects.view', 'timer.track'
         ]
     ];
 

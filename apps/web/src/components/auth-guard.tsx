@@ -56,11 +56,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [isInitializing, setAuth, clearAuth]);
 
   // Route protection & redirects effect
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  let shouldRedirect = false;
+  let targetRoute = null;
 
-  useEffect(() => {
-    if (isInitializing) return;
-
+  if (!isInitializing) {
     const isAuthRoute =
       pathname.startsWith("/login") ||
       pathname.startsWith("/forgot-password") ||
@@ -68,37 +67,26 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (!token || !user) {
       if (!isAuthRoute) {
-        setIsRedirecting(true);
-        router.push("/login");
+        shouldRedirect = true;
+        targetRoute = "/login";
       }
-      return;
+    } else if (user.must_change_password && pathname !== "/change-password") {
+      shouldRedirect = true;
+      targetRoute = "/change-password";
+    } else if (!user.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
+      shouldRedirect = true;
+      targetRoute = "/onboarding";
+    } else if (isAuthRoute) {
+      shouldRedirect = true;
+      targetRoute = user.roles && user.roles.length > 1 ? "/role-select" : "/dashboard";
     }
+  }
 
-    // Enforce must_change_password
-    if (user.must_change_password && pathname !== "/change-password") {
-      setIsRedirecting(true);
-      router.push("/change-password");
-      return;
+  useEffect(() => {
+    if (shouldRedirect && targetRoute) {
+      router.push(targetRoute);
     }
-
-    // Enforce onboarding sequence
-    if (!user.onboarded_at && pathname !== "/onboarding" && pathname !== "/change-password") {
-      setIsRedirecting(true);
-      router.push("/onboarding");
-      return;
-    }
-    // Enforce role selection if multiple roles exist and on auth routes
-    else if (isAuthRoute) {
-      setIsRedirecting(true);
-      if (user.roles && user.roles.length > 1) {
-        router.push("/role-select");
-      } else {
-        router.push("/dashboard");
-      }
-    } else {
-      setIsRedirecting(false);
-    }
-  }, [pathname, token, user, isInitializing, router]);
+  }, [shouldRedirect, targetRoute, router]);
 
   // Listen for SessionRevoked real-time event and new conversations
   const { subscribe, leaveChannel } = useReverb();
@@ -110,11 +98,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const channelName = `user.${user.id}`;
     const channel = subscribe(channelName, true);
     if (channel) {
-      channel.listen('.session.revoked', (e: any) => {
+      channel.listen('.session.revoked', () => {
         clearAuth();
         router.push("/login?reason=expired");
       });
-      channel.listen('.conversation.created', (e: any) => {
+      channel.listen('.conversation.created', () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       });
     }
@@ -128,7 +116,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     };
   }, [user?.id, token, subscribe, leaveChannel, clearAuth, router, queryClient]);
 
-  if (isInitializing) {
+  if (isInitializing || shouldRedirect) {
     return (
       <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 flex flex-col md:flex-row">
         {/* Sidebar Skeleton matching collapsed default layout (72px) */}
@@ -165,7 +153,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isRedirecting) {
+  if (shouldRedirect) {
     return null; // Return null instead of a blank infinite spinner to prevent 403s on components mounting during redirect
   }
 

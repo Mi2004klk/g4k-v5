@@ -963,6 +963,12 @@ class AttendanceController extends Controller
 
         return response()->json(['message' => 'Notifications sent successfully.']);
     }
+
+    private function userHasManage(Request $request): bool
+    {
+        $role = $request->user()->resolveActiveRole();
+        return in_array($role, ['hr', 'super_admin']);
+    }
 }
 
 

@@ -5,7 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
  * Maps logical entity mutations to the query keys that need to be invalidated.
  * Used to ensure all dependent views refresh automatically without manual reloads.
  */
-export const invalidationMap: Record<string, (queryClient: QueryClient, payload?: any) => void> = {
+export const invalidationMap: Record<string, (queryClient: QueryClient, payload?: unknown) => void> = {
   // --- Users & Auth ---
   "user.crud": (qc) => {
     qc.invalidateQueries({ queryKey: queryKeys.usersList });
@@ -21,9 +21,12 @@ export const invalidationMap: Record<string, (queryClient: QueryClient, payload?
     qc.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     qc.invalidateQueries({ queryKey: queryKeys.dashboardMetrics });
     qc.invalidateQueries({ queryKey: queryKeys.myAttendanceHistory() });
-    if (payload?.userId && payload?.date) {
-      qc.invalidateQueries({ queryKey: queryKeys.memberAttendanceDay(payload.userId, payload.date) });
-      qc.invalidateQueries({ queryKey: queryKeys.attendanceDayDetail(payload.date, payload.userId) });
+    if (payload && typeof payload === 'object') {
+      const p = payload as { userId?: number, date?: string };
+      if (p.userId && p.date) {
+        qc.invalidateQueries({ queryKey: queryKeys.memberAttendanceDay(p.userId, p.date) });
+        qc.invalidateQueries({ queryKey: queryKeys.attendanceDayDetail(p.date, p.userId) });
+      }
     }
   },
 
@@ -52,8 +55,11 @@ export const invalidationMap: Record<string, (queryClient: QueryClient, payload?
   "project.crud": (qc, payload) => {
     qc.invalidateQueries({ queryKey: ["projects"] });
     qc.invalidateQueries({ queryKey: queryKeys.dashboardInit });
-    if (payload?.id) {
-      qc.invalidateQueries({ queryKey: queryKeys.project(payload.id) });
+    if (payload && typeof payload === 'object' && 'id' in payload) {
+      const p = payload as { id: string | number };
+      if (p.id) {
+        qc.invalidateQueries({ queryKey: queryKeys.project(p.id) });
+      }
     }
   },
   "task.crud": (qc) => {
@@ -95,7 +101,7 @@ export const invalidationMap: Record<string, (queryClient: QueryClient, payload?
 /**
  * Helper to trigger invalidation for a specific event
  */
-export function triggerInvalidation(queryClient: QueryClient, eventName: keyof typeof invalidationMap, payload?: any) {
+export function triggerInvalidation(queryClient: QueryClient, eventName: keyof typeof invalidationMap, payload?: unknown) {
   const handler = invalidationMap[eventName];
   if (handler) {
     handler(queryClient, payload);

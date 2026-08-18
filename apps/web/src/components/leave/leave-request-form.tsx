@@ -3,20 +3,17 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
 import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
 import { Label } from "@g4k/ui/components";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { Calendar } from "@g4k/ui/components";
-import { format, startOfTomorrow } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { FormError } from "@/components/forms/form-error";
-
-import { useRouter } from "next/navigation";
 import { queryKeys } from "@/lib/query-keys";
 import { triggerInvalidation } from "@/lib/invalidation-map";
 import { LEAVE_TYPES } from "@/lib/constants";
@@ -24,7 +21,6 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 
 export function LeaveRequestForm() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -58,8 +54,12 @@ export function LeaveRequestForm() {
     });
   };
 
+  interface ApiError extends Error {
+    errors?: Record<string, string[]>;
+  }
+
   const submitMutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: { start_date: string; end_date: string; type: string; reason: string }) => {
       return apiFetch("/leave-requests", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -74,7 +74,7 @@ export function LeaveRequestForm() {
       clearDraft();
       triggerInvalidation(queryClient, "leave.request");
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       toast.error(err.message || "Failed to submit leave request.");
       if (err.errors) {
         setFieldErrors(err.errors);
@@ -94,21 +94,28 @@ export function LeaveRequestForm() {
 
     const today = new Date();
     today.setHours(0,0,0,0);
-    if (activeStartDate <= today) {
-      toast.error("Start date must be a future date.");
+    if (activeStartDate < today) {
+      toast.error("Start date cannot be in the past.");
       return;
     }
 
     // Optimistic checking of overlapping dates based on cached data
-    const queries = queryClient.getQueriesData<any>({ queryKey: [queryKeys.myLeaveHistory()[0]], exact: false });
-    const existingLeaves = queries.flatMap(([_, data]) => {
+    const queries = queryClient.getQueriesData<unknown>({ queryKey: [queryKeys.myLeaveHistory()[0]], exact: false });
+    const existingLeaves = queries.flatMap(([_queryKey, data]: [unknown, any]) => {
       if (!data) return [];
       if ('data' in data && Array.isArray(data.data)) return data.data;
       if (data.data && 'data' in data.data && Array.isArray(data.data.data)) return data.data.data;
       if (Array.isArray(data)) return data;
       return [];
     });
-    const hasOverlap = existingLeaves.some((leave: any) => {
+    
+    interface CachedLeave {
+      start_date: string;
+      end_date: string;
+      approval?: { status: string };
+    }
+
+    const hasOverlap = existingLeaves.some((leave: CachedLeave) => {
       if (leave.approval?.status !== "pending" && leave.approval?.status !== "approved") return false;
       const existStart = new Date(leave.start_date);
       const existEnd = new Date(leave.end_date);
@@ -128,7 +135,7 @@ export function LeaveRequestForm() {
     });
   };
 
-  const tomorrow = startOfTomorrow();
+  const todayDate = startOfDay(new Date());
 
   return (
     <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl flex flex-col">
@@ -169,7 +176,7 @@ export function LeaveRequestForm() {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar mode="single" selected={activeStartDate} onSelect={(date) => { setStartDate(date); handleFieldChange({ start_date: date }); }}
-                    disabled={{ before: tomorrow }}
+                    disabled={{ before: todayDate }}
                     initialFocus />
                 </PopoverContent>
               </Popover>
@@ -187,7 +194,7 @@ export function LeaveRequestForm() {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar mode="single" selected={activeEndDate} onSelect={(date) => { setEndDate(date); handleFieldChange({ end_date: date }); }}
-                    disabled={{ before: activeStartDate ?? tomorrow }}
+                    disabled={{ before: activeStartDate ?? todayDate }}
                     initialFocus />
                 </PopoverContent>
               </Popover>

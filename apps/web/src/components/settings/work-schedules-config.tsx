@@ -22,6 +22,21 @@ const scheduleSchema = z.object({
 
 type ScheduleFormValues = z.infer<typeof scheduleSchema>;
 
+export interface WorkSchedule {
+  id: number;
+  name: string;
+  start_time: string;
+  end_time: string;
+  break_minutes: number;
+  grace_minutes: number;
+  working_days: number[] | string;
+  is_default?: boolean;
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
+
 export function WorkSchedulesConfig() {
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -29,11 +44,14 @@ export function WorkSchedulesConfig() {
 
   const { data: schedules = [], isLoading } = useQuery({
     queryKey: queryKeys.workSchedules,
-    queryFn: () => apiFetch("/work-schedules").then((res: any) => (Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []))),
+    queryFn: () => apiFetch("/work-schedules").then((res: any) => {
+      const arr = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
+      return arr as WorkSchedule[];
+    }),
   });
 
   const form = useForm<ScheduleFormValues>({
-    resolver: zodResolver(scheduleSchema) as any,
+    resolver: zodResolver(scheduleSchema) as unknown as import('react-hook-form').Resolver<ScheduleFormValues>,
     defaultValues: {
       name: "Standard G4K Schedule",
       start_time: "09:00",
@@ -46,7 +64,7 @@ export function WorkSchedulesConfig() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: ScheduleFormValues & { standard_seconds: number }) => {
       if (editingId) {
         return apiFetch(`/work-schedules/${editingId}`, { method: "PUT", body: JSON.stringify(data) });
       } else {
@@ -59,10 +77,10 @@ export function WorkSchedulesConfig() {
       setIsDialogOpen(false);
       setEditingId(null);
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       toast.error(err.message || "Failed to save schedule.");
       if (err.errors) {
-        Object.entries(err.errors).forEach(([key, val]: [string, any]) => {
+        Object.entries(err.errors).forEach(([key, val]: [string, string[]]) => {
           form.setError(key as any, { type: 'server', message: val[0] });
         });
       }
@@ -83,7 +101,7 @@ export function WorkSchedulesConfig() {
       toast.success("Schedule deleted");
       queryClient.invalidateQueries({ queryKey: queryKeys.workSchedules });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Cannot delete schedule");
     }
   });
@@ -94,7 +112,7 @@ export function WorkSchedulesConfig() {
     const startSecs = parseInt(start[0]) * 3600 + parseInt(start[1] || "0") * 60;
     const endSecs = parseInt(end[0]) * 3600 + parseInt(end[1] || "0") * 60;
     const breakSecs = (data.break_minutes || 0) * 60;
-    let diff = endSecs - startSecs - breakSecs;
+    const diff = endSecs - startSecs - breakSecs;
     const standardSeconds = diff > 0 ? diff : 0;
 
     saveMutation.mutate({
@@ -103,7 +121,7 @@ export function WorkSchedulesConfig() {
     });
   };
 
-  const handleEdit = (schedule: any) => {
+  const handleEdit = (schedule: WorkSchedule) => {
     setEditingId(schedule.id);
     form.reset({
       name: schedule.name,
@@ -131,6 +149,8 @@ export function WorkSchedulesConfig() {
 
   if (isLoading) return <Skeleton className="w-full h-64 rounded-xl" />;
 
+  const currentWorkingDays = form.watch("working_days") || [];
+
   return (
     <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -139,7 +159,7 @@ export function WorkSchedulesConfig() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {schedules.map((schedule: any) => (
+          {schedules.map((schedule: WorkSchedule) => (
             <div key={schedule.id} className="border border-neutral-200 dark:border-neutral-800 rounded-[var(--radius)] p-4 flex items-center justify-between">
               <div>
                 <h4 className="font-semibold text-sm flex items-center gap-2">
@@ -171,7 +191,7 @@ export function WorkSchedulesConfig() {
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Schedule' : 'Create Schedule'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4">
+          <form onSubmit={form.handleSubmit(handleSubmit as any)} className="space-y-4 pt-4">
             <div>
               <label htmlFor="ws-name" className="text-xs font-medium">Schedule Name</label>
               <input id="ws-name" type="text" {...form.register("name")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
@@ -217,7 +237,7 @@ export function WorkSchedulesConfig() {
                           form.setValue("working_days", current.filter(d => d !== day));
                         }
                       }}
-                      checked={form.watch("working_days").includes(day)}
+                      checked={currentWorkingDays.includes(day)}
                     />
                     {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day]}
                   </label>

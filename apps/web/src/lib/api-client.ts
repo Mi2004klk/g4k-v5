@@ -16,6 +16,7 @@ export function getToken(): string | null {
  * @param res The API response
  * @returns The unwrapped resource
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- HTTP boundary: API response shape is runtime-determined
 export function unwrapOne<T = any>(res: any): T {
   if (res && typeof res === "object" && "data" in res) {
     if (res.data && typeof res.data === "object" && !Array.isArray(res.data) && "id" in res.data) {
@@ -30,6 +31,7 @@ export function unwrapOne<T = any>(res: any): T {
  * @param res The API response
  * @returns The unwrapped array
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- HTTP boundary: API response shape is runtime-determined
 export function unwrapList<T = any>(res: any): T[] {
   if (!res) return [];
   if (Array.isArray(res)) return res;
@@ -42,6 +44,7 @@ export function unwrapList<T = any>(res: any): T[] {
 
 let refreshPromise: Promise<string> | null = null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- HTTP boundary: API response shape is runtime-determined
 export async function apiFetch<T = any>(
   endpoint: string,
   options: RequestInit = {},
@@ -78,7 +81,7 @@ export async function apiFetch<T = any>(
   if (!isAuthEndpoint && !isGet && !bypassQueue && typeof navigator !== 'undefined' && !navigator.onLine) {
     toast.warning("You are offline. Action queued.");
     await offlineEngine.queueRequest(endpoint, options);
-    return { queued: true } as any;
+    return { queued: true } as unknown as T;
   }
 
   try {
@@ -168,7 +171,7 @@ export async function apiFetch<T = any>(
         if (response.status === 422 && errorData.errors) {
           msg = Object.values(errorData.errors).flat().join(', ') || msg;
         }
-        const error = new Error(msg) as any;
+        const error = new Error(msg) as Error & { status?: number, data?: unknown, errors?: Record<string, string[]> };
         error.status = response.status;
         error.data = errorData;
         if (errorData.errors) {
@@ -200,15 +203,16 @@ export async function apiFetch<T = any>(
       }
       
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Intercept offline / network failures for mutations (NOT 5xx server errors)
-      const isNetworkError = error?.message?.includes("Failed to fetch") || (typeof navigator !== "undefined" && !navigator.onLine);
+      const err = error instanceof Error ? error : new Error("Unknown error");
+      const isNetworkError = err.message?.includes("Failed to fetch") || (typeof navigator !== "undefined" && !navigator.onLine);
       if (!isAuthEndpoint && !isGet && !bypassQueue && isNetworkError) {
         toast.warning("Network error. Action queued for sync.");
         await offlineEngine.queueRequest(endpoint, options);
-        return { queued: true } as any;
+        return { queued: true } as unknown as T;
       }
 
-      throw error;
+      throw err;
     }
 }

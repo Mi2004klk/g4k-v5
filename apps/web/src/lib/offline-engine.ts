@@ -50,7 +50,7 @@ class OfflineEngine {
   constructor() {
     if (typeof window !== 'undefined') {
       this.dbPromise = openDB<AttendanceDB>('g4k-offline-attendance', 2, {
-        upgrade(db, oldVersion, newVersion, transaction) {
+        upgrade(db, oldVersion) {
           if (oldVersion < 1) {
             const store = db.createObjectStore('punches', { keyPath: 'client_id' });
             store.createIndex('by-status', 'syncStatus');
@@ -199,7 +199,8 @@ class OfflineEngine {
         punch.syncStatus = 'synced';
         await db.put('punches', punch);
         count++;
-      } catch (err: any) {
+      } catch (error: unknown) {
+        const err = error as Error & { status?: number };
         if (err.status && err.status >= 400 && err.status < 500) {
           punch.syncStatus = 'failed';
           await db.put('punches', punch);
@@ -238,7 +239,8 @@ class OfflineEngine {
         req.syncStatus = 'synced';
         await db.put('requests', req);
         count++;
-      } catch (err: any) {
+      } catch (error: unknown) {
+        const err = error as Error & { status?: number };
         req.retryCount++;
         
         if (err.status === 409 || err.status === 422) {

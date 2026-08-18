@@ -2,13 +2,16 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { WidgetInfo } from "../widgets/widget-info";
 
+interface AttendanceRecord {
+  status: "present" | "late" | "absent" | string;
+}
 
 export function AdminTodayAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
@@ -19,16 +22,14 @@ export function AdminTodayAttendanceWidget() {
   });
 
   const records = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-  const presentCount = records.filter((r: any) => r.status === "present").length;
-  const lateCount = records.filter((r: any) => r.status === "late").length;
-  const absentCount = records.filter((r: any) => r.status === "absent").length;
+  const presentCount = records.filter((r: AttendanceRecord) => r.status === "present").length;
+  const lateCount = records.filter((r: AttendanceRecord) => r.status === "late").length;
+  const absentCount = records.filter((r: AttendanceRecord) => r.status === "absent").length;
   const totalCount = records.length;
-
-  const presentPct = totalCount ? ((presentCount + lateCount) / totalCount) * 100 : 0;
 
   return (
     <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden relative transition-shadow duration-150 group">
-      <Link href="/dashboard/admin/attendance" className="absolute inset-0 z-10">
+      <Link href="/dashboard/org/attendance" className="absolute inset-0 z-10">
         <span className="sr-only">View Full Company Attendance</span>
       </Link>
       
@@ -38,7 +39,7 @@ export function AdminTodayAttendanceWidget() {
             <AppIcon name="directory" className=" text-emerald-600 dark:text-emerald-400" />
           </div>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
-            Today's Attendance
+            Today&apos;s Attendance
             <WidgetInfo summary={`${presentCount + lateCount} clocked in out of ${totalCount}`} />
           </span>
           {isFetching && !isPending && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}

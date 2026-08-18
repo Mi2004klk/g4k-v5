@@ -88,7 +88,7 @@ class Task extends Model
 
     public function approval(): MorphOne
     {
-        return $this->morphOne(Approval::class, 'approvable');
+        return $this->morphOne(Approval::class, 'approvable')->latestOfMany();
     }
 
     public function reminders(): HasMany

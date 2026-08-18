@@ -1,4 +1,4 @@
-// @ts-nocheck
+import { describe, it, expect } from "vitest";
 import { reconcileLayout } from "./reconcile-layout";
 
 describe("reconcileLayout", () => {

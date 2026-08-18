@@ -1,20 +1,16 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
-import { getAuthToken } from "@/lib/auth-store";
 import { useExport } from "@/hooks/use-export";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-
-import { useIsMobile } from "@g4k/ui/hooks/use-mobile";
 import {
   queryKeys,
   STALE_TIME_DEPARTMENTS
@@ -54,6 +50,38 @@ import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox } from "@g4k/ui/components";
+import { ColumnDef } from "@tanstack/react-table";
+
+interface UserRef {
+  id: number;
+  name: string;
+  avatar_url?: string;
+  email?: string;
+  designation?: { name: string };
+  employee_id?: string;
+  roles?: string[];
+}
+
+interface TeamRef {
+  id: number;
+  name: string;
+}
+
+interface Department {
+  id: number;
+  name: string;
+  description?: string;
+  users_count?: number;
+  users?: UserRef[];
+  teams?: TeamRef[];
+  is_active: boolean;
+  archived_at?: string;
+  hrs?: UserRef[];
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
 
 export function DepartmentsTab() {
   const queryClient = useQueryClient();
@@ -71,30 +99,31 @@ export function DepartmentsTab() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  useEffect(() => {
+  const prevStatusRef = useRef(statusFilter);
+  if (prevStatusRef.current !== statusFilter) {
     setPage(1);
-  }, [statusFilter]);
+    prevStatusRef.current = statusFilter;
+  }
 
   const { data: caps } = useCapabilities();
-  const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
-  const isMobile = useIsMobile();
+  const isAdmin = hasCapability(caps, "departments.manage");
 
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
-  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: Department }>({ isOpen: false, type: "" });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<DeptFormValues>({
     resolver: zodResolver(deptSchema),
     defaultValues: { name: "", description: "" }
   });
-  const [editingDept, setEditingDept] = useState<any>(null);
+  const [editingDept, setEditingDept] = useState<Department | null>(null);
 
-  const [selectedDeptMembers, setSelectedDeptMembers] = useState<any>(null);
+  const [selectedDeptMembers, setSelectedDeptMembers] = useState<Department | null>(null);
   const [selectedNewHr, setSelectedNewHr] = useState("");
   const [selectedNewEmployee, setSelectedNewEmployee] = useState("");
   const [newTeamName, setNewTeamName] = useState("");
 
   const { data: deptDetails, isLoading: isDeptLoading } = useQuery({
-    queryKey: queryKeys.department(selectedDeptMembers?.id),
+    queryKey: queryKeys.department(selectedDeptMembers?.id as number),
     queryFn: () => apiFetch(`/departments/${selectedDeptMembers?.id}`),
     enabled: !!selectedDeptMembers,
   });
@@ -119,23 +148,23 @@ export function DepartmentsTab() {
   });
 
   const createDeptMutation = useMutation({
-    mutationFn: (payload: any) => apiFetch("/departments", { method: "POST", body: JSON.stringify(payload) }),
+    mutationFn: (payload: DeptFormValues) => apiFetch("/departments", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("Department created!");
       setIsDeptModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to create department."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to create department."),
   });
 
   const updateDeptMutation = useMutation({
-    mutationFn: (payload: any) => apiFetch(`/departments/${editingDept.id}`, { method: "PUT", body: JSON.stringify(payload) }),
+    mutationFn: (payload: DeptFormValues) => apiFetch(`/departments/${editingDept?.id}`, { method: "PUT", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("Department updated!");
       setIsDeptModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update department."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to update department."),
   });
 
   const archiveMutation = useMutation({
@@ -145,7 +174,7 @@ export function DepartmentsTab() {
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to archive department."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to archive department."),
   });
 
   const restoreMutation = useMutation({
@@ -154,7 +183,7 @@ export function DepartmentsTab() {
       toast.success("Department restored.");
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to restore department."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to restore department."),
   });
 
   const deleteMutation = useMutation({
@@ -164,7 +193,7 @@ export function DepartmentsTab() {
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       toast.error(err.message || "Failed to delete department.");
       setConfirmState({ isOpen: false, type: "" });
     }
@@ -174,58 +203,58 @@ export function DepartmentsTab() {
     mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/hrs/${userId}`, { method: "POST" }),
     onSuccess: () => {
       toast.success("HR assigned successfully.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to assign HR."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to assign HR."),
   });
 
   const removeHrMutation = useMutation({
     mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/hrs/${userId}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("HR removed successfully.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to remove HR."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to remove HR."),
   });
 
   const assignEmployeeMutation = useMutation({
     mutationFn: ({ deptId, userIds }: { deptId: number, userIds: number[] }) => apiFetch(`/departments/${deptId}/employees`, { method: "PUT", body: JSON.stringify({ user_ids: userIds }) }),
     onSuccess: () => {
       toast.success("Employees assigned successfully.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to assign employees."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to assign employees."),
   });
 
   const removeEmployeeMutation = useMutation({
     mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/employees/${userId}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("Employee removed successfully.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to remove employee."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to remove employee."),
   });
 
   const addTeamMutation = useMutation({
     mutationFn: ({ deptId, name }: { deptId: number, name: string }) => apiFetch(`/departments/${deptId}/teams`, { method: "POST", body: JSON.stringify({ name }) }),
     onSuccess: () => {
       toast.success("Team added successfully.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to add team."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to add team."),
   });
 
   const removeTeamMutation = useMutation({
     mutationFn: ({ deptId, teamId }: { deptId: number, teamId: number }) => apiFetch(`/departments/${deptId}/teams/${teamId}`, { method: "DELETE" }),
     onSuccess: () => {
       toast.success("Team removed successfully.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to remove team."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to remove team."),
   });
 
   const { triggerExport } = useExport();
@@ -237,20 +266,21 @@ export function DepartmentsTab() {
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
 
       await triggerExport(`/departments/export?${params.toString()}`, "departments_export.csv");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to export");
+    } catch (e: unknown) {
+      const err = e as ApiError;
+      toast.error(err.message || "Failed to export");
     }
   };
 
   const deptList = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const totalPages = data?.last_page || data?.data?.last_page || 1;
 
-  const columns: any[] = useMemo<any[]>(() => {
-    const baseColumns: any[] = [
+  const columns = useMemo<ColumnDef<Department>[]>(() => {
+    const baseColumns: ColumnDef<Department>[] = [
       {
         accessorKey: "name",
         header: "Department",
-        cell: ({ row }: any) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-[var(--radius)] bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300">
               <AppIcon name="building" />
@@ -272,12 +302,12 @@ export function DepartmentsTab() {
       {
         accessorKey: "users_count",
         header: "Members",
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const count = row.original.users_count || 0;
           return (
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
-                {(row.original.users || []).slice(0, 3).map((u: any, i: number) => (
+                {(row.original.users || []).slice(0, 3).map((u: UserRef, i: number) => (
                   <Avatar key={i} className="w-6 h-6 border-2 border-background">
                     <AvatarImage src={u.avatar_url || ""} />
                     <AvatarFallback name={u.name} className="text-[9px]" />
@@ -292,12 +322,12 @@ export function DepartmentsTab() {
       {
         accessorKey: "teams",
         header: "Sub-teams",
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const teams = row.original.teams || [];
           return (
             <div className="flex flex-wrap gap-1">
               {teams.length > 0 ? (
-                teams.map((team: any) => (
+                teams.map((team: TeamRef) => (
                   <span key={team.id} className="px-2 py-0.5 rounded-[var(--radius)] text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
                     <AppIcon name="directory" size="xs" className=" text-neutral-400" />
                     {team.name}
@@ -311,7 +341,7 @@ export function DepartmentsTab() {
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const isActive = row.original.is_active;
           const isArchived = !!row.original.archived_at;
           return (
@@ -327,7 +357,7 @@ export function DepartmentsTab() {
       baseColumns.push({
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const dept = row.original;
           const isArchived = !!dept.archived_at;
           return (
@@ -378,7 +408,7 @@ export function DepartmentsTab() {
     }
 
     return baseColumns;
-  }, [isAdmin]);
+  }, [isAdmin, reset, restoreMutation, archiveMutation, deleteMutation]);
 
   return (
     <div className="space-y-6 mt-4">
@@ -481,8 +511,8 @@ export function DepartmentsTab() {
         open={confirmState.isOpen}
         onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, type: "" }) }}
         onConfirm={() => {
-          if (confirmState.type === "archive") archiveMutation.mutate(confirmState.payload.id);
-          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
+          if (confirmState.type === "archive") archiveMutation.mutate(confirmState.payload!.id);
+          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload!.id);
         }}
         title={confirmState.type === "delete" ? "Delete Department" : "Archive Department"}
         description={confirmState.type === "delete" ? "Are you sure? This cannot be undone and will fail if employees are assigned." : "Archived departments will no longer be available for new assignments."}
@@ -492,7 +522,7 @@ export function DepartmentsTab() {
       <Sheet open={!!selectedDeptMembers} onOpenChange={(open: boolean) => { if (!open) { setSelectedDeptMembers(null); setSelectedNewHr(""); setSelectedNewEmployee(""); } }}>
         <SheetContent className="w-full sm:w-[540px] flex flex-col h-full">
           <SheetHeader>
-            <SheetTitle>{selectedDeptMembers?.name} Members</SheetTitle>
+            <SheetTitle>{(selectedDeptMembers as any)?.name} Members</SheetTitle>
             <SheetDescription>Manage HRs and employees assigned to this department.</SheetDescription>
           </SheetHeader>
           <div className="mt-6 flex-1 overflow-hidden flex flex-col">
@@ -510,7 +540,7 @@ export function DepartmentsTab() {
                   {isAdmin && (
                     <div className="flex items-center gap-2 mb-4 p-3 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
                       <Combobox
-                        options={allUsers.map((u: any) => ({ label: u.name, value: u.id.toString() }))}
+                        options={allUsers.map((u: UserRef) => ({ label: u.name, value: u.id.toString() }))}
                         value={selectedNewEmployee}
                         onChange={setSelectedNewEmployee}
                         placeholder="Select an employee..."
@@ -519,7 +549,7 @@ export function DepartmentsTab() {
                         disabled={!selectedNewEmployee || assignEmployeeMutation.isPending}
                         onClick={() => {
                           if (selectedNewEmployee) {
-                            assignEmployeeMutation.mutate({ deptId: selectedDeptMembers.id, userIds: [Number(selectedNewEmployee)] }, {
+                            assignEmployeeMutation.mutate({ deptId: selectedDeptMembers!.id, userIds: [Number(selectedNewEmployee)] }, {
                               onSuccess: () => setSelectedNewEmployee("")
                             });
                           }
@@ -534,7 +564,7 @@ export function DepartmentsTab() {
                     <EmptyState title="No employees" description="This department has no employees yet." />
                   ) : (
                     <div className="space-y-3">
-                      {deptDetails.users.map((user: any) => (
+                      {deptDetails.users.map((user: UserRef) => (
                         <div key={user.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-10 h-10">
@@ -551,7 +581,7 @@ export function DepartmentsTab() {
                               variant="ghost"
                               size="sm"
                               className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50"
-                              onClick={() => removeEmployeeMutation.mutate({ deptId: selectedDeptMembers.id, userId: user.id })}
+                              onClick={() => removeEmployeeMutation.mutate({ deptId: selectedDeptMembers!.id, userId: user.id })}
                               disabled={removeEmployeeMutation.isPending}
                             >
                               {removeEmployeeMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
@@ -567,7 +597,7 @@ export function DepartmentsTab() {
                   {isAdmin && (
                     <div className="flex items-center gap-2 mb-4 p-3 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
                       <Combobox
-                        options={allUsers.filter((u: any) => u.roles?.includes('hr') || u.roles?.includes('super_admin')).map((u: any) => ({ label: u.name, value: u.id.toString() }))}
+                        options={allUsers.filter((u: UserRef) => u.roles?.includes('hr') || u.roles?.includes('super_admin')).map((u: UserRef) => ({ label: u.name, value: u.id.toString() }))}
                         value={selectedNewHr}
                         onChange={setSelectedNewHr}
                         placeholder="Select an HR..."
@@ -576,7 +606,7 @@ export function DepartmentsTab() {
                         disabled={!selectedNewHr || addHrMutation.isPending}
                         onClick={() => {
                           if (selectedNewHr) {
-                            addHrMutation.mutate({ deptId: selectedDeptMembers.id, userId: Number(selectedNewHr) }, {
+                            addHrMutation.mutate({ deptId: selectedDeptMembers!.id, userId: Number(selectedNewHr) }, {
                               onSuccess: () => setSelectedNewHr("")
                             });
                           }
@@ -591,7 +621,7 @@ export function DepartmentsTab() {
                     <EmptyState title="No HRs assigned" description="Assign HRs to manage this department." />
                   ) : (
                     <div className="space-y-3">
-                      {deptDetails.hrs.map((hr: any) => (
+                      {deptDetails.hrs.map((hr: UserRef) => (
                         <div key={hr.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-10 h-10">
@@ -608,7 +638,7 @@ export function DepartmentsTab() {
                               variant="ghost"
                               size="sm"
                               className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50"
-                              onClick={() => removeHrMutation.mutate({ deptId: selectedDeptMembers.id, userId: hr.id })}
+                              onClick={() => removeHrMutation.mutate({ deptId: selectedDeptMembers!.id, userId: hr.id })}
                               disabled={removeHrMutation.isPending}
                             >
                               {removeHrMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
@@ -631,7 +661,7 @@ export function DepartmentsTab() {
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && newTeamName) {
                             e.preventDefault();
-                            addTeamMutation.mutate({ deptId: selectedDeptMembers.id, name: newTeamName }, {
+                            addTeamMutation.mutate({ deptId: selectedDeptMembers!.id, name: newTeamName }, {
                               onSuccess: () => setNewTeamName("")
                             });
                           }
@@ -641,7 +671,7 @@ export function DepartmentsTab() {
                         disabled={!newTeamName || addTeamMutation.isPending}
                         onClick={() => {
                           if (newTeamName) {
-                            addTeamMutation.mutate({ deptId: selectedDeptMembers.id, name: newTeamName }, {
+                            addTeamMutation.mutate({ deptId: selectedDeptMembers!.id, name: newTeamName }, {
                               onSuccess: () => setNewTeamName("")
                             });
                           }
@@ -656,7 +686,7 @@ export function DepartmentsTab() {
                     <EmptyState title="No sub-teams" description="Create sub-teams to organize employees within this department." />
                   ) : (
                     <div className="space-y-3">
-                      {deptDetails.teams.map((team: any) => (
+                      {deptDetails.teams.map((team: TeamRef) => (
                         <div key={team.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-[var(--radius)]">
@@ -671,7 +701,7 @@ export function DepartmentsTab() {
                               variant="ghost"
                               size="sm"
                               className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50"
-                              onClick={() => removeTeamMutation.mutate({ deptId: selectedDeptMembers.id, teamId: team.id })}
+                              onClick={() => removeTeamMutation.mutate({ deptId: selectedDeptMembers!.id, teamId: team.id })}
                               disabled={removeTeamMutation.isPending}
                             >
                               {removeTeamMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}

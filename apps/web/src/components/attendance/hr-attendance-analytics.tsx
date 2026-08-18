@@ -4,10 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
+import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useMemo } from "react";
 
+
+interface AttendanceRecord {
+  status: string;
+  overtime_seconds: number;
+  clock_in?: string;
+}
 
 export function HrAttendanceAnalytics() {
   const [selectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
@@ -23,7 +29,7 @@ export function HrAttendanceAnalytics() {
       try {
         // Try the new analytics endpoint first
         return await apiFetch(`/attendance/hr/analytics?${params.toString()}`);
-      } catch (e) {
+      } catch (e: unknown) {
         // Fallback to overview if analytics endpoint doesn't exist yet
         params.append("per_page", "1000"); // Try to get all records for stats
         return await apiFetch(`/attendance/hr/today?${params.toString()}`);
@@ -56,7 +62,7 @@ export function HrAttendanceAnalytics() {
     let totalClockInTime = 0;
     let clockInCount = 0;
 
-    records.forEach((record: any) => {
+    records.forEach((record: AttendanceRecord) => {
       const status = record.status;
       if (status === "present") present++;
       else if (status === "absent") absent++;

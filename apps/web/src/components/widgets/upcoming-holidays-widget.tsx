@@ -2,12 +2,20 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { isAfter, startOfDay } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
 import { safeFormat } from "@/lib/format";
 import { Card, CardHeader, CardTitle, CardContent, Skeleton, Button } from "@g4k/ui/components";
+
+export interface Holiday {
+  name: string;
+  date: string;
+  type?: string;
+  start_time?: string;
+  location?: string;
+}
 
 export function UpcomingHolidaysWidget() {
   const currentYear = new Date().getFullYear();
@@ -22,7 +30,7 @@ export function UpcomingHolidaysWidget() {
 
   const upcomingList = Array.isArray(holidays) || Array.isArray(holidays?.data) 
     ? (holidays?.data || holidays)
-      .filter((h: any) => {
+      .filter((h: Holiday) => {
         if (!h?.date) return false;
         const d = new Date(h.date);
         if (isNaN(d.getTime())) return false;
@@ -39,7 +47,7 @@ export function UpcomingHolidaysWidget() {
           Upcoming Holidays & Events
         </CardTitle>
         <Button variant="ghost" size="sm" asChild className="h-8 text-xs font-semibold text-primary">
-          <Link href="/dashboard/org/leave">
+          <Link href="/dashboard/attendance?tab=leave">
             View All <AppIcon name="chevronRight" size="xs" className=" ml-1" />
           </Link>
         </Button>
@@ -65,7 +73,7 @@ export function UpcomingHolidaysWidget() {
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
-            {upcomingList.map((holiday: any, idx: number) => {
+            {upcomingList.map((holiday: Holiday, idx: number) => {
               const isEvent = holiday.type === 'event';
               return (
                 <div key={idx} className="p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">

@@ -1,28 +1,55 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const TaskGantt = dynamic(() => import("@/components/tasks/task-gantt").then(mod => mod.TaskGantt), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Skeleton, Checkbox, Avatar, AvatarFallback, Badge, StatusBadge, Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker } from "@g4k/ui/components";
+import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker } from "@g4k/ui/components";
 import { FormError } from "@/components/forms/form-error";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
+
+export interface TaskUser {
+  id: number;
+  name: string;
+}
+
+export interface TaskProject {
+  id: number;
+  name: string;
+  allow_employee_tasks?: boolean;
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  description?: string;
+  status: string;
+  scope?: string;
+  blocked_by?: number;
+  priority: string;
+  due_date?: string;
+  assignees?: TaskUser[];
+  project_id?: number;
+  qa_form_id?: number;
+  recurrence?: Record<string, unknown>;
+  order?: number;
+}
 export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa" | "list">("kanban");
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -42,8 +69,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const [recurrenceDays, setRecurrenceDays] = useState<number[]>([]);
   const [dayOfMonth, setDayOfMonth] = useState<number>(1);
   
-  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<any>("/users") });
-  const { data: projectsData } = useQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch<any>("/projects") });
+  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data: TaskUser[] }>("/users") });
+  const { data: projectsData } = useQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch<{ data: TaskProject[] }>("/projects") });
   const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
   
   const searchParams = useSearchParams();
@@ -54,8 +81,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
   const { data: caps = [] } = useCapabilities();
   const canManageTasks = hasCapability(caps, "tasks.manage");
-  const availableUsers = canManageTasks ? usersData?.data : usersData?.data?.filter((u: any) => u.id === user?.id);
-  const availableProjects = canManageTasks ? projectsData?.data : projectsData?.data?.filter((p: any) => p.allow_employee_tasks);
+  const availableUsers = canManageTasks ? usersData?.data : usersData?.data?.filter((u: TaskUser) => u.id === user?.id);
+  const availableProjects = canManageTasks ? projectsData?.data : projectsData?.data?.filter((p: TaskProject) => p.allow_employee_tasks);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(isReview ? "review" : "all");
@@ -68,8 +95,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const [page, setPage] = useUrlState("page", "1");
   const [perPage, setPerPage] = useState(20);
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: [...queryKeys.tasks, statusFilter, scopeFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder],
+  const { data, isLoading, isError } = useQuery({
+    queryKey: [...queryKeys.tasks, statusFilter, scopeFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder, defaultProjectId],
     queryFn: () => {
       const p = new URLSearchParams();
       p.append("per_page", viewMode === "list" ? perPage.toString() : "100");
@@ -103,14 +130,14 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       
       const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks });
 
-      queryClient.setQueriesData({ queryKey: queryKeys.tasks }, (old: any) => {
+      queryClient.setQueriesData({ queryKey: queryKeys.tasks }, (old: unknown) => {
         if (!old) return old;
         
         // Deep clone to avoid mutating cache directly
         const clone = JSON.parse(JSON.stringify(old));
         let arr = Array.isArray(clone.data) ? clone.data : (Array.isArray(clone.data?.data) ? clone.data.data : []);
         
-        const idx = arr.findIndex((t: any) => t.id === taskId);
+        const idx = arr.findIndex((t: Task) => t.id === taskId);
         if (idx !== -1) {
           arr[idx].status = status;
         }
@@ -120,11 +147,12 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
       return { previousTasks };
     },
-    onError: (err: any, variables, context: any) => {
+    onError: (err: Error, variables, context: unknown) => {
       toast.error(err.message || "Failed to move task.");
-      if (context?.previousTasks) {
-        context.previousTasks.forEach(([key, data]: any) => {
-          queryClient.setQueryData(key, data);
+      const ctx = context as { previousTasks?: [unknown, unknown][] };
+      if (ctx?.previousTasks) {
+        ctx.previousTasks.forEach(([key, data]) => {
+          queryClient.setQueryData(key as readonly unknown[], data);
         });
       }
     },
@@ -134,7 +162,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   });
 
   const reorderTaskMutation = useMutation({
-    mutationFn: async (reorderedTasks: any[]) => {
+    mutationFn: async (reorderedTasks: Task[]) => {
       return apiFetch(`/tasks/reorder`, {
         method: "POST",
         body: JSON.stringify({
@@ -145,7 +173,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to reorder tasks.");
     },
   });
@@ -163,10 +191,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (taskIds: number[]) => {
-      let completed = 0;
       for (const id of taskIds) {
         await apiFetch(`/tasks/${id}`, { method: "DELETE" });
-        completed++;
       }
     },
     onSuccess: () => {
@@ -179,10 +205,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
   const bulkStatusMutation = useMutation({
     mutationFn: async ({ taskIds, status }: { taskIds: number[], status: string }) => {
-      let completed = 0;
       for (const id of taskIds) {
         await apiFetch(`/tasks/${id}`, { method: "PUT", body: JSON.stringify({ status }) });
-        completed++;
       }
     },
     onSuccess: () => {
@@ -196,7 +220,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     moveTaskMutation.mutate({ taskId, status });
   }, [moveTaskMutation]);
 
-  const handleTaskSelect = useCallback((task: any) => {
+  const handleTaskSelect = useCallback((task: Task) => {
     setSelectedTask(task);
     setSheetOpen(true);
   }, []);
@@ -246,7 +270,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       // Drop exact:true so the parameterized list key is also invalidated (T-46.2)
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
     },
-    onError: (err: any) => {
+    onError: (err: Error & { errors?: Record<string, string[]> }) => {
       toast.error(err.message || "Failed to create task.");
       if (err.errors) {
         setFieldErrors(err.errors);
@@ -258,7 +282,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const tasks = Array.isArray(data?.data) ? data.data : (Array.isArray(data?.data?.data) ? data.data.data : []);
   const filteredTasks = tasks; // Using server-side filtering now
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<Task>[] = [
     {
       accessorKey: "title",
       header: "Title",
@@ -317,7 +341,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     }
   ];
 
-  const selectedTaskIds = Object.keys(rowSelection).filter(k => (rowSelection as any)[k]).map(k => filteredTasks[Number(k)]?.id).filter(Boolean);
+  const selectedTaskIds = Object.keys(rowSelection).filter(k => (rowSelection as Record<string, boolean>)[k]).map(k => filteredTasks[Number(k)]?.id).filter(Boolean);
 
   return (
     <div className="space-y-6 mt-4">
@@ -364,17 +388,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
               </SelectContent>
             </Select>
           )}
-          <Select value={scopeFilter} onValueChange={setScopeFilter}>
-            <SelectTrigger className="w-[130px] h-9 text-xs">
-              <SelectValue placeholder="All Scopes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Scopes</SelectItem>
-              <SelectItem value="global">Global</SelectItem>
-              <SelectItem value="department">Department</SelectItem>
-              <SelectItem value="role">Role</SelectItem>
-            </SelectContent>
-          </Select>
+
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-9">
@@ -442,7 +456,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">No Project</SelectItem>
-                        {availableProjects?.map((p: any) => (
+                        {availableProjects?.map((p: TaskProject) => (
                           <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
                         ))}
                       </SelectContent>
@@ -452,7 +466,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-neutral-500">Assignees</label>
                       <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-2 space-y-1 bg-white dark:bg-neutral-900">
-                        {availableUsers?.map((u: any) => (
+                        {availableUsers?.map((u: TaskUser) => (
                           <label key={u.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded">
                             <Checkbox 
                               checked={assigneeIds.includes(u.id)}
@@ -503,7 +517,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
-                        {(Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : []).map((q: any) => (
+                        {(Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : []).map((q: { id: number; title: string }) => (
                           <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>
                         ))}
                       </SelectContent>
@@ -517,7 +531,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
-                        {tasks?.map((t: any) => (
+                        {tasks?.map((t: Task) => (
                           <SelectItem key={t.id} value={String(t.id)}>{t.title}</SelectItem>
                         ))}
                       </SelectContent>
@@ -604,7 +618,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         </div>
       </div>
       
-      {viewMode === "list" && (
+      {(viewMode === "list" || viewMode === "kanban") && (
         <div className="space-y-4">
           <FilterBar
             searchQuery={searchQuery}
@@ -620,7 +634,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                 options: [
                   { label: "My Tasks", value: "me" },
                   ...(canManageTasks ? [{ label: "All Tasks", value: "all" }] : []),
-                  ...(canManageTasks ? (usersData?.data?.map((u: any) => ({ label: u.name, value: String(u.id) })) || []) : [])
+                  ...(canManageTasks ? (usersData?.data?.map((u: TaskUser) => ({ label: u.name, value: String(u.id) })) || []) : [])
                 ]
               },
               {
@@ -691,52 +705,54 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
             </div>
           )}
 
-          <DataTable
-            columns={columns}
-            data={filteredTasks}
-            stickyHeader={true}
-            stickyFirstCol={true}
-            rowSelection={rowSelection}
-            onRowSelectionChange={setRowSelection}
-            page={parseInt(page)}
-            perPage={perPage}
-            totalPages={data?.last_page || data?.meta?.last_page || data?.data?.last_page || 1}
-            onPageChange={(p) => setPage(p.toString())}
-            onPerPageChange={setPerPage}
-            density="compact"
-            isLoading={isLoading}
-            isError={isError}
-            sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
-            onSortingChange={(sorting) => {
-              if (sorting.length > 0) {
-                setSortBy(sorting[0].id);
-                setSortOrder(sorting[0].desc ? "desc" : "asc");
-              } else {
-                setSortBy("id");
-                setSortOrder("desc");
-              }
-            }}
-          />
+          {viewMode === "list" && (
+            <DataTable
+              columns={columns}
+              data={filteredTasks}
+              stickyHeader={true}
+              stickyFirstCol={true}
+              rowSelection={rowSelection}
+              onRowSelectionChange={setRowSelection}
+              page={parseInt(page)}
+              perPage={perPage}
+              totalPages={data?.last_page || data?.meta?.last_page || data?.data?.last_page || 1}
+              onPageChange={(p) => setPage(p.toString())}
+              onPerPageChange={setPerPage}
+              density="compact"
+              isLoading={isLoading}
+              isError={isError}
+              sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
+              onSortingChange={(sorting) => {
+                if (sorting.length > 0) {
+                  setSortBy(sorting[0].id);
+                  setSortOrder(sorting[0].desc ? "desc" : "asc");
+                } else {
+                  setSortBy("id");
+                  setSortOrder("desc");
+                }
+              }}
+            />
+          )}
+
+          {viewMode === "kanban" && (
+            <TaskKanbanBoard
+              tasks={filteredTasks as any}
+              onTaskMove={handleTaskMove}
+              onTaskSelect={handleTaskSelect as any}
+              onDeleteTask={handleDeleteTask}
+              onTaskReorder={(tasks) => reorderTaskMutation.mutate(tasks as any)}
+              isLoading={isLoading}
+            />
+          )}
         </div>
       )}
 
-      {viewMode === "kanban" && (
-        <TaskKanbanBoard
-          tasks={filteredTasks}
-          onTaskMove={handleTaskMove}
-          onTaskSelect={handleTaskSelect}
-          onDeleteTask={handleDeleteTask}
-          onTaskReorder={(tasks) => reorderTaskMutation.mutate(tasks)}
-          isLoading={isLoading}
-        />
-      )}
-
-      {viewMode === "gantt" && <TaskGantt tasks={filteredTasks} onTaskSelect={handleTaskSelect} />}
+      {viewMode === "gantt" && <TaskGantt tasks={filteredTasks as any} onTaskSelect={handleTaskSelect as any} />}
 
       {viewMode === "qa" && <QAFormBuilder />}
 
       <TaskDetailSheet
-        task={filteredTasks.find((t: any) => t.id === selectedTask?.id) || selectedTask}
+        task={filteredTasks.find((t: Task) => t.id === selectedTask?.id) || selectedTask}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />

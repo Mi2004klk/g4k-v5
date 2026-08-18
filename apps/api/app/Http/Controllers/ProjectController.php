@@ -233,7 +233,7 @@ class ProjectController extends Controller
         ]);
         
         // T-52: Clear pending approvals cache for HR/Admin
-        $adminIds = \App\Models\User::whereIn('role', ['hr', 'super_admin'])->pluck('id');
+        $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
         foreach ($adminIds as $adminId) {
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
@@ -273,7 +273,7 @@ class ProjectController extends Controller
         }
 
         // T-52: Clear pending approvals cache for HR/Admin
-        $adminIds = \App\Models\User::whereIn('role', ['hr', 'super_admin'])->pluck('id');
+        $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
         foreach ($adminIds as $adminId) {
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
@@ -288,16 +288,25 @@ class ProjectController extends Controller
         }
 
         $request->validate([
-            'cover_image' => 'required|image|max:5120',
+            'cover_image' => 'required|image|max:2048',
         ]);
 
-        $disk = config('filesystems.default');
-        $path = $request->file('cover_image')->store('projects/covers', $disk);
+        try {
+            $disk = config('filesystems.default');
+            $path = $request->file('cover_image')->store('projects/covers', $disk);
 
-        return response()->json([
-            'message' => 'Cover uploaded successfully',
-            'url' => \Illuminate\Support\Facades\Storage::disk($disk)->url($path)
-        ]);
+            if (!$path) {
+                throw new \Exception('Failed to store file');
+            }
+
+            return response()->json([
+                'message' => 'Cover uploaded successfully',
+                'url' => \Illuminate\Support\Facades\Storage::disk($disk)->url($path)
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Project cover upload failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to upload image. Please check server storage permissions.'], 500);
+        }
     }
 }
 

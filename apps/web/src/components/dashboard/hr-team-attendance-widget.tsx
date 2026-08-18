@@ -2,13 +2,19 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 
 import { Card, Skeleton, Button, StatusBadge, Avatar, AvatarFallback } from "@g4k/ui/components";
 
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
+
+interface HrAttendanceRecord {
+  user_id: number;
+  user_name: string;
+  status: "present" | "late" | "absent" | string;
+}
 
 export function HrTeamAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
@@ -18,8 +24,8 @@ export function HrTeamAttendanceWidget() {
     placeholderData: keepPreviousData,
   });
 
-  const records = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-  const presentCount = records.filter((r: any) => r.status === "present" || r.status === "late").length;
+  const records = Array.isArray(data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data) ? (Array.isArray(data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data) ? (data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data as HrAttendanceRecord[]) : []) : [];
+  const presentCount = records.filter((r: HrAttendanceRecord) => r.status === "present" || r.status === "late").length;
   const totalCount = records.length;
   const topRecords = records.slice(0, 3);
 
@@ -71,7 +77,7 @@ export function HrTeamAttendanceWidget() {
           </div>
         ) : (
           <div className="space-y-3 flex-1">
-            {topRecords.map((r: any) => (
+            {topRecords.map((r: HrAttendanceRecord) => (
               <div key={r.user_id} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Avatar className="w-6 h-6">

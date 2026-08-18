@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api-client";
 import { getAuthToken } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 
-import { Card, CardContent, Avatar, AvatarFallback, Button, Input } from "@g4k/ui/components";
+import { Card, CardContent, Avatar, AvatarFallback, Button } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -71,7 +71,7 @@ export function ProfileHeader() {
         try {
           const errorData = await res.json();
           errMessage = errorData.message || errMessage;
-        } catch (e) {}
+        } catch {}
         throw new Error(errMessage);
       }
       return res.json();
@@ -81,7 +81,7 @@ export function ProfileHeader() {
       handleOpenChange(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to upload avatar.");
     },
   });
@@ -97,7 +97,11 @@ export function ProfileHeader() {
       return;
     }
     setAvatarFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const onDragOver = useCallback((e: React.DragEvent) => {

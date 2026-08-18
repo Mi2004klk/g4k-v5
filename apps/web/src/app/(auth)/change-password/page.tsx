@@ -46,7 +46,7 @@ export default function ChangePasswordPage() {
     if (!token && !user) {
       router.replace("/login");
     }
-  }, [token, user]);
+  }, [token, user, router]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(changeSchema),
@@ -81,9 +81,10 @@ export default function ChangePasswordPage() {
          router.push("/dashboard");
       }
       
-    } catch (error: any) {
-      form.setError("root", { type: "manual", message: error.message || "Failed to change password." });
-      toast.error(error.message || "Failed to change password.");
+    } catch (error) {
+      const e = error as Error;
+      form.setError("root", { type: "manual", message: e.message || "Failed to change password." });
+      toast.error(e.message || "Failed to change password.");
     } finally {
       setIsLoading(false);
     }

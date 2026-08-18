@@ -1,24 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
-import Link from "next/link";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { safeFormat } from "@/lib/format";
+import { ColumnDef, Row, Table as ReactTable } from "@tanstack/react-table";
 
 import { useUrlState } from "@/hooks/use-url-state";
 
 import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
-import { getAuthToken } from "@/lib/auth-store";
+import { STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { useReverb } from "@/hooks/use-reverb";
 import { useExport } from "@/hooks/use-export";
-import { keepPreviousData } from "@tanstack/react-query";
-import { Input, Button, Checkbox, DataTable, StatusBadge, FilterBar } from "@g4k/ui/components";
+import { Button, Checkbox, DataTable, StatusBadge, FilterBar } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
+
+export interface HrAttendanceRecord {
+  id: number;
+  user_id: number;
+  user_name: string;
+  department?: string;
+  status: string;
+  clock_in?: string;
+  clock_out?: string;
+  first_event?: string;
+  last_event?: string;
+  total_seconds?: number;
+  overtime_seconds?: number;
+  late_minutes?: number;
+  has_open_shift?: boolean;
+  user_email?: string;
+  date?: string;
+  unapproved_break_seconds?: number;
+  break_seconds?: number;
+}
 
 export function HrAttendanceTable() {
   const queryClient = useQueryClient();
@@ -26,7 +44,6 @@ export function HrAttendanceTable() {
   const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");
-  const [userFilter, setUserFilter] = useUrlState("user", "all");
   const [search, setSearch] = useUrlState("search", "");
   const { triggerExport, isExporting } = useExport();
 
@@ -50,9 +67,15 @@ export function HrAttendanceTable() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  useEffect(() => {
+  const [prevFilters, setPrevFilters] = useState({ selectedDate, deptFilter, statusFilter });
+  if (
+    prevFilters.selectedDate !== selectedDate ||
+    prevFilters.deptFilter !== deptFilter ||
+    prevFilters.statusFilter !== statusFilter
+  ) {
+    setPrevFilters({ selectedDate, deptFilter, statusFilter });
     setPage(1);
-  }, [selectedDate, deptFilter, statusFilter]);
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -104,7 +127,7 @@ export function HrAttendanceTable() {
 
   const handleExport = async (all: boolean = true) => {
     try {
-      let selectedIds = Object.keys(rowSelection);
+      const selectedIds = Object.keys(rowSelection);
       if (!all && selectedIds.length === 0) {
         toast.error("Please select at least one record to export.");
         return;
@@ -124,29 +147,29 @@ export function HrAttendanceTable() {
         `/attendance/export?${params.toString()}`,
         `team_attendance_${selectedDate}.xlsx`
       );
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to export attendance");
+    } catch (e: unknown) {
+      toast.error((e as { message?: string })?.message || "Failed to export attendance");
     }
   };
 
 
 
-    const columns: any[] = [
+    const columns: ColumnDef<HrAttendanceRecord>[] = [
       {
         id: "select",
         size: 40,
-        header: ({ table }: any) => (
+        header: ({ table }: { table: ReactTable<HrAttendanceRecord> }) => (
           <Checkbox
             checked={table.getIsAllPageRowsSelected()}
-            onCheckedChange={(value: any) => table.toggleAllPageRowsSelected(!!value)}
+            onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
             aria-label="Select all"
             className="ml-2"
           />
         ),
-        cell: ({ row }: any) => (
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => (
           <Checkbox
             checked={row.getIsSelected()}
-            onCheckedChange={(value: any) => row.toggleSelected(!!value)}
+            onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
             aria-label="Select row"
             className="ml-2"
           />
@@ -158,7 +181,7 @@ export function HrAttendanceTable() {
         accessorKey: "user_name",
         header: "Employee",
         size: 200,
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           const isToday = selectedDate === format(new Date(), "yyyy-MM-dd");
           const isClockedIn = row.original.clock_in && !row.original.clock_out;
           const isLive = isToday && isClockedIn;
@@ -189,7 +212,7 @@ export function HrAttendanceTable() {
                   onClick={() => setCorrectionData({
                     dayId: row.original.id,
                     userId: row.original.user_id,
-                    date: row.original.date,
+                    date: (row.original.date as string) || "",
                     action: "add_event",
                     type: "clock_out"
                   })}
@@ -210,7 +233,7 @@ export function HrAttendanceTable() {
         id: "date",
         size: 120,
         header: "Date",
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           return <span className="text-sm font-medium text-foreground">{safeFormat(row.original.date, "MMM dd, yyyy")}</span>;
         }
       },
@@ -218,7 +241,7 @@ export function HrAttendanceTable() {
         accessorKey: "clock_in",
         header: "Clock In",
         size: 120,
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           const val = row.getValue("clock_in") as string;
           return <span className="font-mono text-muted-foreground">{val ? safeFormat(val, "hh:mm a") : "—"}</span>;
         },
@@ -227,7 +250,7 @@ export function HrAttendanceTable() {
         id: "productive_hours",
         header: "Total Productive Hours",
         size: 180,
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           const secs = row.original.total_seconds || 0;
           const hours = Math.floor(secs / 3600);
           const mins = Math.floor((secs % 3600) / 60);
@@ -238,7 +261,7 @@ export function HrAttendanceTable() {
         id: "break_hours",
         header: "Total Break",
         size: 140,
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           const secs = row.original.unapproved_break_seconds || 0;
           const hours = Math.floor(secs / 3600);
           const mins = Math.floor((secs % 3600) / 60);
@@ -249,7 +272,7 @@ export function HrAttendanceTable() {
         id: "working_hours",
         header: "Total Working Hours",
         size: 180,
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           // Total working hours includes all breaks
           const secs = (row.original.total_seconds || 0) + (row.original.break_seconds || 0);
           const hours = Math.floor(secs / 3600);
@@ -261,7 +284,7 @@ export function HrAttendanceTable() {
         id: "actions",
         header: "Actions",
         size: 100,
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           return (
             <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
               <Button
@@ -318,7 +341,7 @@ export function HrAttendanceTable() {
               type: "select",
               value: deptFilter,
               onChange: setDeptFilter,
-              options: departments.map((d: any) => ({ label: d.name, value: d.id.toString() }))
+              options: departments.map((d: { id: number; name: string }) => ({ label: d.name, value: d.id.toString() }))
             }
           ]}
           onClearAll={() => {
@@ -370,7 +393,7 @@ export function HrAttendanceTable() {
           onRowClick={(row) => {
             setSelectedUser(row.original.user_id);
           }}
-          getRowId={(row: any) => String(row.user_id || row.id)}
+          getRowId={(row: HrAttendanceRecord) => String(row.user_id || row.id)}
         />
       </div>
 
@@ -388,8 +411,9 @@ export function HrAttendanceTable() {
         userId={correctionData?.userId || 0}
         date={correctionData?.date || ""}
         defaultAction={correctionData?.action as any}
-        defaultType={correctionData?.type as any}
+        defaultType={correctionData?.type as "clock_in" | "clock_out" | "break_start" | "break_end"}
       />
     </div>
   );
 }
+

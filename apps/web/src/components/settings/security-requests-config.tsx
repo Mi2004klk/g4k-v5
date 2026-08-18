@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -15,6 +15,17 @@ import { DataTable } from "@g4k/ui/components/data-table";
 import { StatusBadge, ConfirmDialog } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
+
+export interface PasswordResetRequest {
+  id: number;
+  user: {
+    name: string;
+    email: string;
+    employee_id: string;
+  };
+  created_at: string;
+  status: string;
+}
 
 export function SecurityRequestsConfig() {
   const queryClient = useQueryClient();
@@ -40,7 +51,7 @@ export function SecurityRequestsConfig() {
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.passwordResets("pending") });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to approve request.");
     },
   });
@@ -53,7 +64,7 @@ export function SecurityRequestsConfig() {
       toast.success("Password reset request rejected.");
       queryClient.invalidateQueries({ queryKey: queryKeys.passwordResets("pending") });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to reject request.");
     },
   });
@@ -62,7 +73,7 @@ export function SecurityRequestsConfig() {
     {
       accessorKey: "user.name",
       header: "Employee",
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: PasswordResetRequest } }) => (
         <div>
           <div className="font-semibold text-neutral-900 dark:text-white">
             {row.original.user?.name || "Unknown"}
@@ -76,14 +87,14 @@ export function SecurityRequestsConfig() {
     {
       accessorKey: "user.employee_id",
       header: "Emp ID",
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: PasswordResetRequest } }) => (
         <span className="text-xs font-mono">{row.original.user?.employee_id || "-"}</span>
       ),
     },
     {
       accessorKey: "created_at",
       header: "Requested At",
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: PasswordResetRequest } }) => (
         <span className="text-xs text-neutral-500">
           {row.original.created_at ? format(new Date(row.original.created_at), "MMM d, yyyy h:mm a") : "-"}
         </span>
@@ -92,7 +103,7 @@ export function SecurityRequestsConfig() {
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }: any) => (
+      cell: ({ row }: { row: { original: PasswordResetRequest } }) => (
         <StatusBadge status="warning">
           {row.original.status || "Pending"}
         </StatusBadge>
@@ -101,7 +112,7 @@ export function SecurityRequestsConfig() {
     {
       id: "actions",
       header: () => <div className="text-right">Action</div>,
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: PasswordResetRequest } }) => {
         const id = row.original.id;
         const isApproving = approveMutation.isPending && approveMutation.variables === id;
         const isRejecting = rejectMutation.isPending && rejectMutation.variables === id;

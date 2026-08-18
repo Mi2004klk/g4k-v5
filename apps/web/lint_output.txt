@@ -1,0 +1,12 @@
+
+> web@0.1.0 lint
+> next lint
+
+Invalid project directory provided, no such directory: C:\Users\Founder Desk\3D Objects\Games4Kings-New\apps\web\lint
+npm error Lifecycle script `lint` failed with error:
+npm error code 1
+npm error path C:\Users\Founder Desk\3D Objects\Games4Kings-New\apps\web
+npm error workspace web@0.1.0
+npm error location C:\Users\Founder Desk\3D Objects\Games4Kings-New\apps\web
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c next lint

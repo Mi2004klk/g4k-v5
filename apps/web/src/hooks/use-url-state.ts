@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 export function useUrlState(key: string, defaultValue: string = "") {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   
   // Initialize from URL if present, otherwise defaultValue
@@ -30,8 +29,10 @@ export function useUrlState(key: string, defaultValue: string = "") {
   useEffect(() => {
     const value = searchParams.get(key) || defaultValue;
     if (value !== state) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState(value);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, key, defaultValue]); // Intentionally excluding `state` to prevent loop
 
   return [state, setUrlState] as const;

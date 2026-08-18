@@ -3,14 +3,26 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
-import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent, DatePicker } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent, DatePicker } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { toast } from "sonner";
 import { z } from "zod";
 import { FormError } from "@/components/forms/form-error";
+
+interface Holiday {
+  id: number;
+  name: string;
+  date: string;
+  description?: string;
+  recurring?: boolean;
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
 
 const holidaySchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -29,7 +41,7 @@ export function HolidayCalendar() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
-  const [editingHoliday, setEditingHoliday] = useState<any>(null);
+  const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -46,7 +58,7 @@ export function HolidayCalendar() {
   });
 
   const addHoliday = useMutation({
-    mutationFn: (data: any) => apiFetch("/holidays", { method: "POST", body: JSON.stringify(data) }),
+    mutationFn: (data: z.infer<typeof holidaySchema>) => apiFetch("/holidays", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.holidays(currentYear) });
       setIsAddOpen(false);
@@ -56,7 +68,7 @@ export function HolidayCalendar() {
   });
 
   const editHoliday = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: any }) => apiFetch(`/holidays/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    mutationFn: ({ id, data }: { id: number, data: z.infer<typeof holidaySchema> }) => apiFetch(`/holidays/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.holidays(currentYear) });
       setIsEditOpen(false);
@@ -92,7 +104,7 @@ export function HolidayCalendar() {
     const result = holidaySchema.safeParse(formData);
     if (!result.success) {
       const errors: Record<string, string> = {};
-      result.error.issues.forEach((err: any) => {
+      result.error.issues.forEach((err) => {
         if (err.path[0]) errors[err.path[0].toString()] = err.message;
       });
       setFieldErrors(errors);
@@ -106,7 +118,7 @@ export function HolidayCalendar() {
     }
   };
 
-  const openEdit = (h: any) => {
+  const openEdit = (h: Holiday) => {
     setEditingHoliday(h);
     setFormData({
       name: h.name,
@@ -130,32 +142,7 @@ export function HolidayCalendar() {
     setIsAddOpen(true);
   };
 
-  const HolidayFormFields = () => (
-    <>
-      <div className="space-y-2 flex flex-col">
-        <Label>Date</Label>
-        <DatePicker 
-          value={formData.date ? new Date(formData.date) : undefined} 
-          onChange={(date) => setFormData({ ...formData, date: date ? format(date, "yyyy-MM-dd") : "" })} 
-          className="w-full"
-        />
-        <FormError errors={fieldErrors.date} />
-      </div>
-      <div className="space-y-2">
-        <Label>Name</Label>
-        <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-        <FormError errors={fieldErrors.name} />
-      </div>
-      <div className="space-y-2">
-        <Label>Description</Label>
-        <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-      </div>
-      <div className="flex items-center gap-2">
-        <Checkbox id="recurring-check" checked={formData.recurring} onCheckedChange={(c) => setFormData({ ...formData, recurring: !!c })} />
-        <Label htmlFor="recurring-check">Recurring annually</Label>
-      </div>
-    </>
-  );
+
 
   return (
     <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
@@ -177,7 +164,28 @@ export function HolidayCalendar() {
                   <DialogTitle>Add Holiday or Event</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSave} className="space-y-4">
-                  <HolidayFormFields />
+                  <div className="space-y-2 flex flex-col">
+                    <Label>Date</Label>
+                    <DatePicker 
+                      value={formData.date ? new Date(formData.date) : undefined} 
+                      onChange={(date) => setFormData({ ...formData, date: date ? format(date, "yyyy-MM-dd") : "" })} 
+                      className="w-full"
+                    />
+                    <FormError errors={fieldErrors.date} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Name</Label>
+                    <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                    <FormError errors={fieldErrors.name} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="recurring-check" checked={formData.recurring} onCheckedChange={(c) => setFormData({ ...formData, recurring: !!c })} />
+                    <Label htmlFor="recurring-check">Recurring annually</Label>
+                  </div>
                   <Button type="submit" disabled={addHoliday.isPending} className="w-full">Save</Button>
                 </form>
               </DialogContent>
@@ -209,7 +217,7 @@ export function HolidayCalendar() {
             <div className="grid grid-cols-7 gap-1 flex-1">
               {days.map((day, idx) => {
                 const isCurrentMonth = isSameMonth(day, monthStart);
-                const holiday = holidayList.find((h: any) => isSameDay(new Date(h.date), day));
+                const holiday = holidayList.find((h: Holiday) => isSameDay(new Date(h.date), day));
                 
                 const CellContent = (
                   <div
@@ -297,10 +305,23 @@ export function HolidayCalendar() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit {(formData as any).type === 'event' ? 'Event' : 'Holiday'}</DialogTitle>
+            <DialogTitle>Edit Holiday</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
-            <HolidayFormFields />
+            <div className="space-y-2 flex flex-col">
+              <Label>Date</Label>
+              <DatePicker 
+                value={formData.date ? new Date(formData.date) : undefined} 
+                onChange={(date) => setFormData({ ...formData, date: date ? format(date, "yyyy-MM-dd") : "" })} 
+                className="w-full"
+              />
+              <FormError errors={fieldErrors.date} />
+            </div>
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+              <FormError errors={fieldErrors.name} />
+            </div>
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />

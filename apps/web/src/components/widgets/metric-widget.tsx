@@ -1,14 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { AppIcon, IconName } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
-import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { Card, CardContent, Button } from "@g4k/ui/components";
+import { Card, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { EmptyState } from "@g4k/ui/components";
 import { WidgetInfo } from "./widget-info";
 import { useRouter } from "next/navigation";
 
@@ -30,21 +27,17 @@ export function MetricWidget({
   metricKey,
   icon,
   color = "violet",
-  endpoint = "/dashboard/init",
   subtitle,
-  hasModule = true,
   info,
   breakdown = false,
   href,
 }: MetricWidgetProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const isFirstRender = useRef(true);
-  const prevValueRef = useRef<number | null>(null);
   const router = useRouter();
 
   const { data, isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => data?.metrics || {},
+    select: (data: { metrics?: Record<string, number> } & Record<string, unknown>) => data?.metrics || {},
     placeholderData: keepPreviousData,
   });
 
@@ -63,6 +56,7 @@ export function MetricWidget({
   // Update value instantly
   useEffect(() => {
     if (isPending || typeof rawValue !== "number") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDisplayValue(rawValue);
   }, [rawValue, isPending]);
 

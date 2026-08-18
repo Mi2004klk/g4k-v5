@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, DataTable, FilterBar } from "@g4k/ui/components";
@@ -27,10 +27,10 @@ export function ReportBuilder() {
       });
     },
     onSuccess: (data: any) => {
-      toast.success(`Export job started (${data.format.toUpperCase()}). You will be notified when ready.`);
+      toast.success(`Export job started. You will be notified when ready.`);
       queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to initiate export.");
     },
   });
@@ -39,9 +39,9 @@ export function ReportBuilder() {
   const columns = items.length > 0 ? Object.keys(items[0]).map((key) => ({
     accessorKey: key,
     header: key.replace(/_/g, " ").toUpperCase(),
-    cell: ({ row }: any) => {
+    cell: ({ row }: { row: { original: Record<string, unknown> } }) => {
       const val = row.original[key];
-      return typeof val === "object" ? (val?.name || JSON.stringify(val)) : String(val ?? "N/A");
+      return typeof val === "object" ? ((val as { name?: string })?.name || JSON.stringify(val)) : String(val ?? "N/A");
     }
   })) : [];
 

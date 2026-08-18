@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { TodaySummaryCard } from "@/components/attendance/today-summary-card";
@@ -24,6 +24,16 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { LeaveTab } from "@/components/attendance/leave-tab";
 import { ApprovalsTab } from "@/components/attendance/approvals-tab";
+
+interface AttendanceDay {
+  date: string;
+  status: string;
+  total_seconds: number;
+  overtime_seconds?: number;
+  break_seconds?: number;
+  clock_in?: string;
+  clock_out?: string;
+}
 
 export default function PersonalAttendancePage() {
   const [tab, setTab] = useUrlState("tab", "overview");
@@ -131,7 +141,7 @@ export default function PersonalAttendancePage() {
                 ) : (
                   <div className="max-h-[360px] overflow-y-auto thin-scrollbar p-2">
                     <div className="flex flex-col gap-1">
-                      {recentHistory.map((day: any) => (
+                      {recentHistory.map((day: AttendanceDay) => (
                         <Dialog key={day.date}>
                           <DialogTrigger asChild>
                             <div className="flex items-center justify-between p-3 rounded-[var(--radius)] hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800 cursor-pointer">

@@ -4,9 +4,8 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { getAuthToken } from "@/lib/auth-store";
 import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { FilterBar } from "@g4k/ui/components";
@@ -18,6 +17,19 @@ import { toast } from "sonner";
 import { usePaginatedList } from "@/lib/pagination";
 import { useExport } from "@/hooks/use-export";
 import { LEAVE_TYPES } from "@/lib/constants";
+import { Row, ColumnDef } from "@tanstack/react-table";
+
+interface LeaveRecord {
+  id: number;
+  user_name?: string;
+  user?: { name: string; email?: string; avatar?: string };
+  type: string;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+  status: string;
+  approval?: { status: string; id?: number };
+}
 
 export function ApprovalsTab() {
   const [subTab, setSubTab] = useUrlState("sub", "approvals");
@@ -67,18 +79,16 @@ export function ApprovalsTab() {
     placeholderData: keepPreviousData,
   });
 
-  const paginatedData = usePaginatedList<any>(data);
+  const paginatedData = usePaginatedList<LeaveRecord>(data);
   const records = paginatedData.data;
   const approvalsTotalPages = paginatedData.last_page || 1;
 
-  const pendingCount = records.filter((r: any) => r.approval?.status === "pending").length;
-
-  const columns = useMemo<any[]>(
+  const columns = useMemo<ColumnDef<LeaveRecord>[]>(
     () => [
       {
         accessorKey: "employee",
         header: "Employee",
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<LeaveRecord> }) => {
           const startDate = new Date(row.original.start_date);
           const endDate = new Date(row.original.end_date);
           return (
@@ -96,7 +106,7 @@ export function ApprovalsTab() {
       {
         accessorKey: "type",
         header: "Type",
-        cell: ({ row }: any) => (
+        cell: ({ row }: { row: Row<LeaveRecord> }) => (
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
             {row.original.type}
           </span>
@@ -105,7 +115,7 @@ export function ApprovalsTab() {
       {
         accessorKey: "reason",
         header: "Reason",
-        cell: ({ row }: any) => (
+        cell: ({ row }: { row: Row<LeaveRecord> }) => (
           <div className="text-sm text-neutral-600 dark:text-neutral-400 max-w-[200px] truncate" title={row.original.reason}>
             {row.original.reason}
           </div>
@@ -114,7 +124,7 @@ export function ApprovalsTab() {
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }: any) => {
+        cell: ({ row }: { row: Row<LeaveRecord> }) => {
           const status = row.original.approval?.status || "pending";
           return (
             <StatusBadge 
@@ -129,9 +139,9 @@ export function ApprovalsTab() {
       {
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
-        cell: ({ row }: any) => (
+        cell: ({ row }: { row: Row<LeaveRecord> }) => (
           <div className="flex justify-end">
-            <LeaveApprovalActionsCell record={row.original} />
+            <LeaveApprovalActionsCell record={row.original as any} />
           </div>
         ),
       },
@@ -145,13 +155,14 @@ export function ApprovalsTab() {
         `/leave-requests/export?status=${statusFilter}`,
         `leave_export_${statusFilter}.xlsx`
       );
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e.message || "Failed to export");
+    } catch (e) {
+      const err = e as { message?: string };
+      console.error(err);
+      toast.error(err.message || "Failed to export leave requests");
     }
   };
 
-  const paginatedHistory = usePaginatedList<any>(historyData);
+  const paginatedHistory = usePaginatedList<LeaveRecord>(historyData);
   const historyRecords = paginatedHistory.data;
   const historyTotalPages = paginatedHistory.last_page || 1;
 
@@ -254,14 +265,9 @@ export function ApprovalsTab() {
             </div>
             <div className="flex-1 min-h-[300px] flex flex-col p-4 overflow-y-auto">
               <LeaveHistoryTable
-                records={historyRecords}
+                records={historyRecords as any}
                 isLoading={isLoadingHistory}
-                typeFilter={historyTypeFilter}
-                setTypeFilter={setHistoryTypeFilter}
-                statusFilter={historyStatusFilter}
-                setStatusFilter={setHistoryStatusFilter}
                 showEmployee={true}
-                hideFilters={true}
                 page={historyPage}
                 perPage={historyPerPage}
                 totalPages={historyTotalPages}

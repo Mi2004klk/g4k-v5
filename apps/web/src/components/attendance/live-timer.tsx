@@ -13,27 +13,26 @@ export function LiveTimer({ className, render }: LiveTimerProps) {
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
   const baseSeconds = useTimerStore((s) => s.baseSeconds);
   const lastActiveTimestamp = useTimerStore((s) => s.lastActiveTimestamp);
-  const [displaySeconds, setDisplaySeconds] = useState(baseSeconds);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    // If not active or on break, static time
+    // If not active or on break, we don't tick
     if (!isActive || isOnBreak || !lastActiveTimestamp) {
-      setDisplaySeconds(baseSeconds);
       return;
     }
 
-    // Active and ticking
-    const tick = () => {
-      const elapsed = Math.floor((Date.now() - new Date(lastActiveTimestamp).getTime()) / 1000);
-      setDisplaySeconds(baseSeconds + Math.max(0, elapsed));
-    };
-
     // Initial tick to catch up immediately
-    tick();
+    setNow(Date.now());
 
-    const interval = setInterval(tick, 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [isActive, isOnBreak, baseSeconds, lastActiveTimestamp]);
+  }, [isActive, isOnBreak, lastActiveTimestamp]);
+
+  let displaySeconds = baseSeconds;
+  if (isActive && !isOnBreak && lastActiveTimestamp) {
+    const elapsed = Math.floor((now - new Date(lastActiveTimestamp).getTime()) / 1000);
+    displaySeconds = baseSeconds + Math.max(0, elapsed);
+  }
 
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);

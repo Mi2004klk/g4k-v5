@@ -6,7 +6,7 @@ import { Skeleton } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { safeFormat } from "@/lib/format";
 
@@ -17,20 +17,33 @@ import { CanvasRenderer } from 'echarts/renderers';
 
 echarts.use([BarChart, LineChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]);
 
-const ReactECharts = dynamic(() => import("echarts-for-react/lib/core").then((mod) => {
-  const Core = mod.default || (mod as any);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ReactECharts = dynamic(() => import("echarts-for-react/lib/core").then((mod: any) => {
+  const Core = mod.default || mod;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function EChartsWrapper(props: any) {
     return <Core echarts={echarts} {...props} />;
   };
 }), { 
   ssr: false,
   loading: () => <Skeleton className="w-full h-[400px]" />
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }) as any;
+
+interface TrendStat {
+  date?: string;
+  name?: string;
+  present?: number;
+  absent?: number;
+  late?: number;
+  total_seconds?: number;
+  overtime_seconds?: number;
+}
 
 export function AdminAttendanceTrendsGraph() {
   const [groupBy, setGroupBy] = useState<"date" | "department">("date");
   const [mode, setMode] = useState<"weekly" | "monthly">("weekly");
-  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [date] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.adminAttendanceGraph(groupBy, mode, date),
@@ -42,12 +55,12 @@ export function AdminAttendanceTrendsGraph() {
     if (!data?.stats) return { labels: [], present: [], absent: [], late: [], hours: [], overtime: [] };
     
     const stats = data.stats;
-    const labels = stats.map((d: any) => groupBy === "date" ? safeFormat(d.date, "MMM d") : d.name);
-    const present = stats.map((d: any) => d.present || 0);
-    const absent = stats.map((d: any) => d.absent || 0);
-    const late = stats.map((d: any) => d.late || 0);
-    const hours = stats.map((d: any) => Number(((d.total_seconds || 0) / 3600).toFixed(1)));
-    const overtime = stats.map((d: any) => Number(((d.overtime_seconds || 0) / 3600).toFixed(1)));
+    const labels = stats.map((d: TrendStat) => groupBy === "date" ? safeFormat(d.date || "", "MMM d") : d.name);
+    const present = stats.map((d: TrendStat) => d.present || 0);
+    const absent = stats.map((d: TrendStat) => d.absent || 0);
+    const late = stats.map((d: TrendStat) => d.late || 0);
+    const hours = stats.map((d: TrendStat) => Number(((d.total_seconds || 0) / 3600).toFixed(1)));
+    const overtime = stats.map((d: TrendStat) => Number(((d.overtime_seconds || 0) / 3600).toFixed(1)));
 
     return { labels, present, absent, late, hours, overtime };
   }, [data, groupBy]);

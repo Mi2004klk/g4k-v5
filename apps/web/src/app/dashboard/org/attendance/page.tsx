@@ -15,7 +15,7 @@ export default function AttendanceHubPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold font-display tracking-tight text-neutral-900 dark:text-white">Team Attendance</h1>
-            <p className="text-sm text-neutral-500 mt-1">Monitor today's attendance and view historical trends for your team.</p>
+            <p className="text-sm text-neutral-500 mt-1">Monitor today&apos;s attendance and view historical trends for your team.</p>
           </div>
         </div>
         <HrAttendanceView />

@@ -4,14 +4,20 @@ import { useEffect, useRef, useState } from "react";
 import Gantt from "frappe-gantt";
 import { format, isSameDay } from "date-fns";
 import "../../frappe-gantt.css";
+import { TaskModel } from "./task-detail-sheet";
+
+export interface GanttTask extends TaskModel {
+  created_at?: string;
+  blocked_by?: number | string | null;
+}
 
 export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: { 
-  tasks: any[]; 
-  onTaskSelect?: (task: any) => void;
-  onTaskUpdate?: (task: any, dates: {start: Date, end: Date}) => void;
+  tasks: GanttTask[]; 
+  onTaskSelect?: (task: GanttTask) => void;
+  onTaskUpdate?: (task: GanttTask, dates: {start: Date, end: Date}) => void;
 }) {
   const ganttRef = useRef<SVGSVGElement>(null);
-  const ganttInstance = useRef<any>(null);
+  const ganttInstance = useRef<unknown>(null);
   const [ganttViewMode, setGanttViewMode] = useState<"Day" | "Week" | "Month">("Day");
 
   useEffect(() => {
@@ -38,11 +44,11 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
 
     try {
       ganttInstance.current = new Gantt(ganttRef.current, formattedTasks, {
-        on_click: (task: any) => {
+        on_click: (task: { id: string | number }) => {
           const originalTask = tasks.find(t => String(t.id) === task.id);
           if (originalTask) onTaskSelect?.(originalTask);
         },
-        on_date_change: (task: any, start: Date, end: Date) => {
+        on_date_change: (task: { id: string | number }, start: Date, end: Date) => {
           const originalTask = tasks.find(t => String(t.id) === task.id);
           if (originalTask) {
             onTaskUpdate?.(originalTask, { start, end });
@@ -55,6 +61,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
       console.error("Gantt error", e);
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks, ganttViewMode]);
 
   if (tasks.length === 0) {
@@ -88,7 +95,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
         {["Day", "Week", "Month"].map(mode => (
           <button
             key={mode}
-            onClick={() => setGanttViewMode(mode as any)}
+            onClick={() => setGanttViewMode(mode as "Day" | "Week" | "Month")}
             className={`px-3 py-1 text-xs font-medium rounded-[var(--radius)] transition-colors ${
               ganttViewMode === mode 
                 ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" 

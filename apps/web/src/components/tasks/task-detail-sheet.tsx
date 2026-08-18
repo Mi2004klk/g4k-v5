@@ -4,24 +4,45 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
-import { QAFieldRenderer } from "@/components/projects/qa-field-renderer";
+import { QAFormViewer } from "@/components/projects/qa-form-viewer";
 import { useTimerStore } from "@/stores/timer-store";
-import { Input, Slider, Badge, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, DatePicker, Checkbox, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
+import { Input, Slider, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, DatePicker, Checkbox, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { usePins } from "@/hooks/use-pins";
+
+export interface TaskModel {
+  id: number | string;
+  title: string;
+  description?: string;
+  progress?: number;
+  status?: string;
+  due_date?: string | null;
+  project_id?: number | string;
+  blocked_by?: number | string | null;
+  blocker?: { title: string };
+  assignee_id?: number | string;
+  assignees?: { id: number; name: string }[];
+  assignee?: { id: number; name: string };
+  qa_form?: { id: number; title: string; fields: any[] };
+  time_logs?: any[];
+  activities?: any[];
+  comments?: any[];
+  personal_reminder?: { id: number | string; remind_at: string };
+  submission_note?: string;
+}
 
 export function TaskDetailSheet({
   task: taskPreview,
   open,
   onOpenChange,
 }: {
-  task: any;
+  task: TaskModel | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -51,7 +72,7 @@ export function TaskDetailSheet({
 
   const [comment, setComment] = useState("");
   const [submissionNote, setSubmissionNote] = useState("");
-  const [qaValues, setQaValues] = useState<Record<string, any>>({});
+  const [qaValues, setQaValues] = useState<Record<string, unknown>>({});
   const [minutesLogged, setMinutesLogged] = useState("");
   const [logDescription, setLogDescription] = useState("");
   const [progress, setProgress] = useState(taskPreview?.progress || 0);
@@ -75,10 +96,10 @@ export function TaskDetailSheet({
   const [customReminderDate, setCustomReminderDate] = useState("");
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editForm, setEditForm] = useState<Partial<TaskModel & { assignee_ids: number[] }>>({});
 
-  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<any>("/users"), enabled: isEditing });
-  const { data: allTasksData } = useQuery({ queryKey: ["tasks", "all"], queryFn: () => apiFetch<any>("/tasks?per_page=100"), enabled: isEditing });
+  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing });
+  const { data: allTasksData } = useQuery({ queryKey: ["tasks", "all"], queryFn: () => apiFetch<{ data?: { data?: TaskModel[] } | TaskModel[] }>("/tasks?per_page=100"), enabled: isEditing });
 
   // T-46.5: Fetch the full task detail when the sheet is opened.
   // The list endpoint doesn't include comments/activities/timeLogs/qa_form.
@@ -100,6 +121,7 @@ export function TaskDetailSheet({
 
   useEffect(() => {
     if (task?.progress !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(task.progress);
     }
   }, [task?.progress]);
@@ -121,6 +143,7 @@ export function TaskDetailSheet({
         interval = setInterval(updateElapsed, 1000);
       }
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setElapsedSeconds(0);
     }
     
@@ -198,7 +221,7 @@ export function TaskDetailSheet({
       onOpenChange(false);
       invalidateTasks();
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message || "Failed to submit task.");
     },
   });
@@ -234,7 +257,7 @@ export function TaskDetailSheet({
       toast.success("Time logged successfully.");
       invalidateTasks();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to log time"),
+    onError: (err: Error) => toast.error(err.message || "Failed to log time"),
   });
 
   // T-46.7: Approve mutation for HR/Admin
@@ -249,7 +272,7 @@ export function TaskDetailSheet({
       invalidateTasks();
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to approve task."),
+    onError: (err: Error) => toast.error(err.message || "Failed to approve task."),
   });
 
   // T-46.7: Redo mutation for HR/Admin
@@ -267,7 +290,7 @@ export function TaskDetailSheet({
       invalidateTasks();
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to request redo."),
+    onError: (err: Error) => toast.error(err.message || "Failed to request redo."),
   });
 
   const updateMutation = useMutation({
@@ -289,12 +312,15 @@ export function TaskDetailSheet({
       setIsEditing(false);
       invalidateTasks();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update task."),
+    onError: (err: unknown) => {
+      const error = err as Error;
+      toast.error(error.message || "Failed to update task.");
+    },
   });
 
   const inlineUpdateMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      return apiFetch(`/tasks/${task.id}`, {
+    mutationFn: async (payload: Partial<TaskModel>) => {
+      return apiFetch(`/tasks/${task?.id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
       });
@@ -303,7 +329,7 @@ export function TaskDetailSheet({
       toast.success("Task updated.");
       invalidateTasks();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update task."),
+    onError: (err: Error) => toast.error(err.message || "Failed to update task."),
   });
 
   const setReminderMutation = useMutation({
@@ -318,7 +344,7 @@ export function TaskDetailSheet({
       setCustomReminderDate("");
       invalidateTasks();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to set reminder."),
+    onError: (err: Error) => toast.error(err.message || "Failed to set reminder."),
   });
 
   const deleteReminderMutation = useMutation({
@@ -331,7 +357,7 @@ export function TaskDetailSheet({
       toast.success("Reminder cleared.");
       invalidateTasks();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to clear reminder."),
+    onError: (err: Error) => toast.error(err.message || "Failed to clear reminder."),
   });
 
   return (
@@ -374,7 +400,7 @@ export function TaskDetailSheet({
                   description: task.description || "",
                   due_date: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd") : "",
                   blocked_by: task.blocked_by ? String(task.blocked_by) : "none",
-                  assignee_ids: task.assignees?.map((a: any) => a.id) || (task.assignee_id ? [task.assignee_id] : [])
+                  assignee_ids: task.assignees?.map((a: { id: number }) => a.id) || (task.assignee_id ? [task.assignee_id] : [])
                 });
                 setIsEditing(!isEditing);
               }}>
@@ -407,13 +433,13 @@ export function TaskDetailSheet({
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium">Blocked By</label>
-                <Select value={editForm.blocked_by} onValueChange={v => setEditForm({...editForm, blocked_by: v})}>
+                <Select value={(editForm.blocked_by as string) || undefined} onValueChange={v => setEditForm({...editForm, blocked_by: v})}>
                   <SelectTrigger className="w-full h-9 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    {Array.isArray(allTasksData?.data) ? allTasksData.data.map((t: any) => (
+                    {Array.isArray(allTasksData?.data) ? allTasksData.data.map((t: TaskModel) => (
                       <SelectItem key={t.id} value={String(t.id)}>{t.title}</SelectItem>
-                    )) : (Array.isArray(allTasksData?.data?.data) ? allTasksData.data.data.map((t: any) => (
+                    )) : (Array.isArray(allTasksData?.data?.data) ? allTasksData.data.data.map((t: TaskModel) => (
                       <SelectItem key={t.id} value={String(t.id)}>{t.title}</SelectItem>
                     )) : [])}
                   </SelectContent>
@@ -423,7 +449,7 @@ export function TaskDetailSheet({
             <div className="space-y-1">
               <label className="text-xs font-medium">Assignees</label>
               <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-2 space-y-1 bg-white dark:bg-neutral-900">
-                {usersData?.data?.map((u: any) => (
+                {usersData?.data?.map((u: { id: number, name: string }) => (
                   <label key={u.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded">
                     <Checkbox 
                       checked={editForm.assignee_ids?.includes(u.id)}
@@ -479,8 +505,8 @@ export function TaskDetailSheet({
               <div className="col-span-2 sm:col-span-1">
                 <span className="text-neutral-400 block">Assignees</span>
                 <span className="font-semibold">
-                  {task.assignees?.length > 0 
-                    ? task.assignees.map((a: any) => a.name).join(", ")
+                  {task.assignees?.length ? 
+                    task.assignees.map((a: { name: string }) => a.name).join(", ")
                     : task.assignee?.name || "Unassigned"}
                 </span>
               </div>
@@ -581,18 +607,11 @@ export function TaskDetailSheet({
                   <AppIcon name="success" size="sm" />
                   QA Form Required: {qaForm.title}
                 </h4>
-                {qaForm.fields?.map((field: any) => (
-                  <div key={field.id} className="space-y-1">
-                    <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-300">
-                      {field.label} {field.required && "*"}
-                    </label>
-                    <QAFieldRenderer
-                      field={field}
-                      value={qaValues[field.id]}
-                      onChange={(val) => setQaValues({ ...qaValues, [field.id]: val })}
-                    />
-                  </div>
-                ))}
+                <QAFormViewer
+                  qaForm={qaForm}
+                  qaValues={qaValues}
+                  setQaValues={setQaValues}
+                />
               </div>
             )}
 
@@ -605,7 +624,7 @@ export function TaskDetailSheet({
                 </div>
                 {task.submission_note && (
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 italic">
-                    "{task.submission_note}"
+                    &quot;{task.submission_note}&quot;
                   </p>
                 )}
                 <div className="flex gap-2">
@@ -689,7 +708,7 @@ export function TaskDetailSheet({
               {comments.length === 0 && (
                 <p className="text-xs text-neutral-400 italic">No comments yet.</p>
               )}
-              {comments.map((c: any) => (
+              {comments.map((c: { id: number | string, user?: { name: string }, created_at: string, body: string }) => (
                 <div key={c.id} className="p-3 rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900 text-xs">
                   <div className="flex justify-between font-semibold text-neutral-600 dark:text-neutral-300">
                     <span>{c.user?.name}</span>
@@ -783,7 +802,7 @@ export function TaskDetailSheet({
                 <p className="text-neutral-400 italic">No time logged yet.</p>
               )}
               {/* T-46.5: time_logs (snake_case) */}
-              {timeLogs.map((log: any) => (
+              {timeLogs.map((log: { id: number | string, user?: { name: string }, minutes_logged: number, created_at: string }) => (
                 <div key={log.id} className="flex items-center justify-between p-2 border-b border-neutral-100 dark:border-neutral-800 last:border-0">
                   <div className="flex items-center gap-2">
                     <AppIcon name="teamAttendance" size="sm" className=" text-neutral-400" />
@@ -804,7 +823,7 @@ export function TaskDetailSheet({
             {activities.length === 0 && (
               <p className="text-neutral-400 italic">No activity yet.</p>
             )}
-            {activities.map((act: any) => (
+            {activities.map((act: { id: number | string, user?: { name: string }, event: string, created_at: string }) => (
               <div key={act.id} className="flex items-start gap-2 border-b border-neutral-100 dark:border-neutral-800 pb-2">
                 <div className="w-2 h-2 rounded-full bg-primary-500 mt-1.5" />
                 <div>

@@ -23,17 +23,17 @@ export function ProfileStats() {
 
   // Calculate summaries
   const attendanceData = attendanceHistory?.data || [];
-  const presentCount = attendanceData.filter((r: any) => ["present", "late", "half_day"].includes(r.status)).length;
-  const absentCount = attendanceData.filter((r: any) => r.status === "absent").length;
-  const lateCount = attendanceData.filter((r: any) => r.status === "late").length;
+  const presentCount = attendanceData.filter((r: { status: string }) => ["present", "late", "half_day"].includes(r.status)).length;
+  const absentCount = attendanceData.filter((r: { status: string }) => r.status === "absent").length;
+  const lateCount = attendanceData.filter((r: { status: string }) => r.status === "late").length;
 
   const leaveData = leaveHistory?.data || [];
-  const approvedLeaves = leaveData.filter((l: any) => l.approval?.status === "approved").length;
-  const pendingLeaves = leaveData.filter((l: any) => !l.approval || l.approval.status === "pending").length;
+  const approvedLeaves = leaveData.filter((l: { approval?: { status: string } }) => l.approval?.status === "approved").length;
+  const pendingLeaves = leaveData.filter((l: { approval?: { status: string } }) => !l.approval || l.approval.status === "pending").length;
 
   const taskData = activeTasks?.data || [];
-  const pendingTasks = taskData.filter((t: any) => t.status === "pending" || t.status === "in_progress").length;
-  const completedTasks = taskData.filter((t: any) => t.status === "completed").length;
+  const pendingTasks = taskData.filter((t: { status: string }) => t.status === "pending" || t.status === "in_progress").length;
+  const completedTasks = taskData.filter((t: { status: string }) => t.status === "completed").length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

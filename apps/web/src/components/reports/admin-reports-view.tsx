@@ -3,12 +3,31 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Button, Input, DataTable, Card, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { Button, DataTable, Card, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { SavedReportViews } from "@/components/reports/saved-report-views";
 import { toast } from "sonner";
 import { STALE_TIME_DEPARTMENTS, queryKeys } from "@/lib/query-keys";
+
+export interface ReportDepartment {
+  id: number;
+  name: string;
+}
+
+export interface ReportEmployeeRow {
+  name: string;
+  department?: ReportDepartment;
+  present_days?: number;
+  late_days?: number;
+  absent_days?: number;
+  leave_days?: number;
+  total_hours?: number;
+  total_requests?: number;
+  approved_requests?: number;
+  pending_requests?: number;
+  rejected_requests?: number;
+}
 
 export function AdminReportsView() {
   const [reportType, setReportType] = useState<"attendance-summary" | "leave-summary">("attendance-summary");
@@ -48,14 +67,15 @@ export function AdminReportsView() {
         body: JSON.stringify(payload)
       });
       toast.success(`Export queued. You will be notified when your ${format.toUpperCase()} is ready.`);
-    } catch (e: any) {
-      toast.error(e.message || "Failed to queue export.");
+    } catch (e: unknown) {
+      const err = e as Error;
+      toast.error(err.message || "Failed to queue export.");
     }
   };
 
   const attendanceColumns = [
     { accessorKey: "name", header: "Employee" },
-    { accessorKey: "department.name", header: "Department", cell: ({ row }: any) => row.original.department?.name || "—" },
+    { accessorKey: "department.name", header: "Department", cell: ({ row }: { row: { original: ReportEmployeeRow } }) => row.original.department?.name || "—" },
     { accessorKey: "present_days", header: "Present" },
     { accessorKey: "late_days", header: "Late" },
     { accessorKey: "absent_days", header: "Absent" },
@@ -63,7 +83,7 @@ export function AdminReportsView() {
     { 
       accessorKey: "total_hours", 
       header: "Total Hours",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: ReportEmployeeRow } }) => {
         const secs = row.original.total_hours || 0;
         return `${Math.floor(secs / 3600)}h ${Math.floor((secs % 3600) / 60)}m`;
       }
@@ -72,7 +92,7 @@ export function AdminReportsView() {
 
   const leaveColumns = [
     { accessorKey: "name", header: "Employee" },
-    { accessorKey: "department.name", header: "Department", cell: ({ row }: any) => row.original.department?.name || "—" },
+    { accessorKey: "department.name", header: "Department", cell: ({ row }: { row: { original: ReportEmployeeRow } }) => row.original.department?.name || "—" },
     { accessorKey: "total_requests", header: "Total Requests" },
     { accessorKey: "approved_requests", header: "Approved" },
     { accessorKey: "pending_requests", header: "Pending" },
@@ -90,14 +110,14 @@ export function AdminReportsView() {
           <p className="text-sm text-neutral-500">Generate, save, and export company reports.</p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => handleExport("csv")}>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => handleExport("csv")}>
             <AppIcon name="download" className=" mr-2" /> CSV
           </Button>
-          <Button variant="outline" onClick={() => handleExport("xlsx")}>
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => handleExport("xlsx")}>
             <AppIcon name="download" className=" mr-2" /> Excel
           </Button>
-          <Button variant="outline" onClick={() => handleExport("pdf")}>
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => handleExport("pdf")}>
             <AppIcon name="download" className=" mr-2" /> PDF
           </Button>
         </div>
@@ -150,7 +170,7 @@ export function AdminReportsView() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                {departments.map((d: any) => (
+                {departments.map((d: ReportDepartment) => (
                   <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -163,8 +183,8 @@ export function AdminReportsView() {
             module="reports"
             currentFilters={{ reportType, ...filters }}
             onApplyFilters={(f) => {
-              if (f.reportType) setReportType(f.reportType);
-              setFilters({ start: f.start || filters.start, end: f.end || filters.end, dept: f.dept || filters.dept });
+              if (f.reportType) setReportType(f.reportType as any);
+              setFilters({ start: (f.start || filters.start) as string, end: (f.end || filters.end) as string, dept: (f.dept || filters.dept) as string });
             }}
           />
         </div>

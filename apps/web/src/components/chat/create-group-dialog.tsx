@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@g4k/ui/components";
-import { Button, Input, Label, ScrollArea, Checkbox, AppIcon } from "@g4k/ui/components";
+import { Button, Input, Label, ScrollArea, Checkbox } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/lib/auth-store";
+
+interface DialogUser {
+  id: number;
+  name: string;
+  department?: { name?: string };
+}
 
 export function CreateGroupDialog({
   open,
@@ -30,7 +36,7 @@ export function CreateGroupDialog({
   });
 
   const users = Array.isArray(usersData?.data) ? usersData.data : (usersData?.data?.data || []);
-  const otherUsers = users.filter((u: any) => 
+  const otherUsers = users.filter((u: DialogUser) => 
     u.id !== currentUser?.id && 
     (u.name.toLowerCase().includes(search.toLowerCase()) || u.department?.name?.toLowerCase().includes(search.toLowerCase()))
   );
@@ -132,14 +138,14 @@ export function CreateGroupDialog({
                 <div className="p-4 text-center text-xs text-neutral-500">Loading users...</div>
               ) : (
                 <div className="space-y-2">
-                  {otherUsers.map((u: any) => (
+                  {otherUsers.map((u: DialogUser) => (
                     <label key={u.id} className="flex items-center gap-2 text-sm p-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded cursor-pointer transition-colors">
                       <Checkbox 
                         checked={selectedUsers.includes(u.id)}
                         onCheckedChange={() => toggleUser(u.id)}
                       />
                       <span>{u.name}</span>
-                      <span className="text-xs text-neutral-400 ml-auto capitalize">{u.active_role?.replace('_', ' ')}</span>
+                      <span className="text-xs text-neutral-400 ml-auto capitalize">{(u as any).active_role?.replace('_', ' ')}</span>
                     </label>
                   ))}
                   {otherUsers.length === 0 && (

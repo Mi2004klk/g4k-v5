@@ -28,7 +28,7 @@ export function DemoDataConfig() {
       setConfirmText("");
       setTimeout(() => queryClient.invalidateQueries({ queryKey: ["demo-data-status"] }), 3000);
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast.error(e.message || "Failed to purge demo data");
     }
   });
@@ -41,7 +41,7 @@ export function DemoDataConfig() {
       toast.success("Demo seed job dispatched. Data will be seeded shortly.");
       setTimeout(() => queryClient.invalidateQueries({ queryKey: ["demo-data-status"] }), 3000);
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast.error(e.message || "Failed to seed demo data");
     }
   });
@@ -51,7 +51,7 @@ export function DemoDataConfig() {
   }
 
   const counts = data?.counts || {};
-  const hasDemoData = Object.values(counts).some((count: any) => count > 0);
+  const hasDemoData = Object.values(counts).some((count: unknown) => Number(count) > 0);
 
   return (
     <div className="space-y-6">
@@ -73,10 +73,10 @@ export function DemoDataConfig() {
           <div>
             <h4 className="text-sm font-medium mb-3">Current Demo Data Status: {data?.version ? `Seeded (${data.version})` : 'Not Seeded'}</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(counts).map(([table, count]: [string, any]) => (
+              {Object.entries(counts).map(([table, count]: [string, unknown]) => (
                 <div key={table} className="border border-neutral-200 dark:border-neutral-800 rounded-[var(--radius)] p-3">
                   <div className="text-xs text-neutral-500 capitalize">{table.replace(/_/g, ' ')}</div>
-                  <div className="text-lg font-semibold text-neutral-900 dark:text-white">{count}</div>
+                  <div className="text-lg font-semibold text-neutral-900 dark:text-white">{String(count)}</div>
                 </div>
               ))}
             </div>

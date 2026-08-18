@@ -13,7 +13,6 @@ import {
   DragEndEvent,
   DragOverEvent,
   DragOverlay,
-  useDraggable,
   useDroppable,
   DragStartEvent,
 } from "@dnd-kit/core";
@@ -25,7 +24,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
 import {
   ContextMenu,
@@ -39,6 +38,13 @@ import {
 import { ConfirmDialog } from "@g4k/ui/components";
 import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
 import { EmptyState } from "@g4k/ui/components";
+import { TaskModel } from "./task-detail-sheet";
+
+export interface KanbanTask extends TaskModel {
+  priority: string;
+  scope?: string;
+  order?: number;
+}
 
 const COLUMNS = [
   { id: "todo", title: "To Do", color: "bg-neutral-400" },
@@ -65,8 +71,8 @@ function TaskCard({
   onTaskSelect,
   isOverlay = false,
 }: {
-  task: any;
-  onTaskSelect?: (task: any) => void;
+  task: KanbanTask;
+  onTaskSelect?: (task: KanbanTask) => void;
   isOverlay?: boolean;
 }) {
   return (
@@ -121,8 +127,8 @@ function TaskCard({
           </div>
 
           <div className="flex -space-x-1 z-0">
-            {task.assignees?.length > 0 ? (
-              task.assignees.slice(0, 3).map((a: any) => (
+            {task.assignees && task.assignees.length > 0 ? (
+              task.assignees.slice(0, 3).map((a: { id: number, name: string }) => (
                 <Avatar key={a.id} className="w-5 h-5 border border-white dark:border-neutral-900 relative">
                   <AvatarFallback name={a.name} className="text-[8px]" />
                 </Avatar>
@@ -132,7 +138,7 @@ function TaskCard({
                 <AvatarFallback name={task.assignee.name} className="text-[8px]" />
               </Avatar>
             ) : null}
-            {task.assignees?.length > 3 && (
+            {task.assignees && task.assignees.length > 3 && (
               <div className="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-white dark:border-neutral-900 flex items-center justify-center text-[8px] font-medium z-10 relative">
                 +{task.assignees.length - 3}
               </div>
@@ -144,7 +150,12 @@ function TaskCard({
   );
 }
 
-function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
+function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: {
+  task: KanbanTask;
+  onTaskSelect: (task: KanbanTask) => void;
+  onDeleteTask: (id: number) => void;
+  onTaskMove?: (id: number, status: string) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `task-${task.id}`,
     data: { task },
@@ -186,7 +197,7 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
               <ContextMenuItem
                 key={col.id}
                 disabled={task.status === col.id}
-                onClick={() => onTaskMove(task.id, col.id)}
+                onClick={() => onTaskMove?.(task.id as number, col.id)}
               >
                 Move to {col.title}
               </ContextMenuItem>
@@ -208,13 +219,20 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: any) {
         title="Delete Task"
         description="Are you sure you want to delete this task? This action cannot be undone."
         confirmText="Delete"
-        onConfirm={() => onDeleteTask?.(task.id)}
+        onConfirm={() => onDeleteTask?.(task.id as number)}
       />
     </>
   );
 }
 
-function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, isLoading }: any) {
+function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, isLoading }: {
+  col: typeof COLUMNS[0];
+  tasks: KanbanTask[];
+  onTaskSelect: (task: KanbanTask) => void;
+  onDeleteTask: (id: number) => void;
+  onTaskMove?: (id: number, status: string) => void;
+  isLoading?: boolean;
+}) {
   const { setNodeRef, isOver } = useDroppable({
     id: col.id,
   });
@@ -241,7 +259,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
       </div>
 
       <div className="flex-1 flex flex-col gap-3 min-h-[300px]">
-        <SortableContext items={tasks.map((t: any) => `task-${t.id}`)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={tasks.map((t: KanbanTask) => `task-${t.id}`)} strategy={verticalListSortingStrategy}>
           {isLoading ? (
             <div className="flex flex-col gap-2">
               <div className="h-24 bg-neutral-100 dark:bg-neutral-800 animate-pulse rounded-xl" />
@@ -252,7 +270,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
               No tasks
             </div>
           ) : null}
-          {tasks.map((task: any) => (
+          {tasks.map((task: KanbanTask) => (
             <DraggableTask
               key={task.id}
               task={task}
@@ -275,17 +293,18 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   onTaskReorder,
   isLoading,
 }: {
-  tasks: any[];
+  tasks: KanbanTask[];
   onTaskMove?: (taskId: number, newStatus: string) => void;
-  onTaskSelect: (task: any) => void;
+  onTaskSelect: (task: KanbanTask) => void;
   onDeleteTask: (taskId: number) => void;
   onTaskReorder?: (tasks: { id: number; status: string; order: number }[]) => void;
   isLoading?: boolean;
 }) {
-  const [activeTask, setActiveTask] = useState<any>(null);
-  const [localTasks, setLocalTasks] = useState<any[]>(tasks);
+  const [activeTask, setActiveTask] = useState<KanbanTask | null>(null);
+  const [localTasks, setLocalTasks] = useState<KanbanTask[]>(tasks);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalTasks(tasks);
   }, [tasks]);
 
@@ -314,13 +333,13 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
     if (!isActiveTask) return;
 
     const activeTaskId = Number(activeId.toString().replace("task-", ""));
-    const activeTaskData = localTasks.find((t: any) => t.id === activeTaskId);
+    const activeTaskData = localTasks.find((t: KanbanTask) => t.id === activeTaskId);
     if (!activeTaskData) return;
 
     // Moving over a column directly (e.g. empty column)
     if (!isOverTask) {
       if (activeTaskData.status !== overId) {
-        setLocalTasks((prev: any[]) =>
+        setLocalTasks((prev: KanbanTask[]) =>
           prev.map((t) => (t.id === activeTaskId ? { ...t, status: overId as string } : t))
         );
       }
@@ -329,9 +348,9 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
 
     // Moving over another task
     const overTaskId = Number(overId.toString().replace("task-", ""));
-    const overTaskData = localTasks.find((t: any) => t.id === overTaskId);
+    const overTaskData = localTasks.find((t: KanbanTask) => t.id === overTaskId);
     if (overTaskData && activeTaskData.status !== overTaskData.status) {
-      setLocalTasks((prev: any[]) =>
+      setLocalTasks((prev: KanbanTask[]) =>
         prev.map((t) => (t.id === activeTaskId ? { ...t, status: overTaskData.status } : t))
       );
     }
@@ -354,7 +373,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
     if (!finalTask || !originalTask) return;
 
     if (finalTask.status !== originalTask.status) {
-       onTaskMove?.(taskId, finalTask.status);
+       onTaskMove?.(taskId, finalTask.status as string);
     } else {
        if (onTaskReorder && activeId !== overId) {
           const colTasks = localTasks.filter(t => t.status === finalTask.status);
@@ -366,8 +385,15 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
              const newColTasks = arrayMove(colTasks, oldIndex, newIndex);
              newColTasks.forEach((t, i) => { t.order = i; });
              const otherTasks = localTasks.filter(t => t.status !== finalTask.status);
-             onTaskReorder([...otherTasks, ...newColTasks]);
-             setLocalTasks([...otherTasks, ...newColTasks]);
+             const reorderedTasks = [...otherTasks, ...newColTasks];
+             onTaskReorder(
+               reorderedTasks.map(t => ({ 
+                 id: Number(t.id), 
+                 status: t.status as string, 
+                 order: t.order || 0 
+               }))
+             );
+             setLocalTasks(reorderedTasks);
           }
        }
     }
@@ -398,7 +424,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
           <DroppableColumn
             key={col.id}
             col={col}
-            tasks={isLoading ? [] : localTasks.filter((t: any) => t.status === col.id)}
+            tasks={isLoading ? [] : localTasks.filter((t: KanbanTask) => t.status === col.id)}
             onTaskSelect={onTaskSelect}
             onDeleteTask={onDeleteTask}
             onTaskMove={onTaskMove}

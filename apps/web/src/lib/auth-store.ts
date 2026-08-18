@@ -14,14 +14,14 @@ export interface UserProfile {
     theme_mode?: string;
     density?: string;
     directory_visibility?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   active_role?: string;
   roles?: string[];
-  role_assignments?: any[];
-  department?: any;
-  designation?: any;
-  company?: any;
+  role_assignments?: unknown[];
+  department?: unknown;
+  designation?: unknown;
+  company?: unknown;
 }
 
 interface AuthState {

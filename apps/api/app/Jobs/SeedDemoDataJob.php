@@ -36,8 +36,7 @@ class SeedDemoDataJob implements ShouldQueue
                 \App\Services\NotificationService::sendGlobalNotification(
                     $user,
                     "Demo dataset has been successfully seeded. The dashboard is now populated.",
-                    "/dashboard/settings",
-                    "high"
+                    "/dashboard/settings"
                 );
             }
         }

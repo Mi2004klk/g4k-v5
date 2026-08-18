@@ -2,8 +2,18 @@
 import { useEffect } from "react";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
+
+export interface ExportJob {
+  id: number;
+  report_key: string;
+  format: string;
+  status: string;
+  file_path?: string;
+  created_at: string;
+  error?: string;
+}
 import { apiFetch } from "@/lib/api-client";
 import { useReverb } from "@/hooks/use-reverb";
 import { useAuthStore } from "@/lib/auth-store";
@@ -40,14 +50,14 @@ export function ExportHistory() {
     queryKey: queryKeys.exportHistory,
     queryFn: () => apiFetch("/reports/exports").then(res => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []))),
     refetchInterval: (query) => {
-      const currentData = query.state.data as any[] | undefined;
+      const currentData = query.state.data as ExportJob[] | undefined;
       const isProcessing = currentData?.some((e) => e.status === "processing");
       return isProcessing ? 5000 : false;
     }
   });
 
-    const handleDownload = async (item: any) => {
-      try {
+  const handleDownload = async (item: ExportJob) => {
+    try {
         const url = `/reports/exports/${item.id}/download`;
         const blob = await apiFetch(url, { method: "GET" }) as Blob;
         
@@ -80,7 +90,7 @@ export function ExportHistory() {
         ) : exports.length === 0 ? (
           <p className="text-xs text-neutral-400 py-4 text-center">No export history found.</p>
         ) : (
-          exports.slice(0, 3).map((item: any) => (
+          exports.slice(0, 3).map((item: ExportJob) => (
             <div
               key={item.id}
               className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between gap-3 border border-neutral-100 dark:border-neutral-800"

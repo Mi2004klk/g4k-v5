@@ -1,14 +1,21 @@
 "use client";
 
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { apiFetch } from "@/lib/api-client";
 import { formatDistanceToNow } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
-import { Card, CardHeader, CardTitle, CardContent, Button } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
-import { STALE_TIME_METRICS, queryKeys } from "@/lib/query-keys";
+import { AppIcon } from "@g4k/ui/components";
+import { Card } from "@g4k/ui/components";
+import { STALE_TIME_METRICS } from "@/lib/query-keys";
 import { WidgetInfo } from "./widget-info";
+
+export interface Activity {
+  id: number;
+  user_name?: string;
+  action: string;
+  subject_type: string;
+  after?: unknown;
+  at: string;
+}
 
 export function RecentActivityWidget() {
   const { data: activities = [], isPending, isFetching, isError, refetch } = useDashboardInit({
@@ -50,7 +57,7 @@ export function RecentActivityWidget() {
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-800 -mx-5 px-5">
-            {activities.map((activity: any) => (
+            {activities.map((activity: Activity) => (
               <div key={activity.id} className="py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
                 <div className="flex justify-between items-start gap-2">
                   <p className="text-[11px] text-neutral-700 dark:text-neutral-300 leading-tight">
@@ -60,7 +67,7 @@ export function RecentActivityWidget() {
                     <span className="text-neutral-500">
                       {activity.action} · {activity.subject_type}
                     </span>
-                    {activity.after && (
+                    {!!activity.after && (
                       <span className="block mt-0.5 text-[10px] text-neutral-400 truncate max-w-[280px]">
                         {typeof activity.after === 'string' ? activity.after : JSON.stringify(activity.after)}
                       </span>

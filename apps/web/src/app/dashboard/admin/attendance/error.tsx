@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@g4k/ui/components";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 
 export default function Error({
   error,

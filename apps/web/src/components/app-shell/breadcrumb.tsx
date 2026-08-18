@@ -108,7 +108,7 @@ export function Breadcrumb() {
 
       {segments.slice(1).map((segment, index) => {
         let url = `/${segments.slice(0, index + 2).join("/")}`;
-        if (url === "/dashboard/org") url = "/dashboard/org/users";
+        if (url === "/dashboard/org") url = "/dashboard/directory";
         if (segment === "org") return null; // Skip 'org' in breadcrumb display
         const isLast = index === segments.length - 2;
         const parentSegment = segments[index]; // Because we slice(1), segments[index] refers to the parent

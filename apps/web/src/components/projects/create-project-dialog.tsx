@@ -4,13 +4,33 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
-import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Calendar, FileUploadPopup } from "@g4k/ui/components";
+import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, FileUploadPopup, DatePicker } from "@g4k/ui/components";
+import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { format } from "date-fns";
 import { FormError } from "@/components/forms/form-error";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { Alert, AlertDescription, AlertTitle, AppIcon } from "@g4k/ui/components";
+import Image from "next/image";
+
+interface Department {
+  id: number;
+  name: string;
+}
+
+interface QaForm {
+  id: number;
+  title: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
 
 export function CreateProjectDialog({
   open,
@@ -102,7 +122,7 @@ export function CreateProjectDialog({
       setAllowEmployeeTasks(false);
       clearDraft();
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       toast.error(err.message || "Failed to create project.");
       if (err.errors) {
         setFieldErrors(err.errors);
@@ -186,9 +206,9 @@ export function CreateProjectDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Company-Wide</SelectItem>
-                  {Array.isArray(deptsData?.data) ? deptsData.data.map((d: any) => (
+                  {Array.isArray(deptsData?.data) ? deptsData.data.map((d: Department) => (
                     <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
-                  )) : deptsData?.data?.data?.map((d: any) => (
+                  )) : deptsData?.data?.data?.map((d: Department) => (
                     <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -205,7 +225,7 @@ export function CreateProjectDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  {(Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : []).map((q: any) => (
+                  {(Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : []).map((q: QaForm) => (
                     <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>
                   ))}
                 </SelectContent>
@@ -213,8 +233,16 @@ export function CreateProjectDialog({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="project-deadline" className="text-sm font-medium">Deadline</label>
-              <Input id="project-deadline" type="date" value={activeDeadline} onChange={(e) => { setDeadline(e.target.value); handleFieldChange({ deadline: e.target.value }); }} className={fieldErrors.deadline ? "border-red-500" : ""} />
+              <label className="text-sm font-medium">Deadline</label>
+              <DatePicker
+                value={activeDeadline ? new Date(activeDeadline) : undefined}
+                onChange={(date) => {
+                  const formatted = date ? format(date, "yyyy-MM-dd") : "";
+                  setDeadline(formatted);
+                  handleFieldChange({ deadline: formatted });
+                }}
+                className={`w-full ${fieldErrors.deadline ? "border-red-500" : ""}`}
+              />
               <FormError errors={fieldErrors.deadline} />
             </div>
           </div>
@@ -223,7 +251,9 @@ export function CreateProjectDialog({
             <label className="text-sm font-medium">Project Cover (Optional)</label>
             <div className="flex items-center gap-3">
               {coverImage && (
-                <img src={coverImage} alt="Cover Preview" className="h-10 w-10 object-cover rounded-[var(--radius)] border" />
+                <div className="relative h-10 w-10">
+                  <Image src={coverImage} alt="Cover Preview" fill className="object-cover rounded-[var(--radius)] border" />
+                </div>
               )}
               <Button type="button" variant="outline" size="sm" onClick={() => setShowUploadPopup(true)}>
                 {coverImage ? "Change Image" : "Upload Image"}
@@ -232,7 +262,7 @@ export function CreateProjectDialog({
                 open={showUploadPopup}
                 onOpenChange={setShowUploadPopup}
                 title="Upload Project Cover"
-                maxSizeMB={5}
+                maxSizeMB={2}
                 onUpload={async (file) => {
                   const formData = new FormData();
                   formData.append("cover_image", file);
@@ -254,7 +284,7 @@ export function CreateProjectDialog({
           <div className="space-y-2">
             <label className="text-sm font-medium">Team Members</label>
             <div className="max-h-32 overflow-y-auto border border-neutral-200 rounded-[var(--radius)] p-2 space-y-1">
-              {usersData?.data?.map((u: any) => (
+              {usersData?.data?.map((u: User) => (
                 <label key={u.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-neutral-50 p-1 rounded">
                   <input 
                     type="checkbox" 

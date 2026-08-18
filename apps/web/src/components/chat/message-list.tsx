@@ -2,8 +2,20 @@
 
 import { useEffect, useRef, memo, useCallback } from "react";
 import { format } from "date-fns";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
+
+interface ListMessage {
+  id: number;
+  sender_id: number;
+  created_at: string;
+  body?: string;
+  attachment_url?: string;
+  is_pinned?: boolean;
+  pending?: boolean;
+  sender?: { name?: string };
+  reads?: { user_id: number }[];
+}
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button, Dialog, DialogContent, DialogTrigger } from "@g4k/ui/components";
 
 const MessageItem = memo(function MessageItem({
@@ -15,7 +27,7 @@ const MessageItem = memo(function MessageItem({
   canManage,
   onMarkRead,
 }: {
-  msg: any;
+  msg: ListMessage;
   isMe: boolean;
   isConsecutive?: boolean;
   onPinMessage?: (msgId: number) => void;
@@ -62,10 +74,10 @@ const MessageItem = memo(function MessageItem({
             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none"
         }`}
       >
-        {msg.replyTo && (
+        {(msg as any).replyTo && (
           <div className={`p-1.5 rounded text-[10px] mb-1 opacity-80 ${isMe ? "bg-primary-700" : "bg-neutral-200 dark:bg-neutral-700"}`}>
-            <span className="font-bold block">{msg.replyTo.sender?.name}</span>
-            <span className="truncate block">{msg.replyTo.body}</span>
+            <span className="font-bold block">{(msg as any).replyTo.sender?.name}</span>
+            <span className="truncate block">{(msg as any).replyTo.body}</span>
           </div>
         )}
 
@@ -95,6 +107,7 @@ const MessageItem = memo(function MessageItem({
                       </div>
                     ) : (
                       <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src={msg.attachment_url} 
                           alt="Attachment" 
@@ -117,12 +130,15 @@ const MessageItem = memo(function MessageItem({
                     {/\.(pdf)$/i.test(msg.attachment_url) ? (
                       <iframe src={msg.attachment_url} className="w-full h-full rounded-md bg-white" />
                     ) : (
-                      <img 
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
                         src={msg.attachment_url} 
                         className="max-w-full max-h-full object-contain rounded-md" 
                         alt="Preview" 
                         onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
                       />
+                      </>
                     )}
                     <div className="hidden text-white flex flex-col items-center gap-4">
                        <AppIcon name="fileText" className="w-16 h-16 text-neutral-500" />
@@ -153,7 +169,7 @@ const MessageItem = memo(function MessageItem({
 
       <div className="flex items-center justify-between mt-0.5">
         <div className="flex gap-1">
-          {msg.pinned && (
+          {(msg as any).pinned && (
             <span className="text-[10px] text-amber-500 flex items-center gap-1 font-medium bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded">
               <AppIcon name="pin" size="xs" /> Pinned
             </span>
@@ -180,7 +196,7 @@ const MessageItem = memo(function MessageItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={isMe ? "end" : "start"}>
-              {msg.pinned ? (
+              {(msg as any).pinned ? (
                 <DropdownMenuItem onClick={() => onUnpinMessage?.(msg.id)}>
                   <AppIcon name="pin" className=" mr-2 text-neutral-400" /> Unpin Message
                 </DropdownMenuItem>
@@ -208,7 +224,7 @@ export function MessageList({
   canManage,
   onMarkRead,
 }: {
-  messages: any[];
+  messages: ListMessage[];
   currentUserId: number;
   onFetchNextPage?: () => void;
   hasNextPage?: boolean;
@@ -222,6 +238,7 @@ export function MessageList({
   const previousScrollHeight = useRef<number>(0);
   const isScrolledToBottom = useRef<boolean>(true);
 
+  // eslint-disable-next-line react-compiler/react-compiler
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => scrollRef.current,
@@ -257,7 +274,7 @@ export function MessageList({
     }
   };
 
-  const pinnedMessages = messages.filter(m => m.pinned);
+  const pinnedMessages = messages.filter(m => (m as any).pinned);
 
   return (
     <div className="flex flex-col h-full w-full relative">
@@ -323,7 +340,7 @@ export function MessageList({
               <MessageItem 
                 msg={msg} 
                 isMe={isMe} 
-                isConsecutive={isConsecutive}
+                isConsecutive={!!isConsecutive}
                 onPinMessage={onPinMessage} 
                 onUnpinMessage={onUnpinMessage}
                 canManage={canManage}

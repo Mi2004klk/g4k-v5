@@ -3,18 +3,14 @@
 import { useState, useMemo, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
-import { getAuthToken } from "@/lib/auth-store";
 import { useExport } from "@/hooks/use-export";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-
-import { useIsMobile } from "@g4k/ui/hooks/use-mobile";
 
 const desigSchema = z.object({
   name: z.string().min(1, "Title is required"),
@@ -23,7 +19,7 @@ const desigSchema = z.object({
 type DesigFormValues = z.infer<typeof desigSchema>;
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
-import { Card, CardContent } from "@g4k/ui/components";
+import { Card, CardContent, StatusBadge, FilterBar, ContentSkeleton, IsolatedError, MeaningfulEmpty, DataTable } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -40,14 +36,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
-import { FilterBar } from "@g4k/ui/components";
-import { EmptyState } from "@g4k/ui/components";
-import { DataTable, StatusBadge } from "@g4k/ui/components";
-import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
-import { Badge } from "@g4k/ui/components";
+
+import { ColumnDef } from "@tanstack/react-table";
+import { useRef } from "react";
+
+interface UserRef {
+  id: number;
+  name: string;
+  avatar_url?: string;
+}
+
+interface Designation {
+  id: number;
+  name: string;
+  description?: string;
+  users_count?: number;
+  users?: UserRef[];
+  is_active: boolean;
+}
+
+interface ApiError extends Error {
+  errors?: Record<string, string[]>;
+}
 import {
   queryKeys,
   STALE_TIME_DESIGNATIONS
@@ -69,22 +81,23 @@ export function DesignationsTab() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  useEffect(() => {
+  const prevStatusRef = useRef(statusFilter);
+  if (prevStatusRef.current !== statusFilter) {
     setPage(1);
-  }, [statusFilter]);
+    prevStatusRef.current = statusFilter;
+  }
 
   const { data: caps } = useCapabilities();
-  const isAdmin = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "users.employee.manage");
-  const isMobile = useIsMobile();
+  const isAdmin = hasCapability(caps, "designations.manage");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: any }>({ isOpen: false, type: "" });
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: Designation }>({ isOpen: false, type: "" });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<DesigFormValues>({
     resolver: zodResolver(desigSchema),
     defaultValues: { name: "", description: "" }
   });
-  const [editingDesig, setEditingDesig] = useState<any>(null);
+  const [editingDesig, setEditingDesig] = useState<Designation | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [...queryKeys.designationsPaginated(debouncedSearch, statusFilter), page, perPage],
@@ -100,27 +113,27 @@ export function DesignationsTab() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: any) => apiFetch("/designations", { method: "POST", body: JSON.stringify(payload) }),
+    mutationFn: (payload: DesigFormValues) => apiFetch("/designations", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("Designation created!");
       setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to create designation."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to create designation."),
   });
 
   const updateMutation = useMutation({
-    mutationFn: (payload: any) => apiFetch(`/designations/${editingDesig.id}`, { method: "PUT", body: JSON.stringify(payload) }),
+    mutationFn: (payload: DesigFormValues) => apiFetch(`/designations/${editingDesig?.id}`, { method: "PUT", body: JSON.stringify(payload) }),
     onSuccess: () => {
       toast.success("Designation updated!");
       setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to update designation."),
+    onError: (err: ApiError) => toast.error(err.message || "Failed to update designation."),
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }: any) => apiFetch(`/designations/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    mutationFn: ({ id, status }: { id: number, status: string }) => apiFetch(`/designations/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.designationsPaginated() });
       const previousData = queryClient.getQueriesData({ queryKey: queryKeys.designationsPaginated() });
@@ -129,7 +142,7 @@ export function DesignationsTab() {
         if (!old) return old;
         return {
           ...old,
-          data: old.data?.map((d: any) => d.id === id ? { ...d, is_active: status === 'active' } : d)
+          data: old.data?.map((d: Designation) => d.id === id ? { ...d, is_active: status === 'active' } : d)
         };
       });
       return { previousData };
@@ -138,7 +151,7 @@ export function DesignationsTab() {
       toast.success("Designation status updated.");
       setConfirmState({ isOpen: false, type: "" });
     },
-    onError: (err: any, variables, context: any) => {
+    onError: (err: ApiError, variables, context: any) => {
       if (context?.previousData) {
         context.previousData.forEach(([key, data]: any) => {
           queryClient.setQueryData(key, data);
@@ -158,7 +171,7 @@ export function DesignationsTab() {
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
     },
-    onError: (err: any) => {
+    onError: (err: ApiError) => {
       toast.error(err.message || "Failed to delete designation.");
       setConfirmState({ isOpen: false, type: "" });
     }
@@ -173,19 +186,20 @@ export function DesignationsTab() {
       if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
 
       await triggerExport(`/designations/export?${params.toString()}`, "designations_export.csv");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to export");
+    } catch (e: unknown) {
+      const err = e as ApiError;
+      toast.error(err.message || "Failed to export");
     }
   };
 
   const designationsList = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
   const totalPages = data?.last_page || data?.data?.last_page || 1;
-  const columns = useMemo<any[]>(() => {
-    const baseColumns: any[] = [
+  const columns = useMemo<ColumnDef<Designation>[]>(() => {
+    const baseColumns: ColumnDef<Designation>[] = [
       {
         accessorKey: "name",
         header: "Designation",
-        cell: ({ row }: any) => (
+        cell: ({ row }) => (
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-[var(--radius)] bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400">
               <AppIcon name="award" />
@@ -204,13 +218,13 @@ export function DesignationsTab() {
       {
         accessorKey: "users_count",
         header: "Assigned Employees",
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const count = row.original.users_count || 0;
           const users = row.original.users || [];
           return (
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
-                {users.length > 0 ? users.slice(0, 3).map((u: any, i: number) => (
+                {users.length > 0 ? users.slice(0, 3).map((u: UserRef, i: number) => (
                   <Avatar key={i} className="w-6 h-6 border-2 border-background">
                     <AvatarImage src={u.avatar_url || ""} />
                     <AvatarFallback name={u.name} className="text-[9px]" />
@@ -229,7 +243,7 @@ export function DesignationsTab() {
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const isActive = row.original.is_active;
           return (
             <StatusBadge status={isActive ? "success" : "danger"} dot className="uppercase">
@@ -244,7 +258,7 @@ export function DesignationsTab() {
       baseColumns.push({
         id: "actions",
         header: () => <div className="text-right">Actions</div>,
-        cell: ({ row }: any) => {
+        cell: ({ row }) => {
           const desig = row.original;
           const isInactive = !desig.is_active;
           return (
@@ -287,7 +301,7 @@ export function DesignationsTab() {
     }
 
     return baseColumns;
-  }, [isAdmin]);
+  }, [isAdmin, reset, statusMutation, deleteMutation]);
 
   return (
     <div className="space-y-6 mt-4">
@@ -390,8 +404,8 @@ export function DesignationsTab() {
         open={confirmState.isOpen}
         onOpenChange={(open) => { if (!open) setConfirmState({ isOpen: false, type: "" }) }}
         onConfirm={() => {
-          if (confirmState.type === "deactivate") statusMutation.mutate({ id: confirmState.payload.id, status: "inactive" });
-          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload.id);
+          if (confirmState.type === "deactivate") statusMutation.mutate({ id: confirmState.payload!.id, status: "inactive" });
+          if (confirmState.type === "delete") deleteMutation.mutate(confirmState.payload!.id);
         }}
         title={confirmState.type === "delete" ? "Delete Designation" : "Deactivate Designation"}
         description={confirmState.type === "delete" ? "Are you sure? This cannot be undone and will fail if employees are assigned." : "Inactive designations cannot be assigned to new employees."}

@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 
 export default function ReportsPage() {
   const { data: capabilities } = useCapabilities();
-  const isAdmin = hasCapability(capabilities, "admin.view-reports");
+  const isAdmin = hasCapability(capabilities, "reports.view") || hasCapability(capabilities, "reports.manage");
 
   if (!isAdmin) {
     return (

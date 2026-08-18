@@ -18,7 +18,7 @@ export function HrAttendanceView() {
         <TabsList className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 overflow-x-auto flex-nowrap thin-scrollbar flex">
           <TabsTrigger value="today" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 whitespace-nowrap">
             <AppIcon name="directory" className=" mr-2" />
-            Today's Status
+            Today&apos;s Status
           </TabsTrigger>
           <TabsTrigger value="graph" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 whitespace-nowrap">
             <AppIcon name="chart" className=" mr-2" />

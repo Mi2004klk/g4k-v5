@@ -25,7 +25,7 @@ class UserController extends Controller
     {
         $query = User::with(['department', 'team', 'designation', 'roleAssignments']);
         
-        $isHR = $this->hasCapability($request, 'users.hr.manage');
+        $isHR = $this->hasCapability($request, 'users.employee.manage');
         $isSuperAdmin = $request->user()->resolveActiveRole() === 'super_admin';
         
         if ($isHR && !$isSuperAdmin) {
@@ -94,7 +94,7 @@ class UserController extends Controller
                 'status' => $request->input('status'),
                 'role' => $request->input('role'),
                 'ids' => $request->input('ids'),
-                '_has_manage' => $this->hasCapability($request, 'users.hr.manage') || $request->user()->roleAssignments->pluck('role')->contains('super_admin'),
+                '_has_manage' => $this->hasCapability($request, 'users.employee.manage') || $request->user()->roleAssignments->pluck('role')->contains('super_admin'),
                 '_user_id' => $request->user()->id,
             ],
         ]);

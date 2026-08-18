@@ -2,28 +2,33 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { SheetDescription, Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useIsMobile } from "@g4k/ui/hooks";
-import { formatDistanceToNow } from "date-fns";
 import { queryKeys } from "@/lib/query-keys";
+
+export interface SavedReportView {
+  id: number;
+  name: string;
+  module: string;
+  filters: Record<string, unknown>;
+}
 
 interface SavedReportViewsProps {
   module: string;
-  currentFilters: any;
-  onApplyFilters: (filters: any) => void;
+  currentFilters: Record<string, unknown>;
+  onApplyFilters: (filters: Record<string, unknown>) => void;
 }
 
 export function SavedReportViews({ module, currentFilters, onApplyFilters }: SavedReportViewsProps) {
   const queryClient = useQueryClient();
-  const [isOpen, setIsOpen] = useState(false);
   const [saveName, setSaveName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const isMobile = useIsMobile();
 
-  const { data: views = [], isLoading } = useQuery({
+  const { data: views = [] } = useQuery({
     queryKey: queryKeys.savedViews(module),
     queryFn: () => apiFetch(`/saved-views?module=${module}`).then(res => Array.isArray(res) ? res : (res.data || [])),
   });
@@ -41,14 +46,6 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
     }
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiFetch(`/saved-views/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
-      toast.success("View deleted");
-    }
-  });
-
   const handleSave = () => {
     if (!saveName.trim()) return;
     saveMutation.mutate(saveName.trim());
@@ -62,7 +59,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
           value=""
           onValueChange={(val) => {
             if (!val) return;
-            const view = views.find((v: any) => v.id.toString() === val);
+            const view = views.find((v: SavedReportView) => v.id.toString() === val);
             if (view && view.filters) {
               onApplyFilters(view.filters);
               toast.info(`Applied view: ${view.name}`);
@@ -73,7 +70,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
             <SelectValue placeholder="Load saved view..." />
           </SelectTrigger>
           <SelectContent>
-            {views.map((v: any) => (
+            {views.map((v: SavedReportView) => (
               <SelectItem key={v.id} value={v.id.toString()}>{v.name}</SelectItem>
             ))}
           </SelectContent>

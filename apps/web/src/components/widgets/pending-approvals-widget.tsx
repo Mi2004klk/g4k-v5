@@ -3,22 +3,30 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, ConfirmDialog, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
-import { queryKeys } from "@/lib/query-keys";
+import { Card, Button, Skeleton, ConfirmDialog, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { triggerInvalidation } from "@/lib/invalidation-map";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
 import { WidgetInfo } from "./widget-info";
 
+export interface PendingRequest {
+  id: number;
+  type: string;
+  user_name?: string;
+  title: string;
+  created_at?: string;
+  route?: string;
+  action_url?: string;
+}
+
 export function PendingApprovalsWidget() {
   const queryClient = useQueryClient();
-  const user = useAuthStore((s) => s.user);
 
   const { data: requests = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => Array.isArray(data.pending_approvals) ? data.pending_approvals : [],
+    select: (data: { pending_approvals?: PendingRequest[] } & Record<string, unknown>) => Array.isArray(data.pending_approvals) ? data.pending_approvals : [],
     placeholderData: keepPreviousData,
   });
 
@@ -85,11 +93,15 @@ export function PendingApprovalsWidget() {
             <p className="text-xs font-medium text-neutral-400">No pending approvals</p>
           </div>
         ) : (
-          requests.map((item: any) => {
+          requests.map((item: PendingRequest) => {
             return (
               <div
                 key={`${item.type}-${item.id}`}
-                className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between border border-neutral-100 dark:border-neutral-800"
+                onClick={() => {
+                  const url = item.route || item.action_url;
+                  if (url) window.location.href = url; // or use router
+                }}
+                className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between border border-neutral-100 dark:border-neutral-800 cursor-pointer hover:border-primary-200 transition-colors"
               >
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
@@ -114,7 +126,7 @@ export function PendingApprovalsWidget() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => decisionMutation.mutate({ id: item.id, decision: "approved" })}
+                                onClick={(e) => { e.stopPropagation(); decisionMutation.mutate({ id: item.id, decision: "approved" }); }}
                                 disabled={decisionMutation.isPending}
                                 aria-label="Approve Request"
                                 className="p-1.5 rounded-[var(--radius)] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-colors"
@@ -129,7 +141,7 @@ export function PendingApprovalsWidget() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => setRejectState({ isOpen: true, id: item.id })}
+                                onClick={(e) => { e.stopPropagation(); setRejectState({ isOpen: true, id: item.id }); }}
                                 disabled={decisionMutation.isPending}
                                 aria-label="Reject Request"
                                 className="p-1.5 rounded-[var(--radius)] bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900 transition-colors"
@@ -142,7 +154,7 @@ export function PendingApprovalsWidget() {
                         </TooltipProvider>
                       </>
                   ) : (
-                    <Button variant="outline" size="sm" asChild className="h-7 text-[10px] px-2 font-medium">
+                    <Button variant="outline" size="sm" asChild className="h-7 text-[10px] px-2 font-medium" onClick={(e) => e.stopPropagation()}>
                       <a href={item.route || item.action_url}>{(item.route?.includes('tab=leave') || item.type === 'task') ? 'View' : 'Review'}</a>
                     </Button>
                   )}

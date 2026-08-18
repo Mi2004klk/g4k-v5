@@ -31,6 +31,7 @@ export function ProfilePreferencesTab() {
 
   useEffect(() => {
     if (authUser?.preferences?.directory_visibility) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisibility(authUser.preferences.directory_visibility);
     }
   }, [authUser?.preferences?.directory_visibility]);
@@ -42,13 +43,13 @@ export function ProfilePreferencesTab() {
         body: JSON.stringify({ directory_visibility: val }),
       });
     },
-    onSuccess: (res: any) => {
+    onSuccess: (res: { preferences: Record<string, unknown> }) => {
       toast.success("Visibility preference updated!");
       if (authUser) {
         setAuth(useAuthStore.getState().token!, { ...authUser, preferences: res.preferences }, authUser.active_role);
       }
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to update preference.");
     },
   });

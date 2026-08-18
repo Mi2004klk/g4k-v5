@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AppIcon } from "@g4k/ui/components";
 
 export function VersionGuard() {
   const [currentBuildId, setCurrentBuildId] = useState<string | null>(null);
 
   useEffect(() => {
-    let intervalId: any;
+    let intervalId: ReturnType<typeof setInterval>;
 
     const checkVersion = async () => {
       try {
@@ -30,7 +29,7 @@ export function VersionGuard() {
             clearInterval(intervalId);
           }
         }
-      } catch (err) {
+      } catch {
         // Silent catch
       }
     };

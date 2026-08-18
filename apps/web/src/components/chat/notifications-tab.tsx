@@ -4,11 +4,10 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { safeFromNow } from "@/lib/format";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
-import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 
 import { DataTable, Skeleton, ErrorBoundary } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
@@ -16,6 +15,17 @@ import { Button } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys, STALE_TIME_NOTIFICATIONS } from "@/lib/query-keys";
 import { useReverb } from "@/hooks/use-reverb";
+
+interface NotificationItem {
+  id: string;
+  type: string;
+  title?: string;
+  body?: string;
+  link?: string;
+  priority?: string;
+  read_at?: string | null;
+  created_at: string;
+}
 
 /**
  * Canonical notification type taxonomy emitted by the backend.
@@ -128,7 +138,7 @@ export function NotificationsTab() {
   const columns = [
     {
       header: "Type",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: NotificationItem } }) => {
         const item = row.original;
         return (
           <div className="flex items-center gap-2">
@@ -140,7 +150,7 @@ export function NotificationsTab() {
     },
     {
       header: "Notification",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: NotificationItem } }) => {
         const item = row.original;
         return (
           <div className="flex flex-col">
@@ -148,7 +158,7 @@ export function NotificationsTab() {
               {item.link ? (
                 <Link 
                   href={item.link} 
-                  onClick={() => { if (!item.read_at) markReadMutation.mutate(item.id); }}
+                  onClick={() => { if (!item.read_at) markReadMutation.mutate((item as any).id); }}
                   className={`text-sm hover:underline hover:text-primary-600 dark:hover:text-primary-400 ${!item.read_at ? 'font-semibold text-neutral-900 dark:text-white' : 'text-neutral-700 dark:text-neutral-300'}`}
                 >
                   {item.title || "Notification"}
@@ -175,7 +185,7 @@ export function NotificationsTab() {
     },
     {
       header: "Received",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: NotificationItem } }) => {
         const item = row.original;
         return (
           <div className="flex flex-col text-xs text-neutral-500">
@@ -187,7 +197,7 @@ export function NotificationsTab() {
     },
     {
       header: "Actions",
-      cell: ({ row }: any) => {
+      cell: ({ row }: { row: { original: NotificationItem } }) => {
         const item = row.original;
         return (
           <div className="flex justify-end">
@@ -195,7 +205,7 @@ export function NotificationsTab() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => markReadMutation.mutate(item.id)}
+                onClick={() => markReadMutation.mutate((item as any).id)}
                 disabled={markReadMutation.isPending}
                 className="text-xs flex items-center gap-2"
               >
