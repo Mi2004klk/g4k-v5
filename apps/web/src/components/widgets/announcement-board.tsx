@@ -145,13 +145,13 @@ export function AnnouncementBoard() {
   });
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150">
-      <div className="flex items-center justify-between pb-3">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm hover:shadow-md rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group overflow-hidden">
+      <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[var(--radius)] bg-warning/20 flex items-center justify-center">
-            <AppIcon name="announcement" className=" text-warning" />
+          <div className="w-6 h-6 rounded-[4px] bg-orange-100 dark:bg-orange-950/50 flex items-center justify-center">
+            <AppIcon name="announcement" className="text-orange-600 dark:text-orange-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
             Company Announcements
           </span>
           {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
@@ -229,7 +229,7 @@ export function AnnouncementBoard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="flex-1 space-y-3 max-h-[350px] overflow-y-auto thin-scrollbar">
+      <div className="flex-1 space-y-3 overflow-y-auto thin-scrollbar min-h-0 pr-1">
         {isPending ? (
           <div className="space-y-3">
             {[1, 2].map((i) => (

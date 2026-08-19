@@ -47,23 +47,23 @@ export function PendingApprovalsWidget() {
   });
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col transition-shadow duration-150 shadow-sm hover:shadow-md">
-      <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-2">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 shadow-sm hover:shadow-md group overflow-hidden">
+      <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center">
-            <AppIcon name="clipboard" size="sm" className="text-amber-600 dark:text-amber-400" />
+          <div className="w-6 h-6 rounded-[4px] bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center">
+            <AppIcon name="clipboard" className="text-amber-600 dark:text-amber-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1.5">
             Pending Approvals
             <WidgetInfo summary="Leaves, Tasks, and Projects awaiting your review" />
           </span>
         </div>
-        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold">
+        <span className="text-[9px] px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold">
           {requests.length}
         </span>
       </div>
 
-      <div className="flex-1 space-y-1.5 overflow-y-auto max-h-[260px] thin-scrollbar">
+      <div className="flex-1 space-y-2 overflow-y-auto min-h-0 thin-scrollbar pr-1">
         {isPending ? (
           <div className="space-y-2 min-h-[150px]">
             {[1, 2, 3].map((i) => (
@@ -104,14 +104,14 @@ export function PendingApprovalsWidget() {
               >
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+                    <span className="text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
                       {item.type}
                     </span>
-                    <span className="text-xs font-bold text-neutral-900 dark:text-white">
+                    <span className="text-[13px] font-bold text-neutral-900 dark:text-white">
                       {item.user_name || "Unknown"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-[11px] text-neutral-600 dark:text-neutral-400 font-medium">
+                  <div className="flex items-center gap-1 text-[11px] text-neutral-500 dark:text-neutral-400 font-medium mt-0.5">
                     <Truncate text={item.title} className="max-w-[150px]" />
                     <span className="opacity-50">·</span>
                     <span>{item.created_at ? format(new Date(item.created_at), "MMM d") : ""}</span>

@@ -90,6 +90,8 @@ class AttendanceController extends Controller
         \Illuminate\Support\Facades\Cache::forget("attendanceSummary_{$user->id}");
         \Illuminate\Support\Facades\Cache::forget("attendance_day_{$user->id}_{$today}");
 
+        broadcast(new \App\Events\AttendanceUpdated($user->id, $type));
+
         return response()->json([
             'day' => $dayRecord,
             'events' => $events,
@@ -156,6 +158,10 @@ class AttendanceController extends Controller
 
         foreach ($syncedDates as $date) {
             $reconciledDays[] = AttendanceService::reconcileDay($user->id, $date, false, $user, $schedule);
+        }
+
+        if (!empty($syncedDates)) {
+            broadcast(new \App\Events\AttendanceUpdated($user->id, 'sync'));
         }
 
         return response()->json([

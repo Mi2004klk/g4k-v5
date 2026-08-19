@@ -43,7 +43,7 @@ class AnnouncementController extends Controller
     public function store(Request $request)
     {
         $activeRole = $request->user()->resolveActiveRole();
-        if (!\App\Support\CapabilityMatrix::hasCapability($activeRole, 'announcements.manage')) {
+        if (!\App\Services\CapabilityMatrix::hasCapability($activeRole, 'announcements.manage')) {
             return response()->json(['message' => 'Unauthorized. You need announcements.manage capability.'], 403);
         }
 
@@ -105,7 +105,7 @@ class AnnouncementController extends Controller
         $announcement = Announcement::findOrFail($id);
         
         $activeRole = $request->user()->resolveActiveRole();
-        $canManage = \App\Support\CapabilityMatrix::hasCapability($activeRole, 'announcements.manage');
+        $canManage = \App\Services\CapabilityMatrix::hasCapability($activeRole, 'announcements.manage');
         if ($announcement->created_by !== $request->user()->id && !$canManage) {
             return response()->json(['message' => 'Unauthorized. You can only modify your own announcements.'], 403);
         }
@@ -140,7 +140,7 @@ class AnnouncementController extends Controller
         $announcement = Announcement::findOrFail($id);
 
         $activeRole = $request->user()->resolveActiveRole();
-        $canManage = \App\Support\CapabilityMatrix::hasCapability($activeRole, 'announcements.manage');
+        $canManage = \App\Services\CapabilityMatrix::hasCapability($activeRole, 'announcements.manage');
         if ($announcement->created_by !== $request->user()->id && !$canManage) {
             return response()->json(['message' => 'Unauthorized. You can only delete your own announcements.'], 403);
         }

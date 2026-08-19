@@ -85,22 +85,22 @@ export function HrActivityFeedWidget() {
   }, [data]);
 
   return (
-    <div className="h-[400px] bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden flex flex-col transition-shadow duration-150">
-      <div className="flex items-center justify-between pb-3">
+    <div className="h-full w-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm hover:shadow-md rounded-xl p-4 sm:p-5 overflow-hidden flex flex-col transition-shadow duration-150 group">
+      <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[var(--radius)] bg-primary-100 dark:bg-primary-950 flex items-center justify-center">
-            <AppIcon name="activity" className=" text-primary-600 dark:text-primary-400" />
+          <div className="w-6 h-6 rounded-[4px] bg-indigo-100 dark:bg-indigo-950/50 flex items-center justify-center">
+            <AppIcon name="activity" className="text-indigo-600 dark:text-indigo-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
             Team Activity Feed
           </span>
         </div>
-        <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider bg-primary-100 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">
+        <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">
           Live
         </span>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto pr-1 space-y-4 thin-scrollbar min-h-0">
         {isLoading && (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
@@ -142,10 +142,10 @@ export function HrActivityFeedWidget() {
             </div>
             
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-neutral-900 dark:text-neutral-100 font-medium">
+              <p className="text-[13px] text-neutral-900 dark:text-neutral-100 font-bold">
                 {act.user.name}
               </p>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
+              <p className="text-[12px] text-neutral-500 dark:text-neutral-400 truncate">
                 {act.message}
               </p>
               <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">

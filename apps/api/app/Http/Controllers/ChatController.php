@@ -28,7 +28,7 @@ class ChatController extends Controller
     {
         $search = $request->input('search');
         $users = \App\Models\User::where('id', '!=', $request->user()->id)
-            ->where('active_status', 'active')
+            ->where('status', 'active')
             ->when($search, function ($q) use ($search) {
                 $q->where(function($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -308,6 +308,44 @@ class ChatController extends Controller
         if ($conversation->scope !== 'global') {
             $conversation->users()->updateExistingPivot($request->user()->id, ['is_pinned' => false]);
         }
+
+        return response()->json(['success' => true]);
+    }
+    public function deleteMessage(Request $request, $id, $msgId)
+    {
+        $conversation = Conversation::findOrFail($id);
+        $this->checkAccess($conversation, $request->user());
+
+        $message = Message::where('conversation_id', $id)->findOrFail($msgId);
+
+        if ($message->sender_id !== $request->user()->id) {
+            abort(403, 'You can only delete your own messages');
+        }
+
+        $message->delete();
+
+        // Optionally trigger a MessageDeleted broadcast here if needed in the future
+
+        return response()->json(['success' => true]);
+    }
+
+    public function clearChat(Request $request, $id)
+    {
+        $conversation = Conversation::findOrFail($id);
+        $this->checkAccess($conversation, $request->user());
+
+        // For direct/group chats, just clear messages for this user using a soft delete
+        // or a tracking table. Since this app currently lacks a per-user message visibility pivot,
+        // we'll delete messages where the user is sender, or if it's a direct chat,
+        // this might need to actually just hide them. 
+        // A simple approach for this version is deleting the user's own messages in that chat,
+        // or wiping the entire chat if they are an admin.
+        // Actually, many apps allow "Delete Chat" which leaves the group but deletes history.
+        // Let's implement deleting the user's own messages for now to prevent deleting others' messages.
+        
+        Message::where('conversation_id', $id)
+            ->where('sender_id', $request->user()->id)
+            ->delete();
 
         return response()->json(['success' => true]);
     }

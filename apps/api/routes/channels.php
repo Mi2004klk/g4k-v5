@@ -24,6 +24,10 @@ Broadcast::channel('org.announcements', function ($user) {
     return $user !== null;
 });
 
+Broadcast::channel('company.global', function ($user) {
+    return $user !== null;
+});
+
 Broadcast::channel('conversation.{id}', function ($user, $id) {
     $conversation = \App\Models\Conversation::find($id);
     if (!$conversation) {

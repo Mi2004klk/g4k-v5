@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
@@ -27,6 +27,7 @@ interface LeaveRequestFormProps {
 
 export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
   const queryClient = useQueryClient();
+  const formId = React.useId();
   
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -259,18 +260,18 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
           </div>
         </div>
         
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 flex-1 flex flex-col">
           <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Type *</label>
           <RadioGroup value={activeType} onValueChange={(val) => { setType(val); handleFieldChange({ type: val }); }} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {LEAVE_TYPES.map((item) => (
               <div key={item.value}>
                 <RadioGroupItem
                   value={item.value}
-                  id={`type-${item.value}`}
+                  id={`type-${formId}-${item.value}`}
                   className="peer sr-only"
                 />
                 <Label
-                  htmlFor={`type-${item.value}`}
+                  htmlFor={`type-${formId}-${item.value}`}
                   className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-[11px] font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none"
                 >
                   <AppIcon 
@@ -292,6 +293,7 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
           <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Reason *</label>
           <Textarea
             required
+            id={`reason-${formId}`}
             rows={3}
             value={activeReason}
             onChange={(e) => { setReason(e.target.value); handleFieldChange({ reason: e.target.value }); }}

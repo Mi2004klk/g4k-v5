@@ -60,9 +60,9 @@ export function QuickTaskWidget() {
   };
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150 overflow-hidden shadow-sm hover:shadow-md">
-      <div>
-        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-shadow duration-150 overflow-hidden shadow-sm hover:shadow-md group">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center">
               <AppIcon name="success" size="sm" className="text-emerald-600 dark:text-emerald-400" />
@@ -81,20 +81,20 @@ export function QuickTaskWidget() {
               placeholder="Task title..." 
               value={title} 
               onChange={(e) => setTitle(e.target.value)}
-              className={`h-9 text-xs bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.title ? "border-red-500" : ""}`}
+              className={`h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.title ? "border-red-500" : ""}`}
             />
             <FormError errors={fieldErrors.title} />
           </div>
 
           <div>
             <Select value={assigneeId} onValueChange={setAssigneeId}>
-              <SelectTrigger className={`h-9 text-xs w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.assignee_id ? "border-red-500" : ""}`}>
+              <SelectTrigger className={`h-10 text-[13px] w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.assignee_id ? "border-red-500" : ""}`}>
                 <SelectValue placeholder="Select Assignee" />
               </SelectTrigger>
               <SelectContent className="max-h-[200px]">
                 {users.map((u: QuickTaskUser) => (
-                  <SelectItem key={u.id} value={u.id.toString()} className="text-xs py-1.5">
-                    {u.name} <span className="text-neutral-400 hidden sm:inline-block">({u.email})</span>
+                  <SelectItem key={u.id} value={u.id.toString()} className="text-[13px] py-2">
+                    {u.name} <span className="text-neutral-400 hidden sm:inline-block ml-1">({u.email})</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -104,9 +104,8 @@ export function QuickTaskWidget() {
 
           <Button 
             type="submit" 
-            size="sm" 
             disabled={createTaskMutation.isPending}
-            className="w-full h-9 text-[11px] font-bold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+            className="w-full h-10 mt-2 text-[13px] font-bold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm rounded-lg"
           >
             {createTaskMutation.isPending ? (
               <AppIcon name="loading" size="sm" className=" animate-spin" />

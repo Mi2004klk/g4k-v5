@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Button } from "@g4k/ui/components";
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
 import { ConversationList } from "@/components/chat/conversation-list";
@@ -15,6 +15,7 @@ import { CreateGroupDialog } from "@/components/chat/create-group-dialog";
 import { QuickNotes } from "@/components/widgets/quick-notes";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { toast } from "sonner";
 
 interface ChatUser { id: number; name?: string; pivot?: { last_read_at?: string } }
 interface ChatMessage { id: number; sender_id: number; created_at: string; reads?: {user_id: number}[]; conversation_id?: number; sender?: ChatUser; pending?: boolean; body?: string; }
@@ -76,6 +77,34 @@ export function ChatTab() {
     window.addEventListener("visibilitychange", handleVisibility);
     return () => window.removeEventListener("visibilitychange", handleVisibility);
   }, [selectedId, queryClient]);
+
+  // Global user listener for incoming messages to show toasts and update the list
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const userChannelName = `user.${user.id}`;
+    const channel = subscribe(userChannelName, true);
+    if (channel) {
+      const handler = (e: { message: ChatMessage }) => {
+        if (e.message.sender_id !== user.id) {
+          // Play a sound if you have one, or just show toast
+          if (selectedId !== e.message.conversation_id) {
+            toast(`New message from ${e.message.sender?.name || 'Someone'}`, {
+              icon: '💬',
+            });
+          }
+          queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+        }
+      };
+      
+      channel.listen(".message-sent", handler);
+      
+      return () => {
+        channel.stopListening(".message-sent");
+        leaveChannel(userChannelName);
+      };
+    }
+  }, [user?.id, subscribe, leaveChannel, queryClient, selectedId]);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -140,7 +169,8 @@ export function ChatTab() {
       .flatMap((c) => c.users?.map((u: ChatUser) => u.id) || [])
   );
   
-  const searchUsers: ChatConversation[] = (searchUsersData || [])
+  const searchUsersArray = Array.isArray(searchUsersData) ? searchUsersData : (searchUsersData?.data || []);
+  const searchUsers: ChatConversation[] = searchUsersArray
     .filter((u: any) => !conversationUserIds.has(u.id) && u.id !== user?.id)
     .map((u: any) => ({
       id: `user-${u.id}` as any,
@@ -388,15 +418,35 @@ export function ChatTab() {
     },
   });
 
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (msgId: number) => {
+      return apiFetch(`/conversations/${selectedId}/messages/${msgId}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      toast.success("Message deleted");
+    }
+  });
 
+  const clearChatMutation = useMutation({
+    mutationFn: async () => {
+      return apiFetch(`/conversations/${selectedId}/clear`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      toast.success("Chat cleared");
+    }
+  });
 
   return (
     <>
-      <div className="mt-4 flex flex-col lg:flex-row gap-4 h-[calc(100dvh-180px)] min-h-[500px]">
+      <div className="mt-4 flex flex-col lg:flex-row gap-4 h-[calc(100dvh-180px)] min-h-[500px] max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
       {/* Main Chat Interface */}
       <div
-        className="flex-1 bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 flex overflow-hidden"
-        style={keyboardHeight > 0 ? { height: `calc(100dvh - 200px - ${keyboardHeight}px)`, minHeight: 0 } : undefined}
+        className="flex-1 bg-card dark:bg-neutral-900 md:rounded-xl md:border md:border-neutral-200 dark:md:border-neutral-800 flex overflow-hidden"
+        style={keyboardHeight > 0 ? { height: `calc(100dvh - ${window.innerWidth < 768 ? '0px' : '200px'} - ${keyboardHeight}px)`, minHeight: 0 } : undefined}
       >
         {/* Conversation sidebar */}
         <div className={`w-full md:w-72 lg:w-80 shrink-0 border-r border-neutral-200 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
@@ -467,28 +517,38 @@ export function ChatTab() {
                       </span>
                     )}
                     {selectedConv?.scope !== 'global' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`h-8 w-8 ${
-                          ((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned)
-                            ? "text-primary-500 hover:text-primary-600 bg-primary-50 dark:bg-primary-950/30"
-                            : "text-neutral-400 hover:text-neutral-600"
-                        }`}
-                        onClick={() => {
-                          const isPinned = (selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned;
-                          if (isPinned) {
-                            unpinChatMutation.mutate();
-                          } else {
-                            pinChatMutation.mutate();
-                          }
-                        }}
-                        title={((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned) ? "Unpin chat" : "Pin chat"}
-                        disabled={pinChatMutation.isPending || unpinChatMutation.isPending}
-                      >
-                        <AppIcon name="pin" size="sm" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-600">
+                            <AppIcon name="more" size="sm" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            const isPinned = (selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned;
+                            if (isPinned) {
+                              unpinChatMutation.mutate();
+                            } else {
+                              pinChatMutation.mutate();
+                            }
+                          }} disabled={pinChatMutation.isPending || unpinChatMutation.isPending}>
+                            <AppIcon name="pin" className="mr-2" /> 
+                            {((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned) ? "Unpin chat" : "Pin chat"}
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuItem onClick={() => {
+                            if (window.confirm("Are you sure you want to clear this chat? This will only remove the messages for you.")) {
+                              clearChatMutation.mutate();
+                            }
+                          }} disabled={clearChatMutation.isPending} className="text-red-500 hover:text-red-600 focus:text-red-600">
+                            <AppIcon name="trash" className="mr-2" /> Clear Chat
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
+                    <Button variant="ghost" size="icon" className="hidden md:flex h-8 w-8 text-neutral-400 hover:text-neutral-600" onClick={() => setSelectedId(null)} title="Close Chat">
+                      <AppIcon name="close" size="sm" />
+                    </Button>
                   </div>
                 </div>
 
@@ -502,6 +562,7 @@ export function ChatTab() {
                   onUnpinMessage={(msgId) => unpinMutation.mutate(msgId)}
                   canManage={canPinMessages}
                   onMarkRead={() => markReadMutation.mutate()}
+                  onDeleteMessage={(msgId) => deleteMessageMutation.mutate(msgId)}
                 />
 
                 <MessageComposer

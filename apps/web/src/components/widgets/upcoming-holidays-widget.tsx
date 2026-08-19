@@ -40,19 +40,19 @@ export function UpcomingHolidaysWidget() {
     : [];
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-150">
-      <CardHeader className="border-b border-neutral-100 dark:border-neutral-800/50 pb-2 mb-2 p-0 flex flex-row items-center justify-between">
-        <CardTitle className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-          <div className="w-6 h-6 rounded bg-primary-100 dark:bg-primary-950/60 flex items-center justify-center">
-            <AppIcon name="calendar" size="sm" className="text-primary-600 dark:text-primary-400" />
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-150 group">
+      <CardHeader className="border-b border-neutral-100 dark:border-neutral-800/50 pb-3 mb-3 p-0 flex flex-row items-center justify-between shrink-0">
+        <CardTitle className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
+          <div className="w-6 h-6 rounded-[4px] bg-sky-100 dark:bg-sky-950/50 flex items-center justify-center">
+            <AppIcon name="calendar" size="sm" className="text-sky-600 dark:text-sky-400 w-3.5 h-3.5" />
           </div>
           Upcoming Events
         </CardTitle>
-        <Link href="/dashboard/attendance?tab=leave" className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1">
+        <Link href="/dashboard/attendance?tab=leave" className="text-[10px] font-bold text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1">
           View All <AppIcon name="arrowRight" size="xs" />
         </Link>
       </CardHeader>
-      <CardContent className="p-0 flex-1 overflow-y-auto">
+      <CardContent className="p-0 flex-1 overflow-y-auto min-h-0 thin-scrollbar pr-1">
         {isLoading ? (
           <div className="p-4 space-y-3">
             <Skeleton className="h-12 w-full rounded-[var(--radius)]" />
@@ -76,18 +76,18 @@ export function UpcomingHolidaysWidget() {
             {upcomingList.map((holiday: Holiday, idx: number) => {
               const isEvent = holiday.type === 'event';
               return (
-              <div key={idx} className="p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                <div className="flex items-center justify-between mb-1">
-                    <h4 className="text-sm font-bold">{holiday.name}</h4>
-                    <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+              <div key={idx} className="py-2.5 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/20 transition-colors">
+                <div className="flex items-center justify-between mb-0.5">
+                    <h4 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">{holiday.name}</h4>
+                    <span className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded ${
                       isEvent 
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
-                        : 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
+                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' 
+                        : 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
                     }`}>
                       {isEvent ? 'Event' : 'Holiday'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+                  <div className="flex items-center gap-2 text-[12px] font-medium text-neutral-500 dark:text-neutral-400">
                     {safeFormat(holiday.date, "MMM d, yyyy")}
                   </div>
                   {isEvent && (holiday.start_time || holiday.location) && (

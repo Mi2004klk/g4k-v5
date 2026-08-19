@@ -228,9 +228,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
         Route::middleware('throttle:30,1')->group(function () {
             Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);
-            Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
+        Route::post('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'sendMessage']);
         });
         Route::get('/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages']);
+        Route::delete('/conversations/{id}/messages/{msgId}', [\App\Http\Controllers\ChatController::class, 'deleteMessage']);
+        Route::delete('/conversations/{id}/clear', [\App\Http\Controllers\ChatController::class, 'clearChat']);
         Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
         Route::post('/conversations/{id}/pin', [\App\Http\Controllers\ChatController::class, 'pinChat']);
         Route::post('/conversations/{id}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinChat']);

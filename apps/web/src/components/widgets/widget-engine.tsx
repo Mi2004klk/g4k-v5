@@ -63,9 +63,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         }
         // If uncollapsed, restore original height if currently stuck at h: 1
         const defaultWidget = Array.isArray(availableWidgets) ? availableWidgets.find((w) => w.id === item.i) : undefined;
-        const normalHeight = (defaultWidget?.defaultLayout as any)?.h || (defaultWidget?.defaultLayout as any)?.lg?.h || 3;
+        const normalHeight = (defaultWidget?.defaultLayout as any)?.h || (defaultWidget?.defaultLayout as any)?.lg?.h || 6;
         const currentH = item.h === 1 ? normalHeight : item.h;
-        return { ...item, h: currentH, minH: 2, maxH: undefined, isResizable: true };
+        return { ...item, h: currentH, minH: 3, maxH: undefined, isResizable: true };
       });
     });
     return result;
@@ -188,9 +188,33 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         .is-dragging-widget [role="button"] {
           pointer-events: none !important;
         }
+        .react-grid-item {
+          overflow: hidden !important;
+          border-radius: var(--radius);
+        }
         .react-resizable-handle {
           opacity: 0;
           transition: opacity 0.2s;
+          background-image: none !important;
+          bottom: 2px !important;
+          right: 2px !important;
+          width: 20px !important;
+          height: 20px !important;
+          cursor: se-resize;
+        }
+        .react-resizable-handle::after {
+          content: "";
+          position: absolute;
+          right: 4px;
+          bottom: 4px;
+          width: 8px;
+          height: 8px;
+          border-right: 2px solid #cbd5e1;
+          border-bottom: 2px solid #cbd5e1;
+          border-radius: 1px;
+        }
+        .dark .react-resizable-handle::after {
+          border-color: #475569;
         }
         .react-grid-item:hover .react-resizable-handle {
           opacity: 1;
@@ -201,7 +225,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         layouts={computedLayouts}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         cols={GRID_COLS}
-        rowHeight={120}
+        rowHeight={40}
         onLayoutChange={handleLayoutChange}
         onDragStart={handleDragStart}
         onDragStop={handleDragStop}

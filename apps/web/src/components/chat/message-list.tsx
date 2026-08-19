@@ -34,6 +34,7 @@ const MessageItem = memo(function MessageItem({
   onUnpinMessage?: (msgId: number) => void;
   canManage?: boolean;
   onMarkRead?: () => void;
+  onDeleteMessage?: (msgId: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -56,7 +57,7 @@ const MessageItem = memo(function MessageItem({
   }, [isMe, onMarkRead, msg.reads]);
 
   return (
-    <div ref={ref} className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${isConsecutive ? "mt-1" : "mt-4"}`}>
+    <div ref={ref} className={`relative group flex flex-col ${isMe ? "items-end" : "items-start"} ${isConsecutive ? "mt-1" : "mt-4"}`}>
       {!isConsecutive && (
         <div className="flex items-center gap-1.5 mb-1 text-[9px] text-neutral-400 font-medium">
           <span className="font-semibold text-neutral-700 dark:text-neutral-300">
@@ -187,7 +188,7 @@ const MessageItem = memo(function MessageItem({
         )}
       </div>
 
-      {canManage && (
+      {(canManage || isMe) && (
         <div className={`absolute top-2 ${isMe ? "right-full mr-2" : "left-full ml-2"} opacity-0 group-hover:opacity-100 transition-opacity`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -196,13 +197,18 @@ const MessageItem = memo(function MessageItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={isMe ? "end" : "start"}>
-              {(msg as any).pinned ? (
+              {canManage && ((msg as any).pinned ? (
                 <DropdownMenuItem onClick={() => onUnpinMessage?.(msg.id)}>
                   <AppIcon name="pin" className=" mr-2 text-neutral-400" /> Unpin Message
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onClick={() => onPinMessage?.(msg.id)}>
                   <AppIcon name="pin" className=" mr-2 text-amber-500" /> Pin Message
+                </DropdownMenuItem>
+              ))}
+              {isMe && (
+                <DropdownMenuItem onClick={() => onDeleteMessage?.(msg.id)} className="text-red-500 hover:text-red-600 focus:text-red-600">
+                  <AppIcon name="trash" className="mr-2" /> Delete Message
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -233,6 +239,7 @@ export function MessageList({
   onUnpinMessage?: (msgId: number) => void;
   canManage?: boolean;
   onMarkRead?: () => void;
+  onDeleteMessage?: (msgId: number) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousScrollHeight = useRef<number>(0);
@@ -345,6 +352,7 @@ export function MessageList({
                 onUnpinMessage={onUnpinMessage}
                 canManage={canManage}
                 onMarkRead={onMarkRead}
+                onDeleteMessage={onDeleteMessage}
               />
             </div>
           );

@@ -30,27 +30,27 @@ export function HrTeamAttendanceWidget() {
   const topRecords = records.slice(0, 3);
 
   return (
-    <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 overflow-hidden transition-shadow duration-150 shadow-sm hover:shadow-md">
-      <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-2">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 shadow-sm hover:shadow-md group overflow-hidden">
+      <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center">
-            <AppIcon name="directory" size="sm" className="text-emerald-600 dark:text-emerald-400" />
+          <div className="w-6 h-6 rounded-[4px] bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center">
+            <AppIcon name="directory" className="text-emerald-600 dark:text-emerald-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
             Team Attendance
           </span>
-          {isFetching && !isPending && <AppIcon name="loading" size="xs" className=" animate-spin text-muted-foreground" />}
+          {isFetching && !isPending && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
         </div>
         
         {totalCount > 0 && (
-          <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-[var(--radius)]">
-            <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{presentCount}</span>
-            <span className="text-xs font-medium text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
+          <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded font-bold">
+            <span className="text-[12px] text-emerald-700 dark:text-emerald-400">{presentCount}</span>
+            <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
           </div>
         )}
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-y-auto min-h-0 thin-scrollbar pr-1">
         {isPending ? (
           <div className="space-y-4 w-full pt-2">
             {[1, 2, 3].map((i) => (
@@ -78,12 +78,12 @@ export function HrTeamAttendanceWidget() {
         ) : (
           <div className="space-y-3 flex-1">
             {topRecords.map((r: HrAttendanceRecord) => (
-              <div key={r.user_id} className="flex items-center justify-between">
+              <div key={r.user_id} className="flex items-center justify-between p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-lg transition-colors">
                 <div className="flex items-center gap-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarFallback name={r.user_name} className="text-[10px]" />
+                  <Avatar className="w-7 h-7 border border-neutral-200 dark:border-neutral-800">
+                    <AvatarFallback name={r.user_name} className="text-[11px] font-bold" />
                   </Avatar>
-                  <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{r.user_name}</span>
+                  <span className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">{r.user_name}</span>
                 </div>
                 <StatusBadge 
                   status={
@@ -91,7 +91,7 @@ export function HrTeamAttendanceWidget() {
                     r.status === "late" ? "warning" :
                     r.status === "leave" ? "info" : "danger"
                   } 
-                  className="uppercase text-[10px]"
+                  className="uppercase text-[9px] font-bold tracking-widest px-2 py-0.5 rounded"
                 >
                   {r.status}
                 </StatusBadge>
@@ -101,13 +101,13 @@ export function HrTeamAttendanceWidget() {
         )}
       </div>
 
-      <div className="pt-3 mt-auto">
+      <div className="pt-3 mt-auto shrink-0 border-t border-neutral-100 dark:border-neutral-800/50">
         <Link 
           href="/dashboard/org/attendance"
-          className="flex items-center justify-between w-full text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group transition-colors"
+          className="flex items-center justify-between w-full text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group transition-colors"
         >
           View Full Report
-          <AppIcon name="arrowRight" size="xs" className=" group-hover:translate-x-1 transition-transform" />
+          <AppIcon name="arrowRight" size="xs" className="group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
     </Card>

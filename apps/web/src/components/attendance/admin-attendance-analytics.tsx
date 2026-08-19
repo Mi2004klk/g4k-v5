@@ -1,16 +1,28 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { useReverb } from "@/hooks/use-reverb";
 
 export function AdminAttendanceAnalytics() {
   const [selectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [deptFilter] = useUrlState("dept", "all");
+  const queryClient = useQueryClient();
+  const { subscribe } = useReverb();
+
+  useEffect(() => {
+    const channel = subscribe("private-company.global");
+    if (!channel) return;
+
+    channel.listen(".attendance-updated", () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance-analytics'] });
+    });
+  }, [subscribe, queryClient]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['attendance-analytics', selectedDate, deptFilter],

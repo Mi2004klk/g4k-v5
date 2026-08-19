@@ -146,7 +146,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
 
   return (
-    <div className={cn("relative w-full h-full p-5 bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl transition-shadow duration-150 flex flex-col justify-between", className)}>
+    <div className={cn("relative w-full h-full p-4 sm:p-5 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm rounded-xl flex flex-col justify-between overflow-hidden group transition-shadow hover:shadow-md", className)}>
       {isPending && !todayData && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-xl p-6 gap-6">
           <div className="flex justify-between w-full">
@@ -164,23 +164,23 @@ export function TimeClockWidget({ className }: { className?: string }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between pb-3">
+      <div className="flex items-center justify-between pb-2 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[var(--radius)] bg-primary-100 dark:bg-primary-950 flex items-center justify-center">
-            <AppIcon name="teamAttendance" className=" text-primary-600 dark:text-primary-400" />
+          <div className="w-6 h-6 rounded-[4px] bg-orange-100 dark:bg-orange-950/50 flex items-center justify-center">
+            <AppIcon name="clock" className="text-orange-600 dark:text-orange-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
             Time Clock
           </span>
-          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+          {isFetching && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
           {isOffline ? (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
-              <AppIcon name="error" size="xs" /> Offline Mode
+            <span className="flex items-center gap-1 text-[9px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
+              <AppIcon name="error" size="xs" /> Offline
             </span>
           ) : isError && !todayData ? (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-2">
-              <AppIcon name="error" size="xs" /> Connection Error
-              <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[10px] font-bold text-rose-600 hover:text-rose-700 ml-1">
+            <span className="flex items-center gap-1 text-[9px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
+              <AppIcon name="error" size="xs" /> Error
+              <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[9px] font-bold text-rose-600 hover:text-rose-700 ml-1">
                 Retry
               </Button>
             </span>
@@ -192,18 +192,17 @@ export function TimeClockWidget({ className }: { className?: string }) {
               activeState === "on_break" ? "warning" :
                 activeState === "completed" ? "info" : "neutral"
           }
-          className="uppercase tracking-wider px-2.5 py-0.5 text-[10px]"
+          className="uppercase tracking-widest px-2 py-0.5 text-[9px] font-bold rounded"
         >
           {activeState.replace("_", " ")}
         </StatusBadge>
       </div>
 
-      <div className="my-4 text-center">
+      <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-2">
         <LiveTimer
           render={(formattedTime, displaySeconds) => {
             const isOvertime = displaySeconds > standardSeconds;
 
-            // Format time difference nicely
             const formatTimeDiff = (secs: number) => {
               const h = Math.floor(secs / 3600);
               const m = Math.floor((secs % 3600) / 60);
@@ -212,35 +211,35 @@ export function TimeClockWidget({ className }: { className?: string }) {
             };
 
             return (
-              <>
+              <div className="flex flex-col items-center">
                 <div
                   className={cn(
-                    "text-4xl sm:text-5xl font-mono font-bold tracking-tight tabular-nums transition-colors",
+                    "text-3xl sm:text-4xl md:text-5xl font-mono font-bold tracking-tight tabular-nums transition-colors leading-none",
                     isOvertime ? "text-amber-500" : "text-neutral-900 dark:text-white"
                   )}
                 >
                   {formattedTime}
                 </div>
                 {isOvertime && (
-                  <p className="text-[11px] text-amber-500 font-medium mt-1">
-                    Overtime Threshold Exceeded (+{formatTimeDiff(displaySeconds - standardSeconds)})
+                  <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mt-2 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded">
+                    Overtime (+{formatTimeDiff(displaySeconds - standardSeconds)})
                   </p>
                 )}
-              </>
+              </div>
             );
           }}
         />
       </div>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-2 shrink-0">
         {activeState === "not_started" && (
           <Button
             disabled={isPunching}
             onClick={() => handlePunch("clock_in")}
-            className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
+            className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm rounded-lg"
           >
-            <AppIcon name="play" />
-            <span>Start Shift</span>
+            <AppIcon name="play" className="w-4 h-4" />
+            <span className="text-[13px]">Start Shift</span>
           </Button>
         )}
 
@@ -253,14 +252,14 @@ export function TimeClockWidget({ className }: { className?: string }) {
                     disabled={isPunching}
                     onClick={() => handlePunch("start_break")}
                     variant="outline"
-                    className="flex-1 h-12 border-warning/50 text-warning hover:bg-warning/10 gap-2"
+                    className="flex-1 h-10 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-900/50 dark:text-amber-500 dark:hover:bg-amber-950/30 gap-1.5 rounded-lg shadow-sm"
                     aria-label="Pause Work Session"
                   >
-                    <AppIcon name="break" />
-                    <span>Pause for Break</span>
+                    <AppIcon name="break" className="w-3.5 h-3.5" />
+                    <span className="text-[12px] font-bold">Pause</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="text-xs">Pause Work Session</TooltipContent>
+                <TooltipContent className="text-xs">Take a Break</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -268,10 +267,10 @@ export function TimeClockWidget({ className }: { className?: string }) {
               disabled={isPunching}
               onClick={() => setShowConfirmOut(true)}
               variant="destructive"
-              className="flex-1 h-12 gap-2"
+              className="flex-1 h-10 gap-1.5 rounded-lg shadow-sm"
             >
-              <AppIcon name="stop" />
-              <span>End Shift</span>
+              <AppIcon name="stop" className="w-3.5 h-3.5" />
+              <span className="text-[12px] font-bold">End Shift</span>
             </Button>
           </>
         )}
@@ -283,11 +282,11 @@ export function TimeClockWidget({ className }: { className?: string }) {
                 <Button
                   disabled={isPunching}
                   onClick={() => handlePunch("end_break")}
-                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2 shadow"
+                  className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm rounded-lg"
                   aria-label="Resume Work Session"
                 >
-                  <AppIcon name="play" />
-                  <span>Resume Work</span>
+                  <AppIcon name="play" className="w-4 h-4" />
+                  <span className="text-[13px]">Resume Work</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="text-xs">Resume Work Session</TooltipContent>

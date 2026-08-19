@@ -78,34 +78,34 @@ export default function DashboardPage() {
           component: (
             <MetricWidget title="Total Employees" metricKey="total_employees" icon={"directory"} color="indigo" breakdown={true} href="/dashboard/directory?tab=management" />
           ),
-          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 3, h: 2 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 3, h: 5 }),
         },
         {
           id: "active-projects",
           component: (
             <MetricWidget title="Active Projects" metricKey="active_projects" icon={"projects"} color="emerald" subtitle="In progress" href="/dashboard/projects" />
           ),
-          defaultLayout: responsiveLayout({ x: 3, y: 0, w: 3, h: 2 }),
+          defaultLayout: responsiveLayout({ x: 3, y: 0, w: 3, h: 5 }),
         },
         {
           id: "admin-today-attendance",
           component: <AdminTodayAttendanceWidget />,
-          defaultLayout: responsiveLayout({ x: 6, y: 0, w: 3, h: 2 }),
+          defaultLayout: responsiveLayout({ x: 6, y: 0, w: 3, h: 5 }),
         },
         {
           id: "pending-approvals",
           component: <PendingApprovalsWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 2, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 5, w: 6, h: 7 }),
         },
         {
           id: "recent-activity",
           component: <RecentActivityWidget />,
-          defaultLayout: responsiveLayout({ x: 6, y: 2, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 6, y: 5, w: 6, h: 7 }),
         },
         {
           id: "quick-task",
           component: <QuickTaskWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 5, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 12, w: 6, h: 7 }),
         }
       ];
     }
@@ -115,32 +115,32 @@ export default function DashboardPage() {
         {
           id: "team-attendance",
           component: <HrTeamAttendanceWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 4, h: 2 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 0, w: 4, h: 5 }),
         },
         {
           id: "pending-leave",
           component: <PendingApprovalsWidget />, // Handles leave & submissions
-          defaultLayout: responsiveLayout({ x: 4, y: 0, w: 4, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 4, y: 0, w: 4, h: 7 }),
         },
         {
           id: "team-activity",
           component: <HrActivityFeedWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 3, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 5, w: 6, h: 7 }),
         },
         {
           id: "quick-task",
           component: <QuickTaskWidget />,
-          defaultLayout: responsiveLayout({ x: 6, y: 3, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 6, y: 5, w: 6, h: 7 }),
         },
         {
           id: "announcements",
           component: <AnnouncementBoard />,
-          defaultLayout: responsiveLayout({ x: 0, y: 6, w: 8, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 12, w: 8, h: 7 }),
         },
         {
           id: "upcoming-holidays",
           component: <UpcomingHolidaysWidget />,
-          defaultLayout: responsiveLayout({ x: 8, y: 6, w: 4, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 8, y: 12, w: 4, h: 7 }),
         },
       ];
       
@@ -159,37 +159,37 @@ export default function DashboardPage() {
       {
         id: "announcements",
         component: <AnnouncementBoard />,
-        defaultLayout: responsiveLayout({ x: 0, y: 0, w: 12, h: 3 }),
+        defaultLayout: responsiveLayout({ x: 0, y: 0, w: 12, h: 7 }),
       },
       {
         id: "active-projects",
         component: <MetricWidget title="Active Projects" metricKey="active_projects" icon={"clipboard"} color="blue" subtitle="Projects you're in" href="/dashboard/projects" />,
-        defaultLayout: responsiveLayout({ x: 0, y: 3, w: 2, h: 2 }),
+        defaultLayout: responsiveLayout({ x: 0, y: 7, w: 2, h: 5 }),
       },
       {
         id: "pending-tasks",
         component: <MetricWidget title="Pending Tasks" metricKey="pending_tasks" icon={"clipboard"} color="amber" subtitle="Tasks assigned to you" href="/dashboard/tasks" />,
-        defaultLayout: responsiveLayout({ x: 2, y: 3, w: 2, h: 2 }),
+        defaultLayout: responsiveLayout({ x: 2, y: 7, w: 2, h: 5 }),
       },
       {
         id: "approval-status",
         component: <EmployeeApprovalStatusWidget />,
-        defaultLayout: responsiveLayout({ x: 8, y: 3, w: 4, h: 3 }),
+        defaultLayout: responsiveLayout({ x: 8, y: 7, w: 4, h: 7 }),
       },
       {
         id: "recent-task-progress",
         component: <EmployeeTaskProgressWidget />,
-        defaultLayout: responsiveLayout({ x: 0, y: 5, w: 4, h: 3 }),
+        defaultLayout: responsiveLayout({ x: 0, y: 12, w: 4, h: 7 }),
       },
       {
         id: "upcoming-holidays",
         component: <UpcomingHolidaysWidget />,
-        defaultLayout: responsiveLayout({ x: 4, y: 5, w: 4, h: 3 }),
+        defaultLayout: responsiveLayout({ x: 4, y: 12, w: 4, h: 7 }),
       },
       {
         id: "quick-notes",
         component: <QuickNotes />,
-        defaultLayout: responsiveLayout({ x: 8, y: 5, w: 4, h: 3 }),
+        defaultLayout: responsiveLayout({ x: 8, y: 14, w: 4, h: 7 }),
       },
     ];
 
@@ -197,7 +197,7 @@ export default function DashboardPage() {
       widgets.push({
         id: "time-clock",
         component: <TimeClockWidget />,
-        defaultLayout: responsiveLayout({ x: 4, y: 3, w: 4, h: 3 }),
+        defaultLayout: responsiveLayout({ x: 4, y: 7, w: 4, h: 7 }),
       });
     }
 
@@ -206,7 +206,7 @@ export default function DashboardPage() {
       widgets.push({
         id: "team-attendance",
         component: <TeamAttendanceWidget />,
-        defaultLayout: responsiveLayout({ x: 8, y: 0, w: 4, h: 3 }),
+        defaultLayout: responsiveLayout({ x: 8, y: 0, w: 4, h: 7 }),
       });
     }
 

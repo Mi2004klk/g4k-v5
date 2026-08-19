@@ -105,15 +105,16 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     // actual connection, not just the Echo instance existing.
     const pusherInstance = ((echo.connector as unknown) as { pusher: { connection: Pusher['connection'], connect: () => void } })?.pusher;
     const connection = pusherInstance?.connection;
-    const handleConnected = () => setSocketConnected(true);
-    const handleDisconnected = () => setSocketConnected(false);
+    let handleStateChange: (states: any) => void;
     if (connection) {
       // Seed from the current state in case the socket already settled
       setSocketConnected(connection.state === 'connected');
-      connection.bind('connected', handleConnected);
-      connection.bind('disconnected', handleDisconnected);
-      connection.bind('unavailable', handleDisconnected);
-      connection.bind('failed', handleDisconnected);
+      
+      handleStateChange = (states: { previous: string, current: string }) => {
+        setSocketConnected(states.current === 'connected');
+      };
+      
+      connection.bind('state_change', handleStateChange);
     }
 
     const handleVisibilityOrOnline = () => {
@@ -128,11 +129,8 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('visibilitychange', handleVisibilityOrOnline);
       window.removeEventListener('online', handleVisibilityOrOnline);
-      if (connection) {
-        connection.unbind('connected', handleConnected);
-        connection.unbind('disconnected', handleDisconnected);
-        connection.unbind('unavailable', handleDisconnected);
-        connection.unbind('failed', handleDisconnected);
+      if (connection && handleStateChange) {
+        connection.unbind('state_change', handleStateChange);
       }
       setSocketConnected(false);
       echo.disconnect();
