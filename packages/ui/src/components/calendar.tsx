@@ -35,7 +35,7 @@ function Calendar({
         selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         today: "ring-1 ring-primary font-bold",
         outside: "day-outside text-muted opacity-50 aria-selected:bg-primary/20 aria-selected:text-muted aria-selected:opacity-30",
-        disabled: "text-muted opacity-50 line-through",
+        disabled: "bg-neutral-100 dark:bg-neutral-800/60 text-neutral-400 opacity-60 cursor-not-allowed",
         range_middle: "aria-selected:bg-primary/20 aria-selected:text-foreground",
         hidden: "invisible",
         ...classNames,
