@@ -40,7 +40,7 @@ import {
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { FilterBar } from "@g4k/ui/components";
+import { FilterBar, ListScaffold } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import Link from "next/link";
 import { EmptyState } from "@g4k/ui/components";
@@ -447,91 +447,71 @@ export function EmployeeManagementTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-        <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 w-full md:w-auto">
-            <FilterBar
-              searchQuery={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Search by name, email, code..."
-              filters={[
-                {
-                  type: "select",
-                  key: "role",
-                  label: "Role",
-                  value: roleFilter,
-                  onChange: setRoleFilter,
-                  options: [
-                    { label: "Super Admin", value: "super_admin" },
-                    { label: "HR", value: "hr" },
-                    { label: "Employee", value: "employee" },
-                  ],
-                },
-                {
-                  type: "select",
-                  key: "status",
-                  label: "Status",
-                  value: statusFilter,
-                  onChange: setStatusFilter,
-                  options: [
-                    { label: "Active", value: "active" },
-                    { label: "Inactive", value: "inactive" },
-                    { label: "Deleted", value: "trashed" },
-                  ],
-                },
-                {
-                  type: "select",
-                  key: "dept",
-                  label: "Department",
-                  value: deptFilter,
-                  onChange: setDeptFilter,
-                  options: [...deptOptions],
-                },
-              ]}
-            />
-        </div>
-        <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
-          <Button variant="outline" size="sm" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full md:w-auto">
-            {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
-            Export
-          </Button>
-          {canManageUsers && (
-            <Button size="sm" onClick={() => {
-              setIsCreateOpen(true);
-            }} className="gap-2 shadow-sm h-10 w-full md:w-auto">
-              <AppIcon name="plus" />
-              Add Employee
+      <ListScaffold
+        title="Directory"
+        description="Manage company employees and roles."
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full md:w-auto">
+              {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
+              Export
             </Button>
-          )}
-        </div>
-      </div>
-      {selectedCount > 0 && (
-        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-900/50 rounded-[var(--radius)] p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
-          <span className="text-sm font-medium text-primary-700 dark:text-primary-300">{selectedCount} users selected</span>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8" onClick={() => bulkMutation.mutate({ ids: Object.keys(rowSelection).map(Number), action: 'activate' })}>Bulk Activate</Button>
-            <Button variant="outline" size="sm" className="h-8 text-rose-600" onClick={() => setConfirmState({ isOpen: true, type: "bulk-deactivate", payload: { ids: Object.keys(rowSelection).map(Number) } })}>Bulk Deactivate</Button>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => triggerExport(`/users/export?ids=${Object.keys(rowSelection).join(",")}`, 'users_export.csv')}>Bulk Export</Button>
-          </div>
-        </div>
-      )}
-
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-card dark:bg-neutral-900">
-        <CardContent className="p-0">
-          {isPending ? (
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : isError ? (
-            <div className="p-12">
-              <EmptyState title="Failed to load employees" description="There was an error fetching the user list. Please try again." icon={<AppIcon name="error" size="2xl" className=" text-rose-400" />} />
-              <div className="flex justify-center mt-4">
-                <Button onClick={() => refetch()} variant="outline">Retry</Button>
-              </div>
-            </div>
-          ) : usersList.length === 0 ? (
-            <div className="p-12">
+            {canManageUsers && (
+              <Button size="sm" onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-sm h-10 w-full md:w-auto">
+                <AppIcon name="plus" />
+                Add Employee
+              </Button>
+            )}
+          </>
+        }
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by name, email, code..."
+        filters={[
+          {
+            type: "select",
+            key: "role",
+            label: "Role",
+            value: roleFilter,
+            onChange: setRoleFilter,
+            options: [
+              { label: "Super Admin", value: "super_admin" },
+              { label: "HR", value: "hr" },
+              { label: "Employee", value: "employee" },
+            ],
+          },
+          {
+            type: "select",
+            key: "status",
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+              { label: "Deleted", value: "trashed" },
+            ],
+          },
+          {
+            type: "select",
+            key: "dept",
+            label: "Department",
+            value: deptFilter,
+            onChange: setDeptFilter,
+            options: [...deptOptions],
+          },
+        ]}
+        columns={columns}
+        data={usersList}
+        getRowId={(r: any) => String(r.id)}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        isLoading={isPending}
+        isError={isError}
+        onRetry={() => refetch()}
+        emptyState={
+          usersList.length === 0 ? (
+            <div className="p-12 text-center">
               <EmptyState title="No employees found" description="Try adjusting your search query or filter settings." icon={<AppIcon name="userX" className="w-8 h-8 text-neutral-400" />} />
               <div className="flex justify-center mt-4">
                 <Link href="/dashboard/directory">
@@ -539,24 +519,23 @@ export function EmployeeManagementTab() {
                 </Link>
               </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <DataTable
-                columns={columns}
-                data={usersList}
-                density="compact"
-                getRowId={(r: any) => String(r.id)}
-                onRowSelectionChange={setRowSelection}
-                page={page}
-                perPage={perPage}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                onPerPageChange={setPerPage}
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          ) : undefined
+        }
+        pagination={{
+          page,
+          perPage,
+          totalPages,
+          onPageChange: setPage,
+          onPerPageChange: setPerPage,
+        }}
+        bulkActions={
+          <>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => bulkMutation.mutate({ ids: Object.keys(rowSelection).map(Number), action: 'activate' })}>Bulk Activate</Button>
+            <Button variant="outline" size="sm" className="h-8 text-rose-600" onClick={() => setConfirmState({ isOpen: true, type: "bulk-deactivate", payload: { ids: Object.keys(rowSelection).map(Number) } })}>Bulk Deactivate</Button>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => triggerExport(`/users/export?ids=${Object.keys(rowSelection).join(",")}`, 'users_export.csv')}>Bulk Export</Button>
+          </>
+        }
+      />
 
       {isCreateOpen && (
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

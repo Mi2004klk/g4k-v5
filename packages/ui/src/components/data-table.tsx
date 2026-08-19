@@ -70,6 +70,7 @@ export interface DataTableProps<TData, TValue> {
   isError?: boolean
   skeletonRows?: number
   className?: string
+  emptyState?: React.ReactNode
 }
 
 // Memoized individual cell to prevent re-rendering all cells when one changes or during scroll
@@ -499,11 +500,13 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <div className="py-10">
-                <EmptyState
-                  title="No records found"
-                  description="Try adjusting your filters or search query."
-                  className="max-w-md mx-auto"
-                />
+                {emptyState || (
+                  <EmptyState
+                    title="No records found"
+                    description="Try adjusting your filters or search query."
+                    className="max-w-md mx-auto"
+                  />
+                )}
               </div>
             )}
           </div>

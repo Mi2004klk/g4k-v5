@@ -14,8 +14,7 @@ import { STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/
 import { usePaginatedList } from "@/lib/pagination";
 import { useReverb } from "@/hooks/use-reverb";
 import { useExport } from "@/hooks/use-export";
-import { keepPreviousData } from "@tanstack/react-query";
-import { Button, Checkbox, DataTable, StatusBadge, FilterBar } from "@g4k/ui/components";
+import { Button, Checkbox, DataTable, StatusBadge, FilterBar, ListScaffold } from "@g4k/ui/components";
 import { Row, Table } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
@@ -364,137 +363,121 @@ export function AdminAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center justify-between gap-4">
-        <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 w-full xl:w-auto">
-          <FilterBar
-          searchQuery={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search by name, ID, location..."
-          searchInputId="admin-team-search"
-          sortBy={sortBy}
-          sortDirection={sortOrder}
-          onSortChange={(field, dir) => {
-            setSortBy(field);
-            setSortOrder(dir as "asc" | "desc");
-          }}
-          sortOptions={[
-            { value: "date", label: "Date" },
-            { value: "user_name", label: "Employee Name" },
-            { value: "status", label: "Status" },
-          ]}
-          filters={[
-            {
-              key: "date",
-              label: "Date Range",
-              type: "date-range",
-              value: {
-                from: dateFrom ? new Date(dateFrom) : undefined,
-                to: dateTo ? new Date(dateTo) : undefined
-              },
-              onChange: (range: { from?: Date, to?: Date }) => {
-                setDateFrom(range?.from ? format(range.from, "yyyy-MM-dd") : "");
-                setDateTo(range?.to ? format(range.to, "yyyy-MM-dd") : "");
-              },
+      <ListScaffold
+        title="Attendance Records"
+        description="View and manage employee attendance records."
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by name, ID, location..."
+        sortBy={sortBy}
+        sortDirection={sortOrder}
+        onSortChange={(field, dir) => {
+          setSortBy(field);
+          setSortOrder(dir as "asc" | "desc");
+        }}
+        sortOptions={[
+          { value: "date", label: "Date" },
+          { value: "user_name", label: "Employee Name" },
+          { value: "status", label: "Status" },
+        ]}
+        filters={[
+          {
+            key: "date",
+            label: "Date Range",
+            type: "date-range",
+            value: {
+              from: dateFrom ? new Date(dateFrom) : undefined,
+              to: dateTo ? new Date(dateTo) : undefined
             },
-            {
-              key: "status",
-              label: "Status",
-              type: "checkbox-group",
-              value: statusFilter === "all" ? [] : [statusFilter],
-              onChange: (vals: string[]) => setStatusFilter(vals.length > 0 ? vals[0] : "all"),
-              options: statusOptions.filter(o => o.value !== "all"),
+            onChange: (range: { from?: Date, to?: Date }) => {
+              setDateFrom(range?.from ? format(range.from, "yyyy-MM-dd") : "");
+              setDateTo(range?.to ? format(range.to, "yyyy-MM-dd") : "");
             },
-            {
-              key: "department",
-              label: "Department",
-              type: "select",
-              value: deptFilter,
-              onChange: (v) => {
-                setDeptFilter(v);
-                setPage(1);
-              },
-              options: [{ label: "All Departments", value: "all" }, ...(Array.isArray(departments) ? departments : ((departments as any)?.data || [])).map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))]
+          },
+          {
+            key: "status",
+            label: "Status",
+            type: "checkbox-group",
+            value: statusFilter === "all" ? [] : [statusFilter],
+            onChange: (vals: string[]) => setStatusFilter(vals.length > 0 ? vals[0] : "all"),
+            options: statusOptions.filter(o => o.value !== "all"),
+          },
+          {
+            key: "department",
+            label: "Department",
+            type: "select",
+            value: deptFilter,
+            onChange: (v) => {
+              setDeptFilter(v);
+              setPage(1);
             },
-            {
-              key: "user",
-              label: "Employee",
-              type: "combobox",
-              value: userFilter,
-              onChange: setUserFilter,
-              options: userOptions
-            }
-          ]}
-          onClearAll={() => {
-            setSearch("");
-            setDateFrom(format(new Date(), "yyyy-MM-dd"));
-            setDateTo(format(new Date(), "yyyy-MM-dd"));
-            setStatusFilter("all");
-            setDeptFilter("all");
-            setUserFilter("all");
-          }}
-        />
-        </div>
-        {/* Export Actions */}
-        <div className="flex items-center gap-2 shrink-0 w-full xl:w-auto mt-2 xl:mt-0">
-          {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
+            options: [{ label: "All Departments", value: "all" }, ...(Array.isArray(departments) ? departments : ((departments as any)?.data || [])).map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))]
+          },
+          {
+            key: "user",
+            label: "Employee",
+            type: "combobox",
+            value: userFilter,
+            onChange: setUserFilter,
+            options: userOptions
+          }
+        ]}
+        onClearAll={() => {
+          setSearch("");
+          setDateFrom(format(new Date(), "yyyy-MM-dd"));
+          setDateTo(format(new Date(), "yyyy-MM-dd"));
+          setStatusFilter("all");
+          setDeptFilter("all");
+          setUserFilter("all");
+        }}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap" aria-label="Export company report for selected date">
+              <AppIcon name="download" className="mr-1" aria-hidden="true" />
+              Export Filtered
+            </Button>
+            <Button variant="outline" size="sm" onClick={async () => {
+               const params = new URLSearchParams();
+               params.append("start_date", dateFrom || format(new Date(), "yyyy-MM-dd"));
+               params.append("end_date", dateTo || format(new Date(), "yyyy-MM-dd"));
+               // No dept/user filters appended, meaning global
+               try {
+                 await triggerExport(
+                   `/attendance/export?${params.toString()}`,
+                   `attendance_global_export_${dateFrom}_to_${dateTo}.xlsx`
+                 );
+               } catch (e: any) {
+                 toast.error(e.message || "Failed to export");
+               }
+            }} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
+              <AppIcon name="download" className="mr-1" aria-hidden="true" />
+              Global Export
+            </Button>
+          </>
+        }
+        bulkActions={
+          Object.keys(rowSelection).length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-8" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
               <AppIcon name="download" className="mr-1" aria-hidden="true" />
               Export Selected
             </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap" aria-label="Export company report for selected date">
-            <AppIcon name="download" className="mr-1" aria-hidden="true" />
-            Export Filtered
-          </Button>
-          <Button variant="outline" size="sm" onClick={async () => {
-             const params = new URLSearchParams();
-             params.append("start_date", dateFrom || format(new Date(), "yyyy-MM-dd"));
-             params.append("end_date", dateTo || format(new Date(), "yyyy-MM-dd"));
-             // No dept/user filters appended, meaning global
-             try {
-               await triggerExport(
-                 `/attendance/export?${params.toString()}`,
-                 `attendance_global_export_${dateFrom}_to_${dateTo}.xlsx`
-               );
-             } catch (e: any) {
-               toast.error(e.message || "Failed to export");
-             }
-          }} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
-            <AppIcon name="download" className="mr-1" aria-hidden="true" />
-            Global Export
-          </Button>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-x-auto overflow-y-hidden w-full relative min-h-[400px]">
-        <DataTable 
-          columns={columns} 
-          data={records}
-          density="compact"
-          isLoading={isLoading}
-          isError={!!error}
-          stickyHeader={true}
-          stickyFirstCol={true}
-          onRowSelectionChange={setRowSelection}
-          rowSelection={rowSelection}
-          getRowId={(row) => String(row.id)}
-          page={page}
-          perPage={perPage}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          onPerPageChange={setPerPage}
-          sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
-          onSortingChange={(sorting) => {
-            if (sorting.length > 0) {
-              setSortBy(sorting[0].id);
-              setSortOrder(sorting[0].desc ? "desc" : "asc");
-            } else {
-              setSortBy("date");
-              setSortOrder("desc");
-            }
-          }}
-        />
-      </div>
+          )
+        }
+        columns={columns}
+        data={records}
+        isLoading={isLoading}
+        isError={!!error}
+        onRowSelectionChange={setRowSelection}
+        rowSelection={rowSelection}
+        getRowId={(row) => String(row.id)}
+        pagination={{
+          page,
+          perPage,
+          totalPages,
+          onPageChange: setPage,
+          onPerPageChange: setPerPage,
+        }}
+      />
 
       <TeamMemberAttendanceSheet 
         userId={selectedUser} 
