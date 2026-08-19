@@ -36,7 +36,7 @@ export function SecurityRequestsConfig() {
     queryKey: queryKeys.passwordResets("pending"),
     queryFn: async () => {
       const res = await apiFetch("/admin/password-resets");
-      return Array.isArray(res) ? res : (res.data || []);
+      return Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : []));
     },
   });
 

@@ -22,7 +22,10 @@ import { Button } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 
+import { useState as useStateLocal } from "react";
+
 export function ExportHistory() {
+  const [showAll, setShowAll] = useStateLocal(false);
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const { subscribe, leaveChannel } = useReverb();
@@ -90,7 +93,10 @@ export function ExportHistory() {
         ) : exports.length === 0 ? (
           <p className="text-xs text-neutral-400 py-4 text-center">No export history found.</p>
         ) : (
-          exports.slice(0, 3).map((item: ExportJob) => (
+          
+          <div className="space-y-3">
+            {exports.slice(0, showAll ? undefined : 3).map((item: ExportJob) => (
+
             <div
               key={item.id}
               className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between gap-3 border border-neutral-100 dark:border-neutral-800"
@@ -132,9 +138,23 @@ export function ExportHistory() {
                 </Button>
               )}
             </div>
-          ))
+
+            ))}
+          </div>
+
+        )}
+        {exports.length > 3 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full mt-2 text-xs text-neutral-500"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? "Show Less" : `View All (${exports.length})`}
+          </Button>
         )}
       </CardContent>
+
     </Card>
   );
 }

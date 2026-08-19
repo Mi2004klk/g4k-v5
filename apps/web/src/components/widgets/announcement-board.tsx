@@ -11,6 +11,8 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { hasCapability, useCapabilities } from "@/lib/capabilities";
 
@@ -34,6 +36,26 @@ export function AnnouncementBoard() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
+
+  const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft("announcement_create", { title: "", body: "", scope: "company", pinned: false });
+
+  const activeCreateData = {
+    title: createData.title || draftData.title,
+    body: createData.body || draftData.body,
+    scope: createData.scope !== "company" ? createData.scope : draftData.scope,
+    pinned: createData.pinned !== false ? createData.pinned : draftData.pinned,
+  };
+
+  const handleFieldChange = (updates: any) => {
+    setDraftData({
+      title: createData.title || draftData.title,
+      body: createData.body || draftData.body,
+      scope: createData.scope !== "company" ? createData.scope : draftData.scope,
+      pinned: createData.pinned !== false ? createData.pinned : draftData.pinned,
+      ...updates
+    });
+  };
+
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
   const { data: announcements = [], isPending, isFetching, isError, refetch } = useDashboardInit({
@@ -114,7 +136,7 @@ export function AnnouncementBoard() {
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       setShowCreate(false);
       setEditingId(null);
-      setCreateData({ title: "", body: "", scope: "company", pinned: false });
+      setCreateData({ title: "", body: "", scope: "company", pinned: false }); clearDraft();;
       toast.success("Announcement posted");
     },
     onError: (err: any) => {
@@ -139,7 +161,7 @@ export function AnnouncementBoard() {
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
               Refresh
             </Button>
-            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setCreateData({ title: "", body: "", scope: "company", pinned: false }); setShowCreate(true); }} className="h-6 text-[10px] px-2">
+            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setCreateData({ title: "", body: "", scope: "company", pinned: false }); clearDraft();; setShowCreate(true); }} className="h-6 text-[10px] px-2">
               Post
             </Button>
           </div>
@@ -156,7 +178,7 @@ export function AnnouncementBoard() {
               <label htmlFor="title" className="text-sm font-medium">Title</label>
               <input
                 id="title"
-                value={createData.title}
+                value={editingId ? createData.title : activeCreateData.title}
                 onChange={(e) => setCreateData({ ...createData, title: e.target.value })}
                 className="flex h-10 w-full rounded-[var(--radius)] border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
                 placeholder="Announcement title"
@@ -166,7 +188,7 @@ export function AnnouncementBoard() {
               <label htmlFor="body" className="text-sm font-medium">Message</label>
               <textarea
                 id="body"
-                value={createData.body}
+                value={editingId ? createData.body : activeCreateData.body}
                 onChange={(e) => setCreateData({ ...createData, body: e.target.value })}
                 className="flex min-h-[80px] w-full rounded-[var(--radius)] border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
                 placeholder="Announcement body"
@@ -186,7 +208,7 @@ export function AnnouncementBoard() {
               <input
                 type="checkbox"
                 id="pinned"
-                checked={createData.pinned}
+                checked={editingId ? createData.pinned : activeCreateData.pinned}
                 onChange={(e) => setCreateData({ ...createData, pinned: e.target.checked })}
                 className="rounded border-neutral-300 text-orange-600 focus:ring-orange-500"
               />

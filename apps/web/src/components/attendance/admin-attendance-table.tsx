@@ -95,7 +95,7 @@ export function AdminAttendanceTable() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then((res) => res.data || []),
+    queryFn: () => apiFetch("/departments").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : [])))),
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
@@ -111,7 +111,7 @@ export function AdminAttendanceTable() {
 
   const { data: queryData, isLoading, error } = useQuery({
     queryKey: ['attendance', 'admin-list', dateFrom, dateTo, deptFilter, userFilter, statusFilter, debouncedSearch, page, perPage, sortBy, sortOrder],
-    queryFn: () => apiFetch(`/attendance/admin/overview?from=${dateFrom}&to=${dateTo}&department_id=${deptFilter === "all" ? "" : deptFilter}&user_id=${userFilter === "all" ? "" : userFilter}&status=${statusFilter === "all" ? "" : statusFilter}&search=${debouncedSearch}&page=${page}&per_page=${perPage}&sort_by=${sortBy}&sort_dir=${sortOrder}`),
+    queryFn: () => apiFetch(`/attendance/admin/overview?from=${dateFrom}&to=${dateTo}&department_id=${deptFilter === "all" ? "" : deptFilter}&user_id=${userFilter === "all" ? "" : userFilter}&status=${statusFilter === "all" ? "" : statusFilter}&search=${encodeURIComponent(debouncedSearch)}&page=${page}&per_page=${perPage}&sort_by=${sortBy}&sort_dir=${sortOrder}`),
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_ATTENDANCE,
     refetchInterval: isConnected ? false : 60_000,
@@ -413,7 +413,7 @@ export function AdminAttendanceTable() {
                 setDeptFilter(val);
                 setUserFilter("all");
               },
-              options: departments.map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))
+              options: [{ label: "All Departments", value: "all" }, ...departments.map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))]
             },
             {
               key: "user",

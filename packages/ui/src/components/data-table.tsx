@@ -416,6 +416,7 @@ export function DataTable<TData, TValue>({
                 ) : rows.length > 0 ? (
                   rows.map((row) => (
                     <tr
+                      id={`data-row-${(row.original as any)?.id || row.id}`}
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                       className={cn(

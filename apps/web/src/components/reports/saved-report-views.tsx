@@ -30,7 +30,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
 
   const { data: views = [] } = useQuery({
     queryKey: queryKeys.savedViews(module),
-    queryFn: () => apiFetch(`/saved-views?module=${module}`).then(res => Array.isArray(res) ? res : (res.data || [])),
+    queryFn: () => apiFetch(`/saved-views?module=${module}`).then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : [])))),
   });
 
   const saveMutation = useMutation({

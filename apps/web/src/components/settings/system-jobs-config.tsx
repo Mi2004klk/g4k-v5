@@ -71,7 +71,13 @@ export function SystemJobsConfig() {
                     <span className="text-neutral-500 shrink-0">{format(new Date(job.failed_at), "MMM d, yyyy HH:mm:ss")}</span>
                   </div>
                   <div className="text-neutral-600 dark:text-neutral-400 font-mono text-[10px] break-all">
-                    {job.payload ? JSON.parse(job.payload).displayName : "Unknown payload"}
+                    {(() => {
+                      try {
+                        return job.payload ? JSON.parse(job.payload).displayName : "Unknown payload";
+                      } catch (e) {
+                        return "Invalid payload format";
+                      }
+                    })()}
                   </div>
                 </div>
               ))}

@@ -29,6 +29,10 @@ export function AdminAttendanceView() {
             <AppIcon name="chart" />
             Analytics & Trends
           </TabsTrigger>
+          <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-[var(--radius)] data-[state=active]:bg-primary-50 dark:data-[state=active]:bg-primary-900/30 data-[state=active]:text-primary-700 dark:data-[state=active]:text-primary-300">
+            <AppIcon name="clock" />
+            Live Shifts
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="calendar" className="outline-none m-0 focus-visible:ring-0">
@@ -37,6 +41,10 @@ export function AdminAttendanceView() {
 
         <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0">
           <AdminAttendanceTable />
+        </TabsContent>
+
+        <TabsContent value="shifts" className="outline-none m-0 focus-visible:ring-0">
+          <AdminOpenShiftsTable />
         </TabsContent>
         
         <TabsContent value="analytics" className="outline-none m-0 focus-visible:ring-0 space-y-6">

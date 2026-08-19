@@ -33,7 +33,7 @@ export function AutoNumberingConfig() {
     queryKey: queryKeys.autoNumberings,
     queryFn: async () => {
       const res = await apiFetch("/auto-numberings");
-      return Array.isArray(res) ? res : res.data || [];
+      return Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : []));
     },
   });
 

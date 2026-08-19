@@ -15,6 +15,7 @@ import { TimeClockWidget } from "@/components/widgets/time-clock-widget";
 import { MetricWidget } from "@/components/widgets/metric-widget";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { HrTeamAttendanceWidget } from "@/components/dashboard/hr-team-attendance-widget";
+import { TeamAttendanceWidget } from "@/components/dashboard/team-attendance-widget";
 import { HrActivityFeedWidget } from "@/components/attendance/hr-activity-feed-widget";
 
 import { RecentActivityWidget } from "@/components/widgets/recent-activity-widget";
@@ -200,7 +201,17 @@ export default function DashboardPage() {
       });
     }
 
+
+    if (hasCapability(userCapabilities, "hr.view-team-attendance") && activeRole !== "hr" && activeRole !== "super_admin") {
+      widgets.push({
+        id: "team-attendance",
+        component: <TeamAttendanceWidget />,
+        defaultLayout: responsiveLayout({ x: 8, y: 0, w: 4, h: 3 }),
+      });
+    }
+
     return widgets;
+
   }, [activeRole, userCapabilities]);
 
   const greetingData = useMemo(() => getGreeting(new Date(), user?.id || 0), [user?.id]);

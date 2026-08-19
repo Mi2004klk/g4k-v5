@@ -6,6 +6,7 @@ import { HrAttendanceTable } from '@/components/attendance/hr-attendance-table';
 import { HrAttendanceAnalytics } from '@/components/attendance/hr-attendance-analytics';
 import dynamic from 'next/dynamic';
 import { AppIcon } from "@g4k/ui/components";
+import { HrAttendanceHeatmap } from "./hr-attendance-heatmap";
 
 const HrAttendanceGraph = dynamic(() => import('@/components/attendance/hr-attendance-graph').then(mod => mod.HrAttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 
@@ -33,6 +34,7 @@ export function HrAttendanceView() {
         
         <TabsContent value="graph" className="outline-none m-0 focus-visible:ring-0">
           <HrAttendanceGraph />
+          <HrAttendanceHeatmap />
         </TabsContent>
       </Tabs>
     </div>

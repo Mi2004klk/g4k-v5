@@ -33,6 +33,7 @@ vi.mock('@g4k/ui/components', () => ({
   Card: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div data-testid="card" {...props}>{children}</div>,
   CardContent: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,
   Skeleton: () => <div>Loading...</div>,
+  ContentSkeleton: () => <div>Loading...</div>,
   EmptyState: () => <div>Empty</div>,
   Sheet: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div data-testid="sheet" {...props}>{children}</div>,
   SheetContent: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,

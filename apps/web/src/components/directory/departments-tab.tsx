@@ -44,7 +44,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/u
 import { Skeleton } from "@g4k/ui/components";
 import { FilterBar } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
-import { DataTable, StatusBadge } from "@g4k/ui/components";
+import { DataTable, StatusBadge, InlineEdit } from "@g4k/ui/components";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
@@ -155,6 +155,16 @@ export function DepartmentsTab() {
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: ApiError) => toast.error(err.message || "Failed to create department."),
+  });
+
+  
+  const updateDeptNameMutation = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => apiFetch(`/departments/${id}`, { method: "PUT", body: JSON.stringify({ name }) }),
+    onSuccess: () => {
+      toast.success("Department name updated!");
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
+    },
+    onError: (err: ApiError) => toast.error(err.message || "Failed to update department name."),
   });
 
   const updateDeptMutation = useMutation({
@@ -286,12 +296,26 @@ export function DepartmentsTab() {
               <AppIcon name="building" />
             </div>
             <div>
-              <span
-                className="font-semibold text-neutral-900 dark:text-white block cursor-pointer hover:underline decoration-violet-500 underline-offset-4"
-                onClick={() => setSelectedDeptMembers(row.original)}
-              >
-                {row.original.name}
-              </span>
+              {isAdmin ? (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <InlineEdit
+                    value={row.original.name}
+                    onSave={(val) => {
+                      if (val && val !== row.original.name) {
+                        updateDeptNameMutation.mutate({ id: row.original.id, name: val });
+                      }
+                    }}
+                    className="font-semibold text-neutral-900 dark:text-white hover:underline decoration-violet-500 underline-offset-4"
+                  />
+                </div>
+              ) : (
+                <span
+                  className="font-semibold text-neutral-900 dark:text-white block cursor-pointer hover:underline decoration-violet-500 underline-offset-4"
+                  onClick={() => setSelectedDeptMembers(row.original)}
+                >
+                  {row.original.name}
+                </span>
+              )}
               {row.original.description && (
                 <span className="text-xs text-neutral-500">{row.original.description}</span>
               )}

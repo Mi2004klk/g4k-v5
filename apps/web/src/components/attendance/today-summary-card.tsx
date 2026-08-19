@@ -6,7 +6,7 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, StatusBadge } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { useTimerStore } from "@/stores/timer-store";
+import { useTimerStore, DEFAULT_STANDARD_SECONDS } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
 import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 
@@ -45,7 +45,7 @@ export function TodaySummaryCard() {
   }
 
   const day = data?.day;
-  const standardSeconds = data?.standard_seconds || 31500;
+  const standardSeconds = data?.standard_seconds || DEFAULT_STANDARD_SECONDS;
 
   const formatTime = (secs: number) => {
     const h = Math.floor(secs / 3600);

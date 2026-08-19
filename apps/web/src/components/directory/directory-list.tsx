@@ -199,18 +199,16 @@ export function EmployeeManagementTab() {
   const selectedDept = (Array.isArray(departments) ? departments : []).find((d: any) => d.id === Number(watchDept));
   const availableTeams = (selectedDept as any)?.teams || [];
 
-
-
   const { data: designations = [] } = useQuery({
     queryKey: queryKeys.designations,
-    queryFn: () => apiFetch("/designations").then((res: { data?: any[] }) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/designations?per_page=100").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []))),
     staleTime: STALE_TIME_DESIGNATIONS,
     enabled: canManageUsers,
   });
 
   const { data: work_schedules = [] } = useQuery({
-    queryKey: ["work_schedules"],
-    queryFn: () => apiFetch("/work-schedules").then((res: { data?: any[] }) => Array.isArray(res?.data) ? res.data : []),
+    queryKey: queryKeys.workSchedules,
+    queryFn: () => apiFetch("/work-schedules").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []))),
     enabled: hasCapability(capabilities, "settings.manage") || hasCapability(capabilities, "users.hr.manage"),
   });
 
@@ -498,7 +496,6 @@ export function EmployeeManagementTab() {
             </Button>
             {canManageUsers && (
               <Button onClick={() => {
-                if (!hasDraft) clearDraft();
                 setIsCreateOpen(true);
               }} className="h-9 gap-2 shadow-sm">
                 <AppIcon name="plus" />
@@ -561,25 +558,27 @@ export function EmployeeManagementTab() {
         </CardContent>
       </Card>
 
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Employee</DialogTitle>
-            <DialogDescription>Add a new employee to the directory.</DialogDescription>
-          </DialogHeader>
-          <UserForm
-            defaultValues={draftData}
-            onValuesChange={setDraftData}
-            departments={departments as any}
-            designations={designations as any}
-            work_schedules={work_schedules as any}
-            onSubmit={onSubmitCreate}
-            onCancel={() => setIsCreateOpen(false)}
-            isPending={createMutation.isPending}
-            submitLabel="Create User"
-          />
-        </DialogContent>
-      </Dialog>
+      {isCreateOpen && (
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Employee</DialogTitle>
+              <DialogDescription>Add a new employee to the directory.</DialogDescription>
+            </DialogHeader>
+            <UserForm
+              defaultValues={draftData}
+              onValuesChange={setDraftData}
+              departments={departments as any}
+              designations={designations as any}
+              work_schedules={work_schedules as any}
+              onSubmit={onSubmitCreate}
+              onCancel={() => setIsCreateOpen(false)}
+              isPending={createMutation.isPending}
+              submitLabel="Create User"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {isEditOpen && !!editingUser && (
         <UserEditDialog

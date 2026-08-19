@@ -25,7 +25,7 @@ export function QuickTaskWidget() {
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: queryKeys.usersSelectList,
-    queryFn: () => apiFetch("/users?limit=50"),
+    queryFn: () => apiFetch("/users?per_page=100"),
   });
 
   const users = Array.isArray(usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData) ? (usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData as QuickTaskUser[]) : [];

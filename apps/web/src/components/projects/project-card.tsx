@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
-import { Card, CardContent, CardHeader, CardTitle, Avatar, AvatarFallback } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, Avatar, AvatarFallback, InlineEdit } from "@g4k/ui/components";
 import { usePins } from "@/hooks/use-pins";
 import { Button } from "@g4k/ui/components";
 import Image from "next/image";
@@ -18,7 +18,7 @@ interface Project {
   members?: { id: number; name: string }[];
 }
 
-export function ProjectCard({ project, onClick }: { project: Project; onClick?: () => void }) {
+export function ProjectCard({ project, onClick, onUpdateName }: { project: Project; onClick?: () => void; onUpdateName?: (name: string) => void }) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
@@ -70,7 +70,11 @@ export function ProjectCard({ project, onClick }: { project: Project; onClick?: 
             </div>
             <div>
               <CardTitle className="text-sm font-bold group-hover:text-primary-600 transition-colors">
-                {project.name}
+                {onUpdateName ? (
+                  <InlineEdit value={project.name} onSave={(val) => onUpdateName(val || project.name)} className="text-sm font-bold" />
+                ) : (
+                  project.name
+                )}
               </CardTitle>
               <p className="text-[11px] text-neutral-400 line-clamp-1 mt-0.5">
                 {project.description || "No description provided."}

@@ -206,6 +206,7 @@ export function ApprovalsTab() {
                     value: statusFilter,
                     onChange: setStatusFilter,
                     options: [
+                      { label: "All", value: "all" },
                       { label: "Pending", value: "pending" },
                       { label: "Approved", value: "approved" },
                       { label: "Rejected", value: "rejected" },
@@ -247,6 +248,7 @@ export function ApprovalsTab() {
                     value: historyStatusFilter,
                     onChange: setHistoryStatusFilter,
                     options: [
+                      { label: "All", value: "all" },
                       { label: "Pending", value: "pending" },
                       { label: "Approved", value: "approved" },
                       { label: "Rejected", value: "rejected" },

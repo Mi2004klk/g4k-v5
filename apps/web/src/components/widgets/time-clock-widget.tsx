@@ -19,7 +19,7 @@ import {
 } from "@g4k/ui/components";
 
 import { Skeleton } from "@g4k/ui/components";
-import { useTimerStore } from "@/stores/timer-store";
+import { useTimerStore, DEFAULT_STANDARD_SECONDS } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
 
 export interface AttendanceToday {
@@ -32,7 +32,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   const [showConfirmOut, setShowConfirmOut] = useState(false);
   const [showConfirmContinue, setShowConfirmContinue] = useState(false);
-  const [standardSeconds, setStandardSeconds] = useState(31500); // default 8h45m
+  const [standardSeconds, setStandardSeconds] = useState(DEFAULT_STANDARD_SECONDS); // default 8h45m
   const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
   const [isPunching, setIsPunching] = useState(false);
 

@@ -329,9 +329,9 @@ export function AttendanceHistoryCalendar({
     queryFn: async () => {
       const monthStr = format(currentDate, "yyyy-MM");
       if (userId) {
-        return apiFetch(`/attendance/hr/history/${userId}?month=${monthStr}&per_page=100`).then(res => res.data || []);
+        return apiFetch(`/attendance/hr/history/${userId}?month=${monthStr}&per_page=100`).then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : []))));
       }
-      return apiFetch(`/attendance/me/history?month=${monthStr}&per_page=100`).then(res => res.data || []);
+      return apiFetch(`/attendance/me/history?month=${monthStr}&per_page=100`).then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : []))));
     },
   });
 

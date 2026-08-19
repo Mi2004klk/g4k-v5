@@ -73,8 +73,10 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Companies API
     Route::get('/companies', [CompanyProfileController::class, 'show']);
     Route::get('/companies/{id}', [CompanyProfileController::class, 'show']);
-    Route::post('/companies', [CompanyProfileController::class, 'update']);
-    Route::put('/companies/{id}', [CompanyProfileController::class, 'update']);
+    Route::middleware('capability:settings.manage')->group(function () {
+        Route::post('/companies', [CompanyProfileController::class, 'update']);
+        Route::put('/companies/{id}', [CompanyProfileController::class, 'update']);
+    });
 
     // Admin Password Resets
     Route::get('/admin/password-resets', [\App\Http\Controllers\AdminPasswordResetController::class, 'index'])->middleware('capability:settings.manage');
@@ -88,7 +90,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     // Dashboard API
     Route::get('/dashboard/init', [DashboardController::class, 'init']);
-    Route::get('/dashboard/metrics', [DashboardController::class, 'metrics']);
 
     // Profile API
     Route::middleware('capability:profile.edit')->group(function () {
@@ -102,8 +103,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Directory API
     Route::middleware('capability:directory.view')->group(function () {
         Route::get('/directory', [DirectoryController::class, 'index']);
-        Route::get('/directory/{id}', [DirectoryController::class, 'show']);
-        Route::post('/directory/{id}/send-message', [DirectoryController::class, 'sendMessage']);
     });
     // Attendance API
     Route::middleware('capability:attendance.clock-self')->group(function () {
@@ -114,7 +113,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
             Route::post('/attendance/end-break', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/break-end', [AttendanceController::class, 'endBreak']);
             Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
-            Route::post('/attendance/sync', [AttendanceController::class, 'sync']);
         });
         Route::get('/attendance/me/today', [AttendanceController::class, 'meToday']);
         Route::get('/attendance/me/history', [AttendanceController::class, 'meHistory']);
@@ -122,12 +120,14 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     });
 
     Route::get('/attendance/admin/overview', [AttendanceController::class, 'overview'])->middleware('capability:admin.view-all-attendance');
+    Route::get('/attendance/admin/analytics', [AttendanceController::class, 'adminAnalytics'])->middleware('capability:admin.view-all-attendance');
     Route::get('/attendance/admin/graph', [AttendanceController::class, 'adminGraph'])->middleware('capability:admin.view-all-attendance');
     Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:admin.view-all-attendance');
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
         Route::get('/attendance/team-today', [AttendanceController::class, 'teamToday']);
         Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
+        Route::get('/attendance/hr/analytics', [AttendanceController::class, 'hrAnalytics']);
         Route::get('/attendance/hr/graph', [AttendanceController::class, 'hrGraph']);
         Route::get('/attendance/hr/day/{date}/{userId}', [AttendanceController::class, 'hrDay']);
         Route::get('/attendance/hr/history/{userId}', [AttendanceController::class, 'hrHistory']);
@@ -167,7 +167,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/projects/{id}/history', [ProjectController::class, 'history']);
         
         Route::middleware('capability:timer.track')->group(function () {
-            Route::get('/timer/logs', [TimerController::class, 'index']);
             Route::post('/timer/logs', [TimerController::class, 'logTime']);
             Route::post('/timer/log', [TimerController::class, 'logTime']);
         });
@@ -319,9 +318,10 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Departments
     Route::get('/departments', [DepartmentController::class, 'index']);
     Route::get('/departments/{id}/teams', [DepartmentController::class, 'teams']);
-    Route::post('/departments/{id}/teams', [DepartmentController::class, 'storeTeam']);
-    Route::delete('/departments/{id}/teams/{teamId}', [DepartmentController::class, 'destroyTeam']);
+    
     Route::middleware('capability:departments.manage')->group(function () {
+        Route::post('/departments/{id}/teams', [DepartmentController::class, 'storeTeam']);
+        Route::delete('/departments/{id}/teams/{teamId}', [DepartmentController::class, 'destroyTeam']);
         Route::get('/departments/export', [DepartmentController::class, 'export']);
         Route::patch('/departments/{id}/archive', [DepartmentController::class, 'archive']);
         Route::patch('/departments/{id}/restore', [DepartmentController::class, 'restore']);

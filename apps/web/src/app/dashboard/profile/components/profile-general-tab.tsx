@@ -8,6 +8,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore, UserProfile } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 import {
   Button,
@@ -28,6 +29,10 @@ import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 
 export function ProfileGeneralTab() {
   const queryClient = useQueryClient();
+  
+  const { data: caps = [] } = useCapabilities();
+  const canManageDesignation = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "designations.manage");
+
   const authUser = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -106,7 +111,7 @@ export function ProfileGeneralTab() {
               </div>
               <div>
                 <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Designation</label>
-                <Select value={designationId || "unset"} onValueChange={(v) => { setDesignationId(v === "unset" ? "" : v); }}>
+                <Select disabled={!canManageDesignation} value={designationId || "unset"} onValueChange={(v) => { setDesignationId(v === "unset" ? "" : v); }}>
                   <SelectTrigger className="w-full h-9">
                     <SelectValue placeholder="Select Designation" />
                   </SelectTrigger>

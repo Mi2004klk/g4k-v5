@@ -1,652 +1,469 @@
-# Games4Kings Workplace OS — Complete Workflow Guide
+# Games4Kings Workplace OS — Complete Application Workflow Map
 
-**Document date:** 2026-08-18
-**Source of truth:** This document was generated from a full code-first audit of the repository (`apps/web` Next.js frontend + `apps/api` Laravel backend). It describes every workflow that is implemented in the app today — the rules, validations, and role permissions exactly as the code enforces them.
+**Version:** 2026-08-19 (end-to-end audit edition)
+**Audience:** Client review. This document maps **every implemented workflow** in the application — every page, module, tab, form, field, button, rule, permission, and connection — from the starting point to the final outcome, and how all the parts work together.
+**Companion:** `finalization.md` catalogs every known defect and the plan to 100% (defects are referenced here only briefly with `⚠ FIN-x` markers).
 
 ---
 
 ## Table of Contents
 
-1. [The App at a Glance](#1-the-app-at-a-glance)
-2. [Roles & Permissions Model](#2-roles--permissions-model)
-3. [Authentication Workflows](#3-authentication-workflows)
-4. [Onboarding & First Login](#4-onboarding--first-login)
-5. [Role Switching (Multi-Role Users)](#5-role-switching-multi-role-users)
-6. [Employee Attendance — Clock In/Out & Breaks](#6-employee-attendance--clock-inout--breaks)
-7. [Attendance History & Calendar (Self)](#7-attendance-history--calendar-self)
-8. [HR Team Attendance Monitoring](#8-hr-team-attendance-monitoring)
-9. [Admin (Company-Wide) Attendance Console](#9-admin-company-wide-attendance-console)
-10. [Attendance Corrections](#10-attendance-corrections)
-11. [Leave Management — Requesting Leave](#11-leave-management--requesting-leave)
-12. [Leave Approvals (HR / Admin)](#12-leave-approvals-hr--admin)
-13. [Holidays Calendar Management](#13-holidays-calendar-management)
-14. [Projects Lifecycle](#14-projects-lifecycle)
-15. [Tasks — Board, Lists, Gantt](#15-tasks--board-lists-gantt)
-16. [Task Submission, Review, Approve/Redo](#16-task-submission-review-approveredo)
-17. [Task Comments, Reminders, Dependencies, Recurrence](#17-task-comments-reminders-dependencies-recurrence)
-18. [Time Tracking (Project Timer & Manual Logs)](#18-time-tracking-project-timer--manual-logs)
-19. [QA Forms & QA-Gated Submissions](#19-qa-forms--qa-gated-submissions)
-20. [Chat / Messaging](#20-chat--messaging)
-21. [Announcements](#21-announcements)
-22. [Notifications](#22-notifications)
-23. [Directory (Corporate & Employee Management)](#23-directory-corporate--employee-management)
-24. [Employee Record Management (HR CRUD)](#24-employee-record-management-hr-crud)
-25. [Departments, Teams & Department HRs](#25-departments-teams--department-hrs)
-26. [Designations](#26-designations)
-27. [Role Dashboards & Widget Customization](#27-role-dashboards--widget-customization)
-28. [Reports & Data Exports](#28-reports--data-exports)
-29. [Settings (Admin Console)](#29-settings-admin-console)
-30. [Audit Logs](#30-audit-logs)
-31. [My Profile, Security & Sessions](#31-my-profile-security--sessions)
-32. [Password Reset (Self-Service + Admin Approval)](#32-password-reset-self-service--admin-approval)
-33. [Pins (Quick Access Shortcuts)](#33-pins-quick-access-shortcuts)
-34. [Command Palette & Keyboard Shortcuts](#34-command-palette--keyboard-shortcuts)
-35. [Offline Mode (PWA)](#35-offline-mode-pwa)
-36. [Realtime Updates (WebSockets)](#36-realtime-updates-websockets)
-37. [Theme, Density & Layout Preferences](#37-theme-density--layout-preferences)
-38. [Demo Data Seeding & Purge](#38-demo-data-seeding--purge)
+- [Part 1 — Platform Overview](#part-1--platform-overview)
+- [Part 2 — Access & Account Lifecycle](#part-2--access--account-lifecycle)
+- [Part 3 — Page-by-Page Reference](#part-3--page-by-page-reference)
+  - [3.1 Dashboard (all roles)](#31-dashboard-all-roles)
+  - [3.2 Attendance & Time (personal)](#32-attendance--time-personal)
+  - [3.3 Team Leave Approvals](#33-team-leave-approvals-hr--admin)
+  - [3.4 Attendance Console (Organization)](#34-attendance-console-organization)
+  - [3.5 Projects & Tasks](#35-projects--tasks)
+  - [3.6 Project Detail Page](#36-project-detail-page)
+  - [3.7 Task Detail Sheet](#37-task-detail-sheet)
+  - [3.8 Communications (Chat · Announcements · Notifications)](#38-communications)
+  - [3.9 Directory & People Management](#39-directory--people-management)
+  - [3.10 Employee Record Detail](#310-employee-record-detail)
+  - [3.11 Reports & Data Exports](#311-reports--data-exports)
+  - [3.12 Settings Console (Admin)](#312-settings-console-admin)
+  - [3.13 My Profile](#313-my-profile)
+- [Part 4 — Cross-Cutting Systems](#part-4--cross-cutting-systems)
+- [Part 5 — End-to-End Workflow Narratives](#part-5--end-to-end-workflow-narratives)
+- [Part 6 — Rules Compendium](#part-6--rules-compendium)
+- [Part 7 — Navigation Map](#part-7--navigation-map)
 
 ---
 
-## 1. The App at a Glance
+# Part 1 — Platform Overview
 
-Games4Kings Workplace OS is a company intranet / HRMS for the Games4Kings team (~13 seeded users, 3 departments). It runs as two applications:
+## 1.1 What the app is
 
-- **Frontend:** Next.js 16 (App Router) — login, dashboard, attendance, leave, projects/tasks, chat, directory, reports, settings.
-- **Backend:** Laravel API — token authentication (Sanctum), PostgreSQL (Supabase), S3-compatible file storage, Reverb WebSockets, database queue for background jobs.
+A company management platform for Games4Kings with three user types — **Admin (super_admin), HR, Employee**. Everyone signs in at one place; the app adapts entirely to the active role: navigation, dashboard, permissions, and data scope.
 
-A user logs in with email / employee ID / username + password, possibly picks a role (if they hold more than one), completes a one-time onboarding, and lands on a role-specific dashboard. From there the sidebar offers: **Dashboard, Attendance & Time, Projects & Tasks, Communications (Chat), Directory, Team Attendance (HR+), Reports**, plus **Profile**. Admins additionally reach **Settings** from the user menu.
+**Core loop of the product:**
+1. Admin sets up the company (people, departments, schedules, policies, holidays).
+2. HR runs day-to-day operations (projects → tasks → assignments).
+3. Employees work: clock in → work tasks/projects (timers) → submit (QA-gated).
+4. Approvals flow back up (task/project submissions, leave requests).
+5. Everyone communicates inside the app (global/project/direct/group chats, announcements, notifications).
+6. Everything is measurable (attendance analytics, productivity reports, exports, audit log).
 
----
+## 1.2 Architecture & integrations
 
-## 2. Roles & Permissions Model
+| Layer | Technology | What it does |
+|---|---|---|
+| **Web app** | Next.js 16 + React 19 (Vercel) | All screens; installable PWA with offline support |
+| **API** | Laravel (Cloud Run) | Every action; token-authenticated; capability-checked |
+| **Database** | PostgreSQL (Supabase) | 60+ tables; soft deletes for critical records |
+| **File storage** | S3-compatible (Supabase) | Avatars, project covers, chat attachments, export files |
+| **Realtime** | Reverb WebSockets | Live chat, notifications, attendance refresh, session kill; automatic polling fallback (chat 15s, notifications 30s, attendance 60s) |
+| **Background jobs** | Database queue + scheduler (supervised) | Async exports, reminders, shift alerts, weekly summary email, demo data, cleanup |
+| **Email** | SMTP (configurable in Settings) | Temp-password emails, reset links, weekly summary, suspicious-login alerts; every email path degrades safely to in-app when SMTP is off |
 
-There are exactly **three roles**: `super_admin`, `hr`, `employee`. A user may hold multiple roles (e.g. employee + HR) and chooses an active role at login.
+## 1.3 Roles & permissions model
 
-Permissions are "capabilities" attached to each role in the database (`role_capabilities` table, editable only by seeding/settings). The effective matrix (from the production seeder):
+Exactly three roles; a user may hold several (e.g. Employee + HR). Permissions are **capabilities** stored in the database and enforced by the API on every route; the frontend hides UI the active role lacks.
 
-| Capability | super_admin | hr | employee | What it controls |
-|---|---|---|---|---|
-| `*` (everything) | ✔ | — | — | Wildcard for all capabilities |
-| `attendance.clock-self` | **✖ (excluded by design)** | ✔ | ✔ | Clock in/out, own attendance pages |
-| `hr.view-team-attendance` | ✔ | ✔ | — | Team attendance pages/tables |
-| `admin.view-all-attendance` | ✔ | — | — | Company-wide attendance console |
-| `attendance.correct-team` | ✔ | ✔ | — | Correct team attendance |
-| `leave.request-self` | ✔ | ✔ | ✔ | Request leave for yourself |
-| `leave.approve-employee` | ✔ | ✔ | — | Approve/reject leave of employees |
-| `users.employee.manage` | ✔ | ✔ | — | Employee CRUD list/actions |
-| `users.hr.manage` | ✔ | — | — | HR-level user management + exports |
-| `directory.view` | ✔ | ✔ | ✔ | See the corporate directory |
-| `chat.access` | ✔ | ✔ | ✔ | Use chat |
-| `chat.manage` | ✔ | ✔ | — | See group-creation UI, pin messages |
-| `profile.edit` | ✔ | ✔ | ✔ | Edit own profile |
-| `tasks.view` / `tasks.create-own` | ✔ | ✔ | ✔ | See tasks / create own tasks |
-| `tasks.manage` | ✔ | ✔ | — | Assign, edit, approve tasks |
-| `projects.view` | ✔ | ✔ | ✔ | See projects they belong to |
-| `projects.manage` | ✔ | ✔ | — | Create/edit/review projects |
-| `qa.view` / `qa.manage` | ✔ | ✔ | — / — | QA forms (manage = build) |
-| `timer.track` | ✔ | ✔ | ✔ | Project timer + time logs |
-| `reports.view` | ✔ | ✔ | ✔ (seeded) | Reports page |
-| `settings.manage` | ✔ | — | — | Settings console, holidays CRUD, demo data |
-| `audit.view` | ✔ | — | — | Audit log |
-| `announcements.manage` | ✔ | ✔ | — | Post/edit/pin announcements |
-| `departments.manage` | ✔ | — | — | Department CRUD |
-| `designations.manage` | ✔ | — | — | Designation CRUD |
+| Capability (what it unlocks) | Admin | HR | Employee |
+|---|---|---|---|
+| Everything (wildcard) | ✔ | — | — |
+| Clock in/out + own attendance pages | ✖ (excluded by design) | ✔ | ✔ |
+| Team attendance monitoring (own departments) | ✔ | ✔ | — |
+| Company-wide attendance console | ✔ | — | — |
+| Correct attendance (add/edit/remove punches) | ✔ | ✔ (team) | — |
+| Request own leave | ✔ | ✔ | ✔ |
+| Approve employee leave | ✔ | ✔ (managed depts) | — |
+| Create/manage employee accounts | ✔ | ✔ | — |
+| Create/manage HR accounts | ✔ | — | — |
+| Directory (corporate + departments/designations view) | ✔ | ✔ | — |
+| Chat access / manage groups & pins | ✔/✔ | ✔/✔ | ✔/— |
+| Edit own profile | ✔ | ✔ | ✔ |
+| View tasks / create own tasks / manage (assign, approve) all | ✔/✔/✔ | ✔/✔/✔ | ✔/✔/— |
+| View projects / manage projects | ✔/✔ | ✔/✔ | ✔/— |
+| QA: fill forms / build forms | ✔/✔ | ✔/✔ | ✔/— |
+| Track time (project timer + logs) | ✔ | ✔ | ✔ |
+| Reports & exports | ✔ | ✔ (scoped) | — |
+| Settings console · audit log · demo data | ✔ | — | — |
+| Post announcements | ✔ | ✔ | — |
+| Create/edit departments · designations | ✔ | — | — |
 
-**How gating works in practice:**
-
-- The **backend** is the real enforcement: every API route is wrapped in `capability:...` middleware; requests without the capability get 403.
-- The **frontend** hides UI it knows the user can't use (nav items, buttons) using the capability list fetched after login (`GET /me/capabilities`).
-- A Next.js **middleware** additionally guards a handful of routes (settings, audit, org pages) by reading a capabilities cookie — a UX nicety, not a security boundary (the API enforces the truth).
-
-**Notable design rules:**
-
-- **super_admin cannot clock in/out** — `attendance.clock-self` is explicitly excluded from the wildcard. Their dashboard and nav hide all time-clock features.
-- HR is scoped to **their managed departments** (via the department-HR mapping) for team attendance, leave approvals, and the users list. The admin sees everything.
-
----
-
-## 3. Authentication Workflows
-
-### 3.1 Login
-
-**Who:** everyone. **Entry:** `/login`.
-
-1. User enters an **identifier** (email, employee ID, or username — all three are accepted) and password (min 6 chars client-side).
-2. The backend:
-   - Throttles by identifier+IP: **6 attempts/minute**; after 5 failed attempts the **account locks for 10 minutes** (HTTP 423 with a `retry_after` seconds countdown, shown as a live countdown on the button).
-   - Rejects `inactive` and `locked` accounts with clear messages.
-   - Detects **suspicious logins**: if the user's IP changed since their last successful login, it logs a warning, creates an urgent "Suspicious Login" notification for all HR/super_admins, and (if SMTP is configured) emails the user.
-   - Enforces **password expiry** (if `password.expiry_days` is configured, an expired password sets `must_change_password`).
-   - Enforces **max concurrent devices** (setting `session.max_devices`): oldest sessions' tokens are pruned.
-3. On success the API returns: access token (15 min TTL by default), refresh token (7 days, stored in an **HttpOnly cookie** `g4k_refresh_token`), the user object, active role, capability list, and flags `must_change_password` / `onboarded`.
-4. The frontend routes in this priority:
-   - `must_change_password` → `/change-password`
-   - not onboarded → `/onboarding`
-   - multiple roles → `/role-select`
-   - otherwise → `/dashboard`
-5. Every login/logout is written to the **audit log** and a `login_attempts` row.
-
-### 3.2 Session keep-alive & refresh
-
-- All API calls carry `Authorization: Bearer <access token>`.
-- On any 401 (expired 15-min token), the client silently calls `GET /auth/refresh` **once** (mutex-protected so parallel requests don't stampede), using the HttpOnly refresh cookie. A new access token is issued, the failed request is retried, and the user continues unnoticed.
-- If refresh also fails → auth cleared, hard redirect to `/login?reason=expired`.
-- Changing password revokes **all** tokens on all devices (user must log in again everywhere).
-
-### 3.3 Logout
-
-- From the sidebar/user menu: `POST /auth/logout` → current tokens deleted, a `session.revoked` realtime event fires (other tabs of the same user log out too via a BroadcastChannel), query cache cleared, redirect to `/login`.
-
-### 3.4 Forgot / Reset password (self-service)
-
-1. `/forgot-password`: user enters their identifier. The backend **always** answers 202 with a generic message (no account enumeration). Behind the scenes it creates a **Password Reset Request** (pending) and emails a reset link **only if SMTP is configured** (see §32 for the admin-approval fallback).
-2. `/reset-password?token=...&email=...`: user sets a new password (must pass the password policy: min length + mixed case + number + symbol). Tokens expire after **60 minutes**. On success all tokens are revoked.
-
-### 3.5 Change password (forced or voluntary)
-
-- `/change-password` (also inside Profile → Security): requires current password + new password + confirmation, validated against the server-side password policy.
-- When `must_change_password` is true, **every** API call except change-password/logout returns 403 with `must_change_password: true`, and the frontend guard hard-redirects the user to `/change-password` — it is impossible to use the app until the password is changed.
+**Scoping rules that matter everywhere:**
+- **HR sees only their managed departments** (Admin sets the department↔HR mapping) for team attendance, leave approvals, and user management.
+- **Employees see only** projects, tasks, and conversations they are members of.
+- **Nobody approves their own request**; Admin can approve anyone; HR approves employees (not other HR).
+- Legacy URLs redirect to their new homes (e.g. `/dashboard/org/users` → Directory → Employee Management; `/dashboard/admin/attendance` → Attendance Console; `/dashboard/leave` → Attendance → My Leave; `/dashboard/audit` → Settings → Audit Log).
 
 ---
 
-## 4. Onboarding & First Login
+# Part 2 — Access & Account Lifecycle
 
-**Who:** brand-new users (seeded example: `priya@games4king.in`). **Entry:** forced redirect after login when `onboarded_at` is null.
+## 2.1 Sign In (`/login`)
 
-Three steps:
+**Screen:** landscape company logo → "Welcome back" → identifier + password → Sign In button → footer "Games4King Workplace OS" with ⓘ tooltip *"Gen2k Conglomerate (2018) • Milestone 1"*.
 
-1. **Profile** — phone + emergency contact (optional fields, saved at completion).
-2. **Password** — optional change-password step (skipped if not forced).
-3. **Tour** — a guided product tour, then an animated logo finish screen.
+**Form rules:** identifier accepts **email, employee ID, or username**; password minimum 6 chars (client) with show/hide toggle; loading state on submit; errors shown inline.
 
-Finishing calls `POST /auth/onboarding/complete` which stamps `onboarded_at` and unlocks the whole API (before that, every endpoint 403s with `needs_onboarding: true`). The app then routes to role selection or dashboard.
+**E2E pipeline (what happens when you click Sign In):**
+1. `POST /auth/login` (throttled 6/min; **5 failures locks the account 10 minutes** — the button shows a live countdown from the 423 response).
+2. Server rejects inactive/locked accounts; detects **suspicious logins** (IP changed vs. last success) → logs a warning + notifies all HR/Admins + emails the user (if SMTP).
+3. Enforces password-expiry policy (expired → forced change) and max-device limit (oldest sessions pruned).
+4. Success returns: 15-min access token, 7-day refresh cookie (HttpOnly), user, active role, capabilities, `must_change_password`, `onboarded`.
+5. Frontend routes: forced password change → onboarding → role selection (multi-role) → dashboard.
+6. Every attempt is written to the audit log + login attempts table.
 
----
+## 2.2 Forced password change (`/change-password`)
 
-## 5. Role Switching (Multi-Role Users)
+Reached when `must_change_password` is true (new account, admin reset, expiry). Until changed, **every** API call except change-password/logout returns 403 with a flag the client understands → hard redirect back to this page. Requires current + new + confirm; validated against the server-side policy (length/complexity from Settings → Policies). Success revokes tokens on all devices (re-login everywhere).
 
-**Who:** users with 2+ roles (seeded example: `vignesh@games4king.in` = employee + HR).
+## 2.3 Onboarding (`/onboarding`) — first login only
 
-- After login they land on `/role-select`, which shows one card per assigned role with a description.
-- Choosing a role calls `POST /auth/role-select`: the backend **deletes the current access token and mints a new one scoped to the chosen role** (`role:hr` ability), persists `active_role`, and returns fresh capabilities. The whole app re-renders with the new role's nav/widgets/permissions.
-- Single-role users skip this page entirely (and a redundant auto-select call is still made for them on this route if they visit it directly).
-- All capability-gated UI (nav, buttons, pages) reacts to the active role only.
+Three steps: **Profile** (phone + emergency contact) → **Password** (optional change) → **Tour** (guided walkthrough, animated-logo finish). Completing stamps `onboarded_at`; before that all endpoints 403 with `needs_onboarding`.
 
----
+## 2.4 Role selection (`/role-select`) — multi-role users only
 
-## 6. Employee Attendance — Clock In/Out & Breaks
+One card per assigned role; choosing calls `POST /auth/role-select` which **deletes the current token and mints a new one scoped to the chosen role**, updates `active_role`, and returns fresh capabilities — the entire app re-renders for that role. Single-role users skip this page.
 
-**Who:** hr + employee (super_admin excluded). **Entry:** Dashboard "Time Clock" widget, sidebar "Attendance & Time", mobile bottom-nav big green button, or the command palette.
+## 2.5 Forgot / reset password
 
-**The punch state machine:**
+- `/forgot-password` → identifier → **always** a neutral "if the account exists…" 202 response (no enumeration). Behind the scenes a pending Password-Reset Request is created; an email with a 60-minute token link goes out if SMTP is configured.
+- **No-SMTP fallback:** Admin sees the request in Settings → Security Requests → Approve → gets a one-time link to hand to the user out-of-band (⚠ FIN-P1-11: link host currently falls back to localhost until the config wire-up fix).
+- `/reset-password?token=…` → new password (policy-checked) → all tokens revoked.
 
-```
-not started ──clock-in──▶ active ──start-break──▶ on break
-     ▲                      │  ▲                     │
-     │                      │  └────end-break────────┘
-     │                      │
-  (clock-in again     clock-out (allowed from active OR on break —
-   via "Continue        clocking out while on break auto-records
-   Shift" confirm)      the break end first)
-```
+## 2.6 Sessions & devices
 
-**Rules & behaviors:**
-
-- Punches are sent to `/attendance/clock-in|start-break|end-break|clock-out` with a unique `client_id` (idempotency key — retrying the same punch can't double-record).
-- **Optimistic UI:** the timer starts/stops instantly; the server response then re-syncs the official state.
-- A full day summary shows: status badge (present/late/on-break/in-progress/completed/absent), live worked timer, break list with durations, clock-in/out times, and overtime vs. the **standard day** (default schedule: 09:00–18:30, 45-min break, 10-min grace, Mon–Sat = 8h45m = 31,500 seconds).
-- **Late** is computed server-side from the schedule's start time + grace minutes.
-- Clocking in when the server already has a clock-in doesn't duplicate — the client reconciles instead of punching.
-- The header "project timer" widget is separate (see §18).
-- Works offline (see §35).
+- Access token 15 min; on expiry the client silently refreshes once (single-flight) using the HttpOnly cookie — users never notice; refresh failure → login page with "expired" reason.
+- Profile → Security lists every active session (device, IP, last used, "this device" badge); **Revoke** kills one remotely; revoking the current device logs you out immediately; other open tabs die instantly via the `session.revoked` realtime event.
+- Logout (`POST /auth/logout`) revokes tokens, fires realtime sign-out, clears local caches.
 
 ---
 
-## 7. Attendance History & Calendar (Self)
+# Part 3 — Page-by-Page Reference
 
-**Entry:** Attendance & Time page → history list + "full calendar" dialog (month grid + GitHub-style heatmap on mobile).
+## 3.1 Dashboard (all roles)
 
-- Data: `/attendance/me/history` — last 365 days; each day carries totals (worked, break, overtime, late minutes) plus **projects/tasks time logged that day**.
-- Clicking a day opens a detail dialog: punch timeline (clock-in, breaks, clock-out with device metadata), per-project/task time, open-shift badge.
-- Holidays from the company holiday calendar are rendered in the grid; future dates are disabled.
-- The Profile page also shows a compact stats row (days worked, leave counts) computed from the same data.
+One page, three role-specific widget grids. **Widget framework rules (apply to every widget):** each loads independently (skeleton → content, error + retry, empty state); drag anywhere via the hover handle; collapse/expand; layouts saved per user and restored on any device (a reconciliation step repairs layouts when the widget catalog changes); whole-widget error boundaries so one broken widget never kills the page; every metric widget is clickable to drill into its page and shows a refresh icon on hover.
+
+**Admin widget set:** Total Employees (active/inactive/department split) · Active Projects · Today's Attendance (company snapshot) · Pending Approvals (leave + task + project submissions with quick approve/reject for leave and deep links to review screens) · Recent Activity (company-wide audit feed) · Quick Task (create + assign instantly).
+
+**HR widget set:** Team Attendance today (present/absent/late/leave, avg clock-in, overtime) · Pending Approvals · Team Activity (late arrivals, open shifts) · Quick Task · Announcements board · Upcoming Holidays · Time Clock (own punches).
+
+**Employee widget set:** Announcements (dismissible) · Active Projects · Pending Tasks · Task Approval Status (my submissions: pending / approved / redo with feedback) · Recent Task Progress (latest task + progress bar) · Upcoming Holidays · Quick Notes · Time Clock.
+
+**Quick Task widget (HR/Admin) E2E:** pick employee (searchable), title, description, priority, due date → `POST /tasks` → task appears in the employee's list immediately (realtime/refresh) → when completed, and the task's "notify global chat" flag is on, an automatic completion message is posted to the Global Chat.
+
+## 3.2 Attendance & Time (personal) — `/dashboard/attendance`
+
+Tabs: **Overview** (everyone with clock-self) · **My Leave** (leave + holidays sub-tabs) · **Team Leave Approvals** (HR/Admin only). URL-driven (`?tab=`), deep-linkable.
+
+### Overview tab
+1. **Time Clock widget** — the punch state machine:
+   - States: *not started → active ⇄ on break → completed*. Buttons: Clock In, Start Break, End Break, Clock Out (allowed from active **or** break — clocking out on break auto-closes the break first). "Continue Shift" re-entry path with confirmation.
+   - Every punch carries a unique `client_id` (idempotency key) — retries/replays can never double-record; optimistic UI updates instantly then reconciles with server truth.
+   - Live HH:MM:SS worked timer; break list with durations; overtime computed vs. the **default work schedule** (default 09:00–18:30, 45-min break, 10-min grace, Mon–Sat = 8h45m standard day); **Late** status is computed server-side (schedule start + grace).
+   - Works fully offline (punches queue and sync on reconnect).
+2. **Today Summary card** — status badge, in/out times, break totals, worked/overtime seconds.
+3. **Attendance History** — month calendar + heat colors (present / late / **overtime (separate color)** / leave / absent / holiday / no-data), 365-day data (`/attendance/me/history?limit=365`); click a day → full detail dialog: punch timeline with device metadata, per-project/task logged time, totals. Holidays from the company calendar are rendered; future dates disabled.
+
+### My Leave tab
+- **Sub-tab My Leave:** history table (dates, type, reason, status pill, approver, decision reason) with type/status filters + search + pagination.
+- **New request form** (`/leave-requests`): type (casual/sick/earned/unpaid), start (strictly **tomorrow or later** — enforced client and server), end (≥ start), reason (required, ≤1000). Client-side overlap check; server double-checks overlaps (pending overlapping request → 422) and **leave balance** (12/year per type by default). Draft autosaves (IndexedDB, 30s) with restore banner. Submit → Approval record created → routed by role (employee → their HR; HR → Admin) → approver notified in-app + realtime. **Self-approval blocked.**
+- **Sub-tab Holidays:** company holiday calendar (Admin-managed; recurring holidays repeat annually, Feb 29 → Feb 28 in non-leap years).
+
+## 3.3 Team Leave Approvals (HR + Admin)
+
+- **Approvals sub-tab:** pending requests for the HR's managed departments (Admin: all) — filter by employee + search; **Approve / Reject** buttons (optimistic with rollback). Rejecting requires a reason (dialog + server enforced: `reason required_if decision=rejected`).
+- **Decision effects (E2E):** approved → `on_leave` attendance days written for the whole span (employee shows "leave", not "absent"), leave balance `used` incremented, requester notified (in-app + realtime), dashboard caches bust. Rejected → requester notified with the reason.
+- **History sub-tab:** all past decisions with filters + its own export.
+- Dashboard **Pending Approvals widget** mirrors these actions; task/project submissions deep-link to their review screens.
+
+## 3.4 Attendance Console (Organization)
+
+`/dashboard/org/attendance` — for `hr.view-team-attendance` (HR) and `admin.view-all-attendance` (Admin). Admin gets the company-wide console; HR gets the team view (managed departments only).
+
+**HR Team View — tab "Today's Status":**
+- **Analytics cards** (present/absent/late/leave today, avg clock-in, overtime) for the chosen date/department. *(First request goes to a not-yet-implemented analytics endpoint, then falls back — ⚠ FIN-P1-3.)*
+- **Live table:** every managed employee for a date — status, clock-in/out, breaks, worked hours; live "clocked-in now" ping on today; filters (date, status, department, search debounced); server-side pagination + sorting. Realtime: any team punch refreshes the table (WebSocket), else 60s polling.
+- **Row → Member Sheet** with three tabs: *Day* (full punch timeline + device info + audit deep-link), *History* (their full calendar/heatmap), *Trends* (weekly/monthly hours + overtime chart per employee).
+
+**HR Team View — tab "Trends & Graphs":**
+- **Graph:** stacked present/absent/late bars + hours/overtime lines, weekly or monthly window, groupable by date or employee.
+- **Heatmap:** new year-view heatmap of team attendance intensity (uses the `yearly` graph mode).
+
+**Admin Console — three tabs:**
+1. **Calendar Heatmap:** company present-rate per day (≥90/70/50% bands); click a day → jumps to that date in the table.
+2. **Overview (table):** company-wide day view with date range, department, employee, status filters + search + pagination + sorting; row click opens the same Member Sheet; "View Leave" cross-links to the employee's leave record; per-row **assign correction**.
+3. **Analytics & Trends:** KPI cards + weekly/monthly trend graphs.
+
+**Attendance Corrections (both roles, gated `attendance.correct-team`/`admin.correct-attendance`):**
+- Opened from open-shift badges, member sheet, table rows, or the command palette.
+- Shows the day's real event timeline; HR/Admin can **add / edit / remove** any punch event; **reason mandatory** (≤500 chars, client + server); **live predicted-totals preview** before saving.
+- Save → `attendance_corrections` audit row (old/new values, corrector) + employee notified; corrected day flagged `source: manual` with version bump.
+
+**Exports:** both tables export (selected rows or the whole filtered set) to `.xlsx` through the async export pipeline (Part 4.4).
+
+**Open Shifts (clocked-in-never-out):** the scheduler job flags them, notifies, and the company table exposes correction actions — **⚠ the dedicated Open Shifts admin tab is currently orphaned from the console (FIN-P1-13 in finalization.md); fix pending.**
+
+## 3.5 Projects & Tasks
+
+`/dashboard/projects` — two tabs: **All Projects** · **My Tasks & Board** (URL-driven).
+
+### All Projects tab
+- **Who sees what:** managers (projects.manage) see all projects for their scope; employees see **only projects they belong to**.
+- **Project cards** show name, description, priority badge, deadline, progress (task completion %), member avatars, status pill (active / review / completed / archived). Sorting by created date / deadline / priority, asc + desc.
+- **Create Project dialog (managers):** name (required), description, priority (low/medium/high/urgent), department, team, deadline, start/end dates (end ≥ start server-checked), QA form attach, member list (search + multi-add), **cover image** (S3 upload), and **"Allow employee tasks"** toggle.
+  - **E2E effects of creating:** project row created; **its project chat channel is auto-created with all members**; members gain access to project + tasks + chat instantly.
+- **Card actions:** open, edit (same dialog), archive (status change), delete (soft, managers only), pin (📌 → sidebar Pinned section).
+
+### My Tasks & Board tab — four views (toggle buttons)
+1. **Kanban (default):** columns **To Do / In Progress / Review / Done**. Drag between columns → optimistic status PUT with rollback; same-column drag reorders (persisted via `/tasks/reorder`). Right-click menu: view/edit, move to status, delete (confirm). Mobile: snapping columns + long-press drag. *(Board caps at first 100 tasks — ⚠ FIN notes.)*
+2. **List:** data table — checkboxes, bulk status/delete, per-row actions, filters (status, scope, assignee me/all, search, sort), pagination (20/50/100).
+3. **Timeline (Gantt):** bars from created→due, colored by status, dependency arrows from `blocked_by`. *(Bar drag is currently a no-op — ⚠ FIN-P1-7.)*
+4. **QA Form Builder (managers only):** create QA form templates — title, description, sections, field list (label + type: text/textarea/checkbox/boolean/multiple-choice/slider/date/file-upload + required flag + options + branching logic), drag-to-reorder fields, **live preview**. *(Field-type rendering has a known defect — ⚠ FIN-P0-1. Edit/delete of forms not yet in UI — FIN-P2-2.)*
+
+**Task scoping rules:** employees see tasks where they are assignee, reporter, or project member; managers see everything in scope. Non-managers can create tasks **only for themselves** (`tasks.create-own`) and only inside projects with "allow employee tasks" — otherwise the create dialog auto-assigns them. Managers can set scope (global/department/role), multiple assignees, dependencies, QA form, recurrence.
+
+## 3.6 Project Detail Page
+
+`/dashboard/projects/[id]` — members (or managers) only.
+
+- **Header:** cover image, name, priority/deadline/status badges, progress stats (task completion, total logged hours), member avatars, edit + manage-members dialogs.
+- **Embedded tasks board** scoped to this project (same kanban/list machinery; only this project's tasks — filtering verified).
+- **Project History & Activity card:** virtualized chronological log of every event (created, member changes, task events, submissions, decisions).
+- **Project Workflow card (status machine):**
+  - **Active → Submit for Completion:** submission note (required) + **QA form answers** (if the project has a form; every required field enforced client- and server-side before the submit is accepted) → status `review`; HR + Admin notified.
+  - **Review (managers):** panel shows the submission note + QA answers inline → **Approve** (status `completed`, `completed_at` stamped) or **Redo** (reason required; back to `active`).
+  - Employee sees the result on dashboard + here; the whole trail lands in the activity log.
+- **Status machine:** `active → review → completed | active(redo)`, plus `archived` — all transitions server-validated against the database CHECK constraint.
+
+## 3.7 Task Detail Sheet
+
+Opened from any task row/card (or `/dashboard/tasks/[id]`). Four tabs + action panels:
+
+- **Overview:** description; inline-edit title/due-date (pencil, Enter save / Esc cancel); assignees; priority; **progress slider** (managers); dependencies (blocked-by chain, cycle-safe); recurrence info; QA form (when attached).
+- **Comments:** live discussion feed on the task (Enter to send) — participants only; no need to switch to chat.
+- **Time:** **Log Time** form (task/project link, minutes ≥1, description, log date) + full time-log history for the task. These logs roll up into project hours, attendance day breakdown, and productivity reports.
+- **Activity:** per-task chronological audit (assignments, status changes, submissions, decisions).
+- **Submit for Review (employee):** completion **note** (required) + **QA answers** (required fields enforced) → status `review` → managers notified.
+- **Approve / Redo (managers):** approve → `done` (+ optional auto-post to project/global chat per the task's flag); redo → reason required → back to in-progress/rework. Employee notified instantly; My Submissions widget updates.
+- **Reminders:** personal reminder at a chosen datetime (+ automatic due-date reminder); delivered by the every-minute scheduler as a notification.
+- **Recurrence (managers):** daily / weekly (pick weekdays) / monthly (day-of-month) — when an occurrence is completed the next one is auto-created; HR notified; recurrence can be turned off.
+- **Guard rails (server):** a task whose blocker isn't done cannot be completed; dependency cycles rejected (422); plain assignees can only edit whitelisted fields (status, progress, due date, description).
+
+## 3.8 Communications
+
+`/dashboard/chat` — three tabs: **Chat · Announcements · Notifications** (URL-driven).
+
+### Chat tab
+- **Left: conversation list** — virtualized, infinite cursor pagination, search, unread-first sorting; types: **Global** (company channel, seeded), **Project** (auto-created with each project; members only), **Direct** (1:1), **Group** (created by HR/Admin via dialog: name + member multi-select). Unread conversations show a colored left border + count badge; opening marks read. Chats can be **pinned** to the top of your list.
+- **Right: thread** — infinite upward history (newest at bottom, scroll anchoring); **composer**: Enter to send, Shift+Enter newline, **@mention autocomplete** (filters conversation members; mentioned users get a notification with the message snippet), **file/image attachments ≤10 MB** (uploaded to S3; images/PDFs preview inline), optimistic send with rollback on failure.
+- **Read receipts** (single ✓ sent / double ✓ read) in direct messages; messages auto-mark-read as they scroll into view.
+- **Pinned messages:** managers pin/unpin messages in project chats; pinned items show in a bar atop the thread.
+- **Realtime:** new messages/reads/conversations arrive instantly over WebSockets; when realtime is down the tab degrades to 15-second polling and shows a "Not connected" pill.
+- **New DM entry points:** chat "New message" picker, Directory card "Message", user profile — all call the same find-or-create DM endpoint (`/conversations/dm`; DM-with-self is rejected 422).
+
+### Announcements tab (and the dashboard board widget)
+- Feed of announcement cards: title, rich body, priority (normal/high/urgent), pinned-first ordering, scope (company or team), author + timestamp.
+- **Create/Edit (managers):** title, body, scope, priority, pinned flag. High/urgent → in-app notification to all active users in scope. Live updates via realtime channel.
+- **Reactions:** any user toggles emoji reactions; per-emoji who-reacted visible. No comment threads (by design).
+- The dashboard board widget shows the same feed with a per-user dismiss (✕).
+
+### Notifications tab (+ bell in the top bar)
+- **Bell (every page):** badge = high-priority unread count; popup with recent items, mark-read, mark-all-read; "View all" opens the center.
+- **Center:** full history — filters by type (taxonomy with icons) + unread-only + search; pagination; mark read / all-read.
+- **Sources:** leave decisions, approvals awaiting you, task assignments/completions, @mentions, high/urgent announcements, suspicious logins, export-ready, open-shift nudges, reminders (task/shift/holiday), password-reset decisions. Realtime toasts on arrival (respecting the user's sound preference).
+
+## 3.9 Directory & People Management
+
+`/dashboard/directory` — four tabs (management tabs capability-gated): **Corporate Directory · Employee Management (HR/Admin) · Departments · Designations & Roles**.
+
+### Corporate Directory
+- Card + table views; search; filter by department + designation; 24/page "Load more"; each entry shows photo, name, designation, department, roles, contact info **respecting each user's own privacy setting** (Profile → Preferences: public = full contact; private = name/role only).
+- Actions: **Message** (opens a DM), detail sheet, "View Profile" (full record — requires manage capability at the API).
+
+### Employee Management (HR: managed departments; Admin: all)
+- **Table:** name/ID, email, department/team, designation, roles, status; filters + search + pagination + bulk select; show-trashed toggle with **Restore**.
+- **Create User dialog:** name*, email* (unique), username (unique), phone, employee ID (auto-numbered `G4K-###` if blank), department → team (cascading), designation, work schedule, **roles*** (employee / hr / super_admin checkboxes — creating HR/Admin requires the higher capability, server-checked).
+  - **E2E:** server generates a random temp password → user row + role assignments + audit entry → temp password emailed if SMTP (else the creating manager sees it to hand over) → new user must change it at first login (forced).
+- **Row actions:** Edit (same form), Activate/Deactivate (last-super-admin protected server-side), Reset Password (temp password + forced change), Delete (soft; revokes tokens), Export selected/filtered (async pipeline).
+- **Draft:** the create form autosaves a draft (restore banner on return).
+
+### Departments tab
+- Everyone views the list (name, auto-code `DEP-###`, headcount, status). **Manage actions gated to `departments.manage` (Admin).**
+- **Create/Edit:** name (unique), description. **Archive/Restore**; **Delete blocked while users are assigned**.
+- **Department detail sheet — three tabs:** *Employees* (bulk sync member list), *HRs* (set which HR users manage the department — this mapping drives ALL HR scoping in the app), *Teams* (create/delete sub-teams). Export via async pipeline.
+
+### Designations tab
+- Master list (name, headcount, active status) + search + pagination. Manage (Admin): create/edit, activate/deactivate toggle, delete blocked while any user holds it, export.
+
+## 3.10 Employee Record Detail
+
+`/dashboard/org/users/[id]` (HR for their people; Admin for anyone) — the 360° record: header (avatar, name, role pills, status, quick actions: edit, reset password, activate/deactivate, delete, Message, view attendance) + five tabs:
+1. **Personal Info** — profile fields + department/designation/schedule editors.
+2. **Attendance** — their full attendance history (HR-scoped) with calendar + day details.
+3. **Leave History** — every request + decisions.
+4. **Projects & Tasks** — all assignments with statuses.
+5. **Activity Log** — their audit trail (logins, CRUD performed, approvals…).
+
+## 3.11 Reports & Data Exports
+
+`/dashboard/reports` — two tabs (capability-gated; employees have no Reports nav).
+
+### HR & Admin Reports tab
+- **Attendance Summary** + **Leave Summary** tables over any date range + department; KPI rows; **Saved Views** (save any filter set per module, apply later; delete supported).
+- Export any summary through the async pipeline (xlsx/csv/pdf).
+
+### General Data Exports tab
+- **Report Builder:** dataset picker — **Tasks & Deliverables · Projects & Milestones · Employee Directory · Productivity** (productivity = task completion rate 80% + logged-time score 20%) — search, column generation, refresh, export.
+- **Export History:** your recent export jobs with status and authenticated **Download** button (⚠ capped at 3 visible — FIN-P2-6).
+
+### The async export pipeline (used by EVERY export button app-wide)
+`Export click → POST /…/export → ExportJob queued → file built on worker → stored on S3 → "export-completed" realtime event + bell notification → Export History → Download (authorized blob)`. Nothing blocks the UI; failures land in System Jobs for retry.
+
+## 3.12 Settings Console (Admin)
+
+`/dashboard/settings` — 12 URL-synced tabs behind `settings.manage`:
+
+| Tab | What it controls |
+|---|---|
+| **Company Profile** | Name, short name, timezone, **logo upload** (S3) |
+| **Work Schedules** | Shift templates CRUD: start/end time, break minutes, grace minutes, working days; one default (drives late/overtime math everywhere); default/last-schedule delete protection |
+| **Policies** | Password policy (length, complexity), access-token minutes, refresh days, **max concurrent devices**, password expiry days |
+| **Holidays** | Shortcut into the holiday calendar management (add/edit/delete, recurring flag) |
+| **Mail / SMTP** | Host/port/encryption/credentials + **Send Test Email** (values masked on read-back) |
+| **Notifications** | Per-event channel matrix (leave requests, attendance reminders, weekly summary → in-app / email toggles) |
+| **Auto-Numbering** | Prefix + start number + format for company / department / employee IDs with live preview |
+| **Reminders** | Shift-start reminder minutes, missed-clock-in alert minutes, cutoff time |
+| **Security Requests** | The admin side of no-SMTP password resets: pending list → **Approve** (issues one-time link to copy/send) / **Reject** |
+| **Audit Log** | Immutable trail of every important action (actor, action, subject, before/after diff, IP, timestamp); filters (action, user, date range) + export |
+| **Demo Data** | Dataset status counts; **Seed** (repopulates demo dataset) and **Purge** (type-to-confirm "REMOVE DEMO DATA"; deletes every demo-tagged row in FK-safe order, never touches real data) |
+| **System Jobs** | Queue health: pending/failed counts (10s polling) with per-job **Retry** |
+
+## 3.13 My Profile
+
+`/dashboard/profile` — three tabs + header.
+- **Header:** avatar upload (drag-drop, type + 2 MB validation → S3), name, role pills, compact attendance stats (days worked, leave counts).
+- **General Info:** name, phone, **self-designation dropdown**, department/company read-only cards (company card via the ungated `/companies` endpoint).
+- **Security & Devices:** change password (policy-validated); active session list with per-session **Revoke** (current-device revoke = instant logout; other tabs die via realtime).
+- **Preferences & Support:** directory visibility (public/private), theme (light/dark/system), density, **Hidden Widgets manager** (restore dismissed widgets — ⚠ dismiss wiring pending FIN-P2-1), and the **Feedback / Complaint form** (subject, category suggestion/complaint, body → stored + delivered as a DM to the managing HR/Admin + high-priority notification).
 
 ---
 
-## 8. HR Team Attendance Monitoring
+# Part 4 — Cross-Cutting Systems
 
-**Who:** `hr.view-team-attendance` (hr + super_admin). **Entry:** sidebar "Attendance" (Organization section) → `/dashboard/org/attendance`. Super_admin gets **two tabs: "Global Company (Admin)" and "My Team (HR)"**; plain HR gets only the team view.
+## 4.1 Notification engine
+Two surfaces (bell for high-priority + full center), realtime toasts, per-user sound preference, mark-read/unread semantics, cleanup job pruning old rows. Every business event funnels through one `NotificationService` (in-app always; email where configured).
 
-**Team view ("My Team") contains:**
+## 4.2 Realtime channels (Reverb)
+Chat messages/reads; new conversations; notification toasts; announcement refreshes; attendance table refresh on any punch; approval status changes; export-completed; **session revoked** (instant cross-device logout). Client connects only when Reverb env vars exist; every consumer has a polling fallback — realtime outage degrades UX, never breaks function.
 
-- **Analytics cards** (present/absent/late/leave today, average clock-in, overtime) — computed for the selected date/department.
-- **Live table** of all managed-department employees for a chosen date with status, clock-in/out, breaks, worked hours; a live "clocked-in now" ping on today's view; filters by date, status, department, and debounced search; server-side pagination + sorting.
-- **Realtime:** new punches by anyone instantly refresh the table (WebSocket `presence-org` → `attendance.updated`); if realtime is disconnected it polls every 60s.
-- Clicking an employee opens the **member sheet** with three tabs:
-  - *Day* — that day's full punch timeline (with device info and an audit-log deep link for manual corrections).
-  - *History* — the member's full attendance calendar (same component as self-view, but HR-scoped).
-  - *Trends* — weekly/monthly hours & overtime chart.
-- **Graph tab** — stacked present/absent/late bars + hours/overtime lines, weekly or monthly, groupable by date or employee.
-- **Activity feed widget** (HR dashboard) surfaces anomalies: late arrivals and open shifts, newest first.
-- **Open shift badge** — days where someone clocked in but never clocked out; one click opens the correction dialog preset to add a clock-out.
+## 4.3 Offline engine (PWA)
+Installable app; non-GET API calls queue in IndexedDB while offline and replay on reconnect (retry ladder 1s/5s/30s/2m); punches idempotent so replays never duplicate; the time clock works fully offline; banner + per-widget badges show state; 4xx during sync marks the item failed; conflicts (409/422) are parked for manual review.
 
----
+## 4.4 Export pipeline
+Single async job pipeline for **all** exports (attendance, leave, users, departments, designations, audit, reports) — see 3.11.
 
-## 9. Admin (Company-Wide) Attendance Console
+## 4.5 Scheduler jobs (all verified live in `routes/console.php`, timezone Asia/Kolkata)
+| Job | Cadence | Effect |
+|---|---|---|
+| RemindShiftStart | every 5 min | "Shift starts in X minutes" reminder to employees (default 15-min offset, configurable) |
+| AlertMissedClockIn | every 5 min | HR alert listing employees not clocked in 30 min after start (configurable) |
+| FlagOpenShifts | every 5 min | Flags clocked-in-never-out days + nudges |
+| tasks:reminders | every minute | Delivers due task/due-date reminders as notifications |
+| reminders:holidays | daily | Holiday/event reminder **10 days before** (offset configurable) |
+| reports:send-weekly-summary | Sundays 09:00 | Metrics email to Admins (needs SMTP) |
+| passwords:expire-flag | daily | Flags expired passwords → forced change |
+| sanctum:prune-expired | daily | Token hygiene |
+| notifications:cleanup | daily | Prunes old notifications |
+| Scheduler heartbeat | every minute | Liveness log |
 
-**Who:** `admin.view-all-attendance` (super_admin). **Entry:** the "Global Company (Admin)" tab (hosted at `/dashboard/org/attendance`).
+## 4.6 Audit log
+Written by every consequential action (auth, user CRUD, corrections, settings changes, approvals, exports, chat administration…) via one `AuditLogger` — actor, action, subject type/id, before/after JSON, IP, timestamp. Admin-only viewer + export.
 
-Four sub-tabs:
+## 4.7 Pins
+Per-user shortcuts: pin any project card or task (📌) → appears in the sidebar's Pinned section + mobile drawer; unpin from the same widget; server-persisted (max 100).
 
-1. **Calendar** — month heatmap of present-rate per day (≥90/70/50% bands); clicking a day jumps to that date's table.
-2. **Today/Table** — the company-wide version of the HR table (date range, department, employee, status filters, search, pagination, sorting) plus "View Leave" cross-links into the leave approvals screen filtered to that user.
-3. **Analytics** — six KPI cards for the chosen date/department.
-4. **Open Shifts** — everyone with an open shift; supports **bulk "Notify Open Shifts"** (sends each employee an in-app notification to close their shift) and per-row "assign correction."
+## 4.8 Command palette & shortcuts
+Ctrl/Cmd+K palette: recent directory items, HR/admin actions (attendance console, corrections, exports), punch shortcuts (execute immediately), navigation. Ctrl/Cmd+N context-aware create. Ctrl+B sidebar. Ctrl+/ shortcut help. Escape closes. Version guard polls `/api/version` (60s) → one-click reload on new deploy.
 
-Exports (both HR and admin tables): export selected rows or the whole filtered set to `.xlsx` via the async export pipeline (see §28).
-
----
-
-## 10. Attendance Corrections
-
-**Who:** `admin.correct-attendance` (super_admin) or `attendance.correct-team` (hr). **Entry:** open-shift badges, member sheet, table rows, or command palette "Attendance Correction."
-
-- The dialog shows the day's real event timeline and lets the HR/admin **add**, **edit**, or **remove** a punch event (type + time).
-- A **reason is mandatory** (client and server enforced, ≤500 chars).
-- A **predicted-totals preview** simulates the change live before saving.
-- Saving writes an `attendance_corrections` audit row (old/new value, corrector) and notifies the employee; the corrected day is flagged `source: manual` with a version bump.
-- Every manual event in timelines links back to the audit log for traceability.
+## 4.9 Preferences sync
+Sidebar state, dashboard layouts, density, theme, directory visibility sync via `/auth/preferences` — the user's setup follows them across devices.
 
 ---
 
-## 11. Leave Management — Requesting Leave
+# Part 5 — End-to-End Workflow Narratives
 
-**Who:** everyone (`leave.request-self`). **Entry:** Attendance & Time → "Request Leave" button (page header) or "My Leave" tab.
+### 5.1 Day 1: from zero to a working company
+1. Admin signs in → completes onboarding.
+2. Settings: company profile + logo, default work schedule, policies (password/session), SMTP + test email, holidays, auto-numbering.
+3. Directory → Departments: create departments → assign HRs (sets HR scoping) → teams.
+4. Directory → Designations: create titles.
+5. Employee Management: create HR + employee accounts (temp passwords emailed; forced change on first login; each new user walks through onboarding).
+6. HR creates the first project (+ team + QA form) → project chat auto-created → tasks assigned → employees notified.
 
-**Request form rules:**
+### 5.2 A day in the life (employee)
+Phone buzzes 15 min before shift (scheduler) → sign in → big green button → Clock In (late badge if past grace) → open pinned project → start the project timer → work; pause/resume for breaks; End Session logs the time → update task progress → Submit for Review (note + QA answers) → manager notified → employee keeps working; approval result arrives as a notification and shows on the dashboard widget → Clock Out; day summary + overtime visible in history heatmap.
 
-- Types: **casual, sick, earned, unpaid** (fixed set).
-- Start date must be **strictly tomorrow or later** (today is not allowed); end ≥ start; past dates are disabled in the picker.
-- Reason required (≤1000 chars).
-- **Client-side overlap check** against already-loaded pending/approved leave; the **server double-checks** overlaps (a pending request covering the same days is rejected 422) and **leave balance** (default allowance 12/year per type; insufficient balance is rejected).
-- The form **autosaves a draft** to the browser (IndexedDB) every 30s and offers Restore/Discard if the user leaves and returns.
-- On submit an **Approval** record is created and routed by role: employee leave → their HR; HR leave → super_admin. The approver gets a notification + realtime event. **Self-approval is blocked.**
+### 5.3 Task approval E2E
+Create (manager or allowed employee) → assignment notification → work (comments, timers, reminders, dependencies guard completion) → submit (note + QA, required fields enforced twice) → status `review` → manager reviews (QA answers inline) → **Approve** → `done` + submitter notified + optional auto-post to project/global chat + recurrence spawns the next occurrence → or **Redo** (reason) → back to work. Every step lands in the task's Activity tab and the audit log.
 
-**My Leave tab:** history table (dates, type, reason, status, approver, decision reason) with type/status/search filters and pagination; the **Holidays** sub-tab shows the company holiday calendar (§13).
+### 5.4 Project approval E2E
+Create (+chat auto-created, members synced) → tasks flow (5.3 × N) → employee completes QA form + writes the completion report → Submit → status `review`, HR + Admin notified → review panel shows note + QA answers → Approve (`completed`, timestamped, appears in Project History with team, tasks, total time, approval status) or Redo (reason, back to active).
 
----
+### 5.5 Leave E2E
+Employee/HR submits (future dates, overlap + balance checked twice) → Approval routed (employee→HR, HR→Admin) → bell + realtime to approver → decision (reject reason mandatory) → approve writes on-leave attendance days for the span + balance increment + notify → visible in history tables, member sheets, summaries; the dashboard Pending Approvals widget clears.
 
-## 12. Leave Approvals (HR / Admin)
+### 5.6 Attendance oversight E2E (HR/Admin)
+Punches stream into the console (realtime) → anomalies surface (late badges, open shifts, no-shows via the missed-clock-in job) → HR opens a member sheet → initiates a correction (reason + preview) → audit row + employee notification → corrected totals propagate to history/graphs/exports → exports run through the async pipeline to the admin's downloads + email summary lands every Sunday.
 
-**Who:** `leave.approve-employee` (hr + super_admin). **Entry:** Attendance & Time → "Team Leave Approvals" tab (HR/admin only), or the dashboard "Pending Approvals" widget.
-
-- **Approvals sub-tab:** pending requests for the HR's managed departments (admin sees all), filterable by employee/search, with **Approve / Reject** actions. Rejecting **requires a reason** (enforced in the dialog and server-side).
-- Approvals apply **optimistically** with rollback on failure.
-- **Decision effects:** approved leave writes `on_leave` attendance days for the whole span (so the employee shows "leave" not "absent"), increments the leave balance `used` counter, notifies the requester realtime + in-app, and busts dashboard caches.
-- **History sub-tab:** all past decisions (approvals + rejections) with filters and its own export.
-- The dashboard **Pending Approvals widget** allows approving/rejecting leave directly from the dashboard; task/project submissions listed there deep-link to the review screens.
-- **Scoping rules:** HR can approve employees in departments they manage; HR cannot approve other HR; super_admin approves anyone; nobody approves their own.
-
----
-
-## 13. Holidays Calendar Management
-
-**Viewing (everyone):** the Holidays sub-tab in My Leave + the dashboard "Upcoming Holidays" widget (next 3, with recurring support — recurring holidays repeat every year; Feb 29 maps to Feb 28 in non-leap years).
-
-**Managing (`settings.manage` — super_admin):** add/edit/delete holidays (name, date, description, recurring flag) directly on the calendar. Deletion asks for confirmation. The backend caches holiday lists per year and busts them on change.
-
-*(Audit note: the holiday "event" concept — type event with start time/location — still renders in the widget, but the management form no longer creates events; see report.md.)*
+### 5.7 Communication E2E
+Announcement posted (high priority) → bell + dashboard board for everyone → reactions roll in. Project chat: mention a teammate → they get the snippet notification → read receipts update. Employee complaint via Profile → Support → DM to HR + high-priority notification → resolution in-thread.
 
 ---
 
-## 14. Projects Lifecycle
+# Part 6 — Rules Compendium
 
-**Who:** viewing = everyone (only projects you're a member of, or all if you manage projects); managing = `projects.manage` (hr + super_admin).
+### Validation matrices (server-enforced; client mirrors)
 
-**Status flow:**
+| Form / Action | Key rules |
+|---|---|
+| Login | 6/min throttle; lockout 5 fails / 10 min; inactive/locked rejected |
+| Password (change/reset) | Policy from Settings (min length, mixed case, number, symbol); resets revoke all tokens |
+| Leave request | type ∈ casual/sick/earned/unpaid; start > today; end ≥ start; reason ≤1000; overlap rejected; balance checked |
+| Leave decision | decision ∈ approved/rejected; **reason required on reject**; scope: HR→managed employees, Admin→anyone, never self |
+| Task create | title ≤255 required; priority ∈ low/medium/high/urgent; scope ∈ global/department/role; assignees must exist; blocked_by cycle-checked |
+| Task submit | note required; QA required-fields enforced client + server |
+| Task update | assignees limited to status/progress/due_date/description; blocker-done guard on completion |
+| Project create/update | name required; priority enum; end_date ≥ start_date; status enum vs DB CHECK (active/completed/archived/review/pending_review) |
+| Project submit | note required; QA required-fields enforced server-side |
+| Project review | decision ∈ approved/rejected/redo; redo→active, approved→completed |
+| User create | name/email/roles required; email+username+employee_id unique; roles ⊆ employee/hr/super_admin; HR/Admin creation needs `users.hr.manage` |
+| Message send | body or attachment; files ≤10 MB; mentions must be real users; reply_to must exist |
+| Group create | name required; member_ids must exist (route gated `chat.manage`) |
+| Announcement | title/body required; scope ∈ company/team; priority ∈ normal/high/urgent |
+| Correction | type + time per event; **reason required ≤500**; totals preview before save |
+| Timer log | minutes ≥ 1 integer; task/project optional but validated |
+| Pin | type/target/label/href required; 100 max per user |
+| Feedback | subject required; category ∈ suggestion/complaint; body required |
+| Pagination | per_page whitelisted to 20/50/100 on every paginated endpoint |
 
-```
-active ──(Submit for Review + QA answers + note)──▶ review
-   ▲                                                 │
-   │                                    ┌─ approve ───┴── redo ─┐
-   │                                    ▼                       │
-   └──────────────── rework ◀──────── (stays active)      completed
-                                                        (later: archived)
-```
-
-**Creating a project (managers):** name (required), description, priority, department, deadline, QA form attachment, member list, cover image upload (stored on S3), and an **"allow employee tasks"** toggle (lets non-managers create tasks inside this project). Creating a project **automatically creates its project chat channel** with all members.
-
-**Project detail page:** overview stats (task completion, total logged hours, member avatars), tasks board (embedded), member management, cover image, edit dialog, activity history (virtualized log of every task event), submit-for-review panel (with required submission note + QA form answers; required QA fields must be filled), and — for managers while in review — the **review panel** showing the submission note + QA answers with Approve / Redo (redo requires a reason).
-
-**Rules:**
-
-- Only members (or managers) can open a project.
-- Archive = status change via edit; delete is a soft delete (managers only).
-- Employees (non-managers) only see projects they belong to.
-
----
-
-## 15. Tasks — Board, Lists, Gantt
-
-**Who:** `tasks.view` (everyone). **Entry:** Projects & Tasks → "My Tasks & Board" tab (`/dashboard/projects?tab=tasks`).
-
-**Four views:**
-
-1. **Kanban board (default)** — columns **To Do / In Progress / Review / Done**; drag-and-drop between columns instantly PUTs the new status (optimistic with rollback); same-column drags reorder and persist order via `/tasks/reorder`. Right-click context menu: view/edit, move to status, delete (with confirm). Mobile: horizontally snapping columns with long-press drag.
-2. **List view** — data table with checkboxes, bulk status-update/delete, per-row actions, status/scope/assignee/search filters, pagination.
-3. **Gantt** — timeline bars (created → due), dependencies from blocked-by links, status coloring. *(Audit note: dragging a bar does not persist — see report.md.)*
-4. **QA Form Builder** — managers only (see §19).
-
-**Scoping rules:**
-
-- Employees see tasks where they are assignee, reporter, or a member of the task's project. Managers see everything.
-- Non-managers creating tasks: allowed only **for themselves** (`tasks.create-own`), and only in projects with `allow_employee_tasks` enabled; otherwise the create dialog assigns them automatically.
-- Managers can assign multiple assignees, set scope (global/department/role), dependencies (`blocked_by`), QA form, and recurrence.
-
-**Visibility rules on statuses:** a task in a **blocked-by** state can't be moved to done (server guard). Recurring tasks auto-spawn the next occurrence when marked done.
+### Status vocabularies (single source of truth)
+- **Task:** todo → in_progress → review → done (+ rework via redo)
+- **Project:** active → review → completed / active (redo); archived; (pending_review legacy)
+- **Leave:** pending → approved / rejected (approval `decision` may add `redo` semantics on tasks/projects)
+- **Attendance day:** present / late / on-break / in-progress / completed / absent / leave / holiday; overtime is a computed overlay with its own heat color
+- **Badge colors app-wide:** gray=not started, blue=in progress, amber=pending review/approval, green=approved/done, red=redo/rejected/overdue
 
 ---
 
-## 16. Task Submission, Review, Approve/Redo
+# Part 7 — Navigation Map
 
-The submission pipeline (mirrors projects):
+**Shared:** Sign In → (Role Select) → Dashboard → Chat → Profile → Notifications (bell).
 
-```
-todo / in_progress ──(Submit for Review: note + QA answers required)──▶ review
-                                                                          │
-                                            approve ─────────────────────┴────── redo (reason required)
-                                               │                                     │
-                                               ▼                                     ▼
-                                              done ◀──────────── back to in_progress/rework
-```
+**Admin sidebar:** Overview — Dashboard · Projects & Tasks · Communications │ Organization — Directory · Attendance (console) · Reports & Analytics │ Account — Settings & Profile (Settings via user menu) · Pinned section.
+**HR sidebar:** Overview — Dashboard · Attendance & Time · Projects & Tasks · Communications │ Organization — Directory · Attendance (team) · Reports & Analytics │ Account — Settings & Profile · Pinned.
+**Employee sidebar:** Overview — Dashboard · Attendance & Time · Projects & Tasks · Communications │ Account — Settings & Profile · Pinned. *(No Directory/Reports — owner decision 2026-08.)*
 
-- The **task detail sheet** (click any task, or `/dashboard/tasks/[id]`) hosts everything: description, progress slider (managers), inline title/due-date edit, assignees, dependencies, comments feed, time logs, reminders, QA answers, and the submit/approve/redo panels.
-- Employees see a **"My Submissions"** status widget on their dashboard (pending / approved / redo-required with feedback).
-- Approving marks done, fires notifications to the submitter, and (optionally, per a per-task flag) posts a completion message into the project chat.
+**Mobile:** bottom bar — Dashboard · Projects · **raised green Attendance FAB** · Chat · Profile; hamburger opens the full nav as a slide-over; chat = list → full-screen thread with back; time clock is the hero widget.
+
+**Legacy URL redirects (all verified):** `/dashboard/leave` → Attendance?tab=leave · `/dashboard/org/leave` → Attendance?tab=approvals · `/dashboard/org` & `/dashboard/org/users` → Directory?tab=management · `/dashboard/org/departments|designations` → Directory tabs · `/dashboard/admin/attendance` → Attendance Console · `/dashboard/admin/reports` → Reports · `/dashboard/announcements` → Chat?tab=announcements · `/dashboard/notifications` → Chat?tab=notifications · `/dashboard/audit` → Settings?tab=audit.
 
 ---
 
-## 17. Task Comments, Reminders, Dependencies, Recurrence
-
-- **Comments:** live feed on the task sheet; Enter to send; participants only.
-- **Reminders:** personal reminders at a chosen datetime (`reminders:due-date` also auto-generates from due date); a scheduler runs every minute and delivers due reminders as notifications.
-- **Dependencies:** `blocked_by` links; the server prevents completing a task whose blocker isn't done, and detects cycles.
-- **Recurrence:** daily / weekly (pick weekdays) / monthly (day of month); on completion the next occurrence is auto-created.
-
----
-
-## 18. Time Tracking (Project Timer & Manual Logs)
-
-**Who:** `timer.track` (everyone). **Entry:** header "project timer" widget (always visible) and the task sheet's Time tab.
-
-**Flow:**
-
-1. Pick a project (and optionally a task) → **Start** → timer runs in the header.
-2. Pause / resume any time.
-3. **Stop & Log** opens a pre-filled log (minutes = elapsed, editable) with a description → `POST /timer/log` writes a `task_time_logs` row (task and/or project linked, log date, description).
-4. The task sheet's Time tab lists all logs for the task and offers manual entry.
-5. Time logs roll up into: project "total hours," attendance day "projects/tasks" breakdown, and productivity reports.
-
----
-
-## 19. QA Forms & QA-Gated Submissions
-
-**Who:** building = `qa.manage` (hr + super_admin); answering = anyone submitting a task/project bound to a form.
-
-- The **QA Form Builder** (Tasks tab, managers) creates forms: title, description, and field list (label, type — text/textarea/checkbox/slider, required flag).
-- Forms attach to **projects** and **tasks** at creation/edit.
-- When submitting for review, the submitter fills the form; **required fields are enforced** client- and server-side.
-- Managers reviewing see the answers inline in the review panel; answers are stored as a QA submission tied to the task/project.
-
-*(Audit note: only creation is implemented in the UI — editing/deleting forms and select-type fields are backend features without UI; see report.md.)*
-
----
-
-## 20. Chat / Messaging
-
-**Who:** `chat.access` (everyone). **Entry:** sidebar "Communications" → `/dashboard/chat`.
-
-**Structure:** one screen, three tabs — **Chat**, **Announcements**, **Notifications**.
-
-**Conversations:**
-
-- Types: **Global** (company-wide channel, seeded), **Project** (auto-created per project), **Direct** (1:1), **Group** (named).
-- Left list is virtualized with infinite cursor pagination, search, unread-first sorting, and per-type icons/badges.
-- Starting a DM: from chat "New message" picker, from the Directory, or from a user profile — all call the same "find-or-create DM" endpoint.
-
-**Messaging:**
-
-- Send with Enter (Shift+Enter = newline); **optimistic send** with rollback on failure.
-- **Attachments:** images/PDFs/any file ≤10 MB uploaded to S3; images and PDFs preview inline in a dialog.
-- **@mentions:** autocomplete from conversation members; mentioned users get a notification.
-- **Read receipts:** single/double check marks; conversations auto-mark-read when opened (and per-message as they scroll into view).
-- **History:** infinite upward pagination with scroll anchoring (newest at bottom).
-- **Pinned messages:** managers (`chat.manage` or `projects.manage` in project channels) can pin/unpin; pinned items show in a bar atop the thread.
-- **Group creation** is gated in the UI to `chat.manage` (hr + admin). *(Audit note: the backend additionally requires an unseeded `chat.group` capability, so in practice only super_admin succeeds — see report.md.)*
-- **Realtime:** new messages, reads, and new conversations arrive over WebSockets instantly; if realtime is down, chat degrades to 15-second polling and shows a "Not connected" pill.
-
----
-
-## 21. Announcements
-
-**Who:** reading = everyone; writing = `announcements.manage` (hr + super_admin). **Entry:** dashboard Announcement Board widget and Chat → Announcements tab.
-
-- Posts have title, rich body, **scope** (whole company or a team), **priority** (normal/high/urgent), and a **pinned** flag.
-- High/urgent announcements notify **all active users** in-app.
-- **Reactions:** any user can toggle emoji reactions (per-emoji who-reacted).
-- Editing/deleting: managers (or the author).
-- Live updates arrive over the `org.announcements` realtime channel.
-
----
-
-## 22. Notifications
-
-**Who:** everyone. **Entry:** bell in the header (unread popup) + Chat → Notifications tab (full center); "View all" from the bell opens the center.
-
-- Sources: leave decisions, approvals awaiting you, task assignments/completions, mentions, announcements (high/urgent), suspicious logins, export-ready, open-shift nudges, reminders, password-reset decisions.
-- **Bell behavior:** badge counts **high-priority unread**; popup lists recent unread/important with mark-read and mark-all-read (optimistic); "Clear" hides items locally (persisted per browser).
-- **Center:** filters (type taxonomy with icons, unread-only, search), pagination, mark read/all-read.
-- Realtime `notification-created` toasts on arrival (respecting the user's sound preference); approval status changes refresh leave caches.
-- mark-**unread** exists on the backend but has no UI.
-
----
-
-## 23. Directory (Corporate & Employee Management)
-
-**Entry:** sidebar "Directory" → `/dashboard/directory` with four tabs:
-
-1. **Corporate Directory** (everyone, `directory.view`): searchable/filterable (department, designation) card + table views with photos, roles, contact info. **Privacy rule:** each user sets their own directory visibility (public/private) in Profile → Preferences; private users show name/role only, with email/phone hidden. Infinite "Load more" pagination (24/page). Actions: **Message** (starts a DM), view detail sheet, "View Profile" (opens the full user record — HR/manage capability required by the API).
-2. **Employee Management** (HR + admin only): the full users table — see §24.
-3. **Departments** (visible to all; manage actions gated — see §25).
-4. **Designations** (visible to all; manage gated — §26).
-
----
-
-## 24. Employee Record Management (HR CRUD)
-
-**Who:** `users.employee.manage` (hr) / `users.hr.manage` (admin). **Entry:** Directory → Employee Management tab; user detail at `/dashboard/org/users/[id]`.
-
-- **Create user:** full form — name, email, username, phone, employee ID (auto-numbered `G4K-###` if left blank via the auto-numbering engine), department → team cascade, designation, work schedule, **role checkboxes** (employee/hr/super_admin). The server generates a random password, emails it if SMTP is configured, and requires the new user to change it at first login (`must_change_password`).
-- **Edit:** all of the above including role replacement.
-- **Status:** activate/deactivate (with last-super-admin protection server-side).
-- **Delete:** soft delete (revokes tokens; user disappears from lists but is restorable). A "show trashed" filter exposes deleted records with **Restore**.
-- **Bulk ops:** select many → bulk activate/deactivate.
-- **Reset password (admin-initiated):** generates a temp password, emails it, forces change at next login.
-- **Export:** filtered or selected rows → async export job (§28).
-- **User detail page:** profile header + department/designation/schedule editors, attendance history (HR-scoped), leave history, project/task assignments, activity feed (audit trail), status/edit/reset/delete actions, and shortcuts (Message, view attendance).
-
-**Scoping:** HR sees and manages only their managed departments (admin sees all). Creating an HR user requires the higher `users.hr.manage` capability (server-checked).
-
----
-
-## 25. Departments, Teams & Department HRs
-
-**Viewing:** everyone sees the Departments tab (name, code, headcount, status).
-
-**Managing (`departments.manage` — super_admin only by default):**
-
-- Create/edit department (name unique, auto-numbered code `DEP-###`).
-- **Archive/restore** (soft archive; archived departments filterable).
-- **Delete** blocked if users are still assigned (move them first).
-- **Department detail sheet** with three sub-tabs:
-  - *Employees* — sync the member list (bulk assign/remove).
-  - *HRs* — designate which HR users manage this department (this drives all HR scoping in the app).
-  - *Teams* — create/delete sub-teams within the department.
-- Export to async job.
-
-*(Audit note: the current UI shows manage buttons to HR (`users.*.manage`) but the backend only grants `departments.manage` to super_admin, so HR actions fail with 403 — see report.md.)*
-
----
-
-## 26. Designations
-
-- Everyone views the designation master (name, headcount, active status) with search/pagination.
-- `designations.manage` (super_admin): create/edit, activate/deactivate (optimistic toggle), delete (blocked while any user holds it), export.
-
----
-
-## 27. Role Dashboards & Widget Customization
-
-Every role gets a widget-grid dashboard (drag to rearrange, resize, persist):
-
-- **super_admin:** Total Employees (with active/inactive/department breakdown), Active Projects, Today's Attendance snapshot, Pending Approvals (leave + task/project submissions), Recent Activity, Quick Task creator.
-- **hr:** Team Attendance today, Pending Approvals, Team Activity feed (late/open-shift anomalies), Quick Task, Announcements board, Upcoming Holidays, Time Clock (self).
-- **employee:** Announcements, Active Projects, Pending Tasks, Approval Status (my submissions), Recent Task Progress, Upcoming Holidays, Quick Notes, Time Clock.
-
-**Rules:**
-
-- Layouts (position/size per breakpoint) save automatically (debounced) to the user's preferences server-side and restore on any device; a reconciliation step repairs layouts when the widget catalog changes.
-- Widgets individually show loading skeletons, error+retry, and empty states; the whole dashboard has a load-error screen with Retry/Sign-out.
-- The Time Clock widget follows the `attendance.clock-self` capability (hidden for super_admin).
-- Greeting header (time-of-day based).
-
----
-
-## 28. Reports & Data Exports
-
-**Who:** `reports.view` (everyone per the seeder) for the standard builder; the admin summary view additionally requires a manager capability in practice (see report note).
-
-**Standard Report Builder:** pick a dataset — **Tasks, Projects, Users, Productivity** — with search; columns are generated from the data; refresh; export to **xlsx / csv / pdf**.
-
-**Admin summary view:** attendance-summary and leave-summary tables over a date range + department, with saved views (save current filter sets per module) and export.
-
-**The export pipeline (all exports company-wide):**
-
-1. Any export button (attendance, leave, users, departments, designations, audit, reports) calls the corresponding `/export` endpoint.
-2. The backend creates an **ExportJob** and hands it to the queue worker (runs continuously in deployment).
-3. The UI immediately toasts "Export queued" with a **View Exports** shortcut.
-4. When the job finishes: the file (xlsx/csv/pdf) is stored on S3, an `export-completed` realtime event fires, and the notification lands in the bell.
-5. **Export History** (Reports → Exports tab, also linked from toasts) lists your recent exports with status and a **Download** button (authenticated blob download).
-
----
-
-## 29. Settings (Admin Console)
-
-**Who:** `settings.manage` (super_admin). **Entry:** user menu → Settings (`/dashboard/settings`). Twelve tabs (URL-synced):
-
-1. **Company Profile** — name, short name, timezone, logo upload.
-2. **Work Schedules** — full CRUD of shift templates (start/end, break minutes, grace minutes, working days); one is the default (drives late/standard-hour math); default/last-schedule delete protection.
-3. **Policies** — password policy (min length, complexity), session TTLs (access minutes, refresh days), max devices, password expiry days.
-4. **Holidays** — shortcut into the holiday calendar management (§13).
-5. **Mail / SMTP** — host/port/encryption/credentials + **Send Test Email** (password round-trips masked).
-6. **Notifications** — per-event channel matrix (leave requests, attendance reminders, weekly summary → in-app/email toggles).
-7. **Auto-Numbering** — prefix / start number / format for company, department, employee IDs with live preview.
-8. **Reminders** — shift-start reminder minutes, missed-clock-in alert minutes, cutoff time.
-9. **Security Requests** — the admin side of self-service password resets (§32): pending requests with **Approve** (generates a one-time reset link to copy/send) / **Reject**.
-10. **Audit Log** — see §30.
-11. **Demo Data** — status counts, **Seed** (repopulates the demo dataset) and **Purge** (typed confirmation "REMOVE DEMO DATA"; deletes every demo-tagged row).
-12. **System Jobs** — queue health: pending/failed counts (10s polling) with per-job **Retry**.
-
-*(Audit note: several of these tabs have defects — audit table renders empty, timezone list is hardcoded, etc. — detailed in report.md.)*
-
----
-
-## 30. Audit Logs
-
-**Who:** `audit.view` (super_admin). **Entry:** Settings → Audit Log (the old `/dashboard/audit` URL redirects there).
-
-- Immutable trail of security-relevant actions: logins/logouts, user CRUD, corrections, settings changes, approvals, exports, etc., with actor, action, subject, before/after diff, IP, timestamp.
-- Filters: exact action, user, date range (both dates required for the range to apply), pagination.
-- Export via the async pipeline.
-
-*(Current defect: the table shows empty due to a response-unwrapping bug, and export uses the wrong HTTP method — see report.md.)*
-
----
-
-## 31. My Profile, Security & Sessions
-
-**Entry:** sidebar "Settings & Profile" / user menu → `/dashboard/profile`.
-
-- **Header:** avatar upload (drag-drop, type + 2 MB validation, stored on S3).
-- **General tab:** name, phone, **self-designation** dropdown, department/company read-only cards.
-- **Security tab:** change password (policy-validated); **active sessions list** (device, IP, last used, current-device badge) with per-session **Revoke** (revoking the current device logs you out immediately — realtime `session.revoked` also kills other tabs).
-- **Preferences tab:** directory visibility (public/private), theme, density, **Hidden Widgets manager**, and the **Feedback form** (subject/category/body → on submit, a DM is opened with the managing HR).
-
----
-
-## 32. Password Reset (Self-Service + Admin Approval)
-
-The forgot-password flow has an **offline-friendly fallback** for when SMTP isn't configured:
-
-1. User requests a reset (§3.4) → a **Password Reset Request** row is created (pending) — no email if SMTP is off.
-2. Admin opens **Settings → Security Requests**, sees the pending request, and **Approves** it.
-3. The backend generates a one-time **reset link** (60-min token) which the admin copies and hands to the user through any channel.
-4. The user opens the link → sets a new password → all their tokens are revoked.
-
----
-
-## 33. Pins (Quick Access Shortcuts)
-
-- Any **project card** and any **task sheet** can be pinned (📌).
-- Pinned items appear at the bottom of the sidebar (and mobile drawer) as one-click shortcuts.
-- Unpin from the same source widget. Pins are per-user, server-side (`/pins`), max 100.
-
----
-
-## 34. Command Palette & Keyboard Shortcuts
-
-- **Ctrl/Cmd+K** opens the command palette: recently viewed (directory items), HR/admin actions (team attendance, corrections, exports), punch shortcuts (clock in/out/breaks execute immediately), and navigation (users, departments, designations, settings, reports).
-- **Ctrl+B** toggles the sidebar. **Ctrl+/** opens the keyboard-shortcuts help overlay. **/** focuses search boxes on tables.
-- A **version guard** polls `/api/version` every 60s and offers a one-click reload when a new build ships.
-
----
-
-## 35. Offline Mode (PWA)
-
-- The app is installable (manifest, icons, maskable icon, service worker).
-- **Reads:** service worker uses network-first for pages/API and stale-while-revalidate for static assets.
-- **Writes while offline:** any non-GET API call (punches, leave requests, messages…) is queued in IndexedDB and replayed automatically on reconnect with a retry ladder (1s/5s/30s/2m). Punches use idempotency keys so replays never double-record.
-- The **time clock works fully offline** — the timer runs locally and punches sync later; a banner and per-widget badges show offline state.
-- 4xx during sync marks the item failed (with a toast + event); conflicts (409/422) are parked for manual review.
-
----
-
-## 36. Realtime Updates (WebSockets)
-
-- A Reverb WebSocket connection powers: live chat messages/read receipts, new-conversation events, notification toasts, announcement refreshes, attendance table refreshes on any punch, approval status changes, export-completed, and **session revoked** (instant cross-device logout).
-- The client only connects when the deployment defines the public Reverb host/key; otherwise **everything silently falls back to polling** (chat 15s, notifications 30s, attendance 60s) and chat shows a "Not connected" pill.
-- Channel authorization uses the Sanctum token against `/broadcasting/auth`.
-
----
-
-## 37. Theme, Density & Layout Preferences
-
-- **Theme:** light / dark / system (user menu), persisted.
-- **Density:** compact / comfortable row spacing (user menu), persisted server-side.
-- **Sidebar:** three states (expanded / collapsed / hidden) with per-user persistence; mobile gets a slide-over drawer + fixed bottom nav (Dashboard, Projects, Attendance FAB, Chat, Profile).
-- Preferences (sidebar state, dashboard layout, directory visibility) sync via `/auth/preferences`.
-
----
-
-## 38. Demo Data Seeding & Purge
-
-**Who:** super_admin (Settings → Demo Data).
-
-- **Seed** populates the full demo dataset: 13 users across 3 departments with roles, work schedules, 4 weeks of attendance, leave scenarios, projects/tasks with QA, conversations, announcements, notifications, holidays.
-- **Purge** requires typing "REMOVE DEMO DATA" and deletes **every demo-tagged row** (users, attendance, projects, etc.) in FK-safe order — it does not touch real (non-demo) records.
-- Both run as queue jobs; the status card refetches after completion.
-
----
-
-*This document intentionally describes what IS implemented. Defects, missing pieces, and mismatches are catalogued separately in **report.md**.*
+*Known defects and the finish-line plan live in **finalization.md**. This map reflects the codebase as of 2026-08-19.*

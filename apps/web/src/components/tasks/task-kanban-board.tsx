@@ -77,6 +77,7 @@ function TaskCard({
 }) {
   return (
     <Card
+      id={`data-row-${task.id}`}
       onClick={() => onTaskSelect?.(task)}
       className={cn(
         "border-neutral-200/60 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900",

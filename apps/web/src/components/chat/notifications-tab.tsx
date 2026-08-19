@@ -102,6 +102,16 @@ export function NotificationsTab() {
     }
   });
 
+  const markUnreadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiFetch(`/notifications/${id}/mark-unread`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
+    }
+  });
+
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
       return apiFetch(`/notifications/mark-all-read`, { method: "POST" });
@@ -213,9 +223,15 @@ export function NotificationsTab() {
                 Mark Read
               </Button>
             ) : (
-              <span className="text-xs text-neutral-400 flex items-center gap-2">
-                <AppIcon name="mailOpen" /> Read
-              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markUnreadMutation.mutate((item as any).id)}
+                disabled={markUnreadMutation.isPending}
+                className="text-xs text-neutral-400 flex items-center gap-2 hover:text-neutral-700 dark:hover:text-neutral-200"
+              >
+                <AppIcon name="mail" /> Mark Unread
+              </Button>
             )}
           </div>
         );
@@ -247,6 +263,7 @@ export function NotificationsTab() {
               label: "Status",
               type: "select",
               options: [
+                { label: "All", value: "all" },
                 { label: "Unread", value: "unread" }
               ],
               value: filter.readStatus,
@@ -256,7 +273,7 @@ export function NotificationsTab() {
               key: "type",
               label: "Type",
               type: "select",
-              options: Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => ({ label, value })),
+              options: [{ label: "All", value: "all" }, ...Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => ({ label, value }))],
               value: filter.type,
               onChange: (v) => setFilter(f => ({ ...f, type: v }))
             }

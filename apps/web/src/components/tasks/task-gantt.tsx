@@ -29,7 +29,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
       // Ensure end date is at least 1 day after start to show up on the chart
       const end = task.due_date ? parseDate(task.due_date) : new Date(start.getTime() + 86400000);
       
-      const isMilestone = isSameDay(start, end);
+      const isMilestone = (task as any).is_milestone || isSameDay(start, end);
 
       return {
         id: String(task.id),

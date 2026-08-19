@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Input, Card, CardHeader, CardTitle, CardContent, AppIcon } from "@g4k/ui/components";
+import { Dialog, DialogContent, ConfirmDialog } from "@g4k/ui/components";
+import { QAFormPreview } from "./qa-form-preview";
 import { queryKeys } from "@/lib/query-keys";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -142,6 +144,93 @@ export function QAFormBuilder() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const { data: qaFormsData, isLoading: isLoadingForms } = useQuery({ 
+    queryKey: queryKeys.qaForms, 
+    queryFn: () => apiFetch("/qa-forms") 
+  });
+  
+  const forms = Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : [];
+
+  const updateFormMutation = useMutation({
+    mutationFn: async () => {
+      let currentSectionId: string | null = null;
+      const apiFields = fields.map((f) => {
+        if (f.field_type === "section") {
+          currentSectionId = f.id;
+        }
+        return {
+          label: f.label,
+          field_type: f.field_type,
+          required: f.required,
+          options: f.options,
+          section_id: currentSectionId,
+          branching_logic: f.branching_logic
+        };
+      });
+
+      return apiFetch(`/qa-forms/${editingId}`, {
+        method: "PUT",
+        body: JSON.stringify({ title, description, is_template: true, fields: apiFields }),
+      });
+    },
+    onSuccess: () => {
+      toast.success("QA Form Template updated successfully.");
+      setEditingId(null);
+      setTitle("");
+      setDescription("");
+      setFields([
+        { id: generateId(), label: "First Section", field_type: "section", required: false, options: [], branching_logic: null },
+        { id: generateId(), label: "Check Code Formatting", field_type: "checkbox", required: true, options: [], branching_logic: null }
+      ]);
+      queryClient.invalidateQueries({ queryKey: queryKeys.qaForms });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to update QA form.");
+    },
+  });
+
+  const deleteFormMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiFetch(`/qa-forms/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("QA Form deleted.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.qaForms });
+      setIsDeleteOpen(false);
+      if (editingId === deletingId) {
+        setEditingId(null);
+        setTitle("");
+        setDescription("");
+        setFields([]);
+      }
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to delete QA form."),
+  });
+
+  const handleEdit = (form: any) => {
+    setEditingId(form.id);
+    setTitle(form.title || "");
+    setDescription(form.description || "");
+    const parsedFields = Array.isArray(form.fields) ? form.fields : [];
+    setFields(parsedFields.map((f: any) => ({ ...f, id: f.id || generateId() })));
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTitle("");
+    setDescription("");
+    setFields([
+      { id: generateId(), label: "First Section", field_type: "section", required: false, options: [], branching_logic: null },
+      { id: generateId(), label: "Check Code Formatting", field_type: "checkbox", required: true, options: [], branching_logic: null }
+    ]);
+  };
+
   const [fields, setFields] = useState<QAField[]>([
     { id: generateId(), label: "First Section", field_type: "section", required: false, options: [], branching_logic: null },
     { id: generateId(), label: "Check Code Formatting", field_type: "checkbox", required: true, options: [], branching_logic: null },
@@ -218,11 +307,54 @@ export function QAFormBuilder() {
   });
 
   return (
-    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-e1 rounded-xl overflow-hidden h-full">
+    <>
+      <div className="flex gap-4 h-full">
+      <Card className="w-80 shrink-0 border border-neutral-200 dark:border-neutral-800 shadow-e1 rounded-xl overflow-hidden h-full flex flex-col">
+        <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 py-3">
+          <CardTitle className="text-sm font-bold">Existing QA Forms</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-y-auto p-0">
+          {isLoadingForms ? (
+            <div className="p-4 text-center text-xs text-neutral-500">Loading forms...</div>
+          ) : forms.length === 0 ? (
+            <div className="p-4 text-center text-xs text-neutral-500">No QA forms found.</div>
+          ) : (
+            <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+              {forms.map((form: any) => (
+                <div key={form.id} className="p-4 flex flex-col gap-2 transition-colors">
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <h4 className="text-sm font-semibold">{form.title}</h4>
+                      {form.description && <p className="text-xs text-neutral-500 line-clamp-2">{form.description}</p>}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end mt-2">
+                    <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => handleEdit(form)}>
+                      <AppIcon name="edit" size="xs" className="mr-1" /> Edit
+                    </Button>
+                    <Button size="sm" variant="destructive" className="h-7 text-xs px-2" onClick={() => { setDeletingId(form.id); setIsDeleteOpen(true); }}>
+                      <AppIcon name="trash" size="xs" className="mr-1" /> Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="flex-1 border border-neutral-200 dark:border-neutral-800 shadow-e1 rounded-xl overflow-hidden h-full flex flex-col">
+
       <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
-        <CardTitle className="text-base font-bold flex items-center gap-2">
-          <AppIcon name="success" className="text-primary" />
-          Create QA Form Template
+        <CardTitle className="text-base font-bold flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <AppIcon name="success" className="text-primary" />
+            {editingId ? "Edit QA Form Template" : "Create QA Form Template"}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)} className="h-8">
+            <AppIcon name="search" size="xs" className="mr-2" />
+            Preview
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
@@ -278,14 +410,51 @@ export function QAFormBuilder() {
           )}
         </div>
 
-        <Button
-          onClick={() => createFormMutation.mutate()}
-          disabled={createFormMutation.isPending || !title || fields.length === 0}
-          className="w-full font-semibold h-10 text-sm bg-primary-600 hover:bg-primary-700 text-white"
-        >
-          {createFormMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : "Save QA Template"}
-        </Button>
+        
+        <div className="flex gap-2">
+          {editingId && (
+            <Button
+              variant="outline"
+              onClick={handleCancelEdit}
+              className="font-semibold h-10 text-sm w-1/3"
+            >
+              Cancel Edit
+            </Button>
+          )}
+          <Button
+            onClick={() => editingId ? updateFormMutation.mutate() : createFormMutation.mutate()}
+            disabled={createFormMutation.isPending || updateFormMutation.isPending || !title || fields.length === 0}
+            className="font-semibold h-10 text-sm flex-1 text-white"
+          >
+            {createFormMutation.isPending || updateFormMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : (editingId ? "Update QA Template" : "Save QA Template")}
+          </Button>
+        </div>
+
       </CardContent>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl h-[90vh] p-0 overflow-hidden border-none bg-transparent shadow-none">
+          <div className="h-full w-full bg-background rounded-xl overflow-hidden shadow-2xl">
+            <QAFormPreview
+              title={title}
+              description={description}
+              fields={fields}
+              onClose={() => setPreviewOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
+    </div>
+
+      <ConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        title="Delete QA Form"
+        description="Are you sure you want to delete this QA form? This action cannot be undone."
+        confirmText="Delete Form"
+        onConfirm={() => { if (deletingId) deleteFormMutation.mutate(deletingId); }}
+      />
+    </>
   );
 }

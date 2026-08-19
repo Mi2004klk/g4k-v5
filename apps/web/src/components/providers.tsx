@@ -15,10 +15,13 @@ import { useUIStore } from "@/lib/ui-store";
 import { queryKeys } from "@/lib/query-keys";
 import { triggerInvalidation } from "@/lib/invalidation-map";
 
+import { useTimerStore } from "@/stores/timer-store";
+
 function StoreHydration() {
   React.useEffect(() => {
     useAuthStore.persist.rehydrate();
     useUIStore.persist.rehydrate();
+    useTimerStore.persist.rehydrate();
   }, []);
   return null;
 }

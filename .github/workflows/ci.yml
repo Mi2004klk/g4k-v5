@@ -30,7 +30,9 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - name: Lint & Typecheck
-        run: pnpm --filter web typecheck
+        run: |
+          pnpm --filter web lint
+          pnpm --filter web typecheck
       - name: Run Web Tests
         run: pnpm --filter web test
       - name: Build Next.js App

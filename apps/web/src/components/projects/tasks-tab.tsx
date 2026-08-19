@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useAuthStore } from "@/lib/auth-store";
+import { useFormDraft } from "@/hooks/use-form-draft";
+import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
@@ -68,6 +70,36 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const [recurrencePattern, setRecurrencePattern] = useState("daily");
   const [recurrenceDays, setRecurrenceDays] = useState<number[]>([]);
   const [dayOfMonth, setDayOfMonth] = useState<number>(1);
+
+  const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft("task_create", {
+    title: "", description: "", priority: "medium", dueDate: "", assigneeIds: [] as number[], projectId: defaultProjectId || "", scope: "global", qaFormId: "", blockedBy: "", isRecurring: false, recurrencePattern: "daily", recurrenceDays: [] as number[], dayOfMonth: 1
+  });
+
+  useEffect(() => {
+    setDraftData({
+      title, description, priority, dueDate, assigneeIds, projectId, scope, qaFormId, blockedBy, isRecurring, recurrencePattern, recurrenceDays, dayOfMonth
+    });
+  }, [title, description, priority, dueDate, assigneeIds, projectId, scope, qaFormId, blockedBy, isRecurring, recurrencePattern, recurrenceDays, dayOfMonth, setDraftData]);
+
+  const handleRestoreDraft = async () => {
+    const saved = await restoreDraft();
+    if (saved) {
+      setTitle(saved.title || "");
+      setDescription(saved.description || "");
+      setPriority(saved.priority || "medium");
+      setDueDate(saved.dueDate || "");
+      setAssigneeIds(saved.assigneeIds || []);
+      setProjectId(saved.projectId || defaultProjectId || "");
+      setScope(saved.scope || "global");
+      setQaFormId(saved.qaFormId || "");
+      setBlockedBy(saved.blockedBy || "");
+      setIsRecurring(saved.isRecurring || false);
+      setRecurrencePattern(saved.recurrencePattern || "daily");
+      setRecurrenceDays(saved.recurrenceDays || []);
+      setDayOfMonth(saved.dayOfMonth || 1);
+    }
+  };
+
   
   const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data: TaskUser[] }>("/users") });
   const { data: projectsData } = useQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch<{ data: TaskProject[] }>("/projects") });
@@ -76,6 +108,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const searchParams = useSearchParams();
   const isMe = searchParams.get("me") === "1";
   const isReview = searchParams.get("review") === "1";
+  const highlightId = searchParams.get("highlight");
   const [assigneeFilter, setAssigneeFilter] = useState(isMe ? "me" : "all");
   const user = useAuthStore(s => s.user);
 
@@ -118,6 +151,21 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     staleTime: STALE_TIME_TASKS,
   });
 
+  useEffect(() => {
+    if (highlightId && !isLoading) {
+      setTimeout(() => {
+        const el = document.getElementById(`data-row-${highlightId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20', 'transition-all', 'duration-1000');
+          setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+          }, 2000);
+        }
+      }, 300);
+    }
+  }, [highlightId, isLoading]);
+
   const moveTaskMutation = useMutation({
     mutationFn: async ({ taskId, status }: { taskId: number; status: string }) => {
       return apiFetch(`/tasks/${taskId}`, {
@@ -158,6 +206,24 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    },
+  });
+
+  const updateTaskDatesMutation = useMutation({
+    mutationFn: async ({ taskId, start, end }: { taskId: number; start: Date; end: Date }) => {
+      // In Gantt, `end` is typically exclusive for rendering, we subtract 1 day if it's not a milestone
+      // We'll pass the string formatted date to PUT
+      const due_date = format(end, "yyyy-MM-dd");
+      return apiFetch(`/tasks/${taskId}`, {
+        method: "PUT",
+        body: JSON.stringify({ due_date }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to update task dates.");
     },
   });
 
@@ -265,7 +331,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       setIsCreateOpen(false);
       setTitle("");
       setDescription("");
-      setDueDate("");
+      setDueDate(""); clearDraft();
       toast.success("Task created successfully.");
       // Drop exact:true so the parameterized list key is also invalidated (T-46.2)
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
@@ -734,6 +800,12 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
             />
           )}
 
+          {viewMode !== "list" && (data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
+            <div className="bg-amber-50 text-amber-700 p-2 text-sm rounded-md mb-4 text-center dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50">
+              Showing first 100 tasks.
+            </div>
+          )}
+
           {viewMode === "kanban" && (
             <TaskKanbanBoard
               tasks={filteredTasks as any}
@@ -747,7 +819,16 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         </div>
       )}
 
-      {viewMode === "gantt" && <TaskGantt tasks={filteredTasks as any} onTaskSelect={handleTaskSelect as any} />}
+      {viewMode === "gantt" && (
+        <div className="space-y-4">
+          {(data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
+            <div className="bg-amber-50 text-amber-700 p-2 text-sm rounded-md text-center dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50">
+              Showing first 100 tasks.
+            </div>
+          )}
+          <TaskGantt tasks={filteredTasks as any} onTaskSelect={handleTaskSelect as any} onTaskUpdate={(task, dates) => updateTaskDatesMutation.mutate({ taskId: Number(task.id), start: dates.start, end: dates.end })} />
+        </div>
+      )}
 
       {viewMode === "qa" && <QAFormBuilder />}
 

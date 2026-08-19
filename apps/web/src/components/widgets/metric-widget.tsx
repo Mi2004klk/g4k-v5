@@ -47,10 +47,11 @@ export function MetricWidget({
   const activeCount = data?.active_employees ?? 0;
   const inactiveCount = data?.inactive_employees ?? 0;
   const departmentsCount = data?.departments ?? 0;
+  const presentCount = (data?.present_today ?? 0) + (data?.late_today ?? 0);
 
   let dynamicInfo = info;
   if (breakdown && metricKey === "total_employees") {
-    dynamicInfo = `${activeCount} active · ${inactiveCount} inactive across ${departmentsCount} departments`;
+    dynamicInfo = `${presentCount} currently active · ${departmentsCount} departments`;
   }
 
   // Update value instantly

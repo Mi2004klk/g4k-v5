@@ -53,7 +53,7 @@ export function AdminOpenShiftsTable() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    queryFn: () => apiFetch("/departments").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : [])))),
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 

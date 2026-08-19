@@ -137,7 +137,7 @@ export function ConversationList({
                 isSelected
                   ? "bg-primary-50/60 dark:bg-primary-950/40 border-l-2 border-primary-600"
                   : isUnread 
-                    ? "bg-primary-50/30 dark:bg-primary-900/20 border-l-2 border-primary-500 hover:bg-primary-50/50" 
+                    ? "bg-primary-50/30 dark:bg-primary-900/20 border-l-2 border-transparent hover:bg-primary-50/50" 
                     : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50 border-l-2 border-transparent"
               }`}
               style={{

@@ -78,6 +78,7 @@ export default function EmployeeDetailPage() {
   // Removed blocking isPending return to allow layout to handle loading
 
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
+  const canChat = hasCapability(capabilities, "chat.access");
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
@@ -145,17 +146,29 @@ export default function EmployeeDetailPage() {
       description="View detailed information, attendance, and activity history."
       actions={
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePinClick}
+            disabled={isPinning || isUnpinning}
+            title={isPinned ? "Unpin user" : "Pin user"}
+            className={isPinned ? "text-amber-500 border-amber-200 bg-amber-50 dark:bg-amber-900/20" : "text-neutral-500"}
+          >
+            <AppIcon name="pin" />
+          </Button>
           <Button variant="outline" onClick={() => router.back()} className="gap-2">
             <AppIcon name="arrowLeft" /> Back
           </Button>
-          <Button 
-            onClick={() => sendMessageMutation.mutate(Number(userId))}
-            variant="outline" 
-            className="gap-2 text-primary-600 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-            disabled={sendMessageMutation.isPending}
-          >
-            <AppIcon name="chat" /> Send Message
-          </Button>
+          {canChat && (
+            <Button 
+              onClick={() => sendMessageMutation.mutate(Number(userId))}
+              variant="outline" 
+              className="gap-2 text-primary-600 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+              disabled={sendMessageMutation.isPending}
+            >
+              <AppIcon name="chat" /> Send Message
+            </Button>
+          )}
           {canManageUsers && (
             <>
               <Button onClick={() => { setEditingUser(user); setIsEditOpen(true); }} className="gap-2 bg-neutral-900 text-white">

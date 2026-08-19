@@ -31,6 +31,8 @@ interface TimerState {
   stopProjectTimer: () => { elapsedSeconds: number; taskId: string | null; projectId: string | null };
 }
 
+export const DEFAULT_STANDARD_SECONDS = 31500;
+
 export const useTimerStore = create<TimerState>()(
   persist(
     (set, get) => ({
@@ -40,7 +42,7 @@ export const useTimerStore = create<TimerState>()(
   currentBreakStart: null,
   baseSeconds: 0,
   lastActiveTimestamp: null,
-  standardSeconds: 28800, // Default to 8 hours
+  standardSeconds: 31500, // Default to 8 hours
 
   setStandardSeconds: (seconds: number) => set({ standardSeconds: seconds }),
 
@@ -96,7 +98,7 @@ export const useTimerStore = create<TimerState>()(
     }
 
     const initialTotalSeconds = day.total_seconds || 0;
-    const standardSeconds = providedStandardSeconds || day.standard_seconds || 28800;
+    const standardSeconds = providedStandardSeconds || day.standard_seconds || DEFAULT_STANDARD_SECONDS;
     
     // Determine active state based on events
     let isActive = false;

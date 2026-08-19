@@ -43,6 +43,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/u
 export const navGroups = [
   { label: "Overview", items: [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
+    { name: "Quick Notes", href: "/dashboard/notes", icon: "edit" },
     { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance", capability: "attendance.clock-self" },
     { name: "Projects & Tasks", href: "/dashboard/projects", icon: "projects", capability: "projects.view" },
     { name: "Communications", href: "/dashboard/chat", icon: "chat", capability: "chat.access" },
@@ -130,7 +131,7 @@ export default function DashboardLayout({
   useEffect(() => {
     // Prefetch consolidated dashboard init data on cold load
     if (!authUser) return;
-    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init").then(r => r.data), staleTime: 5 * 60_000 });
+    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init"), staleTime: 5 * 60_000 });
   }, [authUser, queryClient]);
 
   useEffect(() => {
@@ -456,17 +457,19 @@ export default function DashboardLayout({
                 </Link>
               )}
 
-              <Link
-                href="/dashboard/chat"
-                prefetch={false}
-                className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
-                  pathname.startsWith("/dashboard/chat") ? "text-pink-600 dark:text-pink-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                )}
-              >
-                <AppIcon name="chat" size="lg" className=" shrink-0" />
-                <span>Chat</span>
-              </Link>
+              {hasCapability(userCapabilities, "chat.access") && (
+                <Link
+                  href="/dashboard/chat"
+                  prefetch={false}
+                  className={cn(
+                    "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                    pathname.startsWith("/dashboard/chat") ? "text-pink-600 dark:text-pink-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  )}
+                >
+                  <AppIcon name="chat" size="lg" className=" shrink-0" />
+                  <span>Chat</span>
+                </Link>
+              )}
 
               <Link
                 href="/dashboard/profile"

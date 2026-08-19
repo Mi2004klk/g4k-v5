@@ -74,7 +74,9 @@ export function useFormDraft<T extends Record<string, unknown>>(key: string, ini
       if (saved) {
         setFormData(saved);
         toast.info("Form draft restored!");
+        return saved;
       }
+      return null;
     } catch {
       toast.error("Failed to restore draft");
     }

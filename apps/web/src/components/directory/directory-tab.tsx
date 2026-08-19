@@ -81,13 +81,13 @@ export function CorporateDirectoryTab() {
 
   const { data: deptsData } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments?limit=100"),
+    queryFn: () => apiFetch("/departments?per_page=100"),
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
   const { data: desigsData } = useQuery({
     queryKey: queryKeys.designations,
-    queryFn: () => apiFetch("/designations?limit=100"),
+    queryFn: () => apiFetch("/designations?per_page=100"),
     staleTime: STALE_TIME_DESIGNATIONS,
   });
 

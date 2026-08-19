@@ -99,7 +99,7 @@ export function HrAttendanceTable() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then(res => res.data || []),
+    queryFn: () => apiFetch("/departments").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : [])))),
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
@@ -341,7 +341,7 @@ export function HrAttendanceTable() {
               type: "select",
               value: deptFilter,
               onChange: setDeptFilter,
-              options: departments.map((d: { id: number; name: string }) => ({ label: d.name, value: d.id.toString() }))
+              options: [{ label: "All Departments", value: "all" }, ...departments.map((d: { id: number; name: string }) => ({ label: d.name, value: d.id.toString() }))]
             }
           ]}
           onClearAll={() => {

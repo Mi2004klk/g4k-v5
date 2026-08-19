@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api-client";
@@ -11,6 +11,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { ProjectCard } from "@/components/projects/project-card";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { Button, FilterBar } from "@g4k/ui/components";
+import { toast } from "sonner";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
@@ -25,6 +26,23 @@ export function ProjectsTab() {
   const debouncedSearch = useDebounce(search, 250);
   const { data: caps = [] } = useCapabilities();
   const canManageProjects = hasCapability(caps, "projects.manage");
+  const queryClient = useQueryClient();
+
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: number; name: string }) => {
+      return apiFetch(`/projects/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ name }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
+      toast.success("Project updated.");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to update project.");
+    }
+  });
 
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: [...queryKeys.projects(debouncedSearch, sort, page), sortDirection, status],
@@ -114,6 +132,7 @@ export function ProjectsTab() {
                 key={project.id} 
                 project={project} 
                 onClick={() => router.push(`/dashboard/projects/${project.id}`)}
+                onUpdateName={canManageProjects ? (name) => updateProjectMutation.mutate({ id: project.id, name }) : undefined}
               />
             ))}
           </div>

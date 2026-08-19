@@ -34,8 +34,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   }));
   const [, setMounted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const { widgetStates } = useUIStore(useShallow((s) => ({
+  const { widgetStates, dismissWidget } = useUIStore(useShallow((s) => ({
     widgetStates: s.widgetStates,
+    dismissWidget: s.dismissWidget,
   })));
   
   const draggingRef = useRef(false);
@@ -211,8 +212,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
       >
         {availableWidgets.map((widget) => (
           <div key={widget.id} className="h-full group/widget relative">
-            <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-10 flex items-center gap-1">
-              <div className="widget-drag-handle cursor-grab active:cursor-grabbing p-1 bg-black/5 dark:bg-white/10 rounded flex items-center justify-center shadow-sm">
+            <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-50 flex items-center gap-1">
+              <div className="widget-drag-handle cursor-grab active:cursor-grabbing p-1 bg-black/5 dark:bg-white/10 rounded flex items-center justify-center shadow-sm hover:bg-black/10 dark:hover:bg-white/20 transition-colors" title="Drag to move">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500">
                   <circle cx="9" cy="12" r="1" />
                   <circle cx="9" cy="5" r="1" />
@@ -222,6 +223,16 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
                   <circle cx="15" cy="19" r="1" />
                 </svg>
               </div>
+              <button 
+                onClick={() => dismissWidget(widget.id)}
+                className="p-1 bg-black/5 dark:bg-white/10 rounded flex items-center justify-center shadow-sm hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
+                title="Hide widget"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
             <ErrorBoundary name={`Widget-${widget.id}`}>
               {widget.component}

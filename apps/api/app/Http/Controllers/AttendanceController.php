@@ -423,6 +423,24 @@ class AttendanceController extends Controller
         return $this->overview($request);
     }
 
+    public function hrAnalytics(Request $request)
+    {
+        return $this->adminAnalytics($request);
+    }
+
+    public function adminAnalytics(Request $request)
+    {
+        $query = $this->buildOverviewQuery($request);
+        $all = $query->get();
+        
+        return response()->json([
+            'present' => $all->where('status', 'present')->count(),
+            'absent' => $all->where('status', 'absent')->count(),
+            'late' => $all->where('status', 'late')->count(),
+            'leave' => $all->where('status', 'leave')->count(),
+        ]);
+    }
+
     public function overview(Request $request)
     {
         $query = $this->buildOverviewQuery($request);
@@ -653,7 +671,7 @@ class AttendanceController extends Controller
     public function hrGraph(Request $request)
     {
         $validated = $request->validate([
-            'mode' => 'nullable|in:weekly,monthly',
+            'mode' => 'nullable|in:weekly,monthly,yearly',
             'groupBy' => 'nullable|in:date,employee',
             'date' => 'nullable|date',
             'user_id' => 'nullable|integer|exists:users,id',
@@ -677,9 +695,14 @@ class AttendanceController extends Controller
             $start = $carbonDate->copy()->startOfWeek();
             $end = $carbonDate->copy()->endOfWeek();
             $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-        } else {
+        } elseif ($mode === 'monthly') {
             $start = $carbonDate->copy()->startOfMonth();
             $end = $carbonDate->copy()->endOfMonth();
+            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
+        } else {
+            // Yearly mode for Heat Map
+            $start = $carbonDate->copy()->startOfYear();
+            $end = $carbonDate->copy()->endOfYear();
             $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
         }
 
