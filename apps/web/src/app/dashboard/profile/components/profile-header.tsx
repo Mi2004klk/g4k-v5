@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api-client";
 import { getAuthToken } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 
-import { Card, CardContent, Avatar, AvatarFallback, Button } from "@g4k/ui/components";
+import { Card, Avatar, AvatarFallback, Button, Badge } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -89,7 +89,7 @@ export function ProfileHeader() {
   const handleFile = (file: File | undefined) => {
     if (!file) return;
     if (!["image/jpeg", "image/png", "image/webp", "image/jpg", "image/gif", "image/svg+xml"].includes(file.type)) {
-      toast.error("Please select a valid image file (JPEG, PNG, WEBP, GIF, SVG).");
+      toast.error("Please select a valid image file.");
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
@@ -104,16 +104,8 @@ export function ProfileHeader() {
     reader.readAsDataURL(file);
   };
 
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const onDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
+  const onDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
+  const onDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); }, []);
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -122,81 +114,79 @@ export function ProfileHeader() {
 
   return (
     <>
-      {/* Header Profile Card */}
-      <Card className="border border-border shadow-e1 overflow-hidden bg-card rounded-xl relative">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-primary-600" />
-        <CardContent className="p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-brand-violet/5 dark:bg-brand-violet/10">
-          <div className="relative group shrink-0">
-            <div className="w-24 h-24 rounded-full bg-card border-2 border-brand-violet flex items-center justify-center font-bold text-3xl shadow-e1 overflow-hidden text-brand-violet">
-              {profile?.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.name || "User"}
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Avatar className="w-full h-full">
-                  <AvatarFallback name={profile?.name || ""} className="text-4xl" />
-                </Avatar>
-              )}
-            </div>
-            <button
-              onClick={() => setIsAvatarOpen(true)}
-              className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-semibold gap-1 backdrop-blur-sm"
-            >
-              <AppIcon name="upload" />
-              <span>Upload</span>
-            </button>
+      <Card className="flex flex-col sm:flex-row items-center sm:items-center gap-5 p-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl overflow-hidden relative">
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-600 hidden sm:block" />
+        
+        <div className="relative group shrink-0">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-900 shadow-sm flex items-center justify-center font-bold text-2xl overflow-hidden text-neutral-400">
+            {profile?.avatar_url ? (
+              <Image
+                src={profile.avatar_url}
+                alt={profile.name || "User"}
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Avatar className="w-full h-full">
+                <AvatarFallback name={profile?.name || ""} className="text-2xl" />
+              </Avatar>
+            )}
           </div>
+          <button
+            onClick={() => setIsAvatarOpen(true)}
+            className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-semibold flex-col gap-0.5 backdrop-blur-sm"
+          >
+            <AppIcon name="camera" size="xs" />
+            <span>Update</span>
+          </button>
+        </div>
 
-          <div className="space-y-2 text-center sm:text-left flex-1">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2">
-              <div>
-                <h1 className="text-2xl font-bold font-display text-foreground">
-                  {isLoading && !profile ? <Skeleton className="h-8 w-48 mb-2" /> : (profile?.name || "Your Profile")}
-                </h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm font-sans mt-2">
-                  <div className="flex items-center text-muted-foreground bg-surface/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
-                    <AppIcon name="hash" className=" mr-2 text-brand-violet/70" />
-                    {isLoading && !profile ? <Skeleton className="h-4 w-24" /> : (profile?.employee_id || "Employee ID: N/A")}
-                  </div>
-                  <div className="flex items-center text-muted-foreground bg-surface/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
-                    <AppIcon name="building" className=" mr-2 text-brand-violet/70" />
-                    {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.department?.name || "No Department")}
-                  </div>
-                  <div className="flex items-center text-muted-foreground bg-surface/50 dark:bg-neutral-900/50 px-3 py-1 rounded-full border border-border">
-                    <AppIcon name="briefcase" className=" mr-2 text-brand-violet/70" />
-                    {isLoading && !profile ? <Skeleton className="h-4 w-32" /> : (profile?.designation?.name || "No Designation")}
-                  </div>
-                </div>
-              </div>
+        <div className="flex-1 text-center sm:text-left space-y-1.5 min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white truncate">
+              {isLoading && !profile ? <Skeleton className="h-7 w-40 mx-auto sm:mx-0" /> : (profile?.name || "Your Profile")}
+            </h1>
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+              <Badge variant="secondary" className="bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 hover:bg-primary-100 border-none px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+                <AppIcon name="hash" size="xs" className="mr-1 opacity-70" />
+                {isLoading && !profile ? "..." : (profile?.employee_id || "N/A")}
+              </Badge>
+              <Badge variant="outline" className="px-2 py-0.5 text-[10px] text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 font-medium">
+                {isLoading && !profile ? "..." : (profile?.designation?.name || "Employee")}
+              </Badge>
             </div>
-
-            <div className="flex flex-wrap justify-center sm:justify-start gap-4 pt-3 text-xs text-muted-foreground font-medium">
-              <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-[var(--radius)] border border-border shadow-e1">
-                <AppIcon name="mail" className=" .5 .5 text-brand-violet" />
-                {profile?.email}
-              </span>
-              {profile?.phone && (
-                <span className="flex items-center gap-1.5 bg-card px-2 py-1 rounded-[var(--radius)] border border-border shadow-e1">
-                  <AppIcon name="phone" className=" .5 .5 text-brand-violet" />
+          </div>
+          
+          <div className="flex items-center justify-center sm:justify-start gap-3 text-sm text-neutral-500 flex-wrap">
+            <span className="flex items-center gap-1.5 truncate max-w-full">
+              <AppIcon name="mail" size="xs" className="text-neutral-400" />
+              <span className="truncate">{profile?.email || "No email"}</span>
+            </span>
+            {profile?.phone && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700 hidden sm:block" />
+                <span className="flex items-center gap-1.5 shrink-0">
+                  <AppIcon name="phone" size="xs" className="text-neutral-400" />
                   {profile.phone}
                 </span>
-              )}
-            </div>
+              </>
+            )}
+            <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700 hidden sm:block" />
+            <span className="flex items-center gap-1.5 shrink-0">
+              <AppIcon name="building" size="xs" className="text-neutral-400" />
+              {profile?.department?.name || "No Department"}
+            </span>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      {/* Avatar Upload Dialog */}
       <Dialog open={isAvatarOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md font-sans">
           <DialogHeader>
-            <DialogTitle className="font-display">Upload Profile Photo</DialogTitle>
-            <DialogDescription className="text-xs font-sans">
-              Choose a clear photo so your team can easily recognize you.
+            <DialogTitle>Update Profile Photo</DialogTitle>
+            <DialogDescription className="text-xs">
+              Upload a clear photo to help your team recognize you.
             </DialogDescription>
           </DialogHeader>
 
@@ -207,45 +197,45 @@ export function ProfileHeader() {
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`w-full h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                  isDragging ? "border-brand-violet bg-brand-violet/5" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                className={`w-full h-40 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                  isDragging ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
                 }`}
               >
-                <div className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-full mb-3">
-                  <AppIcon name="upload" className="text-neutral-500 w-6 h-6" />
+                <div className="bg-white dark:bg-neutral-800 p-3 rounded-full shadow-sm mb-3 border border-neutral-100 dark:border-neutral-700">
+                  <AppIcon name="upload" className="text-primary-600 dark:text-primary-400 w-5 h-5" />
                 </div>
                 <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Click or drag and drop</p>
-                <p className="text-xs text-neutral-500 mt-1">SVG, PNG, JPG or GIF (max. 2MB)</p>
+                <p className="text-xs text-neutral-500 mt-1">SVG, PNG, JPG (max. 2MB)</p>
               </div>
             ) : (
               <div className="w-full flex flex-col items-center py-4 relative">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-neutral-950 shadow-lg relative group">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-neutral-900 shadow-md relative group">
                   <Image src={previewUrl} alt="Preview" fill className="object-cover" />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-white hover:text-white hover:bg-white/20"
+                      className="text-white hover:text-white hover:bg-white/20 h-8 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         fileInputRef.current?.click();
                       }}
                     >
-                      <AppIcon name="edit" size="sm" className="mr-1" /> Change
+                      <AppIcon name="edit" size="xs" className="mr-1.5" /> Change
                     </Button>
                   </div>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="mt-4 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  className="mt-4 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 h-8 text-xs"
                   onClick={() => {
                     setAvatarFile(null);
                     setPreviewUrl(null);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                 >
-                  <AppIcon name="trash" size="sm" className="mr-1" /> Remove Photo
+                  <AppIcon name="trash" size="xs" className="mr-1.5" /> Remove
                 </Button>
               </div>
             )}
@@ -259,19 +249,18 @@ export function ProfileHeader() {
             />
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => handleOpenChange(false)} className="font-sans">
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" size="sm" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
             <Button
+              size="sm"
               onClick={() => avatarFile && uploadAvatarMutation.mutate(avatarFile)}
               disabled={uploadAvatarMutation.isPending || !avatarFile}
-              className="bg-neutral-900 hover:bg-neutral-800 text-white font-sans shadow-e1"
+              className="bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
             >
               {uploadAvatarMutation.isPending ? (
-                <>
-                  <AppIcon name="loading" className="mr-2 animate-spin" /> Uploading...
-                </>
+                <><AppIcon name="loading" size="xs" className="mr-2 animate-spin" /> Saving...</>
               ) : (
                 "Save Photo"
               )}

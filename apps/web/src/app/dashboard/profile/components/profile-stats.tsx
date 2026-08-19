@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardContent } from "@g4k/ui/components";
+import { Card } from "@g4k/ui/components";
 
 export function ProfileStats() {
   const { data: attendanceHistory } = useQuery({
@@ -24,61 +24,66 @@ export function ProfileStats() {
   // Calculate summaries
   const attendanceData = attendanceHistory?.data || [];
   const presentCount = attendanceData.filter((r: { status: string }) => ["present", "late", "half_day"].includes(r.status)).length;
-  const absentCount = attendanceData.filter((r: { status: string }) => r.status === "absent").length;
   const lateCount = attendanceData.filter((r: { status: string }) => r.status === "late").length;
 
   const leaveData = leaveHistory?.data || [];
-  const approvedLeaves = leaveData.filter((l: { approval?: { status: string } }) => l.approval?.status === "approved").length;
   const pendingLeaves = leaveData.filter((l: { approval?: { status: string } }) => !l.approval || l.approval.status === "pending").length;
 
   const taskData = activeTasks?.data || [];
   const pendingTasks = taskData.filter((t: { status: string }) => t.status === "pending" || t.status === "in_progress").length;
-  const completedTasks = taskData.filter((t: { status: string }) => t.status === "completed").length;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <Card className="border border-border shadow-e1 bg-card rounded-xl">
-        <CardContent className="p-4 flex items-center gap-4">
-          <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-[var(--radius)] shrink-0">
-            <AppIcon name="calendar" />
+    <div className="flex flex-col sm:flex-row xl:flex-col gap-3">
+      <Card className="flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl min-w-[200px]">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg">
+            <AppIcon name="calendar" size="sm" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground">My Attendance (Recent)</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">{presentCount} Present</span> •{" "}
-              <span className="font-medium text-amber-600 dark:text-amber-400">{lateCount} Late</span> •{" "}
-              <span className="font-medium text-rose-600 dark:text-rose-400">{absentCount} Absent</span>
+            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Attendance</h3>
+            <p className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
+              {presentCount} <span className="text-xs font-medium text-neutral-400 ml-1">Present</span>
             </p>
           </div>
-        </CardContent>
+        </div>
+        {lateCount > 0 && (
+          <div className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
+            {lateCount} Late
+          </div>
+        )}
       </Card>
-      <Card className="border border-border shadow-e1 bg-card rounded-xl">
-        <CardContent className="p-4 flex items-center gap-4">
-          <div className="p-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-[var(--radius)] shrink-0">
-            <AppIcon name="fileText" />
+
+      <Card className="flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl min-w-[200px]">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg">
+            <AppIcon name="fileText" size="sm" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground">My Leave Summary</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">{approvedLeaves} Approved</span> •{" "}
-              <span className="font-medium text-amber-600 dark:text-amber-400">{pendingLeaves} Pending</span>
+            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Leaves</h3>
+            <p className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
+              {leaveData.length} <span className="text-xs font-medium text-neutral-400 ml-1">Total</span>
             </p>
           </div>
-        </CardContent>
+        </div>
+        {pendingLeaves > 0 && (
+          <div className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
+            {pendingLeaves} Pending
+          </div>
+        )}
       </Card>
-      <Card className="border border-border shadow-e1 bg-card rounded-xl">
-        <CardContent className="p-4 flex items-center gap-4">
-          <div className="p-3 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-[var(--radius)] shrink-0">
-            <AppIcon name="tasks" />
+
+      <Card className="flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl min-w-[200px]">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-lg">
+            <AppIcon name="tasks" size="sm" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-foreground">My Active Tasks</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              <span className="font-medium text-primary-600 dark:text-primary-400">{pendingTasks} Active</span> •{" "}
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">{completedTasks} Completed</span>
+            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Tasks</h3>
+            <p className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
+              {pendingTasks} <span className="text-xs font-medium text-neutral-400 ml-1">Active</span>
             </p>
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   );

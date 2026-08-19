@@ -19,10 +19,6 @@ import {
   SelectValue,
   Input,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Skeleton
 } from "@g4k/ui/components";
 import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
@@ -69,148 +65,154 @@ export function ProfileGeneralTab() {
       });
     },
     onSuccess: (res: Record<string, unknown>) => {
-      toast.success("Profile updated successfully!");
+      toast.success("Profile updated successfully");
       if (authUser) {
         setAuth(useAuthStore.getState().token!, res as unknown as UserProfile, authUser.active_role);
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
     onError: (err: { message?: string }) => {
-      toast.error(err.message || "Failed to update profile.");
+      toast.error(err.message || "Failed to update profile");
     },
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="flex flex-col gap-6 max-w-3xl">
       {/* Personal Details Form */}
-      <Card className="border border-border shadow-e1 bg-card rounded-xl">
-        <CardHeader>
-          <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-            <AppIcon name="profile" className=" text-brand-violet" />
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+        <div className="border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-900/50 px-6 py-4">
+          <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+            <AppIcon name="profile" size="sm" className="text-primary-600 dark:text-primary-400" />
             Personal & Contact Information
-          </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground font-sans">
-            Update your display name and phone number.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 text-xs font-sans">
+          </h2>
+          <p className="text-xs text-neutral-500 mt-1">Manage your public profile details and contact information.</p>
+        </div>
+        
+        <div className="p-6">
           <DisabledWhileSubmitting isSubmitting={updateProfileMutation.isPending}>
-            <div className="space-y-4">
-              <div>
-                <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Full Name</label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} className="font-sans" />
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Full Name</label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9 text-sm" />
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Phone Number</label>
+                  <Input
+                    placeholder="+1 (555) 000-0000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Phone Number</label>
-                <Input
-                  placeholder="+91 98765 43210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="font-sans"
-                />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center justify-between">
+                    Designation
+                    {!canManageDesignation && <span className="text-[10px] text-neutral-400 font-normal">Contact HR to change</span>}
+                  </label>
+                  <Select disabled={!canManageDesignation} value={designationId || "unset"} onValueChange={(v) => { setDesignationId(v === "unset" ? "" : v); }}>
+                    <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectValue placeholder="Select Designation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unset">Select Designation</SelectItem>
+                      {(designations as Array<{ id: number, name: string }> | undefined)?.map((d) => (
+                        <SelectItem key={d.id} value={String(d.id)}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Email Address</label>
+                  <Input value={profile?.email || ""} disabled className="h-9 text-sm bg-neutral-50 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed" />
+                </div>
               </div>
-              <div>
-                <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Designation</label>
-                <Select disabled={!canManageDesignation} value={designationId || "unset"} onValueChange={(v) => { setDesignationId(v === "unset" ? "" : v); }}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="Select Designation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unset">Select Designation</SelectItem>
-                    {(designations as Array<{ id: number, name: string }> | undefined)?.map((d) => (
-                      <SelectItem key={d.id} value={String(d.id)}>
-                        {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+              <div className="pt-4 flex justify-end">
+                <Button
+                  size="sm"
+                  onClick={() => updateProfileMutation.mutate({ name, phone, designation_id: designationId || null })}
+                  disabled={updateProfileMutation.isPending}
+                  className="bg-primary-600 hover:bg-primary-700 text-white shadow-sm px-6 h-9"
+                >
+                  {updateProfileMutation.isPending ? (
+                    <><AppIcon name="loading" size="xs" className="animate-spin mr-2" /> Saving...</>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
               </div>
-              <div>
-                <label className="font-semibold block mb-1 text-muted-foreground">Email Address (Read-only)</label>
-                <Input value={profile?.email || ""} disabled className="bg-muted/50 font-sans" />
-              </div>
-              <Button
-                onClick={() => updateProfileMutation.mutate({ name, phone, designation_id: designationId || null })}
-                disabled={updateProfileMutation.isPending}
-                className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 font-sans"
-              >
-                {updateProfileMutation.isPending ? (
-                  <AppIcon name="loading" className=" animate-spin animate-spin" />
-                ) : (
-                  "Save Personal Info"
-                )}
-              </Button>
             </div>
           </DisabledWhileSubmitting>
-        </CardContent>
+        </div>
       </Card>
 
       {/* Company Profile (Read-Only) */}
-      <Card className="border border-border shadow-e1 bg-card rounded-xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
-        <CardHeader className="flex flex-row justify-between items-start pt-6">
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+        <div className="border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-900/50 px-6 py-4 flex items-start justify-between">
           <div>
-            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-              <AppIcon name="building" className=" text-brand-violet" />
+            <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+              <AppIcon name="building" size="sm" className="text-primary-600 dark:text-primary-400" />
               Company Information
-            </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
-              General details about the organization.
-            </CardDescription>
+            </h2>
+            <p className="text-xs text-neutral-500 mt-1">General details about the organization you belong to.</p>
           </div>
           {authUser?.active_role === 'super_admin' && (
-            <Link href="/dashboard/settings" className="text-xs font-semibold text-brand-violet flex items-center gap-1 hover:underline">
-              Edit in Settings <AppIcon name="externalLink" />
+            <Link href="/dashboard/settings" className="text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 flex items-center gap-1 hover:underline">
+              Edit Settings <AppIcon name="externalLink" size="xs" />
             </Link>
           )}
-        </CardHeader>
-        <CardContent className="space-y-4 font-sans text-sm">
+        </div>
+        
+        <div className="p-6">
           {isCompanyLoading ? (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <Skeleton className="h-4 w-1/3" />
               <Skeleton className="h-4 w-1/4" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
-                <div className="text-xs font-medium text-muted-foreground mb-1">Company Name</div>
-                <div className="font-semibold text-foreground">
+                <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Company Name</div>
+                <div className="text-sm font-medium text-neutral-900 dark:text-white">
                   {companyProfile?.name || "Games4King"}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium text-muted-foreground mb-1">Short Name</div>
-                <div className="font-semibold text-foreground">
+                <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Short Name</div>
+                <div className="text-sm font-medium text-neutral-900 dark:text-white">
                   {companyProfile?.short_name || "-"}
                 </div>
               </div>
-              <div className="md:col-span-2">
-                <div className="text-xs font-medium text-muted-foreground mb-1">Description</div>
-                <div className="text-neutral-700 dark:text-neutral-300 text-sm">
-                  {companyProfile?.description || "-"}
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <div className="text-xs font-medium text-muted-foreground mb-1">Address</div>
-                <div className="text-neutral-700 dark:text-neutral-300 text-sm">
-                  {companyProfile?.address || "-"}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium text-muted-foreground mb-1">Primary Phone</div>
-                <div className="text-neutral-700 dark:text-neutral-300">
+              <div className="sm:col-span-2 lg:col-span-1">
+                <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Primary Phone</div>
+                <div className="text-sm text-neutral-700 dark:text-neutral-300">
                   {companyProfile?.primary_phone || "-"}
                 </div>
               </div>
-              <div>
-                <div className="text-xs font-medium text-muted-foreground mb-1">Email</div>
-                <div className="text-neutral-700 dark:text-neutral-300">
+              
+              <div className="sm:col-span-2">
+                <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Address</div>
+                <div className="text-sm text-neutral-700 dark:text-neutral-300">
+                  {companyProfile?.address || "-"}
+                </div>
+              </div>
+              <div className="sm:col-span-2 lg:col-span-1">
+                <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Support Email</div>
+                <div className="text-sm text-neutral-700 dark:text-neutral-300">
                   {companyProfile?.email || "-"}
                 </div>
               </div>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
     </div>
   );

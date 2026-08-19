@@ -8,19 +8,15 @@ import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { strongPasswordSchema } from "@/lib/validations";
 import { parseUserAgent } from "@/lib/utils";
-import { ColumnDef } from "@tanstack/react-table";
 import { queryKeys } from "@/lib/query-keys";
 
 import {
   Button,
   PasswordInput,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   ConfirmDialog,
-  DataTable
+  Badge,
+  Skeleton
 } from "@g4k/ui/components";
 import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 
@@ -45,7 +41,7 @@ export function ProfileSecurityTab() {
   const [isRevokeOpen, setIsRevokeOpen] = useState(false);
   const [revokeId, setRevokeId] = useState<string | null>(null);
 
-  const { data: sessions } = useQuery({
+  const { data: sessions, isLoading: sessionsLoading } = useQuery({
     queryKey: queryKeys.sessions,
     queryFn: async () => apiFetch("/auth/sessions"),
   });
@@ -69,7 +65,7 @@ export function ProfileSecurityTab() {
       });
     },
     onSuccess: () => {
-      toast.success("Password updated!");
+      toast.success("Password updated successfully");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -84,7 +80,7 @@ export function ProfileSecurityTab() {
       return apiFetch(`/auth/sessions/${sessionId}`, { method: "DELETE" });
     },
     onSuccess: () => {
-      toast.success("Session revoked!");
+      toast.success("Session revoked successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
       setIsRevokeOpen(false);
       setRevokeId(null);
@@ -94,99 +90,19 @@ export function ProfileSecurityTab() {
     },
   });
 
-  const columns: ColumnDef<SessionRecord>[] = [
-    {
-      accessorKey: "device_name",
-      header: "Device / Browser",
-      cell: ({ row }) => (
-        <div className="flex flex-col min-w-[120px]">
-          <div className="flex items-center gap-2 font-semibold text-foreground">
-            <AppIcon name="laptop" className=" text-brand-violet shrink-0" />
-            <span className="truncate">{row.original.device_name || "Unknown Device"}</span>
-          </div>
-          {row.original.user_agent && (
-            <span className="text-[10px] text-muted-foreground mt-0.5 ml-6">
-              {parseUserAgent(row.original.user_agent)}
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "ip_address",
-      header: "IP Address",
-      cell: ({ row }) => (
-        <span className="text-muted-foreground font-mono text-xs">{row.original.ip_address || "Unknown"}</span>
-      ),
-    },
-    {
-      accessorKey: "last_used_at",
-      header: "Last Used",
-      cell: ({ row }) => (
-        <span className="text-muted-foreground text-xs">
-          {row.original.last_used_at ? new Date(row.original.last_used_at).toLocaleString() : "Recently"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
-        if (row.original.is_current) {
-          return (
-            <span className="px-2.5 py-1 rounded-[var(--radius)] text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 border border-green-200 dark:border-green-500/20 whitespace-nowrap">
-              Current Device
-            </span>
-          );
-        }
-        return <span className="text-muted-foreground text-[11px] font-medium">Active</span>;
-      },
-    },
-    {
-      id: "actions",
-      header: () => <div className="text-right">Action</div>,
-      cell: ({ row }) => {
-        if (row.original.is_current) return null;
-        return (
-          <div className="text-right">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setRevokeId(row.original.id);
-                setIsRevokeOpen(true);
-              }}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium"
-            >
-              <AppIcon name="trash" className=" mr-1" />
-              <span>Revoke</span>
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="flex flex-col gap-6 max-w-3xl">
       {/* Password Security Form */}
-      <Card className="border border-border shadow-e1 bg-card rounded-xl">
-        <CardHeader>
-          <div className="flex justify-between items-start gap-4">
-            <div>
-              <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-                <AppIcon name="key" className=" text-brand-violet" />
-                Security & Password
-              </CardTitle>
-              <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
-                Change your password and manage two-factor authentication.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="text-xs font-sans">
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+        <div className="border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-900/50 px-6 py-4">
+          <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+            <AppIcon name="shield" size="sm" className="text-primary-600 dark:text-primary-400" />
+            Security & Password
+          </h2>
+          <p className="text-xs text-neutral-500 mt-1">Update your password to keep your account secure.</p>
+        </div>
+        <div className="p-6">
           <form
-            className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
               if (!changePasswordMutation.isPending && currentPassword && newPassword && confirmPassword) {
@@ -195,71 +111,78 @@ export function ProfileSecurityTab() {
             }}
           >
             <DisabledWhileSubmitting isSubmitting={changePasswordMutation.isPending}>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <input type="text" name="username" value={authUser?.email || ""} autoComplete="username" className="hidden" readOnly />
-                <div>
-                  <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Current Password</label>
-                  <PasswordInput
-                    placeholder="Current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="font-sans"
-                    autoComplete="current-password"
-                  />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Current Password</label>
+                    <PasswordInput
+                      placeholder="Enter current password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="h-9 text-sm max-w-md"
+                      autoComplete="current-password"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">New Password</label>
+                    <PasswordInput
+                      placeholder="Min 8 chars, mixed case, numbers"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="h-9 text-sm"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Confirm Password</label>
+                    <PasswordInput
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="h-9 text-sm"
+                      autoComplete="new-password"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">New Password</label>
-                  <PasswordInput
-                    placeholder="New password (min 8 chars, mixed case, numbers, symbols)"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="font-sans"
-                    autoComplete="new-password"
-                  />
+
+                <div className="pt-4 flex justify-end">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={
+                      changePasswordMutation.isPending ||
+                      !currentPassword ||
+                      !newPassword ||
+                      !confirmPassword
+                    }
+                    className="bg-primary-600 hover:bg-primary-700 text-white shadow-sm px-6 h-9"
+                  >
+                    {changePasswordMutation.isPending ? (
+                      <><AppIcon name="loading" size="xs" className="animate-spin mr-2" /> Updating...</>
+                    ) : (
+                      "Update Password"
+                    )}
+                  </Button>
                 </div>
-                <div>
-                  <label className="font-semibold block mb-1 text-neutral-700 dark:text-neutral-300">Confirm New Password</label>
-                  <PasswordInput
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="font-sans"
-                    autoComplete="new-password"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={
-                    changePasswordMutation.isPending ||
-                    !currentPassword ||
-                    !newPassword ||
-                    !confirmPassword
-                  }
-                  className="w-full mt-4 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 font-sans"
-                >
-                  {changePasswordMutation.isPending ? (
-                    <AppIcon name="loading" className=" animate-spin animate-spin" />
-                  ) : (
-                    "Update Password"
-                  )}
-                </Button>
               </div>
             </DisabledWhileSubmitting>
           </form>
-        </CardContent>
+        </div>
       </Card>
 
       {/* Active Device Sessions */}
-      <Card className="border border-border shadow-e1 bg-card rounded-xl lg:col-span-2">
-        <CardHeader className="flex flex-row justify-between items-start">
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+        <div className="border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-900/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-base font-bold flex items-center gap-2 font-display text-foreground">
-              <AppIcon name="laptop" className=" text-brand-violet" />
-              Active Device Sessions
-            </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground font-sans mt-1">
-              Devices currently logged into your Games4King Workplace OS account. Revoking a session will immediately log out that device.
-            </CardDescription>
+            <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+              <AppIcon name="laptop" size="sm" className="text-primary-600 dark:text-primary-400" />
+              Active Sessions
+            </h2>
+            <p className="text-xs text-neutral-500 mt-1">Devices currently logged into your account.</p>
           </div>
           <Button
             variant="outline"
@@ -274,17 +197,76 @@ export function ProfileSecurityTab() {
                 toast.error(err.message || "Logout failed");
               }
             }}
-            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 shrink-0"
+            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 dark:border-rose-900/50 dark:hover:bg-rose-900/20 shrink-0 h-8"
           >
             Log Out Current Device
           </Button>
-        </CardHeader>
-        <CardContent className="p-0 overflow-x-auto border-t border-border dark:border-neutral-800">
-          <DataTable
-            columns={columns}
-            data={sessions || []}
-          />
-        </CardContent>
+        </div>
+        
+        <div className="divide-y divide-neutral-100 dark:divide-neutral-800/50">
+          {sessionsLoading ? (
+            <div className="p-6 space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : sessions && sessions.length > 0 ? (
+            sessions.map((session: SessionRecord) => (
+              <div key={session.id} className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/20 transition-colors">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg mt-1 shrink-0 ${session.is_current ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800'}`}>
+                    <AppIcon name={session.device_name?.toLowerCase().includes('mobile') ? 'smartphone' : 'laptop'} size="sm" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+                        {session.device_name || "Unknown Device"}
+                      </p>
+                      {session.is_current && (
+                        <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 text-[10px] py-0 px-1.5 h-4">
+                          Current
+                        </Badge>
+                      )}
+                    </div>
+                    {session.user_agent && (
+                      <p className="text-[11px] text-neutral-500 mt-0.5">
+                        {parseUserAgent(session.user_agent)}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] text-neutral-400 font-medium mt-1.5">
+                      <span className="flex items-center gap-1 font-mono">
+                        <AppIcon name="globe" size="xs" className="opacity-70" />
+                        {session.ip_address || "Unknown IP"}
+                      </span>
+                      <span className="hidden sm:inline w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+                      <span className="flex items-center gap-1">
+                        <AppIcon name="clock" size="xs" className="opacity-70" />
+                        {session.last_used_at ? new Date(session.last_used_at).toLocaleString() : "Recently"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {!session.is_current && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setRevokeId(session.id);
+                      setIsRevokeOpen(true);
+                    }}
+                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 h-8 text-xs font-medium self-start sm:self-center shrink-0"
+                  >
+                    Revoke Access
+                  </Button>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center">
+              <p className="text-sm text-neutral-500">No active sessions found.</p>
+            </div>
+          )}
+        </div>
       </Card>
 
       <ConfirmDialog
@@ -303,6 +285,7 @@ export function ProfileSecurityTab() {
         title="Revoke Session"
         description="Are you sure you want to log out this device? Any unsaved work on that device may be lost."
         confirmText="Revoke Device"
+        confirmVariant="destructive"
         isLoading={revokeSessionMutation.isPending}
       />
     </div>
