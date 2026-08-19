@@ -102,10 +102,21 @@ export function FilterBar({
   const renderFilterControl = (filter: FilterOption) => {
     switch (filter.type) {
       case "select":
+        const isActive = filter.value && filter.value !== "all";
         return (
           <Select value={filter.value} onValueChange={filter.onChange}>
-            <SelectTrigger className="w-full sm:w-[150px] h-9">
-              <SelectValue placeholder={filter.label} />
+            <SelectTrigger className={cn("w-full sm:w-auto min-w-[130px] h-9 transition-colors", isActive && "border-primary-300 dark:border-primary-700 bg-primary-50/30 dark:bg-primary-900/10")}>
+              <SelectValue placeholder={filter.label}>
+                {isActive ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
+                    <span className="text-neutral-500 font-normal">{filter.label}:</span>
+                    <span className="font-semibold">{filter.options?.find(o => o.value === filter.value)?.label}</span>
+                  </div>
+                ) : (
+                  <span>{filter.label}</span>
+                )}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All {filter.label}</SelectItem>
@@ -284,8 +295,17 @@ export function FilterBar({
           {sortOptions.length > 0 && onSortChange && (
             <div className="flex items-center gap-1">
               <Select value={sortBy} onValueChange={(val) => onSortChange(val, sortDirection)}>
-                <SelectTrigger className="w-full sm:w-[140px] h-9">
-                  <SelectValue placeholder="Sort by" />
+                <SelectTrigger className="w-full sm:w-auto min-w-[140px] h-9">
+                  <SelectValue placeholder="Sort by">
+                    {sortBy ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-neutral-500 font-normal">Sort:</span>
+                        <span className="font-semibold">{sortOptions.find(o => o.value === sortBy)?.label}</span>
+                      </div>
+                    ) : (
+                      <span>Sort by</span>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {sortOptions.map((opt) => (

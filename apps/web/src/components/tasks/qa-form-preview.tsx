@@ -15,6 +15,8 @@ interface QAFormPreviewProps {
 export function QAFormPreview({ title, description, fields, onClose }: QAFormPreviewProps) {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Group fields into sections
   const sections = useMemo(() => {
@@ -34,16 +36,16 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
           const last = result[result.length - 1];
           if (last && last.fields.length === 0) {
             // Update empty section
-            last.id = field.id;
-            last.label = field.label;
+            last.id = String(field.id);
+            last.label = field.label || "";
           } else {
-            result.push({ id: field.id, label: field.label, fields: [] });
+            result.push({ id: String(field.id), label: field.label || "", fields: [] });
           }
         } else {
-          result.push({ id: field.id, label: field.label, fields: [] });
+          result.push({ id: String(field.id), label: field.label || "", fields: [] });
         }
-        currentSectionId = field.id;
-        currentSectionLabel = field.label;
+        currentSectionId = String(field.id);
+        currentSectionLabel = field.label || "";
       } else {
         if (result.length === 0) {
           result.push({ id: currentSectionId, label: currentSectionLabel, fields: [] });
@@ -57,18 +59,36 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
 
   const currentSection = sections[currentSectionIndex];
 
+  const validateCurrentSection = () => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+    currentSection?.fields.forEach(field => {
+      if (field.required) {
+        const val = answers[field.id];
+        if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
+          newErrors[field.id] = "This field is required.";
+          isValid = false;
+        }
+      }
+    });
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleNext = () => {
+    if (!validateCurrentSection()) return;
+
     // Evaluate branching logic
     let nextSectionId: string | null = null;
 
     for (const field of currentSection.fields) {
-      if (field.branching_logic && field.branching_logic.condition && field.branching_logic.target_section_id) {
+      if ((field as any).branching_logic && (field as any).branching_logic.condition && (field as any).branching_logic.target_section_id) {
         const val = answers[field.id];
-        const condition = field.branching_logic.condition;
+        const condition = (field as any).branching_logic.condition;
         
         // Simple string match for condition
         if (String(val).toLowerCase() === String(condition).toLowerCase()) {
-          nextSectionId = field.branching_logic.target_section_id;
+          nextSectionId = (field as any).branching_logic.target_section_id;
           break; // First match wins
         }
       }
@@ -94,77 +114,132 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
     }
   };
 
+  const handleSubmit = () => {
+    if (!validateCurrentSection()) return;
+    setIsSubmitted(true);
+  };
+
+  if (isSubmitted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-white dark:bg-neutral-950">
+        <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+          <AppIcon name="success" className="w-10 h-10" />
+        </div>
+        <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Thank you!</h2>
+        <p className="text-neutral-500 mb-8 max-w-sm">Your response has been recorded. This is just a preview, so no data was actually saved.</p>
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={() => { setIsSubmitted(false); setAnswers({}); setCurrentSectionIndex(0); }}>Submit another response</Button>
+          {onClose && <Button onClick={onClose} className="bg-primary-600 hover:bg-primary-700 text-white">Close Preview</Button>}
+        </div>
+      </div>
+    );
+  }
+
+  const progressPercentage = sections.length > 0 ? ((currentSectionIndex + 1) / sections.length) * 100 : 0;
+
   return (
-    <Card className="border border-primary-200 dark:border-primary-900 shadow-xl rounded-xl overflow-hidden h-full flex flex-col bg-card">
-      <CardHeader className="bg-primary-50 dark:bg-primary-900/20 border-b border-primary-100 dark:border-primary-800 flex flex-row items-center justify-between py-4">
-        <div>
-          <CardTitle className="text-lg font-bold text-primary-900 dark:text-primary-100">
-            {title || "Untitled Form"}
-            <span className="ml-2 text-xs font-normal px-2 py-1 bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-300 rounded uppercase tracking-wider">Preview Mode</span>
-          </CardTitle>
-          {description && <p className="text-xs text-primary-600 dark:text-primary-400 mt-1">{description}</p>}
+    <div className="flex flex-col h-full bg-[#f0f4f9] dark:bg-neutral-950 relative overflow-hidden">
+      {/* Top Banner */}
+      <div className="h-4 bg-primary-600 shrink-0 w-full" />
+      
+      <div className="h-14 shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 shadow-sm z-10">
+        <div className="flex items-center gap-3">
+          <AppIcon name="eye" className="text-primary-600" />
+          <h2 className="font-bold text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-xs">{title || "Untitled Form"}</h2>
+          <span className="ml-2 text-[10px] font-bold px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded uppercase tracking-wider border border-neutral-200 dark:border-neutral-700">Preview Mode</span>
         </div>
         {onClose && (
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-neutral-500 hover:text-neutral-700">
-            <AppIcon name="close" size="sm" />
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 text-xs font-semibold">
+            Close Preview
           </Button>
         )}
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 overflow-y-auto p-6 space-y-6">
-        {sections.length === 0 ? (
-          <div className="text-center p-8 text-neutral-400">No fields to preview.</div>
-        ) : (
-          <div className="max-w-2xl mx-auto">
-            <h3 className="text-xl font-bold mb-6 text-foreground border-b pb-2">{currentSection?.label}</h3>
-            
-            <div className="space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 flex justify-center pb-32">
+        <div className="w-full max-w-3xl flex flex-col gap-4 relative">
+          
+          {currentSectionIndex === 0 && (
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden p-8 flex flex-col gap-2">
+              <h1 className="text-3xl font-normal" style={{ fontFamily: "'Google Sans', Roboto, Arial, sans-serif" }}>{title || "Untitled Form"}</h1>
+              {description && <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">{description}</p>}
+              <div className="text-xs text-rose-500 font-medium mt-4">* Indicates required question</div>
+            </div>
+          )}
+
+          {currentSection?.label && currentSectionIndex > 0 && (
+             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm p-6 relative overflow-hidden">
+               <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-500" />
+               <h2 className="text-xl font-normal ml-2">{currentSection.label}</h2>
+             </div>
+          )}
+
+          {sections.length === 0 ? (
+            <div className="text-center p-8 text-neutral-400">No fields to preview.</div>
+          ) : (
+            <div className="space-y-4">
               {currentSection?.fields.map((field) => (
-                <div key={field.id} className="space-y-2 bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800">
-                  <label className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 flex items-start gap-1">
-                    {field.label}
+                <div key={field.id} className={`bg-white dark:bg-neutral-900 p-6 rounded-xl border transition-all ${errors[field.id] ? 'border-rose-300 ring-1 ring-rose-500/20' : 'border-neutral-200 dark:border-neutral-800'}`}>
+                  <label className="text-[15px] font-medium text-neutral-900 dark:text-white flex items-start gap-1 mb-1">
+                    {field.label || "Untitled Question"}
                     {field.required && <span className="text-rose-500">*</span>}
                   </label>
-                  <QAFieldRenderer
-                    field={{
-                      id: field.id,
-                      type: field.field_type,
-                      label: field.label,
-                      options: field.options,
-                    }}
-                    value={answers[field.id]}
-                    onChange={(val) => setAnswers(prev => ({ ...prev, [field.id]: val }))}
-                  />
+                  {field.description && <p className="text-xs text-neutral-500 mb-4">{field.description}</p>}
+                  
+                  <div className="mt-4">
+                    <QAFieldRenderer
+                      field={field}
+                      value={answers[field.id]}
+                      onChange={(val) => {
+                        setAnswers(prev => ({ ...prev, [field.id]: val }));
+                        if (errors[field.id]) {
+                          setErrors(prev => { const e = {...prev}; delete e[field.id]; return e; });
+                        }
+                      }}
+                    />
+                  </div>
+                  {errors[field.id] && (
+                    <div className="text-rose-500 text-xs font-medium mt-3 flex items-center gap-1.5">
+                      <AppIcon name="info" size="xs" /> {errors[field.id]}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-
-            <div className="flex items-center justify-between mt-8 pt-4 border-t border-neutral-100 dark:border-neutral-800">
-              <Button 
+          )}
+        </div>
+      </div>
+      
+      {/* Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 shadow-lg z-20 flex justify-center">
+        <div className="w-full max-w-3xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+             <Button 
                 variant="outline" 
                 onClick={handlePrev} 
                 disabled={currentSectionIndex === 0}
+                className="font-semibold shadow-sm"
               >
-                Previous
+                Back
               </Button>
-
-              <div className="text-xs text-neutral-400 font-medium">
-                Page {currentSectionIndex + 1} of {sections.length}
-              </div>
-
               {currentSectionIndex < sections.length - 1 ? (
-                <Button onClick={handleNext} className="bg-primary-600 hover:bg-primary-700 text-white">
-                  Next Page
+                <Button onClick={handleNext} className="bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-sm px-6">
+                  Next
                 </Button>
               ) : (
-                <Button onClick={() => alert("Form Submitted in Preview Mode!")} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button onClick={handleSubmit} className="bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-sm px-6">
                   Submit
                 </Button>
               )}
-            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <div className="flex items-center gap-3">
+             <div className="w-32 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+               <div className="h-full bg-primary-600 transition-all duration-300" style={{ width: `${progressPercentage}%` }} />
+             </div>
+             <span className="text-xs font-semibold text-neutral-500">Page {currentSectionIndex + 1} of {sections.length || 1}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

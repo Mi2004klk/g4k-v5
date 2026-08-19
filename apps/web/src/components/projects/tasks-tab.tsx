@@ -17,7 +17,7 @@ import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const TaskGantt = dynamic(() => import("@/components/tasks/task-gantt").then(mod => mod.TaskGantt), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker } from "@g4k/ui/components";
+import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent, DraftBanner } from "@g4k/ui/components";
 import { FormError } from "@/components/forms/form-error";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
@@ -366,22 +366,23 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     {
       accessorKey: "title",
       header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Title</span>,
-      cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5 max-w-[300px] sm:max-w-[400px]">
-          <div 
-            className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-100 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors truncate"
-            onClick={() => {
-              setSelectedTask(row.original);
-              setSheetOpen(true);
-            }}
-          >
-            {row.getValue("title")}
+      cell: ({ row }) => {
+        const p = row.getValue("priority") as string;
+        const pColor = p === "urgent" ? "bg-rose-500" : p === "high" ? "bg-amber-500" : p === "medium" ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-600";
+        return (
+          <div className="flex flex-col gap-0.5 max-w-[300px] sm:max-w-[400px] group/title py-1">
+            <div className="flex items-center gap-2">
+              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${pColor}`} title={`Priority: ${p}`} />
+              <div className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-100 group-hover/title:text-primary-600 dark:group-hover/title:text-primary-400 transition-colors truncate">
+                {row.getValue("title")}
+              </div>
+            </div>
+            {row.original.description && (
+              <span className="text-[11px] text-neutral-500 truncate ml-3.5">{row.original.description}</span>
+            )}
           </div>
-          {row.original.description && (
-            <span className="text-[11px] text-neutral-500 truncate">{row.original.description}</span>
-          )}
-        </div>
-      )
+        );
+      }
     },
     {
       accessorKey: "status",
@@ -389,23 +390,57 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       cell: ({ row }) => {
         const s = row.getValue("status") as string;
         const task = row.original;
+        
+        // Solid vibrant colors for statuses
+        let statusClass = "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
+        if (s === 'completed') statusClass = "bg-emerald-500 text-white";
+        else if (s === 'in_progress') statusClass = "bg-blue-500 text-white";
+        else if (s === 'review') statusClass = "bg-purple-500 text-white";
+        else if (s === 'todo') statusClass = "bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300";
+        else if (s === 'redo' || s === 'overdue') statusClass = "bg-rose-500 text-white";
+
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <StatusBadge 
-              status={s === 'completed' ? 'success' : s === 'review' ? 'warning' : s === 'redo' || s === 'overdue' ? 'danger' : s === 'in_progress' ? 'info' : 'neutral'} 
-              className="capitalize text-[10px] px-2 py-0.5 font-bold tracking-wide"
-            >
+            <span className={`capitalize text-[10px] px-2 py-0.5 rounded-sm font-bold tracking-wide shadow-sm ${statusClass}`}>
               {s.replace("_", " ")}
-            </StatusBadge>
+            </span>
             {task.scope && (
-              <span className="capitalize text-[10px] font-medium text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm">
+              <span className="capitalize text-[10px] font-medium text-neutral-500 border border-neutral-200 dark:border-neutral-800 px-1.5 py-0.5 rounded-sm">
                 {task.scope}
               </span>
             )}
             {task.blocked_by && (
-              <span className="flex items-center text-[10px] font-medium bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-1.5 py-0.5 rounded-sm">
+              <span className="flex items-center text-[10px] font-medium bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-1.5 py-0.5 rounded-sm border border-rose-100 dark:border-rose-900/50">
                 <AppIcon name="error" size="xs" className="mr-1 h-3 w-3" /> Blocked
               </span>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      id: "assignees",
+      header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Assignees</span>,
+      cell: ({ row }) => {
+        const assignees = row.original.assignees || [];
+        if (assignees.length === 0) return <span className="text-neutral-300 dark:text-neutral-700">-</span>;
+        
+        return (
+          <div className="flex items-center -space-x-1.5">
+            {assignees.slice(0, 3).map((u, i) => (
+              <div 
+                key={u.id} 
+                className="h-6 w-6 rounded-full bg-primary-100 dark:bg-primary-900/50 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-[9px] font-bold text-primary-700 dark:text-primary-300 shadow-sm" 
+                style={{ zIndex: 10 - i }} 
+                title={u.name}
+              >
+                {u.name.substring(0, 2).toUpperCase()}
+              </div>
+            ))}
+            {assignees.length > 3 && (
+              <div className="h-6 w-6 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-[9px] font-bold text-neutral-600 dark:text-neutral-400 z-0 shadow-sm">
+                +{assignees.length - 3}
+              </div>
             )}
           </div>
         );
@@ -417,7 +452,12 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       cell: ({ row }) => {
         const p = row.getValue("priority") as string;
         const colorClass = p === "urgent" ? "text-rose-600" : p === "high" ? "text-amber-600" : p === "medium" ? "text-blue-600" : "text-neutral-500";
-        return <span className={`capitalize text-[11px] font-bold ${colorClass}`}>{p}</span>;
+        return (
+          <span className={`flex items-center capitalize text-[11px] font-bold ${colorClass}`}>
+            {p === "urgent" && <AppIcon name="flag" size="xs" className="mr-1.5" />}
+            {p}
+          </span>
+        );
       }
     },
     {
@@ -429,7 +469,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         
         const isOverdue = new Date(val) < new Date() && row.getValue("status") !== "completed";
         return (
-          <span className={`text-[11px] font-medium ${isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-neutral-600 dark:text-neutral-400"}`}>
+          <span className={`text-[11px] font-medium flex items-center ${isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-neutral-600 dark:text-neutral-400"}`}>
+            {isOverdue && <AppIcon name="warning" size="xs" className="mr-1.5" />}
             {format(new Date(val), "MMM d, yyyy")}
           </span>
         );
@@ -463,354 +504,358 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   return (
     <div className="flex flex-col h-[calc(100dvh-140px)] min-h-[500px] mt-2">
       {/* Unified Toolbar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 mb-3 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm shrink-0">
-        <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full lg:w-auto">
-          <Button variant={viewMode === "kanban" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("kanban")} className={`h-8 px-3 text-[11px] font-semibold transition-colors ${viewMode === "kanban" ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm border border-neutral-200 dark:border-neutral-700" : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200"}`}>
-            <AppIcon name="kanban" className="mr-1.5" size="xs" /> Board
-          </Button>
-          <Button variant={viewMode === "list" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("list")} className={`h-8 px-3 text-[11px] font-semibold transition-colors ${viewMode === "list" ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm border border-neutral-200 dark:border-neutral-700" : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200"}`}>
-            <AppIcon name="list" className="mr-1.5" size="xs" /> List
-          </Button>
-          <Button variant={viewMode === "gantt" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("gantt")} className={`h-8 px-3 text-[11px] font-semibold transition-colors ${viewMode === "gantt" ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm border border-neutral-200 dark:border-neutral-700" : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200"}`}>
-            <AppIcon name="calendar" className="mr-1.5" size="xs" /> Timeline
-          </Button>
-          <Button variant={viewMode === "qa" ? "secondary" : "ghost"} size="sm" onClick={() => setViewMode("qa")} className={`h-8 px-3 text-[11px] font-semibold transition-colors ${viewMode === "qa" ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm border border-neutral-200 dark:border-neutral-700" : "text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200"}`}>
-            <AppIcon name="tasks" className="mr-1.5" size="xs" /> QA Forms
-          </Button>
-        </div>
-        <div className="flex-1 min-w-0">
-          <FilterBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            searchPlaceholder="Search tasks..."
-            sortBy={sortBy}
-            sortDirection={sortOrder as "asc" | "desc"}
-            onSortChange={(val, dir) => {
-              setSortBy(val);
-              setSortOrder(dir);
-            }}
-            sortOptions={[
-              { label: "Created (Newest)", value: "id" },
-              { label: "Priority", value: "priority" },
-              { label: "Due Date", value: "due_date" }
-            ]}
-            filters={[
-              {
-                key: "status",
-                label: "Status",
-                type: "select",
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: [
-                  { label: "All Status", value: "all" },
-                  { label: "To Do", value: "todo" },
-                  { label: "In Progress", value: "in_progress" },
-                  { label: "In Review", value: "review" },
-                  { label: "Done", value: "completed" },
-                  { label: "Redo", value: "redo" },
-                ]
-              },
-              {
-                key: "assignee",
-                label: "Assignee",
-                type: "select",
-                value: assigneeFilter,
-                onChange: setAssigneeFilter,
-                options: [
-                  { label: "All Assignee", value: "all" },
-                  { label: "My Tasks", value: "me" },
-                  ...(canManageTasks && usersList.length ? usersList.map((u: TaskUser) => ({ label: u.name, value: u.id.toString() })) : [])
-                ]
-              },
-              {
-                key: "scope",
-                label: "Scope",
-                type: "select",
-                value: scopeFilter,
-                onChange: setScopeFilter,
-                options: [
-                  { label: "All Scope", value: "all" },
-                  { label: "Global", value: "global" },
-                  { label: "Department", value: "department" },
-                  { label: "Role", value: "role" },
-                ]
-              }
-            ]}
-            onClearAll={() => {
-              setSearchQuery("");
-              setStatusFilter("all");
-              setAssigneeFilter("all");
-              setScopeFilter("all");
-              setSortBy("id");
-              setSortOrder("desc");
-            }}
-          />
-        </div>
+      <div className="flex flex-col gap-3 mb-3 shrink-0">
+        {/* Row 1: Views and Actions */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-full lg:w-auto">
+            <TabsList className="h-9 w-full lg:w-auto">
+              <TabsTrigger value="kanban" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="kanban" className="mr-1.5" size="xs" /> Board</TabsTrigger>
+              <TabsTrigger value="list" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="list" className="mr-1.5" size="xs" /> List</TabsTrigger>
+              <TabsTrigger value="gantt" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="calendar" className="mr-1.5" size="xs" /> Timeline</TabsTrigger>
+              <TabsTrigger value="qa" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="tasks" className="mr-1.5" size="xs" /> QA Forms</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-        <div className="flex items-center gap-2 shrink-0">
-
+          <div className="flex items-center gap-3 shrink-0">
+            {viewMode !== "qa" && (
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
+                  {filteredTasks.length} task{filteredTasks.length === 1 ? '' : 's'}
+                </span>
+              </div>
+            )}
+            
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shadow-sm ml-2 shrink-0">
+                <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shadow-sm shrink-0">
                   <AppIcon name="plus" size="xs" /> New Task
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
-              <DialogHeader className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20">
-                <DialogTitle className="text-base font-semibold">Create New Task</DialogTitle>
-                <DialogDescription className="sr-only">Create a new task in this project.</DialogDescription>
-              </DialogHeader>
-              <div className="overflow-y-auto max-h-[65dvh] p-5 space-y-5 thin-scrollbar">
-                {/* Core Details */}
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Task Title <span className="text-red-500">*</span></label>
-                    <Input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g. Update user onboarding flow"
-                      className={`h-9 text-sm ${fieldErrors.title ? "border-red-500 ring-1 ring-red-500/20" : ""}`}
-                      autoFocus
-                    />
-                    <FormError errors={fieldErrors.title} />
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Description</label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Add context, acceptance criteria, or notes..."
-                      className={`w-full p-2.5 text-sm rounded-md border bg-background resize-none min-h-[80px] ${fieldErrors.description ? "border-red-500 ring-1 ring-red-500/20" : "border-input focus:ring-1 focus:ring-primary-500 outline-none"}`}
-                    />
-                    <FormError errors={fieldErrors.description} />
-                  </div>
+              <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
+                <DialogHeader className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20">
+                  <DialogTitle className="text-base font-semibold">Create New Task</DialogTitle>
+                  <DialogDescription className="sr-only">Create a new task in this project.</DialogDescription>
+                </DialogHeader>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5 flex flex-col">
-                      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Due Date</label>
-                      <DatePicker
-                        value={dueDate ? new Date(dueDate) : undefined}
-                        onChange={(date) => setDueDate(date ? format(date, "yyyy-MM-dd") : "")}
-                        className="text-sm h-9 w-full"
+                {hasDraft && (
+                  <DraftBanner hasDraft={hasDraft} onRestore={handleRestoreDraft} onDiscard={clearDraft} />
+                )}
+
+                <div className="overflow-y-auto max-h-[65dvh] p-5 space-y-5 thin-scrollbar">
+                  {/* Core Details */}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Task Title <span className="text-red-500">*</span></label>
+                      <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="e.g. Update user onboarding flow"
+                        className={`h-9 text-sm ${fieldErrors.title ? "border-red-500 ring-1 ring-red-500/20" : ""}`}
+                        autoFocus
                       />
+                      <FormError errors={fieldErrors.title} />
                     </div>
+                    
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Priority</label>
-                      <Select value={priority} onValueChange={setPriority}>
-                        <SelectTrigger className="w-full h-9 text-sm">
-                          <SelectValue placeholder="Priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Description</label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Add context, acceptance criteria, or notes..."
+                        className={`w-full p-2.5 text-sm rounded-md border bg-background resize-none min-h-[80px] ${fieldErrors.description ? "border-red-500 ring-1 ring-red-500/20" : "border-input focus:ring-1 focus:ring-primary-500 outline-none"}`}
+                      />
+                      <FormError errors={fieldErrors.description} />
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Project</label>
-                      <Select value={projectId} onValueChange={setProjectId}>
-                        <SelectTrigger className="w-full h-9 text-sm">
-                          <SelectValue placeholder="No Project" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No Project</SelectItem>
-                          {availableProjects?.map((p: TaskProject) => (
-                            <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {canManageTasks ? (
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Assignees</label>
-                        <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-1.5 space-y-0.5 bg-background shadow-inner">
-                          {availableUsers?.map((u: TaskUser) => (
-                            <label key={u.id} className="flex items-center gap-2.5 cursor-pointer px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded text-sm transition-colors">
-                              <Checkbox 
-                                checked={assigneeIds.includes(u.id)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setAssigneeIds([...assigneeIds, u.id]);
-                                  } else {
-                                    setAssigneeIds(assigneeIds.filter(id => id !== u.id));
-                                  }
-                                }}
-                              />
-                              <span className="flex-1 truncate">{u.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5 flex flex-col justify-end">
-                        <div className="h-9 flex items-center px-3 bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800/50 rounded-md">
-                          <span className="text-[11px] font-medium text-primary-700 dark:text-primary-400 flex items-center gap-1.5">
-                            <AppIcon name="info" size="xs" />
-                            Assigned to you automatically
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Advanced Settings */}
-                <div className="space-y-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                  <h4 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider">Advanced Options</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {canManageTasks && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 flex flex-col">
+                        <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Due Date</label>
+                        <DatePicker
+                          value={dueDate ? new Date(dueDate) : undefined}
+                          onChange={(date) => setDueDate(date ? format(date, "yyyy-MM-dd") : "")}
+                          className="text-sm h-9 w-full"
+                        />
+                      </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-semibold text-neutral-500 uppercase">Scope</label>
-                        <Select value={scope} onValueChange={setScope}>
-                          <SelectTrigger className="w-full h-8 text-xs">
-                            <SelectValue placeholder="Global" />
+                        <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Priority</label>
+                        <Select value={priority} onValueChange={setPriority}>
+                          <SelectTrigger className="w-full h-9 text-sm">
+                            <SelectValue placeholder="Priority" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="global" className="text-xs">Global</SelectItem>
-                            <SelectItem value="department" className="text-xs">Department</SelectItem>
-                            <SelectItem value="role" className="text-xs">Role</SelectItem>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                    )}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-500 uppercase">QA Form</label>
-                      <Select value={qaFormId} onValueChange={setQaFormId}>
-                        <SelectTrigger className="w-full h-8 text-xs">
-                          <SelectValue placeholder="None" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none" className="text-xs">None</SelectItem>
-                          {(Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : []).map((q: { id: number; title: string }) => (
-                            <SelectItem key={q.id} value={String(q.id)} className="text-xs">{q.title}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-semibold text-neutral-500 uppercase">Blocked By</label>
-                      <Select value={blockedBy} onValueChange={setBlockedBy}>
-                        <SelectTrigger className="w-full h-8 text-xs">
-                          <SelectValue placeholder="None" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none" className="text-xs">None</SelectItem>
-                          {tasks?.map((t: Task) => (
-                            <SelectItem key={t.id} value={String(t.id)} className="text-xs truncate">{t.title}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Project</label>
+                        <Select value={projectId} onValueChange={setProjectId}>
+                          <SelectTrigger className="w-full h-9 text-sm">
+                            <SelectValue placeholder="No Project" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No Project</SelectItem>
+                            {availableProjects?.map((p: TaskProject) => (
+                              <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {canManageTasks ? (
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Assignees</label>
+                          <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-1.5 space-y-0.5 bg-background shadow-inner">
+                            {availableUsers?.map((u: TaskUser) => (
+                              <label key={u.id} className="flex items-center gap-2.5 cursor-pointer px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded text-sm transition-colors">
+                                <Checkbox 
+                                  checked={assigneeIds.includes(u.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setAssigneeIds([...assigneeIds, u.id]);
+                                    } else {
+                                      setAssigneeIds(assigneeIds.filter(id => id !== u.id));
+                                    }
+                                  }}
+                                />
+                                <span className="flex-1 truncate">{u.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 flex flex-col justify-end">
+                          <div className="h-9 flex items-center px-3 bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800/50 rounded-md">
+                            <span className="text-[11px] font-medium text-primary-700 dark:text-primary-400 flex items-center gap-1.5">
+                              <AppIcon name="info" size="xs" />
+                              Assigned to you automatically
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="bg-neutral-50/50 dark:bg-neutral-900/20 p-3 rounded-md border border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-center gap-2">
-                      <Checkbox id="recurring-checkbox" checked={isRecurring} onCheckedChange={(checked) => setIsRecurring(checked === true)} />
-                      <label htmlFor="recurring-checkbox" className="text-xs font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer">
-                        Make this a recurring task
-                      </label>
-                    </div>
-                    {isRecurring && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 pt-3 border-t border-neutral-200/50 dark:border-neutral-700/50">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-semibold text-neutral-500 uppercase">Pattern</label>
-                          <Select value={recurrencePattern} onValueChange={setRecurrencePattern}>
-                            <SelectTrigger className="w-full h-8 text-xs">
-                              <SelectValue placeholder="Daily" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="daily" className="text-xs">Daily</SelectItem>
-                              <SelectItem value="weekly" className="text-xs">Weekly</SelectItem>
-                              <SelectItem value="monthly" className="text-xs">Monthly</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {recurrencePattern === "weekly" && (
-                          <div className="space-y-1.5 col-span-1 sm:col-span-2">
-                            <label className="text-[10px] font-semibold text-neutral-500 uppercase">Days of Week</label>
-                            <div className="flex flex-wrap gap-2">
-                              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => (
-                                <label key={day} className="flex items-center justify-center gap-1.5 px-2 py-1 rounded border border-neutral-200 dark:border-neutral-700 bg-background cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
-                                  <Checkbox 
-                                    className="h-3 w-3"
-                                    checked={recurrenceDays.includes(idx)} 
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setRecurrenceDays([...recurrenceDays, idx]);
-                                      } else {
-                                        setRecurrenceDays(recurrenceDays.filter(d => d !== idx));
-                                      }
-                                    }}
-                                  />
-                                  <span className="text-[11px] font-medium">{day}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {recurrencePattern === "monthly" && (
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-between h-9 shadow-sm">
+                        <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">Advanced Options</span>
+                        <AppIcon name="chevronDown" size="xs" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-4 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {canManageTasks && (
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-semibold text-neutral-500 uppercase">Day of Month</label>
-                            <Select value={dayOfMonth.toString()} onValueChange={(val) => setDayOfMonth(parseInt(val))}>
+                            <label className="text-[10px] font-semibold text-neutral-500 uppercase">Scope</label>
+                            <Select value={scope} onValueChange={setScope}>
                               <SelectTrigger className="w-full h-8 text-xs">
-                                <SelectValue placeholder="Day" />
+                                <SelectValue placeholder="Global" />
                               </SelectTrigger>
                               <SelectContent>
-                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                  <SelectItem key={day} value={day.toString()} className="text-xs">{day}</SelectItem>
-                                ))}
+                                <SelectItem value="global" className="text-xs">Global</SelectItem>
+                                <SelectItem value="department" className="text-xs">Department</SelectItem>
+                                <SelectItem value="role" className="text-xs">Role</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                         )}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-neutral-500 uppercase">QA Form</label>
+                          <Select value={qaFormId} onValueChange={setQaFormId}>
+                            <SelectTrigger className="w-full h-8 text-xs">
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none" className="text-xs">None</SelectItem>
+                              {(Array.isArray(qaFormsData?.data) ? qaFormsData.data : Array.isArray(qaFormsData) ? qaFormsData : []).map((q: { id: number; title: string }) => (
+                                <SelectItem key={q.id} value={String(q.id)} className="text-xs">{q.title}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-neutral-500 uppercase">Blocked By</label>
+                          <Select value={blockedBy} onValueChange={setBlockedBy}>
+                            <SelectTrigger className="w-full h-8 text-xs">
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none" className="text-xs">None</SelectItem>
+                              {tasks?.map((t: Task) => (
+                                <SelectItem key={t.id} value={String(t.id)} className="text-xs truncate">{t.title}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    )}
-                  </div>
+
+                      <div className="bg-neutral-50/50 dark:bg-neutral-900/20 p-3 rounded-md border border-neutral-100 dark:border-neutral-800">
+                        <div className="flex items-center gap-2">
+                          <Checkbox id="recurring-checkbox" checked={isRecurring} onCheckedChange={(checked) => setIsRecurring(checked === true)} />
+                          <label htmlFor="recurring-checkbox" className="text-xs font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer">
+                            Make this a recurring task
+                          </label>
+                        </div>
+                        {isRecurring && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 pt-3 border-t border-neutral-200/50 dark:border-neutral-700/50">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-semibold text-neutral-500 uppercase">Pattern</label>
+                              <Select value={recurrencePattern} onValueChange={setRecurrencePattern}>
+                                <SelectTrigger className="w-full h-8 text-xs">
+                                  <SelectValue placeholder="Daily" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="daily" className="text-xs">Daily</SelectItem>
+                                  <SelectItem value="weekly" className="text-xs">Weekly</SelectItem>
+                                  <SelectItem value="monthly" className="text-xs">Monthly</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {recurrencePattern === "weekly" && (
+                              <div className="space-y-1.5 col-span-1 sm:col-span-2">
+                                <label className="text-[10px] font-semibold text-neutral-500 uppercase">Days of Week</label>
+                                <div className="flex flex-wrap gap-2">
+                                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => (
+                                    <label key={day} className={`flex items-center justify-center gap-1.5 h-8 min-w-[44px] px-2 rounded border cursor-pointer transition-colors ${recurrenceDays.includes(idx) ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-400 text-primary-700 dark:text-primary-300' : 'border-neutral-200 dark:border-neutral-700 bg-background hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}>
+                                      <input 
+                                        type="checkbox"
+                                        className="hidden"
+                                        checked={recurrenceDays.includes(idx)} 
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setRecurrenceDays([...recurrenceDays, idx]);
+                                          } else {
+                                            setRecurrenceDays(recurrenceDays.filter(d => d !== idx));
+                                          }
+                                        }}
+                                      />
+                                      <span className="text-[11px] font-medium">{day}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {recurrencePattern === "monthly" && (
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold text-neutral-500 uppercase">Day of Month</label>
+                                <Select value={dayOfMonth.toString()} onValueChange={(val) => setDayOfMonth(parseInt(val))}>
+                                  <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectValue placeholder="Day" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                      <SelectItem key={day} value={day.toString()} className="text-xs">{day}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
-              </div>
-              <div className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20 flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="h-9 px-4 text-xs font-medium">
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    setFieldErrors({});
-                    createMutation.mutate();
-                  }}
-                  disabled={createMutation.isPending || !title}
-                  className="h-9 px-6 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold shadow-sm"
-                >
-                  {createMutation.isPending ? <AppIcon name="loading" className="animate-spin mr-2" size="xs" /> : null}
-                  Create Task
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+                <div className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20 flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="h-9 px-4 text-xs font-medium">
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setFieldErrors({});
+                      createMutation.mutate();
+                    }}
+                    disabled={createMutation.isPending || !title}
+                    className="h-9 px-6 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold shadow-sm"
+                  >
+                    {createMutation.isPending ? <AppIcon name="loading" className="animate-spin mr-2" size="xs" /> : null}
+                    Create Task
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {/* Row 2: Filters */}
+        {viewMode !== "qa" && (
+          <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm">
+            <FilterBar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchPlaceholder="Search tasks..."
+              sortBy={sortBy}
+              sortDirection={sortOrder as "asc" | "desc"}
+              onSortChange={(val, dir) => {
+                setSortBy(val);
+                setSortOrder(dir);
+              }}
+              sortOptions={[
+                { label: "Created (Newest)", value: "id" },
+                { label: "Priority", value: "priority" },
+                { label: "Due Date", value: "due_date" }
+              ]}
+              filters={[
+                {
+                  key: "status",
+                  label: "Status",
+                  type: "select",
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  options: [
+                    { label: "To Do", value: "todo" },
+                    { label: "In Progress", value: "in_progress" },
+                    { label: "In Review", value: "review" },
+                    { label: "Done", value: "completed" },
+                    { label: "Redo", value: "redo" },
+                  ]
+                },
+                {
+                  key: "assignee",
+                  label: "Assignee",
+                  type: "select",
+                  value: assigneeFilter,
+                  onChange: setAssigneeFilter,
+                  options: [
+                    { label: "My Tasks", value: "me" },
+                    ...(canManageTasks && usersList.length ? usersList.map((u: TaskUser) => ({ label: u.name, value: u.id.toString() })) : [])
+                  ]
+                },
+                {
+                  key: "scope",
+                  label: "Scope",
+                  type: "select",
+                  value: scopeFilter,
+                  onChange: setScopeFilter,
+                  options: [
+                    { label: "Global", value: "global" },
+                    { label: "Department", value: "department" },
+                    { label: "Role", value: "role" },
+                  ]
+                }
+              ]}
+              onClearAll={() => {
+                setSearchQuery("");
+                setStatusFilter("all");
+                setAssigneeFilter("all");
+                setScopeFilter("all");
+                setSortBy("id");
+                setSortOrder("desc");
+              }}
+            />
+          </div>
+        )}
       </div>
             {(viewMode === "list" || viewMode === "kanban") && (
         <div className="flex-1 flex flex-col min-h-0">
           
-          {selectedTaskIds.length > 0 && (
-            <div className="flex items-center gap-2 p-2 bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800 rounded-lg mb-3 shrink-0">
-              <span className="text-[11px] font-semibold text-primary-700 dark:text-primary-300 ml-1">
-                {selectedTaskIds.length} task{selectedTaskIds.length > 1 ? "s" : ""} selected
-              </span>
-              <div className="flex-1" />
-              <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-[11px] px-2 shadow-none border-primary-200 text-primary-700 hover:bg-primary-100">
-                <AppIcon name="success" className="mr-1.5" size="xs" /> Mark Done
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-[11px] px-2 shadow-none">
-                <AppIcon name="trash" className="mr-1.5" size="xs" /> Delete
-              </Button>
-            </div>
-          )}
+
 
           {viewMode === "list" && (
             <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden flex flex-col">
@@ -898,6 +943,31 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         confirmText="Delete All"
         onConfirm={() => bulkDeleteMutation.mutate(selectedTaskIds)}
       />
+
+      {/* Floating Bulk Actions Footer */}
+      {selectedTaskIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 animate-in slide-in-from-bottom-5">
+          <div className="flex items-center gap-2 px-2 border-r border-neutral-200 dark:border-neutral-800">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 text-[10px] font-bold">
+              {selectedTaskIds.length}
+            </div>
+            <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400 mr-2">
+              selected
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 pr-1">
+            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-[11px] px-3 shadow-sm rounded-full">
+              <AppIcon name="success" className="mr-1.5 text-green-600 dark:text-green-500" size="xs" /> Mark Done
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-[11px] px-3 shadow-sm rounded-full">
+              <AppIcon name="trash" className="mr-1.5" size="xs" /> Delete
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setRowSelection({})} className="h-7 w-7 p-0 rounded-full text-neutral-500 hover:text-neutral-800 ml-1">
+              <AppIcon name="close" size="xs" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

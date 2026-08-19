@@ -5,6 +5,8 @@ import Gantt from "frappe-gantt";
 import { format, isSameDay } from "date-fns";
 import "../../frappe-gantt.css";
 import { TaskModel } from "./task-detail-sheet";
+import { Tabs, TabsList, TabsTrigger } from "@g4k/ui/components";
+import { AppIcon } from "@g4k/ui/components/icon/AppIcon";
 
 export interface GanttTask extends TaskModel {
   created_at?: string;
@@ -109,36 +111,63 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-neutral-400">
-        <p>No tasks available to display in Gantt view.</p>
+      <div className="flex flex-col items-center justify-center h-[400px] bg-card dark:bg-neutral-900 border border-border/80 rounded-xl shadow-sm text-neutral-500">
+        <AppIcon name="calendarX" size="2xl" className="text-neutral-300 dark:text-neutral-700 mb-4" />
+        <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">No timeline data available</p>
+        <p className="text-xs text-neutral-500 mt-1">Tasks must have due dates to appear in this view.</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full overflow-x-auto bg-white dark:bg-neutral-900 rounded-lg p-4">
+    <div className="w-full h-full flex flex-col bg-card dark:bg-neutral-900 border border-border/80 rounded-xl shadow-sm overflow-hidden">
       <style>{`
         /* Core Styling */
         .gantt { font-family: inherit; }
-        .gantt .grid-header { fill: var(--bg-neutral-50, #f8fafc); }
+        .gantt .grid-header { fill: var(--muted, #f1f5f9); }
         .gantt .grid-row { fill: transparent; }
-        .gantt .grid-row:nth-child(even) { fill: var(--bg-neutral-50, #f8fafc); }
-        .gantt .tick { stroke: var(--border-neutral-200, #e2e8f0); stroke-width: 1; }
+        .gantt .grid-row:nth-child(even) { fill: var(--muted, #f1f5f9); opacity: 0.3; }
+        .gantt .tick { stroke: var(--border, #e2e8f0); stroke-width: 1; }
         
         /* Typography */
-        .gantt .lower-text, .gantt .upper-text { font-size: 11px; fill: var(--text-neutral-500, #64748b); font-weight: 600; }
+        .gantt .lower-text, .gantt .upper-text { font-size: 11px; fill: var(--muted-foreground, #64748b); font-weight: 600; text-transform: uppercase; }
         .gantt .bar-label { font-size: 11px; font-weight: 600; fill: #fff; }
+        
+        /* Popover (Details Container) */
+        .gantt .details-container { 
+          background-color: var(--card, #ffffff);
+          border: 1px solid var(--border, #e2e8f0);
+          border-radius: 12px;
+          box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+          padding: 12px;
+          color: var(--foreground, #020617);
+          font-family: inherit;
+        }
+        .gantt-container .details-container h5 {
+          font-size: 13px !important;
+          font-weight: 600 !important;
+          margin-bottom: 6px !important;
+          color: var(--foreground, #020617) !important;
+        }
+        .gantt-container .details-container p {
+          font-size: 11px !important;
+          color: var(--muted-foreground, #64748b) !important;
+          margin-bottom: 0 !important;
+          line-height: 1.4 !important;
+        }
         
         /* Bar Styling */
         .gantt .bar-wrapper .bar { rx: 4; ry: 4; }
-        .gantt .bar-progress { rx: 4; ry: 4; fill: rgba(0,0,0,0.15); }
-        .gantt .bar-wrapper:hover .bar { filter: brightness(0.9); }
+        .gantt .bar-progress { rx: 4; ry: 4; fill: rgba(255, 255, 255, 0.25); }
+        .gantt .bar-wrapper:hover .bar { filter: brightness(1.1); }
+        .gantt .bar-wrapper.active .bar { filter: brightness(1.2); }
         
-        /* Status Colors */
-        .gantt .bar-wrapper.gantt-task-todo .bar { fill: #94a3b8; stroke: #64748b; stroke-width: 1; }
+        /* Vibrant Status Colors */
+        .gantt .bar-wrapper.gantt-task-todo .bar { fill: #d4d4d8; stroke: #a1a1aa; stroke-width: 1; }
         .gantt .bar-wrapper.gantt-task-in_progress .bar { fill: #3b82f6; stroke: #2563eb; stroke-width: 1; }
         .gantt .bar-wrapper.gantt-task-review .bar { fill: #a855f7; stroke: #9333ea; stroke-width: 1; }
         .gantt .bar-wrapper.gantt-task-completed .bar { fill: #10b981; stroke: #059669; stroke-width: 1; }
+        .gantt .bar-wrapper.gantt-task-redo .bar, .gantt .bar-wrapper.gantt-task-overdue .bar { fill: #f43f5e; stroke: #e11d48; stroke-width: 1; }
         
         /* Milestones */
         .gantt .bar-wrapper.gantt-task-milestone .bar {
@@ -154,23 +183,35 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
         }
         .gantt .bar-wrapper.gantt-task-milestone .bar-progress { display: none; }
         .gantt .bar-wrapper.gantt-task-milestone .bar-label { display: none; }
+
+        .dark .gantt .grid-header { fill: #171717; }
+        .dark .gantt .grid-row:nth-child(even) { fill: #171717; }
+        .dark .gantt .tick { stroke: #262626; }
+        .dark .gantt .lower-text, .dark .gantt .upper-text { fill: #a3a3a3; }
+        .dark .gantt .details-container { 
+          background-color: #0a0a0a;
+          border-color: #262626;
+          color: #f5f5f5;
+        }
+        .dark .gantt-container .details-container h5 { color: #f5f5f5 !important; }
+        .dark .gantt-container .details-container p { color: #a3a3a3 !important; }
       `}</style>
-      <div className="flex justify-end gap-1 mb-4">
-        {["Day", "Week", "Month"].map(mode => (
-          <button
-            key={mode}
-            onClick={() => setGanttViewMode(mode as "Day" | "Week" | "Month")}
-            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
-              ganttViewMode === mode 
-                ? "bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400" 
-                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700"
-            }`}
-          >
-            {mode}
-          </button>
-        ))}
+      
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/80 bg-muted/20">
+        <div className="flex items-center gap-2">
+          <AppIcon name="calendar" size="sm" className="text-primary-500" />
+          <h3 className="text-[13px] font-bold text-neutral-700 dark:text-neutral-300">Timeline</h3>
+        </div>
+        <Tabs value={ganttViewMode} onValueChange={(v) => setGanttViewMode(v as any)}>
+          <TabsList className="h-8">
+            <TabsTrigger value="Day" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Day</TabsTrigger>
+            <TabsTrigger value="Week" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Week</TabsTrigger>
+            <TabsTrigger value="Month" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Month</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
-      <div className="overflow-x-auto pb-4 custom-scrollbar" ref={ganttContainerRef}>
+      
+      <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar min-h-[400px]" ref={ganttContainerRef}>
         {/* SVG will be injected here by useEffect */}
       </div>
     </div>

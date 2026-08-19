@@ -47,10 +47,10 @@ export interface KanbanTask extends TaskModel {
 }
 
 const COLUMNS = [
-  { id: "todo", title: "To Do", color: "bg-neutral-400" },
-  { id: "in_progress", title: "In Progress", color: "bg-info" },
-  { id: "review", title: "In Review", color: "bg-warning" },
-  { id: "done", title: "Done", color: "bg-success" },
+  { id: "todo", title: "To Do", color: "bg-neutral-400", border: "border-t-neutral-400" },
+  { id: "in_progress", title: "In Progress", color: "bg-info", border: "border-t-blue-500" },
+  { id: "review", title: "In Review", color: "bg-warning", border: "border-t-amber-500" },
+  { id: "done", title: "Done", color: "bg-success", border: "border-t-green-500" },
 ];
 
 const getPriorityStatus = (priority: string): StatusType => {
@@ -80,13 +80,19 @@ function TaskCard({
       id={`data-row-${task.id}`}
       onClick={() => onTaskSelect?.(task)}
       className={cn(
-        "border-neutral-200 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900 rounded-lg",
+        "relative overflow-hidden border-neutral-200 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900 rounded-lg group",
         isOverlay 
           ? "scale-[1.02] rotate-2 cursor-grabbing shadow-2xl ring-1 ring-primary/20" 
-          : "shadow-none hover:shadow-sm cursor-grab border"
+          : "shadow-none hover:shadow-sm hover:border-primary-300 dark:hover:border-primary-700 cursor-grab border"
       )}
     >
-      <CardContent className="p-2.5 space-y-2">
+      <div className={cn(
+        "absolute left-0 top-0 bottom-0 w-1",
+        task.priority === "urgent" ? "bg-red-500" :
+        task.priority === "high" ? "bg-orange-500" :
+        task.priority === "medium" ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-600"
+      )} />
+      <CardContent className="p-2.5 pl-3.5 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1">
             <h4 className="text-xs font-semibold text-neutral-900 dark:text-white line-clamp-2">
@@ -247,16 +253,12 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
           : "bg-transparent"
       }`}
     >
-      <div className="flex items-center justify-between px-2 py-3 border-b-2 border-neutral-100 dark:border-neutral-800/50 sticky top-0 bg-background z-10 mb-1">
+      <div className={cn("flex items-center justify-between px-3 py-2.5 bg-neutral-50 dark:bg-neutral-900/50 border-t-[3px] sticky top-0 z-10 mb-2 rounded-t-md shadow-sm border-b border-b-neutral-200 dark:border-b-neutral-800", col.border)}>
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${col.color}`} />
-          <h3 className="font-bold text-xs text-neutral-800 dark:text-neutral-200">
-            {col.title}
-          </h3>
+          <div className={cn("w-2 h-2 rounded-full", col.color)} />
+          <h3 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider">{col.title}</h3>
         </div>
-        <span className="text-[10px] font-bold text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
-          {tasks.length}
-        </span>
+        <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center">{tasks.length}</span>
       </div>
 
       <div className="flex-1 flex flex-col gap-3 min-h-[300px]">
@@ -267,8 +269,13 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
               <div className="h-24 bg-neutral-100 dark:bg-neutral-800 animate-pulse rounded-xl" />
             </div>
           ) : tasks.length === 0 ? (
-            <div className="flex items-center justify-center h-24 mt-2 border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-[var(--radius)] text-xs font-semibold text-neutral-400">
-              No tasks
+            <div className="mt-2 scale-90 opacity-70 hover:opacity-100 transition-opacity">
+              <EmptyState
+                icon="kanban"
+                title="No Tasks"
+                description="Drag tasks here"
+                className="border-2 border-dashed shadow-none bg-transparent py-6"
+              />
             </div>
           ) : null}
           {tasks.map((task: KanbanTask) => (
@@ -422,18 +429,25 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className={`flex flex-nowrap md:grid ${statusFilter && statusFilter !== 'all' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0`}>
-        {COLUMNS.filter(col => !statusFilter || statusFilter === "all" || col.id === statusFilter).map((col) => (
-          <DroppableColumn
-            key={col.id}
-            col={col}
-            tasks={isLoading ? [] : localTasks.filter((t: KanbanTask) => t.status === col.id)}
-            onTaskSelect={onTaskSelect}
-            onDeleteTask={onDeleteTask}
-            onTaskMove={onTaskMove}
-            isLoading={isLoading}
-          />
-        ))}
+      <div className="relative group/board">
+        <div className={`flex flex-nowrap md:grid ${statusFilter && statusFilter !== 'all' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 relative`}>
+          {COLUMNS.filter(col => !statusFilter || statusFilter === "all" || col.id === statusFilter).map((col) => (
+            <DroppableColumn
+              key={col.id}
+              col={col}
+              tasks={isLoading ? [] : localTasks.filter((t: KanbanTask) => t.status === col.id)}
+              onTaskSelect={onTaskSelect}
+              onDeleteTask={onDeleteTask}
+              onTaskMove={onTaskMove}
+              isLoading={isLoading}
+            />
+          ))}
+        </div>
+        
+        {/* Mobile scroll indicator */}
+        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden flex items-center justify-end pr-2 opacity-100 group-hover/board:opacity-0 transition-opacity z-20">
+          <AppIcon name="chevronRight" className="text-neutral-400 animate-pulse" />
+        </div>
       </div>
 
       <DragOverlay>
