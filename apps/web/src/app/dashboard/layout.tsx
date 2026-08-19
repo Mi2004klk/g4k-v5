@@ -59,20 +59,7 @@ export const navGroups = [
   ]},
 ];
 
-const accentClasses: Record<string, { bg: string; hoverBg: string; text: string; hoverText: string; bgDark: string; textDark: string; border: string; ring: string }> = {
-  emerald: { bg: "bg-emerald-100", hoverBg: "hover:bg-emerald-100 dark:hover:bg-emerald-950", text: "text-emerald-700", hoverText: "hover:text-emerald-700 dark:hover:text-emerald-300", bgDark: "dark:bg-emerald-950", textDark: "dark:text-emerald-300", border: "bg-emerald-600", ring: "ring-1 ring-inset ring-emerald-500/50" },
-  amber: { bg: "bg-amber-100", hoverBg: "hover:bg-amber-100 dark:hover:bg-amber-950", text: "text-amber-700", hoverText: "hover:text-amber-700 dark:hover:text-amber-300", bgDark: "dark:bg-amber-950", textDark: "dark:text-amber-300", border: "bg-amber-600", ring: "ring-1 ring-inset ring-amber-500/50" },
-  pink: { bg: "bg-pink-100", hoverBg: "hover:bg-pink-100 dark:hover:bg-pink-950", text: "text-pink-700", hoverText: "hover:text-pink-700 dark:hover:text-pink-300", bgDark: "dark:bg-pink-950", textDark: "dark:text-pink-300", border: "bg-pink-600", ring: "ring-1 ring-inset ring-pink-500/50" },
-  blue: { bg: "bg-blue-100", hoverBg: "hover:bg-blue-100 dark:hover:bg-blue-950", text: "text-blue-700", hoverText: "hover:text-blue-700 dark:hover:text-blue-300", bgDark: "dark:bg-blue-950", textDark: "dark:text-blue-300", border: "bg-blue-600", ring: "ring-1 ring-inset ring-blue-500/50" },
-  slate: { bg: "bg-slate-100", hoverBg: "hover:bg-slate-100 dark:hover:bg-slate-900", text: "text-slate-700", hoverText: "hover:text-slate-700 dark:hover:text-slate-300", bgDark: "dark:bg-slate-900", textDark: "dark:text-slate-300", border: "bg-slate-600", ring: "ring-1 ring-inset ring-slate-500/50" },
-  rose: { bg: "bg-rose-100", hoverBg: "hover:bg-rose-100 dark:hover:bg-rose-950", text: "text-rose-700", hoverText: "hover:text-rose-700 dark:hover:text-rose-300", bgDark: "dark:bg-rose-950", textDark: "dark:text-rose-300", border: "bg-rose-600", ring: "ring-1 ring-inset ring-rose-500/50" },
-  violet: { bg: "bg-primary-100", hoverBg: "hover:bg-primary-100 dark:hover:bg-primary-950", text: "text-primary-700", hoverText: "hover:text-primary-700 dark:hover:text-primary-300", bgDark: "dark:bg-primary-950", textDark: "dark:text-primary-300", border: "bg-primary-600", ring: "ring-1 ring-inset ring-primary-500/50" },
-  indigo: { bg: "bg-indigo-100", hoverBg: "hover:bg-indigo-100 dark:hover:bg-indigo-950", text: "text-indigo-700", hoverText: "hover:text-indigo-700 dark:hover:text-indigo-300", bgDark: "dark:bg-indigo-950", textDark: "dark:text-indigo-300", border: "bg-indigo-600", ring: "ring-1 ring-inset ring-indigo-500/50" },
-  teal: { bg: "bg-teal-100", hoverBg: "hover:bg-teal-100 dark:hover:bg-teal-950", text: "text-teal-700", hoverText: "hover:text-teal-700 dark:hover:text-teal-300", bgDark: "dark:bg-teal-950", textDark: "dark:text-teal-300", border: "bg-teal-600", ring: "ring-1 ring-inset ring-teal-500/50" },
-  cyan: { bg: "bg-cyan-100", hoverBg: "hover:bg-cyan-100 dark:hover:bg-cyan-950", text: "text-cyan-700", hoverText: "hover:text-cyan-700 dark:hover:text-cyan-300", bgDark: "dark:bg-cyan-950", textDark: "dark:text-cyan-300", border: "bg-cyan-600", ring: "ring-1 ring-inset ring-cyan-500/50" },
-  orange: { bg: "bg-orange-100", hoverBg: "hover:bg-orange-100 dark:hover:bg-orange-950", text: "text-orange-700", hoverText: "hover:text-orange-700 dark:hover:text-orange-300", bgDark: "dark:bg-orange-950", textDark: "dark:text-orange-300", border: "bg-orange-600", ring: "ring-1 ring-inset ring-orange-500/50" },
-  green: { bg: "bg-green-100", hoverBg: "hover:bg-green-100 dark:hover:bg-green-950", text: "text-green-700", hoverText: "hover:text-green-700 dark:hover:text-green-300", bgDark: "dark:bg-green-950", textDark: "dark:text-green-300", border: "bg-green-600", ring: "ring-1 ring-inset ring-green-500/50" },
-};
+import { navAccent } from "@g4k/ui/theme";
 
 function getAccent(href: string) {
   let color = "violet";
@@ -84,7 +71,7 @@ function getAccent(href: string) {
   else if (href.startsWith("/dashboard/org/users")) color = "cyan";
   else if (href.startsWith("/dashboard/org/attendance")) color = "teal";
   else if (href.startsWith("/dashboard/profile")) color = "rose";
-  return accentClasses[color] || accentClasses.violet;
+  return navAccent(color);
 }
 
 export default function DashboardLayout({
