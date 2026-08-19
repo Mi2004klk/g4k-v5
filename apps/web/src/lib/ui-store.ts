@@ -17,7 +17,9 @@ interface UIState {
   clearPopupNotifications: (ids: number[]) => void;
   toggleWidgetCollapse: (widgetId: string) => void;
   dismissWidget: (widgetId: string) => void;
+  toggleWidgetVisibility: (widgetId: string) => void;
   restoreWidgets: () => void;
+  hydrateFromServer: (dismissed: string[], states: Record<string, { collapsed?: boolean }>) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -82,8 +84,26 @@ export const useUIStore = create<UIState>()(
         }));
       },
 
+      toggleWidgetVisibility: (widgetId: string) => {
+        set((state) => {
+          const isDismissed = state.dismissedWidgets.includes(widgetId);
+          if (isDismissed) {
+            return { dismissedWidgets: state.dismissedWidgets.filter(id => id !== widgetId) };
+          } else {
+            return { dismissedWidgets: [...state.dismissedWidgets, widgetId] };
+          }
+        });
+      },
+
       restoreWidgets: () => {
         set({ dismissedWidgets: [] });
+      },
+
+      hydrateFromServer: (dismissed, states) => {
+        set({
+          dismissedWidgets: Array.isArray(dismissed) ? dismissed : [],
+          widgetStates: states && typeof states === 'object' ? states : {}
+        });
       },
 
     }),

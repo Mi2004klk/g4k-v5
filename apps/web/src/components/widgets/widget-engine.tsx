@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { apiFetch } from "@/lib/api-client";
 import { reconcileLayout, GRID_COLS } from "@/lib/reconcile-layout";
-import { ErrorBoundary } from "@g4k/ui/components";
+import { ErrorBoundary, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, AppIcon } from "@g4k/ui/components";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
@@ -34,9 +34,13 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   }));
   const [, setMounted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const { widgetStates, dismissWidget } = useUIStore(useShallow((s) => ({
+  const { widgetStates, dismissedWidgets, dismissWidget, toggleWidgetVisibility, restoreWidgets, hydrateFromServer } = useUIStore(useShallow((s) => ({
     widgetStates: s.widgetStates,
+    dismissedWidgets: s.dismissedWidgets,
     dismissWidget: s.dismissWidget,
+    toggleWidgetVisibility: s.toggleWidgetVisibility,
+    restoreWidgets: s.restoreWidgets,
+    hydrateFromServer: s.hydrateFromServer,
   })));
   
   const draggingRef = useRef(false);
@@ -96,6 +100,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     };
   }, []);
 
+  const isHydratedRef = useRef(false);
+
   useEffect(() => {
     setMounted(true);
     if (!preferencesData) return;
@@ -120,28 +126,34 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLayouts((prev) => JSON.stringify(prev) === JSON.stringify(mergedBreakpoints) ? prev : mergedBreakpoints);
     }
-  }, [preferencesData, availableWidgets]);
-
-  const handleLayoutChange = (_currentLayout: unknown, allLayouts: Record<string, unknown[]>) => {
-    const isDifferent = JSON.stringify(layouts) !== JSON.stringify(allLayouts);
-    if (!isDifferent) return; // Prevent unnecessary re-renders (Fix for #2)
-
-    setLayouts((prev) => (JSON.stringify(prev) === JSON.stringify(allLayouts) ? prev : allLayouts));
     
-    // Suppress persistence until (a) preferences loaded AND (b) user interacted
+    // Hydrate visibility and collapse states from backend ONCE
+    if (!isHydratedRef.current) {
+      const dismissedRaw = (preferencesData as any).dismissed_widgets || (preferencesData as any).preferences?.dismissed_widgets;
+      const statesRaw = (preferencesData as any).widget_states || (preferencesData as any).preferences?.widget_states;
+      if (dismissedRaw || statesRaw) {
+        hydrateFromServer(dismissedRaw || [], statesRaw || {});
+      }
+      isHydratedRef.current = true;
+    }
+  }, [preferencesData, availableWidgets, hydrateFromServer]);
+
+  const savePreferences = (allLayouts: Record<string, unknown[]>, dismissed: string[], states: Record<string, any>) => {
     if (!preferencesData || !isDirtyRef.current) return;
 
     if (layoutTimeoutRef.current) {
       clearTimeout(layoutTimeoutRef.current);
     }
-    // Debounce layout save API call to prevent spamming on drag (UX-10)
+    
     layoutTimeoutRef.current = setTimeout(async () => {
       try {
         await apiFetch("/auth/preferences", {
           method: "PUT",
           body: JSON.stringify({
             preferences: { 
-              dashboard_layout: { version: 1, layouts: allLayouts } 
+              dashboard_layout: { version: 1, layouts: allLayouts },
+              dismissed_widgets: dismissed,
+              widget_states: states,
             },
           }),
         });
@@ -149,6 +161,49 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         // Ignore layout save errors silently
       }
     }, 500);
+  };
+
+  // Sync when visibility or collapse states change (but only if user interacted)
+  useEffect(() => {
+    if (isDirtyRef.current) {
+      savePreferences(layouts, dismissedWidgets, widgetStates);
+    }
+  }, [dismissedWidgets, widgetStates]);
+
+  const handleLayoutChange = (_currentLayout: unknown, allLayouts: Record<string, unknown[]>) => {
+    const isDifferent = JSON.stringify(layouts) !== JSON.stringify(allLayouts);
+    if (!isDifferent) return; // Prevent unnecessary re-renders (Fix for #2)
+
+    setLayouts((prev) => (JSON.stringify(prev) === JSON.stringify(allLayouts) ? prev : allLayouts));
+    savePreferences(allLayouts, dismissedWidgets, widgetStates);
+  };
+
+  const handleResetLayout = async () => {
+    const defaultLayouts = {
+      lg: availableWidgets.map((w: any) => ({ ...(w.defaultLayout?.lg || w.defaultLayout), i: w.id })),
+      md: availableWidgets.map((w: any) => ({ ...(w.defaultLayout?.md || w.defaultLayout), i: w.id })),
+      sm: availableWidgets.map((w: any) => ({ ...(w.defaultLayout?.sm || w.defaultLayout), i: w.id })),
+      xs: availableWidgets.map((w: any) => ({ ...(w.defaultLayout?.xs || w.defaultLayout), i: w.id })),
+      xxs: availableWidgets.map((w: any) => ({ ...(w.defaultLayout?.xxs || w.defaultLayout), i: w.id })),
+    };
+    setLayouts(defaultLayouts);
+    hydrateFromServer([], {});
+    
+    isDirtyRef.current = false; // Prevent auto-save from overriding
+    try {
+      await apiFetch("/auth/preferences", {
+        method: "PUT",
+        body: JSON.stringify({
+          preferences: { 
+            dashboard_layout: null,
+            dismissed_widgets: [],
+            widget_states: {},
+          },
+        }),
+      });
+    } catch {
+      // Ignore
+    }
   };
 
   const handleDragStart = () => {
@@ -182,6 +237,37 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         }
       }}
     >
+      <div className="flex justify-end mb-4 px-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 shadow-sm">
+              <AppIcon name="settings" className="mr-2 h-4 w-4" /> Customize Dashboard
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <div className="px-2 py-1.5 text-xs font-semibold text-neutral-500">Visible Widgets</div>
+            {availableWidgets.map((w) => (
+              <DropdownMenuItem 
+                key={w.id} 
+                onSelect={(e) => {
+                  e.preventDefault();
+                  toggleWidgetVisibility(w.id);
+                  isDirtyRef.current = true;
+                }}
+                className="flex items-center justify-between"
+              >
+                <span>{w.id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                {!dismissedWidgets.includes(w.id) && <AppIcon name="check" className="h-4 w-4 text-primary" />}
+              </DropdownMenuItem>
+            ))}
+            <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1" />
+            <DropdownMenuItem onSelect={handleResetLayout} className="text-rose-600 focus:text-rose-700">
+              <AppIcon name="refresh" className="mr-2 h-4 w-4" /> Reset to Default
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <style>{`
         .is-dragging-widget a,
         .is-dragging-widget button,
@@ -234,7 +320,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         margin={[12, 12] as [number, number]}
         draggableHandle=".widget-drag-handle"
       >
-        {availableWidgets.map((widget) => (
+        {availableWidgets.filter(w => !dismissedWidgets.includes(w.id)).map((widget) => (
           <div key={widget.id} className="h-full group/widget relative">
             <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-50 flex items-center bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm px-1.5 py-1 rounded shadow-sm border border-neutral-200/50 dark:border-neutral-700/50">
               <div className="widget-drag-handle cursor-grab active:cursor-grabbing p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors" title="Drag to move">

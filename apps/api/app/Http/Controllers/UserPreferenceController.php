@@ -58,6 +58,8 @@ class UserPreferenceController extends Controller
         $user->preferences = $prefs;
         $user->save();
 
+        \Illuminate\Support\Facades\Cache::forget("user_prefs_{$user->id}");
+
         return response()->json([
             'theme_mode' => $prefs['theme_mode'] ?? 'system',
             'density' => $prefs['density'] ?? 'comfortable',
