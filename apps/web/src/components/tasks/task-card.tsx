@@ -4,6 +4,7 @@ import { AppIcon } from "@g4k/ui/components";
 import { Card, CardContent } from "@g4k/ui/components";
 import { Avatar, AvatarFallback } from "@g4k/ui/components";
 import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
+import { getPriorityColor } from "@g4k/ui/theme";
 
 export interface KanbanTask {
   id: number;
@@ -22,23 +23,7 @@ export interface KanbanTask {
   order?: number;
 }
 
-const getPriorityStatus = (priority: string): StatusType => {
-  switch (priority) {
-    case "urgent": return "danger";
-    case "high": return "warning";
-    case "medium": return "info";
-    default: return "neutral";
-  }
-};
 
-const getPriorityIcon = (priority: string) => {
-  switch (priority) {
-    case "urgent": return "flag";
-    case "high": return "arrowUp";
-    case "medium": return "minus";
-    default: return "arrowDown";
-  }
-};
 
 export function TaskCard({
   task,
@@ -65,9 +50,7 @@ export function TaskCard({
       {/* Priority Left Border */}
       <div className={cn(
         "absolute left-0 top-0 bottom-0 w-1",
-        task.priority === "urgent" ? "bg-rose-500" :
-        task.priority === "high" ? "bg-amber-500" :
-        task.priority === "medium" ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-600"
+        getPriorityColor(task.priority).bar
       )} />
 
       <CardContent className="p-3 pl-4 space-y-2.5">
@@ -101,9 +84,9 @@ export function TaskCard({
           </div>
           
           <div className="flex items-center gap-1 shrink-0">
-            <StatusBadge status={getPriorityStatus(task.priority)} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider h-[22px] flex items-center">
-              <AppIcon name={getPriorityIcon(task.priority)} size="xs" className="mr-1 h-3 w-3" />
-              {task.priority}
+            <StatusBadge status={getPriorityColor(task.priority).status} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider h-[22px] flex items-center">
+              <AppIcon name={getPriorityColor(task.priority).icon as any} size="xs" className="mr-1 h-3 w-3" />
+              {getPriorityColor(task.priority).label}
             </StatusBadge>
             
             {/* Drag Handle (visible on hover) */}

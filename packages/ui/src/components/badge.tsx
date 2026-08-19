@@ -44,12 +44,13 @@ const statusColorMap: Record<StatusType, { bg: string, text: string, dot: string
 };
 
 export interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  status: StatusType;
+  status?: StatusType;
+  colors?: { bg: string, text: string, dot?: string };
   dot?: boolean;
 }
 
-function StatusBadge({ className, status, dot = false, children, ...props }: StatusBadgeProps) {
-  const colors = statusColorMap[status];
+function StatusBadge({ className, status, colors: overrideColors, dot = false, children, ...props }: StatusBadgeProps) {
+  const colors = overrideColors || (status ? statusColorMap[status] : statusColorMap.neutral);
 
   return (
     <div

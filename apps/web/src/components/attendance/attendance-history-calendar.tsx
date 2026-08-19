@@ -16,6 +16,7 @@ import {
   eachWeekOfInterval,
 } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
+import { getAttendanceStatusColor } from "@g4k/ui/theme";
 import {
   Button,
   Skeleton,
@@ -101,53 +102,38 @@ function getDayRecord(days: AttendanceDay[], dateStr: string): AttendanceDay | u
   return days.find((d) => d.date === dateStr);
 }
 
-const STATUS_STYLES: Record<DayStatus, string> = {
-  nodata: "bg-neutral-100 dark:bg-neutral-800",
-  absent: "bg-neutral-200 dark:bg-neutral-700",
-  late: "bg-amber-300 dark:bg-amber-500",
-  present: "bg-emerald-300 dark:bg-emerald-500",
-  overtime: "bg-indigo-400 dark:bg-indigo-500",
-  leave: "bg-primary-300 dark:bg-primary-500",
-  holiday: "bg-blue-300 dark:bg-blue-500",
-};
 
-const STATUS_LABEL: Record<DayStatus, string> = {
-  nodata: "No data",
-  absent: "Absent",
-  late: "Late",
-  present: "Present",
-  overtime: "Overtime",
-  leave: "On Leave",
-  holiday: "Holiday",
-};
 
 // ─── Legend ──────────────────────────────────────────────────────────────────
 
 function CalendarLegend({ compact = false }: { compact?: boolean }) {
-  const items: [DayStatus, string][] = [
-    ["nodata", "No Data"],
-    ["late", "Late"],
-    ["present", "Present"],
-    ["overtime", "Overtime"],
-    ["leave", "Leave"],
-    ["holiday", "Holiday"],
+  const items: DayStatus[] = [
+    "nodata",
+    "late",
+    "present",
+    "overtime",
+    "leave",
+    "holiday",
   ];
   return (
     <div
       className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${compact ? "gap-x-2" : ""}`}
       aria-label="Calendar legend"
     >
-      {items.map(([status, label]) => (
-        <span key={status} className="flex items-center gap-1">
-          <span
-            className={`${compact ? "w-2.5 h-2.5" : "w-3 h-3"} rounded-sm flex-shrink-0 ${STATUS_STYLES[status]}`}
-            aria-hidden
-          />
-          <span className={`${compact ? "text-[9px]" : "text-[10px]"} text-neutral-500 dark:text-neutral-400`}>
-            {compact ? label.split(" ")[0] : label}
-          </span>
-        </span>
-      ))}
+      {items.map((statusKey) => {
+        const color = getAttendanceStatusColor(statusKey === "leave" ? "on_leave" : statusKey);
+        return (
+          <div key={statusKey} className="flex items-center gap-1.5">
+            <span
+              className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} rounded-sm ${color.bg}`}
+              aria-hidden
+            />
+            <span className={`${compact ? "text-[9px]" : "text-[10px]"} text-neutral-500 dark:text-neutral-400`}>
+              {color.label}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -167,10 +153,10 @@ function DayTooltipContent({ date, record, holiday }: { date: Date; record?: Att
       )}
       <p className="text-[11px] capitalize">
         <span
-          className={`inline-block w-2 h-2 rounded-sm mr-1 ${STATUS_STYLES[status]}`}
+          className={`inline-block w-2 h-2 rounded-sm mr-1 ${getAttendanceStatusColor(status === "leave" ? "on_leave" : status).bg}`}
           aria-hidden
         />
-        {STATUS_LABEL[status]}
+        {getAttendanceStatusColor(status === "leave" ? "on_leave" : status).label}
       </p>
       {record && record.total_seconds > 0 && (
         <p className="text-[11px] text-neutral-400">
@@ -262,8 +248,7 @@ function MonthCalendarGrid({
                     </span>
                     {status !== "nodata" && (
                       <div
-                        className={`w-2 h-2 rounded-full ${STATUS_STYLES[status]}`}
-                        title={STATUS_LABEL[status]}
+                        className={`w-1.5 h-1.5 rounded-sm ${getAttendanceStatusColor(status === "leave" ? "on_leave" : status).bg}`}
                       />
                     )}
                   </div>

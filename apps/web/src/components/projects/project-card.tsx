@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { Card, CardContent, Avatar, AvatarFallback, InlineEdit, StatusBadge, Progress } from "@g4k/ui/components";
+import { getPriorityColor } from "@g4k/ui/theme";
 import { usePins } from "@/hooks/use-pins";
 import { Button } from "@g4k/ui/components";
 import Image from "next/image";
@@ -19,15 +20,6 @@ interface Project {
 }
 
 export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName }: { project: Project; viewMode?: "grid" | "list"; onClick?: () => void; onUpdateName?: (name: string) => void }) {
-  const getPriorityStatus = (priority: string): "danger" | "warning" | "info" | "neutral" => {
-    switch (priority) {
-      case "urgent": return "danger";
-      case "high": return "warning";
-      case "medium": return "info";
-      default: return "neutral";
-    }
-  };
-
   const { pins, pin, unpin, isPinning, isUnpinning } = usePins();
   const pinnedItem = pins?.find(p => p.type === 'project' && p.target_id === String(project.id));
   const isPinned = !!pinnedItem;
@@ -114,7 +106,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
               <AppIcon name="calendar" size="xs" />
               <span>{project.deadline ? format(new Date(project.deadline), "MMM d, yyyy") : "No due date"}</span>
             </div>
-            <StatusBadge status={getPriorityStatus(project.priority)} className="uppercase text-[9px] tracking-wider font-bold h-6">
+            <StatusBadge status={getPriorityColor(project.priority).status} className="uppercase text-[9px] tracking-wider font-bold h-6">
               {project.priority}
             </StatusBadge>
             <Button
@@ -159,7 +151,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
             </p>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <StatusBadge status={getPriorityStatus(project.priority)} className="uppercase text-[9px] tracking-wider font-bold">
+            <StatusBadge status={getPriorityColor(project.priority).status} className="uppercase text-[9px] tracking-wider font-bold">
               {project.priority}
             </StatusBadge>
             <Button
