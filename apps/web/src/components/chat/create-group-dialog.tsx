@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, EmptyState } from "@g4k/ui/components";
 import { Button, Input, Label, ScrollArea, Checkbox } from "@g4k/ui/components";
 import { apiFetch, unwrapList } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -194,7 +194,10 @@ export function CreateGroupDialog({
                     </label>
                   ))}
                   {otherUsers.length === 0 && (
-                     <div className="p-2 text-xs text-neutral-500 text-center">No users found</div>
+                     <EmptyState 
+                       title="No users found" 
+                       className="min-h-[100px] border-none shadow-none mt-4" 
+                     />
                   )}
                 </div>
               )}

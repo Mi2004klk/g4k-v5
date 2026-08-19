@@ -20,6 +20,7 @@ import { getAttendanceStatusColor } from "@g4k/ui/theme";
 import {
   Button,
   Skeleton,
+  EmptyState,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -482,12 +483,14 @@ function DayDetailContent({
   const timerStandard = useTimerStore((s) => s.standardSeconds);
 
   if (summaryDay.id === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 space-y-2 text-center">
-        <AppIcon name="calendar" size="2xl" />
-        <p className="text-sm font-medium text-neutral-500">No attendance record for this day.</p>
-      </div>
-    );
+      return (
+        <EmptyState
+          title="No Record"
+          description="No attendance record for this day."
+          icon={<AppIcon name="calendar" size="2xl" />}
+          className="my-10"
+        />
+      );
   }
 
   return (
@@ -525,7 +528,11 @@ function DayDetailContent({
             <Skeleton className="h-12 w-full rounded-[var(--radius)]" />
           </div>
         ) : events.length === 0 ? (
-          <p className="text-xs text-neutral-500 italic">No punches recorded for this day.</p>
+          <EmptyState
+              title="No Punches"
+              description="No punches recorded for this day."
+              className="min-h-[100px]"
+            />
         ) : (
           <div className="space-y-2">
             {events.map((evt: AttendanceEvent) => (

@@ -1,9 +1,8 @@
 "use client";
 
 import { useRef, useCallback, useEffect } from "react";
-import { AppIcon } from "@g4k/ui/components";
-import { Avatar, AvatarFallback } from "@g4k/ui/components";
 import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage, AppIcon, EmptyState } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface ChatUser { id: number; name?: string; pivot?: { last_read_at?: string } }
@@ -77,6 +76,14 @@ export function ConversationList({
 
   return (
     <div ref={parentRef} className="h-full overflow-y-auto relative">
+      {conversations.length === 0 && !isFetchingNextPage ? (
+        <EmptyState
+          title="No Conversations"
+          description="You don't have any chats yet."
+          icon={<AppIcon name="chat" size="2xl" />}
+          className="mt-10"
+        />
+      ) : (
       <div
         className="w-full relative divide-y divide-neutral-100 dark:divide-neutral-800"
         style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
@@ -179,6 +186,7 @@ export function ConversationList({
           );
         })}
       </div>
+      )}
     </div>
   );
 }

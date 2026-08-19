@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Skeleton } from "@g4k/ui/components";
+import { Skeleton, EmptyState } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -210,11 +210,12 @@ export function HrAttendanceGraph() {
             <AppIcon name="loading" size="2xl" className=" animate-spin text-emerald-500" />
           </div>
         ) : !data?.stats || data.stats.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground z-10">
-            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-              <AppIcon name="chart" size="2xl" className="text-muted-foreground" />
-            </div>
-            <p className="font-medium">No data available for this period</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm z-10 rounded-xl">
+            <EmptyState
+              title="No Data Available"
+              description="There is no attendance data for this period."
+              icon={<AppIcon name="chart" size="2xl" />}
+            />
           </div>
         ) : null}
         

@@ -12,6 +12,7 @@ import {
   CardContent, 
   DataTable, 
   FilterBar,
+  EmptyState,
   Button,
   Badge,
   DropdownMenu,
@@ -210,12 +211,12 @@ export function ReportBuilder() {
              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Loading report data...</p>
            </div>
         ) : items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-             <div className="h-16 w-16 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
-               <AppIcon name="search" size="xl" className="text-neutral-400" />
-             </div>
-             <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">No results found</p>
-             <p className="text-sm text-neutral-500 mt-1 max-w-[300px]">We couldn't find any data matching your current filters. Try adjusting your search.</p>
+          <div className="flex-1 flex items-center justify-center p-12">
+            <EmptyState
+              title="No results found"
+              description="We couldn't find any data matching your current filters. Try adjusting your search."
+              icon={<AppIcon name="search" size="xl" />}
+            />
           </div>
         ) : (
           <div className="flex-1 overflow-auto">
