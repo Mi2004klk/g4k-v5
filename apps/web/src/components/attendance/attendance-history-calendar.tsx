@@ -15,7 +15,7 @@ import {
   subWeeks,
   eachWeekOfInterval,
 } from "date-fns";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, SemanticCalendar } from "@g4k/ui/components";
 import { getAttendanceStatusColor } from "@g4k/ui/theme";
 import {
   Button,
@@ -190,99 +190,80 @@ function MonthCalendarGrid({
   currentDate: Date;
   onDayClick: (day: AttendanceDay | null, date: Date) => void;
 }) {
-  const calendarDays = useMemo(() => {
-    const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
-    const end = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 });
-    return eachDayOfInterval({ start, end });
-  }, [currentDate]);
-
   const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
   return (
     <TooltipProvider delayDuration={200}>
       <div className="w-full" data-testid="month-calendar-grid">
-        {/* Weekday headers */}
-        <div className="grid grid-cols-7 mb-1">
-          {WEEKDAY_LABELS.map((d) => (
-            <div
-              key={d}
-              className="text-center text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 py-1"
-            >
-              {d}
-            </div>
-          ))}
-        </div>
+        <SemanticCalendar
+          currentDate={currentDate}
+          weekdayLabels={WEEKDAY_LABELS}
+          gridClassName="grid grid-cols-7 border-t border-l border-border/50"
+          renderDay={(date, { isCurrentMonth, isToday: isCurrDay, isFuture }) => {
+            const dateStr = format(date, "yyyy-MM-dd");
+            const record = getDayRecord(days, dateStr);
+            const holiday = holidays.find(h => h.date === dateStr);
+            const status = getStatus(days, holidays, dateStr);
 
-        {/* Day cells */}
-        <div className="grid grid-cols-7 border-t border-l border-border/50" data-testid="month-calendar-grid-cells">
-        {calendarDays.map((date, i) => {
-          const dateStr = format(date, "yyyy-MM-dd");
-          const isCurrMonth = isSameMonth(date, currentDate);
-          const isCurrDay = isToday(date);
-          const record = getDayRecord(days, dateStr);
-          const holiday = holidays.find(h => h.date === dateStr);
-          const status = getStatus(days, holidays, dateStr);
-          const isFuture = date > new Date();
-
-          return (
-            <Tooltip key={dateStr}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onDayClick(record || null, date)}
-                  disabled={isFuture}
-                  className={`
-                    relative p-1 md:p-2 min-h-[4rem] md:min-h-[5.5rem] border-r border-b border-border/50
-                    hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors
-                    flex flex-col items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
-                    ${!isCurrMonth ? "opacity-30 bg-neutral-50/50 dark:bg-neutral-900/50" : ""}
-                    ${isFuture ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
-                  `}
-                  aria-label={`View details for ${dateStr}`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span
-                      className={`text-xs md:text-sm font-semibold flex items-center justify-center
-                      ${isCurrDay ? "bg-primary-600 text-white w-6 h-6 rounded-full" : "text-neutral-700 dark:text-neutral-300 w-6 h-6"}
+            return (
+              <Tooltip key={dateStr}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => onDayClick(record || null, date)}
+                    disabled={isFuture}
+                    className={`
+                      relative p-1 md:p-2 min-h-[4rem] md:min-h-[5.5rem] border-r border-b border-border/50
+                      hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors
+                      flex flex-col items-start focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
+                      ${!isCurrentMonth ? "opacity-30 bg-neutral-50/50 dark:bg-neutral-900/50" : ""}
+                      ${isFuture ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
                     `}
-                    >
-                      {format(date, "d")}
-                    </span>
-                    {status !== "nodata" && (
-                      <div
-                        className={`w-1.5 h-1.5 rounded-sm ${getAttendanceStatusColor(status === "leave" ? "on_leave" : status).bg}`}
-                      />
-                    )}
-                  </div>
-                  {/* Compact timeline bar for desktop */}
-                  {record && record.first_event && record.last_event && (
-                    <div className="hidden md:block w-full mt-auto">
-                      <div className="h-1.5 w-full bg-neutral-200 dark:bg-neutral-700 rounded-sm overflow-hidden flex">
-                        {record.break_seconds > 0 ? (
-                          <div className="flex w-full h-full">
-                            <div className="h-full bg-primary-400" style={{ width: "45%" }} />
-                            <div className="h-full bg-amber-400" style={{ width: "10%" }} />
-                            <div className="h-full bg-primary-400" style={{ width: "45%" }} />
-                          </div>
-                        ) : (
-                          <div className="h-full bg-primary-400 w-full" />
-                        )}
+                    aria-label={`View details for ${dateStr}`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span
+                        className={`text-xs md:text-sm font-semibold flex items-center justify-center
+                        ${isCurrDay ? "bg-primary-600 text-white w-6 h-6 rounded-full" : "text-neutral-700 dark:text-neutral-300 w-6 h-6"}
+                      `}
+                      >
+                        {format(date, "d")}
+                      </span>
+                      {status !== "nodata" && (
+                        <div
+                          className={`w-1.5 h-1.5 rounded-sm ${getAttendanceStatusColor(status === "leave" ? "on_leave" : status).bg}`}
+                        />
+                      )}
+                    </div>
+                    {/* Compact timeline bar for desktop */}
+                    {record && record.first_event && record.last_event && (
+                      <div className="hidden md:block w-full mt-auto">
+                        <div className="h-1.5 w-full bg-neutral-200 dark:bg-neutral-700 rounded-sm overflow-hidden flex">
+                          {record.break_seconds > 0 ? (
+                            <div className="flex w-full h-full">
+                              <div className="h-full bg-primary-400" style={{ width: "45%" }} />
+                              <div className="h-full bg-amber-400" style={{ width: "10%" }} />
+                              <div className="h-full bg-primary-400" style={{ width: "45%" }} />
+                            </div>
+                          ) : (
+                            <div className="h-full bg-primary-400 w-full" />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {holiday && (
-                    <div className="w-full mt-auto truncate text-[9px] text-blue-600 dark:text-blue-400 font-semibold hidden md:block">
-                      {holiday.name}
-                    </div>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="p-3 shadow-xl">
-                <DayTooltipContent date={date} record={record} holiday={holiday} />
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </div>
+                    )}
+                    {holiday && (
+                      <div className="w-full mt-auto truncate text-[9px] text-blue-600 dark:text-blue-400 font-semibold hidden md:block">
+                        {holiday.name}
+                      </div>
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="p-3 shadow-xl">
+                  <DayTooltipContent date={date} record={record} holiday={holiday} />
+                </TooltipContent>
+              </Tooltip>
+            );
+          }}
+        />
       </div>
     </TooltipProvider>
   );

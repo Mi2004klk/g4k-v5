@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, getDay } from "date-fns";
+import { format, isSameMonth, isSameDay, addMonths, subMonths, getDay } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
-import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent, DatePicker } from "@g4k/ui/components";
+import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent, DatePicker, SemanticCalendar } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -91,12 +91,9 @@ export function HolidayCalendar() {
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
 
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(monthEnd);
-
-  const days = eachDayOfInterval({ start: startDate, end: endDate });
+  const promptDelete = (id: number) => {
+    setConfirmState({ isOpen: true, id });
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,8 +138,6 @@ export function HolidayCalendar() {
     setFieldErrors({});
     setIsAddOpen(true);
   };
-
-
 
   return (
     <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
@@ -207,18 +202,11 @@ export function HolidayCalendar() {
           </div>
         ) : (
           <div className="h-full flex flex-col">
-            <div className="grid grid-cols-7 mb-2">
-              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                <div key={day} className="text-center text-[10px] font-semibold text-neutral-500">
-                  {day}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1 flex-1">
-              {days.map((day, idx) => {
-                const isCurrentMonth = isSameMonth(day, monthStart);
+            <SemanticCalendar
+              currentDate={currentDate}
+              renderDay={(day, { isCurrentMonth }) => {
                 const holiday = holidayList.find((h: Holiday) => isSameDay(new Date(h.date), day));
-                const isWeeklyOff = getDay(day) === 0 || getDay(day) === 6; // Sunday = 0, Saturday = 6
+                const isWeeklyOff = getDay(day) === 0 || getDay(day) === 6;
                 
                 const CellContent = (
                   <div
@@ -240,7 +228,7 @@ export function HolidayCalendar() {
 
                 if (holiday) {
                   return (
-                    <Popover key={idx}>
+                    <Popover key={day.toISOString()}>
                       <PopoverTrigger asChild>
                         {CellContent}
                       </PopoverTrigger>
@@ -248,13 +236,6 @@ export function HolidayCalendar() {
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">Holiday</span>
-                          </div>
-                          <div>
-                            <div className="font-bold text-sm text-neutral-900 dark:text-white leading-tight">
-                              {holiday.name}
-                            </div>
-                            <div className="text-xs text-neutral-500 mt-1">
-                              {format(new Date(holiday.date), "MMMM d, yyyy")} {holiday.recurring && "(Recurring)"}
                             </div>
                           </div>
                           {holiday.description && (
@@ -299,7 +280,7 @@ export function HolidayCalendar() {
                   );
                 }
 
-                return <div key={idx}>{CellContent}</div>;
+                return <div key={day.toISOString()}>{CellContent}</div>;
               })}
             </div>
           </div>

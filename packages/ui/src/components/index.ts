@@ -50,3 +50,4 @@ export type { IconName } from './icon/registry';
 export * from "./state-helpers";
 export * from "./draft-banner";
 export * from "./breadcrumb";
+export * from "./semantic-calendar";
