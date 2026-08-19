@@ -802,6 +802,7 @@ export function QAFormBuilder() {
         title="Delete QA Form"
         description="Are you sure you want to delete this QA form? This action cannot be undone."
         confirmText="Delete Form"
+        isDestructive={true}
         onConfirm={() => { if (deletingId) deleteFormMutation.mutate(deletingId); }}
       />
     </>

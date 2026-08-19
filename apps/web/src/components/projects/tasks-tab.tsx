@@ -1068,6 +1068,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         title={`Delete ${selectedTaskIds.length} Tasks`}
         description="Are you sure you want to delete the selected tasks? This action cannot be undone."
         confirmText="Delete All"
+        isDestructive={true}
         onConfirm={() => bulkDeleteMutation.mutate(selectedTaskIds)}
       />
 

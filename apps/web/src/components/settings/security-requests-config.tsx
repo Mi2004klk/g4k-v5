@@ -229,6 +229,7 @@ export function SecurityRequestsConfig() {
         title="Reject Request"
         description="Are you sure you want to reject this password reset request?"
         confirmText="Reject"
+        isDestructive={true}
         isLoading={rejectMutation.isPending}
       />
     </div>

@@ -540,6 +540,8 @@ export function DepartmentsTab() {
         }}
         title={confirmState.type === "delete" ? "Delete Department" : "Archive Department"}
         description={confirmState.type === "delete" ? "Are you sure? This cannot be undone and will fail if employees are assigned." : "Archived departments will no longer be available for new assignments."}
+        confirmText={confirmState.type === "delete" ? "Delete" : "Archive"}
+        isDestructive={confirmState.type === "delete"}
         isLoading={archiveMutation.isPending || deleteMutation.isPending}
       />
 

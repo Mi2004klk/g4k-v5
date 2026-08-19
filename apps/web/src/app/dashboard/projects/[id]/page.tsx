@@ -820,6 +820,7 @@ export default function ProjectDetailPage() {
         title="Delete Project"
         description="Are you sure you want to delete this project? This action cannot be undone and will permanently delete all tasks within."
         confirmText="Delete Project"
+        isDestructive={true}
         onConfirm={() => deleteProjectMutation.mutate()}
       />
     </div>

@@ -350,6 +350,8 @@ export function HolidayCalendar() {
         }}
         title="Delete Item"
         description="Are you sure you want to delete this? This action cannot be undone."
+        confirmText="Delete"
+        isDestructive={true}
         isLoading={deleteHoliday.isPending}
       />
     </Card>

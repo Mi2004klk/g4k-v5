@@ -290,8 +290,9 @@ export function ProfileSecurityTab() {
           }
         }}
         title="Revoke Session"
-        description="Are you sure you want to log out this device? Any unsaved work on that device may be lost."
-        confirmText="Revoke Device"
+        description="Are you sure you want to revoke this session? The user will be logged out on that device."
+        confirmText="Revoke"
+        isDestructive={true}
         isLoading={revokeSessionMutation.isPending}
       />
     </div>

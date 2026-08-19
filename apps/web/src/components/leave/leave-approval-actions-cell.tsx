@@ -144,6 +144,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
         title="Reject Leave Request"
         description="Please provide a reason for rejecting this leave request. This will be visible to the employee."
         confirmText="Confirm Rejection"
+        isDestructive={true}
         isLoading={decisionMutation.isPending}
       >
         <div className="py-2">
