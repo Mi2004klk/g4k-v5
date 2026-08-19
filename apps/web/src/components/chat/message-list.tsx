@@ -26,6 +26,7 @@ const MessageItem = memo(function MessageItem({
   onUnpinMessage,
   canManage,
   onMarkRead,
+  onDeleteMessage,
 }: {
   msg: ListMessage;
   isMe: boolean;
