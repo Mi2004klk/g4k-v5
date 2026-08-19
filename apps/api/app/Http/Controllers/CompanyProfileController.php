@@ -48,20 +48,29 @@ class CompanyProfileController extends Controller
             'logo' => 'required|image|max:5120', // max 5MB
         ]);
 
-        $disk = config('filesystems.default');
-        $file = $request->file('logo');
-        $path = $file->store('company-logos', $disk);
-        $logoUrl = Storage::disk($disk)->url($path);
+        try {
+            $disk = config('filesystems.default');
+            $file = $request->file('logo');
+            $path = $file->store('company-logos', $disk);
 
-        $profile = CompanyProfile::first();
-        if (!$profile) {
-            $profile = new CompanyProfile();
+            if (!$path) {
+                throw new \Exception('Failed to store file');
+            }
+
+            $logoUrl = Storage::disk($disk)->url($path);
+
+            $profile = CompanyProfile::first();
+            if (!$profile) {
+                $profile = new CompanyProfile();
+            }
+            $profile->logo_url = $logoUrl;
+            $profile->updated_by = $request->user()->id;
+            $profile->save();
+
+            return response()->json(['logo_url' => $logoUrl]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Company logo upload failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to upload logo. Please check server storage permissions.'], 500);
         }
-        $profile->logo_url = $logoUrl;
-        $profile->updated_by = $request->user()->id;
-        $profile->save();
-
-        // We don't log this to audit in CompanyProfileController right now, but we could.
-        return response()->json(['logo_url' => $logoUrl]);
     }
 }

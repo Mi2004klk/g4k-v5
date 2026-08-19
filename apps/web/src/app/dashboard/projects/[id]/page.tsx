@@ -463,8 +463,7 @@ export default function ProjectDetailPage() {
           try {
             const res = await apiFetch("/projects/cover", {
               method: "POST",
-              body: formData, // let browser set multipart/form-data boundary
-              headers: { "Content-Type": undefined } as unknown as HeadersInit
+              body: formData,
             });
             if (res.url) {
               setEditForm({ ...editForm, cover_image: res.url });

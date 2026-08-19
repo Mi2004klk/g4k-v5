@@ -52,19 +52,29 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-        
-        // Use S3 (Supabase) Storage for avatars
-        $disk = config('filesystems.default');
-        $path = $request->file('avatar')->store('avatars', $disk);
-        $avatarUrl = Storage::disk($disk)->url($path);
 
-        $before = $user->toArray();
-        $user->avatar_url = $avatarUrl;
-        $user->save();
+        try {
+            // Use S3 (Supabase) Storage for avatars
+            $disk = config('filesystems.default');
+            $path = $request->file('avatar')->store('avatars', $disk);
 
-        AuditLogger::log($request, 'upload_avatar', 'user', $user->id, $before, ['avatar_url' => $avatarUrl]);
+            if (!$path) {
+                throw new \Exception('Failed to store file');
+            }
 
-        return response()->json(['avatar_url' => $avatarUrl, 'user' => $user]);
+            $avatarUrl = Storage::disk($disk)->url($path);
+
+            $before = $user->toArray();
+            $user->avatar_url = $avatarUrl;
+            $user->save();
+
+            AuditLogger::log($request, 'upload_avatar', 'user', $user->id, $before, ['avatar_url' => $avatarUrl]);
+
+            return response()->json(['avatar_url' => $avatarUrl, 'user' => $user]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Avatar upload failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to upload avatar. Please check server storage permissions.'], 500);
+        }
     }
 
 }
