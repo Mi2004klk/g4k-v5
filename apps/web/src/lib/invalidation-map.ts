@@ -63,7 +63,7 @@ export const invalidationMap: Record<string, (queryClient: QueryClient, payload?
     }
   },
   "task.crud": (qc) => {
-    qc.invalidateQueries({ queryKey: queryKeys.tasks });
+    qc.invalidateQueries({ queryKey: queryKeys.tasks() });
     qc.invalidateQueries({ queryKey: ["projects"] });
     qc.invalidateQueries({ queryKey: queryKeys.dashboardInit });
   },
