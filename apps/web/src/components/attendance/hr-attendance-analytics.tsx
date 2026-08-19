@@ -1,12 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { useReverb } from "@/hooks/use-reverb";
 
 
 interface AttendanceRecord {
@@ -18,6 +19,8 @@ interface AttendanceRecord {
 export function HrAttendanceAnalytics() {
   const [selectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [deptFilter] = useUrlState("dept", "all");
+  const queryClient = useQueryClient();
+  const { subscribe } = useReverb();
 
   const { data, isLoading } = useQuery({
     queryKey: ['attendance-analytics-hr', selectedDate, deptFilter],
@@ -29,7 +32,17 @@ export function HrAttendanceAnalytics() {
       return await apiFetch(`/attendance/hr/today?${params.toString()}`);
     },
     staleTime: STALE_TIME_ATTENDANCE,
+    refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    const channel = subscribe("presence-org");
+    if (channel) {
+      channel.listen(".attendance.updated", () => {
+        queryClient.invalidateQueries({ queryKey: ['attendance-analytics-hr', selectedDate, deptFilter] });
+      });
+    }
+  }, [subscribe, selectedDate, deptFilter, queryClient]);
 
   const stats = useMemo(() => {
     // If backend returns the new dedicated analytics object shape

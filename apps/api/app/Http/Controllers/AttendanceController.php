@@ -456,8 +456,22 @@ class AttendanceController extends Controller
         ]);
         $perPage = $request->input('per_page', 20);
         $results = $query->paginate($perPage);
+
+        $items = $results->items();
+        foreach ($items as $item) {
+            if (isset($item->user_id)) {
+                $activeTask = \Illuminate\Support\Facades\Cache::get("user_active_task_{$item->user_id}");
+                if ($activeTask) {
+                    $item->active_task_id = $activeTask['task_id'] ?? null;
+                    $item->active_project_id = $activeTask['project_id'] ?? null;
+                    $item->active_task_title = $activeTask['task_title'] ?? null;
+                    $item->active_task_started_at = $activeTask['started_at'] ?? null;
+                }
+            }
+        }
+
         $response = response()->json($results);
-        $lastModified = collect($results->items())->max('updated_at') ?? '';
+        $lastModified = collect($items)->max('updated_at') ?? '';
         $response->setEtag(md5($results->count() . $lastModified . $request->fullUrl()));
         $response->header('Cache-Control', 'private, max-age=30');
         $response->isNotModified($request);

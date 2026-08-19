@@ -114,12 +114,12 @@ export function AdminAttendanceAnalytics() {
   }
 
   const cards = [
-    { title: "Present", value: stats.present, icon: "directory", color: "text-success", bg: "bg-success/10", total: stats.total },
-    { title: "Late", value: stats.late, icon: "teamAttendance", color: "text-warning", bg: "bg-warning/10", total: stats.total },
-    { title: "Absent", value: stats.absent, icon: "calendarX", color: "text-danger", bg: "bg-danger/10", total: stats.total },
-    { title: "On Leave", value: stats.leave, icon: "calendar", color: "text-info", bg: "bg-info/10", total: stats.total },
-    { title: "Avg Clock-In", value: stats.avgClockIn, icon: "login", color: "text-info", bg: "bg-info/10" },
-    { title: "Total Overtime", value: stats.totalOvertime, icon: "teamAttendance", color: "text-warning", bg: "bg-warning/10" },
+    { title: "Present", value: stats.present, icon: "directory", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30", total: stats.total },
+    { title: "Late", value: stats.late, icon: "teamAttendance", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30", total: stats.total },
+    { title: "Absent", value: stats.absent, icon: "calendarX", color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30", total: stats.total },
+    { title: "On Leave", value: stats.leave, icon: "calendar", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30", total: stats.total },
+    { title: "Avg Clock-In", value: stats.avgClockIn, icon: "login", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+    { title: "Total Overtime", value: stats.totalOvertime, icon: "teamAttendance", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
   ];
 
   return (
@@ -129,8 +129,8 @@ export function AdminAttendanceAnalytics() {
           <div key={i} className="p-4 relative overflow-hidden group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">{card.title}</h4>
-              <div className={`p-1 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 group-hover:${card.color} group-hover:${card.bg} transition-colors`}>
-                <AppIcon name={card.icon as IconName} className="w-3.5 h-3.5" />
+              <div className={`p-1.5 rounded-md text-neutral-500 group-hover:${card.color} group-hover:${card.bg} transition-colors`}>
+                <AppIcon name={card.icon as IconName} className="w-4 h-4" />
               </div>
             </div>
             <div className="flex items-baseline gap-1.5 mt-1">

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Button, DataTable, Card, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { Button, DataTable, Card, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { SavedReportViews } from "@/components/reports/saved-report-views";
 import { toast } from "sonner";
 import { STALE_TIME_DEPARTMENTS, queryKeys } from "@/lib/query-keys";
@@ -101,81 +101,59 @@ export function AdminReportsView() {
 
   return (
     <div className="flex-1 max-w-7xl mx-auto w-full space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-            <AppIcon name="fileText" size="xl" className=" text-emerald-500" />
-            Report Builder
-          </h1>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Export HR Data</h2>
           <p className="text-sm text-neutral-500">Generate, save, and export company reports.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => handleExport("csv")}>
-            <AppIcon name="download" className=" mr-2" /> CSV
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Button variant="outline" size="sm" onClick={() => handleExport("csv")} className="gap-2 text-neutral-600 dark:text-neutral-300">
+            <AppIcon name="download" className="mr-1" /> CSV
           </Button>
-          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => handleExport("xlsx")}>
-            <AppIcon name="download" className=" mr-2" /> Excel
+          <Button variant="outline" size="sm" onClick={() => handleExport("xlsx")} className="gap-2 text-neutral-600 dark:text-neutral-300">
+            <AppIcon name="download" className="mr-1" /> Excel
           </Button>
-          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => handleExport("pdf")}>
-            <AppIcon name="download" className=" mr-2" /> PDF
+          <Button variant="outline" size="sm" onClick={() => handleExport("pdf")} className="gap-2 text-neutral-600 dark:text-neutral-300">
+            <AppIcon name="download" className="mr-1" /> PDF
           </Button>
         </div>
       </div>
 
-      <Card className="p-4 border-none shadow-e1 flex flex-col md:flex-row gap-4 items-end bg-surface dark:bg-neutral-900">
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="space-y-1.5">
-            <label htmlFor="report-type" className="text-xs font-bold text-neutral-500 uppercase">Report Type</label>
-            <Select
-              value={reportType}
-              onValueChange={(v: "attendance-summary" | "leave-summary") => setReportType(v)}
-            >
-              <SelectTrigger id="report-type" className="w-full h-10 bg-surface">
-                <SelectValue placeholder="Select report type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="attendance-summary">Attendance Summary</SelectItem>
-                <SelectItem value="leave-summary">Leave Summary</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5 flex flex-col">
-            <label className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> Start Date</label>
+      <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 mb-6 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
+        <Tabs value={reportType} onValueChange={(v) => setReportType(v as "attendance-summary" | "leave-summary")} className="w-full xl:w-auto shrink-0">
+          <TabsList className="bg-neutral-100/50 dark:bg-neutral-800/50 p-1">
+            <TabsTrigger value="attendance-summary" className="text-sm px-4">Attendance Summary</TabsTrigger>
+            <TabsTrigger value="leave-summary" className="text-sm px-4">Leave Summary</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto flex-1 xl:justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-xs font-semibold text-neutral-500 uppercase whitespace-nowrap hidden sm:inline-block">Date Range:</span>
             <DatePicker
               value={filters.start ? new Date(filters.start) : undefined}
               onChange={(date) => setFilters({ ...filters, start: date ? format(date, "yyyy-MM-dd") : "" })}
-              className="w-full"
+              className="w-full sm:w-[140px] h-9"
             />
-          </div>
-
-          <div className="space-y-1.5 flex flex-col">
-            <label className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="calendar" size="xs" /> End Date</label>
+            <span className="text-neutral-400">-</span>
             <DatePicker
               value={filters.end ? new Date(filters.end) : undefined}
               onChange={(date) => setFilters({ ...filters, end: date ? format(date, "yyyy-MM-dd") : "" })}
-              className="w-full"
+              className="w-full sm:w-[140px] h-9"
             />
           </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="dept-filter" className="text-xs font-bold text-neutral-500 uppercase flex items-center gap-1"><AppIcon name="building" size="xs" /> Department</label>
-            <Select
-              value={filters.dept}
-              onValueChange={(v) => setFilters({ ...filters, dept: v })}
-            >
-              <SelectTrigger id="dept-filter" className="w-full h-10 bg-surface">
-                <SelectValue placeholder="All Departments" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                {departments.map((d: ReportDepartment) => (
-                  <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={filters.dept} onValueChange={(v) => setFilters({ ...filters, dept: v })}>
+            <SelectTrigger id="dept-filter" className="w-full sm:w-[180px] h-9 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+              <SelectValue placeholder="All Departments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {(Array.isArray(departments) ? departments : ((departments as any)?.data || [])).map((d: ReportDepartment) => (
+                <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="shrink-0">

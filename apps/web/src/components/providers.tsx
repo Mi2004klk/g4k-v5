@@ -26,6 +26,36 @@ function StoreHydration() {
   return null;
 }
 
+function HydrationGuard({ children }: { children: React.ReactNode }) {
+  const [hydrated, setHydrated] = React.useState(false);
+  
+  React.useEffect(() => {
+    // If it's already hydrated, update state immediately
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+    
+    // Listen for hydration finish
+    const unsub = useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+    return () => {
+      unsub();
+    };
+  }, []);
+
+  if (!hydrated) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-app">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground animate-pulse">Loading workspace...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function DensityProvider() {
   const density = useAuthStore((state) => state.density);
   React.useEffect(() => {
@@ -130,9 +160,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <StoreHydration />
         <DensityProvider />
         <VersionGuard />
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        <HydrationGuard>
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </HydrationGuard>
         <Toaster position="top-right" duration={4000} richColors closeButton expand={true} visibleToasts={3} />
         <OfflineBannerWrapper />
       </QueryClientProvider>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, memo, useCallback } from "react";
+import { useEffect, useRef, memo, useCallback, useState } from "react";
 import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -38,8 +38,10 @@ const MessageItem = memo(function MessageItem({
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  const [hasMarkedRead, setHasMarkedRead] = useState(false);
+
   useEffect(() => {
-    if (isMe || !onMarkRead) return;
+    if (isMe || !onMarkRead || hasMarkedRead) return;
     
     // Only trigger if this is an unread direct message
     const hasRead = msg.reads && msg.reads.length > 0;
@@ -47,6 +49,7 @@ const MessageItem = memo(function MessageItem({
 
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
+        setHasMarkedRead(true);
         onMarkRead();
         observer.disconnect();
       }
@@ -229,6 +232,7 @@ export function MessageList({
   onUnpinMessage,
   canManage,
   onMarkRead,
+  onDeleteMessage,
 }: {
   messages: ListMessage[];
   currentUserId: number;

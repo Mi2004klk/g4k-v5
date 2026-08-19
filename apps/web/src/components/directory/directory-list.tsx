@@ -447,8 +447,8 @@ export function EmployeeManagementTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+        <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 w-full md:w-auto">
             <FilterBar
               searchQuery={search}
               onSearchChange={setSearch}
@@ -488,20 +488,20 @@ export function EmployeeManagementTab() {
                 },
               ]}
             />
-          <div className="flex items-center gap-2 shrink-0 ml-2">
-            <Button variant="outline" size="sm" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-9">
-              {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
-              Export
+        </div>
+        <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+          <Button variant="outline" size="sm" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full md:w-auto">
+            {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
+            Export
+          </Button>
+          {canManageUsers && (
+            <Button size="sm" onClick={() => {
+              setIsCreateOpen(true);
+            }} className="gap-2 shadow-sm h-10 w-full md:w-auto">
+              <AppIcon name="plus" />
+              Add Employee
             </Button>
-            {canManageUsers && (
-              <Button size="sm" onClick={() => {
-                setIsCreateOpen(true);
-              }} className="gap-2 shadow-sm h-9">
-                <AppIcon name="plus" />
-                Add Employee
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
       {selectedCount > 0 && (
@@ -544,6 +544,7 @@ export function EmployeeManagementTab() {
               <DataTable
                 columns={columns}
                 data={usersList}
+                density="compact"
                 getRowId={(r: any) => String(r.id)}
                 onRowSelectionChange={setRowSelection}
                 page={page}
@@ -567,9 +568,9 @@ export function EmployeeManagementTab() {
             <UserForm
               defaultValues={draftData}
               onValuesChange={setDraftData}
-              departments={departments as any}
-              designations={designations as any}
-              work_schedules={work_schedules as any}
+              departments={Array.isArray(departments) ? departments as any : ((departments as any)?.data || [])}
+              designations={Array.isArray(designations) ? designations as any : ((designations as any)?.data || [])}
+              work_schedules={Array.isArray(work_schedules) ? work_schedules as any : ((work_schedules as any)?.data || [])}
               onSubmit={onSubmitCreate}
               onCancel={() => setIsCreateOpen(false)}
               isPending={createMutation.isPending}

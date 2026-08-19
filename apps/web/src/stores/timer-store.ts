@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { apiFetch } from '@/lib/api-client';
 
 interface TimerState {
   isActive: boolean;
@@ -160,6 +161,11 @@ export const useTimerStore = create<TimerState>()(
       projectTimerAccumulatedSeconds: 0,
       isProjectTimerRunning: true,
     });
+    // Fire and forget sync to backend
+    apiFetch('/timer/active', {
+      method: 'POST',
+      body: JSON.stringify({ project_id: projectId, task_id: taskId === 'none' ? null : taskId, task_title: title })
+    }).catch(console.error);
   },
 
   pauseProjectTimer: () => {
@@ -171,15 +177,20 @@ export const useTimerStore = create<TimerState>()(
       projectTimerStartedAt: null,
       projectTimerAccumulatedSeconds: projectTimerAccumulatedSeconds + elapsed,
     });
+    apiFetch('/timer/active/clear', { method: 'POST' }).catch(console.error);
   },
 
   resumeProjectTimer: () => {
-    const { activeTaskId, isProjectTimerRunning } = get();
+    const { activeTaskId, activeProjectId, activeTaskTitle, isProjectTimerRunning } = get();
     if (!activeTaskId || isProjectTimerRunning) return;
     set({
       isProjectTimerRunning: true,
       projectTimerStartedAt: Date.now(),
     });
+    apiFetch('/timer/active', {
+      method: 'POST',
+      body: JSON.stringify({ project_id: activeProjectId, task_id: activeTaskId === 'none' ? null : activeTaskId, task_title: activeTaskTitle })
+    }).catch(console.error);
   },
 
   stopProjectTimer: () => {
@@ -207,6 +218,8 @@ export const useTimerStore = create<TimerState>()(
       projectTimerAccumulatedSeconds: 0,
       isProjectTimerRunning: false,
     });
+    
+    apiFetch('/timer/active/clear', { method: 'POST' }).catch(console.error);
 
     return { elapsedSeconds: totalSeconds, taskId: tId, projectId: pId };
   },

@@ -90,7 +90,8 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
             }
           },
           view_mode: ganttViewMode,
-          language: 'en'
+          language: 'en',
+          readonly: true,
         });
       }
     } catch (e) {

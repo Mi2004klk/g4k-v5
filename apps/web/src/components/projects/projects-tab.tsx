@@ -55,8 +55,8 @@ export function ProjectsTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6 w-full justify-between">
+        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 flex items-center min-w-0 overflow-x-auto overflow-y-hidden scrollbar-hide">
           <FilterBar
             searchQuery={search}
             onSearchChange={setSearch}
@@ -93,14 +93,12 @@ export function ProjectsTab() {
               setStatus("all");
             }}
           />
-          <div className="flex items-center gap-2 shrink-0 ml-2">
-            {canManageProjects && (
-              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-2 shadow-sm h-9">
-                <AppIcon name="plus" /> Create Project
-              </Button>
-            )}
-          </div>
         </div>
+        {canManageProjects && (
+          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-2 shadow-sm h-9 shrink-0 w-full md:w-auto">
+            <AppIcon name="plus" /> Create Project
+          </Button>
+        )}
       </div>
 
       <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />

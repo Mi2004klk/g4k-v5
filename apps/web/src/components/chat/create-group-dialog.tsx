@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@g4k/ui/components";
 import { Button, Input, Label, ScrollArea, Checkbox } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapList } from "@/lib/api-client";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/lib/auth-store";
@@ -54,7 +54,7 @@ export function CreateGroupDialog({
     enabled: open,
   });
 
-  const users = Array.isArray(usersData) ? usersData : (usersData?.data || []);
+  const users = unwrapList(usersData);
   const otherUsers = users.filter((u: DialogUser) => u.id !== currentUser?.id);
 
   const mutation = useMutation({

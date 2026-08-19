@@ -47,7 +47,8 @@ export function CreateProjectDialog({
   const [qaFormId, setQaFormId] = useState("none");
   const [deadline, setDeadline] = useState("");
   const [memberIds, setMemberIds] = useState<string[]>([]);
-  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [coverImagePath, setCoverImagePath] = useState<string | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [allowEmployeeTasks, setAllowEmployeeTasks] = useState(false);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -92,20 +93,25 @@ export function CreateProjectDialog({
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      return apiFetch("/projects", {
-        method: "POST",
-        body: JSON.stringify({
-          name: activeName,
-          description: activeDescription,
-          priority: activePriority,
-          department_id: activeDepartmentId === "none" ? null : activeDepartmentId,
-          qa_form_id: activeQaFormId === "none" ? null : activeQaFormId,
-          deadline: activeDeadline || null,
-          member_ids: activeMemberIds,
-          cover_image: coverImage,
-          allow_employee_tasks: activeAllowEmployeeTasks,
-        }),
-      });
+      try {
+        const res = await apiFetch("/projects", {
+          method: "POST",
+          body: JSON.stringify({
+            name: activeName,
+            description: activeDescription,
+            priority: activePriority,
+            department_id: activeDepartmentId === "none" ? null : activeDepartmentId,
+            qa_form_id: activeQaFormId === "none" ? null : activeQaFormId,
+            deadline: activeDeadline || null,
+            member_ids: activeMemberIds,
+            cover_image: coverImagePath,
+            allow_employee_tasks: activeAllowEmployeeTasks,
+          }),
+        });
+        return res;
+      } catch (err: unknown) {
+        throw err;
+      }
     },
     onSuccess: () => {
       toast.success("Project created successfully.");
@@ -118,14 +124,16 @@ export function CreateProjectDialog({
       setQaFormId("none");
       setDeadline("");
       setMemberIds([]);
-      setCoverImage(null);
+      setCoverImagePath(null);
+      setCoverImagePreview(null);
       setAllowEmployeeTasks(false);
       clearDraft();
     },
     onError: (err: ApiError) => {
-      toast.error(err.message || "Failed to create project.");
       if (err.errors) {
         setFieldErrors(err.errors);
+      } else {
+        toast.error(err.message || "Failed to create project.");
       }
     },
   });
@@ -250,13 +258,13 @@ export function CreateProjectDialog({
           <div className="space-y-2">
             <label className="text-sm font-medium">Project Cover (Optional)</label>
             <div className="flex items-center gap-3">
-              {coverImage && (
+              {coverImagePreview && (
                 <div className="relative h-10 w-10">
-                  <Image src={coverImage} alt="Cover Preview" fill className="object-cover rounded-[var(--radius)] border" />
+                  <Image src={coverImagePreview} alt="Cover Preview" fill className="object-cover rounded-[var(--radius)] border" />
                 </div>
               )}
               <Button type="button" variant="outline" size="sm" onClick={() => setShowUploadPopup(true)}>
-                {coverImage ? "Change Image" : "Upload Image"}
+                {coverImagePreview ? "Change Image" : "Upload Image"}
               </Button>
               <FileUploadPopup
                 open={showUploadPopup}
@@ -270,11 +278,12 @@ export function CreateProjectDialog({
                     method: "POST",
                     body: formData,
                   });
-                  setCoverImage(res.url);
+                  setCoverImagePath(res.path || res.url);
+                  setCoverImagePreview(res.url);
                 }}
               />
-              {coverImage && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => setCoverImage(null)} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50">
+              {coverImagePreview && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => { setCoverImagePath(null); setCoverImagePreview(null); }} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50">
                   Remove
                 </Button>
               )}

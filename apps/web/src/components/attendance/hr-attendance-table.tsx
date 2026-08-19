@@ -99,9 +99,11 @@ export function HrAttendanceTable() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (Array.isArray(res?.data?.data) ? res.data.data : [])))),
+    queryFn: () => apiFetch("/departments?per_page=100"),
     staleTime: STALE_TIME_DEPARTMENTS,
   });
+
+  const departmentsList = Array.isArray(departments?.data) ? departments.data : (Array.isArray(departments) ? departments : []);
 
   const { data, isLoading, error } = useQuery({
     queryKey: [...queryKeys.hrAttendance(selectedDate, deptFilter), statusFilter, debouncedSearch, page, perPage],
@@ -314,7 +316,8 @@ export function HrAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-border shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="flex flex-col xl:flex-row items-center justify-between gap-4 mb-6">
+        <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 w-full xl:w-auto">
         <FilterBar
           searchQuery={search || ""}
           onSearchChange={setSearch}
@@ -341,7 +344,7 @@ export function HrAttendanceTable() {
               type: "select",
               value: deptFilter,
               onChange: setDeptFilter,
-              options: [{ label: "All Departments", value: "all" }, ...departments.map((d: { id: number; name: string }) => ({ label: d.name, value: d.id.toString() }))]
+              options: [{ label: "All Departments", value: "all" }, ...departmentsList.map((d: { id: number; name: string }) => ({ label: d.name, value: d.id.toString() }))]
             }
           ]}
           onClearAll={() => {
@@ -351,14 +354,14 @@ export function HrAttendanceTable() {
             setDeptFilter("all");
           }}
         />
-
-        <div className="flex items-center gap-2 mt-4 sm:mt-0">
-          <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0}>
-            <AppIcon name="download" size="sm" className="mr-2" />
+        </div>
+        <div className="flex items-center gap-2 shrink-0 w-full xl:w-auto mt-2 xl:mt-0">
+          <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
+            <AppIcon name="download" className="mr-1" />
             {isExporting ? "Exporting..." : "Export"}
           </Button>
-          <Button variant="outline" onClick={() => handleExport(true)} disabled={isExporting}>
-            <AppIcon name="download" size="sm" className="mr-2" />
+          <Button variant="outline" onClick={() => handleExport(true)} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
+            <AppIcon name="download" className="mr-1" />
             {isExporting ? "Exporting All..." : "Export All"}
           </Button>
         </div>

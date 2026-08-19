@@ -60,6 +60,10 @@ class TaskService
         $oldStatus = $task->status;
         $task->update(['status' => $newStatus]);
 
+        if ($newStatus === 'review' && $oldStatus !== 'review') {
+            app(\App\Services\ApprovalService::class)->submit($task, $userId);
+        }
+
         TaskActivity::create([
             'task_id' => $task->id,
             'user_id' => $userId,

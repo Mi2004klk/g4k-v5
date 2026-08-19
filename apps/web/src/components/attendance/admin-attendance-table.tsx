@@ -104,7 +104,7 @@ export function AdminAttendanceTable() {
     queryFn: () => apiFetch(deptFilter && deptFilter !== "all" ? `/users?department_id=${deptFilter}` : "/users"),
     staleTime: 60000,
   });
-  const users = usersData?.data || [];
+  const users = Array.isArray(usersData) ? usersData : usersData?.data || [];
   const userOptions = [
     ...users.map((u: { id: number; name: string }) => ({ label: u.name, value: u.id.toString() }))
   ];
@@ -364,9 +364,9 @@ export function AdminAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-3 bg-white dark:bg-neutral-900 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
-        
-        <FilterBar
+      <div className="flex flex-col xl:flex-row items-center justify-between gap-4">
+        <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 w-full xl:w-auto">
+          <FilterBar
           searchQuery={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search by name, ID, location..."
@@ -409,11 +409,11 @@ export function AdminAttendanceTable() {
               label: "Department",
               type: "select",
               value: deptFilter,
-              onChange: (val) => {
-                setDeptFilter(val);
-                setUserFilter("all");
+              onChange: (v) => {
+                setDeptFilter(v);
+                setPage(1);
               },
-              options: [{ label: "All Departments", value: "all" }, ...departments.map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))]
+              options: [{ label: "All Departments", value: "all" }, ...(Array.isArray(departments) ? departments : ((departments as any)?.data || [])).map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))]
             },
             {
               key: "user",
@@ -433,17 +433,17 @@ export function AdminAttendanceTable() {
             setUserFilter("all");
           }}
         />
-
+        </div>
         {/* Export Actions */}
-        <div className="flex justify-end items-center gap-1.5 overflow-x-auto w-full xl:w-auto mt-2 xl:mt-0 ml-auto">
+        <div className="flex items-center gap-2 shrink-0 w-full xl:w-auto mt-2 xl:mt-0">
           {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-8 px-2.5 text-[13px] text-primary-600 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
-              <AppIcon name="download" size="xs" className="mr-1.5" aria-hidden="true" />
+            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
+              <AppIcon name="download" className="mr-1" aria-hidden="true" />
               Export Selected
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-8 px-2.5 text-[13px] whitespace-nowrap shrink-0 border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800" aria-label="Export company report for selected date">
-            <AppIcon name="download" size="xs" className="mr-1.5" aria-hidden="true" />
+          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap" aria-label="Export company report for selected date">
+            <AppIcon name="download" className="mr-1" aria-hidden="true" />
             Export Filtered
           </Button>
           <Button variant="outline" size="sm" onClick={async () => {
@@ -459,8 +459,8 @@ export function AdminAttendanceTable() {
              } catch (e: any) {
                toast.error(e.message || "Failed to export");
              }
-          }} className="h-8 px-2.5 text-[13px] whitespace-nowrap shrink-0 text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/40">
-            <AppIcon name="download" size="xs" className="mr-1.5" aria-hidden="true" />
+          }} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
+            <AppIcon name="download" className="mr-1" aria-hidden="true" />
             Global Export
           </Button>
         </div>
@@ -470,6 +470,7 @@ export function AdminAttendanceTable() {
         <DataTable 
           columns={columns} 
           data={records}
+          density="compact"
           isLoading={isLoading}
           isError={!!error}
           stickyHeader={true}

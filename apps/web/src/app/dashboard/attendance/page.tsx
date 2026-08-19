@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  ErrorBoundary,
 } from "@g4k/ui/components";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
@@ -23,7 +24,6 @@ import { format } from "date-fns";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { LeaveTab } from "@/components/attendance/leave-tab";
-import { ApprovalsTab } from "@/components/attendance/approvals-tab";
 
 interface AttendanceDay {
   date: string;
@@ -40,6 +40,7 @@ export default function PersonalAttendancePage() {
   const { data: capabilities = [] } = useCapabilities();
 
   const isHrOrAdmin = hasCapability(capabilities, "leave.approve-employee") || hasCapability(capabilities, "admin.view-all-attendance");
+  const isAdmin = hasCapability(capabilities, "admin.view-all-attendance");
 
   const { data: historyData, isPending } = useQuery({
     queryKey: queryKeys.myAttendanceHistory(),
@@ -64,33 +65,35 @@ export default function PersonalAttendancePage() {
       title="Attendance"
       description="Track daily shift punches, request leave, and view time off history."
       actions={
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gap-2 shrink-0 h-11 px-4">
-              <AppIcon name="plus" />
-              Request Leave
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Request Leave</DialogTitle>
-              <DialogDescription className="sr-only">Submit a new leave request.</DialogDescription>
-            </DialogHeader>
-            <div className="mt-4">
-              <LeaveRequestForm inDialog={true} />
-            </div>
-          </DialogContent>
-        </Dialog>
+        !isAdmin && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="gap-2 shrink-0 h-11 px-4">
+                <AppIcon name="plus" />
+                Request Leave
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Request Leave</DialogTitle>
+                <DialogDescription className="sr-only">Submit a new leave request.</DialogDescription>
+              </DialogHeader>
+              <div className="mt-4">
+                <LeaveRequestForm inDialog={true} />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )
       }
     >
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="mb-4 w-full justify-start overflow-x-auto flex-nowrap md:justify-center">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="leave">My Leave</TabsTrigger>
-          {isHrOrAdmin && <TabsTrigger value="approvals">Team Leave Approvals</TabsTrigger>}
+          {!isAdmin && <TabsTrigger value="leave">My Leave</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {/* ... existing overview content ... */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             {hasCapability(capabilities, "attendance.clock-self") && (
               <div className="md:col-span-4 min-h-[300px]">
@@ -98,7 +101,9 @@ export default function PersonalAttendancePage() {
               </div>
             )}
             <div className={hasCapability(capabilities, "attendance.clock-self") ? "md:col-span-8" : "md:col-span-12"}>
-              <TodaySummaryCard />
+              <ErrorBoundary name="TodaySummaryCard">
+                <TodaySummaryCard />
+              </ErrorBoundary>
             </div>
           </div>
 
@@ -211,12 +216,9 @@ export default function PersonalAttendancePage() {
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="leave" className="mt-0">
-          <LeaveTab />
-        </TabsContent>
-        {isHrOrAdmin && (
-          <TabsContent value="approvals" className="mt-0">
-            <ApprovalsTab />
+        {!isAdmin && (
+          <TabsContent value="leave" className="space-y-6">
+            <LeaveTab />
           </TabsContent>
         )}
       </Tabs>

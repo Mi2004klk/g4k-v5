@@ -293,6 +293,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   onDeleteTask,
   onTaskReorder,
   isLoading,
+  statusFilter,
 }: {
   tasks: KanbanTask[];
   onTaskMove?: (taskId: number, newStatus: string) => void;
@@ -300,6 +301,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   onDeleteTask: (taskId: number) => void;
   onTaskReorder?: (tasks: { id: number; status: string; order: number }[]) => void;
   isLoading?: boolean;
+  statusFilter?: string;
 }) {
   const [activeTask, setActiveTask] = useState<KanbanTask | null>(null);
   const [localTasks, setLocalTasks] = useState<KanbanTask[]>(tasks);
@@ -420,8 +422,8 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-nowrap md:grid md:grid-cols-4 gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-        {COLUMNS.map((col) => (
+      <div className={`flex flex-nowrap md:grid ${statusFilter && statusFilter !== 'all' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0`}>
+        {COLUMNS.filter(col => !statusFilter || statusFilter === "all" || col.id === statusFilter).map((col) => (
           <DroppableColumn
             key={col.id}
             col={col}

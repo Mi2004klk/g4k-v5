@@ -125,8 +125,10 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const [assigneeFilter, setAssigneeFilter] = useState(isMe ? "me" : "all");
   const user = useAuthStore(s => s.user);
 
-  const availableUsers = canManageTasks ? usersData?.data : (user ? [user] : []);
-  const availableProjects = canManageTasks ? projectsData?.data : projectsData?.data?.filter((p: TaskProject) => p.allow_employee_tasks);
+  const usersList = Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []);
+  const availableUsers = canManageTasks ? usersList : (user ? [user] : []);
+  const projectsList = Array.isArray(projectsData?.data) ? projectsData.data : (Array.isArray(projectsData) ? projectsData : []);
+  const availableProjects = canManageTasks ? projectsList : projectsList.filter((p: TaskProject) => p.allow_employee_tasks);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(isReview ? "review" : "all");
@@ -140,7 +142,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const [perPage, setPerPage] = useState(20);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: [...queryKeys.tasks, statusFilter, scopeFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder, defaultProjectId],
+    queryKey: [...queryKeys.tasks(defaultProjectId), statusFilter, scopeFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder, defaultProjectId],
     queryFn: () => {
       const p = new URLSearchParams();
       p.append("per_page", viewMode === "list" ? perPage.toString() : "100");
@@ -185,11 +187,11 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       });
     },
     onMutate: async ({ taskId, status }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.tasks });
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks(defaultProjectId) });
       
-      const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks });
+      const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) });
 
-      queryClient.setQueriesData({ queryKey: queryKeys.tasks }, (old: unknown) => {
+      queryClient.setQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) }, (old: unknown) => {
         if (!old) return old;
         
         // Deep clone to avoid mutating cache directly
@@ -216,7 +218,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 
@@ -231,7 +233,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (err: Error) => {
       toast.error(err.message || "Failed to update task dates.");
@@ -248,7 +250,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (err: Error) => {
       toast.error(err.message || "Failed to reorder tasks.");
@@ -262,7 +264,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     onSuccess: () => {
       toast.success("Task deleted successfully.");
       // T-46.2: invalidate without exact so parameterized keys are included
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
 
@@ -276,7 +278,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       toast.success("Tasks deleted successfully.");
       setRowSelection({});
       // T-46.2: invalidate without exact
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
 
@@ -289,7 +291,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     onSuccess: () => {
       toast.success("Tasks status updated.");
       setRowSelection({});
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
 
@@ -345,12 +347,13 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       setDueDate(""); clearDraft();
       toast.success("Task created successfully.");
       // Drop exact:true so the parameterized list key is also invalidated (T-46.2)
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (err: Error & { errors?: Record<string, string[]> }) => {
-      toast.error(err.message || "Failed to create task.");
       if (err.errors) {
         setFieldErrors(err.errors);
+      } else {
+        toast.error(err.message || "Failed to create task.");
       }
     },
   });
@@ -475,31 +478,76 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
             <AppIcon name="tasks" className="mr-1.5" size="xs" /> QA Forms
           </Button>
         </div>
-        
-        <div className="flex items-center justify-end gap-2 w-full lg:w-auto overflow-x-auto hide-scrollbar">
-          {canManageTasks && (
-            <Button 
-              variant={statusFilter === "review" ? "secondary" : "ghost"} 
-              size="sm" 
-              onClick={() => setStatusFilter(statusFilter === "review" ? "all" : "review")} 
-              className={`h-8 text-[11px] font-semibold transition-colors px-3 shrink-0 ${statusFilter === "review" ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800" : "text-neutral-500 hover:text-neutral-800 border border-transparent"}`}
-            >
-              <AppIcon name="clipboard" className="mr-1.5" size="xs" /> Needs Review
-            </Button>
-          )}
-          {canManageTasks && (
-            <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-              <SelectTrigger className="w-[110px] h-8 text-[11px] font-semibold border-neutral-200 dark:border-neutral-800 bg-background shadow-none shrink-0">
-                <SelectValue placeholder="Tasks" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="me" className="text-[11px]">My Tasks</SelectItem>
-                <SelectItem value="all" className="text-[11px]">All Tasks</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          
-          <div className="w-px h-5 bg-neutral-200 dark:bg-neutral-800 mx-1 hidden sm:block shrink-0"></div>
+        <div className="flex-1 min-w-0">
+          <FilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchPlaceholder="Search tasks..."
+            sortBy={sortBy}
+            sortDirection={sortOrder as "asc" | "desc"}
+            onSortChange={(val, dir) => {
+              setSortBy(val);
+              setSortOrder(dir);
+            }}
+            sortOptions={[
+              { label: "Created (Newest)", value: "id" },
+              { label: "Priority", value: "priority" },
+              { label: "Due Date", value: "due_date" }
+            ]}
+            filters={[
+              {
+                key: "status",
+                label: "Status",
+                type: "select",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { label: "All Status", value: "all" },
+                  { label: "To Do", value: "todo" },
+                  { label: "In Progress", value: "in_progress" },
+                  { label: "In Review", value: "review" },
+                  { label: "Done", value: "completed" },
+                  { label: "Redo", value: "redo" },
+                ]
+              },
+              {
+                key: "assignee",
+                label: "Assignee",
+                type: "select",
+                value: assigneeFilter,
+                onChange: setAssigneeFilter,
+                options: [
+                  { label: "All Assignee", value: "all" },
+                  { label: "My Tasks", value: "me" },
+                  ...(canManageTasks && usersList.length ? usersList.map((u: TaskUser) => ({ label: u.name, value: u.id.toString() })) : [])
+                ]
+              },
+              {
+                key: "scope",
+                label: "Scope",
+                type: "select",
+                value: scopeFilter,
+                onChange: setScopeFilter,
+                options: [
+                  { label: "All Scope", value: "all" },
+                  { label: "Global", value: "global" },
+                  { label: "Department", value: "department" },
+                  { label: "Role", value: "role" },
+                ]
+              }
+            ]}
+            onClearAll={() => {
+              setSearchQuery("");
+              setStatusFilter("all");
+              setAssigneeFilter("all");
+              setScopeFilter("all");
+              setSortBy("id");
+              setSortOrder("desc");
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
 
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
@@ -810,6 +858,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                 onDeleteTask={handleDeleteTask}
                 onTaskReorder={(tasks) => reorderTaskMutation.mutate(tasks as any)}
                 isLoading={isLoading}
+                statusFilter={statusFilter}
               />
             </div>
           )}

@@ -40,7 +40,7 @@ export function ProjectTimerWidget() {
   });
 
   const { data: tasksData } = useQuery({ 
-    queryKey: [...queryKeys.tasks, projectId], 
+    queryKey: [...queryKeys.tasks(projectId), projectId], 
     queryFn: () => apiFetch(`/tasks?project_id=${projectId}&per_page=100`),
     enabled: !!projectId && canTrack
   });
@@ -81,7 +81,7 @@ export function ProjectTimerWidget() {
     },
     onSuccess: () => {
       toast.success("Time logged successfully.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       if (projectId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });

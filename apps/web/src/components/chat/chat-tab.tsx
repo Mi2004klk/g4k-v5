@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapList } from "@/lib/api-client";
+import { asArray } from "@/lib/utils";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
@@ -108,9 +109,9 @@ export function ChatTab() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: searchUsersData } = useQuery({
+  const { data: searchUsersData } = useQuery<any[]>({
     queryKey: queryKeys.directory(searchQuery),
-    queryFn: () => apiFetch(`/directory?search=${encodeURIComponent(searchQuery)}`).then(r => r.data || []),
+    queryFn: () => apiFetch(`/chat/users?search=${encodeURIComponent(searchQuery)}`).then(unwrapList),
     enabled: searchQuery.length > 2,
   });
 
@@ -169,7 +170,7 @@ export function ChatTab() {
       .flatMap((c) => c.users?.map((u: ChatUser) => u.id) || [])
   );
   
-  const searchUsersArray = Array.isArray(searchUsersData) ? searchUsersData : (searchUsersData?.data || []);
+  const searchUsersArray = searchUsersData || [];
   const searchUsers: ChatConversation[] = searchUsersArray
     .filter((u: any) => !conversationUserIds.has(u.id) && u.id !== user?.id)
     .map((u: any) => ({
@@ -177,7 +178,7 @@ export function ChatTab() {
       is_user: true,
       name: u.name,
       scope: "direct",
-      latestMessage: { sender_id: 0, body: "Click to start chatting", created_at: new Date().toISOString() },
+      latestMessage: { id: 0, conversation_id: 0, sender_id: 0, body: "Click to start chatting", created_at: new Date().toISOString() },
       users: [u],
       original_user_id: u.id,
     }));
@@ -314,7 +315,8 @@ export function ChatTab() {
   });
 
   const selectedConv = conversations.find((c: ChatConversation) => c.id === selectedId);
-  const messages = messageData?.pages?.flatMap((page: PaginatedResponse<ChatMessage>) => Array.isArray(page?.data) ? page.data : []).reverse() || [];
+  const pages = messageData?.pages;
+  const messages = pages ? pages.flatMap((page: PaginatedResponse<ChatMessage>) => asArray<ChatMessage>(page?.data)).reverse() : [];
   const unreadCount = selectedConv?.unread_count || 0;
 
   useEffect(() => {

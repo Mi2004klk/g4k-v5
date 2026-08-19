@@ -177,7 +177,7 @@ export function TaskDetailSheet({
 
   // T-46.2: Drop exact: true everywhere so parameterized task list keys are also invalidated
   const invalidateTasks = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
     if (task?.id) {
       queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
     }

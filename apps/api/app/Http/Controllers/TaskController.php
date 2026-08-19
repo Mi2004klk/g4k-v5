@@ -462,13 +462,19 @@ class TaskController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $task = Task::with('approval')->findOrFail($id);
+        $task = Task::findOrFail($id);
         
-        if (!$task->approval) {
+        $approval = \App\Models\Approval::where('approvable_type', get_class($task))
+            ->where('approvable_id', $task->id)
+            ->where('status', 'pending')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$approval) {
             return response()->json(['message' => 'Task has no pending approval.'], 422);
         }
 
-        ApprovalService::approve($task->approval, $request->user()->id);
+        ApprovalService::approve($approval, $request->user()->id);
 
         TaskService::updateStatus($task, 'done', $request->user()->id);
         $task->update(['status' => 'done']);
@@ -502,17 +508,21 @@ class TaskController extends Controller
 
     public function redo(Request $request, $id)
     {
-        $task = Task::with('approval')->findOrFail($id);
+        $task = Task::findOrFail($id);
+        
+        $approval = \App\Models\Approval::where('approvable_type', get_class($task))
+            ->where('approvable_id', $task->id)
+            ->where('status', 'pending')
+            ->orderBy('id', 'desc')
+            ->first();
 
-        $validated = $request->validate([
-            'reason' => 'required|string',
-        ]);
-
-        if (!$task->approval) {
+        if (!$approval) {
             return response()->json(['message' => 'Task has no pending approval.'], 422);
         }
 
-        ApprovalService::redo($task->approval, $request->user()->id, $validated['reason']);
+        $validated = $request->validate(['reason' => 'required|string']);
+        
+        ApprovalService::reject($approval, $request->user()->id, $validated['reason']);
 
         TaskService::updateStatus($task, 'in_progress', $request->user()->id);
         $task->update(['status' => 'in_progress']);

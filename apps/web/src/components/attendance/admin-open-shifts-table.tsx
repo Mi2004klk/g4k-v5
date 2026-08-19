@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, differenceInSeconds } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
+import { useReverb } from "@/hooks/use-reverb";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
@@ -23,6 +24,26 @@ interface OpenShiftRecord {
   user_email?: string;
   department_name?: string;
   clock_in?: string;
+  break_seconds?: number;
+  active_task_title?: string;
+}
+
+function LiveDuration({ clockIn }: { clockIn: string }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const updateElapsed = () => {
+      setElapsed(differenceInSeconds(new Date(), new Date(clockIn)));
+    };
+    updateElapsed();
+    const int = setInterval(updateElapsed, 1000);
+    return () => clearInterval(int);
+  }, [clockIn]);
+
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  const s = elapsed % 60;
+  return <span className="font-mono">{h}h {m}m {s}s</span>;
 }
 
 export function AdminOpenShiftsTable() {
@@ -37,6 +58,23 @@ export function AdminOpenShiftsTable() {
   // Dialog & selection state
   const [correctionData, setCorrectionData] = useState<{ dayId: number, userId: number, date: string, action: string, type: string } | null>(null);
   const [rowSelection, setRowSelection] = useState({});
+
+  const queryClient = useQueryClient();
+  const { subscribe } = useReverb();
+
+  useEffect(() => {
+    const channel = subscribe("private-company.global");
+    if (!channel) return;
+
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminAttendance(selectedDate, deptFilter) });
+    };
+
+    channel.listen(".active-task-updated", handler);
+    channel.listen(".attendance-updated", handler);
+
+    return () => {};
+  }, [subscribe, queryClient, selectedDate, deptFilter]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -147,6 +185,39 @@ export function AdminOpenShiftsTable() {
           </div>
         );
       },
+    },
+    {
+      id: "duration",
+      header: "Duration",
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
+        const val = row.original.clock_in;
+        return <div className="text-sm font-medium">{val ? <LiveDuration clockIn={val} /> : "—"}</div>;
+      }
+    },
+    {
+      id: "breaks",
+      header: "Breaks",
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
+        const breakSecs = row.original.break_seconds || 0;
+        if (breakSecs === 0) return <span className="text-muted-foreground text-xs">—</span>;
+        const m = Math.floor(breakSecs / 60);
+        return <span className="text-sm font-medium text-amber-600">{m}m</span>;
+      }
+    },
+    {
+      id: "activity",
+      header: "Current Activity",
+      cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
+        const activity = row.original.active_task_title;
+        return activity ? (
+          <StatusBadge status="info" className="gap-1 truncate max-w-[200px]">
+            <AppIcon name="timer" size="xs" className="animate-pulse" />
+            <span className="truncate">{activity}</span>
+          </StatusBadge>
+        ) : (
+          <span className="text-muted-foreground text-xs italic">Idle</span>
+        );
+      }
     },
     {
       id: "actions",

@@ -88,7 +88,7 @@ export function FilterBar({
     return acc
   }, 0)
   
-  const hasActiveFilters = activeFiltersCount > 0 || searchQuery.length > 0
+  const hasActiveFilters = activeFiltersCount > 0 || (searchQuery?.length || 0) > 0
 
   const handleClearAll = () => {
     setLocalSearch("")

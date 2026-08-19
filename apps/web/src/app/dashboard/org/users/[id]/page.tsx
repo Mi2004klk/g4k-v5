@@ -52,8 +52,13 @@ export default function EmployeeDetailPage() {
       method: "POST",
       body: JSON.stringify({ recipient_id: recipientId }),
     }),
-    onSuccess: (conversation: { conversation_id?: string | number, id?: string | number }) => {
-      router.push(`/dashboard/chat?conversation=${conversation.conversation_id || conversation.id}`);
+    onSuccess: (conversation: any) => {
+      const convId = conversation?.id || conversation?.conversation_id || conversation?.data?.id || conversation?.data?.conversation_id;
+      if (convId) {
+        router.push(`/dashboard/chat?conversation=${convId}`);
+      } else {
+        toast.error("Failed to extract conversation ID.");
+      }
     },
     onError: (err: { message?: string }) => toast.error(err.message || "Failed to start chat."),
   });

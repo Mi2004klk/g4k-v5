@@ -39,6 +39,7 @@ export function HrActivityFeedWidget() {
     queryFn: () => apiFetch(`/attendance/hr/today?date=${todayDate}`),
     staleTime: STALE_TIME_ATTENDANCE,
     placeholderData: keepPreviousData,
+    refetchInterval: 30000,
   });
 
   const activities = useMemo(() => {

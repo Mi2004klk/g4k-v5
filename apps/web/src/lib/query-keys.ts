@@ -26,6 +26,7 @@ export const queryKeys = {
   usersSelectList: ["users-select-list"] as const,
   orgLeaveRequests: ["org-leave-requests"] as const,
   directory: (search?: string, dept?: string, desig?: string, vis?: string) => ["directory", search ?? "", dept ?? "all", desig ?? "all", vis ?? "all"] as const,
+  directoryInfinite: (search?: string, dept?: string, desig?: string, vis?: string) => ["directory-infinite", search ?? "", dept ?? "all", desig ?? "all", vis ?? "all"] as const,
 
   // --- Attendance & Time ---
   attendanceToday: ["attendance-today"] as const,
@@ -59,7 +60,7 @@ export const queryKeys = {
   conversations: ["conversations"] as const,
   messages: (id: number) => ["messages", id] as const,
   projects: (search?: string, sort?: string, page?: string) => ["projects", search ?? "", sort ?? "", page ?? "1"] as const,
-  tasks: ["tasks"] as const,
+  tasks: (projectId?: string) => ["tasks", projectId ?? "all"] as const,
   qaForms: ["qa-forms"] as const,
   announcements: ["announcements"] as const,
   quickNotes: ["quick-notes"] as const,

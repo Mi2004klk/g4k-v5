@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
+import { format, isSameMonth, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, getDay } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
@@ -218,6 +218,7 @@ export function HolidayCalendar() {
               {days.map((day, idx) => {
                 const isCurrentMonth = isSameMonth(day, monthStart);
                 const holiday = holidayList.find((h: Holiday) => isSameDay(new Date(h.date), day));
+                const isWeeklyOff = getDay(day) === 0 || getDay(day) === 6; // Sunday = 0, Saturday = 6
                 
                 const CellContent = (
                   <div
@@ -225,11 +226,14 @@ export function HolidayCalendar() {
                       ${isCurrentMonth ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-600 opacity-50"}
                       ${holiday ? 
                         "bg-primary-50 dark:bg-primary-900/20 font-semibold border border-primary-100 dark:border-primary-800/50 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/40" 
-                        : ""}`}
+                        : isWeeklyOff ? "bg-neutral-50 dark:bg-neutral-800/40 text-neutral-500" : ""}`}
                   >
                     <span>{format(day, "d")}</span>
                     {holiday && (
                       <span className={`w-1 h-1 rounded-full mt-1 bg-primary-500`} />
+                    )}
+                    {!holiday && isWeeklyOff && isCurrentMonth && (
+                      <span className="text-[9px] text-neutral-400 mt-0.5">Off</span>
                     )}
                   </div>
                 );

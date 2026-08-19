@@ -22,6 +22,7 @@ export function HrTeamAttendanceWidget() {
     queryFn: () => apiFetch(`/attendance/hr/today?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
     placeholderData: keepPreviousData,
+    refetchInterval: 30000,
   });
 
   const records = Array.isArray(data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data) ? (Array.isArray(data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data) ? (data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data as HrAttendanceRecord[]) : []) : [];

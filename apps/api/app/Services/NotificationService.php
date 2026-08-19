@@ -36,6 +36,12 @@ class NotificationService
                 'data' => $data,
                 'link' => $link,
             ]);
+            
+            try {
+                broadcast(new \App\Events\NotificationCreated($notification))->toOthers();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to broadcast notification: ' . $e->getMessage());
+            }
         }
 
         if (in_array('email', $channels) && $user && \App\Support\SmtpSettings::isConfigured()) {

@@ -10,6 +10,7 @@ import { AdminAttendanceAnalytics } from '@/components/attendance/admin-attendan
 import { AdminAttendanceTrendsGraph } from '@/components/attendance/admin-attendance-trends-graph';
 import { AdminOpenShiftsTable } from '@/components/attendance/admin-open-shifts-table';
 import { AdminAttendanceCalendar } from '@/components/attendance/admin-attendance-calendar';
+import { AdminLeaveHolidaysView } from '@/components/leave/admin-leave-holidays-view';
 export function AdminAttendanceView() {
   const [tab, setTab] = useUrlState('tab', 'calendar');
 
@@ -33,6 +34,10 @@ export function AdminAttendanceView() {
             <AppIcon name="clock" size="xs" />
             Live Shifts
           </TabsTrigger>
+          <TabsTrigger value="leave" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all whitespace-nowrap">
+            <AppIcon name="calendar" size="xs" />
+            Leave & Holidays
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="calendar" className="outline-none m-0 focus-visible:ring-0">
@@ -50,6 +55,10 @@ export function AdminAttendanceView() {
         <TabsContent value="analytics" className="outline-none m-0 focus-visible:ring-0 space-y-6">
           <AdminAttendanceAnalytics />
           <AdminAttendanceTrendsGraph />
+        </TabsContent>
+
+        <TabsContent value="leave" className="outline-none m-0 focus-visible:ring-0">
+          <AdminLeaveHolidaysView />
         </TabsContent>
       </Tabs>
     </div>

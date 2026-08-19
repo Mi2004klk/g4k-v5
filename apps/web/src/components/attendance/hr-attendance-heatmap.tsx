@@ -86,7 +86,7 @@ export function HrAttendanceHeatmap() {
       <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 py-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-bold flex items-center gap-2">
           <AppIcon name="chart" className="text-primary" size="sm" />
-          Attendance Heat Map
+          Team Attendance Heat Map
         </CardTitle>
         <Select value={year} onValueChange={setYear}>
           <SelectTrigger className="w-28 h-8 text-xs bg-white dark:bg-neutral-950">

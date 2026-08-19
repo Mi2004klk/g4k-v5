@@ -5,6 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function asArray<T>(x: any): T[] {
+  return Array.isArray(x) ? x : [];
+}
+
+
 export function parseUserAgent(ua: string): string {
   if (!ua) return "Unknown Device";
   

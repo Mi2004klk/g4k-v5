@@ -71,4 +71,18 @@ class Project extends Model
     {
         return $this->hasOne(QaSubmission::class);
     }
+
+    public function getCoverImageAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        // If it's already a full URL (e.g., from an older record), return as is
+        if (str_starts_with($value, 'http')) {
+            return $value;
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($value);
+    }
 }

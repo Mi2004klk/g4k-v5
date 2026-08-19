@@ -168,8 +168,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/projects/{id}/history', [ProjectController::class, 'history']);
         
         Route::middleware('capability:timer.track')->group(function () {
-            Route::post('/timer/logs', [TimerController::class, 'logTime']);
             Route::post('/timer/log', [TimerController::class, 'logTime']);
+            Route::post('/timer/logs', [TimerController::class, 'logTime']);
+            Route::post('/timer/active', [TimerController::class, 'setActive']);
+            Route::post('/timer/active/clear', [TimerController::class, 'clearActive']);
+            Route::get('/timer/logs', [TimerController::class, 'index']);
         });
         Route::post('/projects/{id}/submit', [ProjectController::class, 'submit']);
     });

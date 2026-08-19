@@ -27,6 +27,8 @@ interface LeaveHistoryTableProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onPerPageChange?: (perPage: number) => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }
 
 export function LeaveHistoryTable({ 
@@ -37,7 +39,9 @@ export function LeaveHistoryTable({
   perPage,
   totalPages,
   onPageChange,
-  onPerPageChange
+  onPerPageChange,
+  emptyTitle = "No leave requests found.",
+  emptyDescription = "No leave records match your current filters."
 }: LeaveHistoryTableProps) {
   const columns = useMemo<ColumnDef<LeaveRecord>[]>(() => {
     const cols: ColumnDef<LeaveRecord>[] = [];
@@ -142,8 +146,8 @@ export function LeaveHistoryTable({
           <div className="p-8">
             <EmptyState
               icon={<AppIcon name="plane" size="hero" className=" text-neutral-300" />}
-              title="No leave requests yet."
-              description="You haven't requested any time off, or no requests match your current filters."
+              title={emptyTitle}
+              description={emptyDescription}
             />
           </div>
         ) : (

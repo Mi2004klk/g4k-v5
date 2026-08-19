@@ -300,8 +300,8 @@ class ProjectController extends Controller
             }
 
             return response()->json([
-                'message' => 'Cover uploaded successfully',
-                'url' => \Illuminate\Support\Facades\Storage::disk($disk)->url($path)
+                'url' => \Illuminate\Support\Facades\Storage::disk($disk)->url($path),
+                'path' => $path
             ]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Project cover upload failed: ' . $e->getMessage());

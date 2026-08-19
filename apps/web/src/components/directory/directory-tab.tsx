@@ -93,7 +93,7 @@ export function CorporateDirectoryTab() {
   });
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, isError, refetch } = useInfiniteQuery({
-    queryKey: queryKeys.directory(debouncedSearch, deptFilter, desigFilter, visFilter),
+    queryKey: queryKeys.directoryInfinite(debouncedSearch, deptFilter, desigFilter, visFilter),
     queryFn: ({ pageParam = 1 }) => {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("search", debouncedSearch);
@@ -121,8 +121,13 @@ export function CorporateDirectoryTab() {
       method: "POST",
       body: JSON.stringify({ recipient_id: recipientId }),
     }),
-    onSuccess: (conversation: { conversation_id?: number; id: number }) => {
-      router.push(`/dashboard/chat?conversation=${conversation.conversation_id || conversation.id}`);
+    onSuccess: (conversation: any) => {
+      const convId = conversation?.id || conversation?.conversation_id || conversation?.data?.id || conversation?.data?.conversation_id;
+      if (convId) {
+        router.push(`/dashboard/chat?conversation=${convId}`);
+      } else {
+        toast.error("Failed to extract conversation ID.");
+      }
     },
     onError: (err: ApiError) => toast.error(err.message || "Failed to start chat."),
   });
@@ -150,7 +155,7 @@ export function CorporateDirectoryTab() {
                   type: "select",
                   value: deptFilter,
                   onChange: setDeptFilter,
-                  options: (deptsData?.data || deptsData || []).map((d: Department) => ({ label: d.name, value: d.id.toString() }))
+                  options: (Array.isArray(deptsData?.data) ? deptsData.data : Array.isArray(deptsData) ? deptsData : []).map((d: Department) => ({ label: d.name, value: d.id.toString() }))
                 },
                 {
                   key: "designation",
@@ -158,7 +163,7 @@ export function CorporateDirectoryTab() {
                   type: "select",
                   value: desigFilter,
                   onChange: setDesigFilter,
-                  options: (desigsData?.data || desigsData || []).map((d: Designation) => ({ label: d.name, value: d.id.toString() }))
+                  options: (Array.isArray(desigsData?.data) ? desigsData.data : Array.isArray(desigsData) ? desigsData : []).map((d: Designation) => ({ label: d.name, value: d.id.toString() }))
                 }
               ]}
           />

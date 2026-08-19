@@ -125,22 +125,22 @@ export default function DashboardPage() {
         {
           id: "team-activity",
           component: <HrActivityFeedWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 5, w: 6, h: 7 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 7, w: 6, h: 7 }),
         },
         {
           id: "quick-task",
           component: <QuickTaskWidget />,
-          defaultLayout: responsiveLayout({ x: 6, y: 5, w: 6, h: 7 }),
+          defaultLayout: responsiveLayout({ x: 6, y: 7, w: 6, h: 7 }),
         },
         {
           id: "announcements",
           component: <AnnouncementBoard />,
-          defaultLayout: responsiveLayout({ x: 0, y: 12, w: 8, h: 7 }),
+          defaultLayout: responsiveLayout({ x: 0, y: 14, w: 8, h: 7 }),
         },
         {
           id: "upcoming-holidays",
           component: <UpcomingHolidaysWidget />,
-          defaultLayout: responsiveLayout({ x: 8, y: 12, w: 4, h: 7 }),
+          defaultLayout: responsiveLayout({ x: 8, y: 14, w: 4, h: 7 }),
         },
       ];
       
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         hrWidgets.push({
           id: "time-clock",
           component: <TimeClockWidget />,
-          defaultLayout: responsiveLayout({ x: 0, y: 6, w: 6, h: 3 }),
+          defaultLayout: responsiveLayout({ x: 8, y: 0, w: 4, h: 5 }),
         });
       }
       return hrWidgets;
