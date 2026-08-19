@@ -14,6 +14,7 @@ import { STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/
 import { usePaginatedList } from "@/lib/pagination";
 import { useReverb } from "@/hooks/use-reverb";
 import { useExport } from "@/hooks/use-export";
+import { keepPreviousData } from "@tanstack/react-query";
 import { Button, Checkbox, DataTable, StatusBadge, FilterBar, ListScaffold } from "@g4k/ui/components";
 import { Row, Table } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";

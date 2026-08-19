@@ -140,7 +140,7 @@ export function ListScaffold<TData, TValue>({
           {isError ? (
             <div className="flex flex-col items-center justify-center p-8 h-full text-center">
               <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400">
-                <AppIcon name="alertCircle" size="lg" />
+                <AppIcon name="error" size="lg" />
               </div>
               <h3 className="text-base font-semibold mb-1">Failed to load data</h3>
               <p className="text-sm text-neutral-500 mb-4 max-w-sm">

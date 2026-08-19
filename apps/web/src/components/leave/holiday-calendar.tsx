@@ -236,8 +236,8 @@ export function HolidayCalendar() {
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">Holiday</span>
-                            </div>
                           </div>
+                          <h4 className="font-semibold text-sm">{holiday.name}</h4>
                           {holiday.description && (
                             <p className="text-xs text-neutral-500">{holiday.description}</p>
                           )}
@@ -281,8 +281,8 @@ export function HolidayCalendar() {
                 }
 
                 return <div key={day.toISOString()}>{CellContent}</div>;
-              })}
-            </div>
+              }}
+            />
           </div>
         )}
       </CardContent>

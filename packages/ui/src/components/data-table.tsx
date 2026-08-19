@@ -197,6 +197,7 @@ export function DataTable<TData, TValue>({
   isError,
   skeletonRows = 5,
   className,
+  emptyState,
 }: DataTableProps<TData, TValue>) {
   const [internalSorting, setInternalSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})

@@ -23,7 +23,7 @@ export function useBreakpoint() {
     checkBreakpoints();
 
     // Debounce the resize event for performance
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(checkBreakpoints, 100);
