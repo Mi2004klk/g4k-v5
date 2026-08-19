@@ -58,6 +58,7 @@ export const queryKeys = {
   // --- Comm & Tasks ---
   pendingApprovals: ["pending-approvals-list"] as const,
   conversations: ["conversations"] as const,
+  chatUsers: (search: string) => ["chat-users", search] as const,
   messages: (id: number) => ["messages", id] as const,
   projects: (search?: string, sort?: string, page?: string) => ["projects", search ?? "", sort ?? "", page ?? "1"] as const,
   tasks: (projectId?: string) => ["tasks", projectId ?? "all"] as const,

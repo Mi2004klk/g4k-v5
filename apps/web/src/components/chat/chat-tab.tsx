@@ -114,7 +114,7 @@ export function ChatTab() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: searchUsersData } = useQuery<any[]>({
-    queryKey: queryKeys.directory(searchQuery),
+    queryKey: queryKeys.chatUsers(searchQuery),
     queryFn: () => apiFetch(`/chat/users?search=${encodeURIComponent(searchQuery)}`).then(unwrapList),
     enabled: searchQuery.length > 2,
   });
