@@ -91,6 +91,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
           },
           view_mode: ganttViewMode,
           language: 'en',
+          // @ts-expect-error - readonly is not in GanttOptions typings but works in frappe-gantt
           readonly: true,
         });
       }
