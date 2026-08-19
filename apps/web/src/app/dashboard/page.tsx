@@ -266,15 +266,15 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card dark:bg-neutral-900 p-6 rounded-2xl text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-border">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-2 mb-2">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-0.5">
             {greetingData.salutation}
           </p>
-          <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white">
+          <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white leading-tight">
             {greetingData.title}, {firstName}
           </h1>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-xs text-neutral-500 mt-0.5">
             {greetingData.subtitle}
           </p>
         </div>

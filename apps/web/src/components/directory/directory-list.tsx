@@ -299,10 +299,10 @@ export function EmployeeManagementTab() {
               <AvatarFallback name={user.name} className="font-bold" />
             </Avatar>
             <div>
-              <div className="font-semibold text-neutral-900 dark:text-white">
+              <div className="font-semibold text-[13px] text-neutral-900 dark:text-white">
                 {user.name}
               </div>
-              <div className="text-neutral-400 text-[11px] flex items-center gap-2">
+              <div className="text-neutral-400 text-[11px] flex items-center gap-2 mt-0.5">
                 <span>{user.email}</span>
               </div>
             </div>
@@ -327,12 +327,12 @@ export function EmployeeManagementTab() {
         return (
           <div className="flex flex-col gap-1">
             {dept ? (
-              <span className="inline-flex items-center gap-1 text-neutral-700 dark:text-neutral-300 text-xs font-medium">
-                <AppIcon name="building" size="sm" className=" text-neutral-400" />
+              <span className="inline-flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300 text-[12px] font-medium">
+                <AppIcon name="building" size="xs" className=" text-neutral-400" />
                 {dept.name}
               </span>
-            ) : <span className="text-neutral-400">—</span>}
-            {desig && <span className="text-[10px] text-neutral-500">{desig.name}</span>}
+            ) : <span className="text-neutral-400 text-[12px]">—</span>}
+            {desig && <span className="text-[11px] text-neutral-500">{desig.name}</span>}
           </div>
         );
       }
@@ -366,8 +366,8 @@ export function EmployeeManagementTab() {
       cell: ({ row }) => {
         const isInactive = row.original.status === "inactive";
         return (
-          <StatusBadge status={isInactive ? "danger" : "success"} dot className="uppercase">
-            {row.original.status || "active"}
+          <StatusBadge status={isInactive ? "danger" : "success"} dot className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0">
+            {row.original.status || "Active"}
           </StatusBadge>
         );
       }
@@ -446,9 +446,8 @@ export function EmployeeManagementTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 mb-6">
-        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
-          <div className="flex-1 w-full">
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1">
             <FilterBar
               searchQuery={search}
               onSearchChange={setSearch}
@@ -488,23 +487,22 @@ export function EmployeeManagementTab() {
                 },
               ]}
             />
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" onClick={bulkExport} disabled={isExporting} className="h-9 gap-2 shadow-sm">
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <Button variant="outline" size="sm" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-9">
               {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
               Export
             </Button>
             {canManageUsers && (
-              <Button onClick={() => {
+              <Button size="sm" onClick={() => {
                 setIsCreateOpen(true);
-              }} className="h-9 gap-2 shadow-sm">
+              }} className="gap-2 shadow-sm h-9">
                 <AppIcon name="plus" />
                 Add Employee
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
       {selectedCount > 0 && (
         <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-900/50 rounded-[var(--radius)] p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
           <span className="text-sm font-medium text-primary-700 dark:text-primary-300">{selectedCount} users selected</span>
@@ -516,7 +514,7 @@ export function EmployeeManagementTab() {
         </div>
       )}
 
-      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-card dark:bg-neutral-900">
         <CardContent className="p-0">
           {isPending ? (
             <div className="p-6 space-y-4">

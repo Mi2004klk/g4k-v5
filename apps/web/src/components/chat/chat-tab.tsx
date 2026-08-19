@@ -381,43 +381,43 @@ export function ChatTab() {
 
 
   return (
-    <div className="space-y-6 mt-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chat Interface */}
-        <div
-          className="lg:col-span-2 bg-card dark:bg-neutral-900 rounded-2xl shadow-e1 hover:shadow-e2 transition-shadow duration-150 border border-neutral-100 dark:border-neutral-800 flex h-[calc(100dvh-200px)] min-h-[500px] overflow-hidden"
-          style={keyboardHeight > 0 ? { height: `calc(100dvh - 200px - ${keyboardHeight}px)`, minHeight: 0 } : undefined}
-        >
-          {/* Conversation sidebar */}
-          <div className={`w-full md:w-1/3 border-r border-neutral-100 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
-            <div className="p-3 border-b border-neutral-100 dark:border-neutral-800 font-bold text-xs flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span>Chats</span>
+    <>
+      <div className="mt-4 flex flex-col lg:flex-row gap-4 h-[calc(100dvh-180px)] min-h-[500px]">
+      {/* Main Chat Interface */}
+      <div
+        className="flex-1 bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 flex overflow-hidden"
+        style={keyboardHeight > 0 ? { height: `calc(100dvh - 200px - ${keyboardHeight}px)`, minHeight: 0 } : undefined}
+      >
+        {/* Conversation sidebar */}
+        <div className={`w-full md:w-72 lg:w-80 shrink-0 border-r border-neutral-200 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
+          <div className="p-2.5 border-b border-neutral-200 dark:border-neutral-800 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between px-1">
+              <span className="font-bold text-xs text-neutral-800 dark:text-neutral-200">Chats</span>
                 {canManageChat && (
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-11 w-11 sm:h-7 sm:w-7 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
+                    className="h-6 w-6 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
                     aria-label="New group chat"
                     title="New Group"
                     onClick={() => setGroupDialogOpen(true)}
                   >
-                    <AppIcon name="plus" />
+                    <AppIcon name="plus" size="sm" />
                   </Button>
                 )}
               </div>
-              <div className="relative">
-                <AppIcon name="search" size="xs" className="absolute left-2.5 top-2.5 text-neutral-400" />
-                <input
-                  type="text"
-                  placeholder="Search chats..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-8 pl-8 pr-3 text-xs bg-neutral-100 dark:bg-neutral-800 border-transparent focus:border-primary-500 rounded-md outline-none transition-colors"
-                />
-              </div>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="relative px-2.5 pb-2.5">
+              <AppIcon name="search" size="xs" className="absolute left-4 top-2 text-neutral-400" />
+              <input
+                type="text"
+                placeholder="Search chats..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-7 pl-7 pr-3 text-[11px] bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-primary-500 rounded-md outline-none transition-colors"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto thin-scrollbar">
               <ConversationList
                 currentUserId={user?.id as number}
                 conversations={conversations}
@@ -431,7 +431,7 @@ export function ChatTab() {
           </div>
 
           {/* Active Chat Area */}
-          <div className={`flex-1 flex flex-col bg-neutral-50/50 dark:bg-neutral-900/50 ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
+          <div className={`flex-1 flex flex-col bg-white dark:bg-neutral-950 ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
             {selectedId ? (
               <>
                 <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-3">
@@ -509,10 +509,10 @@ export function ChatTab() {
           </div>
         </div>
 
-        {/* Sidebar Widgets */}
-        <div className="space-y-6">
-          <QuickNotes />
-        </div>
+      {/* Sidebar Widgets */}
+      <div className="hidden lg:block w-72 shrink-0 h-full overflow-y-auto thin-scrollbar">
+        <QuickNotes />
+      </div>
       </div>
 
       <CreateGroupDialog
@@ -523,6 +523,6 @@ export function ChatTab() {
           if (convId) setSelectedId(convId);
         }}
       />
-    </div>
+    </>
   );
 }

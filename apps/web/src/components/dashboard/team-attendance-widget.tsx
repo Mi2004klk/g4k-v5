@@ -29,14 +29,14 @@ export function TeamAttendanceWidget() {
 
   if (isError) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
-        <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150 shadow-sm">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
           <div className="flex items-center gap-2">
-            <AppIcon name="directory" className=" text-primary-600" />
-            <span className="text-sm font-bold">Team Attendance</span>
+            <AppIcon name="directory" size="sm" className=" text-primary-600" />
+            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">Team Attendance</span>
           </div>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-[var(--radius)] p-4 mt-4">
+        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded p-4 mt-2">
           <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
           <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load attendance</span>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
@@ -52,18 +52,18 @@ export function TeamAttendanceWidget() {
 
   if (!isLoading && employees.length === 0) {
     return (
-      <Card className="h-full flex flex-col items-center justify-center border-none shadow-e1 overflow-hidden p-6 text-center">
-        <div className="text-sm font-semibold text-muted-foreground">No team members scheduled today</div>
+      <Card className="h-full flex flex-col items-center justify-center border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card shadow-sm p-6 text-center">
+        <div className="text-[11px] font-semibold text-neutral-500">No team members scheduled today</div>
       </Card>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col border-none shadow-e1 overflow-hidden">
-      <CardHeader className="pb-3 border-b border-border dark:border-neutral-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <AppIcon name="directory" className=" text-primary-600" />
+    <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-150">
+      <CardHeader className="p-3 border-b border-neutral-100 dark:border-neutral-800/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <CardTitle className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+            <AppIcon name="directory" size="sm" className="text-primary-600" />
             Today&apos;s Team Attendance
           </CardTitle>
           {isLoading ? (

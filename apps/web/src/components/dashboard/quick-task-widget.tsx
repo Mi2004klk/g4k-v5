@@ -60,41 +60,41 @@ export function QuickTaskWidget() {
   };
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 overflow-hidden">
+    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150 overflow-hidden shadow-sm hover:shadow-md">
       <div>
-        <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-[var(--radius)] bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
-              <AppIcon name="success" className=" text-emerald-600 dark:text-emerald-400" />
+            <div className="w-7 h-7 rounded bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center">
+              <AppIcon name="success" size="sm" className="text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
               Quick Task
               <WidgetInfo summary="Instantly dispatch a work item to any employee" />
             </span>
-            {usersLoading && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
           </div>
+          {usersLoading && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-2.5">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <Input 
               placeholder="Task title..." 
               value={title} 
               onChange={(e) => setTitle(e.target.value)}
-              className={`h-8 text-xs ${fieldErrors.title ? "border-red-500" : ""}`}
+              className={`h-9 text-xs bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.title ? "border-red-500" : ""}`}
             />
             <FormError errors={fieldErrors.title} />
           </div>
 
           <div>
             <Select value={assigneeId} onValueChange={setAssigneeId}>
-              <SelectTrigger className={`h-8 text-xs w-full ${fieldErrors.assignee_id ? "border-red-500" : ""}`}>
+              <SelectTrigger className={`h-9 text-xs w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.assignee_id ? "border-red-500" : ""}`}>
                 <SelectValue placeholder="Select Assignee" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px]">
                 {users.map((u: QuickTaskUser) => (
-                  <SelectItem key={u.id} value={u.id.toString()} className="text-xs">
-                    {u.name} ({u.email})
+                  <SelectItem key={u.id} value={u.id.toString()} className="text-xs py-1.5">
+                    {u.name} <span className="text-neutral-400 hidden sm:inline-block">({u.email})</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -106,12 +106,12 @@ export function QuickTaskWidget() {
             type="submit" 
             size="sm" 
             disabled={createTaskMutation.isPending}
-            className="w-full h-8 text-xs font-bold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="w-full h-9 text-[11px] font-bold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
           >
             {createTaskMutation.isPending ? (
               <AppIcon name="loading" size="sm" className=" animate-spin" />
             ) : (
-              <AppIcon name="send" size="sm" />
+              <AppIcon name="send" size="xs" />
             )}
             Assign Task
           </Button>

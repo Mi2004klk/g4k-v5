@@ -22,18 +22,38 @@ export default function DirectoryModulePage() {
     >
       <ErrorBoundary>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            <TabsList className="w-full md:w-auto justify-start overflow-x-auto flex-nowrap">
-              <TabsTrigger value="directory">Corporate Directory</TabsTrigger>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+            <TabsList className="w-full md:w-auto justify-start overflow-x-auto flex-nowrap bg-transparent h-12 p-0 rounded-none">
+              <TabsTrigger 
+                value="directory" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
+              >
+                Corporate Directory
+              </TabsTrigger>
               {canManageUsers && (
-                <TabsTrigger value="management">Employee Management</TabsTrigger>
+                <TabsTrigger 
+                  value="management" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
+                >
+                  Employee Management
+                </TabsTrigger>
               )}
-              <TabsTrigger value="departments">Departments</TabsTrigger>
-              <TabsTrigger value="designations">Designations & Roles</TabsTrigger>
+              <TabsTrigger 
+                value="departments" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
+              >
+                Departments
+              </TabsTrigger>
+              <TabsTrigger 
+                value="designations" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
+              >
+                Designations & Roles
+              </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="directory" className="mt-0">
+          <TabsContent value="directory" className="mt-0 focus-visible:outline-none">
             <CorporateDirectoryTab />
           </TabsContent>
 

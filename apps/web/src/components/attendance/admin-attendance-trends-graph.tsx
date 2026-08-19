@@ -157,13 +157,13 @@ export function AdminAttendanceTrendsGraph() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-[var(--radius)]">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 w-full sm:w-auto overflow-x-auto thin-scrollbar">
           <button
             onClick={() => setGroupBy("date")}
-            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-sm text-xs font-semibold whitespace-nowrap transition-all ${
               groupBy === "date" 
-                ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
+                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
@@ -171,9 +171,9 @@ export function AdminAttendanceTrendsGraph() {
           </button>
           <button
             onClick={() => setGroupBy("department")}
-            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-sm text-xs font-semibold whitespace-nowrap transition-all ${
               groupBy === "department" 
-                ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
+                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
@@ -181,12 +181,12 @@ export function AdminAttendanceTrendsGraph() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-[var(--radius)]">
+        <div className="flex items-center bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 shrink-0">
           <button
             onClick={() => setMode("weekly")}
-            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-sm text-xs font-semibold whitespace-nowrap transition-all ${
               mode === "weekly" 
-                ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
+                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
@@ -194,9 +194,9 @@ export function AdminAttendanceTrendsGraph() {
           </button>
           <button
             onClick={() => setMode("monthly")}
-            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-sm text-xs font-semibold whitespace-nowrap transition-all ${
               mode === "monthly" 
-                ? "bg-card dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-e1 hover:shadow-e2 transition-shadow duration-150" 
+                ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm" 
                 : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
             }`}
           >
@@ -205,7 +205,7 @@ export function AdminAttendanceTrendsGraph() {
         </div>
       </div>
 
-      <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 p-2 relative min-h-[400px]">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-xl">
             <AppIcon name="loading" size="xl" className=" animate-spin text-emerald-500" />

@@ -137,7 +137,7 @@ export function ProfileHeader() {
             onClick={() => setIsAvatarOpen(true)}
             className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-semibold flex-col gap-0.5 backdrop-blur-sm"
           >
-            <AppIcon name="camera" size="xs" />
+            <AppIcon name="edit" size="xs" />
             <span>Update</span>
           </button>
         </div>

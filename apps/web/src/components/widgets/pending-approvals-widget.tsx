@@ -47,24 +47,23 @@ export function PendingApprovalsWidget() {
   });
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
-      <div className="flex items-center justify-between pb-3">
+    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col transition-shadow duration-150 shadow-sm hover:shadow-md">
+      <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-2">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[var(--radius)] bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
-            <AppIcon name="clipboard" className=" text-amber-600 dark:text-amber-400" />
+          <div className="w-6 h-6 rounded bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center">
+            <AppIcon name="clipboard" size="sm" className="text-amber-600 dark:text-amber-400" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
             Pending Approvals
             <WidgetInfo summary="Leaves, Tasks, and Projects awaiting your review" />
           </span>
-          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
-        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold">
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-semibold">
           {requests.length}
         </span>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto max-h-[260px] thin-scrollbar">
+      <div className="flex-1 space-y-1.5 overflow-y-auto max-h-[260px] thin-scrollbar">
         {isPending ? (
           <div className="space-y-2 min-h-[150px]">
             {[1, 2, 3].map((i) => (
@@ -101,7 +100,7 @@ export function PendingApprovalsWidget() {
                   const url = item.route || item.action_url;
                   if (url) window.location.href = url; // or use router
                 }}
-                className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between border border-neutral-100 dark:border-neutral-800 cursor-pointer hover:border-primary-200 transition-colors"
+                className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between border border-neutral-100 dark:border-neutral-800 cursor-pointer hover:border-primary-200 transition-colors"
               >
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">

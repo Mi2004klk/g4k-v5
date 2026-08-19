@@ -30,13 +30,13 @@ export function HrTeamAttendanceWidget() {
   const topRecords = records.slice(0, 3);
 
   return (
-    <Card className="h-full flex flex-col bg-card border shadow-e1 hover:shadow-e2 rounded-xl p-5 overflow-hidden transition-shadow duration-150">
-      <div className="flex items-center justify-between pb-3">
+    <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 overflow-hidden transition-shadow duration-150 shadow-sm hover:shadow-md">
+      <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-2">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[var(--radius)] bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center">
-            <AppIcon name="directory" className=" text-emerald-600 dark:text-emerald-400" />
+          <div className="w-6 h-6 rounded bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center">
+            <AppIcon name="directory" size="sm" className="text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
             Team Attendance
           </span>
           {isFetching && !isPending && <AppIcon name="loading" size="xs" className=" animate-spin text-muted-foreground" />}

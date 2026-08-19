@@ -119,27 +119,29 @@ export function AdminAttendanceAnalytics() {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {cards.map((card, i) => (
-        <div key={i} className="bg-card border border-border rounded-xl p-4 relative overflow-hidden group hover:border-primary/50 transition-colors">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">{card.title}</h4>
-            <div className={`p-1.5 rounded-[var(--radius)] ${card.bg}`}>
-              <AppIcon name={card.icon as IconName} className={`w-4 h-4 ${card.color}`} />
+    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 divide-x divide-y lg:divide-y-0 divide-neutral-200 dark:divide-neutral-800">
+        {cards.map((card, i) => (
+          <div key={i} className="p-4 relative overflow-hidden group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">{card.title}</h4>
+              <div className={`p-1 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 group-hover:${card.color} group-hover:${card.bg} transition-colors`}>
+                <AppIcon name={card.icon as IconName} className="w-3.5 h-3.5" />
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className="text-xl font-bold text-neutral-900 dark:text-white font-mono">
+                {card.value}
+              </span>
+              {card.total !== undefined && card.total > 0 && (
+                <span className="text-[11px] text-neutral-400 font-semibold font-mono">
+                  / {card.total}
+                </span>
+              )}
             </div>
           </div>
-          <div className="flex items-end gap-2">
-            <span className="text-2xl font-bold text-neutral-900 dark:text-white">
-              {card.value}
-            </span>
-            {card.total !== undefined && card.total > 0 && (
-              <span className="text-xs text-neutral-400 dark:text-neutral-500 mb-1 font-medium">
-                / {card.total}
-              </span>
-            )}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

@@ -42,7 +42,7 @@ export function ConversationList({
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? conversations.length + 1 : conversations.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: useCallback(() => 64, []),
+    estimateSize: useCallback(() => 54, []),
     overscan: 5,
   });
 
@@ -133,39 +133,39 @@ export function ConversationList({
               data-index={virtualRow.index}
               ref={rowVirtualizer.measureElement}
               onClick={() => onSelect(conv.id)}
-              className={`absolute top-0 left-0 w-full p-3 flex items-start gap-3 cursor-pointer transition-all ${
+              className={`absolute top-0 left-0 w-full px-3 py-2 flex items-center gap-2.5 cursor-pointer transition-all border-b border-neutral-100 dark:border-neutral-800/50 ${
                 isSelected
-                  ? "bg-primary-50/60 dark:bg-primary-950/40 border-l-2 border-primary-600"
+                  ? "bg-primary-50/40 dark:bg-primary-950/20 border-l-2 border-l-primary-600"
                   : isUnread 
-                    ? "bg-primary-50/30 dark:bg-primary-900/20 border-l-2 border-transparent hover:bg-primary-50/50" 
-                    : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50 border-l-2 border-transparent"
+                    ? "bg-neutral-50/50 dark:bg-neutral-900/30 border-l-2 border-l-transparent hover:bg-neutral-50" 
+                    : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50 border-l-2 border-l-transparent"
               }`}
               style={{
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <div className="p-2 rounded-[var(--radius)] bg-neutral-100 dark:bg-neutral-800 shrink-0 mt-0.5">
+              <div className="p-1.5 rounded-[var(--radius)] bg-neutral-100 dark:bg-neutral-800 shrink-0">
                 {getIcon(conv.scope)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className={`text-xs truncate ${isUnread ? "font-black text-primary-700 dark:text-primary-400" : "font-bold text-neutral-900 dark:text-white"}`}>
+                  <h4 className={`text-xs truncate ${isUnread ? "font-bold text-primary-700 dark:text-primary-400" : "font-semibold text-neutral-800 dark:text-neutral-200"}`}>
                     {title}
                   </h4>
                   {conv.latestMessage && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 shrink-0 pl-2">
                       {isUnread && (
-                        <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[1rem] px-1 rounded-full shadow-sm">
+                        <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-3.5 min-w-[14px] px-1 rounded-full shadow-sm">
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
-                      <span className={`text-[10px] ${isUnread ? "text-primary-600 font-bold" : "text-neutral-400"}`}>
+                      <span className={`text-[9px] uppercase tracking-wider ${isUnread ? "text-primary-600 font-bold" : "text-neutral-400 font-medium"}`}>
                         {format(new Date(conv.latestMessage.created_at), "h:mm a")}
                       </span>
                     </div>
                   )}
                 </div>
-                <p className={`text-[11px] truncate mt-0.5 ${isUnread ? "font-semibold text-neutral-800 dark:text-neutral-200" : "text-neutral-500"}`}>
+                <p className={`text-[10px] truncate mt-0.5 ${isUnread ? "font-medium text-neutral-700 dark:text-neutral-300" : "text-neutral-500"}`}>
                   {conv.latestMessage ? conv.latestMessage.body : "No messages yet"}
                 </p>
               </div>

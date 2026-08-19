@@ -47,41 +47,50 @@ export function AdminAttendanceCalendar() {
   const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
   return (
-    <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
-            {format(currentDate, "MMMM yyyy")}
+          <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+            <AppIcon name="calendar" size="sm" className="text-primary-600 dark:text-primary-400" />
+            {format(currentDate, "MMMM yyyy")} Heatmap
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Company-wide attendance heatmap
-          </p>
+          <p className="text-xs text-neutral-500 mt-1">Company-wide attendance density.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevMonth} className="h-8 w-8">
-            <AppIcon name="chevronLeft" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={nextMonth} className="h-8 w-8">
-            <AppIcon name="chevronRight" />
-          </Button>
+        
+        <div className="flex items-center gap-6">
+          <div className="hidden sm:flex items-center gap-4 border-r border-neutral-200 dark:border-neutral-800 pr-6">
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /><span className="text-[11px] font-medium text-neutral-500">&ge; 90%</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-300" /><span className="text-[11px] font-medium text-neutral-500">70-89%</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-300" /><span className="text-[11px] font-medium text-neutral-500">50-69%</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-rose-400" /><span className="text-[11px] font-medium text-neutral-500">&lt; 50%</span></div>
+          </div>
+          <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded-lg border border-neutral-100 dark:border-neutral-800">
+            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm">
+              <AppIcon name="chevronLeft" size="xs" />
+            </Button>
+            <div className="px-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300">{format(currentDate, "MMM")}</div>
+            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm">
+              <AppIcon name="chevronRight" size="xs" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="h-64 flex items-center justify-center">
-          <AppIcon name="loading" size="xl" className=" animate-spin text-primary-500" />
+        <div className="h-48 flex items-center justify-center">
+          <AppIcon name="loading" size="xl" className="animate-spin text-primary-500" />
         </div>
       ) : (
         <TooltipProvider delayDuration={100}>
-          <div className="w-full max-w-lg mx-auto">
+          <div className="w-full max-w-[400px] mx-auto">
             <div className="grid grid-cols-7 mb-2">
               {WEEKDAY_LABELS.map((d) => (
-                <div key={d} className="text-center text-xs font-semibold text-neutral-400 py-2">
+                <div key={d} className="text-center text-[10px] font-bold text-neutral-400 py-1 uppercase tracking-wider">
                   {d}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-2 sm:gap-2.5">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {calendarDays.map((date, idx) => {
                 const dateStr = format(date, "yyyy-MM-dd");
                 const stat = statsByDate[dateStr];
@@ -89,8 +98,8 @@ export function AdminAttendanceCalendar() {
                 const isTodayFlag = isToday(date);
                 const isFutureFlag = isFuture(date);
                 
-                let bgColor = "bg-neutral-50 dark:bg-neutral-800/50";
-                let textColor = "text-neutral-600 dark:text-neutral-400";
+                let bgColor = "bg-neutral-100 dark:bg-neutral-800";
+                let textColor = "text-neutral-500 dark:text-neutral-400";
                 
                 if (stat && stat.total > 0 && inCurrentMonth) {
                   const presentRate = stat.present / stat.total;
@@ -98,11 +107,11 @@ export function AdminAttendanceCalendar() {
                     bgColor = "bg-emerald-500 dark:bg-emerald-600";
                     textColor = "text-white";
                   } else if (presentRate >= 0.7) {
-                    bgColor = "bg-emerald-300 dark:bg-emerald-400/80";
-                    textColor = "text-emerald-900 dark:text-emerald-100";
+                    bgColor = "bg-emerald-300 dark:bg-emerald-500/80";
+                    textColor = "text-emerald-950 dark:text-emerald-50";
                   } else if (presentRate >= 0.5) {
                     bgColor = "bg-amber-300 dark:bg-amber-500/80";
-                    textColor = "text-amber-900 dark:text-amber-100";
+                    textColor = "text-amber-950 dark:text-amber-50";
                   } else {
                     bgColor = "bg-rose-400 dark:bg-rose-500/80";
                     textColor = "text-white";
@@ -116,61 +125,36 @@ export function AdminAttendanceCalendar() {
                         onClick={() => handleDayClick(date)}
                         disabled={isFutureFlag && !stat}
                         className={[
-                          "relative flex flex-col items-center justify-center rounded-md sm:rounded-lg aspect-square w-full transition-all duration-200",
+                          "relative flex flex-col items-center justify-center rounded-md aspect-square w-full transition-all duration-150",
                           inCurrentMonth ? "opacity-100" : "opacity-30",
-                          isFutureFlag && !stat ? "cursor-default" : "cursor-pointer hover:scale-105 hover:shadow-e2",
+                          isFutureFlag && !stat ? "cursor-default" : "cursor-pointer hover:ring-2 hover:ring-neutral-300 dark:hover:ring-neutral-600 hover:ring-offset-1 dark:hover:ring-offset-neutral-900",
                           bgColor,
-                          isTodayFlag ? "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-neutral-900" : ""
+                          isTodayFlag ? "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-neutral-900 font-bold" : ""
                         ].join(" ")}
                       >
-                        <span className={`text-xs sm:text-sm font-semibold ${textColor}`}>
+                        <span className={`text-[11px] sm:text-xs font-semibold ${textColor}`}>
                           {format(date, "d")}
                         </span>
-                        {stat && stat.total > 0 && inCurrentMonth && (
-                          <span className={`text-[9px] sm:text-[10px] mt-0.5 font-medium ${textColor} opacity-90`}>
-                            {Math.round((stat.present / stat.total) * 100)}%
-                          </span>
-                        )}
                       </button>
                     </TooltipTrigger>
                     {stat && stat.total > 0 && inCurrentMonth && (
-                      <TooltipContent side="top" className="flex flex-col gap-1 p-3">
-                        <p className="font-semibold text-sm">{format(date, "EEEE, MMMM d")}</p>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mt-1">
-                          <span className="text-neutral-500">Total:</span>
-                          <span className="font-medium">{stat.total}</span>
-                          <span className="text-emerald-500">Present:</span>
-                          <span className="font-medium text-emerald-500">{stat.present}</span>
-                          <span className="text-amber-500">Late:</span>
-                          <span className="font-medium text-amber-500">{stat.late}</span>
-                          <span className="text-rose-500">Absent:</span>
-                          <span className="font-medium text-rose-500">{stat.absent}</span>
+                      <TooltipContent side="top" className="flex flex-col gap-1 p-2 bg-neutral-900 border-neutral-800 text-white rounded-lg shadow-xl">
+                        <p className="font-semibold text-xs border-b border-neutral-800 pb-1 mb-1">{format(date, "EEEE, MMMM d")}</p>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] mt-1">
+                          <span className="text-neutral-400">Total</span>
+                          <span className="font-medium text-right">{stat.total}</span>
+                          <span className="text-emerald-400">Present</span>
+                          <span className="font-medium text-emerald-400 text-right">{stat.present} ({Math.round((stat.present / stat.total) * 100)}%)</span>
+                          <span className="text-amber-400">Late</span>
+                          <span className="font-medium text-amber-400 text-right">{stat.late}</span>
+                          <span className="text-rose-400">Absent</span>
+                          <span className="font-medium text-rose-400 text-right">{stat.absent}</span>
                         </div>
-                        <p className="text-[10px] text-neutral-400 mt-2 text-center">Click to view day summary</p>
                       </TooltipContent>
                     )}
                   </Tooltip>
                 );
               })}
-            </div>
-            
-            <div className="flex items-center justify-center gap-6 mt-8">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-emerald-500" />
-                <span className="text-xs text-neutral-500">&ge; 90% Present</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-emerald-300" />
-                <span className="text-xs text-neutral-500">70% - 89%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-amber-300" />
-                <span className="text-xs text-neutral-500">50% - 69%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded bg-rose-400" />
-                <span className="text-xs text-neutral-500">&lt; 50%</span>
-              </div>
             </div>
           </div>
         </TooltipProvider>

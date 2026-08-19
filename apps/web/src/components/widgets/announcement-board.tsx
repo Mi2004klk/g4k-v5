@@ -145,7 +145,7 @@ export function AnnouncementBoard() {
   });
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
+    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150">
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-[var(--radius)] bg-warning/20 flex items-center justify-center">
@@ -158,10 +158,10 @@ export function AnnouncementBoard() {
         </div>
         {canManage && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-[11px] px-2.5">
               Refresh
             </Button>
-            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setCreateData({ title: "", body: "", scope: "company", pinned: false }); clearDraft();; setShowCreate(true); }} className="h-6 text-[10px] px-2">
+            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setCreateData({ title: "", body: "", scope: "company", pinned: false }); clearDraft();; setShowCreate(true); }} className="h-7 text-[11px] px-2.5">
               Post
             </Button>
           </div>
@@ -260,11 +260,11 @@ export function AnnouncementBoard() {
             return (
               <div
                 key={item.id}
-                className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 space-y-2 border border-neutral-100 dark:border-neutral-800"
+                className="p-3 rounded-lg bg-white dark:bg-neutral-950 space-y-2 border border-neutral-200 dark:border-neutral-800 shadow-sm"
               >
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
-                    {isPinned && <AppIcon name="pin" size="sm" className=" text-amber-500 fill-amber-500" />}
+                <div className="flex items-start justify-between gap-4">
+                  <h4 className="text-[13px] font-bold text-neutral-900 dark:text-white flex items-center gap-1.5 leading-snug">
+                    {isPinned && <AppIcon name="pin" size="xs" className=" text-amber-500 fill-amber-500 shrink-0" />}
                     {item.title}
                   </h4>
                   <div className="flex items-center gap-2">
@@ -351,10 +351,10 @@ export function AnnouncementBoard() {
                         <button
                           key={key}
                           onClick={() => reactMutation.mutate({ id: item.id, emoji: key })}
-                          className={`px-1.5 py-0.5 rounded-full text-[10px] flex items-center gap-1 border transition-colors ${
+                          className={`px-1.5 py-0.5 rounded text-[9px] flex items-center gap-1 transition-colors border-none ${
                             hasReacted
-                              ? "bg-secondary border-border-strong font-bold"
-                              : "bg-transparent border-transparent hover:bg-muted"
+                              ? "bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 font-bold"
+                              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400 font-medium"
                           }`}
                         >
                           <span>{label}</span>

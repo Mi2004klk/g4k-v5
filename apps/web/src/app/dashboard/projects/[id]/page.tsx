@@ -211,13 +211,13 @@ export default function ProjectDetailPage() {
   return (
     <div className="space-y-6 relative">
       {project?.cover_image && (
-        <div className="w-full h-48 rounded-xl overflow-hidden mb-6 border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
+        <div className="w-full h-32 rounded-xl overflow-hidden mb-6 border border-neutral-200 dark:border-neutral-800 shadow-sm relative">
           <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent dark:from-background/90 z-10" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={project.cover_image} alt="Project Cover" className="w-full h-full object-cover" />
         </div>
       )}
-      <div className={`flex items-center gap-3 justify-between ${project?.cover_image ? '-mt-16 relative z-20 px-4' : ''}`}>
+      <div className={`flex items-center gap-3 justify-between ${project?.cover_image ? '-mt-12 relative z-20 px-4' : ''}`}>
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/projects")} className="h-8 bg-background/50 backdrop-blur-sm">
             <AppIcon name="arrowLeft" className=" mr-1" /> Back
@@ -458,9 +458,29 @@ export default function ProjectDetailPage() {
         maxSizeMB={5}
       />
 
-      <div className="flex bg-neutral-100/80 dark:bg-neutral-900/50 p-1 rounded-[var(--radius)] w-fit mb-2">
-        <Button variant={activeTab === "overview" ? "primary" : "ghost"} size="sm" onClick={() => setActiveTab("overview")} className="h-8 text-xs px-4">Overview</Button>
-        <Button variant={activeTab === "tasks" ? "primary" : "ghost"} size="sm" onClick={() => setActiveTab("tasks")} className="h-8 text-xs px-4">Tasks</Button>
+      <div className="border-b border-neutral-200 dark:border-neutral-800 mb-6 mt-4">
+        <nav className="flex items-center gap-6" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === "overview"
+                ? "border-primary-600 text-primary-600"
+                : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 dark:hover:text-neutral-300"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("tasks")}
+            className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === "tasks"
+                ? "border-primary-600 text-primary-600"
+                : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 dark:hover:text-neutral-300"
+            }`}
+          >
+            Tasks
+          </button>
+        </nav>
       </div>
 
       {activeTab === "tasks" ? (
@@ -468,33 +488,33 @@ export default function ProjectDetailPage() {
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <Card className="border-none shadow-e1">
-            <CardHeader>
-              <CardTitle className="text-base font-bold">Project History & Activity</CardTitle>
+          <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-card dark:bg-neutral-900">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold">Project History & Activity</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2">
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Time Spent</span>
-                    <span className="font-semibold">{project?.total_time_hours || 0} hrs</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-800">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] uppercase font-bold text-neutral-400">Time Spent</span>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{project?.total_time_hours || 0} hrs</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Tasks Done</span>
-                    <span className="font-semibold">{project ? `${project.completed_tasks_count || 0} / ${project.total_tasks_count || 0}` : <Skeleton className="h-4 w-12" />}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] uppercase font-bold text-neutral-400">Tasks Done</span>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{project ? `${project.completed_tasks_count || 0} / ${project.total_tasks_count || 0}` : <Skeleton className="h-4 w-12" />}</span>
                   </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Team</span>
-                    <span className="font-semibold">{project?.members?.length || 0} members</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] uppercase font-bold text-neutral-400">Team</span>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{project?.members?.length || 0} members</span>
                   </div>
-                  <div>
-                    <span className="text-xs uppercase font-semibold text-neutral-500">Status</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] uppercase font-bold text-neutral-400">Status</span>
                     {project ? (
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        project.status === 'completed' ? 'bg-green-100 text-green-700' :
-                        project.status === 'active' ? 'bg-blue-100 text-blue-700' :
-                        project.status === 'on_hold' ? 'bg-amber-100 text-amber-700' :
-                        'bg-neutral-100 text-neutral-700'
+                      <span className={`px-2 py-0.5 text-[10px] font-bold uppercase self-start rounded-[4px] ${
+                        project.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' :
+                        project.status === 'active' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400' :
+                        project.status === 'on_hold' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' :
+                        'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
                       }`}>
                         {project.status || "In Progress"}
                       </span>
@@ -523,9 +543,9 @@ export default function ProjectDetailPage() {
                               }}
                               className="flex gap-3 text-xs p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-[var(--radius)]"
                             >
-                              <AppIcon name="teamAttendance" className=" text-neutral-400 shrink-0 mt-0.5" />
-                              <div>
-                                <p><span className="font-semibold">{h.user?.name}</span> {h.event}</p>
+                              <AppIcon name="teamAttendance" className=" text-neutral-400 shrink-0 mt-0.5" size="xs" />
+                              <div className="flex flex-col">
+                                <span className="text-[11px]"><span className="font-semibold">{h.user?.name}</span> {h.event}</span>
                                 <span className="text-neutral-400 text-[10px]">{format(new Date(h.created_at), "MMM d, yyyy h:mm a")}</span>
                               </div>
                             </div>
@@ -543,28 +563,28 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="border-none shadow-e1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold flex items-center justify-between">
+          <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-card dark:bg-neutral-900">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold flex items-center justify-between">
                 <span>Team</span>
-                <span className="text-xs font-normal text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
                   {project?.members?.length || 0} members
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-3">
+            <CardContent className="pt-2">
+              <div className="flex flex-col gap-2">
                 {project?.members && project.members.length > 0 ? (
                   project.members.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3">
-                      <Avatar className="w-8 h-8 border border-neutral-200 dark:border-neutral-800">
+                    <div key={member.id} className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6 border-[1.5px] border-background">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         {member.avatar_url && <img src={member.avatar_url} alt={member.name} />}
-                        <AvatarFallback name={member.name} className="text-xs" />
+                        <AvatarFallback name={member.name} className="text-[9px] font-bold" />
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{member.name}</span>
-                        <span className="text-[10px] text-neutral-500">{member.active_role?.replace("_", " ") || "Employee"}</span>
+                        <span className="text-[11px] font-semibold text-neutral-900 dark:text-neutral-100 leading-tight">{member.name}</span>
+                        <span className="text-[9px] text-neutral-500 leading-tight">{member.active_role?.replace("_", " ") || "Employee"}</span>
                       </div>
                     </div>
                   ))
@@ -575,20 +595,18 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-e1 bg-primary-50/50 dark:bg-primary-950/30 border-primary-100 dark:border-primary-900">
-            <CardHeader>
-              <CardTitle className="text-base font-bold text-primary-800 dark:text-primary-300">Project Workflow</CardTitle>
+          <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-primary-50/20 dark:bg-primary-950/10">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-primary-800 dark:text-primary-400">Project Workflow</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-2">
               {project?.status !== "completed" && project?.status !== "review" && (
                 <div className="space-y-3">
-                  <label className="text-xs font-semibold">Submit for Completion</label>
-                  
                   {project?.qa_form && (
-                    <div className="p-3 bg-primary-50/50 dark:bg-primary-950/30 rounded-[var(--radius)] border border-primary-100 dark:border-primary-900 space-y-2 mb-3">
-                      <h4 className="font-bold text-primary-700 dark:text-primary-300 flex items-center gap-1.5">
-                        <AppIcon name="success" size="sm" />
-                        QA Form Required: {project.qa_form.title}
+                    <div className="p-3 bg-white dark:bg-neutral-900 rounded-lg border border-primary-100 dark:border-primary-900/50 space-y-2 mb-3 shadow-sm">
+                      <h4 className="font-bold text-[11px] text-primary-700 dark:text-primary-400 flex items-center gap-1.5 uppercase">
+                        <AppIcon name="success" size="xs" />
+                        Required: {project.qa_form.title}
                       </h4>
                       <QAFormViewer
                         qaForm={project.qa_form}
@@ -601,12 +619,12 @@ export default function ProjectDetailPage() {
                   <textarea
                     value={submissionNote}
                     onChange={(e) => setSubmissionNote(e.target.value)}
-                    placeholder="Completion notes..."
-                    className="w-full p-2 text-xs rounded border border-input bg-background resize-none"
+                    placeholder="Submit for Completion (Notes...)"
+                    className="w-full p-2.5 text-xs rounded-lg border border-neutral-200 dark:border-neutral-800 bg-background shadow-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary-500"
                     rows={3}
                   />
                   <Button 
-                    className="w-full bg-primary-600 text-white" 
+                    className="w-full bg-primary-600 text-white shadow-sm h-9" 
                     onClick={() => submitProjectMutation.mutate()}
                     disabled={submitProjectMutation.isPending || !submissionNote}
                   >

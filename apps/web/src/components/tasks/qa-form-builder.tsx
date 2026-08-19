@@ -40,7 +40,7 @@ function SortableFieldItem({ field, index, updateField, removeField, allFields }
   const sectionFields = allFields.filter((f: any) => f.field_type === "section" && f.id !== field.id);
 
   return (
-    <div ref={setNodeRef} style={style} className={`p-3 rounded-lg border ${isSection ? 'border-primary/50 bg-primary/5' : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950'} flex flex-col gap-3 relative shadow-sm`}>
+    <div ref={setNodeRef} style={style} className={`p-3 rounded-xl border ${isSection ? 'border-primary/50 bg-primary/5' : 'border-neutral-200 dark:border-neutral-800 bg-transparent'} flex flex-col gap-3 relative transition-colors`}>
       <div className="flex items-center gap-3">
         <div {...attributes} {...listeners} className="cursor-grab hover:text-primary text-neutral-400 p-1">
           <AppIcon name="menu" size="sm" />
@@ -309,7 +309,7 @@ export function QAFormBuilder() {
   return (
     <>
       <div className="flex gap-4 h-full">
-      <Card className="w-80 shrink-0 border border-neutral-200 dark:border-neutral-800 shadow-e1 rounded-xl overflow-hidden h-full flex flex-col">
+      <Card className="w-80 shrink-0 border border-neutral-200 dark:border-neutral-800 shadow-none rounded-xl overflow-hidden h-full flex flex-col">
         <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 py-3">
           <CardTitle className="text-sm font-bold">Existing QA Forms</CardTitle>
         </CardHeader>
@@ -343,7 +343,7 @@ export function QAFormBuilder() {
         </CardContent>
       </Card>
 
-      <Card className="flex-1 border border-neutral-200 dark:border-neutral-800 shadow-e1 rounded-xl overflow-hidden h-full flex flex-col">
+      <Card className="flex-1 border border-neutral-200 dark:border-neutral-800 shadow-none rounded-xl overflow-hidden h-full flex flex-col">
 
       <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
         <CardTitle className="text-base font-bold flex items-center justify-between w-full">

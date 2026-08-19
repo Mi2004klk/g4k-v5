@@ -214,7 +214,7 @@ export function ProfileSecurityTab() {
               <div key={session.id} className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/20 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-lg mt-1 shrink-0 ${session.is_current ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800'}`}>
-                    <AppIcon name={session.device_name?.toLowerCase().includes('mobile') ? 'smartphone' : 'laptop'} size="sm" />
+                    <AppIcon name={session.device_name?.toLowerCase().includes('mobile') ? 'laptop' : 'laptop'} size="sm" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -285,7 +285,6 @@ export function ProfileSecurityTab() {
         title="Revoke Session"
         description="Are you sure you want to log out this device? Any unsaved work on that device may be lost."
         confirmText="Revoke Device"
-        confirmVariant="destructive"
         isLoading={revokeSessionMutation.isPending}
       />
     </div>

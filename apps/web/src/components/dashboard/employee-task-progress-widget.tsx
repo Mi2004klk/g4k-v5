@@ -28,9 +28,9 @@ export function EmployeeTaskProgressWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
-        <div className="flex items-center gap-2 pb-3">
-          <Skeleton className="w-7 h-7 rounded-[var(--radius)]" />
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 transition-shadow duration-150 shadow-sm">
+        <div className="flex items-center gap-2 pb-2">
+          <Skeleton className="w-6 h-6 rounded" />
           <Skeleton className="h-4 w-32" />
         </div>
         <Skeleton className="h-14 w-full" />
@@ -40,8 +40,8 @@ export function EmployeeTaskProgressWidget() {
 
   if (isError) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
-        <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150 shadow-sm">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold">Task Progress</span>
           </div>
@@ -60,14 +60,14 @@ export function EmployeeTaskProgressWidget() {
   const tasks = Array.isArray(data) ? data : [];
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
+    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150 shadow-sm hover:shadow-md">
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-[var(--radius)] bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
-              <AppIcon name="success" className=" text-purple-600 dark:text-purple-400" />
+            <div className="w-6 h-6 rounded bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center">
+              <AppIcon name="success" size="sm" className="text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
               Recent Task Progress
             </span>
           </div>

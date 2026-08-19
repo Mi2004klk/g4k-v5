@@ -77,12 +77,12 @@ export function MetricWidget({
 
   if (isPending) {
     return (
-      <Card className="h-full border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
-        <div className="flex items-center gap-2 pb-3">
-          <Skeleton className="w-7 h-7 rounded-[var(--radius)]" />
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-center transition-shadow duration-150">
+        <div className="flex items-center gap-2 pb-2">
+          <Skeleton className="w-7 h-7 rounded" />
           <Skeleton className="h-4 w-24" />
         </div>
-        <Skeleton className="h-8 w-16 mb-2 mt-2" />
+        <Skeleton className="h-8 w-16 mb-2 mt-1" />
         <Skeleton className="h-3 w-32" />
       </Card>
     );
@@ -90,8 +90,8 @@ export function MetricWidget({
 
   if (isError) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
-        <div className="flex items-center justify-between pb-3">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150 shadow-sm hover:shadow-md">
+        <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-[var(--radius)] ${colorStyles[color]} flex items-center justify-center`}>
               <AppIcon name={icon} size="md" />
@@ -116,36 +116,26 @@ export function MetricWidget({
   return (
     <Card 
       onClick={() => href && router.push(href)}
-      className={`h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150 group ${href ? 'cursor-pointer' : ''}`}
+      className={`h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-all duration-150 shadow-sm hover:shadow-md group ${href ? 'cursor-pointer' : ''}`}
     >
       <div>
-        <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
           <div className="flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-[var(--radius)] ${colorStyles[color]} flex items-center justify-center transition-transform group-hover:scale-110`}>
-              <AppIcon name={icon} size="md" />
+            <div className={`w-7 h-7 rounded ${colorStyles[color]} flex items-center justify-center transition-transform group-hover:scale-105`}>
+              <AppIcon name={icon} size="sm" />
             </div>
-            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
               {title}
               {dynamicInfo && <WidgetInfo summary={dynamicInfo} />}
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 ml-auto">
               {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
-              {!isFetching && (
-                <>
-                  <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); refetch(); }}>
-                    <AppIcon name="refresh" size="xs" className="text-neutral-400" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setIsVisible(false); }}>
-                    <AppIcon name="close" size="sm" className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200" />
-                  </Button>
-                </>
-              )}
             </div>
           </div>
         </div>
 
-        <div className="mt-2">
-          <div className="text-3xl font-bold font-mono tracking-tight text-neutral-900 dark:text-white">
+        <div className="mt-3">
+          <div className="text-3xl font-black font-display tracking-tight text-neutral-900 dark:text-white">
             {displayValue.toLocaleString()}
           </div>
           {breakdown && metricKey === "total_employees" ? (

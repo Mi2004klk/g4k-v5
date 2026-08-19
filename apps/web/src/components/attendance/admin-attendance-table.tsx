@@ -235,10 +235,10 @@ export function AdminAttendanceTable() {
                     type: "clock_out"
                   });
                 }}
-                className="cursor-pointer hover:opacity-80 transition-opacity gap-1"
+                className="cursor-pointer hover:bg-warning/20 transition-colors gap-1 text-[10px] uppercase h-6 px-1.5 font-bold"
                 title="Open shift - missing clock out"
               >
-                <AppIcon name="error" size="xs" />
+                <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                 OPEN SHIFT
               </StatusBadge>
             )}
@@ -302,16 +302,16 @@ export function AdminAttendanceTable() {
         const late = row.original.late_minutes || 0;
         
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <StatusBadge 
               status={status === "present" ? "success" : status === "late" ? "warning" : isLeave ? "info" : "danger"} 
               dot 
-              className="uppercase"
+              className="uppercase text-[10px] font-bold h-6 px-2"
             >
               {status}
             </StatusBadge>
             {late > 0 && (
-              <StatusBadge status="warning" className="font-mono">
+              <StatusBadge status="warning" className="font-mono text-[10px] h-6 px-1.5">
                 LATE · {late}m
               </StatusBadge>
             )}
@@ -364,7 +364,7 @@ export function AdminAttendanceTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="flex flex-col xl:flex-row items-center gap-3 bg-white dark:bg-neutral-900 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
         
         <FilterBar
           searchQuery={search}
@@ -435,15 +435,15 @@ export function AdminAttendanceTable() {
         />
 
         {/* Export Actions */}
-        <div className="flex justify-end items-center gap-2 overflow-x-auto w-full xl:w-auto mt-4 xl:mt-0">
+        <div className="flex justify-end items-center gap-1.5 overflow-x-auto w-full xl:w-auto mt-2 xl:mt-0 ml-auto">
           {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-9 text-primary-600 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
-              <AppIcon name="download" className=" mr-2" aria-hidden="true" />
+            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="h-8 px-2.5 text-[13px] text-primary-600 border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 whitespace-nowrap shrink-0" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
+              <AppIcon name="download" size="xs" className="mr-1.5" aria-hidden="true" />
               Export Selected
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-9 whitespace-nowrap shrink-0" aria-label="Export company report for selected date">
-            <AppIcon name="download" className=" mr-2" aria-hidden="true" />
+          <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="h-8 px-2.5 text-[13px] whitespace-nowrap shrink-0 border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800" aria-label="Export company report for selected date">
+            <AppIcon name="download" size="xs" className="mr-1.5" aria-hidden="true" />
             Export Filtered
           </Button>
           <Button variant="outline" size="sm" onClick={async () => {
@@ -459,14 +459,14 @@ export function AdminAttendanceTable() {
              } catch (e: any) {
                toast.error(e.message || "Failed to export");
              }
-          }} className="h-9 whitespace-nowrap shrink-0 text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:hover:bg-emerald-950/20">
-            <AppIcon name="download" className=" mr-2" aria-hidden="true" />
-            Global Export (All Depts)
+          }} className="h-8 px-2.5 text-[13px] whitespace-nowrap shrink-0 text-emerald-700 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/40">
+            <AppIcon name="download" size="xs" className="mr-1.5" aria-hidden="true" />
+            Global Export
           </Button>
         </div>
       </div>
 
-      <div className="bg-card dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-x-auto overflow-y-hidden w-full relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-x-auto overflow-y-hidden w-full relative min-h-[400px]">
         <DataTable 
           columns={columns} 
           data={records}

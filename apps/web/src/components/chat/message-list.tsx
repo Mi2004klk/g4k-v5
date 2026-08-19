@@ -58,17 +58,17 @@ const MessageItem = memo(function MessageItem({
   return (
     <div ref={ref} className={`flex flex-col ${isMe ? "items-end" : "items-start"} ${isConsecutive ? "mt-1" : "mt-4"}`}>
       {!isConsecutive && (
-        <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
+        <div className="flex items-center gap-1.5 mb-1 text-[9px] text-neutral-400 font-medium">
           <span className="font-semibold text-neutral-700 dark:text-neutral-300">
             {isMe ? "You" : msg.sender?.name}
           </span>
           <span>•</span>
-          <span>{format(new Date(msg.created_at), "h:mm a")}</span>
+          <span className="uppercase tracking-wider">{format(new Date(msg.created_at), "h:mm a")}</span>
         </div>
       )}
 
       <div
-        className={`max-w-[75%] p-3 rounded-xl text-xs space-y-1 ${
+        className={`max-w-[85%] px-3 py-2 rounded-lg text-[11px] space-y-1 shadow-sm ${
           isMe
             ? "bg-primary-600 text-white rounded-tr-none"
             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none"
@@ -279,15 +279,15 @@ export function MessageList({
   return (
     <div className="flex flex-col h-full w-full relative">
       {pinnedMessages.length > 0 && (
-        <div className="absolute top-0 left-0 right-0 z-10 bg-amber-50/95 dark:bg-amber-950/95 border-b border-amber-200 dark:border-amber-900 p-2 text-xs flex flex-col gap-2 shadow-sm backdrop-blur">
-          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold mb-1">
-            <AppIcon name="pin" size="sm" /> Pinned Messages ({pinnedMessages.length})
+        <div className="absolute top-0 left-0 right-0 z-10 bg-amber-50/95 dark:bg-amber-950/95 border-b border-amber-200 dark:border-amber-900 px-3 py-1.5 text-xs flex items-center shadow-sm backdrop-blur">
+          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold shrink-0 mr-4">
+            <AppIcon name="pin" size="sm" /> {pinnedMessages.length} Pinned
           </div>
-          <div className="flex gap-2 overflow-x-auto thin-scrollbar pb-1">
+          <div className="flex gap-2 overflow-x-auto thin-scrollbar items-center">
             {pinnedMessages.map(pm => (
-              <div key={pm.id} className="min-w-[200px] max-w-[250px] shrink-0 bg-white dark:bg-neutral-900 border border-amber-200 dark:border-amber-800 rounded p-2">
-                <span className="font-semibold block text-[10px] text-amber-600 dark:text-amber-500 mb-0.5">{pm.sender?.name}</span>
-                <span className="truncate block">{pm.body}</span>
+              <div key={pm.id} className="max-w-[200px] shrink-0 bg-white dark:bg-neutral-900 border border-amber-200 dark:border-amber-800 rounded px-2 py-1 flex items-center gap-2">
+                <span className="font-bold text-[9px] text-amber-600 dark:text-amber-500">{pm.sender?.name}:</span>
+                <span className="truncate text-[10px]">{pm.body}</span>
               </div>
             ))}
           </div>
@@ -297,7 +297,7 @@ export function MessageList({
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto p-4 space-y-3 relative ${pinnedMessages.length > 0 ? "pt-[110px]" : ""}`}
+        className={`flex-1 overflow-y-auto p-4 space-y-3 relative ${pinnedMessages.length > 0 ? "pt-12" : ""}`}
       >
         {isFetchingNextPage && (
           <div className="text-center text-xs text-neutral-400 py-1">Loading older messages...</div>

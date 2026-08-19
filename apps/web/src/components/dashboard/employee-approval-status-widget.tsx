@@ -25,10 +25,10 @@ export function EmployeeApprovalStatusWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 transition-shadow duration-150">
-        <div className="flex items-center justify-between pb-3">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 transition-shadow duration-150 shadow-sm">
+        <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2">
-            <Skeleton className="w-7 h-7 rounded-[var(--radius)]" />
+            <Skeleton className="w-6 h-6 rounded" />
             <Skeleton className="h-4 w-24" />
           </div>
         </div>
@@ -40,8 +40,8 @@ export function EmployeeApprovalStatusWidget() {
 
   if (isError) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col transition-shadow duration-150">
-        <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150 shadow-sm">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold">Approval Status</span>
           </div>
@@ -60,18 +60,18 @@ export function EmployeeApprovalStatusWidget() {
   const tasks = (Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : [])).slice(0, 3);
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border shadow-e1 hover:shadow-e2 rounded-xl p-5 flex flex-col justify-between transition-shadow duration-150">
+    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150 shadow-sm hover:shadow-md">
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-[var(--radius)] bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
-              <AppIcon name="clipboard" className=" text-blue-600 dark:text-blue-400" />
+            <div className="w-6 h-6 rounded bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center">
+              <AppIcon name="clipboard" size="sm" className="text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
               Approval Status
             </span>
           </div>
-          <Link href="/dashboard/tasks" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
+          <Link href="/dashboard/tasks" className="text-[10px] font-semibold text-blue-600 hover:underline flex items-center gap-1">
             View All <AppIcon name="arrowRight" size="xs" />
           </Link>
         </div>

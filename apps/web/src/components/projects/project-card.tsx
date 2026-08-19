@@ -54,35 +54,35 @@ export function ProjectCard({ project, onClick, onUpdateName }: { project: Proje
   return (
     <Card
       onClick={onClick}
-      className="hover:shadow-e2 transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full"
+      className="hover:shadow-md transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-none hover:-translate-y-0.5 duration-150 rounded-xl overflow-hidden h-full flex flex-col"
     >
       <CardHeader className="pb-2 relative z-10">
         {project.cover_image && (
-          <div className="absolute inset-0 h-24 w-full">
-            <div className="absolute inset-0 bg-gradient-to-t from-card/90 to-transparent dark:from-neutral-900/90 z-10" />
+          <div className="absolute inset-0 h-16 w-full">
+            <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent dark:from-neutral-900/90 z-10" />
             <Image src={project.cover_image} alt="Project Cover" fill className="object-cover opacity-60" />
           </div>
         )}
-        <div className={`flex items-start justify-between ${project.cover_image ? 'pt-8' : ''} relative z-20`}>
+        <div className={`flex items-start justify-between ${project.cover_image ? 'pt-4' : ''} relative z-20`}>
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-[var(--radius)] bg-primary-50 text-primary-600 dark:bg-primary-950 dark:text-primary-400">
               <AppIcon name="projects" />
             </div>
             <div>
-              <CardTitle className="text-sm font-bold group-hover:text-primary-600 transition-colors">
+              <CardTitle className="text-[13px] leading-none font-bold group-hover:text-primary-600 transition-colors">
                 {onUpdateName ? (
-                  <InlineEdit value={project.name} onSave={(val) => onUpdateName(val || project.name)} className="text-sm font-bold" />
+                  <InlineEdit value={project.name} onSave={(val) => onUpdateName(val || project.name)} className="text-[13px] font-bold" />
                 ) : (
                   project.name
                 )}
               </CardTitle>
-              <p className="text-[11px] text-neutral-400 line-clamp-1 mt-0.5">
+              <p className="text-[10px] text-neutral-500 line-clamp-1 mt-1">
                 {project.description || "No description provided."}
               </p>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getPriorityColor(project.priority)}`}>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <span className={`px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider ${getPriorityColor(project.priority)}`}>
               {project.priority}
             </span>
             <Button
@@ -97,7 +97,7 @@ export function ProjectCard({ project, onClick, onUpdateName }: { project: Proje
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-2 space-y-3">
+      <CardContent className="pt-1 pb-3 px-4 flex flex-col justify-end flex-1 gap-3">
         {/* Progress bar */}
         <div>
           <div className="flex justify-between text-[10px] text-neutral-500 font-semibold mb-1">
@@ -113,7 +113,7 @@ export function ProjectCard({ project, onClick, onUpdateName }: { project: Proje
         </div>
 
         {/* Footer meta */}
-        <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-400">
+        <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800 text-[10px] text-neutral-500 font-medium">
           <div className="flex items-center gap-1">
             <AppIcon name="calendar" size="xs" />
             <span>{project.deadline ? format(new Date(project.deadline), "MMM d") : "No due date"}</span>

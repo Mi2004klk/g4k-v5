@@ -241,44 +241,48 @@ export function NotificationsTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-bold text-neutral-900 dark:text-white">All Notifications</h2>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => markAllReadMutation.mutate()}
-          disabled={markAllReadMutation.isPending}
-          className="flex items-center gap-2"
-        >
-          <AppIcon name="success" />
-          Mark all as read
-        </Button>
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
+        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 flex items-center justify-between">
+          <FilterBar
+            searchQuery={search || ""}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search notifications..."
+            filters={[
+              {
+                key: "readStatus",
+                label: "Status",
+                type: "select",
+                options: [
+                  { label: "All", value: "all" },
+                  { label: "Unread", value: "unread" }
+                ],
+                value: filter.readStatus,
+                onChange: (v) => setFilter(f => ({ ...f, readStatus: v }))
+              },
+              {
+                key: "type",
+                label: "Type",
+                type: "select",
+                options: [{ label: "All", value: "all" }, ...Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => ({ label, value }))],
+                value: filter.type,
+                onChange: (v) => setFilter(f => ({ ...f, type: v }))
+              }
+            ]}
+          />
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => markAllReadMutation.mutate()}
+              disabled={markAllReadMutation.isPending}
+              className="h-9 shadow-sm"
+            >
+              <AppIcon name="success" size="sm" className="mr-2 text-emerald-500" />
+              Mark all as read
+            </Button>
+          </div>
+        </div>
       </div>
-        <FilterBar
-          searchQuery={search || ""}
-          onSearchChange={setSearch}
-          filters={[
-            {
-              key: "readStatus",
-              label: "Status",
-              type: "select",
-              options: [
-                { label: "All", value: "all" },
-                { label: "Unread", value: "unread" }
-              ],
-              value: filter.readStatus,
-              onChange: (v) => setFilter(f => ({ ...f, readStatus: v }))
-            },
-            {
-              key: "type",
-              label: "Type",
-              type: "select",
-              options: [{ label: "All", value: "all" }, ...Object.entries(NOTIFICATION_TYPE_LABELS).map(([value, label]) => ({ label, value }))],
-              value: filter.type,
-              onChange: (v) => setFilter(f => ({ ...f, type: v }))
-            }
-          ]}
-        />
       
       {isLoading ? (
         <div className="space-y-3 p-4">
@@ -306,6 +310,7 @@ export function NotificationsTab() {
             totalPages={totalPages}
             onPageChange={setPage}
             onPerPageChange={setPerPage}
+            density="compact"
           />
         </ErrorBoundary>
       )}

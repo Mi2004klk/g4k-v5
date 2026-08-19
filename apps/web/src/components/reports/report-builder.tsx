@@ -130,7 +130,6 @@ export function ReportBuilder() {
             <FilterBar
               searchQuery={search}
               onSearchChange={setSearch}
-              className="flex-1 sm:w-[320px]"
               filters={[
                 {
                   key: "reportKey",

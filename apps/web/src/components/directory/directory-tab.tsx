@@ -136,13 +136,12 @@ export function CorporateDirectoryTab() {
   return (
     <div className="space-y-6 mt-4">
       {/* Search Bar & View Toggle */}
-      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 mb-6">
-        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
-          <div className="flex-1 w-full">
-            <FilterBar
-              searchQuery={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Search by name, email, designation, or department..."
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1">
+          <FilterBar
+            searchQuery={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search by name, email, designation..."
               filters={[
                 {
                   key: "department",
@@ -161,10 +160,9 @@ export function CorporateDirectoryTab() {
                   options: (desigsData?.data || desigsData || []).map((d: Designation) => ({ label: d.name, value: d.id.toString() }))
                 }
               ]}
-            />
-          </div>
-        </CardContent>
-      </Card>
+          />
+        </div>
+      </div>
 
       {/* Grid or List View */}
       {isPending ? (
@@ -178,76 +176,57 @@ export function CorporateDirectoryTab() {
           description="Try broadening your search term."
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {users.map((user: User) => (
             <Card
               key={user.id}
               onClick={() => setSelectedUser(user)}
-              className="border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 hover:shadow-e2 transition-all cursor-pointer group relative overflow-hidden flex flex-col h-full bg-card dark:bg-neutral-900 rounded-xl"
+              className="group cursor-pointer border border-neutral-200 dark:border-neutral-800 shadow-none hover:shadow-sm hover:border-primary-200 dark:hover:border-primary-900/50 transition-all bg-card dark:bg-neutral-900 rounded-xl overflow-hidden flex flex-row items-center p-4 gap-4"
             >
-              <div className="h-16 w-full bg-primary-600 dark:bg-primary-800 relative">
-                <div className="absolute inset-0 bg-surface/10 dark:bg-black/10 pattern-dots opacity-20"></div>
+              <Avatar className="w-14 h-14 border border-neutral-100 dark:border-neutral-800 shrink-0">
+                <AvatarImage src={user.avatar_url || ""} />
+                <AvatarFallback name={user.name} className="text-lg font-medium" />
+              </Avatar>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                  <div className="truncate pr-2">
+                    <h3 className="font-semibold text-[14px] text-neutral-900 dark:text-white truncate">
+                      {user.name}
+                    </h3>
+                    <p className="text-[12px] font-medium text-neutral-500 dark:text-neutral-400 truncate">
+                      {user.designation?.name || "Team Member"}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sendMessageMutation.mutate(user.id);
+                    }}
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Message ${user.name}`}
+                    className="h-8 w-8 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-full shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <AppIcon name="chat" size="sm" />
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-neutral-500">
+                  {user.department && (
+                    <div className="flex items-center gap-1.5 truncate text-neutral-600 dark:text-neutral-400 font-medium">
+                      <AppIcon name="building" size="xs" />
+                      <span className="truncate">{user.department.name}</span>
+                    </div>
+                  )}
+                  {user.email && (
+                    <div className="flex items-center gap-1.5 truncate">
+                      <AppIcon name="mail" size="xs" className="text-neutral-400" />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <CardContent className="p-0 flex-1 flex flex-col items-center text-center">
-                <div className="-mt-10 mb-3 relative rounded-full p-1 bg-card dark:bg-neutral-900">
-                  <Avatar className="w-20 h-20 border-2 border-neutral-100 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-                    <AvatarImage src={user.avatar_url || ""} />
-                    <AvatarFallback name={user.name} className="text-xl" />
-                  </Avatar>
-                </div>
-                <div className="px-6 flex-1 flex flex-col w-full">
-                  <h3 className="font-bold text-base text-neutral-900 dark:text-white truncate">
-                    {user.name}
-                  </h3>
-                  <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 mt-1 truncate">
-                    {user.designation?.name || "Team Member"}
-                  </p>
-
-                  <div className="space-y-2 mt-4 mb-4 text-xs text-neutral-500 w-full flex-1">
-                    {user.department && (
-                      <div className="flex justify-center items-center gap-1.5 truncate text-neutral-600 dark:text-neutral-400 font-medium">
-                        <AppIcon name="building" size="sm" />
-                        <span>{user.department.name}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-center items-center gap-1.5 truncate">
-                      <AppIcon name="mail" size="sm" className=" text-neutral-400" />
-                      {user.email ? (
-                        <span>{user.email}</span>
-                      ) : (
-                        <span className="text-neutral-400 italic">Hidden</span>
-                      )}
-                    </div>
-                    {user.phone && (
-                      <div className="flex justify-center items-center gap-1.5 truncate">
-                        <AppIcon name="phone" size="sm" className=" text-neutral-400" />
-                        <span>{user.phone}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="w-full flex items-center justify-between border-t border-neutral-100 dark:border-neutral-800 pt-3 pb-4 mt-auto">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-neutral-400">
-                      ID: {user.employee_code || user.employee_id || "N/A"}
-                    </div>
-                    <div className="flex gap-1">
-
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          sendMessageMutation.mutate(user.id);
-                        }}
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Message ${user.name}`}
-                        className="h-11 w-11 sm:h-8 sm:w-8 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-500/10 hover:bg-primary-100 dark:hover:bg-primary-500/20 rounded-full"
-                      >
-                        <AppIcon name="chat" size="sm" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
             </Card>
           ))}
           {hasNextPage && (

@@ -205,7 +205,7 @@ export function DesignationsTab() {
               <AppIcon name="award" />
             </div>
             <div>
-              <span className="font-semibold text-neutral-900 dark:text-white block">
+              <span className="font-semibold text-[14px] text-neutral-900 dark:text-white block">
                 {row.original.name}
               </span>
               {row.original.description && (
@@ -225,13 +225,13 @@ export function DesignationsTab() {
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 {users.length > 0 ? users.slice(0, 3).map((u: UserRef, i: number) => (
-                  <Avatar key={i} className="w-6 h-6 border-2 border-background">
+                  <Avatar key={i} className="w-5 h-5 border-[1.5px] border-background">
                     <AvatarImage src={u.avatar_url || ""} />
-                    <AvatarFallback name={u.name} className="text-[9px]" />
+                    <AvatarFallback name={u.name} className="text-[8px] font-bold" />
                   </Avatar>
                 )) : [...Array(Math.min(count, 3))].map((_, i) => (
-                  <Avatar key={i} className="w-6 h-6 border-2 border-background">
-                    <AvatarFallback className="text-[9px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
+                  <Avatar key={i} className="w-5 h-5 border-[1.5px] border-background">
+                    <AvatarFallback className="text-[8px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
                   </Avatar>
                 ))}
               </div>
@@ -246,7 +246,7 @@ export function DesignationsTab() {
         cell: ({ row }) => {
           const isActive = row.original.is_active;
           return (
-            <StatusBadge status={isActive ? "success" : "danger"} dot className="uppercase">
+            <StatusBadge status={isActive ? "success" : "danger"} dot className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0">
               {isActive ? "Active" : "Inactive"}
             </StatusBadge>
           );
@@ -305,21 +305,8 @@ export function DesignationsTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      <div className="flex justify-end gap-2 mb-4">
-        {isAdmin && (
-          <Button variant="outline" onClick={bulkExport} className="gap-2 shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-            <AppIcon name="download" /> Export
-          </Button>
-        )}
-        {isAdmin && (
-          <Button onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow">
-            <AppIcon name="plus" /> Add Designation
-          </Button>
-        )}
-      </div>
-
-      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 bg-card dark:bg-neutral-900">
-        <CardContent className="p-4 flex flex-col md:flex-row items-center gap-4">
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 flex items-center justify-between">
           <FilterBar
             searchQuery={search}
             onSearchChange={setSearch}
@@ -338,10 +325,22 @@ export function DesignationsTab() {
               },
             ]}
           />
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-9">
+                <AppIcon name="download" /> Export
+              </Button>
+            )}
+            {isAdmin && (
+              <Button size="sm" onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow-sm h-9">
+                <AppIcon name="plus" /> Add Designation
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
 
-      <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-card dark:bg-neutral-900">
         <CardContent className="p-0">
           {isLoading ? (
             <ContentSkeleton type="table" rows={3} />

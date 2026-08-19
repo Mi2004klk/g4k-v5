@@ -80,13 +80,13 @@ function TaskCard({
       id={`data-row-${task.id}`}
       onClick={() => onTaskSelect?.(task)}
       className={cn(
-        "border-neutral-200/60 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900",
+        "border-neutral-200 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900 rounded-lg",
         isOverlay 
           ? "scale-[1.02] rotate-2 cursor-grabbing shadow-2xl ring-1 ring-primary/20" 
-          : "shadow-e1 hover:shadow-md hover:-translate-y-0.5 cursor-grab"
+          : "shadow-none hover:shadow-sm cursor-grab border"
       )}
     >
-      <CardContent className="p-3 space-y-2">
+      <CardContent className="p-2.5 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col gap-1">
             <h4 className="text-xs font-semibold text-neutral-900 dark:text-white line-clamp-2">
@@ -110,7 +110,7 @@ function TaskCard({
               )}
             </div>
           </div>
-          <StatusBadge status={getPriorityStatus(task.priority)} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0">
+          <StatusBadge status={getPriorityStatus(task.priority)} className="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase shrink-0 tracking-wider">
             {task.priority}
           </StatusBadge>
         </div>
@@ -241,13 +241,13 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-3 w-[85vw] md:w-auto md:min-w-[260px] flex-shrink-0 snap-center p-3 rounded-xl border transition-colors ${
+      className={`flex flex-col gap-2 w-[85vw] md:w-auto md:min-w-[270px] md:max-w-[300px] flex-shrink-0 snap-center p-2 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
         isOver
-          ? "bg-secondary/50 border-ring/50"
-          : "bg-neutral-50/50 border-neutral-100 dark:bg-neutral-900/40 dark:border-neutral-800"
+          ? "bg-secondary/20"
+          : "bg-transparent"
       }`}
     >
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between px-2 py-3 border-b-2 border-neutral-100 dark:border-neutral-800/50 sticky top-0 bg-background z-10 mb-1">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${col.color}`} />
           <h3 className="font-bold text-xs text-neutral-800 dark:text-neutral-200">

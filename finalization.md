@@ -1,6 +1,6 @@
 # Finalization — Production Readiness Audit & Implementation Plan
 
-**Audit date:** 2026-08-19 (zero-trust, code-first; nothing carried over unverified). **Second pass (same day):** complete end-to-end walk of every page, tab, form, component, controller, route, job, and rule — documented in `workflow.md`; all deltas folded in here.
+**Audit date:** 2026-08-19 (zero-trust, code-first; nothing carried over unverified). **Second pass (same day):** complete end-to-end walk of every page, tab, form, component, controller, route, job, and rule — documented in `workflow.md`; all deltas folded in here. **Third pass (same day):** live-instability root-cause audit (chat 500s, widget crashes, photo uploads, 403 storms) → **stability root causes and their fixes live in `polish.md`** — including three new P0-class finds not duplicated below: avatar/cover uploads bypass `apiFetch` (401 after token TTL), group-chat creation sends `per_page=1000` (422 every time), and employee DM-search calls now-403 `/directory`.
 **Scope:** Full codebase — `apps/web` (Next.js 16), `apps/api` (Laravel), `packages/ui`, CI, deployment configs — re-audited against the owner's product spec (Sections 1–9) and the 2026-08-18 audit findings.
 **Companion:** `workflow.md` = the complete client-facing workflow map (every page, form, rule, and E2E flow). This document = what is broken, what is missing, and the exact plan to finish.
 

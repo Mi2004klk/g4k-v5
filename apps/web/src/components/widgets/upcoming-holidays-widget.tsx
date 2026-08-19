@@ -40,17 +40,17 @@ export function UpcomingHolidaysWidget() {
     : [];
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 flex flex-col">
-      <CardHeader className="border-b border-neutral-100 dark:border-neutral-800 pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <AppIcon name="calendar" className=" text-primary" />
-          Upcoming Holidays & Events
+    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-150">
+      <CardHeader className="border-b border-neutral-100 dark:border-neutral-800/50 pb-2 mb-2 p-0 flex flex-row items-center justify-between">
+        <CardTitle className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="w-6 h-6 rounded bg-primary-100 dark:bg-primary-950/60 flex items-center justify-center">
+            <AppIcon name="calendar" size="sm" className="text-primary-600 dark:text-primary-400" />
+          </div>
+          Upcoming Events
         </CardTitle>
-        <Button variant="ghost" size="sm" asChild className="h-8 text-xs font-semibold text-primary">
-          <Link href="/dashboard/attendance?tab=leave">
-            View All <AppIcon name="chevronRight" size="xs" className=" ml-1" />
-          </Link>
-        </Button>
+        <Link href="/dashboard/attendance?tab=leave" className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1">
+          View All <AppIcon name="arrowRight" size="xs" />
+        </Link>
       </CardHeader>
       <CardContent className="p-0 flex-1 overflow-y-auto">
         {isLoading ? (
@@ -76,8 +76,8 @@ export function UpcomingHolidaysWidget() {
             {upcomingList.map((holiday: Holiday, idx: number) => {
               const isEvent = holiday.type === 'event';
               return (
-                <div key={idx} className="p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                  <div className="flex items-center justify-between mb-1">
+              <div key={idx} className="p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                <div className="flex items-center justify-between mb-1">
                     <h4 className="text-sm font-bold">{holiday.name}</h4>
                     <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
                       isEvent 
