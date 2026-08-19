@@ -54,13 +54,7 @@ Route::get('/test-pusher', function () {
         broadcast(new \App\Events\TestPusherEvent('Hello from backend via Pusher!'));
         return response()->json(['status' => 'Event broadcasted to Pusher successfully. Check your browser alert.']);
     } catch (\Throwable $e) {
-        $key = env('PUSHER_APP_KEY');
-        $debug = [
-            'key_length' => strlen($key ?? ''),
-            'key_start' => substr($key ?? '', 0, 3) . '...',
-            'error' => $e->getMessage()
-        ];
-        return response()->json(['status' => 'error', 'debug' => $debug], 500);
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
 });
 Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
