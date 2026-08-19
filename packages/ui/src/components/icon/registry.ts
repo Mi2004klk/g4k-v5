@@ -1,3 +1,4 @@
+import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
 import { faHouse, faGaugeHigh, faCalendarCheck, faClock, faUsers, faMessage,
   faGear, faBell, faMagnifyingGlass, faPlus, faTrashCan, faPenToSquare, faTriangleExclamation,
   faCircleCheck, faCircleInfo, faCircleExclamation, faCircleNotch, faDownload, faUpload,
@@ -86,7 +87,7 @@ export const iconRegistry = {
   // leave
   leave: { icon: faUmbrellaBeach, tone: "info" }, plane: { icon: faPlane },
   // misc / views
-  star: { icon: faStar, tone: "warning" }, award: { icon: faAward, tone: "warning" },
+  star: { icon: faStar, tone: "warning" }, starOutline: { icon: faStarRegular, tone: "neutral" }, award: { icon: faAward, tone: "warning" },
   flag: { icon: faFlag, tone: "danger" }, chart: { icon: faChartBar }, activity: { icon: faChartLine },
   globe: { icon: faGlobe }, sun: { icon: faSun }, moon: { icon: faMoon },
   laptop: { icon: faLaptop }, computer: { icon: faComputer }, devices: { icon: faTablet },

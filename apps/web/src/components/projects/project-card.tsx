@@ -92,7 +92,7 @@ export function ProjectCard({ project, onClick, onUpdateName }: { project: Proje
               onClick={handlePinClick}
               disabled={isPinning || isUnpinning}
             >
-              <AppIcon name="star" className="h-4 w-4 shrink-0" />
+              <AppIcon name={isPinned ? "star" : "starOutline"} className="h-4 w-4 shrink-0" />
             </Button>
           </div>
         </div>

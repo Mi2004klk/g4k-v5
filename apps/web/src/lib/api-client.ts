@@ -201,6 +201,9 @@ export async function apiFetch<T = any>(
       )) {
         return (await response.blob()) as unknown as T;
       }
+      if (response.status === 204) {
+        return {} as unknown as T;
+      }
 
       const data = await response.json();
       
