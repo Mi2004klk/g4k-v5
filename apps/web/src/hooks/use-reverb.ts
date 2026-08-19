@@ -14,10 +14,10 @@ declare global {
 }
 
 interface ReverbContextType {
-  subscribe: (channelName: string, isPrivate?: boolean) => ReturnType<Echo<'reverb'>['channel']> | null;
+  subscribe: (channelName: string, isPrivate?: boolean) => any | null;
   leaveChannel: (channelName: string) => void;
   isConnected: boolean;
-  echo: Echo<'reverb'> | null;
+  echo: any | null;
 }
 
 const ReverbContext = createContext<ReverbContextType>({
@@ -35,13 +35,15 @@ const ReverbContext = createContext<ReverbContextType>({
  */
 function isReverbAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!process.env.NEXT_PUBLIC_REVERB_HOST && !!process.env.NEXT_PUBLIC_REVERB_APP_KEY; // Only connect if explicitly configured
+  const hasReverb = !!process.env.NEXT_PUBLIC_REVERB_HOST && !!process.env.NEXT_PUBLIC_REVERB_APP_KEY;
+  const hasPusher = !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
+  return hasReverb || hasPusher; // Connect if either Reverb or standard Pusher is configured
 }
 
 export function ReverbProvider({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
-  const [echoInstance, setEchoInstance] = useState<Echo<'reverb'> | null>(null);
+  const [echoInstance, setEchoInstance] = useState<any | null>(null);
   // Real pusher socket state — NOT mere Echo-instance existence. Drives the
   // polling fallbacks in consumers (chat/notifications) when the socket drops.
   const [socketConnected, setSocketConnected] = useState(false);
@@ -53,7 +55,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     // Only connect if we have a logged in user, token, AND Reverb is reachable
     if (!user || !token || !isReverbAvailable()) {
       if (typeof window !== 'undefined' && window.Echo) {
-        (window.Echo as Echo<'reverb'>).disconnect();
+        (window.Echo as any).disconnect();
       }
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setEchoInstance(null);
@@ -64,7 +66,21 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
 
     window.Pusher = Pusher;
 
-    const echo = new Echo({
+    const isPusher = !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
+    
+    const echoConfig: any = isPusher ? {
+      broadcaster: 'pusher',
+      key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
+      cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || '',
+      forceTLS: true,
+      authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
+      auth: {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          Accept: 'application/json',
+        },
+      },
+    } : {
       broadcaster: 'reverb',
       key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || '',
       wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || undefined,
@@ -79,7 +95,9 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
           Accept: 'application/json',
         },
       },
-    });
+    };
+
+    const echo: any = new Echo(echoConfig);
 
     window.Echo = echo;
     setEchoInstance(echo);
