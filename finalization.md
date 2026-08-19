@@ -16,7 +16,7 @@ What remains before day-to-day production use:
 - **15 P1s** — 2 authorization gaps (any logged-in user can edit the company profile or create/delete department teams), phantom API calls, silent 20-row dropdown truncation, one-way filters, a lost timer on reload, Gantt drag doing nothing, an unguarded `JSON.parse` that can crash the Settings page, an unencoded search string, **1 failing frontend test** masking CI signal, the localhost reset-link config gap, a 45-minute overtime-threshold mismatch, **the Open Shifts console rendered unreachable** (second-pass finding), and the 100-task Kanban/Gantt cap.
 - **~10 P2s** — dead code, unused backend features (QA form edit/delete, mark-unread), quick-notes not in palette/sidebar, widget-hide dead end, export history capped at 3.
 - **Toolchain:** typecheck ✅ clean, production build ✅ 28 routes, tests ❌ 1 failure, eslint ⚠️ 218 errors / 76 warnings **and still not in CI**.
-- **Deployment:** worker + scheduler + queue are properly supervised; APP_KEY set; S3/Reverb/mail configured; CI covers typecheck/test/build/bundle/OpenAPI/pgsql — only the eslint gate and the `frontend_url` config wire-up are missing.
+- **Deployment:** worker + scheduler + queue are properly supervised; APP_KEY set; S3/Pusher/mail configured; CI covers typecheck/test/build/bundle/OpenAPI/pgsql — only the eslint gate and the `frontend_url` config wire-up are missing.
 
 Estimated effort to green: **1–2 focused days** (Phase A below), plus a half-day hardening pass (Phase B) and an optional polish pass (Phase C).
 
@@ -33,7 +33,7 @@ Estimated effort to green: **1–2 focused days** (Phase A below), plus a half-d
 | ESLint in CI | `.github/workflows/ci.yml` | ❌ not present (only OpenAPI lint) |
 | API tests | CI pgsql matrix | ✅ covered in CI (sqlite locally) |
 | Scheduler/jobs | `routes/console.php` + `start-worker.sh` | ✅ all jobs scheduled; worker supervised |
-| APP_KEY / S3 / Reverb / queue | `.env`, `.env.production` | ✅ set (`QUEUE_CONNECTION=database`, `FILESYSTEM_DISK=s3`, `BROADCAST_CONNECTION=pusher`) |
+| APP_KEY / S3 / Pusher / queue | `.env`, `.env.production` | ✅ set (`QUEUE_CONNECTION=database`, `FILESYSTEM_DISK=s3`, `BROADCAST_CONNECTION=pusher`) |
 
 ---
 
@@ -232,12 +232,12 @@ The spec is now ~95% implemented. Remaining true gaps (not defects):
 - [ ] `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY` set ✅ (verified)
 - [ ] `FRONTEND_URL` = production web origin **and** wired into `config/app.php` (A5)
 - [ ] `DB_*` → Supabase pgsql; `FILESYSTEM_*` → S3 adapter ✅; `QUEUE_CONNECTION=database` ✅
-- [ ] `BROADCAST_CONNECTION=pusher` + Reverb host/key/secret; web `NEXT_PUBLIC_REVERB_*` set (else realtime silently polls)
+- [ ] `BROADCAST_CONNECTION=pusher` + Pusher host/key/secret; web `NEXT_PUBLIC_PUSHER_*` set (else realtime silently polls)
 - [ ] SMTP configured + "Send Test Email" from Settings (needed for: welcome emails w/ temp passwords, reset links, weekly Sunday summary, suspicious-login alerts)
 
 **Infra:**
 - [ ] Cloud Run service running `start.sh`; **second service (or same) running `start-worker.sh`** (queue worker + `schedule:run` supervision — verified present)
-- [ ] Vercel deploy of `apps/web` with API origin + Reverb env vars; `/api/version` buildId populated (version.json in build output)
+- [ ] Vercel deploy of `apps/web` with API origin + Pusher env vars; `/api/version` buildId populated (version.json in build output)
 - [ ] CI green on release commit (incl. pgsql matrix); eslint gate added (B1)
 
 **Data:**

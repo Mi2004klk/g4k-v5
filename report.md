@@ -34,9 +34,9 @@ However, this audit found **11 P0 defects that break user-facing workflows today
 ## 3. System Snapshot
 
 - **Frontend:** Next.js 16 App Router, React 19, TanStack Query/Table/Virtual, zustand (persist), react-hook-form + zod, ECharts, dnd-kit, frappe-gantt, laravel-echo/pusher-js, react-grid-layout, sonner. Deployed on Vercel.
-- **Backend:** Laravel + Sanctum (15-min access token + 7-day HttpOnly refresh cookie), PostgreSQL (Supabase, RLS enabled at table level), S3-compatible storage (Supabase), Reverb WebSockets, database queue + scheduler (supervised in Cloud Run `start-worker.sh`). 3 roles, 40+ capabilities, 62 tables.
+- **Backend:** Laravel + Sanctum (15-min access token + 7-day HttpOnly refresh cookie), PostgreSQL (Supabase, RLS enabled at table level), S3-compatible storage (Supabase), Pusher WebSockets, database queue + scheduler (supervised in Cloud Run `start-worker.sh`). 3 roles, 40+ capabilities, 62 tables.
 - **Auth chain:** login → (must_change_password → /change-password) → (onboarding) → (multi-role → /role-select) → dashboard; silent single-flight token refresh on 401; forced-password/onboarding 403 middlewares with dedicated payload flags the client understands.
-- **Realtime:** functional when `NEXT_PUBLIC_REVERB_*` env vars are present; every consumer (chat 15s, notifications 30s, attendance 60s) has a polling fallback.
+- **Realtime:** functional when `NEXT_PUBLIC_PUSHER_*` env vars are present; every consumer (chat 15s, notifications 30s, attendance 60s) has a polling fallback.
 
 ---
 

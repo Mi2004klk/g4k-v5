@@ -41,27 +41,6 @@ steps:
     secretEnv: ['DB_PASSWORD']
 
   - name: google/cloud-sdk:slim
-    id: DeployReverb
-    entrypoint: gcloud
-    args:
-      - run
-      - deploy
-      - g4k-reverb
-      - --image=asia-south1-docker.pkg.dev/${PROJECT_ID}/g4k/${_SERVICE}:latest
-      - --region=${_REGION}
-      - --platform=managed
-      - --allow-unauthenticated
-      - --memory=1Gi
-      - --cpu=1
-      - --min-instances=1
-      - --max-instances=2
-      - --command=php
-      - --args=artisan,reverb:start,--host=0.0.0.0,--port=8080
-      - --set-env-vars=APP_NAME=Games4King,APP_ENV=production,APP_DEBUG=false,APP_LOCALE=en,APP_MAINTENANCE_DRIVER=cache,APP_MAINTENANCE_STORE=database,BCRYPT_ROUNDS=12,LOG_CHANNEL=stderr,LOG_LEVEL=error,DB_CONNECTION=pgsql,DB_SSLMODE=require,DB_PORT=5432,DB_HOST=aws-0-ap-south-1.pooler.supabase.com,DB_DATABASE=postgres,DB_USERNAME=postgres.jtcgtjrqijdnecwtuspv,SESSION_DRIVER=database,CACHE_STORE=database,QUEUE_CONNECTION=database,FILESYSTEM_DISK=s3,BROADCAST_CONNECTION=pusher,AWS_DEFAULT_REGION=ap-south-1,AWS_USE_PATH_STYLE_ENDPOINT=false,OCTANE_HTTPS=true,OCTANE_SERVER=frankenphp
-      - --set-env-vars=AWS_ENDPOINT=https://jtcgtjrqijdnecwtuspv.storage.supabase.co/storage/v1/s3,AWS_BUCKET=g4k,AWS_URL=https://jtcgtjrqijdnecwtuspv.supabase.co/storage/v1/object/public/g4k,SUPABASE_URL=https://jtcgtjrqijdnecwtuspv.supabase.co,PUSHER_APP_CLUSTER=ap2,FRONTEND_URL=https://g4k-v5.vercel.app,APP_URL=https://g4k-v5.vercel.app,SANCTUM_STATEFUL_DOMAINS=g4k-v5.vercel.app
-      - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID:latest,AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest,SUPABASE_JWT_SECRET=SUPABASE_JWT_SECRET:latest,PUSHER_APP_ID=PUSHER_APP_ID:latest,PUSHER_APP_KEY=PUSHER_APP_KEY:latest,PUSHER_APP_SECRET=PUSHER_APP_SECRET:latest,REVERB_APP_ID=REVERB_APP_ID:latest,REVERB_APP_KEY=REVERB_APP_KEY:latest,REVERB_APP_SECRET=REVERB_APP_SECRET:latest
-
-  - name: google/cloud-sdk:slim
     id: Deploy
     entrypoint: gcloud
     args:
@@ -83,7 +62,7 @@ steps:
       - --no-use-http2
       - --set-env-vars=APP_NAME=Games4King,APP_ENV=production,APP_DEBUG=false,APP_LOCALE=en,APP_MAINTENANCE_DRIVER=cache,APP_MAINTENANCE_STORE=database,BCRYPT_ROUNDS=12,LOG_CHANNEL=stderr,LOG_LEVEL=error,DB_CONNECTION=pgsql,DB_SSLMODE=require,DB_PORT=5432,DB_HOST=aws-0-ap-south-1.pooler.supabase.com,DB_DATABASE=postgres,DB_USERNAME=postgres.jtcgtjrqijdnecwtuspv,SESSION_DRIVER=database,CACHE_STORE=database,QUEUE_CONNECTION=database,FILESYSTEM_DISK=s3,BROADCAST_CONNECTION=pusher,AWS_DEFAULT_REGION=ap-south-1,AWS_USE_PATH_STYLE_ENDPOINT=false,OCTANE_HTTPS=true,OCTANE_SERVER=frankenphp
       - --set-env-vars=AWS_ENDPOINT=https://jtcgtjrqijdnecwtuspv.storage.supabase.co/storage/v1/s3,AWS_BUCKET=g4k,AWS_URL=https://jtcgtjrqijdnecwtuspv.supabase.co/storage/v1/object/public/g4k,SUPABASE_URL=https://jtcgtjrqijdnecwtuspv.supabase.co,PUSHER_APP_CLUSTER=ap2,FRONTEND_URL=https://g4k-v5.vercel.app,APP_URL=https://g4k-v5.vercel.app,SANCTUM_STATEFUL_DOMAINS=g4k-v5.vercel.app
-      - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID:latest,AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest,SUPABASE_JWT_SECRET=SUPABASE_JWT_SECRET:latest,PUSHER_APP_ID=PUSHER_APP_ID:latest,PUSHER_APP_KEY=PUSHER_APP_KEY:latest,PUSHER_APP_SECRET=PUSHER_APP_SECRET:latest,REVERB_APP_ID=REVERB_APP_ID:latest,REVERB_APP_KEY=REVERB_APP_KEY:latest,REVERB_APP_SECRET=REVERB_APP_SECRET:latest
+      - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID:latest,AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest,SUPABASE_JWT_SECRET=SUPABASE_JWT_SECRET:latest,PUSHER_APP_ID=PUSHER_APP_ID:latest,PUSHER_APP_KEY=PUSHER_APP_KEY:latest,PUSHER_APP_SECRET=PUSHER_APP_SECRET:latest
 
   - name: google/cloud-sdk:slim
     id: DeployWorker
@@ -104,7 +83,7 @@ steps:
       - --args=start-worker.sh
       - --set-env-vars=APP_NAME=Games4King,APP_ENV=production,APP_DEBUG=false,APP_LOCALE=en,APP_MAINTENANCE_DRIVER=cache,APP_MAINTENANCE_STORE=database,BCRYPT_ROUNDS=12,LOG_CHANNEL=stderr,LOG_LEVEL=error,DB_CONNECTION=pgsql,DB_SSLMODE=require,DB_PORT=5432,DB_HOST=aws-0-ap-south-1.pooler.supabase.com,DB_DATABASE=postgres,DB_USERNAME=postgres.jtcgtjrqijdnecwtuspv,SESSION_DRIVER=database,CACHE_STORE=database,QUEUE_CONNECTION=database,FILESYSTEM_DISK=s3,BROADCAST_CONNECTION=pusher,AWS_DEFAULT_REGION=ap-south-1,AWS_USE_PATH_STYLE_ENDPOINT=false,OCTANE_HTTPS=true,OCTANE_SERVER=frankenphp
       - --set-env-vars=AWS_ENDPOINT=https://jtcgtjrqijdnecwtuspv.storage.supabase.co/storage/v1/s3,AWS_BUCKET=g4k,AWS_URL=https://jtcgtjrqijdnecwtuspv.supabase.co/storage/v1/object/public/g4k,SUPABASE_URL=https://jtcgtjrqijdnecwtuspv.supabase.co,PUSHER_APP_CLUSTER=ap2,FRONTEND_URL=https://g4k-v5.vercel.app,APP_URL=https://g4k-v5.vercel.app,SANCTUM_STATEFUL_DOMAINS=g4k-v5.vercel.app
-      - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID:latest,AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest,SUPABASE_JWT_SECRET=SUPABASE_JWT_SECRET:latest,PUSHER_APP_ID=PUSHER_APP_ID:latest,PUSHER_APP_KEY=PUSHER_APP_KEY:latest,PUSHER_APP_SECRET=PUSHER_APP_SECRET:latest,REVERB_APP_ID=REVERB_APP_ID:latest,REVERB_APP_KEY=REVERB_APP_KEY:latest,REVERB_APP_SECRET=REVERB_APP_SECRET:latest
+      - --set-secrets=APP_KEY=APP_KEY:latest,DB_PASSWORD=DB_PASSWORD:latest,AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID:latest,AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY:latest,SUPABASE_SERVICE_ROLE_KEY=SUPABASE_SERVICE_ROLE_KEY:latest,SUPABASE_JWT_SECRET=SUPABASE_JWT_SECRET:latest,PUSHER_APP_ID=PUSHER_APP_ID:latest,PUSHER_APP_KEY=PUSHER_APP_KEY:latest,PUSHER_APP_SECRET=PUSHER_APP_SECRET:latest
 
   - name: 'google/cloud-sdk:slim'
     id: SmokeCheck

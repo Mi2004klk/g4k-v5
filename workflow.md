@@ -53,7 +53,7 @@ A company management platform for Games4Kings with three user types — **Admin 
 | **API** | Laravel (Cloud Run) | Every action; token-authenticated; capability-checked |
 | **Database** | PostgreSQL (Supabase) | 60+ tables; soft deletes for critical records |
 | **File storage** | S3-compatible (Supabase) | Avatars, project covers, chat attachments, export files |
-| **Realtime** | Reverb WebSockets | Live chat, notifications, attendance refresh, session kill; automatic polling fallback (chat 15s, notifications 30s, attendance 60s) |
+| **Realtime** | Pusher WebSockets | Live chat, notifications, attendance refresh, session kill; automatic polling fallback (chat 15s, notifications 30s, attendance 60s) |
 | **Background jobs** | Database queue + scheduler (supervised) | Async exports, reminders, shift alerts, weekly summary email, demo data, cleanup |
 | **Email** | SMTP (configurable in Settings) | Temp-password emails, reset links, weekly summary, suspicious-login alerts; every email path degrades safely to in-app when SMTP is off |
 
@@ -350,8 +350,8 @@ Opened from any task row/card (or `/dashboard/tasks/[id]`). Four tabs + action p
 ## 4.1 Notification engine
 Two surfaces (bell for high-priority + full center), realtime toasts, per-user sound preference, mark-read/unread semantics, cleanup job pruning old rows. Every business event funnels through one `NotificationService` (in-app always; email where configured).
 
-## 4.2 Realtime channels (Reverb)
-Chat messages/reads; new conversations; notification toasts; announcement refreshes; attendance table refresh on any punch; approval status changes; export-completed; **session revoked** (instant cross-device logout). Client connects only when Reverb env vars exist; every consumer has a polling fallback — realtime outage degrades UX, never breaks function.
+## 4.2 Realtime channels (Pusher)
+Chat messages/reads; new conversations; notification toasts; announcement refreshes; attendance table refresh on any punch; approval status changes; export-completed; **session revoked** (instant cross-device logout). Client connects only when Pusher env vars exist; every consumer has a polling fallback — realtime outage degrades UX, never breaks function.
 
 ## 4.3 Offline engine (PWA)
 Installable app; non-GET API calls queue in IndexedDB while offline and replay on reconnect (retry ladder 1s/5s/30s/2m); punches idempotent so replays never duplicate; the time clock works fully offline; banner + per-widget badges show state; 4xx during sync marks the item failed; conflicts (409/422) are parked for manual review.

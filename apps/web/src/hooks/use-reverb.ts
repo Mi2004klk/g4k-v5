@@ -28,16 +28,14 @@ const ReverbContext = createContext<ReverbContextType>({
 });
 
 /**
- * Determines whether the Reverb WebSocket server is reachable.
+ * Determines whether the Pusher WebSocket server is reachable.
  * Returns false on Vercel preview/production domains when no explicit
- * NEXT_PUBLIC_REVERB_HOST has been set – this prevents hundreds of
+ * NEXT_PUBLIC_PUSHER_HOST has been set – this prevents hundreds of
  * failed WebSocket connection attempts that flood the console.
  */
-function isReverbAvailable(): boolean {
+function isPusherAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-  const hasReverb = !!process.env.NEXT_PUBLIC_REVERB_HOST && !!process.env.NEXT_PUBLIC_REVERB_APP_KEY;
-  const hasPusher = !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
-  return hasReverb || hasPusher; // Connect if either Reverb or standard Pusher is configured
+  return !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
 }
 
 export function ReverbProvider({ children }: { children: ReactNode }) {
@@ -52,8 +50,8 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
   const [subscriptions] = useState<Map<string, number>>(() => new Map());
 
   useEffect(() => {
-    // Only connect if we have a logged in user, token, AND Reverb is reachable
-    if (!user || !token || !isReverbAvailable()) {
+    // Only connect if we have a logged in user, token, AND Pusher is reachable
+    if (!user || !token || !isPusherAvailable()) {
       if (typeof window !== 'undefined' && window.Echo) {
         (window.Echo as any).disconnect();
       }
@@ -66,28 +64,11 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
 
     window.Pusher = Pusher;
 
-    const isPusher = !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
-    
-    const echoConfig: any = isPusher ? {
+    const echoConfig: any = {
       broadcaster: 'pusher',
       key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
       cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || '',
       forceTLS: true,
-      authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
-      auth: {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          Accept: 'application/json',
-        },
-      },
-    } : {
-      broadcaster: 'reverb',
-      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || '',
-      wsHost: process.env.NEXT_PUBLIC_REVERB_HOST || undefined,
-      wsPort: process.env.NEXT_PUBLIC_REVERB_PORT ? parseInt(process.env.NEXT_PUBLIC_REVERB_PORT, 10) : 80,
-      wssPort: process.env.NEXT_PUBLIC_REVERB_PORT ? parseInt(process.env.NEXT_PUBLIC_REVERB_PORT, 10) : 443,
-      forceTLS: (process.env.NEXT_PUBLIC_REVERB_SCHEME ?? 'https') === 'https',
-      enabledTransports: ['ws', 'wss'],
       authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
       auth: {
         headers: {
@@ -144,7 +125,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     const count = subscriptions.get(channelName) || 0;
     subscriptions.set(channelName, count + 1);
     
-    return isPrivate ? (echoInstance as Echo<'reverb'>).private(channelName) : (echoInstance as Echo<'reverb'>).channel(channelName);
+    return isPrivate ? (echoInstance as Echo<'pusher'>).private(channelName) : (echoInstance as Echo<'pusher'>).channel(channelName);
   }, [echoInstance, subscriptions]);
 
   const leaveChannel = useCallback((channelName: string) => {
@@ -153,7 +134,7 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     const count = (subscriptions.get(channelName) || 0) - 1;
     if (count <= 0) {
       subscriptions.delete(channelName);
-      (echoInstance as Echo<'reverb'>).leave(channelName);
+      (echoInstance as Echo<'pusher'>).leave(channelName);
     } else {
       subscriptions.set(channelName, count);
     }
