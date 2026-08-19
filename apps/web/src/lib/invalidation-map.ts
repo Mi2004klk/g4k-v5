@@ -36,7 +36,7 @@ export const invalidationMap: Record<string, (queryClient: QueryClient, payload?
     qc.invalidateQueries({ queryKey: ["team-leave-approvals"] });
     qc.invalidateQueries({ queryKey: ["org-leave-requests"] });
     qc.invalidateQueries({ queryKey: queryKeys.dashboardInit });
-    qc.invalidateQueries({ queryKey: queryKeys.tasks });
+    qc.invalidateQueries({ queryKey: queryKeys.tasks() });
     qc.invalidateQueries({ queryKey: ["projects"] });
   },
   "leave.decision": (qc) => {
