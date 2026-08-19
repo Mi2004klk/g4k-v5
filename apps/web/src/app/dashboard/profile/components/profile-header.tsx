@@ -105,7 +105,7 @@ export function ProfileHeader() {
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-900 shadow-sm flex items-center justify-center font-bold text-2xl overflow-hidden text-neutral-400">
             {profile?.avatar_url ? (
               <Image
-                src={resolveAvatarUrl(profile.avatar_url)}
+                src={resolveAvatarUrl(profile.avatar_url) as string}
                 alt={profile.name || "User"}
                 width={80}
                 height={80}

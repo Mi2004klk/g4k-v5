@@ -98,10 +98,7 @@ export function TaskDetailSheet({
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<TaskModel & { assignee_ids: number[] }>>({});
 
-  const { data: caps = [] } = useCapabilities();
-  const canManageTasks = hasCapability(caps, "tasks.manage");
-
-  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing && canManageTasks });
+  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing && canManage });
   const { data: allTasksData } = useQuery({ queryKey: ["tasks", "all"], queryFn: () => apiFetch<{ data?: { data?: TaskModel[] } | TaskModel[] }>("/tasks?per_page=100"), enabled: isEditing });
 
   // T-46.5: Fetch the full task detail when the sheet is opened.

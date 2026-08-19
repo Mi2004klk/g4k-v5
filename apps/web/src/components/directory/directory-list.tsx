@@ -296,7 +296,7 @@ export function EmployeeManagementTab() {
             router.push(`/dashboard/org/users/${user.id}`);
           }}>
             <Avatar className="w-9 h-9">
-              {user.avatar_url && <AvatarImage src={resolveAvatarUrl(user.avatar_url)} alt={user.name} />}
+              {user.avatar_url && <AvatarImage src={resolveAvatarUrl(user.avatar_url as string)} alt={user.name} />}
               <AvatarFallback name={user.name} className="font-bold" />
             </Avatar>
             <div>

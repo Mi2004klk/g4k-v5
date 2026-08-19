@@ -60,8 +60,8 @@ interface Designation {
 interface ApiError extends Error {
   errors?: Record<string, string[]>;
 }
-import {
 import { resolveAvatarUrl } from "@/lib/utils";
+import {
   queryKeys,
   STALE_TIME_DESIGNATIONS
 } from "@/lib/query-keys";

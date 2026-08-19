@@ -33,8 +33,8 @@ export function parseUserAgent(ua: string): string {
   return `${browser} on ${os}`;
 }
 
-export function resolveAvatarUrl(url: string | null): string | null {
-  if (!url) return null;
+export function resolveAvatarUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
