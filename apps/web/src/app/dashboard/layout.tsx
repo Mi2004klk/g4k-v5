@@ -345,73 +345,89 @@ export default function DashboardLayout({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <DropdownMenuContent align="end" className="w-56 text-xs">
-                    <DropdownMenuLabel className="flex flex-col gap-1">
-                      <span className="font-bold truncate text-sm">{authUser?.name}</span>
-                      <span className="text-xs text-neutral-400 font-normal truncate">
-                        {authUser?.email}
-                      </span>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/profile" prefetch={false} className="cursor-pointer gap-2">
-                        <AppIcon name="profile" className=" text-muted-foreground" />
-                        My Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    {hasCapability(userCapabilities, "settings.manage") && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/dashboard/settings" prefetch={false} className="cursor-pointer gap-2">
-                          <AppIcon name="settings" className=" text-muted-foreground" />
-                          Settings
+                  <DropdownMenuContent align="end" className="w-64 p-0 shadow-xl border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
+                    <div className="p-4 border-b border-neutral-100 dark:border-neutral-800/60 bg-neutral-50/50 dark:bg-neutral-900/50">
+                      <div className="font-bold text-sm text-neutral-900 dark:text-neutral-100">{authUser?.name}</div>
+                      <div className="text-xs text-neutral-500 mt-0.5 truncate">{authUser?.email}</div>
+                    </div>
+                    
+                    <div className="p-1.5">
+                      <DropdownMenuItem asChild className="h-9 px-3 gap-3 rounded-lg cursor-pointer">
+                        <Link href="/dashboard/profile" prefetch={false}>
+                          <AppIcon name="profile" className="text-neutral-500" size="sm" />
+                          <span className="font-medium text-neutral-700 dark:text-neutral-300">My Profile</span>
                         </Link>
                       </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Theme</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer gap-2">
-                      <AppIcon name="sun" className="text-muted-foreground" />
-                      <span>Light</span>
-                      {theme === "light" && <AppIcon name="check" size="xs" className="ml-auto text-primary" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("dark")} className="cursor-pointer gap-2">
-                      <AppIcon name="moon" className="text-muted-foreground" />
-                      <span>Dark</span>
-                      {theme === "dark" && <AppIcon name="check" size="xs" className="ml-auto text-primary" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme("system")} className="cursor-pointer gap-2">
-                      <AppIcon name="computer" className="text-muted-foreground" />
-                      <span>System</span>
-                      {theme === "system" && <AppIcon name="check" size="xs" className="ml-auto text-primary" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Density</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => setDensity("comfortable")} className="cursor-pointer gap-2">
-                      <AppIcon name="density" className=" text-muted-foreground" />
-                      <span>Comfortable</span>
-                      {density === "comfortable" && <AppIcon name="check" size="xs" className=" ml-auto text-primary" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDensity("compact")} className="cursor-pointer gap-2">
-                      <AppIcon name="density" className=" text-muted-foreground" />
-                      <span>Compact</span>
-                      {density === "compact" && <AppIcon name="check" size="xs" className=" ml-auto text-primary" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => {
-                        const event = new KeyboardEvent("keydown", { key: "/", ctrlKey: true });
-                        document.dispatchEvent(event);
-                      }} className="cursor-pointer gap-2">
-                      <AppIcon name="command" className=" text-muted-foreground" />
-                      Keyboard Shortcuts
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={handleLogout}
-                      className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 dark:focus:bg-rose-950/40 cursor-pointer gap-2"
-                    >
-                      <AppIcon name="logout" />
-                      Log out
-                    </DropdownMenuItem>
+                      {hasCapability(userCapabilities, "settings.manage") && (
+                        <DropdownMenuItem asChild className="h-9 px-3 gap-3 rounded-lg cursor-pointer">
+                          <Link href="/dashboard/settings" prefetch={false}>
+                            <AppIcon name="settings" className="text-neutral-500" size="sm" />
+                            <span className="font-medium text-neutral-700 dark:text-neutral-300">Settings</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                    </div>
+                    
+                    <DropdownMenuSeparator className="bg-neutral-100 dark:bg-neutral-800/60 m-0" />
+                    
+                    <div className="p-1.5">
+                      <div className="px-3 py-1.5 text-[10px] font-bold text-neutral-400 tracking-widest uppercase">Theme</div>
+                      <DropdownMenuItem onClick={() => setTheme("light")} className="h-9 px-3 gap-3 rounded-lg cursor-pointer relative">
+                        <AppIcon name="sun" className="text-neutral-500" size="sm" />
+                        <span className="text-neutral-700 dark:text-neutral-300">Light</span>
+                        {theme === "light" && <AppIcon name="check" size="xs" className="absolute right-3 text-primary-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme("dark")} className="h-9 px-3 gap-3 rounded-lg cursor-pointer relative">
+                        <AppIcon name="moon" className="text-neutral-500" size="sm" />
+                        <span className="text-neutral-700 dark:text-neutral-300">Dark</span>
+                        {theme === "dark" && <AppIcon name="check" size="xs" className="absolute right-3 text-primary-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTheme("system")} className="h-9 px-3 gap-3 rounded-lg cursor-pointer relative">
+                        <AppIcon name="computer" className="text-neutral-500" size="sm" />
+                        <span className="text-neutral-700 dark:text-neutral-300">System</span>
+                        {theme === "system" && <AppIcon name="check" size="xs" className="absolute right-3 text-primary-500" />}
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className="bg-neutral-100 dark:bg-neutral-800/60 m-0" />
+
+                    <div className="p-1.5">
+                      <div className="px-3 py-1.5 text-[10px] font-bold text-neutral-400 tracking-widest uppercase">Density</div>
+                      <DropdownMenuItem onClick={() => setDensity("comfortable")} className="h-9 px-3 gap-3 rounded-lg cursor-pointer relative">
+                        <AppIcon name="list" className="text-neutral-500" size="sm" />
+                        <span className="text-neutral-700 dark:text-neutral-300">Comfortable</span>
+                        {density === "comfortable" && <AppIcon name="check" size="xs" className="absolute right-3 text-primary-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDensity("compact")} className="h-9 px-3 gap-3 rounded-lg cursor-pointer relative">
+                        <AppIcon name="density" className="text-neutral-500" size="sm" />
+                        <span className="text-neutral-700 dark:text-neutral-300">Compact</span>
+                        {density === "compact" && <AppIcon name="check" size="xs" className="absolute right-3 text-primary-500" />}
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className="bg-neutral-100 dark:bg-neutral-800/60 m-0" />
+
+                    <div className="p-1.5">
+                      <DropdownMenuItem onClick={() => {
+                          const event = new KeyboardEvent("keydown", { key: "/", ctrlKey: true });
+                          document.dispatchEvent(event);
+                        }} className="h-9 px-3 gap-3 rounded-lg cursor-pointer">
+                        <AppIcon name="command" className="text-neutral-500" size="sm" />
+                        <span className="text-neutral-700 dark:text-neutral-300">Keyboard Shortcuts</span>
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator className="bg-neutral-100 dark:bg-neutral-800/60 m-0" />
+
+                    <div className="p-1.5">
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="h-9 px-3 gap-3 rounded-lg cursor-pointer text-rose-600 focus:text-rose-700 focus:bg-rose-50 dark:focus:bg-rose-950/40 group"
+                      >
+                        <AppIcon name="logout" size="sm" className="text-rose-500 group-focus:text-rose-600 transition-colors" />
+                        <span className="font-medium">Log out</span>
+                      </DropdownMenuItem>
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

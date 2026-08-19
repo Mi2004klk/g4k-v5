@@ -157,63 +157,123 @@ export function ProfilePreferencesTab() {
           </div>
           
           <div className="p-6">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const subject = formData.get('subject') as string;
-                const category = formData.get('category') as string;
-                const body = formData.get('body') as string;
-                if (!subject || !category || !body) {
-                  toast.error("Please fill all fields");
-                  return;
-                }
-                
-                const btn = e.currentTarget.querySelector('button[type="submit"]') as HTMLButtonElement;
-                const originalText = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = `<span class="flex items-center gap-2"><svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...</span>`;
-                
-                apiFetch('/feedback', {
-                  method: 'POST',
-                  body: JSON.stringify({ subject, category, body })
-                }).then((res) => {
-                  toast.success("Feedback submitted successfully. HR will contact you via direct message.");
-                  (e.target as HTMLFormElement).reset();
-                  if (res.conversation_id) {
-                    router.push(`/dashboard/chat?conversation=${res.conversation_id}`);
-                  }
-                }).catch((err) => {
-                  toast.error(err.message || "Failed to submit feedback");
-                }).finally(() => {
-                  btn.disabled = false;
-                  btn.innerHTML = originalText;
-                });
-              }}
-              className="space-y-4"
-            >
-              <div className="space-y-1.5">
-                <label htmlFor="fb-category" className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Category</label>
-                <select id="fb-category" name="category" className="w-full h-9 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500">
-                  <option value="suggestion">Suggestion</option>
-                  <option value="complaint">Complaint</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="fb-subject" className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Subject</label>
-                <Input id="fb-subject" name="subject" placeholder="What is this about?" required className="h-9 text-sm" />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="fb-body" className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Details</label>
-                <textarea id="fb-body" name="body" required rows={4} className="w-full rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 resize-none" placeholder="Please provide details..."></textarea>
-              </div>
-              <Button type="submit" className="w-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm h-9">
-                Submit to HR
-              </Button>
-            </form>
+            <FeedbackForm />
           </div>
         </Card>
       </div>
     </div>
+  );
+}
+
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
+
+const feedbackSchema = z.object({
+  category: z.string().min(1, "Category is required"),
+  subject: z.string().min(3, "Subject must be at least 3 characters"),
+  body: z.string().min(10, "Please provide more details"),
+});
+
+type FeedbackFormValues = z.infer<typeof feedbackSchema>;
+
+function FeedbackForm() {
+  const router = useRouter();
+
+  const form = useForm<FeedbackFormValues>({
+    resolver: zodResolver(feedbackSchema),
+    defaultValues: {
+      category: "suggestion",
+      subject: "",
+      body: "",
+    },
+  });
+
+  const feedbackMutation = useMutation({
+    mutationFn: async (data: FeedbackFormValues) => {
+      return apiFetch("/feedback", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: (res: { conversation_id?: string }) => {
+      toast.success("Feedback submitted successfully. HR will contact you via direct message.");
+      form.reset();
+      if (res.conversation_id) {
+        router.push(`/dashboard/chat?conversation=${res.conversation_id}`);
+      }
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || "Failed to submit feedback");
+    },
+  });
+
+  const onSubmit = (data: FeedbackFormValues) => {
+    feedbackMutation.mutate(data);
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <DisabledWhileSubmitting isSubmitting={feedbackMutation.isPending}>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Category</label>
+            <Controller
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full h-9 text-sm">
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="suggestion">Suggestion</SelectItem>
+                    <SelectItem value="complaint">Complaint</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {form.formState.errors.category && (
+              <p className="text-xs text-red-500">{form.formState.errors.category.message}</p>
+            )}
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Subject</label>
+            <Input {...form.register("subject")} placeholder="What is this about?" className="h-9 text-sm" />
+            {form.formState.errors.subject && (
+              <p className="text-xs text-red-500">{form.formState.errors.subject.message}</p>
+            )}
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Details</label>
+            <textarea
+              {...form.register("body")}
+              rows={4}
+              className="w-full rounded-md border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary-500 resize-none"
+              placeholder="Please provide details..."
+            />
+            {form.formState.errors.body && (
+              <p className="text-xs text-red-500">{form.formState.errors.body.message}</p>
+            )}
+          </div>
+          
+          <Button
+            type="submit"
+            disabled={feedbackMutation.isPending}
+            className="w-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm h-9"
+          >
+            {feedbackMutation.isPending ? (
+              <><AppIcon name="loading" size="xs" className="animate-spin mr-2" /> Sending...</>
+            ) : (
+              "Submit to HR"
+            )}
+          </Button>
+        </div>
+      </DisabledWhileSubmitting>
+    </form>
   );
 }

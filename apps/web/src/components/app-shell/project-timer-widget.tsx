@@ -137,37 +137,36 @@ export function ProjectTimerWidget() {
       <PopoverContent className="w-80 p-4" align="end">
         <div className="space-y-4">
           <h4 className="font-semibold text-sm">Time Tracker</h4>
-          
-          <div className="text-3xl font-mono text-center font-bold tracking-tight">
+          <div className="text-[40px] font-mono text-center font-black tracking-tight text-neutral-900 dark:text-neutral-100">
             {formatTime(elapsedSeconds)}
           </div>
 
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-neutral-500">Project</label>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-slate-500 dark:text-slate-400">Project</label>
               <Select value={projectId} onValueChange={setProjectId} disabled={isActive}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 focus:ring-0 focus:ring-offset-0 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
                   <SelectValue placeholder="Select Project" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800 shadow-xl">
                   {projectsData?.data?.map((p: any) => (
-                    <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={String(p.id)} className="text-[13px] py-2 cursor-pointer">{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             {projectId && (
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-neutral-500">Task (Optional)</label>
+              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                <label className="text-[13px] font-medium text-slate-500 dark:text-slate-400">Task (Optional)</label>
                 <Select value={taskId} onValueChange={setTaskId} disabled={isActive}>
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 focus:ring-0 focus:ring-offset-0 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
                     <SelectValue placeholder="No specific task" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No specific task</SelectItem>
+                  <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800 shadow-xl">
+                    <SelectItem value="none" className="text-[13px] py-2 cursor-pointer">No specific task</SelectItem>
                     {tasksData?.data?.map((t: any) => (
-                      <SelectItem key={t.id} value={String(t.id)}>{t.title}</SelectItem>
+                      <SelectItem key={t.id} value={String(t.id)} className="text-[13px] py-2 cursor-pointer">{t.title}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -175,22 +174,22 @@ export function ProjectTimerWidget() {
             )}
 
             {isActive && (
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-neutral-500">Log Description (Optional)</label>
+              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                <label className="text-[13px] font-medium text-slate-500 dark:text-slate-400">Log Description (Optional)</label>
                 <Input
                   value={logDescription}
                   onChange={(e) => setLogDescription(e.target.value)}
                   placeholder="What did you work on?"
-                  className="h-8 text-xs"
+                  className="h-10 text-[13px] bg-slate-50 border-slate-100 focus-visible:ring-1 focus-visible:ring-primary-500 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl"
                 />
               </div>
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             {!isActive ? (
               <Button 
-                className="w-full bg-green-600 hover:bg-green-700 text-white" 
+                className="w-full h-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-[13px]" 
                 onClick={handleStart}
                 disabled={!projectId}
               >
@@ -200,7 +199,7 @@ export function ProjectTimerWidget() {
               <>
                 <Button 
                   variant={isProjectTimerRunning ? "outline" : "primary"} 
-                  className="flex-1"
+                  className="flex-1 h-10 rounded-xl font-semibold text-[13px]"
                   onClick={handlePauseResume}
                 >
                   <AppIcon name={isProjectTimerRunning ? "pause" : "play"} className="mr-2" size="sm" />
@@ -208,7 +207,7 @@ export function ProjectTimerWidget() {
                 </Button>
                 <Button 
                   variant="destructive"
-                  className="flex-1"
+                  className="flex-1 h-10 rounded-xl font-semibold text-[13px]"
                   onClick={handleStop}
                   disabled={timerMutation.isPending}
                 >

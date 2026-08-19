@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
@@ -9,6 +9,9 @@ import { apiFetch } from "@/lib/api-client";
 import { useAuthStore, UserProfile } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 import {
   Button,
@@ -23,6 +26,14 @@ import {
 } from "@g4k/ui/components";
 import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 
+const profileSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters."),
+  phone: z.string().optional(),
+  designation_id: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
 export function ProfileGeneralTab() {
   const queryClient = useQueryClient();
   
@@ -32,20 +43,32 @@ export function ProfileGeneralTab() {
   const authUser = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [name, setName] = useState(authUser?.name || "");
-  const [phone, setPhone] = useState("");
-  const [designationId, setDesignationId] = useState("");
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: authUser?.name || "",
+      phone: "",
+      designation_id: "",
+    },
+  });
 
   const { data: profile } = useQuery({
     queryKey: queryKeys.profile,
     queryFn: async () => {
       const data = await apiFetch("/profile");
-      setName(data.name || "");
-      setPhone(data.phone || "");
-      setDesignationId(data.designation_id?.toString() || "");
       return data;
     },
   });
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        name: profile.name || "",
+        phone: profile.phone || "",
+        designation_id: profile.designation_id?.toString() || "",
+      });
+    }
+  }, [profile, form]);
 
   const { data: designations } = useQuery({
     queryKey: ["designations"],
@@ -76,6 +99,14 @@ export function ProfileGeneralTab() {
     },
   });
 
+  const onSubmit = (data: ProfileFormValues) => {
+    updateProfileMutation.mutate({
+      name: data.name,
+      phone: data.phone || null,
+      designation_id: data.designation_id || null,
+    });
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
       {/* Personal Details Form */}
@@ -90,21 +121,26 @@ export function ProfileGeneralTab() {
         
         <div className="p-6">
           <DisabledWhileSubmitting isSubmitting={updateProfileMutation.isPending}>
-            <div className="space-y-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Full Name</label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} className="h-9 text-sm" />
+                  <Input {...form.register("name")} className="h-9 text-sm" />
+                  {form.formState.errors.name && (
+                    <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>
+                  )}
                 </div>
                 
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Phone Number</label>
                   <Input
+                    {...form.register("phone")}
                     placeholder="+1 (555) 000-0000"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
                     className="h-9 text-sm"
                   />
+                  {form.formState.errors.phone && (
+                    <p className="text-xs text-red-500">{form.formState.errors.phone.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -114,19 +150,25 @@ export function ProfileGeneralTab() {
                     Designation
                     {!canManageDesignation && <span className="text-[10px] text-neutral-400 font-normal">Contact HR to change</span>}
                   </label>
-                  <Select disabled={!canManageDesignation} value={designationId || "unset"} onValueChange={(v) => { setDesignationId(v === "unset" ? "" : v); }}>
-                    <SelectTrigger className="w-full h-9 text-sm">
-                      <SelectValue placeholder="Select Designation" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unset">Select Designation</SelectItem>
-                      {(designations as Array<{ id: number, name: string }> | undefined)?.map((d) => (
-                        <SelectItem key={d.id} value={String(d.id)}>
-                          {d.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    control={form.control}
+                    name="designation_id"
+                    render={({ field }) => (
+                      <Select disabled={!canManageDesignation} value={field.value || "unset"} onValueChange={(v) => field.onChange(v === "unset" ? "" : v)}>
+                        <SelectTrigger className="w-full h-9 text-sm">
+                          <SelectValue placeholder="Select Designation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unset">Select Designation</SelectItem>
+                          {(designations as Array<{ id: number, name: string }> | undefined)?.map((d) => (
+                            <SelectItem key={d.id} value={String(d.id)}>
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 
                 <div className="space-y-1.5">
@@ -137,9 +179,9 @@ export function ProfileGeneralTab() {
 
               <div className="pt-4 flex justify-end">
                 <Button
+                  type="submit"
                   size="sm"
-                  onClick={() => updateProfileMutation.mutate({ name, phone, designation_id: designationId || null })}
-                  disabled={updateProfileMutation.isPending}
+                  disabled={updateProfileMutation.isPending || !form.formState.isDirty}
                   className="bg-primary-600 hover:bg-primary-700 text-white shadow-sm px-6 h-9"
                 >
                   {updateProfileMutation.isPending ? (
@@ -149,7 +191,7 @@ export function ProfileGeneralTab() {
                   )}
                 </Button>
               </div>
-            </div>
+            </form>
           </DisabledWhileSubmitting>
         </div>
       </Card>

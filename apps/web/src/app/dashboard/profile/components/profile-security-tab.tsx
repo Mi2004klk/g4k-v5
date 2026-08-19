@@ -6,9 +6,11 @@ import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
-import { strongPasswordSchema } from "@/lib/validations";
 import { parseUserAgent } from "@/lib/utils";
 import { queryKeys } from "@/lib/query-keys";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 import {
   Button,
@@ -30,13 +32,20 @@ interface SessionRecord {
   is_current?: boolean;
 }
 
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters").regex(/[a-z]/, "Must contain lowercase").regex(/[A-Z]/, "Must contain uppercase").regex(/[0-9]/, "Must contain number"),
+  confirmPassword: z.string().min(1, "Confirm password is required"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type PasswordFormValues = z.infer<typeof passwordSchema>;
+
 export function ProfileSecurityTab() {
   const queryClient = useQueryClient();
   const authUser = useAuthStore((s) => s.user);
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isRevokeOpen, setIsRevokeOpen] = useState(false);
   const [revokeId, setRevokeId] = useState<string | null>(null);
@@ -46,29 +55,29 @@ export function ProfileSecurityTab() {
     queryFn: async () => apiFetch("/auth/sessions"),
   });
 
+  const form = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
   const changePasswordMutation = useMutation({
-    mutationFn: async () => {
-      if (newPassword !== confirmPassword) {
-        throw new Error("New passwords do not match.");
-      }
-      const valResult = strongPasswordSchema.safeParse(newPassword);
-      if (!valResult.success) {
-        throw new Error(valResult.error.issues[0]?.message || "Invalid password.");
-      }
+    mutationFn: async (data: PasswordFormValues) => {
       return apiFetch("/auth/change-password", {
         method: "POST",
         body: JSON.stringify({
-          current_password: currentPassword,
-          password: newPassword,
-          password_confirmation: confirmPassword,
+          current_password: data.currentPassword,
+          password: data.newPassword,
+          password_confirmation: data.confirmPassword,
         }),
       });
     },
     onSuccess: () => {
       toast.success("Password updated successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      form.reset();
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || "Failed to change password.");
@@ -90,6 +99,10 @@ export function ProfileSecurityTab() {
     },
   });
 
+  const onSubmit = (data: PasswordFormValues) => {
+    changePasswordMutation.mutate(data);
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
       {/* Password Security Form */}
@@ -102,14 +115,7 @@ export function ProfileSecurityTab() {
           <p className="text-xs text-neutral-500 mt-1">Update your password to keep your account secure.</p>
         </div>
         <div className="p-6">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!changePasswordMutation.isPending && currentPassword && newPassword && confirmPassword) {
-                changePasswordMutation.mutate();
-              }
-            }}
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <DisabledWhileSubmitting isSubmitting={changePasswordMutation.isPending}>
               <div className="space-y-5">
                 <input type="text" name="username" value={authUser?.email || ""} autoComplete="username" className="hidden" readOnly />
@@ -118,34 +124,40 @@ export function ProfileSecurityTab() {
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Current Password</label>
                     <PasswordInput
+                      {...form.register("currentPassword")}
                       placeholder="Enter current password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
                       className="h-9 text-sm max-w-md"
                       autoComplete="current-password"
                     />
+                    {form.formState.errors.currentPassword && (
+                      <p className="text-xs text-red-500">{form.formState.errors.currentPassword.message}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">New Password</label>
                     <PasswordInput
+                      {...form.register("newPassword")}
                       placeholder="Min 8 chars, mixed case, numbers"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
                       className="h-9 text-sm"
                       autoComplete="new-password"
                     />
+                    {form.formState.errors.newPassword && (
+                      <p className="text-xs text-red-500">{form.formState.errors.newPassword.message}</p>
+                    )}
                   </div>
                   
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Confirm Password</label>
                     <PasswordInput
+                      {...form.register("confirmPassword")}
                       placeholder="Confirm new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
                       className="h-9 text-sm"
                       autoComplete="new-password"
                     />
+                    {form.formState.errors.confirmPassword && (
+                      <p className="text-xs text-red-500">{form.formState.errors.confirmPassword.message}</p>
+                    )}
                   </div>
                 </div>
 
@@ -153,12 +165,7 @@ export function ProfileSecurityTab() {
                   <Button
                     type="submit"
                     size="sm"
-                    disabled={
-                      changePasswordMutation.isPending ||
-                      !currentPassword ||
-                      !newPassword ||
-                      !confirmPassword
-                    }
+                    disabled={changePasswordMutation.isPending || !form.formState.isDirty}
                     className="bg-primary-600 hover:bg-primary-700 text-white shadow-sm px-6 h-9"
                   >
                     {changePasswordMutation.isPending ? (
