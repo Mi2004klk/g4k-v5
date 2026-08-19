@@ -48,6 +48,15 @@ Route::get('/health', function () {
         'timestamp' => now()->toIso8601String(),
     ]);
 });
+
+Route::get('/test-pusher', function () {
+    try {
+        broadcast(new \App\Events\TestPusherEvent('Hello from backend via Pusher!'));
+        return response()->json(['status' => 'Event broadcasted to Pusher successfully. Check your browser alert.']);
+    } catch (\Throwable $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+});
 Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
