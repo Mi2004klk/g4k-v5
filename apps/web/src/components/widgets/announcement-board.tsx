@@ -9,12 +9,10 @@ import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
-import { useFormDraft } from "@/hooks/use-form-draft";
-import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { hasCapability, useCapabilities } from "@/lib/capabilities";
+import { AnnouncementComposer } from "./announcement-composer";
 
 export interface Announcement {
   id: number;
@@ -35,26 +33,7 @@ export function AnnouncementBoard() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [createData, setCreateData] = useState({ title: "", body: "", scope: "company", pinned: false });
-
-  const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft("announcement_create", { title: "", body: "", scope: "company", pinned: false });
-
-  const activeCreateData = {
-    title: createData.title || draftData.title,
-    body: createData.body || draftData.body,
-    scope: createData.scope !== "company" ? createData.scope : draftData.scope,
-    pinned: createData.pinned !== false ? createData.pinned : draftData.pinned,
-  };
-
-  const handleFieldChange = (updates: any) => {
-    setDraftData({
-      title: createData.title || draftData.title,
-      body: createData.body || draftData.body,
-      scope: createData.scope !== "company" ? createData.scope : draftData.scope,
-      pinned: createData.pinned !== false ? createData.pinned : draftData.pinned,
-      ...updates
-    });
-  };
+  const [initialData, setInitialData] = useState<{ title: string; body: string; scope: string; pinned: boolean } | undefined>();
 
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
@@ -123,26 +102,137 @@ export function AnnouncementBoard() {
     { key: "party", label: "🎉" },
   ];
 
-  const createMutation = useMutation({
-    mutationFn: async (data: typeof createData & { id?: number }) => {
-      const url = data.id ? `/announcements/${data.id}` : "/announcements";
-      const method = data.id ? "PUT" : "POST";
-      return apiFetch(url, {
-        method,
-        body: JSON.stringify(data),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
-      setShowCreate(false);
-      setEditingId(null);
-      setCreateData({ title: "", body: "", scope: "company", pinned: false }); clearDraft();;
-      toast.success("Announcement posted");
-    },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to post announcement");
-    }
-  });
+  const pinnedAnnouncements = announcements.filter((a: Announcement) => a.pinned_at);
+  const unpinnedAnnouncements = announcements.filter((a: Announcement) => !a.pinned_at);
+
+  const renderAnnouncement = (item: Announcement) => {
+    const reactions = item.reactions || {};
+    const isPinned = Boolean(item.pinned_at);
+
+    return (
+      <div
+        key={item.id}
+        className={`p-4 rounded-xl space-y-3 border transition-all ${
+          isPinned 
+            ? 'bg-amber-50/30 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50 shadow-sm' 
+            : 'bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-sm'
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            {isPinned && <AppIcon name="pin" size="xs" className=" text-amber-500 fill-amber-500 shrink-0" />}
+            <h4 className="text-[14px] font-bold text-neutral-900 dark:text-white leading-snug truncate">
+              {item.title}
+            </h4>
+            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+              item.scope === 'company' 
+                ? 'bg-primary-100 text-primary-700 dark:bg-primary-950 dark:text-primary-400' 
+                : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+            }`}>
+              {item.scope === 'company' ? 'Company' : 'Team'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] text-neutral-400 font-medium">
+              {safeFormat(item.created_at, "MMM d")}
+            </span>
+            {canManage && (
+              <div className="flex items-center gap-0.5">
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingId(item.id);
+                          setInitialData({ title: item.title, body: item.body, scope: item.scope || "company", pinned: isPinned });
+                          setShowCreate(true);
+                        }}
+                        aria-label="Edit Announcement"
+                        className="h-6 w-6 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
+                      >
+                        <AppIcon name="edit" size="xs" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">Edit</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => pinMutation.mutate({ id: item.id, pinned: !isPinned })}
+                        aria-label={isPinned ? "Unpin Announcement" : "Pin Announcement"}
+                        className={`h-6 w-6 transition-colors ${
+                          isPinned ? "text-amber-500 hover:text-amber-600" : "text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+                        }`}
+                      >
+                        <AppIcon name="pin" size="xs" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">{isPinned ? "Unpin" : "Pin"}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setConfirmState({ isOpen: true, id: item.id })}
+                        aria-label="Delete Announcement"
+                        className="h-6 w-6 text-neutral-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
+                      >
+                        <AppIcon name="trash" size="xs" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">Delete</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p className="text-[13px] text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
+          {item.body}
+        </p>
+
+        <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800/80">
+          <span className="text-[10px] text-neutral-400 font-medium flex items-center gap-1.5">
+            <AppIcon name="profile" size="xs" />
+            By {item.creator?.name || "Management"}
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            {emojis.map(({ key, label }) => {
+              const uids: number[] = Array.isArray(reactions[key]) ? reactions[key] : [];
+              const count = uids.length;
+              const hasReacted = user?.id ? uids.includes(user.id) : false;
+
+              return (
+                <button
+                  key={key}
+                  onClick={() => reactMutation.mutate({ id: item.id, emoji: key })}
+                  className={`px-2 py-1 rounded-full text-[11px] flex items-center gap-1.5 transition-all ${
+                    hasReacted
+                      ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 font-bold border border-primary-200 dark:border-primary-800 shadow-sm"
+                      : "bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-medium border border-neutral-200 dark:border-neutral-800"
+                  }`}
+                >
+                  <span className="text-sm leading-none">{label}</span>
+                  {count > 0 && <span>{count}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm hover:shadow-md rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group overflow-hidden">
@@ -161,212 +251,52 @@ export function AnnouncementBoard() {
             <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-[11px] px-2.5">
               Refresh
             </Button>
-            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setCreateData({ title: "", body: "", scope: "company", pinned: false }); clearDraft();; setShowCreate(true); }} className="h-7 text-[11px] px-2.5">
-              Post
+            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setInitialData(undefined); setShowCreate(true); }} className="h-7 text-[11px] px-2.5 shadow-sm">
+              <AppIcon name="plus" size="xs" className="mr-1" /> Post
             </Button>
           </div>
         )}
       </div>
       
-      <Dialog open={showCreate} onOpenChange={(open) => { setShowCreate(open); if (!open) setEditingId(null); }}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Announcement" : "Post Announcement"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="title" className="text-sm font-medium">Title</label>
-              <input
-                id="title"
-                value={editingId ? createData.title : activeCreateData.title}
-                onChange={(e) => setCreateData({ ...createData, title: e.target.value })}
-                className="flex h-10 w-full rounded-[var(--radius)] border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
-                placeholder="Announcement title"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="body" className="text-sm font-medium">Message</label>
-              <textarea
-                id="body"
-                value={editingId ? createData.body : activeCreateData.body}
-                onChange={(e) => setCreateData({ ...createData, body: e.target.value })}
-                className="flex min-h-[80px] w-full rounded-[var(--radius)] border border-neutral-300 bg-transparent px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-50 dark:focus:ring-orange-400 dark:focus:ring-offset-neutral-900"
-                placeholder="Announcement body"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="scope"
-                checked={createData.scope === "company"}
-                onChange={(e) => setCreateData({ ...createData, scope: e.target.checked ? "company" : "team" })}
-                className="rounded border-neutral-300 text-orange-600 focus:ring-orange-500"
-              />
-              <label htmlFor="scope" className="text-sm font-medium">Company-wide (vs Team-only)</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="pinned"
-                checked={editingId ? createData.pinned : activeCreateData.pinned}
-                onChange={(e) => setCreateData({ ...createData, pinned: e.target.checked })}
-                className="rounded border-neutral-300 text-orange-600 focus:ring-orange-500"
-              />
-              <label htmlFor="pinned" className="text-sm font-medium">Pin to top</label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)} disabled={createMutation.isPending}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => createMutation.mutate({ ...createData, id: editingId || undefined })} 
-              disabled={createMutation.isPending || !createData.title || !createData.body}
-            >
-              {createMutation.isPending && <AppIcon name="loading" className="mr-2 animate-spin" />}
-              {editingId ? "Save" : "Post"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <div className="flex-1 space-y-3 overflow-y-auto thin-scrollbar min-h-0 pr-1">
+      <AnnouncementComposer
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        editingId={editingId}
+        initialData={initialData}
+      />
+      <div className="flex-1 overflow-y-auto thin-scrollbar pr-1 -mr-1 relative min-h-[200px]">
         {isPending ? (
-          <div className="space-y-3">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 space-y-2 border border-neutral-100 dark:border-neutral-800">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
+          <div className="space-y-3 p-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="animate-pulse bg-neutral-100 dark:bg-neutral-800 h-24 rounded-lg w-full" />
             ))}
           </div>
-        ) : isError ? (
-          <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
-            <AppIcon name="warning" size="xl" className=" text-rose-400" />
-            <p className="text-xs font-medium text-rose-600">Failed to load announcements</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
-              Retry
-            </Button>
-          </div>
         ) : announcements.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl">
-            <p className="text-xs font-medium text-neutral-400">No announcements yet</p>
+          <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50">
+            <AppIcon name="announcement" size="lg" className="text-neutral-300 dark:text-neutral-700 mb-2" />
+            <p className="text-xs font-bold text-neutral-500">No announcements yet</p>
+            <p className="text-[10px] text-neutral-400 mt-1">Check back later for updates</p>
           </div>
         ) : (
-          announcements.map((item: Announcement) => {
-            const reactions = item.reactions || {};
-            const isPinned = Boolean(item.pinned_at);
-
-            return (
-              <div
-                key={item.id}
-                className="p-3 rounded-lg bg-white dark:bg-neutral-950 space-y-2 border border-neutral-200 dark:border-neutral-800 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <h4 className="text-[13px] font-bold text-neutral-900 dark:text-white flex items-center gap-1.5 leading-snug">
-                    {isPinned && <AppIcon name="pin" size="xs" className=" text-amber-500 fill-amber-500 shrink-0" />}
-                    {item.title}
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-neutral-400">
-                      {safeFormat(item.created_at, "MMM d")}
-                    </span>
-                    {canManage && (
-                      <div className="flex items-center gap-1">
-                        <TooltipProvider delayDuration={150}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setEditingId(item.id);
-                                  setCreateData({ title: item.title, body: item.body, scope: item.scope || "company", pinned: isPinned });
-                                  setShowCreate(true);
-                                }}
-                                aria-label="Edit Announcement"
-                                className="h-5 w-5 text-neutral-400 hover:text-neutral-600 transition-colors"
-                              >
-                                <AppIcon name="edit" size="xs" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="text-xs">Edit Announcement</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider delayDuration={150}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => pinMutation.mutate({ id: item.id, pinned: !isPinned })}
-                                aria-label={isPinned ? "Unpin Announcement" : "Pin Announcement"}
-                                className={`h-5 w-5 transition-colors ${
-                                  isPinned ? "text-warning hover:text-warning/80" : "text-neutral-400 hover:text-neutral-600"
-                                }`}
-                              >
-                                <AppIcon name="pin" size="xs" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="text-xs">{isPinned ? "Unpin Announcement" : "Pin Announcement"}</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <TooltipProvider delayDuration={150}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setConfirmState({ isOpen: true, id: item.id })}
-                                aria-label="Delete Announcement"
-                                className="h-5 w-5 text-neutral-400 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              >
-                                <AppIcon name="trash" size="xs" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="text-xs">Delete Announcement</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                  {item.body}
-                </p>
-
-                <div className="flex items-center justify-between pt-1 border-t border-neutral-200/50 dark:border-neutral-700/50 text-[10px]">
-                  <span className="text-neutral-400 font-medium">
-                    By {item.creator?.name || "Management"}
-                  </span>
-
-                  <div className="flex items-center gap-1">
-                    {emojis.map(({ key, label }) => {
-                      const uids: number[] = Array.isArray(reactions[key]) ? reactions[key] : [];
-                      const count = uids.length;
-                      const hasReacted = user?.id ? uids.includes(user.id) : false;
-
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => reactMutation.mutate({ id: item.id, emoji: key })}
-                          className={`px-1.5 py-0.5 rounded text-[9px] flex items-center gap-1 transition-colors border-none ${
-                            hasReacted
-                              ? "bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 font-bold"
-                              : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400 font-medium"
-                          }`}
-                        >
-                          <span>{label}</span>
-                          {count > 0 && <span>{count}</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+          <div className="space-y-4">
+            {pinnedAnnouncements.length > 0 && (
+              <div className="space-y-3">
+                {pinnedAnnouncements.map(renderAnnouncement)}
               </div>
-            );
-          })
+            )}
+            {unpinnedAnnouncements.length > 0 && (
+              <div className="space-y-3">
+                {pinnedAnnouncements.length > 0 && (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="h-px bg-neutral-200 dark:bg-neutral-800 flex-1"></div>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Recent</span>
+                    <div className="h-px bg-neutral-200 dark:bg-neutral-800 flex-1"></div>
+                  </div>
+                )}
+                {unpinnedAnnouncements.map(renderAnnouncement)}
+              </div>
+            )}
+          </div>
         )}
       </div>
 

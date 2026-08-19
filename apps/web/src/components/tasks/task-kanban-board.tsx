@@ -39,123 +39,14 @@ import { ConfirmDialog } from "@g4k/ui/components";
 import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
 import { EmptyState } from "@g4k/ui/components";
 import { TaskModel } from "./task-detail-sheet";
-
-export interface KanbanTask extends TaskModel {
-  priority: string;
-  scope?: string;
-  order?: number;
-}
+import { TaskCard, KanbanTask } from "./task-card";
 
 const COLUMNS = [
-  { id: "todo", title: "To Do", color: "bg-neutral-400", border: "border-t-neutral-400" },
-  { id: "in_progress", title: "In Progress", color: "bg-info", border: "border-t-blue-500" },
-  { id: "review", title: "In Review", color: "bg-warning", border: "border-t-amber-500" },
-  { id: "done", title: "Done", color: "bg-success", border: "border-t-green-500" },
+  { id: "todo", title: "To Do", color: "bg-neutral-400", border: "border-t-neutral-400/50" },
+  { id: "in_progress", title: "In Progress", color: "bg-primary-500", border: "border-t-primary-500/50" },
+  { id: "review", title: "In Review", color: "bg-amber-500", border: "border-t-amber-500/50" },
+  { id: "done", title: "Done", color: "bg-emerald-500", border: "border-t-emerald-500/50" },
 ];
-
-const getPriorityStatus = (priority: string): StatusType => {
-  switch (priority) {
-    case "urgent":
-      return "danger";
-    case "high":
-      return "warning";
-    case "medium":
-      return "info";
-    default:
-      return "neutral";
-  }
-};
-
-function TaskCard({
-  task,
-  onTaskSelect,
-  isOverlay = false,
-}: {
-  task: KanbanTask;
-  onTaskSelect?: (task: KanbanTask) => void;
-  isOverlay?: boolean;
-}) {
-  return (
-    <Card
-      id={`data-row-${task.id}`}
-      onClick={() => onTaskSelect?.(task)}
-      className={cn(
-        "relative overflow-hidden border-neutral-200 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900 rounded-lg group",
-        isOverlay 
-          ? "scale-[1.02] rotate-2 cursor-grabbing shadow-2xl ring-1 ring-primary/20" 
-          : "shadow-none hover:shadow-sm hover:border-primary-300 dark:hover:border-primary-700 cursor-grab border"
-      )}
-    >
-      <div className={cn(
-        "absolute left-0 top-0 bottom-0 w-1",
-        task.priority === "urgent" ? "bg-red-500" :
-        task.priority === "high" ? "bg-orange-500" :
-        task.priority === "medium" ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-600"
-      )} />
-      <CardContent className="p-2.5 pl-3.5 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col gap-1">
-            <h4 className="text-xs font-semibold text-neutral-900 dark:text-white line-clamp-2">
-              {task.title}
-            </h4>
-            <div className="flex gap-2">
-              {task.scope && task.scope !== "global" && (
-                <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded text-[9px] font-bold capitalize bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
-                  {task.scope}
-                </span>
-              )}
-              {task.status === "review" && (
-                <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                  In Review
-                </span>
-              )}
-              {task.blocked_by && (
-                <span className="inline-flex items-center self-start px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                  <AppIcon name="error" size="xs" className="mr-1" /> Blocked
-                </span>
-              )}
-            </div>
-          </div>
-          <StatusBadge status={getPriorityStatus(task.priority)} className="px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold uppercase shrink-0 tracking-wider">
-            {task.priority}
-          </StatusBadge>
-        </div>
-
-        {task.description && (
-          <p className="text-[11px] text-neutral-500 line-clamp-2">
-            {task.description}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between pt-2 text-[10px] text-neutral-400 border-t border-neutral-100 dark:border-neutral-800">
-          <div className="flex items-center gap-1">
-            <AppIcon name="teamAttendance" size="xs" />
-            <span>{task.due_date ? format(new Date(task.due_date), "MMM d") : "No due date"}</span>
-          </div>
-
-          <div className="flex -space-x-1 z-0">
-            {task.assignees && task.assignees.length > 0 ? (
-              task.assignees.slice(0, 3).map((a: { id: number, name: string }) => (
-                <Avatar key={a.id} className="w-5 h-5 border border-white dark:border-neutral-900 relative">
-                  <AvatarFallback name={a.name} className="text-[8px]" />
-                </Avatar>
-              ))
-            ) : task.assignee ? (
-              <Avatar className="w-5 h-5 border border-white dark:border-neutral-900 relative">
-                <AvatarFallback name={task.assignee.name} className="text-[8px]" />
-              </Avatar>
-            ) : null}
-            {task.assignees && task.assignees.length > 3 && (
-              <div className="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-white dark:border-neutral-900 flex items-center justify-center text-[8px] font-medium z-10 relative">
-                +{task.assignees.length - 3}
-              </div>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: {
   task: KanbanTask;
@@ -189,10 +80,10 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: {
 
   return (
     <>
-      <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+      <div ref={setNodeRef} style={style} {...attributes}>
         <ContextMenu>
           <ContextMenuTrigger>
-            <TaskCard task={task} onTaskSelect={onTaskSelect} />
+            <TaskCard task={task} onTaskSelect={onTaskSelect} dragHandleProps={listeners} />
           </ContextMenuTrigger>
           <ContextMenuContent className="w-48">
             <ContextMenuItem onClick={() => onTaskSelect(task)}>
@@ -243,22 +134,54 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
   const { setNodeRef, isOver } = useDroppable({
     id: col.id,
   });
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  if (isCollapsed) {
+    return (
+      <div className={cn(
+        "flex flex-col items-center py-4 w-12 md:min-w-[48px] md:max-w-[48px] flex-shrink-0 snap-center transition-all bg-neutral-50/50 dark:bg-neutral-900/30 border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 border-t-[3px] shadow-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-t-md",
+        col.border
+      )} onClick={() => setIsCollapsed(false)}>
+        <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center mb-4">
+          {tasks.length}
+        </span>
+        <div className="writing-vertical-rl rotate-180 flex items-center gap-2 whitespace-nowrap">
+          <div className={cn("w-2 h-2 rounded-full shrink-0", col.color)} />
+          <h3 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider">{col.title}</h3>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-2 w-[85vw] md:w-auto md:min-w-[270px] md:max-w-[300px] flex-shrink-0 snap-center p-2 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
+      className={`flex flex-col gap-2 w-[85vw] md:w-auto md:min-w-[280px] md:max-w-[320px] flex-shrink-0 snap-center p-2 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
         isOver
           ? "bg-secondary/20"
           : "bg-transparent"
       }`}
     >
-      <div className={cn("flex items-center justify-between px-3 py-2.5 bg-neutral-50 dark:bg-neutral-900/50 border-t-[3px] sticky top-0 z-10 mb-2 rounded-t-md shadow-sm border-b border-b-neutral-200 dark:border-b-neutral-800", col.border)}>
+      <div className={cn(
+        "flex items-center justify-between px-3 py-2.5 bg-neutral-50 dark:bg-neutral-900/50 border-t-[3px] sticky top-0 z-10 mb-2 rounded-t-md shadow-sm border-b border-b-neutral-200 dark:border-b-neutral-800 group", 
+        col.border
+      )}>
         <div className="flex items-center gap-2">
-          <div className={cn("w-2 h-2 rounded-full", col.color)} />
-          <h3 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider">{col.title}</h3>
+          <div className={cn("w-2 h-2 rounded-full shrink-0", col.color)} />
+          <h3 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider truncate">{col.title}</h3>
         </div>
-        <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center">{tasks.length}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center shrink-0">
+            {tasks.length}
+          </span>
+          <button 
+            onClick={() => setIsCollapsed(true)} 
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded shrink-0"
+            title="Collapse column"
+          >
+            <AppIcon name="chevronLeft" size="xs" className="text-neutral-500" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col gap-3 min-h-[300px]">

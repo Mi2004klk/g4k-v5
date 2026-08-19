@@ -2,6 +2,7 @@
 
 import { useRef, useCallback, useEffect } from "react";
 import { AppIcon } from "@g4k/ui/components";
+import { Avatar, AvatarFallback } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
@@ -64,13 +65,13 @@ export function ConversationList({
   const getIcon = (scope?: string) => {
     switch (scope) {
       case "global":
-        return <AppIcon name="globe" className=" text-primary-500" />;
+        return <div className="h-8 w-8 rounded-full bg-primary-50 dark:bg-primary-950 flex items-center justify-center shrink-0"><AppIcon name="globe" className="text-primary-500" size="sm" /></div>;
       case "project":
-        return <AppIcon name="hash" className=" text-blue-500" />;
+        return <div className="h-8 w-8 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0"><AppIcon name="hash" className="text-blue-500" size="sm" /></div>;
       case "group":
-        return <AppIcon name="directory" className=" text-amber-500" />;
+        return <div className="h-8 w-8 rounded-full bg-amber-50 dark:bg-amber-950 flex items-center justify-center shrink-0"><AppIcon name="directory" className="text-amber-500" size="sm" /></div>;
       default:
-        return <AppIcon name="chat" className=" text-emerald-500" />;
+        return <div className="h-8 w-8 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center shrink-0"><AppIcon name="chat" className="text-emerald-500" size="sm" /></div>;
     }
   };
 
@@ -133,33 +134,38 @@ export function ConversationList({
               data-index={virtualRow.index}
               ref={rowVirtualizer.measureElement}
               onClick={() => onSelect(conv.id)}
-              className={`absolute top-0 left-0 w-full px-3 py-2 flex items-center gap-2.5 cursor-pointer transition-all border-b border-neutral-100 dark:border-neutral-800/50 ${
+              className={`absolute top-0 left-0 w-full px-3 py-2.5 flex items-center gap-2.5 cursor-pointer transition-all ${
                 isSelected
-                  ? "bg-primary-50/40 dark:bg-primary-950/20 border-l-2 border-l-primary-600"
+                  ? "bg-primary-50/60 dark:bg-primary-950/30 border-l-2 border-l-primary-600"
                   : isUnread 
-                    ? "bg-neutral-50/50 dark:bg-neutral-900/30 border-l-2 border-l-transparent hover:bg-neutral-50" 
+                    ? "bg-neutral-50/50 dark:bg-neutral-900/30 border-l-2 border-l-primary-400 dark:border-l-primary-600 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40" 
                     : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50 border-l-2 border-l-transparent"
               }`}
               style={{
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <div className="p-1.5 rounded-[var(--radius)] bg-neutral-100 dark:bg-neutral-800 shrink-0">
-                {getIcon(conv.scope)}
-              </div>
+              {/* Avatar: initials for DMs, icon for channels */}
+              {conv.scope === 'direct' ? (
+                <Avatar className="h-8 w-8 shrink-0">
+                  <AvatarFallback name={title} className="text-[10px]" />
+                </Avatar>
+              ) : (
+                getIcon(conv.scope)
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className={`text-xs truncate ${isUnread ? "font-bold text-primary-700 dark:text-primary-400" : "font-semibold text-neutral-800 dark:text-neutral-200"}`}>
+                  <h4 className={`text-xs truncate ${isUnread ? "font-bold text-neutral-900 dark:text-white" : "font-semibold text-neutral-700 dark:text-neutral-300"}`}>
                     {title}
                   </h4>
                   {conv.latestMessage && (
                     <div className="flex items-center gap-1.5 shrink-0 pl-2">
                       {isUnread && (
-                        <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-3.5 min-w-[14px] px-1 rounded-full shadow-sm">
+                        <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[16px] px-1 rounded-full shadow-sm shadow-primary-500/30">
                           {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
-                      <span className={`text-[9px] uppercase tracking-wider ${isUnread ? "text-primary-600 font-bold" : "text-neutral-400 font-medium"}`}>
+                      <span className={`text-[9px] tabular-nums ${isUnread ? "text-primary-600 dark:text-primary-400 font-bold" : "text-neutral-400 font-medium"}`}>
                         {format(new Date(conv.latestMessage.created_at), "h:mm a")}
                       </span>
                     </div>

@@ -21,7 +21,7 @@ import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, Dia
 import { FormError } from "@/components/forms/form-error";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
-
+import { cn } from "@/lib/utils";
 export interface TaskUser {
   id: number;
   name: string;
@@ -51,6 +51,8 @@ export interface Task {
 export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa" | "list">("kanban");
+  const [groupBy, setGroupBy] = useState<"status" | "priority" | "assignee">("status");
+  const [filterPreset, setFilterPreset] = useState("custom");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   
@@ -224,19 +226,39 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
   const updateTaskDatesMutation = useMutation({
     mutationFn: async ({ taskId, start, end }: { taskId: number; start: Date; end: Date }) => {
-      // In Gantt, `end` is typically exclusive for rendering, we subtract 1 day if it's not a milestone
-      // We'll pass the string formatted date to PUT
       const due_date = format(end, "yyyy-MM-dd");
       return apiFetch(`/tasks/${taskId}`, {
         method: "PUT",
         body: JSON.stringify({ due_date }),
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    onMutate: async ({ taskId, end }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks(defaultProjectId) });
+      const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) });
+      const due_date = format(end, "yyyy-MM-dd");
+
+      queryClient.setQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) }, (old: unknown) => {
+        if (!old) return old;
+        const clone = JSON.parse(JSON.stringify(old));
+        let arr = Array.isArray(clone.data) ? clone.data : (Array.isArray(clone.data?.data) ? clone.data.data : []);
+        const idx = arr.findIndex((t: Task) => t.id === taskId);
+        if (idx !== -1) arr[idx].due_date = due_date;
+        return clone;
+      });
+
+      return { previousTasks };
     },
-    onError: (err: Error) => {
+    onError: (err: Error, variables, context: unknown) => {
       toast.error(err.message || "Failed to update task dates.");
+      const ctx = context as { previousTasks?: [unknown, unknown][] };
+      if (ctx?.previousTasks) {
+        ctx.previousTasks.forEach(([key, data]) => {
+          queryClient.setQueryData(key as readonly unknown[], data);
+        });
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 
@@ -249,11 +271,39 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         }),
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    onMutate: async (reorderedTasks) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks(defaultProjectId) });
+      const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) });
+
+      queryClient.setQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) }, (old: unknown) => {
+        if (!old) return old;
+        const clone = JSON.parse(JSON.stringify(old));
+        let arr = Array.isArray(clone.data) ? clone.data : (Array.isArray(clone.data?.data) ? clone.data.data : []);
+        
+        reorderedTasks.forEach(task => {
+          const idx = arr.findIndex((t: Task) => t.id === task.id);
+          if (idx !== -1) {
+            arr[idx].status = task.status;
+            arr[idx].order = task.order;
+          }
+        });
+        
+        return clone;
+      });
+
+      return { previousTasks };
     },
-    onError: (err: Error) => {
+    onError: (err: Error, variables, context: unknown) => {
       toast.error(err.message || "Failed to reorder tasks.");
+      const ctx = context as { previousTasks?: [unknown, unknown][] };
+      if (ctx?.previousTasks) {
+        ctx.previousTasks.forEach(([key, data]) => {
+          queryClient.setQueryData(key as readonly unknown[], data);
+        });
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 
@@ -288,9 +338,36 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         await apiFetch(`/tasks/${id}`, { method: "PUT", body: JSON.stringify({ status }) });
       }
     },
+    onMutate: async ({ taskIds, status }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks(defaultProjectId) });
+      const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) });
+
+      queryClient.setQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) }, (old: unknown) => {
+        if (!old) return old;
+        const clone = JSON.parse(JSON.stringify(old));
+        let arr = Array.isArray(clone.data) ? clone.data : (Array.isArray(clone.data?.data) ? clone.data.data : []);
+        arr.forEach((t: Task) => {
+          if (taskIds.includes(t.id)) t.status = status;
+        });
+        return clone;
+      });
+
+      return { previousTasks };
+    },
+    onError: (err: Error, variables, context: unknown) => {
+      toast.error("Failed to update tasks status.");
+      const ctx = context as { previousTasks?: [unknown, unknown][] };
+      if (ctx?.previousTasks) {
+        ctx.previousTasks.forEach(([key, data]) => {
+          queryClient.setQueryData(key as readonly unknown[], data);
+        });
+      }
+    },
     onSuccess: () => {
       toast.success("Tasks status updated.");
       setRowSelection({});
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
@@ -507,14 +584,23 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       <div className="flex flex-col gap-3 mb-3 shrink-0">
         {/* Row 1: Views and Actions */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-full lg:w-auto">
-            <TabsList className="h-9 w-full lg:w-auto">
-              <TabsTrigger value="kanban" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="kanban" className="mr-1.5" size="xs" /> Board</TabsTrigger>
-              <TabsTrigger value="list" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="list" className="mr-1.5" size="xs" /> List</TabsTrigger>
-              <TabsTrigger value="gantt" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="calendar" className="mr-1.5" size="xs" /> Timeline</TabsTrigger>
-              <TabsTrigger value="qa" className="flex-1 lg:flex-none text-[11px] font-semibold px-4"><AppIcon name="tasks" className="mr-1.5" size="xs" /> QA Forms</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50">
+            {(["kanban", "list", "gantt", "qa"] as const).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={cn(
+                  "flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap",
+                  viewMode === mode 
+                    ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800"
+                    : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                )}
+              >
+                <AppIcon name={mode === "kanban" ? "kanban" : mode === "list" ? "list" : mode === "gantt" ? "calendar" : "tasks"} size="xs" />
+                {mode === "kanban" ? "Board" : mode === "list" ? "List" : mode === "gantt" ? "Timeline" : "QA"}
+              </button>
+            ))}
+          </div>
 
           <div className="flex items-center gap-3 shrink-0">
             {viewMode !== "qa" && (
@@ -785,7 +871,35 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
         {/* Row 2: Filters */}
         {viewMode !== "qa" && (
-          <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm">
+          <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm flex flex-col md:flex-row md:items-center gap-2">
+            <div className="flex items-center gap-2 px-2 border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800 pb-2 md:pb-0 shrink-0">
+              <Select value={filterPreset} onValueChange={setFilterPreset}>
+                <SelectTrigger className="w-[140px] h-8 text-[11px] font-bold bg-neutral-50 dark:bg-neutral-800 border-none shadow-none text-primary-600 dark:text-primary-400">
+                  <SelectValue placeholder="Saved Filters" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom" className="text-xs">Custom Filter</SelectItem>
+                  <SelectItem value="my_active" className="text-xs">My Active Tasks</SelectItem>
+                  <SelectItem value="high_priority" className="text-xs">High Priority</SelectItem>
+                  <SelectItem value="overdue" className="text-xs">Overdue</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {viewMode === "kanban" && (
+                <Select value={groupBy} onValueChange={(v) => setGroupBy(v as any)}>
+                  <SelectTrigger className="w-[120px] h-8 text-[11px] font-bold border-none shadow-none">
+                    <AppIcon name="list" size="xs" className="mr-1.5 text-neutral-400" />
+                    <SelectValue placeholder="Group By" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="status" className="text-xs">Group: Status</SelectItem>
+                    <SelectItem value="priority" className="text-xs">Group: Priority</SelectItem>
+                    <SelectItem value="assignee" className="text-xs">Group: Assignee</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            <div className="flex-1">
             <FilterBar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -850,83 +964,96 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
               }}
             />
           </div>
+        </div>
         )}
       </div>
-            {(viewMode === "list" || viewMode === "kanban") && (
-        <div className="flex-1 flex flex-col min-h-0">
-          
 
-
-          {viewMode === "list" && (
-            <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden flex flex-col">
-              <DataTable
-                columns={columns}
-                data={filteredTasks}
-                stickyHeader={true}
-                stickyFirstCol={true}
-                rowSelection={rowSelection}
-                onRowSelectionChange={setRowSelection}
-                page={parseInt(page)}
-                perPage={perPage}
-                totalPages={data?.last_page || data?.meta?.last_page || data?.data?.last_page || 1}
-                onPageChange={(p) => setPage(p.toString())}
-                onPerPageChange={setPerPage}
-                density="compact"
-                isLoading={isLoading}
-                isError={isError}
-                sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
-                onSortingChange={(sorting) => {
-                  if (sorting.length > 0) {
-                    setSortBy(sorting[0].id);
-                    setSortOrder(sorting[0].desc ? "desc" : "asc");
-                  } else {
-                    setSortBy("id");
-                    setSortOrder("desc");
-                  }
-                }}
-              />
-            </div>
-          )}
-
-          {viewMode !== "list" && (data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-[11px] font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
-              Showing first 100 tasks. Use List view for full pagination.
-            </div>
-          )}
-
-          {viewMode === "kanban" && (
-            <div className="flex-1 min-h-0 -mx-4 sm:-mx-6 lg:mx-0 lg:bg-neutral-50/50 lg:dark:bg-neutral-950/50 lg:border lg:border-neutral-200 lg:dark:border-neutral-800 lg:rounded-lg overflow-hidden">
-              <TaskKanbanBoard
-                tasks={filteredTasks as any}
-                onTaskMove={handleTaskMove}
-                onTaskSelect={handleTaskSelect as any}
-                onDeleteTask={handleDeleteTask}
-                onTaskReorder={(tasks) => reorderTaskMutation.mutate(tasks as any)}
-                isLoading={isLoading}
-                statusFilter={statusFilter}
-              />
-            </div>
-          )}
+      {isError ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-center mt-2">
+          <AppIcon name="error" size="3xl" className="text-rose-500 mb-4 opacity-80" />
+          <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-2">Failed to load tasks</h3>
+          <p className="text-xs text-neutral-500 max-w-md">There was a problem communicating with the server. Please check your connection and try again.</p>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.tasks(defaultProjectId) })}>
+            Retry
+          </Button>
         </div>
-      )}
+      ) : (
+        <>
+          {(viewMode === "list" || viewMode === "kanban") && (
+            <div className="flex-1 flex flex-col min-h-0">
+              
+              {viewMode === "list" && (
+                <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                  <DataTable
+                    columns={columns}
+                    data={filteredTasks}
+                    stickyHeader={true}
+                    stickyFirstCol={true}
+                    rowSelection={rowSelection}
+                    onRowSelectionChange={setRowSelection}
+                    page={parseInt(page)}
+                    perPage={perPage}
+                    totalPages={data?.last_page || data?.meta?.last_page || data?.data?.last_page || 1}
+                    onPageChange={(p) => setPage(p.toString())}
+                    onPerPageChange={setPerPage}
+                    density="compact"
+                    isLoading={isLoading}
+                    isError={isError}
+                    sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
+                    onSortingChange={(sorting) => {
+                      if (sorting.length > 0) {
+                        setSortBy(sorting[0].id);
+                        setSortOrder(sorting[0].desc ? "desc" : "asc");
+                      } else {
+                        setSortBy("id");
+                        setSortOrder("desc");
+                      }
+                    }}
+                  />
+                </div>
+              )}
 
-      {viewMode === "gantt" && (
-        <div className="flex-1 flex flex-col min-h-0">
-          {(data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-[11px] font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
-              Showing first 100 tasks. Use List view for full pagination.
+              {viewMode !== "list" && (data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-[11px] font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
+                  Showing first 100 tasks. Use List view for full pagination.
+                </div>
+              )}
+
+              {viewMode === "kanban" && (
+                <div className="flex-1 min-h-0 -mx-4 sm:-mx-6 lg:mx-0 lg:bg-neutral-50/50 lg:dark:bg-neutral-950/50 lg:border lg:border-neutral-200 lg:dark:border-neutral-800 lg:rounded-lg overflow-hidden">
+                  <TaskKanbanBoard
+                    tasks={filteredTasks as any}
+                    onTaskMove={handleTaskMove}
+                    onTaskSelect={handleTaskSelect as any}
+                    onDeleteTask={handleDeleteTask}
+                    onTaskReorder={(tasks) => reorderTaskMutation.mutate(tasks as any)}
+                    isLoading={isLoading}
+                    statusFilter={statusFilter}
+                  />
+                </div>
+              )}
             </div>
           )}
-          <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden">
-            <TaskGantt tasks={filteredTasks as any} onTaskSelect={handleTaskSelect as any} onTaskUpdate={(task, dates) => updateTaskDatesMutation.mutate({ taskId: Number(task.id), start: dates.start, end: dates.end })} />
-          </div>
-        </div>
-      )}
 
-      {viewMode === "qa" && (
-        <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar">
-          <QAFormBuilder />
-        </div>
+          {viewMode === "gantt" && (
+            <div className="flex-1 flex flex-col min-h-0">
+              {(data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-[11px] font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
+                  Showing first 100 tasks. Use List view for full pagination.
+                </div>
+              )}
+              <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden">
+                <TaskGantt tasks={filteredTasks as any} onTaskSelect={handleTaskSelect as any} onTaskUpdate={(task, dates) => updateTaskDatesMutation.mutate({ taskId: Number(task.id), start: dates.start, end: dates.end })} isLoading={isLoading} />
+              </div>
+            </div>
+          )}
+
+          {viewMode === "qa" && (
+            <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar">
+              <QAFormBuilder />
+            </div>
+          )}
+        </>
       )}
 
       <TaskDetailSheet
@@ -946,23 +1073,23 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
       {/* Floating Bulk Actions Footer */}
       {selectedTaskIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 animate-in slide-in-from-bottom-5">
-          <div className="flex items-center gap-2 px-2 border-r border-neutral-200 dark:border-neutral-800">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 animate-in slide-in-from-bottom-5">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 border-r border-neutral-200 dark:border-neutral-800">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 text-[10px] font-bold">
               {selectedTaskIds.length}
             </div>
-            <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400 mr-2">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
               selected
             </span>
           </div>
-          <div className="flex items-center gap-1.5 pr-1">
-            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-[11px] px-3 shadow-sm rounded-full">
-              <AppIcon name="success" className="mr-1.5 text-green-600 dark:text-green-500" size="xs" /> Mark Done
+          <div className="flex items-center gap-1 sm:gap-1.5 pr-1">
+            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "completed" })} className="h-7 text-[10px] sm:text-[11px] px-2 sm:px-3 shadow-sm rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
+              <AppIcon name="success" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Mark Done</span>
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-[11px] px-3 shadow-sm rounded-full">
-              <AppIcon name="trash" className="mr-1.5" size="xs" /> Delete
+            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-[10px] sm:text-[11px] px-2 sm:px-3 shadow-sm rounded-full">
+              <AppIcon name="trash" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Delete</span>
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setRowSelection({})} className="h-7 w-7 p-0 rounded-full text-neutral-500 hover:text-neutral-800 ml-1">
+            <Button size="sm" variant="ghost" onClick={() => setRowSelection({})} className="h-7 w-7 p-0 rounded-full text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 ml-1 shrink-0">
               <AppIcon name="close" size="xs" />
             </Button>
           </div>

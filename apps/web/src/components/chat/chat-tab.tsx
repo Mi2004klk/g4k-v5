@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch, unwrapList } from "@/lib/api-client";
 import { asArray } from "@/lib/utils";
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@g4k/ui/components";
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Avatar, AvatarFallback, MeaningfulEmpty } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { useReverb } from "@/hooks/use-reverb";
 import { ConversationList } from "@/components/chat/conversation-list";
 import { MessageList } from "@/components/chat/message-list";
 import { MessageComposer } from "@/components/chat/message-composer";
 import { CreateGroupDialog } from "@/components/chat/create-group-dialog";
-import { QuickNotes } from "@/components/widgets/quick-notes";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { toast } from "sonner";
@@ -39,12 +38,17 @@ export function ChatTab() {
   const initialConvId = searchParams.get("conversation");
   const [selectedId, setSelectedId] = useState<number | string | null>(initialConvId ? parseInt(initialConvId) : null);
   const [groupDialogOpen, setGroupDialogOpen] = useState(false);
+  const [scopeFilter, setScopeFilter] = useState<"all" | "direct" | "group" | "project">("all");
   
+  // Track which message we are replying to
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+
   const [prevInitialConvId, setPrevInitialConvId] = useState(initialConvId);
   if (initialConvId !== prevInitialConvId) {
     setPrevInitialConvId(initialConvId);
     if (initialConvId) {
       setSelectedId(parseInt(initialConvId));
+      setReplyingTo(null);
     }
   }
 
@@ -217,17 +221,47 @@ export function ChatTab() {
     return (uData as any)?.pivot?.is_pinned === 1 || (uData as any)?.pivot?.is_pinned === true;
   }).length;
 
+  // Compute total unread count across all conversations
+  const totalUnreadCount = useMemo(() => {
+    return allConversations.reduce((count: number, c: ChatConversation) => {
+      const uc = c.unread_count || 0;
+      if (uc > 0) return count + uc;
+      // Fallback: check latestMessage vs last_read_at
+      const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
+      const lastRead = uData?.pivot?.last_read_at;
+      if (c.latestMessage && c.latestMessage.sender_id !== user?.id &&
+        (!lastRead || new Date(c.latestMessage.created_at) > new Date(lastRead))) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  }, [allConversations, user?.id]);
+
+  // Apply scope filter
+  const scopeFilteredItems = scopeFilter === "all"
+    ? sortedItems
+    : sortedItems.filter((c: ChatConversation) => c.scope === scopeFilter);
+
   const conversations: ChatConversation[] = [];
-  if (pinnedCount > 0 && !searchQuery) {
-    conversations.push({ id: 'divider-pinned', is_divider: true, title: 'Pinned' });
-    conversations.push(...sortedItems.slice(0, pinnedCount));
-    
-    if (pinnedCount < sortedItems.length) {
+  if (pinnedCount > 0 && !searchQuery && scopeFilter === "all") {
+    const pinnedItems = scopeFilteredItems.filter(c => {
+      const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
+      return (uData as any)?.pivot?.is_pinned === 1 || (uData as any)?.pivot?.is_pinned === true;
+    });
+    const unpinnedItems = scopeFilteredItems.filter(c => {
+      const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
+      return !((uData as any)?.pivot?.is_pinned === 1 || (uData as any)?.pivot?.is_pinned === true);
+    });
+    if (pinnedItems.length > 0) {
+      conversations.push({ id: 'divider-pinned', is_divider: true, title: 'Pinned' });
+      conversations.push(...pinnedItems);
+    }
+    if (unpinnedItems.length > 0) {
       conversations.push({ id: 'divider-recent', is_divider: true, title: 'Recent' });
-      conversations.push(...sortedItems.slice(pinnedCount));
+      conversations.push(...unpinnedItems);
     }
   } else {
-    conversations.push(...sortedItems);
+    conversations.push(...scopeFilteredItems);
   }
 
   const { 
@@ -354,12 +388,15 @@ export function ChatTab() {
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ body, mentions, attachment }: { body: string; mentions?: number[]; attachment?: File | null }) => {
+    mutationFn: async ({ body, mentions, attachment, replyToId }: { body: string; mentions?: number[]; attachment?: File | null; replyToId?: number }) => {
       if (attachment) {
         const formData = new FormData();
         formData.append("body", body);
         if (mentions?.length) {
           mentions.forEach(m => formData.append("mentions[]", m.toString()));
+        }
+        if (replyToId) {
+          formData.append("reply_to_id", replyToId.toString());
         }
         formData.append("attachment", attachment);
         
@@ -370,7 +407,7 @@ export function ChatTab() {
       } else {
         return apiFetch(`/conversations/${selectedId}/messages`, {
           method: "POST",
-          body: JSON.stringify({ body, mentions }),
+          body: JSON.stringify({ body, mentions, reply_to_id: replyToId }),
         });
       }
     },
@@ -442,9 +479,28 @@ export function ChatTab() {
     }
   });
 
+  // Derive chat header subtitle
+  const chatHeaderName = selectedConv?.scope === 'direct'
+    ? selectedConv?.users?.find((p: ChatUser) => p.id !== user?.id)?.name
+    : selectedConv?.name;
+  const chatHeaderSubtitle = selectedConv?.scope === 'direct'
+    ? 'Direct Message'
+    : selectedConv?.scope === 'global'
+      ? 'Everyone'
+      : selectedConv?.users
+        ? `${selectedConv.users.length} member${selectedConv.users.length !== 1 ? 's' : ''}`
+        : undefined;
+
+  const scopeFilters = [
+    { key: 'all' as const, label: 'All' },
+    { key: 'direct' as const, label: 'Direct' },
+    { key: 'group' as const, label: 'Groups' },
+    { key: 'project' as const, label: 'Channels' },
+  ];
+
   return (
     <>
-      <div className="mt-4 flex flex-col lg:flex-row gap-4 h-[calc(100dvh-180px)] min-h-[500px] max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
+      <div className="mt-4 flex flex-col h-[calc(100dvh-180px)] min-h-[500px] max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
       {/* Main Chat Interface */}
       <div
         className="flex-1 bg-card dark:bg-neutral-900 md:rounded-xl md:border md:border-neutral-200 dark:md:border-neutral-800 flex overflow-hidden"
@@ -452,25 +508,34 @@ export function ChatTab() {
       >
         {/* Conversation sidebar */}
         <div className={`w-full md:w-72 lg:w-80 shrink-0 border-r border-neutral-200 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="p-2.5 border-b border-neutral-200 dark:border-neutral-800 flex flex-col gap-2.5">
+          {/* Sidebar header */}
+          <div className="p-2.5 border-b border-neutral-200 dark:border-neutral-800 flex flex-col gap-2">
             <div className="flex items-center justify-between px-1">
-              <span className="font-bold text-xs text-neutral-800 dark:text-neutral-200">Chats</span>
-                {canManageChat && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
-                    aria-label="New group chat"
-                    title="New Group"
-                    onClick={() => setGroupDialogOpen(true)}
-                  >
-                    <AppIcon name="plus" size="sm" />
-                  </Button>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xs text-neutral-800 dark:text-neutral-200">Chats</span>
+                {totalUnreadCount > 0 && (
+                  <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[16px] px-1.5 rounded-full shadow-sm">
+                    {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                  </span>
                 )}
               </div>
+              {canManageChat && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
+                  aria-label="New group chat"
+                  title="New Group"
+                  onClick={() => setGroupDialogOpen(true)}
+                >
+                  <AppIcon name="plus" size="sm" />
+                </Button>
+              )}
             </div>
-            <div className="relative px-2.5 pb-2.5">
-              <AppIcon name="search" size="xs" className="absolute left-4 top-2 text-neutral-400" />
+
+            {/* Search */}
+            <div className="relative px-0.5">
+              <AppIcon name="search" size="xs" className="absolute left-2 top-2 text-neutral-400" />
               <input
                 type="text"
                 placeholder="Search chats..."
@@ -479,112 +544,152 @@ export function ChatTab() {
                 className="w-full h-7 pl-7 pr-3 text-[11px] bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-primary-500 rounded-md outline-none transition-colors"
               />
             </div>
-            <div className="flex-1 overflow-y-auto thin-scrollbar">
-              <ConversationList
-                currentUserId={user?.id as number}
-                conversations={conversations}
-                selectedId={selectedId}
-                onSelect={handleSelectConversation}
-                hasNextPage={hasNextConversations}
-                isFetchingNextPage={isFetchingNextConversations}
-                fetchNextPage={fetchNextConversations}
-              />
+
+            {/* Scope filter pills */}
+            <div className="flex items-center gap-1 px-0.5">
+              {scopeFilters.map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setScopeFilter(f.key)}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
+                    scopeFilter === f.key
+                      ? 'bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
+                      : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-300'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Active Chat Area */}
-          <div className={`flex-1 flex flex-col bg-white dark:bg-neutral-950 ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
-            {selectedId ? (
-              <>
-                <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-3">
-                  <Button variant="ghost" size="sm" className="md:hidden p-0 h-11 w-11 sm:h-8 sm:w-8" onClick={() => setSelectedId(null)}>
-                    <AppIcon name="arrowLeft" />
-                  </Button>
-                  <div>
-                    <h3 className="font-bold text-neutral-900 dark:text-white">
-                      {selectedConv?.scope === 'direct' 
-                        ? selectedConv?.users?.find((p: ChatUser) => p.id !== user?.id)?.name 
-                        : selectedConv?.name}
-                    </h3>
-                  </div>
-
-                  <div className="ml-auto flex items-center gap-2">
-                    {!isConnected && (
-                      <span
-                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 text-[10px] font-semibold shrink-0"
-                        title="Real-time connection lost — falling back to periodic refresh"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        Not connected
-                      </span>
-                    )}
-                    {selectedConv?.scope !== 'global' && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-600">
-                            <AppIcon name="more" size="sm" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                            const isPinned = (selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned;
-                            if (isPinned) {
-                              unpinChatMutation.mutate();
-                            } else {
-                              pinChatMutation.mutate();
-                            }
-                          }} disabled={pinChatMutation.isPending || unpinChatMutation.isPending}>
-                            <AppIcon name="pin" className="mr-2" /> 
-                            {((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned) ? "Unpin chat" : "Pin chat"}
-                          </DropdownMenuItem>
-                          
-                          <DropdownMenuItem onClick={() => {
-                            if (window.confirm("Are you sure you want to clear this chat? This will only remove the messages for you.")) {
-                              clearChatMutation.mutate();
-                            }
-                          }} disabled={clearChatMutation.isPending} className="text-red-500 hover:text-red-600 focus:text-red-600">
-                            <AppIcon name="trash" className="mr-2" /> Clear Chat
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                    <Button variant="ghost" size="icon" className="hidden md:flex h-8 w-8 text-neutral-400 hover:text-neutral-600" onClick={() => setSelectedId(null)} title="Close Chat">
-                      <AppIcon name="close" size="sm" />
-                    </Button>
-                  </div>
-                </div>
-
-                <MessageList 
-                  messages={messages} 
-                  currentUserId={user?.id || 0} 
-                  onFetchNextPage={() => fetchNextPage()}
-                  hasNextPage={!!hasNextPage}
-                  isFetchingNextPage={isFetchingNextPage}
-                  onPinMessage={(msgId) => pinMutation.mutate(msgId)}
-                  onUnpinMessage={(msgId) => unpinMutation.mutate(msgId)}
-                  canManage={canPinMessages}
-                  onMarkRead={() => markReadMutation.mutate()}
-                  onDeleteMessage={(msgId) => deleteMessageMutation.mutate(msgId)}
-                />
-
-                <MessageComposer
-                  onSend={(body, mentions, attachment) => sendMessageMutation.mutate({ body, mentions, attachment })}
-                  disabled={sendMessageMutation.isPending}
-                  conversation={selectedConv}
-                />
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-neutral-400">
-                <AppIcon name="chat" className=" text-neutral-300 mb-2" />
-                <p className="text-xs font-medium">Select a conversation to start chatting.</p>
-              </div>
-            )}
+          {/* Conversation list */}
+          <div className="flex-1 overflow-y-auto thin-scrollbar">
+            <ConversationList
+              currentUserId={user?.id as number}
+              conversations={conversations}
+              selectedId={selectedId}
+              onSelect={handleSelectConversation}
+              hasNextPage={hasNextConversations}
+              isFetchingNextPage={isFetchingNextConversations}
+              fetchNextPage={fetchNextConversations}
+            />
           </div>
         </div>
 
-      {/* Sidebar Widgets */}
-      <div className="hidden lg:block w-72 shrink-0 h-full overflow-y-auto thin-scrollbar">
-        <QuickNotes />
+        {/* Active Chat Area */}
+        <div className={`flex-1 flex flex-col bg-white dark:bg-neutral-950 ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
+          {selectedId ? (
+            <>
+              {/* Chat header */}
+              <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-3">
+                <Button variant="ghost" size="sm" className="md:hidden p-0 h-11 w-11 sm:h-8 sm:w-8" onClick={() => setSelectedId(null)}>
+                  <AppIcon name="arrowLeft" />
+                </Button>
+
+                {/* Avatar for the chat partner / group */}
+                {selectedConv?.scope === 'direct' ? (
+                  <Avatar className="h-8 w-8 shrink-0">
+                    <AvatarFallback name={chatHeaderName || 'U'} className="text-[10px]" />
+                  </Avatar>
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center shrink-0">
+                    <AppIcon name={selectedConv?.scope === 'global' ? 'globe' : selectedConv?.scope === 'project' ? 'hash' : 'directory'} className="text-primary-600 dark:text-primary-400" size="sm" />
+                  </div>
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-sm text-neutral-900 dark:text-white truncate">
+                    {chatHeaderName}
+                  </h3>
+                  {chatHeaderSubtitle && (
+                    <p className="text-[10px] text-neutral-500 truncate">{chatHeaderSubtitle}</p>
+                  )}
+                </div>
+
+                <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                  {!isConnected && (
+                    <span
+                      className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 text-[10px] font-semibold shrink-0"
+                      title="Real-time connection lost — falling back to periodic refresh"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Offline
+                    </span>
+                  )}
+                  {selectedConv?.scope !== 'global' && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-600">
+                          <AppIcon name="more" size="sm" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          const isPinned = (selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned;
+                          if (isPinned) {
+                            unpinChatMutation.mutate();
+                          } else {
+                            pinChatMutation.mutate();
+                          }
+                        }} disabled={pinChatMutation.isPending || unpinChatMutation.isPending}>
+                          <AppIcon name="pin" className="mr-2" />
+                          {((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned) ? "Unpin chat" : "Pin chat"}
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem onClick={() => {
+                          if (window.confirm("Are you sure you want to clear this chat? This will only remove the messages for you.")) {
+                            clearChatMutation.mutate();
+                          }
+                        }} disabled={clearChatMutation.isPending} className="text-red-500 hover:text-red-600 focus:text-red-600">
+                          <AppIcon name="trash" className="mr-2" /> Clear Chat
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  <Button variant="ghost" size="icon" className="hidden md:flex h-8 w-8 text-neutral-400 hover:text-neutral-600" onClick={() => setSelectedId(null)} title="Close Chat">
+                    <AppIcon name="close" size="sm" />
+                  </Button>
+                </div>
+              </div>
+
+              <MessageList 
+                messages={messages} 
+                currentUserId={user?.id || 0} 
+                onFetchNextPage={() => fetchNextPage()}
+                hasNextPage={!!hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onPinMessage={(msgId) => pinMutation.mutate(msgId)}
+                onUnpinMessage={(msgId) => unpinMutation.mutate(msgId)}
+                canManage={canPinMessages}
+                onMarkRead={() => markReadMutation.mutate()}
+                onDeleteMessage={(msgId) => deleteMessageMutation.mutate(msgId)}
+                onReply={(msg) => setReplyingTo(msg as ChatMessage)}
+              />
+
+              <MessageComposer
+                onSend={(body, mentions, attachment) => {
+                  sendMessageMutation.mutate({ body, mentions, attachment, replyToId: replyingTo?.id });
+                  setReplyingTo(null);
+                }}
+                disabled={sendMessageMutation.isPending}
+                conversation={selectedConv}
+                replyTo={replyingTo}
+                onCancelReply={() => setReplyingTo(null)}
+              />
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-8">
+              <MeaningfulEmpty
+                entityName="conversations"
+                icon="chat"
+                description="Select a conversation from the sidebar, or start a new chat."
+                actionLabel={canManageChat ? "New Group" : undefined}
+                onAction={canManageChat ? () => setGroupDialogOpen(true) : undefined}
+              />
+            </div>
+          )}
+        </div>
       </div>
       </div>
 

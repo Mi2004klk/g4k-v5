@@ -13,10 +13,11 @@ export interface GanttTask extends TaskModel {
   blocked_by?: number | string | null;
 }
 
-export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: { 
+export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: { 
   tasks: GanttTask[]; 
   onTaskSelect?: (task: GanttTask) => void;
   onTaskUpdate?: (task: GanttTask, dates: {start: Date, end: Date}) => void;
+  isLoading?: boolean;
 }) {
   const ganttContainerRef = useRef<HTMLDivElement>(null);
   const ganttInstance = useRef<any>(null);
@@ -93,9 +94,35 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
           },
           view_mode: ganttViewMode,
           language: 'en',
-          // @ts-expect-error - readonly is not in GanttOptions typings but works in frappe-gantt
-          readonly: true,
-        });
+          custom_popup_html: (task: any) => {
+            const originalTask = tasks.find(t => String(t.id) === task.id);
+            const statusLabel = originalTask?.status?.replace("_", " ") || "";
+            const assignees = originalTask?.assignees || (originalTask?.assignee ? [originalTask.assignee] : []);
+            const avatarsHtml = assignees.slice(0, 3).map((a: any) => 
+              `<div class="w-6 h-6 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center text-[9px] font-bold text-neutral-600 uppercase shrink-0" title="${a.name}">${a.name.substring(0, 2)}</div>`
+            ).join('');
+            const moreHtml = assignees.length > 3 ? `<div class="w-6 h-6 rounded-full bg-neutral-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-neutral-600 shrink-0">+${assignees.length - 3}</div>` : '';
+            const allAvatars = assignees.length > 0 ? `<div class="flex -space-x-2 mt-2">${avatarsHtml}${moreHtml}</div>` : `<div class="mt-2 text-xs text-neutral-400">Unassigned</div>`;
+            
+            return `
+              <div class="flex flex-col gap-1 w-[220px]">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 border border-neutral-200">${statusLabel}</span>
+                  <span class="text-[10px] text-neutral-400">${task.progress}%</span>
+                </div>
+                <h5 class="text-sm font-bold text-neutral-800 line-clamp-2 leading-tight">${task.name}</h5>
+                <p class="text-xs text-neutral-500 flex items-center gap-1 mt-1">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="opacity-70"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  ${format(new Date(task.start), "MMM d")} - ${format(new Date(task.end), "MMM d")}
+                </p>
+                ${allAvatars}
+                <div class="mt-3 text-[10px] text-primary-500 font-semibold flex items-center gap-1 opacity-80">
+                  Click to view full details
+                </div>
+              </div>
+            `;
+          }
+        } as any);
       }
     } catch (e) {
       console.error("Gantt error", e);
@@ -107,7 +134,26 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
         ganttContainerRef.current.innerHTML = '';
       }
     };
-  }, [tasks, ganttViewMode]);
+  }, [tasks, ganttViewMode, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex flex-col bg-card dark:bg-neutral-900 border border-border/80 rounded-xl shadow-sm overflow-hidden p-4">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-24 h-6 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
+          <div className="w-32 h-6 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse ml-auto" />
+        </div>
+        <div className="flex-1 flex flex-col gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex gap-4 items-center">
+              <div className="w-48 h-8 bg-neutral-100 dark:bg-neutral-800/50 rounded animate-pulse shrink-0" />
+              <div className="flex-1 h-8 bg-neutral-100 dark:bg-neutral-800/50 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (tasks.length === 0) {
     return (
@@ -200,18 +246,37 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate }: {
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/80 bg-muted/20">
         <div className="flex items-center gap-2">
           <AppIcon name="calendar" size="sm" className="text-primary-500" />
-          <h3 className="text-[13px] font-bold text-neutral-700 dark:text-neutral-300">Timeline</h3>
+          <h3 className="text-[13px] font-bold text-neutral-700 dark:text-neutral-300 hidden sm:block">Timeline</h3>
+          <button 
+            onClick={() => {
+              const todayEl = ganttContainerRef.current?.querySelector('.today-highlight');
+              const container = ganttContainerRef.current;
+              if (todayEl && container) {
+                const scrollPos = (todayEl as HTMLElement).offsetLeft - (container.clientWidth / 2);
+                container.scrollTo({ left: scrollPos, behavior: 'smooth' });
+              }
+            }}
+            className="ml-2 px-2 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded text-[10px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"
+          >
+            Today
+          </button>
         </div>
-        <Tabs value={ganttViewMode} onValueChange={(v) => setGanttViewMode(v as any)}>
-          <TabsList className="h-8">
-            <TabsTrigger value="Day" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Day</TabsTrigger>
-            <TabsTrigger value="Week" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Week</TabsTrigger>
-            <TabsTrigger value="Month" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Month</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        
+        <div className="flex items-center gap-3">
+          <div className="sm:hidden flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200 text-[10px] font-bold">
+            <AppIcon name="loading" size="xs" className="animate-spin" /> Rotate to landscape
+          </div>
+          <Tabs value={ganttViewMode} onValueChange={(v) => setGanttViewMode(v as any)}>
+            <TabsList className="h-8">
+              <TabsTrigger value="Day" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Day</TabsTrigger>
+              <TabsTrigger value="Week" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Week</TabsTrigger>
+              <TabsTrigger value="Month" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Month</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
       
-      <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar min-h-[400px]" ref={ganttContainerRef}>
+      <div className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar min-h-[500px]" ref={ganttContainerRef}>
         {/* SVG will be injected here by useEffect */}
       </div>
     </div>

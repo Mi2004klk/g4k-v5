@@ -3,6 +3,7 @@
 import { useEffect, useRef, memo, useCallback, useState } from "react";
 import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
+import { Avatar, AvatarFallback } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface ListMessage {
@@ -27,6 +28,7 @@ const MessageItem = memo(function MessageItem({
   canManage,
   onMarkRead,
   onDeleteMessage,
+  onReply,
 }: {
   msg: ListMessage;
   isMe: boolean;
@@ -36,6 +38,7 @@ const MessageItem = memo(function MessageItem({
   canManage?: boolean;
   onMarkRead?: () => void;
   onDeleteMessage?: (msgId: number) => void;
+  onReply?: (msg: ListMessage) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -61,16 +64,26 @@ const MessageItem = memo(function MessageItem({
   }, [isMe, onMarkRead, msg.reads]);
 
   return (
-    <div ref={ref} className={`relative group flex flex-col ${isMe ? "items-end" : "items-start"} ${isConsecutive ? "mt-1" : "mt-4"}`}>
-      {!isConsecutive && (
-        <div className="flex items-center gap-1.5 mb-1 text-[9px] text-neutral-400 font-medium">
-          <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-            {isMe ? "You" : msg.sender?.name}
-          </span>
-          <span>•</span>
-          <span className="uppercase tracking-wider">{format(new Date(msg.created_at), "h:mm a")}</span>
-        </div>
+    <div ref={ref} className={`relative group flex ${isMe ? "flex-row-reverse" : "flex-row"} gap-2 ${isConsecutive ? "mt-0.5" : "mt-4"}`}>
+      {/* Avatar column */}
+      {!isConsecutive ? (
+        <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+          <AvatarFallback name={isMe ? "You" : msg.sender?.name || 'U'} className="text-[9px]" />
+        </Avatar>
+      ) : (
+        <div className="w-7 shrink-0" />
       )}
+
+      <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} flex-1 min-w-0`}>
+        {!isConsecutive && (
+          <div className="flex items-center gap-1.5 mb-1 text-[9px] text-neutral-400 font-medium">
+            <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+              {isMe ? "You" : msg.sender?.name}
+            </span>
+            <span>•</span>
+            <span className="tabular-nums">{format(new Date(msg.created_at), "h:mm a")}</span>
+          </div>
+        )}
 
       <div
         className={`max-w-[85%] px-3 py-2 rounded-lg text-[11px] space-y-1 shadow-sm ${
@@ -192,16 +205,18 @@ const MessageItem = memo(function MessageItem({
         )}
       </div>
 
-      {(canManage || isMe) && (
-        <div className={`absolute top-2 ${isMe ? "right-full mr-2" : "left-full ml-2"} opacity-0 group-hover:opacity-100 transition-opacity`}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full">
-                <AppIcon name="moreH" size="xs" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={isMe ? "end" : "start"}>
-              {canManage && ((msg as any).pinned ? (
+      <div className={`absolute top-2 ${isMe ? "right-full mr-2" : "left-full ml-2"} opacity-0 group-hover:opacity-100 transition-opacity`}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 rounded-full">
+              <AppIcon name="moreH" size="xs" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align={isMe ? "end" : "start"}>
+            <DropdownMenuItem onClick={() => onReply?.(msg)}>
+              <AppIcon name="arrowLeft" className=" mr-2 text-primary-500" /> Reply
+            </DropdownMenuItem>
+            {canManage && ((msg as any).pinned ? (
                 <DropdownMenuItem onClick={() => onUnpinMessage?.(msg.id)}>
                   <AppIcon name="pin" className=" mr-2 text-neutral-400" /> Unpin Message
                 </DropdownMenuItem>
@@ -218,7 +233,7 @@ const MessageItem = memo(function MessageItem({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      )}
+      </div>
     </div>
   );
 });
@@ -234,6 +249,7 @@ export function MessageList({
   canManage,
   onMarkRead,
   onDeleteMessage,
+  onReply,
 }: {
   messages: ListMessage[];
   currentUserId: number;
@@ -245,6 +261,7 @@ export function MessageList({
   canManage?: boolean;
   onMarkRead?: () => void;
   onDeleteMessage?: (msgId: number) => void;
+  onReply?: (msg: ListMessage) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousScrollHeight = useRef<number>(0);
@@ -277,39 +294,64 @@ export function MessageList({
     }
   }, [messages.length, isFetchingNextPage]);
 
+  const [showScrollFab, setShowScrollFab] = useState(false);
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
-    isScrolledToBottom.current = Math.abs(target.scrollHeight - target.clientHeight - target.scrollTop) < 10;
+    const distanceFromBottom = target.scrollHeight - target.clientHeight - target.scrollTop;
+    isScrolledToBottom.current = distanceFromBottom < 10;
+    setShowScrollFab(distanceFromBottom > 200);
     
     if (target.scrollTop === 0 && hasNextPage && !isFetchingNextPage && onFetchNextPage) {
       onFetchNextPage();
     }
   };
 
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    }
+  };
+
   const pinnedMessages = messages.filter(m => (m as any).pinned);
+  const [pinnedExpanded, setPinnedExpanded] = useState(false);
 
   return (
     <div className="flex flex-col h-full w-full relative">
       {pinnedMessages.length > 0 && (
-        <div className="absolute top-0 left-0 right-0 z-10 bg-amber-50/95 dark:bg-amber-950/95 border-b border-amber-200 dark:border-amber-900 px-3 py-1.5 text-xs flex items-center shadow-sm backdrop-blur">
-          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold shrink-0 mr-4">
-            <AppIcon name="pin" size="sm" /> {pinnedMessages.length} Pinned
-          </div>
-          <div className="flex gap-2 overflow-x-auto thin-scrollbar items-center">
-            {pinnedMessages.map(pm => (
-              <div key={pm.id} className="max-w-[200px] shrink-0 bg-white dark:bg-neutral-900 border border-amber-200 dark:border-amber-800 rounded px-2 py-1 flex items-center gap-2">
-                <span className="font-bold text-[9px] text-amber-600 dark:text-amber-500">{pm.sender?.name}:</span>
-                <span className="truncate text-[10px]">{pm.body}</span>
-              </div>
-            ))}
-          </div>
+        <div className="border-b border-amber-200 dark:border-amber-900 bg-amber-50/95 dark:bg-amber-950/95 backdrop-blur z-10">
+          <button
+            onClick={() => setPinnedExpanded(!pinnedExpanded)}
+            className="w-full px-3 py-1.5 text-xs flex items-center justify-between hover:bg-amber-100/50 dark:hover:bg-amber-900/30 transition-colors"
+          >
+            <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold">
+              <AppIcon name="pin" size="sm" />
+              <span>{pinnedMessages.length} Pinned</span>
+            </div>
+            {!pinnedExpanded && pinnedMessages.length > 0 && (
+              <span className="text-[10px] text-amber-600 dark:text-amber-500 truncate max-w-[200px] ml-3">
+                {pinnedMessages[pinnedMessages.length - 1]?.body}
+              </span>
+            )}
+            <AppIcon name={pinnedExpanded ? 'chevronUp' : 'chevronDown'} size="xs" className="text-amber-500 shrink-0 ml-2" />
+          </button>
+          {pinnedExpanded && (
+            <div className="px-3 pb-2 flex flex-col gap-1.5">
+              {pinnedMessages.map(pm => (
+                <div key={pm.id} className="bg-white dark:bg-neutral-900 border border-amber-200 dark:border-amber-800 rounded px-2.5 py-1.5 flex items-center gap-2">
+                  <span className="font-bold text-[9px] text-amber-600 dark:text-amber-500 shrink-0">{pm.sender?.name}:</span>
+                  <span className="truncate text-[10px] text-neutral-700 dark:text-neutral-300">{pm.body}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
       
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto p-4 space-y-3 relative ${pinnedMessages.length > 0 ? "pt-12" : ""}`}
+        className="flex-1 overflow-y-auto p-4 space-y-3 relative"
       >
         {isFetchingNextPage && (
           <div className="text-center text-xs text-neutral-400 py-1">Loading older messages...</div>
@@ -358,12 +400,24 @@ export function MessageList({
                 canManage={canManage}
                 onMarkRead={onMarkRead}
                 onDeleteMessage={onDeleteMessage}
+                onReply={onReply}
               />
             </div>
           );
         })}
       </div>
     </div>
+
+    {/* Scroll to bottom FAB */}
+    {showScrollFab && (
+      <button
+        onClick={scrollToBottom}
+        className="absolute bottom-4 right-4 z-20 h-8 w-8 rounded-full bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center justify-center text-neutral-500 hover:text-primary-600 hover:border-primary-300 transition-all"
+        aria-label="Scroll to bottom"
+      >
+        <AppIcon name="chevronDown" size="sm" />
+      </button>
+    )}
     </div>
   );
 }

@@ -21,6 +21,8 @@ export function ProjectsTab() {
   const [sort, setSort] = useState("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [status, setStatus] = useState("all");
+  const [priority, setPriority] = useState("all");
+  const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [page, setPage] = useUrlState("p_page", "1");
   const [createOpen, setCreateOpen] = useState(false);
   const debouncedSearch = useDebounce(search, 250);
@@ -45,8 +47,8 @@ export function ProjectsTab() {
   });
 
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: [...queryKeys.projects(debouncedSearch, sort, page), sortDirection, status],
-    queryFn: () => apiFetch(`/projects?search=${encodeURIComponent(debouncedSearch || "")}&sort=${sort || "created_at"}&direction=${sortDirection}&status=${status === "all" ? "" : status}&page=${page || 1}`),
+    queryKey: [...queryKeys.projects(debouncedSearch, sort, page), sortDirection, status, priority],
+    queryFn: () => apiFetch(`/projects?search=${encodeURIComponent(debouncedSearch || "")}&sort=${sort || "created_at"}&direction=${sortDirection}&status=${status === "all" ? "" : status}&priority=${priority === "all" ? "" : priority}&page=${page || 1}`),
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_PROJECTS,
   });
@@ -55,50 +57,94 @@ export function ProjectsTab() {
 
   return (
     <div className="space-y-6 mt-4">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6 w-full justify-between">
-        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 flex items-center min-w-0 overflow-x-auto overflow-y-hidden scrollbar-hide">
-          <FilterBar
-            searchQuery={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search projects..."
-            sortBy={sort}
-            sortDirection={sortDirection}
-            onSortChange={(val, dir) => {
-              setSort(val);
-              setSortDirection(dir);
-            }}
-            sortOptions={[
-              { label: "Created Date", value: "created_at" },
-              { label: "Deadline", value: "deadline" },
-              { label: "Priority", value: "priority" }
-            ]}
-            filters={[
-              {
-                key: "status",
-                label: "Status",
-                type: "select",
-                value: status,
-                onChange: setStatus,
-                options: [
-                  { label: "Active", value: "active" },
-                  { label: "Completed", value: "completed" },
-                  { label: "On Hold", value: "on_hold" },
-                ]
-              }
-            ]}
-            onClearAll={() => {
-              setSearch("");
-              setSort("created_at");
-              setSortDirection("desc");
-              setStatus("all");
-            }}
-          />
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4 w-full justify-between">
+        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900/50 p-1 rounded-lg shrink-0">
+          <button 
+            onClick={() => setStatus("all")} 
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${status === "all" ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+          >
+            All Projects
+          </button>
+          <button 
+            onClick={() => setStatus("active")} 
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${status === "active" ? "bg-white dark:bg-neutral-800 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+          >
+            Active
+          </button>
+          <button 
+            onClick={() => setStatus("completed")} 
+            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${status === "completed" ? "bg-white dark:bg-neutral-800 shadow-sm text-success-600 dark:text-success-500" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+          >
+            Completed
+          </button>
         </div>
-        {canManageProjects && (
-          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-2 shadow-sm h-9 shrink-0 w-full md:w-auto">
-            <AppIcon name="plus" /> Create Project
-          </Button>
-        )}
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1 flex items-center overflow-x-auto overflow-y-hidden scrollbar-hide shadow-sm">
+            <FilterBar
+              searchQuery={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search projects..."
+              sortBy={sort}
+              sortDirection={sortDirection}
+              onSortChange={(val, dir) => {
+                setSort(val);
+                setSortDirection(dir);
+              }}
+              sortOptions={[
+                { label: "Created Date", value: "created_at" },
+                { label: "Deadline", value: "deadline" },
+                { label: "Priority", value: "priority" }
+              ]}
+              filters={[
+                {
+                  key: "priority",
+                  label: "Priority",
+                  type: "select",
+                  value: priority,
+                  onChange: setPriority,
+                  options: [
+                    { label: "All", value: "all" },
+                    { label: "Urgent", value: "urgent" },
+                    { label: "High", value: "high" },
+                    { label: "Medium", value: "medium" },
+                    { label: "Low", value: "low" },
+                  ]
+                }
+              ]}
+              onClearAll={() => {
+                setSearch("");
+                setSort("created_at");
+                setSortDirection("desc");
+                setStatus("all");
+                setPriority("all");
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900/50 p-1 rounded-lg shrink-0 h-[42px]">
+            <button 
+              onClick={() => setViewMode("grid")}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-neutral-800 shadow-sm text-primary-600" : "text-neutral-400 hover:text-neutral-600"}`}
+              title="Grid View"
+            >
+              <AppIcon name="grid" size="sm" />
+            </button>
+            <button 
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-neutral-800 shadow-sm text-primary-600" : "text-neutral-400 hover:text-neutral-600"}`}
+              title="List View"
+            >
+              <AppIcon name="menu" size="sm" />
+            </button>
+          </div>
+
+          {canManageProjects && (
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-2 shadow-sm h-[42px] shrink-0 bg-primary-600 hover:bg-primary-700 text-white rounded-lg">
+              <AppIcon name="plus" size="sm" /> Create Project
+            </Button>
+          )}
+        </div>
       </div>
 
       <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
@@ -116,7 +162,7 @@ export function ProjectsTab() {
         />
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
             {projects.map((project: {
               id: number;
               name: string;
@@ -130,6 +176,7 @@ export function ProjectsTab() {
               <ProjectCard 
                 key={project.id} 
                 project={project} 
+                viewMode={viewMode as "grid" | "list"}
                 onClick={() => router.push(`/dashboard/projects/${project.id}`)}
                 onUpdateName={canManageProjects ? (name) => updateProjectMutation.mutate({ id: project.id, name }) : undefined}
               />
