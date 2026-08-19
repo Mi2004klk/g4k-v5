@@ -51,6 +51,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 interface UserRef {
   id: number;
@@ -333,7 +334,7 @@ export function DepartmentsTab() {
               <div className="flex -space-x-2">
                 {(row.original.users || []).slice(0, 3).map((u: UserRef, i: number) => (
                   <Avatar key={i} className="w-5 h-5 border-[1.5px] border-background">
-                    <AvatarImage src={u.avatar_url || ""} />
+                    <AvatarImage src={resolveAvatarUrl(u.avatar_url) || ""} />
                     <AvatarFallback name={u.name} className="text-[8px] font-bold" />
                   </Avatar>
                 ))}
@@ -591,7 +592,7 @@ export function DepartmentsTab() {
                         <div key={user.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-10 h-10">
-                              <AvatarImage src={user.avatar_url || ""} />
+                              <AvatarImage src={resolveAvatarUrl(user.avatar_url) || ""} />
                               <AvatarFallback name={user.name} />
                             </Avatar>
                             <div>
@@ -648,7 +649,7 @@ export function DepartmentsTab() {
                         <div key={hr.id} className="p-3 border rounded-[var(--radius)] bg-card dark:bg-neutral-950 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-10 h-10">
-                              <AvatarImage src={hr.avatar_url || ""} />
+                              <AvatarImage src={resolveAvatarUrl(hr.avatar_url) || ""} />
                               <AvatarFallback name={hr.name} />
                             </Avatar>
                             <div>

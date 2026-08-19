@@ -46,7 +46,7 @@ export function ProjectsTab() {
 
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: [...queryKeys.projects(debouncedSearch, sort, page), sortDirection, status],
-    queryFn: () => apiFetch(`/projects?search=${debouncedSearch || ""}&sort=${sort || "created_at"}&direction=${sortDirection}&status=${status === "all" ? "" : status}&page=${page || 1}`),
+    queryFn: () => apiFetch(`/projects?search=${encodeURIComponent(debouncedSearch || "")}&sort=${sort || "created_at"}&direction=${sortDirection}&status=${status === "all" ? "" : status}&page=${page || 1}`),
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_PROJECTS,
   });

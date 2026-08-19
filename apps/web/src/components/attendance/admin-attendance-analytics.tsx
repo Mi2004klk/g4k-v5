@@ -15,18 +15,10 @@ export function AdminAttendanceAnalytics() {
   const { data, isLoading } = useQuery({
     queryKey: ['attendance-analytics', selectedDate, deptFilter],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedDate) params.append("date", selectedDate);
+      const params = new URLSearchParams({ date: selectedDate });
       if (deptFilter && deptFilter !== "all") params.append("department_id", deptFilter);
-      
-      try {
-        // Try the new analytics endpoint first
-        return await apiFetch(`/attendance/admin/analytics?${params.toString()}`);
-      } catch (e) {
-        // Fallback to overview if analytics endpoint doesn't exist yet
-        params.append("per_page", "1000"); // Try to get all records for stats
-        return await apiFetch(`/attendance/admin/overview?${params.toString()}`);
-      }
+      params.append("per_page", "1000");
+      return await apiFetch(`/attendance/admin/overview?${params.toString()}`);
     },
     staleTime: STALE_TIME_ATTENDANCE,
   });

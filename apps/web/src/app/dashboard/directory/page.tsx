@@ -20,7 +20,7 @@ export default function DirectoryModulePage() {
       title="Team Directory & Org"
       description="Browse corporate team members, roles, contact info, and departments."
     >
-      <ErrorBoundary>
+      <ErrorBoundary resetKeys={[tab]}>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
             <TabsList className="w-full md:w-auto justify-start overflow-x-auto flex-nowrap bg-transparent h-12 p-0 rounded-none">

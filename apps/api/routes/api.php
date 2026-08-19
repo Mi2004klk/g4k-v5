@@ -48,6 +48,7 @@ Route::get('/health', function () {
         'timestamp' => now()->toIso8601String(),
     ]);
 });
+Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
@@ -222,6 +223,8 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     // Phase 8 API (Chat & Communication)
     Route::middleware('capability:chat.access')->group(function () {
+        // Chat API
+        Route::get('/chat/users', [\App\Http\Controllers\ChatController::class, 'searchUsers']);
         Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
         Route::middleware('throttle:30,1')->group(function () {
             Route::post('/conversations/dm', [\App\Http\Controllers\ChatController::class, 'startDirectMessage']);

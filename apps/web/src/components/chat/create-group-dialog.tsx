@@ -49,16 +49,13 @@ export function CreateGroupDialog({
   const currentUser = useAuthStore((s) => s.user);
 
   const { data: usersData, isLoading } = useQuery({
-    queryKey: queryKeys.usersList,
-    queryFn: () => apiFetch("/users?per_page=1000"),
+    queryKey: [queryKeys.usersList, search],
+    queryFn: () => apiFetch(`/chat/users?search=${encodeURIComponent(search)}`),
     enabled: open,
   });
 
-  const users = Array.isArray(usersData?.data) ? usersData.data : (usersData?.data?.data || []);
-  const otherUsers = users.filter((u: DialogUser) => 
-    u.id !== currentUser?.id && 
-    (u.name.toLowerCase().includes(search.toLowerCase()) || u.department?.name?.toLowerCase().includes(search.toLowerCase()))
-  );
+  const users = Array.isArray(usersData) ? usersData : (usersData?.data || []);
+  const otherUsers = users.filter((u: DialogUser) => u.id !== currentUser?.id);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -75,12 +72,19 @@ export function CreateGroupDialog({
       }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-      toast.success(activeTab === "dm" ? "Direct message started" : "Group created successfully");
-      onOpenChange(false);
-      setName(""); clearDraft();
-      setSelectedUsers([]);
-      if (onSuccess) onSuccess(data.id);
+      import("@/lib/api-client").then(({ isQueued }) => {
+        if (isQueued(data)) {
+          onOpenChange(false);
+          setName(""); clearDraft(); setSelectedUsers([]);
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+        toast.success(activeTab === "dm" ? "Direct message started" : "Group created successfully");
+        onOpenChange(false);
+        setName(""); clearDraft();
+        setSelectedUsers([]);
+        if (onSuccess) onSuccess(data.id);
+      });
     },
     onError: () => {
       toast.error(activeTab === "dm" ? "Failed to start direct message" : "Failed to create group");

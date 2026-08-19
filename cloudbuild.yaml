@@ -152,7 +152,7 @@ steps:
             exit 1
           fi
           
-          endpoints="/api/dashboard/init /api/notifications /api/directory"
+          endpoints="/api/dashboard/init /api/notifications /api/directory /api/conversations /api/conversations/1/messages"
           if [ "$$role" = "admin" ]; then
             endpoints="$$endpoints /api/admin/jobs"
           fi

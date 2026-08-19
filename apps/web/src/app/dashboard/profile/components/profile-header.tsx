@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { getAuthToken } from "@/lib/auth-store";
+import { getAuthToken, useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 
 import { Card, Avatar, AvatarFallback, Button, Badge } from "@g4k/ui/components";
@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 export function ProfileHeader() {
   const queryClient = useQueryClient();
@@ -48,37 +49,20 @@ export function ProfileHeader() {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const token = getAuthToken();
-      let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
-      if (API_BASE_URL.startsWith("http") && !API_BASE_URL.endsWith("/api")) {
-        API_BASE_URL = `${API_BASE_URL.replace(/\/$/, "")}/api`;
-      }
-      const baseUrl = API_BASE_URL.startsWith("http")
-        ? API_BASE_URL.replace(/\/$/, "")
-        : `${window.location.origin}${API_BASE_URL}`;
-
-      const res = await fetch(`${baseUrl}/profile/avatar`, {
+      return apiFetch("/profile/avatar", {
         method: "POST",
-        headers: {
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-          "Accept": "application/json",
-        },
         body: formData,
       });
-
-      if (!res.ok) {
-        let errMessage = "Failed to upload avatar.";
-        try {
-          const errorData = await res.json();
-          errMessage = errorData.message || errMessage;
-        } catch {}
-        throw new Error(errMessage);
-      }
-      return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Avatar updated!");
       handleOpenChange(false);
+      
+      // Attempt to update the user in the auth store with the new avatar_url if the API returned it
+      if (data?.avatar_url) {
+        useAuthStore.getState().updateUser({ avatar_url: data.avatar_url });
+      }
+
       queryClient.invalidateQueries({ queryKey: queryKeys.profile });
     },
     onError: (err: Error) => {
@@ -121,7 +105,7 @@ export function ProfileHeader() {
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-900 shadow-sm flex items-center justify-center font-bold text-2xl overflow-hidden text-neutral-400">
             {profile?.avatar_url ? (
               <Image
-                src={profile.avatar_url}
+                src={resolveAvatarUrl(profile.avatar_url)}
                 alt={profile.name || "User"}
                 width={80}
                 height={80}

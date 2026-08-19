@@ -98,7 +98,10 @@ export function TaskDetailSheet({
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<TaskModel & { assignee_ids: number[] }>>({});
 
-  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing });
+  const { data: caps = [] } = useCapabilities();
+  const canManageTasks = hasCapability(caps, "tasks.manage");
+
+  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing && canManageTasks });
   const { data: allTasksData } = useQuery({ queryKey: ["tasks", "all"], queryFn: () => apiFetch<{ data?: { data?: TaskModel[] } | TaskModel[] }>("/tasks?per_page=100"), enabled: isEditing });
 
   // T-46.5: Fetch the full task detail when the sheet is opened.
@@ -190,10 +193,14 @@ export function TaskDetailSheet({
         body: JSON.stringify({ body }),
       });
     },
-    onSuccess: () => {
-      setComment("");
-      toast.success("Comment added.");
-      invalidateTasks();
+    onSuccess: (data) => {
+      import("@/lib/api-client").then(({ isQueued }) => {
+        setComment("");
+        if (!isQueued(data)) {
+          toast.success("Comment added.");
+        }
+        invalidateTasks();
+      });
     },
   });
 
@@ -216,10 +223,14 @@ export function TaskDetailSheet({
         }),
       });
     },
-    onSuccess: () => {
-      toast.success("Task submitted for review.");
-      onOpenChange(false);
-      invalidateTasks();
+    onSuccess: (data) => {
+      import("@/lib/api-client").then(({ isQueued }) => {
+        if (!isQueued(data)) {
+          toast.success("Task submitted for review.");
+        }
+        onOpenChange(false);
+        invalidateTasks();
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message || "Failed to submit task.");
@@ -233,9 +244,13 @@ export function TaskDetailSheet({
         body: JSON.stringify({ progress: newProgress }),
       });
     },
-    onSuccess: () => {
-      toast.success("Progress updated.");
-      invalidateTasks();
+    onSuccess: (data) => {
+      import("@/lib/api-client").then(({ isQueued }) => {
+        if (!isQueued(data)) {
+          toast.success("Progress updated.");
+        }
+        invalidateTasks();
+      });
     },
   });
 

@@ -61,6 +61,7 @@ interface ApiError extends Error {
   errors?: Record<string, string[]>;
 }
 import {
+import { resolveAvatarUrl } from "@/lib/utils";
   queryKeys,
   STALE_TIME_DESIGNATIONS
 } from "@/lib/query-keys";
@@ -226,7 +227,7 @@ export function DesignationsTab() {
               <div className="flex -space-x-2">
                 {users.length > 0 ? users.slice(0, 3).map((u: UserRef, i: number) => (
                   <Avatar key={i} className="w-5 h-5 border-[1.5px] border-background">
-                    <AvatarImage src={u.avatar_url || ""} />
+                    <AvatarImage src={resolveAvatarUrl(u.avatar_url) || ""} />
                     <AvatarFallback name={u.name} className="text-[8px] font-bold" />
                   </Avatar>
                 )) : [...Array(Math.min(count, 3))].map((_, i) => (

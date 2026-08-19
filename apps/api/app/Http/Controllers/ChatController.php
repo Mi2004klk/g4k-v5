@@ -24,6 +24,27 @@ class ChatController extends Controller
         }
     }
 
+    public function searchUsers(Request $request)
+    {
+        $search = $request->input('search');
+        $users = \App\Models\User::where('id', '!=', $request->user()->id)
+            ->where('active_status', 'active')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                          ->orWhereHas('department', function($q2) use ($search) {
+                              $q2->where('name', 'like', "%{$search}%");
+                          });
+                });
+            })
+            ->with('department:id,name')
+            ->select('id', 'name', 'avatar_url', 'department_id')
+            ->limit(20)
+            ->get();
+            
+        return response()->json($users);
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();

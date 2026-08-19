@@ -18,6 +18,7 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import Link from "next/link";
 import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
 import { usePins } from "@/hooks/use-pins";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 export default function EmployeeDetailPage() {
   const params = useParams();
@@ -208,7 +209,7 @@ export default function EmployeeDetailPage() {
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <Avatar size="lg" className="w-24 h-24">
-                <AvatarImage src={user.avatar_url || ""} />
+                <AvatarImage src={resolveAvatarUrl(user.avatar_url) || ""} />
                 <AvatarFallback name={user.name} className="text-2xl" />
               </Avatar>
               <div className="text-center sm:text-left flex-1">

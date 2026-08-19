@@ -9,6 +9,7 @@ interface Props {
   fallbackTitle?: string
   name?: string
   onRetry?: () => void
+  resetKeys?: any[]
 }
 
 interface State {
@@ -31,6 +32,18 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo
     )
+  }
+
+  public componentDidUpdate(prevProps: Props) {
+    if (this.state.hasError && this.props.resetKeys) {
+      if (
+        !prevProps.resetKeys ||
+        this.props.resetKeys.length !== prevProps.resetKeys.length ||
+        this.props.resetKeys.some((k, i) => k !== prevProps.resetKeys![i])
+      ) {
+        this.setState({ hasError: false, error: undefined })
+      }
+    }
   }
 
   private handleReset = () => {

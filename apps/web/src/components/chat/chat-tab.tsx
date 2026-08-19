@@ -81,7 +81,7 @@ export function ChatTab() {
 
   const { data: searchUsersData } = useQuery({
     queryKey: queryKeys.directory(searchQuery),
-    queryFn: () => apiFetch(`/directory?search=${searchQuery}`).then(r => r.data || []),
+    queryFn: () => apiFetch(`/directory?search=${encodeURIComponent(searchQuery)}`).then(r => r.data || []),
     enabled: searchQuery.length > 2,
   });
 
@@ -93,9 +93,15 @@ export function ChatTab() {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-      setSelectedId(data.id);
-      setSearchQuery("");
+      import("@/lib/api-client").then(({ isQueued }) => {
+        if (isQueued(data)) {
+          setSearchQuery("");
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+        setSelectedId(data.id);
+        setSearchQuery("");
+      });
     }
   });
 
@@ -372,9 +378,13 @@ export function ChatTab() {
         queryClient.setQueryData(queryKeys.messages(selectedId as number), context.previousMessages);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+    onSettled: (data) => {
+      import("@/lib/api-client").then(({ isQueued }) => {
+        if (!isQueued(data)) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+        }
+      });
     },
   });
 

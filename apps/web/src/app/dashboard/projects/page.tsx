@@ -14,7 +14,7 @@ export default function ProjectsModulePage() {
       title="Projects & Tasks"
       description="Manage all organizational projects and track your personal task list."
     >
-      <ErrorBoundary>
+      <ErrorBoundary resetKeys={[tab]}>
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="projects">All Projects</TabsTrigger>

@@ -15,6 +15,7 @@ import { Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, S
 import { Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
 import { TasksTab } from "@/components/projects/tasks-tab";
 import { queryKeys } from "@/lib/query-keys";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 interface ProjectMember {
   id: number;
@@ -81,9 +82,23 @@ export default function ProjectDetailPage() {
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [qaValues, setQaValues] = useState<Record<string, unknown>>({});
 
-  const { data: deptsData } = useQuery({ queryKey: ["departments"], queryFn: () => apiFetch("/departments") });
-  const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
-  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch("/users") });
+  const canManageProjects = hasCapability(caps, "projects.manage");
+  
+  const { data: deptsData } = useQuery({ 
+    queryKey: ["departments"], 
+    queryFn: () => apiFetch("/departments"),
+    enabled: canManageProjects
+  });
+  const { data: qaFormsData } = useQuery({ 
+    queryKey: queryKeys.qaForms, 
+    queryFn: () => apiFetch("/qa-forms"),
+    enabled: canManageProjects
+  });
+  const { data: usersData } = useQuery({ 
+    queryKey: queryKeys.usersList, 
+    queryFn: () => apiFetch("/users"),
+    enabled: canManageProjects
+  });
   // /departments, /users and /qa-forms may return Laravel paginators ({ data: [...] }) — unwrap to plain arrays
   const departments = unwrapList(deptsData);
   const qaForms = unwrapList(qaFormsData);
@@ -381,7 +396,7 @@ export default function ProjectDetailPage() {
                     />
                     <Avatar className="w-5 h-5">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {u.avatar_url && <img src={u.avatar_url} alt={u.name} />}
+                      {u.avatar_url && <img src={resolveAvatarUrl(u.avatar_url)} alt={u.name} />}
                       <AvatarFallback name={u.name} className="text-[9px]" />
                     </Avatar>
                     <span className="truncate">{u.name}</span>
@@ -579,7 +594,7 @@ export default function ProjectDetailPage() {
                     <div key={member.id} className="flex items-center gap-2">
                       <Avatar className="w-6 h-6 border-[1.5px] border-background">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {member.avatar_url && <img src={member.avatar_url} alt={member.name} />}
+                        {member.avatar_url && <img src={resolveAvatarUrl(member.avatar_url)} alt={member.name} />}
                         <AvatarFallback name={member.name} className="text-[9px] font-bold" />
                       </Avatar>
                       <div className="flex flex-col">

@@ -23,6 +23,7 @@ import {
   SheetTitle,
 } from "@g4k/ui/components";
 import { useTrackRecent } from "@/hooks/use-track-recent";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 interface User {
   id: number;
@@ -184,7 +185,7 @@ export function CorporateDirectoryTab() {
               className="group cursor-pointer border border-neutral-200 dark:border-neutral-800 shadow-none hover:shadow-sm hover:border-primary-200 dark:hover:border-primary-900/50 transition-all bg-card dark:bg-neutral-900 rounded-xl overflow-hidden flex flex-row items-center p-4 gap-4"
             >
               <Avatar className="w-14 h-14 border border-neutral-100 dark:border-neutral-800 shrink-0">
-                <AvatarImage src={user.avatar_url || ""} />
+                <AvatarImage src={resolveAvatarUrl(user.avatar_url) || ""} />
                 <AvatarFallback name={user.name} className="text-lg font-medium" />
               </Avatar>
 
@@ -247,7 +248,7 @@ export function CorporateDirectoryTab() {
             <div className="space-y-6 pt-4">
               <SheetHeader className="text-left space-y-2">
                 <Avatar size="lg" className="w-16 h-16 text-2xl">
-                  <AvatarImage src={selectedUser.avatar_url || ""} />
+                  <AvatarImage src={resolveAvatarUrl(selectedUser.avatar_url) || ""} />
                   <AvatarFallback name={selectedUser.name} />
                 </Avatar>
                 <SheetTitle className="text-xl font-bold font-display">

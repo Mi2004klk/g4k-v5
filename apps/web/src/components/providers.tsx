@@ -134,8 +134,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
           {children}
         </ErrorBoundary>
         <Toaster position="top-right" duration={4000} richColors closeButton expand={true} visibleToasts={3} />
-        <OfflineBanner />
+        <OfflineBannerWrapper />
       </QueryClientProvider>
     </NextThemesProvider>
   );
+}
+
+import { useOfflineStore } from "@/lib/offline-engine";
+function OfflineBannerWrapper() {
+  const queueCount = useOfflineStore((s) => s.queueCount);
+  return <OfflineBanner pendingItems={queueCount} />;
 }

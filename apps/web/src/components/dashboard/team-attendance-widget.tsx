@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, Avatar, AvatarFallback, AvatarImage, Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { AppIcon } from "@g4k/ui/components";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 interface TeamAttendanceRecord {
   user_id: string | number;
@@ -100,7 +101,7 @@ export function TeamAttendanceWidget() {
                 <div key={emp.user_id} className="flex items-center gap-3 p-3 bg-card transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
                   <div className="relative">
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={emp.avatar_url || ''} />
+                      <AvatarImage src={resolveAvatarUrl(emp.avatar_url) || ''} />
                       <AvatarFallback name={emp.user_name} className="text-[10px]" />
                     </Avatar>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-neutral-900 ${statusColor}`} />

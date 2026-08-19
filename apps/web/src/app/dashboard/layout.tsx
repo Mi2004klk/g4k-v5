@@ -28,6 +28,7 @@ import { ProjectTimerWidget } from "@/components/app-shell/project-timer-widget"
 import { NavGroup } from "@/components/app-shell/nav-group";
 import { PinnedItems } from "@/components/layout/pinned-items";
 import { ReverbProvider } from "@/hooks/use-reverb";
+import { ErrorBoundary } from "@g4k/ui/components";
 import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
 import {
   DropdownMenu,
@@ -106,6 +107,11 @@ export default function DashboardLayout({
   const setDensity = useAuthStore((s) => s.setDensity);
   const { theme, setTheme } = useTheme();
   
+  const [isHydrated, setIsHydrated] = useState(false);
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   const [showError, setShowError] = useState(false);
 
   useEffect(() => {
@@ -128,11 +134,7 @@ export default function DashboardLayout({
     }
   }, [initData, syncWithServer]);
 
-  useEffect(() => {
-    // Prefetch consolidated dashboard init data on cold load
-    if (!authUser) return;
-    queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init"), staleTime: 5 * 60_000 });
-  }, [authUser, queryClient]);
+
 
   useEffect(() => {
     if (preferencesData?.preferences?.sidebar_state && !isInitialized) {
@@ -172,6 +174,10 @@ export default function DashboardLayout({
   };
 
   const isCollapsed = sidebarState === "collapsed";
+
+  if (!isHydrated) {
+    return null; // Hydration gate to prevent Zustand persist mismatch
+  }
 
   if (isErrorCapabilities) {
     if (!showError) {
@@ -413,8 +419,10 @@ export default function DashboardLayout({
 
             <main id="main-content" className="flex-1 overflow-y-auto relative z-10 bg-app p-4 pb-24 md:pb-6 md:p-6 lg:p-8">
               <div key={pathname} className="mx-auto max-w-[1440px] animate-page-in">
-                <Breadcrumb />
-                {children}
+                <ErrorBoundary resetKeys={[pathname]}>
+                  <Breadcrumb />
+                  {children}
+                </ErrorBoundary>
               </div>
             </main>
 

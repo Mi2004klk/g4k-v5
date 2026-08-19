@@ -55,6 +55,7 @@ import { UserForm, UserFormValues } from "@/components/users/user-form";
 
 import { DataTable } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 interface User {
   id: number;
@@ -295,7 +296,7 @@ export function EmployeeManagementTab() {
             router.push(`/dashboard/org/users/${user.id}`);
           }}>
             <Avatar className="w-9 h-9">
-              {user.avatar_url && <AvatarImage src={user.avatar_url} alt={user.name} />}
+              {user.avatar_url && <AvatarImage src={resolveAvatarUrl(user.avatar_url)} alt={user.name} />}
               <AvatarFallback name={user.name} className="font-bold" />
             </Avatar>
             <div>

@@ -100,10 +100,23 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     }
   };
 
+  const { data: caps = [] } = useCapabilities();
+  const canManageTasks = hasCapability(caps, "tasks.manage");
   
-  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data: TaskUser[] }>("/users") });
-  const { data: projectsData } = useQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch<{ data: TaskProject[] }>("/projects") });
-  const { data: qaFormsData } = useQuery({ queryKey: queryKeys.qaForms, queryFn: () => apiFetch("/qa-forms") });
+  const { data: usersData } = useQuery({ 
+    queryKey: queryKeys.usersList, 
+    queryFn: () => apiFetch<{ data: TaskUser[] }>("/users"),
+    enabled: canManageTasks
+  });
+  const { data: projectsData } = useQuery({ 
+    queryKey: queryKeys.projects(), 
+    queryFn: () => apiFetch<{ data: TaskProject[] }>("/projects") 
+  });
+  const { data: qaFormsData } = useQuery({ 
+    queryKey: queryKeys.qaForms, 
+    queryFn: () => apiFetch("/qa-forms"),
+    enabled: canManageTasks
+  });
   
   const searchParams = useSearchParams();
   const isMe = searchParams.get("me") === "1";
@@ -112,9 +125,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const [assigneeFilter, setAssigneeFilter] = useState(isMe ? "me" : "all");
   const user = useAuthStore(s => s.user);
 
-  const { data: caps = [] } = useCapabilities();
-  const canManageTasks = hasCapability(caps, "tasks.manage");
-  const availableUsers = canManageTasks ? usersData?.data : usersData?.data?.filter((u: TaskUser) => u.id === user?.id);
+  const availableUsers = canManageTasks ? usersData?.data : (user ? [user] : []);
   const availableProjects = canManageTasks ? projectsData?.data : projectsData?.data?.filter((p: TaskProject) => p.allow_employee_tasks);
 
   const [searchQuery, setSearchQuery] = useState("");

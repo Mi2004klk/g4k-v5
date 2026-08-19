@@ -63,8 +63,12 @@ export function NotificationsBell() {
       return { previous };
     },
     onSuccess: (data, id) => {
-      toast("Notification marked as read", {
-        duration: 3000,
+      import("@/lib/api-client").then(({ isQueued }) => {
+        if (!isQueued(data)) {
+          toast("Notification marked as read", {
+            duration: 3000,
+          });
+        }
       });
     },
     onError: (err, id, context: any) => {
@@ -92,8 +96,12 @@ export function NotificationsBell() {
 
       return { previous };
     },
-    onSuccess: () => {
-      toast.success("All notifications marked as read");
+    onSuccess: (data) => {
+      import("@/lib/api-client").then(({ isQueued }) => {
+        if (!isQueued(data)) {
+          toast.success("All notifications marked as read");
+        }
+      });
     },
     onError: (err, variables, context: any) => {
       queryClient.setQueryData(queryKeys.notifications(filter), context.previous);

@@ -17,7 +17,8 @@ export function getToken(): string | null {
  * @returns The unwrapped resource
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- HTTP boundary: API response shape is runtime-determined
-export function unwrapOne<T = any>(res: any): T {
+export function unwrapOne<T = any>(res: any): T | null {
+  if (!res) return null;
   if (res && typeof res === "object" && "data" in res) {
     if (res.data && typeof res.data === "object" && !Array.isArray(res.data) && "id" in res.data) {
       return res.data as T;
@@ -35,9 +36,15 @@ export function unwrapOne<T = any>(res: any): T {
 export function unwrapList<T = any>(res: any): T[] {
   if (!res) return [];
   if (Array.isArray(res)) return res;
-  if (Array.isArray(res.data)) return res.data;
-  if (res.data && Array.isArray(res.data.data)) return res.data.data;
+  if (res && typeof res === "object") {
+    if (Array.isArray(res.data)) return res.data;
+    if (res.data && Array.isArray(res.data.data)) return res.data.data;
+  }
   return [];
+}
+
+export function isQueued(res: any): boolean {
+  return res && typeof res === "object" && res.queued === true;
 }
 
 

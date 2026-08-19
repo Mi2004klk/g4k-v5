@@ -7,6 +7,7 @@ export interface UserProfile {
   email: string;
   username?: string;
   employee_id?: string;
+  avatar_url?: string | null;
   must_change_password?: boolean;
   onboarded_at?: string | null;
   active_status: string;
@@ -32,6 +33,7 @@ interface AuthState {
   density: "comfortable" | "compact";
   setAuth: (token: string, user: UserProfile, activeRole?: string, refreshToken?: string, capabilities?: string[], broadcast?: boolean) => void;
   setDensity: (density: "comfortable" | "compact") => void;
+  updateUser: (partial: Partial<UserProfile>) => void;
   clearAuth: (broadcast?: boolean) => void;
 }
 
@@ -70,6 +72,7 @@ export const useAuthStore = create<AuthState>()(
         }));
       },
       setDensity: (density) => set({ density }),
+      updateUser: (partial) => set((state) => ({ user: state.user ? { ...state.user, ...partial } : null })),
       clearAuth: (broadcast = true) => {
         if (typeof window !== "undefined") {
           document.cookie = `g4k_token=; path=/; max-age=0; SameSite=Lax`;
