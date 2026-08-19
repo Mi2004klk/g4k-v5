@@ -21,16 +21,15 @@ import { useFormDraft } from "@/hooks/use-form-draft";
 import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 import { cn } from "@/lib/utils";
 
-export type DateRange = {
-  from: Date | undefined;
-  to?: Date | undefined;
-};
+interface LeaveRequestFormProps {
+  inDialog?: boolean;
+}
 
-export function LeaveRequestForm() {
+export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
   const queryClient = useQueryClient();
   
-  // Combine start/end dates into a single date range state
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [type, setType] = useState("casual");
   const [reason, setReason] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -45,8 +44,8 @@ export function LeaveRequestForm() {
     reason: "",
   });
 
-  const activeStartDate = dateRange?.from ?? draftData.start_date;
-  const activeEndDate = dateRange?.to ?? draftData.end_date;
+  const activeStartDate = startDate ?? draftData.start_date;
+  const activeEndDate = endDate ?? draftData.end_date;
   const activeType = type !== "casual" ? type : (draftData.type || "casual");
   const activeReason = reason || draftData.reason || "";
 
@@ -79,7 +78,8 @@ export function LeaveRequestForm() {
     },
     onSuccess: () => {
       toast.success("Leave request submitted successfully.");
-      setDateRange(undefined);
+      setStartDate(undefined);
+      setEndDate(undefined);
       setReason("");
       setType("casual");
       clearDraft();
@@ -152,47 +152,55 @@ export function LeaveRequestForm() {
   const getLeaveIcon = (val: string) => {
     switch (val) {
       case 'casual': return 'leave';
-      case 'sick': return 'plus'; // medical cross metaphor
+      case 'sick': return 'plus';
       case 'earned': return 'award';
       case 'unpaid': return 'minus';
       default: return 'file';
     }
   };
 
-  return (
-    <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-none hover:shadow-sm transition-shadow duration-150 rounded-xl flex flex-col bg-card">
-      <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800/50">
-        <CardTitle className="text-base font-bold flex justify-between items-center">
-          Request Time Off
-          {daysRequested > 0 && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
-              {daysRequested} {daysRequested === 1 ? 'Day' : 'Days'}
-            </span>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-5">
-        {hasDraft && (
-          <Alert className="mb-4 bg-amber-50/50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
-            <AppIcon name="warning" className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800 dark:text-amber-400">Unsaved draft</AlertTitle>
-            <AlertDescription className="text-amber-700/80 dark:text-amber-500/80 flex items-center justify-between">
-              <span>Continue from where you left off?</span>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => {
-                  restoreDraft();
-                  setDateRange({ from: draftData.start_date, to: draftData.end_date });
-                  setType(draftData.type || "casual");
-                  setReason(draftData.reason || "");
-                }} className="h-6 px-2 text-[10px] bg-white dark:bg-neutral-900">Restore</Button>
-                <Button variant="ghost" size="sm" onClick={clearDraft} className="h-6 px-2 text-[10px] hover:bg-amber-100/50 dark:hover:bg-amber-900/50">Discard</Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-6">
+  const FormContent = (
+    <div className="flex flex-col h-full space-y-5">
+      {hasDraft && (
+        <Alert className="bg-amber-50/50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
+          <AppIcon name="warning" className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800 dark:text-amber-400">Unsaved draft</AlertTitle>
+          <AlertDescription className="text-amber-700/80 dark:text-amber-500/80 flex items-center justify-between">
+            <span>Continue from where you left off?</span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                restoreDraft();
+                setStartDate(draftData.start_date);
+                setEndDate(draftData.end_date);
+                setType(draftData.type || "casual");
+                setReason(draftData.reason || "");
+              }} className="h-6 px-2 text-[10px] bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800">Restore</Button>
+              <Button variant="ghost" size="sm" onClick={clearDraft} className="h-6 px-2 text-[10px] hover:bg-amber-100/50 dark:hover:bg-amber-900/50">Discard</Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Header for days requested calculation */}
+      {daysRequested > 0 && !inDialog && (
+         <div className="flex justify-end">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 border border-primary-200 dark:border-primary-800/50">
+            {daysRequested} {daysRequested === 1 ? 'Day' : 'Days'} Requested
+          </span>
+         </div>
+      )}
+      {daysRequested > 0 && inDialog && (
+        <div className="-mt-3 mb-2 flex justify-start">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 border border-primary-200 dark:border-primary-800/50">
+            {daysRequested} {daysRequested === 1 ? 'Day' : 'Days'} Requested
+          </span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Dates *</label>
+            <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Start Date *</label>
             <Popover>
               <PopoverTrigger asChild>
                 <button type="button"
@@ -200,89 +208,125 @@ export function LeaveRequestForm() {
                     "flex h-10 w-full items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-800 bg-background px-3 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900",
                     !activeStartDate && "text-neutral-400 dark:text-neutral-500"
                   )}>
-                  <div className="flex items-center gap-2">
-                    <AppIcon name="calendar" className="text-neutral-400 dark:text-neutral-500" size="sm" />
-                    {activeStartDate ? (
-                      activeEndDate ? (
-                        <span className="font-medium">{format(activeStartDate, "MMM d, yyyy")} - {format(activeEndDate, "MMM d, yyyy")}</span>
-                      ) : (
-                        <span className="font-medium">{format(activeStartDate, "MMM d, yyyy")}</span>
-                      )
-                    ) : (
-                      <span className="tracking-wide text-neutral-400 dark:text-neutral-500 text-xs">Select dates</span>
-                    )}
-                  </div>
+                  {activeStartDate ? format(activeStartDate, "MMM d, yyyy") : <span>Select date</span>}
+                  <AppIcon name="calendar" className="text-neutral-400 dark:text-neutral-500" size="sm" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar 
-                  mode="range" 
-                  selected={{ from: activeStartDate, to: activeEndDate }} 
-                  onSelect={(range) => {
-                    setDateRange(range);
-                    handleFieldChange({ start_date: range?.from, end_date: range?.to });
+                  mode="single" 
+                  selected={activeStartDate} 
+                  onSelect={(date) => { 
+                    setStartDate(date); 
+                    handleFieldChange({ start_date: date }); 
+                    // Automatically clear end date if it's before the new start date
+                    if (date && activeEndDate && activeEndDate < date) {
+                      setEndDate(undefined);
+                      handleFieldChange({ end_date: undefined });
+                    }
                   }}
                   disabled={{ before: todayDate }}
                   initialFocus 
                 />
               </PopoverContent>
             </Popover>
-            <div className="flex justify-between">
-               <FormError errors={fieldErrors.start_date} />
-               <FormError errors={fieldErrors.end_date} />
-            </div>
+            <FormError errors={fieldErrors.start_date} />
           </div>
-          
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Leave Type *</label>
-            <RadioGroup value={activeType} onValueChange={(val) => { setType(val); handleFieldChange({ type: val }); }} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-              {LEAVE_TYPES.map((item) => (
-                <div key={item.value}>
-                  <RadioGroupItem
-                    value={item.value}
-                    id={`type-${item.value}`}
-                    className="peer sr-only"
+            <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">End Date *</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button"
+                  className={cn(
+                    "flex h-10 w-full items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-800 bg-background px-3 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900",
+                    !activeEndDate && "text-neutral-400 dark:text-neutral-500"
+                  )}>
+                  {activeEndDate ? format(activeEndDate, "MMM d, yyyy") : <span>Select date</span>}
+                  <AppIcon name="calendar" className="text-neutral-400 dark:text-neutral-500" size="sm" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar 
+                  mode="single" 
+                  selected={activeEndDate} 
+                  onSelect={(date) => { setEndDate(date); handleFieldChange({ end_date: date }); }}
+                  disabled={{ before: activeStartDate ?? todayDate }}
+                  initialFocus 
+                />
+              </PopoverContent>
+            </Popover>
+            <FormError errors={fieldErrors.end_date} />
+          </div>
+        </div>
+        
+        <div className="space-y-1.5">
+          <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Type *</label>
+          <RadioGroup value={activeType} onValueChange={(val) => { setType(val); handleFieldChange({ type: val }); }} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {LEAVE_TYPES.map((item) => (
+              <div key={item.value}>
+                <RadioGroupItem
+                  value={item.value}
+                  id={`type-${item.value}`}
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor={`type-${item.value}`}
+                  className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-[11px] font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none"
+                >
+                  <AppIcon 
+                    name={getLeaveIcon(item.value) as any} 
+                    size="sm" 
+                    className={activeType === item.value ? "text-primary-600 dark:text-primary-400" : "text-neutral-400"} 
                   />
-                  <Label
-                    htmlFor={`type-${item.value}`}
-                    className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-[11px] font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none"
-                  >
-                    <AppIcon 
-                      name={getLeaveIcon(item.value) as any} 
-                      size="sm" 
-                      className={activeType === item.value ? "text-primary-600 dark:text-primary-400" : "text-neutral-400"} 
-                    />
-                    <span className={activeType === item.value ? "text-primary-700 dark:text-primary-300" : "text-neutral-600 dark:text-neutral-300"}>
-                      {item.label}
-                    </span>
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-            <FormError errors={fieldErrors.type} />
-          </div>
+                  <span className={activeType === item.value ? "text-primary-700 dark:text-primary-300" : "text-neutral-600 dark:text-neutral-300"}>
+                    {item.label}
+                  </span>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+          <FormError errors={fieldErrors.type} />
+        </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Reason *</label>
-            <Textarea
-              required
-              rows={3}
-              value={activeReason}
-              onChange={(e) => { setReason(e.target.value); handleFieldChange({ reason: e.target.value }); }}
-              className={`text-sm resize-none rounded-lg border-neutral-200 dark:border-neutral-800 focus-visible:ring-1 focus-visible:ring-primary-500 ${fieldErrors.reason ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-              placeholder="Briefly explain the reason for your time off..."
-            />
-            <FormError errors={fieldErrors.reason} />
-          </div>
+        <div className="space-y-1.5 flex-1 flex flex-col">
+          <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Reason *</label>
+          <Textarea
+            required
+            rows={3}
+            value={activeReason}
+            onChange={(e) => { setReason(e.target.value); handleFieldChange({ reason: e.target.value }); }}
+            className={`text-sm resize-none flex-1 min-h-[80px] rounded-lg border-neutral-200 dark:border-neutral-800 focus-visible:ring-1 focus-visible:ring-primary-500 ${fieldErrors.reason ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            placeholder="Briefly explain the reason for your time off..."
+          />
+          <FormError errors={fieldErrors.reason} />
+        </div>
 
+        <div className="pt-2">
           <Button
             type="submit"
             disabled={submitMutation.isPending || !activeStartDate || !activeEndDate || !activeReason}
-            className="w-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 font-medium h-10 shadow-sm"
+            className="w-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 font-medium h-10 shadow-sm transition-colors"
           >
             {submitMutation.isPending ? <AppIcon name="loading" className="animate-spin" /> : "Submit Request"}
           </Button>
-        </form>
+        </div>
+      </form>
+    </div>
+  );
+
+  if (inDialog) {
+    return FormContent;
+  }
+
+  return (
+    <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-none hover:shadow-sm transition-shadow duration-150 rounded-xl flex flex-col bg-card">
+      <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800/50">
+        <CardTitle className="text-base font-bold flex justify-between items-center">
+          Request Time Off
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-5 flex-1">
+        {FormContent}
       </CardContent>
     </Card>
   );

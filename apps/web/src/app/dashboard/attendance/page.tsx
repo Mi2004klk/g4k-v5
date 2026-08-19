@@ -77,7 +77,7 @@ export default function PersonalAttendancePage() {
               <DialogDescription className="sr-only">Submit a new leave request.</DialogDescription>
             </DialogHeader>
             <div className="mt-4">
-              <LeaveRequestForm />
+              <LeaveRequestForm inDialog={true} />
             </div>
           </DialogContent>
         </Dialog>
