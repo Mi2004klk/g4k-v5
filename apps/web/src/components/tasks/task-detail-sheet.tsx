@@ -192,32 +192,7 @@ export function TaskDetailSheet({
     onError: (err: Error) => toast.error(err.message || "Failed to update task."),
   });
 
-  const setReminderMutation = useMutation({
-    mutationFn: async (dateStr: string) => {
-      return apiFetch(`/tasks/${task.id}/reminders`, {
-        method: "POST",
-        body: JSON.stringify({ remind_at: dateStr, type: "personal" }),
-      });
-    },
-    onSuccess: () => {
-      toast.success("Reminder set.");
-      invalidateTasks();
-    },
-    onError: (err: Error) => toast.error(err.message || "Failed to set reminder."),
-  });
 
-  const deleteReminderMutation = useMutation({
-    mutationFn: async (reminderId: string | number) => {
-      return apiFetch(`/tasks/reminders/${reminderId}`, {
-        method: "DELETE",
-      });
-    },
-    onSuccess: () => {
-      toast.success("Reminder cleared.");
-      invalidateTasks();
-    },
-    onError: (err: Error) => toast.error(err.message || "Failed to clear reminder."),
-  });
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

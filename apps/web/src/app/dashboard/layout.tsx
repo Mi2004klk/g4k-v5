@@ -52,7 +52,6 @@ export const navGroups = [
   ]},
   { label: "Organization", items: [
     { name: "Directory", href: "/dashboard/directory", icon: "directory", capability: "directory.view" },
-    { name: "User Management", href: "/dashboard/directory", icon: "users", adminOnly: true },
     { name: "Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
     { name: "Reports & Analytics", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },
   ]},
@@ -72,7 +71,6 @@ function getAccent(href: string) {
   else if (href.startsWith("/dashboard/projects")) color = "indigo";
   else if (href.startsWith("/dashboard/chat")) color = "pink";
   else if (href.startsWith("/dashboard/directory")) color = "amber";
-  else if (href.startsWith("/dashboard/org/users")) color = "cyan";
   else if (href.startsWith("/dashboard/org/attendance")) color = "teal";
   else if (href.startsWith("/dashboard/profile")) color = "rose";
   return navAccent(color);
@@ -133,8 +131,6 @@ export default function DashboardLayout({
       useUIStore.setState({ isInitialized: true });
     }
   }, [preferencesData, setSidebarStateSilent, isInitialized]);
-
-  // Pins removed
 
   // Close mobile menu on navigate
   useEffect(() => {

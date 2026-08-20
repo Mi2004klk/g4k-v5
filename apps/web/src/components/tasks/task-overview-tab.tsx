@@ -44,12 +44,11 @@ export function TaskOverviewTab({
 
   const setReminderMutation = useMutation({
     mutationFn: async (date: string) => {
-      return apiFetch("/reminders", {
+      return apiFetch(`/tasks/${task.id}/reminders`, {
         method: "POST",
         body: JSON.stringify({
-          entity_type: "App\\Models\\Task",
-          entity_id: task.id,
           remind_at: date,
+          type: "personal"
         }),
       });
     },
@@ -63,7 +62,7 @@ export function TaskOverviewTab({
 
   const deleteReminderMutation = useMutation({
     mutationFn: async (reminderId: number | string) => {
-      return apiFetch(`/reminders/${reminderId}`, { method: "DELETE" });
+      return apiFetch(`/tasks/reminders/${reminderId}`, { method: "DELETE" });
     },
     onSuccess: () => {
       toast.success("Reminder removed");

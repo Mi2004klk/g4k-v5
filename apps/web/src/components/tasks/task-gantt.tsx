@@ -212,8 +212,8 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
         .gantt .bar-wrapper.gantt-task-todo .bar { fill: #d4d4d8; stroke: #a1a1aa; stroke-width: 1; }
         .gantt .bar-wrapper.gantt-task-in_progress .bar { fill: #3b82f6; stroke: #2563eb; stroke-width: 1; }
         .gantt .bar-wrapper.gantt-task-review .bar { fill: #a855f7; stroke: #9333ea; stroke-width: 1; }
-        .gantt .bar-wrapper.gantt-task-completed .bar { fill: #10b981; stroke: #059669; stroke-width: 1; }
-        .gantt .bar-wrapper.gantt-task-redo .bar, .gantt .bar-wrapper.gantt-task-overdue .bar { fill: #f43f5e; stroke: #e11d48; stroke-width: 1; }
+        .gantt .bar-wrapper.gantt-task-done .bar { fill: #10b981; stroke: #059669; stroke-width: 1; }
+        .gantt .bar-wrapper.gantt-task-overdue .bar { fill: #f43f5e; stroke: #e11d48; stroke-width: 1; }
         
         /* Milestones */
         .gantt .bar-wrapper.gantt-task-milestone .bar {

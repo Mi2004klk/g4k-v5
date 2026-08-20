@@ -129,10 +129,10 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel htmlFor="identifier" className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                      Email or Employee ID
+                      Email, Username, or Employee ID
                     </FormLabel>
                     <FormControl>
-                      <Input id="identifier" placeholder="e.g. you@games4king.in or EMP-1042" {...field} disabled={lockoutSeconds > 0} autoComplete="username" />
+                      <Input id="identifier" placeholder="e.g. you@games4king.in or G4K-001" {...field} disabled={lockoutSeconds > 0} autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -544,7 +544,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         const val = row.getValue("due_date") as string;
         if (!val) return <span className="text-neutral-300 dark:text-neutral-700">-</span>;
         
-        const isOverdue = new Date(val) < new Date() && row.getValue("status") !== "completed";
+        const isOverdue = new Date(val) < new Date() && row.getValue("status") !== "done";
         return (
           <span className={`text-[11px] font-medium flex items-center ${isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-neutral-600 dark:text-neutral-400"}`}>
             {isOverdue && <AppIcon name="warning" size="xs" className="mr-1.5" />}

@@ -9,8 +9,8 @@ export const taskStatus = {
 
 export const priority = {
   urgent: { bar: 'bg-rose-500',    status: 'danger'  as StatusType, icon: 'flag',     label: 'Urgent' },
-  high:   { bar: 'bg-amber-500',   status: 'warning' as StatusType, icon: 'arrowUp',  label: 'High' },
-  medium: { bar: 'bg-blue-500',    status: 'info'    as StatusType, icon: 'minus',    label: 'Medium' },
+  high:   { bar: 'bg-orange-500',  status: 'warning' as StatusType, icon: 'arrowUp',  label: 'High' },
+  medium: { bar: 'bg-yellow-500',  status: 'info'    as StatusType, icon: 'minus',    label: 'Medium' },
   low:    { bar: 'bg-neutral-300 dark:bg-neutral-600', status: 'neutral' as StatusType, icon: 'arrowDown', label: 'Low' },
 } as const;
 
