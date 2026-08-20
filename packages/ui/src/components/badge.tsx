@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { getPriorityColor } from "../theme/semantic"
 
 import { cn } from "../utils/cn"
 
@@ -68,6 +69,15 @@ function StatusBadge({ className, status, colors: overrideColors, dot = false, c
       {children}
     </div>
   )
+}
+
+export function PriorityBar({ priority: p, className }: { priority: string; className?: string }) {
+  const config = getPriorityColor(p);
+  return <div className={cn("w-1 rounded-full", config.bar, className)} />;
+}
+
+export function StatusDot({ color, className }: { color: string; className?: string }) {
+  return <span className={cn("h-2 w-2 rounded-full inline-block shrink-0", color, className)} aria-hidden="true" />;
 }
 
 export { Badge, badgeVariants, StatusBadge }

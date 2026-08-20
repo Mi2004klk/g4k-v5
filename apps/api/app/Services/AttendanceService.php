@@ -24,9 +24,10 @@ class AttendanceService
             $parsedTs = Carbon::parse($timestamp);
             $date = $parsedTs->toDateString();
 
-            // Validate punch state machine
+            // Check events within the last 48 hours to support overnight shifts
             $lastEvent = AttendanceEvent::where('user_id', $userId)
-                ->whereBetween('timestamp', [$date . ' 00:00:00', $date . ' 23:59:59'])
+                ->where('timestamp', '>=', Carbon::parse($date)->subHours(48))
+                ->where('timestamp', '<=', $parsedTs)
                 ->orderBy('timestamp', 'desc')
                 ->first();
 
@@ -63,7 +64,19 @@ class AttendanceService
                 ]);
             }
 
-            return static::reconcileDay($userId, $date);
+            $reconcileDate = $date;
+            if (in_array($type, ['clock_out', 'break_start', 'break_end'])) {
+                $shiftStartEvent = AttendanceEvent::where('user_id', $userId)
+                    ->where('timestamp', '<=', $parsedTs)
+                    ->where('type', 'clock_in')
+                    ->orderBy('timestamp', 'desc')
+                    ->first();
+                if ($shiftStartEvent) {
+                    $reconcileDate = $shiftStartEvent->timestamp->toDateString();
+                }
+            }
+
+            return static::reconcileDay($userId, $reconcileDate);
         });
     }
 
@@ -88,9 +101,15 @@ class AttendanceService
 
             foreach ($allEvents as $ev) {
                 $evDate = $ev->timestamp->toDateString();
-                if ($ev->type === 'clock_in' && $evDate === $date) {
-                    $hasStartedOnDate = true;
+                
+                if ($ev->type === 'clock_in') {
+                    if ($evDate === $date) {
+                        $hasStartedOnDate = true;
+                    } elseif ($evDate !== $date && $hasStartedOnDate) {
+                        break;
+                    }
                 }
+                
                 if ($hasStartedOnDate) {
                     $events[] = $ev;
                 }

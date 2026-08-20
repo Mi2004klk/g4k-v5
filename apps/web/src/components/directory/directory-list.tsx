@@ -46,7 +46,8 @@ import Link from "next/link";
 import { EmptyState } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
-import { StatusBadge } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components/badge";
+import { getUserStatusColor } from "@g4k/ui/theme";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useUserActions } from "@/hooks/use-user-actions";
@@ -291,10 +292,7 @@ export function EmployeeManagementTab() {
       cell: ({ row }) => {
         const user = row.original;
         return (
-          <button className={`flex items-center gap-3 w-full text-left transition-opacity ${canManageUsers ? 'hover:opacity-80' : ''}`} onClick={() => {
-            if (!canManageUsers) return;
-            router.push(`/dashboard/org/users/${user.id}`);
-          }}>
+          <div className="flex items-center gap-3 w-full text-left">
             <Avatar className="w-9 h-9">
               {user.avatar_url && <AvatarImage src={resolveAvatarUrl(user.avatar_url as string)} alt={user.name} />}
               <AvatarFallback name={user.name} className="font-bold" />
@@ -307,7 +305,7 @@ export function EmployeeManagementTab() {
                 <span>{user.email}</span>
               </div>
             </div>
-          </button>
+          </div>
         );
       },
     },
@@ -365,10 +363,15 @@ export function EmployeeManagementTab() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const isInactive = row.original.status === "inactive";
+        const status = row.original.status || "active";
+        const config = getUserStatusColor(status);
         return (
-          <StatusBadge status={isInactive ? "danger" : "success"} dot className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0">
-            {row.original.status || "Active"}
+          <StatusBadge 
+            status={config.status} 
+            dot 
+            className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0"
+          >
+            {config.label}
           </StatusBadge>
         );
       }
@@ -404,9 +407,6 @@ export function EmployeeManagementTab() {
                   </DropdownMenuItem>
                 ) : (
                   <>
-                    <DropdownMenuItem onClick={() => router.push(`/dashboard/org/users/${user.id}`)} className="gap-2 font-medium text-primary-600">
-                      <AppIcon name="userCheck" /> View Details
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => {
                       setActivityUser(user);
                       setIsActivityOpen(true);

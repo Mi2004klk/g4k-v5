@@ -7,13 +7,13 @@ import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
-import { Card, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
-import { DataTable } from "@g4k/ui/components";
-import { FilterBar, DatePicker } from "@g4k/ui/components";
+import { ListScaffold } from "@g4k/ui/components";
+import { DatePicker } from "@g4k/ui/components";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
+import { useExport } from "@/hooks/use-export";
 
 export interface AuditLogUser {
   id: number;
@@ -36,7 +36,7 @@ export function AuditLogTable() {
   const [startDate, setStartDate] = useUrlState("start_date", "");
   const [endDate, setEndDate] = useUrlState("end_date", "");
   const filters = { action, user_id: userId, start_date: startDate, end_date: endDate };
-  const [isExporting, setIsExporting] = useState(false);
+  const { triggerExport, isExporting } = useExport();
   
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
@@ -68,22 +68,13 @@ export function AuditLogTable() {
   const totalPages = logsData?.last_page || 1;
 
   const handleExport = async () => {
-    try {
-      setIsExporting(true);
-      const params = new URLSearchParams();
-      if (filters.action) params.append("action", filters.action);
-      if (filters.user_id) params.append("user_id", filters.user_id);
-      if (filters.start_date) params.append("start_date", filters.start_date);
-      if (filters.end_date) params.append("end_date", filters.end_date);
-      
-      await apiFetch(`/audit-logs/export?${params.toString()}`, { method: "GET" });
-      toast.success("Export queued. You will be notified when it's ready.");
-      queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
-    } catch (err: unknown) {
-      toast.error((err as Error).message || "Failed to start export.");
-    } finally {
-      setIsExporting(false);
-    }
+    const params = new URLSearchParams();
+    if (filters.action) params.append("action", filters.action);
+    if (filters.user_id) params.append("user_id", filters.user_id);
+    if (filters.start_date) params.append("start_date", filters.start_date);
+    if (filters.end_date) params.append("end_date", filters.end_date);
+    
+    await triggerExport(`/audit-logs/export?${params.toString()}`, "audit-logs-export.csv");
   };
 
   const columns = [
@@ -139,74 +130,87 @@ export function AuditLogTable() {
   ];
 
   return (
-    <Card className=" border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
-      <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex justify-between gap-4 bg-neutral-50/50 dark:bg-neutral-800/30">
-        <div className="flex-1 max-w-xl">
-          <FilterBar
-            hideSearch={true}
-            filters={[
-              {
-                key: "action",
-                label: "Action",
-                type: "select",
-                options: [
-                  { label: "All Actions", value: "" },
-                  { label: "login", value: "login" },
-                  { label: "logout", value: "logout" },
-                  { label: "create", value: "create" },
-                  { label: "update", value: "update" },
-                  { label: "delete", value: "delete" },
-                ],
-                value: filters.action,
-                onChange: (v) => setAction(v)
-              },
-              {
-                key: "user_id",
-                label: "User",
-                type: "select",
-                options: userOptions,
-                value: filters.user_id,
-                onChange: (v) => setUserId(v)
-              }
-            ]}
-          />
-        </div>
-        <div className="flex items-center gap-2 text-sm text-neutral-500">
-          <DatePicker
-            value={filters.start_date ? new Date(filters.start_date) : undefined}
-            onChange={(date) => setStartDate(date ? format(date, "yyyy-MM-dd") : "")}
-            className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
-            placeholder="Start date"
-          />
-          <span>to</span>
-          <DatePicker
-            value={filters.end_date ? new Date(filters.end_date) : undefined}
-            onChange={(date) => setEndDate(date ? format(date, "yyyy-MM-dd") : "")}
-            className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
-            placeholder="End date"
-          />
-        </div>
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap">
-          <AppIcon name="download" className=" mr-2" />
-          {isExporting ? "Queuing..." : "Export CSV"}
-        </Button>
-      </div>
-
-      <CardContent className="p-0 overflow-x-auto w-full">
-          <DataTable
-            columns={columns}
-            data={logs}
-            isLoading={isLoading}
-            isError={isError}
-            stickyHeader={true}
-            stickyFirstCol={true}
-            page={page}
-            perPage={perPage}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            onPerPageChange={setPerPage}
-          />
-      </CardContent>
-    </Card>
+    <div className="h-full py-4">
+      <ListScaffold
+        title="Audit Log"
+        hideSearch={true}
+        filters={[
+          {
+            key: "action",
+            label: "Action",
+            type: "select",
+            options: [
+              { label: "All Actions", value: "" },
+              { label: "login", value: "login" },
+              { label: "logout", value: "logout" },
+              { label: "create", value: "create" },
+              { label: "update", value: "update" },
+              { label: "delete", value: "delete" },
+            ],
+            value: filters.action,
+            onChange: (v) => setAction(v as string)
+          },
+          {
+            key: "user_id",
+            label: "User",
+            type: "select",
+            options: userOptions,
+            value: filters.user_id,
+            onChange: (v) => setUserId(v as string)
+          }
+        ]}
+        actions={
+          <>
+            <div className="hidden md:flex items-center gap-2 text-sm text-neutral-500 mr-2">
+              <DatePicker
+                value={filters.start_date ? new Date(filters.start_date) : undefined}
+                onChange={(date) => setStartDate(date ? format(date, "yyyy-MM-dd") : "")}
+                className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
+                placeholder="Start date"
+              />
+              <span>to</span>
+              <DatePicker
+                value={filters.end_date ? new Date(filters.end_date) : undefined}
+                onChange={(date) => setEndDate(date ? format(date, "yyyy-MM-dd") : "")}
+                className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
+                placeholder="End date"
+              />
+            </div>
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap shadow-sm text-neutral-600 dark:text-neutral-300">
+              <AppIcon name="download" />
+              {isExporting ? "Queuing..." : "Export CSV"}
+            </Button>
+          </>
+        }
+        columns={columns}
+        data={logs}
+        isLoading={isLoading}
+        isError={isError}
+        pagination={{
+          page,
+          perPage,
+          totalPages,
+          onPageChange: setPage,
+          onPerPageChange: setPerPage
+        }}
+        mobileCardRenderer={(log) => (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-[10px] font-mono">
+                  {log.action}
+                </span>
+                <span className="text-sm font-medium">{log.user ? log.user.name : "System"}</span>
+              </div>
+              <span className="text-[10px] text-neutral-500">{format(new Date(log.at), "MMM d, HH:mm")}</span>
+            </div>
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-800 text-xs">
+              <span className="text-neutral-500">{log.subject_type ? `${log.subject_type.split('\\').pop()} #${log.subject_id}` : "-"}</span>
+              <span className="text-neutral-400 font-mono text-[10px]">{log.ip || "—"}</span>
+            </div>
+          </div>
+        )}
+      />
+    </div>
   );
 }

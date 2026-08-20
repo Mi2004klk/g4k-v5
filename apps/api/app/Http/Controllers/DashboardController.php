@@ -74,7 +74,7 @@ class DashboardController extends Controller
                             'title' => $l->title ?? 'Leave Request',
                             'user_name' => $l->user_name,
                             'created_at' => $l->created_at,
-                            'route' => $activeRole === 'hr' ? '/dashboard/attendance?tab=approvals' : '/dashboard/attendance?tab=leave'
+                            'route' => '/dashboard/attendance?tab=leave'
                         ];
                     }
 
@@ -95,11 +95,6 @@ class DashboardController extends Controller
                                   });
                             });
                         } elseif ($activeRole === 'hr') {
-                            \App\Support\HrScope::apply($tasksQuery, $user, 'tasks.assignee_id'); // This will also need to cover task_assignees in HrScope if it isn't
-                            // Actually, tasks have multiple assignees. HrScope uses a subquery for assignee_id. But wait, tasks can also have task_assignees.
-                            // To be perfectly safe, I will just apply HrScope to task's assignee_id, AND task_assignees. 
-                            // HrScope subquery checks the column directly.
-                            // Let's implement it carefully.
                             $tasksQuery->where(function($q) use ($user) {
                                 $q->whereExists(function ($q2) use ($user) {
                                     $q2->select(DB::raw(1))->from('users')

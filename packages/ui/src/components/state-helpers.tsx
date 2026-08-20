@@ -4,6 +4,20 @@ import { Button } from "./button"
 import { Skeleton } from "./skeleton"
 import { EmptyState } from "./empty-state"
 
+export const emptyStateDefaults = {
+  tasks:         { title: "No tasks yet",           description: "Create your first task to get started.",            icon: "tasks" as const },
+  projects:      { title: "No projects yet",        description: "Start a new project to organize your work.",       icon: "projects" as const },
+  leaves:        { title: "No leave requests",      description: "Your leave history will appear here.",             icon: "calendar" as const },
+  conversations: { title: "No conversations",       description: "Start a chat to begin messaging.",                 icon: "chat" as const },
+  notifications: { title: "All caught up",          description: "You have no new notifications.",                   icon: "bell" as const },
+  departments:   { title: "No departments",         description: "Create departments to organize your team.",        icon: "organization" as const },
+  designations:  { title: "No designations",        description: "Create designations to define team roles.",        icon: "badge" as const },
+  members:       { title: "No team members",        description: "Invite team members to get started.",              icon: "users" as const },
+  holidays:      { title: "No holidays configured", description: "Add holidays to your company calendar.",           icon: "calendar" as const },
+  reports:       { title: "No reports generated",   description: "Run a report to see data here.",                   icon: "spreadsheet" as const },
+  auditLogs:     { title: "No audit logs",          description: "Activity will be recorded here.",                  icon: "shield" as const },
+} as const;
+
 export function ContentSkeleton({ type = "table", rows = 5 }: { type?: "table" | "card-grid" | "detail", rows?: number }) {
   if (type === "table") {
     return (

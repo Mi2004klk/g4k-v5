@@ -298,18 +298,10 @@ export function CorporateDirectoryTab() {
               <div className="flex gap-2 w-full">
                 <Button
                   onClick={() => sendMessageMutation.mutate(selectedUser.id)}
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 text-white gap-2"
+                  className="w-full bg-primary-600 hover:bg-primary-700 text-white gap-2"
                 >
                   <AppIcon name="chat" />
                   <span>Message</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push(`/dashboard/org/users/${selectedUser.id}`)}
-                  className="flex-1 gap-2"
-                >
-                  <AppIcon name="userCheck" />
-                  <span>View Profile</span>
                 </Button>
               </div>
             </div>

@@ -50,7 +50,7 @@ export function ExportHistory() {
     queryFn: () => apiFetch("/reports/exports").then(res => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []))),
     refetchInterval: (query) => {
       const currentData = query.state.data as ExportJob[] | undefined;
-      const isProcessing = currentData?.some((e) => e.status === "processing");
+      const isProcessing = currentData?.some((e) => e.status === "processing" || e.status === "pending");
       return isProcessing ? 5000 : false;
     }
   });

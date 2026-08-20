@@ -42,14 +42,14 @@ import {
 } from "@g4k/ui/components";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { FilterBar } from "@g4k/ui/components";
+import { ListScaffold } from "@g4k/ui/components";
 import { EmptyState } from "@g4k/ui/components";
 import { DataTable, StatusBadge, InlineEdit } from "@g4k/ui/components";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
-import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox } from "@g4k/ui/components";
+import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox, Switch } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
 import { resolveAvatarUrl } from "@/lib/utils";
 
@@ -107,7 +107,7 @@ export function DepartmentsTab() {
   }
 
   const { data: caps } = useCapabilities();
-  const isAdmin = hasCapability(caps, "departments.manage");
+  const isAdmin = hasCapability(caps, "departments.manage") || hasCapability(caps, "users.hr.manage");
 
   const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: Department }>({ isOpen: false, type: "" });
@@ -204,6 +204,15 @@ export function DepartmentsTab() {
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
     onError: (err: ApiError) => toast.error(err.message || "Failed to reactivate department."),
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: number, is_active: boolean }) => apiFetch(`/departments/${id}`, { method: "PUT", body: JSON.stringify({ is_active }) }),
+    onSuccess: (_, variables) => {
+      toast.success(`Department ${variables.is_active ? "activated" : "deactivated"}.`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
+    },
+    onError: (err: ApiError) => toast.error(err.message || "Failed to toggle department status."),
   });
 
   const deleteMutation = useMutation({
@@ -310,7 +319,7 @@ export function DepartmentsTab() {
                 <div onClick={(e) => e.stopPropagation()}>
                   <InlineEdit
                     value={row.original.name}
-                    onSave={(val) => {
+                    onSave={(val: string) => {
                       if (val && val !== row.original.name) {
                         updateDeptNameMutation.mutate({ id: row.original.id, name: val });
                       }
@@ -378,6 +387,20 @@ export function DepartmentsTab() {
         cell: ({ row }) => {
           const isActive = row.original.is_active;
           const isArchived = !!row.original.archived_at;
+          
+          if (isAdmin && !isArchived) {
+             return (
+               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                 <Switch
+                   checked={isActive}
+                   onCheckedChange={(c) => toggleActiveMutation.mutate({ id: row.original.id, is_active: c })}
+                   disabled={toggleActiveMutation.isPending}
+                 />
+                 <span className="text-xs text-neutral-500 font-medium w-12">{isActive ? "Active" : "Inactive"}</span>
+               </div>
+             );
+          }
+
           return (
             <StatusBadge status={isArchived ? "neutral" : (isActive ? "success" : "danger")} dot className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0">
               {isArchived ? "Archived" : (isActive ? "Active" : "Inactive")}
@@ -449,72 +472,82 @@ export function DepartmentsTab() {
   }, [isAdmin, reset, restoreMutation, reactivateMutation, archiveMutation, deleteMutation]);
 
   return (
-    <div className="space-y-6 mt-4">
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 flex items-center justify-between">
-          <FilterBar
-            searchQuery={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search departments..."
-            filters={[
-              {
-                type: "select",
-                key: "status",
-                label: "Status",
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: [
-                  { label: "Active", value: "active" },
-                  { label: "Inactive", value: "inactive" },
-                  { label: "Archived", value: "archived" },
-                ],
-              },
-            ]}
-          />
-          <div className="flex items-center gap-2 shrink-0 ml-2">
+    <div className="h-full py-4">
+      <ListScaffold
+        title="Departments"
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search departments..."
+        filters={[
+          {
+            type: "select",
+            key: "status",
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+              { label: "Archived", value: "archived" },
+            ],
+          },
+        ]}
+        actions={
+          <>
             {isAdmin && (
-              <Button variant="outline" size="sm" onClick={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-9">
+              <Button variant="outline" size="sm" onClick={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
                 <AppIcon name="download" /> Export
               </Button>
             )}
             {isAdmin && (
-              <Button size="sm" onClick={() => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow-sm h-9">
+              <Button size="sm" onClick={() => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow-sm">
                 <AppIcon name="plus" /> Add Department
               </Button>
             )}
-          </div>
-        </div>
-      </div>
-
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-card dark:bg-neutral-900">
-        <CardContent className="p-0">
-          {isLoading ? (
-            <ContentSkeleton type="table" rows={3} />
-          ) : isError ? (
-            <IsolatedError error={isError ? "Failed to load departments." : undefined} onRetry={() => refetch()} />
-          ) : deptList.length === 0 ? (
-            <MeaningfulEmpty 
-              entityName="departments" 
-              icon="building"
-              description="Try adjusting your search query or create a new department."
-              actionLabel={isAdmin ? "Create Department" : undefined}
-              onAction={isAdmin ? () => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); } : undefined}
-            />
-          ) : (
-            <div className="space-y-4">
-              <DataTable
-                columns={columns}
-                data={deptList}
-                page={page}
-                perPage={perPage}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                onPerPageChange={setPerPage}
-              />
+          </>
+        }
+        columns={columns}
+        data={deptList}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        emptyState={
+          <MeaningfulEmpty 
+            entityName="departments" 
+            icon="building"
+            description="Try adjusting your search query or create a new department."
+            actionLabel={isAdmin ? "Create Department" : undefined}
+            onAction={isAdmin ? () => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); } : undefined}
+          />
+        }
+        pagination={{
+          page,
+          perPage,
+          totalPages,
+          onPageChange: setPage,
+          onPerPageChange: setPerPage
+        }}
+        mobileCardRenderer={(dept) => (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-semibold text-sm">{dept.name}</h3>
+                {dept.description && <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{dept.description}</p>}
+              </div>
+              <StatusBadge status={dept.archived_at ? "neutral" : (dept.is_active ? "success" : "danger")} dot className="capitalize text-[10px]">
+                {dept.archived_at ? "Archived" : (dept.is_active ? "Active" : "Inactive")}
+              </StatusBadge>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div className="flex items-center justify-between text-xs text-neutral-500 mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+              <span className="flex items-center gap-1"><AppIcon name="users" size="xs" /> {dept.users_count || 0} members</span>
+              <span className="flex items-center gap-1"><AppIcon name="directory" size="xs" /> {(dept.teams || []).length} teams</span>
+            </div>
+            <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => setSelectedDeptMembers(dept)}>
+              Manage Members
+            </Button>
+          </div>
+        )}
+      />
 
       <Dialog open={isDeptModalOpen} onOpenChange={setIsDeptModalOpen}>
         <DialogContent className="sm:max-w-md">
@@ -527,7 +560,7 @@ export function DepartmentsTab() {
               <div>
                 <label htmlFor="dept-name" className="block mb-1 text-sm font-semibold">Department Name *</label>
                 <Input id="dept-name" {...register("name")} placeholder="e.g. Engineering" aria-describedby={errors.name ? "dept-name-error" : undefined} />
-                {errors.name && <p id="dept-name-error" role="alert" className="text-xs text-rose-500 mt-1">{errors.name.message}</p>}
+                {errors.name && <p id="dept-name-error" role="alert" className="text-xs text-rose-500 mt-1">{errors.name?.message}</p>}
               </div>
               <div>
                 <label htmlFor="dept-desc" className="block mb-1 text-sm font-semibold">Description</label>

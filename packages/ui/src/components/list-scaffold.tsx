@@ -7,6 +7,7 @@ import { Pagination } from "./pagination";
 import { Button } from "./button";
 import { AppIcon } from "./icon/AppIcon";
 import { ColumnDef } from "@tanstack/react-table";
+import { useBreakpoint } from "../hooks/use-breakpoint";
 
 export interface ListScaffoldProps<TData, TValue> {
   title: React.ReactNode;
@@ -51,6 +52,7 @@ export interface ListScaffoldProps<TData, TValue> {
 
   // Rendering
   emptyState?: React.ReactNode;
+  mobileCardRenderer?: (row: TData) => React.ReactNode;
 }
 
 export function ListScaffold<TData, TValue>({
@@ -80,9 +82,11 @@ export function ListScaffold<TData, TValue>({
   onRetry,
   pagination,
   emptyState,
+  mobileCardRenderer,
 }: ListScaffoldProps<TData, TValue>) {
   const selectedCount = rowSelection ? Object.keys(rowSelection).filter(k => rowSelection[k]).length : 0;
   const hasSelection = selectedCount > 0;
+  const { isMobile } = useBreakpoint();
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -153,23 +157,63 @@ export function ListScaffold<TData, TValue>({
               )}
             </div>
           ) : (
-            <DataTable
-              columns={columns}
-              data={data}
-              getRowId={getRowId}
-              onRowClick={onRowClick}
-              rowSelection={rowSelection}
-              onRowSelectionChange={onRowSelectionChange}
-              isLoading={isLoading}
-              emptyState={emptyState}
-              {...(pagination ? {
-                page: pagination.page,
-                perPage: pagination.perPage,
-                totalPages: pagination.totalPages,
-                onPageChange: pagination.onPageChange,
-                onPerPageChange: pagination.onPerPageChange
-              } : {})}
-            />
+            isMobile && mobileCardRenderer ? (
+              <div className="space-y-3 p-4 flex-1 overflow-auto">
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex gap-4 p-4 border border-neutral-200 dark:border-neutral-800 rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-800/50">
+                      <div className="h-4 w-1/4 rounded bg-neutral-200 dark:bg-neutral-700" />
+                      <div className="h-4 w-1/2 rounded bg-neutral-200 dark:bg-neutral-700" />
+                    </div>
+                  ))
+                ) : data.length === 0 ? (
+                  emptyState || (
+                    <div className="flex flex-col items-center justify-center py-12 text-neutral-500">
+                      No data found.
+                    </div>
+                  )
+                ) : (
+                  data.map((row, i) => (
+                    <div key={getRowId ? getRowId(row, i) : i} onClick={() => onRowClick?.(row)}>
+                      {mobileCardRenderer(row)}
+                    </div>
+                  ))
+                )}
+                {pagination && data.length > 0 && (
+                  <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 mt-4">
+                    <Pagination 
+                      variant="standard"
+                      currentPage={pagination.page}
+                      totalPages={pagination.totalPages}
+                      pageSize={pagination.perPage}
+                      hasNextPage={pagination.page < pagination.totalPages}
+                      hasPreviousPage={pagination.page > 1}
+                      onNextPage={() => pagination.onPageChange(pagination.page + 1)}
+                      onPreviousPage={() => pagination.onPageChange(pagination.page - 1)}
+                      onPageSizeChange={pagination.onPerPageChange}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <DataTable
+                columns={columns}
+                data={data}
+                getRowId={getRowId}
+                onRowClick={onRowClick}
+                rowSelection={rowSelection}
+                onRowSelectionChange={onRowSelectionChange}
+                isLoading={isLoading}
+                emptyState={emptyState}
+                {...(pagination ? {
+                  page: pagination.page,
+                  perPage: pagination.perPage,
+                  totalPages: pagination.totalPages,
+                  onPageChange: pagination.onPageChange,
+                  onPerPageChange: pagination.onPerPageChange
+                } : {})}
+              />
+            )
           )}
         </div>
       </div>

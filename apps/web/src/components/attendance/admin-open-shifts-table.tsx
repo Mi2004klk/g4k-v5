@@ -11,7 +11,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { usePaginatedList } from "@/lib/pagination";
-import { Button, Checkbox, DataTable, FilterBar, DatePicker } from "@g4k/ui/components";
+import { Button, Checkbox, DatePicker, ListScaffold } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { Row, Table } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
@@ -244,77 +244,59 @@ export function AdminOpenShiftsTable() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center gap-4 bg-card p-4 rounded-xl border border-warning/30 relative overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <div className="absolute top-0 left-0 w-1 h-full bg-warning" />
-        
-        {/* Search & Dept */}
-        <FilterBar
-          searchQuery={search || ""}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search company..."
-          filters={[
-            {
-              key: "department",
-              label: "Department",
-              type: "select",
-              value: deptFilter,
-              onChange: setDeptFilter,
-              options: departments.map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))
-            }
-          ]}
-          onClearAll={() => {
-            setSearch("");
-            setDeptFilter("all");
-          }}
-        />
-
-        <div className="flex-1 flex justify-start xl:justify-end items-center gap-2 w-full xl:w-auto overflow-x-auto">
-          {Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleBulkNotify} className="h-10 text-amber-600 border-amber-200 hover:bg-amber-50 dark:hover:bg-amber-900/20 whitespace-nowrap shrink-0">
-              <AppIcon name="bell" className=" mr-2" />
-              Notify HR ({Object.keys(rowSelection).length})
-            </Button>
-          )}
-          <DatePicker 
-            value={selectedDate ? new Date(selectedDate) : undefined}
-            onChange={(d: Date | undefined) => setSelectedDate(d ? format(d, "yyyy-MM-dd") : "")}
-            placeholder="Select date"
-            className="w-auto min-w-[140px] h-10 shrink-0 border-amber-100 dark:border-amber-900/30 focus-visible:ring-amber-500"
-          />
-        </div>
-      </div>
-
-      <div className="bg-card rounded-xl border border-border overflow-x-auto overflow-y-hidden w-full shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        {openShifts.length === 0 && !isLoading ? (
-          <div className="p-12 text-center flex flex-col items-center">
-            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-4">
-              <AppIcon name="error" size="xl" className=" text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <h3 className="text-lg font-medium text-foreground mb-1">No Open Shifts</h3>
-            <p className="text-sm text-muted-foreground">
-              All employees have successfully clocked out for this date.
-            </p>
-          </div>
-        ) : (
-          <DataTable 
-            columns={columns} 
-            data={openShifts}
-            isLoading={isLoading}
-            isError={!!error}
-            stickyHeader={true}
-            stickyFirstCol={true}
-            onRowSelectionChange={setRowSelection}
-            rowSelection={rowSelection}
-            getRowId={(row) => String(row.id)}
-            page={page}
-            perPage={perPage}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            onPerPageChange={setPerPage}
-          />
-        )}
-      </div>
+    <div className="h-full py-4">
+      <ListScaffold
+        title="Open Shifts"
+        description="Monitor active shifts and missing clock-outs."
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search employees..."
+        filters={[
+          {
+            key: "department",
+            label: "Department",
+            type: "select",
+            value: deptFilter,
+            onChange: setDeptFilter,
+            options: departments.map((d: { id: number, name: string }) => ({ label: d.name, value: d.id.toString() }))
+          }
+        ]}
+        onClearAll={() => {
+          setSearch("");
+          setDeptFilter("all");
+          setSelectedDate(format(new Date(), "yyyy-MM-dd"));
+        }}
+        actions={
+          <>
+            {Object.keys(rowSelection).length > 0 && (
+              <Button variant="outline" size="sm" onClick={handleBulkNotify} className="h-10 text-amber-600 border-amber-200 hover:bg-amber-50 dark:hover:bg-amber-900/20 whitespace-nowrap shrink-0">
+                <AppIcon name="bell" className=" mr-2" />
+                Notify HR ({Object.keys(rowSelection).length})
+              </Button>
+            )}
+            <DatePicker 
+              value={selectedDate ? new Date(selectedDate) : undefined}
+              onChange={(d: Date | undefined) => setSelectedDate(d ? format(d, "yyyy-MM-dd") : "")}
+              placeholder="Select date"
+              className="w-auto min-w-[140px] h-10 shrink-0 border-amber-100 dark:border-amber-900/30 focus-visible:ring-amber-500"
+            />
+          </>
+        }
+        columns={columns as any}
+        data={openShifts}
+        isLoading={isLoading}
+        isError={!!error}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        getRowId={(row: OpenShiftRecord) => String(row.id)}
+        pagination={{
+          page,
+          perPage,
+          totalPages: totalPages,
+          onPageChange: setPage,
+          onPerPageChange: setPerPage
+        }}
+      />
 
       <HrCorrectionDialog
         isOpen={!!correctionData}

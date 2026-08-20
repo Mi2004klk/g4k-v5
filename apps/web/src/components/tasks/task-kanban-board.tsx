@@ -2,6 +2,7 @@
 
 import { useState, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   DndContext,
   closestCorners,
@@ -40,12 +41,13 @@ import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
 import { EmptyState } from "@g4k/ui/components";
 import { TaskModel } from "./task-detail-sheet";
 import { TaskCard, KanbanTask } from "./task-card";
+import { taskStatus } from "@g4k/ui/theme";
 
 const COLUMNS = [
-  { id: "todo", title: "To Do", color: "bg-neutral-400", border: "border-t-neutral-400/50" },
-  { id: "in_progress", title: "In Progress", color: "bg-primary-500", border: "border-t-primary-500/50" },
-  { id: "review", title: "In Review", color: "bg-amber-500", border: "border-t-amber-500/50" },
-  { id: "done", title: "Done", color: "bg-emerald-500", border: "border-t-emerald-500/50" },
+  { id: "todo", title: taskStatus.todo.label, color: taskStatus.todo.dot, border: taskStatus.todo.border },
+  { id: "in_progress", title: taskStatus.in_progress.label, color: taskStatus.in_progress.dot, border: taskStatus.in_progress.border },
+  { id: "review", title: taskStatus.review.label, color: taskStatus.review.dot, border: taskStatus.review.border },
+  { id: "done", title: taskStatus.done.label, color: taskStatus.done.dot, border: taskStatus.done.border },
 ];
 
 function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: {
@@ -306,6 +308,11 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
     if (!finalTask || !originalTask) return;
 
     if (finalTask.status !== originalTask.status) {
+       if (finalTask.qa_form_id && (finalTask.status === "review" || finalTask.status === "done")) {
+         toast.error("This task requires QA verification and cannot be dragged to this column.");
+         setLocalTasks([...tasks]);
+         return;
+       }
        onTaskMove?.(taskId, finalTask.status as string);
     } else {
        if (onTaskReorder && activeId !== overId) {

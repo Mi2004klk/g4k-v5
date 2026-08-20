@@ -19,7 +19,7 @@ export function QAFormViewer({
     let current = { id: "default", title: qaForm.title || "Section", fields: [] as any[] };
     
     (qaForm.fields || []).forEach((f: any) => {
-      if (f.field_type === "section") {
+      if ((f.field_type || f.type) === "section") {
         if (current.fields.length > 0 || current.id !== "default") {
           list.push(current);
         }

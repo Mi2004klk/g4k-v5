@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
@@ -102,6 +102,17 @@ export function ProfileSecurityTab() {
   const onSubmit = (data: PasswordFormValues) => {
     changePasswordMutation.mutate(data);
   };
+
+  const uniqueSessions = useMemo(() => {
+    if (!sessions) return [];
+    const seen = new Set<string>();
+    return (sessions as SessionRecord[]).filter((s) => {
+      const key = `${s.device_name || ""}-${s.user_agent || ""}-${s.ip_address || ""}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [sessions]);
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
@@ -216,8 +227,8 @@ export function ProfileSecurityTab() {
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
-          ) : sessions && sessions.length > 0 ? (
-            sessions.map((session: SessionRecord) => (
+          ) : uniqueSessions.length > 0 ? (
+            uniqueSessions.map((session: SessionRecord) => (
               <div key={session.id} className="p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/20 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-lg mt-1 shrink-0 ${session.is_current ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800'}`}>

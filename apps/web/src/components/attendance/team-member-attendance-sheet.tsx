@@ -17,7 +17,8 @@ import { EmptyState } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
 import { AttendanceHistoryCalendar } from "./attendance-history-calendar";
-import { TeamMemberTrendsGraph } from "./team-member-trends-graph";
+import dynamic from 'next/dynamic';
+const AttendanceGraph = dynamic(() => import('@/components/attendance/attendance-graph').then(mod => mod.AttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 
 interface TeamMemberAttendanceSheetProps {
   userId: number | null;
@@ -240,9 +241,14 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
             )}
           </TabsContent>
 
-          <TabsContent value="trends" className="mt-0">
-            {userId && <TeamMemberTrendsGraph userId={userId} />}
-          </TabsContent>
+            <TabsContent value="trends" className="mt-0">
+              {userId && (
+                <AttendanceGraph
+                  endpoint={`/attendance/hr/graph?user_id=${userId}`}
+                  queryKeyBase={['attendance_graph', String(userId)]}
+                />
+              )}
+            </TabsContent>
         </Tabs>
       </SheetContent>
     </Sheet>

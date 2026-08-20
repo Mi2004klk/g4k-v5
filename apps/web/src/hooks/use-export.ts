@@ -52,14 +52,14 @@ export function useExport() {
           toast.success(`Export queued (Job ${data.job_id}).`, { 
             id: toastId,
             description: "Check the Export history later.",
-            action: { label: "View Exports", onClick: () => window.location.href = "/dashboard/reports?tab=exports" }
+            action: { label: "View Exports", onClick: () => window.location.href = "/dashboard/reports?tab=general" }
           });
           setIsExporting(false);
         } else if (data.message === "Export queued") {
           toast.success(`Export queued.`, { 
             id: toastId,
             description: "Check the Export history later.",
-            action: { label: "View Exports", onClick: () => window.location.href = "/dashboard/reports?tab=exports" }
+            action: { label: "View Exports", onClick: () => window.location.href = "/dashboard/reports?tab=general" }
           });
           setIsExporting(false);
         } else {

@@ -25,7 +25,7 @@ class UserCredentialsMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to Jetro - Your Account Credentials',
+            subject: 'Welcome to Games4King Workplace OS - Your Account Credentials',
         );
     }
 

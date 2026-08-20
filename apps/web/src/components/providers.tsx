@@ -13,7 +13,6 @@ import { useAuthStore } from "@/lib/auth-store";
 
 import { useUIStore } from "@/lib/ui-store";
 import { queryKeys } from "@/lib/query-keys";
-import { triggerInvalidation } from "@/lib/invalidation-map";
 
 import { useTimerStore } from "@/stores/timer-store";
 
@@ -116,7 +115,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     const handleSyncComplete = () => {
-      triggerInvalidation(queryClient, "attendance.punch"); // Simplification: assume most offline sync is punches
+      queryClient.invalidateQueries({ queryKey: queryKeys.attendanceToday });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myAttendanceHistory() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     };
     window.addEventListener("offline-sync-complete", handleSyncComplete);

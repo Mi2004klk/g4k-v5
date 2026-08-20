@@ -82,11 +82,8 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
-        $clearedAt = null;
-        if ($conversation->scope !== 'global') {
-            $pivot = $conversation->users()->where('users.id', $request->user()->id)->first()?->pivot;
-            $clearedAt = $pivot?->cleared_at;
-        }
+        $pivot = $conversation->users()->where('users.id', $request->user()->id)->first()?->pivot;
+        $clearedAt = $pivot?->cleared_at;
 
         $messages = Message::where('conversation_id', $conversation->id)
             ->when($clearedAt, function ($q) use ($clearedAt) {
@@ -103,11 +100,18 @@ class ChatController extends Controller
     {
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
+        
+        if ($conversation->scope === 'direct') {
+            $otherUser = $conversation->users()->where('users.id', '!=', $request->user()->id)->first();
+            if ($otherUser && $otherUser->status !== 'active') {
+                return response()->json(['message' => 'Cannot send messages to deactivated users.'], 403);
+            }
+        }
 
         $validated = $request->validate([
             'body' => 'required_without_all:attachment,attachment_url|nullable|string',
             'type' => 'nullable|in:text,image,file',
-            'attachment_url' => 'nullable|string',
+            'attachment_url' => 'nullable|url:http,https|max:2048',
             'attachment' => 'nullable|file|max:10240',
             'reply_to_id' => 'nullable|exists:messages,id',
             'mentions' => 'nullable|array',
@@ -176,10 +180,22 @@ class ChatController extends Controller
                 $q->where('user_id', $request->user()->id);
             })
             ->chunkById(200, function ($messages) use ($request) {
+                $upserts = [];
+                $now = now();
                 foreach ($messages as $msg) {
-                    \Illuminate\Support\Facades\DB::table('conversation_message_reads')->updateOrInsert(
-                        ['message_id' => $msg->id, 'user_id' => $request->user()->id],
-                        ['read_at' => now(), 'updated_at' => now(), 'created_at' => now()]
+                    $upserts[] = [
+                        'message_id' => $msg->id,
+                        'user_id' => $request->user()->id,
+                        'read_at' => $now,
+                        'updated_at' => $now,
+                        'created_at' => $now,
+                    ];
+                }
+                if (!empty($upserts)) {
+                    \Illuminate\Support\Facades\DB::table('conversation_message_reads')->upsert(
+                        $upserts,
+                        ['message_id', 'user_id'],
+                        ['read_at', 'updated_at']
                     );
                 }
             });
@@ -219,6 +235,8 @@ class ChatController extends Controller
             ->whereHas('users', function ($q) use ($recipientId) {
                 $q->where('users.id', $recipientId);
             })
+            ->withCount('users')
+            ->having('users_count', 2)
             ->first();
 
         if ($existing) {
@@ -269,8 +287,11 @@ class ChatController extends Controller
         $this->checkAccess($conversation, $request->user());
 
         $role = $request->user()->resolveActiveRole();
-        if (!CapabilityMatrix::hasCapability($role, 'chat.manage') && !CapabilityMatrix::hasCapability($role, 'projects.manage')) {
-            abort(403, 'Only HR or Admin can pin messages');
+        $hasChatManage = CapabilityMatrix::hasCapability($role, 'chat.manage');
+        $hasProjectManage = $conversation->project_id && CapabilityMatrix::hasCapability($role, 'projects.manage');
+
+        if (!$hasChatManage && !$hasProjectManage) {
+            abort(403, 'Unauthorized to pin messages');
         }
 
         $message = Message::where('conversation_id', $conversationId)->findOrFail($messageId);
@@ -287,8 +308,11 @@ class ChatController extends Controller
         $this->checkAccess($conversation, $request->user());
 
         $role = $request->user()->resolveActiveRole();
-        if (!CapabilityMatrix::hasCapability($role, 'chat.manage') && !CapabilityMatrix::hasCapability($role, 'projects.manage')) {
-            abort(403, 'Only HR or Admin can unpin messages');
+        $hasChatManage = CapabilityMatrix::hasCapability($role, 'chat.manage');
+        $hasProjectManage = $conversation->project_id && CapabilityMatrix::hasCapability($role, 'projects.manage');
+
+        if (!$hasChatManage && !$hasProjectManage) {
+            abort(403, 'Unauthorized to unpin messages');
         }
 
         $message = Message::where('conversation_id', $conversationId)->findOrFail($messageId);
@@ -304,7 +328,9 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
-        if ($conversation->scope !== 'global') {
+        if (!$conversation->users()->where('users.id', $request->user()->id)->exists()) {
+            $conversation->users()->attach($request->user()->id, ['is_pinned' => true]);
+        } else {
             $conversation->users()->updateExistingPivot($request->user()->id, ['is_pinned' => true]);
         }
 
@@ -316,7 +342,9 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
-        if ($conversation->scope !== 'global') {
+        if (!$conversation->users()->where('users.id', $request->user()->id)->exists()) {
+            $conversation->users()->attach($request->user()->id, ['is_pinned' => false]);
+        } else {
             $conversation->users()->updateExistingPivot($request->user()->id, ['is_pinned' => false]);
         }
 
@@ -360,7 +388,9 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
-        if ($conversation->scope !== 'global') {
+        if (!$conversation->users()->where('users.id', $request->user()->id)->exists()) {
+            $conversation->users()->attach($request->user()->id, ['cleared_at' => now()]);
+        } else {
             $conversation->users()->updateExistingPivot($request->user()->id, ['cleared_at' => now()]);
         }
 

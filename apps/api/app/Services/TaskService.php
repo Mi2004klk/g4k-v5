@@ -52,7 +52,7 @@ class TaskService
             if ($task->blocked_by) {
                 $blocker = Task::find($task->blocked_by);
                 if ($blocker && $blocker->status !== 'done') {
-                    throw new Exception("Cannot move task to {$newStatus} because it is blocked by task #{$blocker->id} ({$blocker->title}).");
+                    abort(422, "Cannot move task to {$newStatus} because it is blocked by task #{$blocker->id} ({$blocker->title}).");
                 }
             }
         }

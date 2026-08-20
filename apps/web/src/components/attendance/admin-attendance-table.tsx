@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import Link from "next/link";
 import { AppIcon } from "@g4k/ui/components";
+import { getAttendanceStatusColor } from "@g4k/ui/theme";
 import { toast } from "sonner";
 import { safeFormat } from "@/lib/format";
 
@@ -298,24 +299,24 @@ export function AdminAttendanceTable() {
       header: "Status",
       cell: ({ row }: { row: Row<AttendanceRecord> }) => {
         const status = row.getValue("status") as string;
-        const isLeave = status === "leave";
         const late = row.original.late_minutes || 0;
-        
+        const config = getAttendanceStatusColor(status);
+
         return (
           <div className="flex items-center gap-1.5">
             <StatusBadge 
-              status={status === "present" ? "success" : status === "late" ? "warning" : isLeave ? "info" : "danger"} 
+              colors={config}
               dot 
               className="uppercase text-[10px] font-bold h-6 px-2"
             >
-              {status}
+              {config.label}
             </StatusBadge>
-            {late > 0 && (
-              <StatusBadge status="warning" className="font-mono text-[10px] h-6 px-1.5">
-                LATE · {late}m
-              </StatusBadge>
+            {late > 0 && status !== "absent" && status !== "leave" && (
+              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                (+{late}m)
+              </span>
             )}
-            {isLeave && (
+            {status === "leave" && (
               <Link 
                 href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
                 className="text-xs text-primary-600 hover:underline flex items-center gap-1"

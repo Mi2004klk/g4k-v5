@@ -57,7 +57,7 @@ class CompanyProfileController extends Controller
             }
 
             $profile = CompanyProfile::first();
-            $oldLogoUrl = $profile->logo_url ?? null;
+            $oldLogoUrl = $profile ? $profile->logo_url : null;
 
             $logoUrl = Storage::disk($disk)->url($path);
 

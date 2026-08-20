@@ -74,7 +74,7 @@ interface AttendanceDay {
   tasks?: string[];
 }
 
-type DayStatus = "present" | "overtime" | "late" | "leave" | "absent" | "holiday" | "nodata";
+type DayStatus = "present" | "overtime" | "late" | "on_leave" | "absent" | "holiday" | "nodata";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ function getStatus(days: AttendanceDay[], holidays: HolidayRecord[], dateStr: st
   const day = days.find((d) => d.date === dateStr);
   const isHoliday = holidays.find((h) => h.date === dateStr);
   
-  if (day && day.status === "leave") return "leave";
+  if (day && day.status === "on_leave") return "on_leave";
   if (day && day.status === "late") return "late";
   if (day && day.status === "present" && day.overtime_seconds > 0) return "overtime";
   if (day && day.status === "present") return "present";
@@ -113,7 +113,7 @@ function CalendarLegend({ compact = false }: { compact?: boolean }) {
     "late",
     "present",
     "overtime",
-    "leave",
+    "on_leave",
     "holiday",
   ];
   return (
@@ -122,7 +122,7 @@ function CalendarLegend({ compact = false }: { compact?: boolean }) {
       aria-label="Calendar legend"
     >
       {items.map((statusKey) => {
-        const color = getAttendanceStatusColor(statusKey === "leave" ? "on_leave" : statusKey);
+        const color = getAttendanceStatusColor(statusKey);
         return (
           <div key={statusKey} className="flex items-center gap-1.5">
             <span
@@ -154,10 +154,10 @@ function DayTooltipContent({ date, record, holiday }: { date: Date; record?: Att
       )}
       <p className="text-[11px] capitalize">
         <span
-          className={`inline-block w-2 h-2 rounded-sm mr-1 ${getAttendanceStatusColor(status === "leave" ? "on_leave" : status).bg}`}
+          className={`inline-block w-2 h-2 rounded-sm mr-1 ${getAttendanceStatusColor(status).bg}`}
           aria-hidden
         />
-        {getAttendanceStatusColor(status === "leave" ? "on_leave" : status).label}
+        {getAttendanceStatusColor(status).label}
       </p>
       {record && record.total_seconds > 0 && (
         <p className="text-[11px] text-neutral-400">
@@ -230,7 +230,7 @@ function MonthCalendarGrid({
                       </span>
                       {status !== "nodata" && (
                         <div
-                          className={`w-1.5 h-1.5 rounded-sm ${getAttendanceStatusColor(status === "leave" ? "on_leave" : status).bg}`}
+                          className={`w-1.5 h-1.5 rounded-sm ${getAttendanceStatusColor(status).bg}`}
                         />
                       )}
                     </div>

@@ -30,6 +30,7 @@ interface TimerState {
   pauseProjectTimer: () => void;
   resumeProjectTimer: () => void;
   stopProjectTimer: () => { elapsedSeconds: number; taskId: string | null; projectId: string | null };
+  _broadcastState: () => void;
 }
 
 export const DEFAULT_STANDARD_SECONDS = 31500;
@@ -161,6 +162,7 @@ export const useTimerStore = create<TimerState>()(
       projectTimerAccumulatedSeconds: 0,
       isProjectTimerRunning: true,
     });
+    get()._broadcastState();
     // Fire and forget sync to backend
     apiFetch('/timer/active', {
       method: 'POST',
@@ -177,6 +179,7 @@ export const useTimerStore = create<TimerState>()(
       projectTimerStartedAt: null,
       projectTimerAccumulatedSeconds: projectTimerAccumulatedSeconds + elapsed,
     });
+    get()._broadcastState();
     apiFetch('/timer/active/clear', { method: 'POST' }).catch(console.error);
   },
 
@@ -187,6 +190,7 @@ export const useTimerStore = create<TimerState>()(
       isProjectTimerRunning: true,
       projectTimerStartedAt: Date.now(),
     });
+    get()._broadcastState();
     apiFetch('/timer/active', {
       method: 'POST',
       body: JSON.stringify({ project_id: activeProjectId, task_id: activeTaskId === 'none' ? null : activeTaskId, task_title: activeTaskTitle })
@@ -219,9 +223,16 @@ export const useTimerStore = create<TimerState>()(
       isProjectTimerRunning: false,
     });
     
+    get()._broadcastState();
     apiFetch('/timer/active/clear', { method: 'POST' }).catch(console.error);
 
     return { elapsedSeconds: totalSeconds, taskId: tId, projectId: pId };
+  },
+  _broadcastState: () => {
+    if (typeof window !== 'undefined') {
+      const channel = new BroadcastChannel('g4k_timer_sync');
+      channel.postMessage({ type: 'SYNC_STATE', state: get() });
+    }
   },
 }), {  
   name: 'g4k-timer',
@@ -229,6 +240,13 @@ export const useTimerStore = create<TimerState>()(
 }));
 
 if (typeof window !== 'undefined') {
+  const channel = new BroadcastChannel('g4k_timer_sync');
+  channel.onmessage = (event) => {
+    if (event.data && event.data.type === 'SYNC_STATE') {
+      useTimerStore.setState(event.data.state);
+    }
+  };
+
   window.addEventListener('storage', (e) => {
     if (e.key === 'g4k-timer' && e.newValue) {
       try {

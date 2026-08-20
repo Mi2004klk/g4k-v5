@@ -68,25 +68,28 @@ class AnnouncementController extends Controller
             'priority' => 'nullable|in:normal,high,urgent',
         ]);
 
+        $scope = $validated['scope'] ?? 'company';
         $announcement = Announcement::create([
             'title' => $validated['title'],
             'body' => $validated['body'],
-            'scope' => $validated['scope'] ?? 'company',
-            'team_id' => $validated['team_id'] ?? ($validated['scope'] === 'team' ? $request->user()->team_id : null),
+            'scope' => $scope,
+            'team_id' => $validated['team_id'] ?? ($scope === 'team' ? $request->user()->team_id : null),
             'created_by' => $request->user()->id,
             'pinned_at' => !empty($validated['pinned']) ? now() : null,
             'priority' => $validated['priority'] ?? 'normal',
         ]);
 
         try {
-            broadcast(new AnnouncementCreated($announcement))->toOthers();
+            try {
+                broadcast(new AnnouncementCreated($announcement))->toOthers();
+            } catch (\Throwable $e) {}
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Failed to broadcast AnnouncementCreated event: " . $e->getMessage());
         }
 
         if (in_array($announcement->priority, ['high', 'urgent'])) {
             $userIds = [];
-            if ($announcement->scope === 'department' && $announcement->team_id) {
+            if ($announcement->scope === 'team' && $announcement->team_id) {
                 $userIds = \App\Models\User::where('department_id', $announcement->team_id)->where('status', 'active')->pluck('id')->toArray();
             } else {
                 $userIds = \App\Models\User::where('status', 'active')->pluck('id')->toArray();
@@ -169,7 +172,31 @@ class AnnouncementController extends Controller
             'emoji' => 'required|string|max:16',
         ]);
 
-        $announcement = Announcement::findOrFail($id);
+        $user = $request->user();
+        $activeRole = $user->resolveActiveRole();
+        
+        $query = Announcement::where('id', $id);
+        if ($activeRole !== 'super_admin') {
+            $query->where(function($q) use ($user) {
+                $q->where('scope', 'company')
+                  ->orWhere(function($sub) use ($user) {
+                      $sub->where('scope', 'team');
+                      $sub->where(function($teamQ) use ($user) {
+                          if ($user->team_id) {
+                              $teamQ->where('team_id', $user->team_id);
+                          }
+                          $teamQ->orWhere(function($hrQ) use ($user) {
+                              if ($user->resolveActiveRole() === 'hr') {
+                                  \App\Support\HrScope::apply($hrQ, $user, 'team_id');
+                              } else {
+                                  $hrQ->whereRaw('1 = 0');
+                              }
+                          });
+                      });
+                  });
+            });
+        }
+        $announcement = $query->firstOrFail();
         $userId = $request->user()->id;
         $emoji = $validated['emoji'];
 

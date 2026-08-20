@@ -9,7 +9,7 @@ class AuditLogger
 {
     public static function log($request, string $action, string $subjectType, $subjectId, ?array $before, ?array $after): void
     {
-        ProcessAuditLogJob::dispatch(
+        ProcessAuditLogJob::dispatchSync(
             $request->user()?->id,
             $action,
             $subjectType,

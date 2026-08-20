@@ -115,7 +115,7 @@ export function CreateProjectDialog({
     },
     onSuccess: () => {
       toast.success("Project created successfully.");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       onOpenChange(false);
       setName("");
       setDescription("");

@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_PROJECTS } from "@/lib/query-keys";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
+import { useExport } from "@/hooks/use-export";
 import { ProjectCard } from "@/components/projects/project-card";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { Button, FilterBar } from "@g4k/ui/components";
@@ -29,6 +30,22 @@ export function ProjectsTab() {
   const { data: caps = [] } = useCapabilities();
   const canManageProjects = hasCapability(caps, "projects.manage");
   const queryClient = useQueryClient();
+  const { triggerExport } = useExport();
+
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (sort) params.append("sort", sort);
+      if (sortDirection) params.append("direction", sortDirection);
+      if (status && status !== "all") params.append("status", status);
+      if (priority && priority !== "all") params.append("priority", priority);
+
+      await triggerExport(`/projects/export?${params.toString()}`, "projects_export.csv");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to export");
+    }
+  };
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({ id, name }: { id: number; name: string }) => {
@@ -145,13 +162,7 @@ export function ProjectsTab() {
             </Button>
           )}
 
-          <Button size="sm" variant="outline" onClick={() => {
-            toast.promise(apiFetch("/projects/export?search=" + encodeURIComponent(debouncedSearch)), {
-              loading: 'Preparing export...',
-              success: 'Export started. You will be notified when it is ready.',
-              error: 'Failed to start export'
-            });
-          }} className="gap-2 shadow-sm h-[42px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
+          <Button size="sm" variant="outline" onClick={handleExport} className="gap-2 shadow-sm h-[42px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
             <AppIcon name="download" size="sm" /> Export
           </Button>
         </div>

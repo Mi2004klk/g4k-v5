@@ -7,11 +7,12 @@ export interface PageContainerProps {
   children: React.ReactNode;
   actions?: React.ReactNode;
   filterBar?: React.ReactNode;
+  maxWidth?: "full" | "readable";
 }
 
-export function PageContainer({ title, description, children, actions, filterBar }: PageContainerProps) {
+export function PageContainer({ title, description, children, actions, filterBar, maxWidth = "full" }: PageContainerProps) {
   return (
-    <div className="flex flex-col gap-page-sections page-padding">
+    <div className={`flex flex-col gap-page-sections page-padding ${maxWidth === "readable" ? "max-w-5xl mx-auto w-full" : ""}`}>
       <div className="flex flex-col gap-4">
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

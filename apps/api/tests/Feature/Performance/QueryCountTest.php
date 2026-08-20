@@ -40,6 +40,8 @@ class QueryCountTest extends TestCase
         $queryCount = count(DB::getQueryLog());
         DB::disableQueryLog();
 
+        $response->assertSuccessful();
+
         $this->assertTrue(
             $queryCount <= $maxQueries,
             "Endpoint {$endpoint} executed {$queryCount} queries, exceeding maximum allowed of {$maxQueries}."

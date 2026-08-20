@@ -56,7 +56,15 @@ class SmtpSettings {
       try {
           return Crypt::decryptString($value);
       } catch (\Exception $e) {
-          return $value; // Fallback to plaintext if decryption fails (e.g. legacy data)
+          // Fallback to plaintext, but upgrade the DB to encrypted for future reads
+          try {
+              Setting::where('category', 'mail')->where('key', 'password')->update([
+                  'value' => Crypt::encryptString($value)
+              ]);
+          } catch (\Exception $inner) {
+              // Ignore failure to upgrade
+          }
+          return $value;
       }
   }
 }

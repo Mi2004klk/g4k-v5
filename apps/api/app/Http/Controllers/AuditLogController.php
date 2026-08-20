@@ -38,7 +38,7 @@ class AuditLogController extends Controller
             'report_key' => 'audit_logs',
             'format' => 'csv',
             'status' => 'pending',
-            'parameters' => $request->all(),
+            'filters' => $request->all(),
         ]);
 
         ExportAuditLogsJob::dispatch($exportJob, $request->all());

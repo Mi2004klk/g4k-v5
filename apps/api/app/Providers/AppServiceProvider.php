@@ -51,11 +51,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $observers = [
-            \App\Models\Notification::class => NotificationObserver::class,
             \App\Models\Project::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\Task::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\AttendanceDay::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\LeaveRequest::class => \App\Observers\CacheInvalidationObserver::class,
+            \App\Models\Notification::class => \App\Observers\NotificationObserver::class,
         ];
 
         foreach ($observers as $model => $observer) {

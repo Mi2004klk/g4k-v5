@@ -24,7 +24,7 @@ class CapabilityMatrix
             'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access', 'chat.manage',
             'profile.edit', 'leave.request-self', 'timer.track',
             'reports.view', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'projects.view', 'projects.manage', 'qa.view', 'qa.manage',
-            'departments.manage', 'designations.manage'
+            'departments.manage', 'designations.manage', 'announcements.manage'
         ],
         'employee' => [
             'attendance.clock-self', 'leave.request-self', 'profile.edit',

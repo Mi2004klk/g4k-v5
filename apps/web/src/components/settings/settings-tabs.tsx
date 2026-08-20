@@ -40,6 +40,7 @@ export function SettingsTabs() {
   const queryClient = useQueryClient();
   const { data: caps } = useCapabilities();
   const canManageSettings = hasCapability(caps, 'settings.manage');
+  const timezones = Intl.supportedValuesOf('timeZone');
   
   const [logoUploadOpen, setLogoUploadOpen] = useState(false);
   const [tab, setTab] = useUrlState("tab", "company");
@@ -191,11 +192,9 @@ export function SettingsTabs() {
                       <SelectValue placeholder="Select Timezone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Asia/Kolkata">Asia/Kolkata</SelectItem>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">America/New_York</SelectItem>
-                      <SelectItem value="Europe/London">Europe/London</SelectItem>
-                      <SelectItem value="Asia/Singapore">Asia/Singapore</SelectItem>
+                      {timezones.map(tz => (
+                        <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {profileForm.formState.errors.timezone && (

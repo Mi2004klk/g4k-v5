@@ -105,11 +105,12 @@ class User extends Authenticatable
 
     public function resolveActiveRole(): string
     {
-        if ($this->active_role) {
+        $roles = $this->getCachedRoles();
+
+        if ($this->active_role && in_array($this->active_role, $roles)) {
             return $this->active_role;
         }
 
-        $roles = $this->getCachedRoles();
         if (in_array('super_admin', $roles)) return 'super_admin';
         if (in_array('hr', $roles)) return 'hr';
 

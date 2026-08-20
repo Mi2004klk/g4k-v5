@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
@@ -41,6 +44,17 @@ export default function PersonalAttendancePage() {
 
   const isHrOrAdmin = hasCapability(capabilities, "leave.approve-employee") || hasCapability(capabilities, "admin.view-all-attendance");
   const isAdmin = hasCapability(capabilities, "admin.view-all-attendance");
+  const router = useRouter();
+
+  useEffect(() => {
+    if (tab === "approvals") {
+      if (isHrOrAdmin) {
+        router.replace("/dashboard/org/attendance?tab=leave&sub=approvals");
+      } else {
+        setTab("overview");
+      }
+    }
+  }, [tab, isHrOrAdmin, router, setTab]);
 
   const { data: historyData, isPending } = useQuery({
     queryKey: queryKeys.myAttendanceHistory(),
@@ -89,7 +103,7 @@ export default function PersonalAttendancePage() {
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="mb-4 w-full justify-start overflow-x-auto flex-nowrap md:justify-center">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          {!isAdmin && <TabsTrigger value="leave">My Leave</TabsTrigger>}
+          <TabsTrigger value="leave">My Leave</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -216,11 +230,9 @@ export default function PersonalAttendancePage() {
             </Card>
           </div>
         </TabsContent>
-        {!isAdmin && (
-          <TabsContent value="leave" className="space-y-6">
-            <LeaveTab />
-          </TabsContent>
-        )}
+        <TabsContent value="leave" className="space-y-6">
+          <LeaveTab />
+        </TabsContent>
       </Tabs>
     </PageContainer>
   );

@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { format } from "date-fns";
 import { safeFromNow } from "@/lib/format";
 import { AppIcon } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components/badge";
+import { getPriorityColor } from "@g4k/ui/theme";
 import { toast } from "sonner";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
@@ -97,7 +99,7 @@ export function NotificationsTab() {
       return apiFetch(`/notifications/${id}/mark-read`, { method: "POST" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
       queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
     }
   });
@@ -107,7 +109,7 @@ export function NotificationsTab() {
       return apiFetch(`/notifications/${id}/mark-unread`, { method: "POST" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
       queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
     }
   });
@@ -117,7 +119,7 @@ export function NotificationsTab() {
       return apiFetch(`/notifications/mark-all-read`, { method: "POST" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
       queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
       toast.success("All notifications marked as read");
     }
@@ -282,10 +284,9 @@ export function NotificationsTab() {
                               </span>
                             )}
                             {item.priority === 'urgent' && (
-                              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400 uppercase tracking-wider">
-                                <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-                                Urgent
-                              </span>
+                                <StatusBadge status={getPriorityColor(item.priority).status} dot className="uppercase text-[9px] font-bold tracking-wider px-1.5 py-0.5">
+                                  {getPriorityColor(item.priority).label}
+                                </StatusBadge>
                             )}
                           </div>
                           <p className={`text-xs mt-0.5 leading-relaxed ${!item.read_at ? 'text-neutral-700 dark:text-neutral-300' : 'text-neutral-500 dark:text-neutral-400'}`}>

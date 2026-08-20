@@ -18,45 +18,31 @@ export function NotificationsConfig() {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Record<string, string[]>>({});
 
-  const { data: settings = [], isLoading, isError, refetch } = useQuery({
-    queryKey: [...queryKeys.settings, "notifications"],
-    queryFn: () => apiFetch("/settings/grouped").then((res: Record<string, SettingItem[]>) => res["notifications"] || []),
+  const { data: preferencesResponse, isLoading, isError, refetch } = useQuery({
+    queryKey: ["user-preferences"],
+    queryFn: () => apiFetch("/auth/preferences"),
   });
 
   useEffect(() => {
-    if (settings) {
-      const initial: Record<string, string[]> = {};
-      settings.forEach((s: SettingItem) => {
-        try {
-          initial[s.key] = JSON.parse(s.value);
-        } catch (_) {
-          initial[s.key] = [];
-        }
-      });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFormData(initial);
+    if (preferencesResponse?.preferences) {
+      setFormData(preferencesResponse.preferences);
     }
-  }, [settings]);
+  }, [preferencesResponse]);
 
   const updateMutation = useMutation({
-    mutationFn: (settingsArr: SettingItem[]) => apiFetch("/settings/bulk", {
-      method: "POST",
-      body: JSON.stringify({ settings: settingsArr }),
+    mutationFn: (newPrefs: Record<string, string[]>) => apiFetch("/auth/preferences", {
+      method: "PUT",
+      body: JSON.stringify({ preferences: newPrefs }),
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.settings, "notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
       toast.success("Notification preferences updated");
     },
     onError: (e: Error) => toast.error(e.message || "Update failed"),
   });
 
   const handleSave = () => {
-    const settingsArr = Object.entries(formData).map(([key, value]) => ({
-      category: "notifications",
-      key,
-      value: JSON.stringify(value),
-    }));
-    updateMutation.mutate(settingsArr);
+    updateMutation.mutate(formData);
   };
 
   const toggleChannel = (key: string, channel: string, checked: boolean) => {
@@ -115,6 +101,48 @@ export function NotificationsConfig() {
               description="Weekly reports for attendance and tasks"
               settingKey="weekly_summary.channels"
               channels={formData["weekly_summary.channels"] || []}
+              onToggle={toggleChannel}
+            />
+            <NotificationRow 
+              title="Task Assignments" 
+              description="Notifications when you are assigned a new task"
+              settingKey="task_assigned.channels"
+              channels={formData["task_assigned.channels"] || []}
+              onToggle={toggleChannel}
+            />
+            <NotificationRow 
+              title="Chat Messages" 
+              description="Direct messages and group mentions"
+              settingKey="chat.channels"
+              channels={formData["chat.channels"] || []}
+              onToggle={toggleChannel}
+            />
+            <NotificationRow 
+              title="System Alerts" 
+              description="Platform updates and maintenance announcements"
+              settingKey="system.channels"
+              channels={formData["system.channels"] || []}
+              onToggle={toggleChannel}
+            />
+            <NotificationRow 
+              title="Security Alerts" 
+              description="New logins, password changes, and security events"
+              settingKey="security.channels"
+              channels={formData["security.channels"] || []}
+              onToggle={toggleChannel}
+            />
+            <NotificationRow 
+              title="Warnings" 
+              description="Important account or usage warnings"
+              settingKey="warning.channels"
+              channels={formData["warning.channels"] || []}
+              onToggle={toggleChannel}
+            />
+            <NotificationRow 
+              title="Feedback" 
+              description="Updates on your submitted feedback"
+              settingKey="feedback.channels"
+              channels={formData["feedback.channels"] || []}
               onToggle={toggleChannel}
             />
           </div>

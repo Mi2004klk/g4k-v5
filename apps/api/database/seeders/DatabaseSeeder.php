@@ -61,7 +61,7 @@ class DatabaseSeeder extends Seeder
                 'attendance.clock-self',
                 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
                 'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
-                'profile.edit', 'leave.request-self', 'timer.track', 'announcements.manage', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'chat.manage', 'projects.view', 'reports.view', 'projects.manage', 'qa.view', 'qa.manage'
+                'profile.edit', 'leave.request-self', 'timer.track', 'announcements.manage', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'chat.manage', 'projects.view', 'reports.view', 'projects.manage', 'qa.view', 'qa.manage', 'departments.manage', 'designations.manage'
             ],
             'employee' => [
                 'attendance.clock-self', 'leave.request-self', 'profile.edit',
@@ -242,14 +242,17 @@ class DatabaseSeeder extends Seeder
         $scheduleId = DB::table('work_schedules')->where('name', 'Standard G4K Schedule')->value('id');
 
         foreach ($employees as $emp) {
+            $isProd = app()->environment('production');
+            $password = $isProd ? \Illuminate\Support\Str::random(16) : $emp["password"];
+            
             $user = User::updateOrCreate(
                 ["username" => $emp["username"]],
                 [
                     "company_id" => $company->id,
                     "name" => $emp["name"],
                     "email" => $emp["email"],
-                    "password" => Hash::make($emp["password"]),
-                    "must_change_password" => false,
+                    "password" => Hash::make($password),
+                    "must_change_password" => $isProd ? true : false,
                     "department_id" => $emp["dept"],
                     "designation_id" => $desigMap[$emp["designation"]]->id,
                     "phone" => $emp["mobile"],
@@ -275,6 +278,10 @@ class DatabaseSeeder extends Seeder
                 DB::table("department_hr")->updateOrInsert(
                     ["department_id" => $emp["dept"], "user_id" => $user->id]
                 );
+            }
+
+            if ($isProd && in_array("super_admin", $emp["roles"]) && isset($this->command)) {
+                $this->command->info("Seeded super_admin ({$emp['email']}) with password: {$password}");
             }
         }
 

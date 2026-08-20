@@ -9,6 +9,8 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 import { Button } from "@g4k/ui/components";
 import {
@@ -40,6 +42,7 @@ export default function ChangePasswordPage() {
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const token = useAuthStore((s) => s.token);
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -69,7 +72,8 @@ export default function ChangePasswordPage() {
       toast.success("Password changed successfully!");
       
       if (result.token && result.user) {
-         setAuth(result.token, result.user, result.user.active_role || 'employee', result.refresh_token);
+         setAuth(result.token, result.user, result.user.active_role || 'employee', result.refresh_token, result.capabilities);
+         queryClient.invalidateQueries({ queryKey: queryKeys.profile });
          if (!result.user.onboarded_at) {
             router.push("/onboarding");
          } else if (result.user.roles?.length > 1) {

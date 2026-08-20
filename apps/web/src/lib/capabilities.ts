@@ -37,7 +37,7 @@ export function useCapabilities() {
       }
     },
     enabled: !!token,
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
     initialData: getCapabilitiesFromCookie(),
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),

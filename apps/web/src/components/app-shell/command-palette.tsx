@@ -67,7 +67,7 @@ export function CommandPalette() {
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Type a command or search workspace..." value={search} onValueChange={setSearch} />
+      <CommandInput placeholder="Type a command or navigate..." value={search} onValueChange={setSearch} />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         

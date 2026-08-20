@@ -19,7 +19,7 @@ const desigSchema = z.object({
 type DesigFormValues = z.infer<typeof desigSchema>;
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
-import { Card, CardContent, StatusBadge, FilterBar, ContentSkeleton, IsolatedError, MeaningfulEmpty, DataTable } from "@g4k/ui/components";
+import { ListScaffold, StatusBadge } from "@g4k/ui/components";
 import {
   Dialog,
   DialogContent,
@@ -89,7 +89,7 @@ export function DesignationsTab() {
   }
 
   const { data: caps } = useCapabilities();
-  const isAdmin = hasCapability(caps, "designations.manage");
+  const isAdmin = hasCapability(caps, "designations.manage") || hasCapability(caps, "users.hr.manage");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; type: string; payload?: Designation }>({ isOpen: false, type: "" });
@@ -305,71 +305,68 @@ export function DesignationsTab() {
   }, [isAdmin, reset, statusMutation, deleteMutation]);
 
   return (
-    <div className="space-y-6 mt-4">
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-        <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 flex items-center justify-between">
-          <FilterBar
-            searchQuery={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search designations..."
-            filters={[
-              {
-                type: "select",
-                key: "status",
-                label: "Status",
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: [
-                  { label: "Active", value: "active" },
-                  { label: "Inactive", value: "inactive" },
-                ],
-              },
-            ]}
-          />
-          <div className="flex items-center gap-2 shrink-0 ml-2">
+    <div className="h-full py-4">
+      <ListScaffold
+        title="Designations"
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search designations..."
+        filters={[
+          {
+            type: "select",
+            key: "status",
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ],
+          },
+        ]}
+        actions={
+          <>
             {isAdmin && (
-              <Button variant="outline" size="sm" onClick={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-9">
+              <Button variant="outline" size="sm" onClick={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
                 <AppIcon name="download" /> Export
               </Button>
             )}
             {isAdmin && (
-              <Button size="sm" onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow-sm h-9">
+              <Button size="sm" onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow-sm">
                 <AppIcon name="plus" /> Add Designation
               </Button>
             )}
-          </div>
-        </div>
-      </div>
-
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-none bg-card dark:bg-neutral-900">
-        <CardContent className="p-0">
-          {isLoading ? (
-            <ContentSkeleton type="table" rows={3} />
-          ) : isError ? (
-            <IsolatedError error={isError ? "Failed to load designations." : undefined} onRetry={() => refetch()} />
-          ) : designationsList.length === 0 ? (
-            <MeaningfulEmpty 
-              entityName="designations" 
-              icon="star"
-              description="Try adjusting your search query or create a new designation."
-              actionLabel={isAdmin ? "Create Designation" : undefined}
-              onAction={isAdmin ? () => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); } : undefined}
-            />
-          ) : (
-            <div className="space-y-4">
-              <DataTable
-                columns={columns}
-                data={designationsList}
-                page={page}
-                perPage={perPage}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                onPerPageChange={setPerPage}
-              />
+          </>
+        }
+        columns={columns}
+        data={designationsList}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        emptyState={
+          <div className="flex flex-col items-center justify-center py-12 text-center max-w-sm mx-auto">
+            <div className="h-12 w-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-400">
+              <AppIcon name="star" size="lg" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <h3 className="text-sm font-semibold mb-1">No designations found</h3>
+            <p className="text-xs text-neutral-500 mb-4">
+              Try adjusting your search query or create a new designation.
+            </p>
+            {isAdmin && (
+              <Button variant="outline" size="sm" onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }}>
+                Create Designation
+              </Button>
+            )}
+          </div>
+        }
+        pagination={{
+          page,
+          perPage,
+          totalPages,
+          onPageChange: setPage,
+          onPerPageChange: setPerPage
+        }}
+      />
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-md">

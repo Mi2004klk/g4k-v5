@@ -21,6 +21,19 @@ class UserController extends Controller
         return CapabilityMatrix::hasCapability($activeRole, $capability);
     }
 
+    private function checkHrScope(Request $request, User $targetUser): bool
+    {
+        $activeRole = $request->user()->resolveActiveRole();
+        if ($activeRole === 'super_admin') {
+            return true;
+        }
+        if ($activeRole === 'employee') {
+            return (int) $request->user()->id === (int) $targetUser->id;
+        }
+        
+        return \App\Support\HrScope::apply(User::where('id', $targetUser->id), $request->user())->exists();
+    }
+
     private function buildIndexQuery(Request $request)
     {
         $query = User::with(['department', 'team', 'designation', 'roleAssignments']);
@@ -159,26 +172,44 @@ class UserController extends Controller
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'create', 'user', $user->id, null, $user->toArray());
 
-        try {
-            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserCredentialsMail($user, $password));
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to send credentials: ' . $e->getMessage());
+        $emailSent = false;
+        if (\App\Support\SmtpSettings::isConfigured()) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserCredentialsMail($user, $password));
+                $emailSent = true;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send credentials: ' . $e->getMessage());
+            }
         }
 
-        return response()->json($user, 201);
+        $responseData = $user->toArray();
+        if (!$emailSent) {
+            $responseData['_temp_password'] = $password;
+            $responseData['_warning'] = 'SMTP is not configured or failed to send email. Please securely share this temporary password with the user.';
+        }
+
+        return response()->json($responseData, 201);
     }
 
     public function update(UpdateUserRequest $request, string $id)
     {
         $user = User::findOrFail($id);
+        if (!$this->checkHrScope($request, $user)) {
+            return response()->json(['message' => 'Unauthorized to update this user.'], 403);
+        }
         $before = $user->toArray();
 
         $validated = $request->validated();
 
-        // Access check for updating roles or HR users
-        $targetHasHR = $user->roleAssignments->pluck('role')->contains('hr') || $user->roleAssignments->pluck('role')->contains('super_admin');
+        $targetHasHR = $user->roleAssignments->pluck('role')->contains('hr');
+        $isTargetSuperAdmin = $user->roleAssignments->pluck('role')->contains('super_admin');
+        
+        if ($isTargetSuperAdmin && $request->user()->resolveActiveRole() !== 'super_admin') {
+            return response()->json(['message' => 'Unauthorized to update Super Admin users.'], 403);
+        }
+
         if ($targetHasHR && !$this->hasCapability($request, 'users.hr.manage')) {
-            return response()->json(['message' => 'Unauthorized to update HR/Admin users.'], 403);
+            return response()->json(['message' => 'Unauthorized to update HR users.'], 403);
         }
 
         if (isset($validated['roles'])) {
@@ -187,7 +218,7 @@ class UserController extends Controller
             $isSuperAdmin = in_array('super_admin', $roles);
             $isEmployee = in_array('employee', $roles);
 
-            if ($isSuperAdmin && !$this->hasCapability($request, '*')) {
+            if ($isSuperAdmin && $request->user()->resolveActiveRole() !== 'super_admin') {
                 return response()->json(['message' => 'Unauthorized to assign Super Admin role. Only a Super Admin can do this.'], 403);
             }
             if ($isHR && !$this->hasCapability($request, 'users.hr.manage')) {
@@ -215,10 +246,19 @@ class UserController extends Controller
                 foreach ($validated['roles'] as $roleName) {
                     $user->roleAssignments()->create(['role' => $roleName]);
                 }
+                
+                if (!in_array($user->active_role, $validated['roles'])) {
+                    $user->update(['active_role' => null]);
+                }
+                
+                $user->tokens()->delete();
+                \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
             }
         });
         
         if (isset($validated['roles']) && count($validated['roles']) > 0) {
+            $user->forceFill(['active_role' => null])->save();
+            $user->tokens()->delete();
             \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
         }
 
@@ -257,6 +297,9 @@ class UserController extends Controller
         ]);
 
         $user = User::with('roleAssignments')->findOrFail($id);
+        if (!$this->checkHrScope($request, $user)) {
+            return response()->json(['message' => 'Unauthorized to manage this user.'], 403);
+        }
         
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -293,6 +336,9 @@ class UserController extends Controller
         public function restore(Request $request, string $id)
     {
         $user = User::with('roleAssignments')->withTrashed()->findOrFail($id);
+        if (!$this->checkHrScope($request, $user)) {
+            return response()->json(['message' => 'Unauthorized to manage this user.'], 403);
+        }
 
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -315,6 +361,9 @@ class UserController extends Controller
     public function destroy(Request $request, string $id)
     {
         $user = User::with('roleAssignments')->findOrFail($id);
+        if (!$this->checkHrScope($request, $user)) {
+            return response()->json(['message' => 'Unauthorized to manage this user.'], 403);
+        }
 
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -390,6 +439,9 @@ class UserController extends Controller
     public function resetPassword(Request $request, string $id)
     {
         $user = User::with('roleAssignments')->findOrFail($id);
+        if (!$this->checkHrScope($request, $user)) {
+            return response()->json(['message' => 'Unauthorized to manage this user.'], 403);
+        }
         
         // Capability Check
         $targetRoles = $user->roleAssignments->pluck('role')->toArray();
@@ -401,40 +453,48 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
         }
 
-        if (!\App\Support\SmtpSettings::isConfigured()) {
-            return response()->json(['message' => 'Email not configured yet. Cannot reset password.'], 422);
-        }
-
         $tempPassword = \Illuminate\Support\Str::random(16);
 
-        try {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($user, $tempPassword) {
-                $user->password = Hash::make($tempPassword);
-                $user->must_change_password = true;
-                $user->password_changed_at = now();
-                $user->save();
-                $user->tokens()->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($user, $tempPassword) {
+            $user->password = Hash::make($tempPassword);
+            $user->must_change_password = true;
+            $user->password_changed_at = now();
+            $user->save();
+            $user->tokens()->delete();
 
-                \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+            \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+        });
 
+        $emailSent = false;
+        if (\App\Support\SmtpSettings::isConfigured()) {
+            try {
                 \Illuminate\Support\Facades\Mail::raw("Your password has been reset by an administrator. Your temporary password is: {$tempPassword}\nPlease login and change it immediately.", function ($message) use ($user) {
                     $message->to($user->email)->subject('Password Reset by Administrator');
                 });
-            });
-            AuditLogger::log($request, 'reset_password', 'user', $user->id, [], ['notified' => true]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Password reset email failed: ' . $e->getMessage());
-            return response()->json(['message' => 'Failed to send password reset email. Password was not changed.'], 500);
+                $emailSent = true;
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Password reset email failed: ' . $e->getMessage());
+            }
         }
 
-        return response()->json(['message' => 'Password reset and temporary password emailed to user.']);
+        AuditLogger::log($request, 'reset_password', 'user', $user->id, [], ['notified' => $emailSent]);
+
+        $responseData = ['message' => 'Password reset successfully.'];
+        if (!$emailSent) {
+            $responseData['_temp_password'] = $tempPassword;
+            $responseData['_warning'] = 'SMTP is not configured or failed to send email. Please securely share this temporary password with the user.';
+        } else {
+            $responseData['message'] = 'Password reset and temporary password emailed to user.';
+        }
+
+        return response()->json($responseData);
     }
 
     public function bulk(Request $request)
     {
         $validated = $request->validate([
             'ids' => 'required|array',
-            'ids.*' => 'exists:users,id',
+            'ids.*' => 'exists:users,id,deleted_at,NULL',
             'action' => 'required|in:activate,deactivate'
         ]);
 
@@ -470,6 +530,11 @@ class UserController extends Controller
             if (!$isHRTarget && !$canManageEmployee) {
                 $stats['unauthorized']++;
                 continue; // Skip unauthorized
+            }
+            
+            if (!$this->checkHrScope($request, $user)) {
+                $stats['unauthorized']++;
+                continue;
             }
 
             // Super Admin check for deactivate

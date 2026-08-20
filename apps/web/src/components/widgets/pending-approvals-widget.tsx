@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Button, Skeleton, ConfirmDialog, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
-import { triggerInvalidation } from "@/lib/invalidation-map";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
 import { WidgetInfo } from "./widget-info";
@@ -24,6 +25,7 @@ export interface PendingRequest {
 
 export function PendingApprovalsWidget() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { data: requests = [], isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: { pending_approvals?: PendingRequest[] } & Record<string, unknown>) => Array.isArray(data.pending_approvals) ? data.pending_approvals : [],
@@ -42,7 +44,7 @@ export function PendingApprovalsWidget() {
     },
     onSuccess: () => {
       toast.success("Action recorded successfully!");
-      triggerInvalidation(queryClient, "approval.decision");
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
 
@@ -98,7 +100,7 @@ export function PendingApprovalsWidget() {
                 key={`${item.type}-${item.id}`}
                 onClick={() => {
                   const url = item.route || item.action_url;
-                  if (url) window.location.href = url; // or use router
+                  if (url) router.push(url);
                 }}
                 className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800/50 flex items-center justify-between border border-neutral-100 dark:border-neutral-800 cursor-pointer hover:border-primary-200 transition-colors"
               >
@@ -154,7 +156,7 @@ export function PendingApprovalsWidget() {
                       </>
                   ) : (
                     <Button variant="outline" size="sm" asChild className="h-7 text-[10px] px-2 font-medium" onClick={(e) => e.stopPropagation()}>
-                      <a href={item.route || item.action_url}>{(item.route?.includes('tab=leave') || item.type === 'task') ? 'View' : 'Review'}</a>
+                      <Link href={item.route || item.action_url || "#"}>{(item.route?.includes('tab=leave') || item.type === 'task') ? 'View' : 'Review'}</Link>
                     </Button>
                   )}
                 </div>
@@ -183,6 +185,7 @@ export function PendingApprovalsWidget() {
         description="Please provide a reason for rejecting this request."
         confirmText="Reject"
         isLoading={decisionMutation.isPending}
+        confirmDisabled={!rejectReason.trim()}
       >
         <Input 
           value={rejectReason} 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\QaForm;
 use App\Models\QaFormField;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class QaController extends Controller
 {
@@ -21,7 +22,7 @@ class QaController extends Controller
             'is_template' => 'boolean',
             'fields' => 'required|array|min:1',
             'fields.*.label' => 'required|string',
-            'fields.*.field_type' => 'required|string|in:input,textarea,checkbox,slider,select,multiselect,date,time,file,signature,rating,email,number',
+            'fields.*.field_type' => 'required|string|in:text,textarea,number,email,phone,url,multiple_choice,checkbox,dropdown,boolean,linear_scale,rating,slider,file_upload,date,time,datetime,signature,section',
             'fields.*.required' => 'boolean',
             'fields.*.options' => 'nullable|array',
             'fields.*.section_id' => 'nullable|string',
@@ -70,7 +71,7 @@ class QaController extends Controller
             'is_template' => 'boolean',
             'fields' => 'nullable|array',
             'fields.*.label' => 'required_with:fields|string',
-            'fields.*.field_type' => 'required_with:fields|string|in:input,textarea,checkbox,slider,select,multiselect,date,time,file,signature,rating,email,number',
+            'fields.*.field_type' => 'required_with:fields|string|in:text,textarea,number,email,phone,url,multiple_choice,checkbox,dropdown,boolean,linear_scale,rating,slider,file_upload,date,time,datetime,signature,section',
             'fields.*.required' => 'boolean',
             'fields.*.options' => 'nullable|array',
             'fields.*.section_id' => 'nullable|string',
@@ -85,21 +86,23 @@ class QaController extends Controller
         $qaForm->save();
 
         if (!empty($validated['fields'])) {
-            QaFormField::where('qa_form_id', $qaForm->id)->delete();
-            foreach ($validated['fields'] as $index => $field) {
-                QaFormField::create([
-                    'qa_form_id' => $qaForm->id,
-                    'label' => $field['label'],
-                    'field_type' => $field['field_type'],
-                    'required' => $field['required'] ?? false,
-                    'options' => $field['options'] ?? null,
-                    'section_id' => $field['section_id'] ?? null,
-                    'branching_logic' => $field['branching_logic'] ?? null,
-                    'config' => $field['config'] ?? null,
-                    'validation' => $field['validation'] ?? null,
-                    'order' => $index,
-                ]);
-            }
+            DB::transaction(function () use ($qaForm, $validated) {
+                QaFormField::where('qa_form_id', $qaForm->id)->delete();
+                foreach ($validated['fields'] as $index => $field) {
+                    QaFormField::create([
+                        'qa_form_id' => $qaForm->id,
+                        'label' => $field['label'],
+                        'field_type' => $field['field_type'],
+                        'required' => $field['required'] ?? false,
+                        'options' => $field['options'] ?? null,
+                        'section_id' => $field['section_id'] ?? null,
+                        'branching_logic' => $field['branching_logic'] ?? null,
+                        'config' => $field['config'] ?? null,
+                        'validation' => $field['validation'] ?? null,
+                        'order' => $index,
+                    ]);
+                }
+            });
         }
 
         return response()->json(['data' => $qaForm->load('fields')]);
@@ -115,6 +118,10 @@ class QaController extends Controller
 
         if (\App\Models\Project::where('qa_form_id', $qaForm->id)->exists()) {
             return response()->json(['message' => 'Cannot delete QA Form because it is used by one or more projects.'], 409);
+        }
+
+        if (\App\Models\QaSubmission::where('qa_form_id', $qaForm->id)->exists()) {
+            return response()->json(['message' => 'Cannot delete QA Form because it has historical submissions.'], 409);
         }
 
         QaFormField::where('qa_form_id', $qaForm->id)->delete();

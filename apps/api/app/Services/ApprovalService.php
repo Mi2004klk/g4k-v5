@@ -18,11 +18,11 @@ class ApprovalService
     public static function submit(\Illuminate\Database\Eloquent\Model $approvable, int $submittedBy, ?array $payload = null): Approval
     {
         $user = User::findOrFail($submittedBy);
-        $roles = $user->getCachedRoles();
+        $activeRole = $user->resolveActiveRole();
 
         // Determine next approver role based on submitter's highest role
-        $currentApproverRole = in_array('hr', $roles) ? 'super_admin' : 'hr';
-        if (in_array('super_admin', $roles)) {
+        $currentApproverRole = $activeRole === 'hr' ? 'super_admin' : 'hr';
+        if ($activeRole === 'super_admin') {
             $currentApproverRole = 'super_admin';
         }
 
@@ -42,22 +42,15 @@ class ApprovalService
 
     private static function checkRoleGating(Approval $approval, int $decidedBy)
     {
-        $deciderRoles = \App\Models\RoleAssignment::getRolesForUser($decidedBy);
-        if (!in_array($approval->current_approver_role, $deciderRoles) && !in_array('super_admin', $deciderRoles)) {
-            $rolesStr = implode(', ', $deciderRoles);
-            throw new AuthorizationException("User {$decidedBy} does not have the correct active role ({$approval->current_approver_role}) to decide this approval. Roles found: {$rolesStr}");
+        $deciderActiveRole = User::findOrFail($decidedBy)->resolveActiveRole();
+        if ($approval->current_approver_role !== $deciderActiveRole && $deciderActiveRole !== 'super_admin') {
+            throw new AuthorizationException("User {$decidedBy} does not have the correct active role ({$approval->current_approver_role}) to decide this approval. Active role: {$deciderActiveRole}");
         }
 
         // Capability Matrix defense-in-depth check
         $requiredCap = ($approval->current_approver_role === 'super_admin') ? 'leave.approve-hr' : 'leave.approve-employee';
-        $hasCap = false;
-        foreach ($deciderRoles as $role) {
-            if (CapabilityMatrix::hasCapability($role, $requiredCap) || $role === 'super_admin') {
-                $hasCap = true;
-                break;
-            }
-        }
-        if (!$hasCap) {
+        
+        if (!CapabilityMatrix::hasCapability($deciderActiveRole, $requiredCap) && $deciderActiveRole !== 'super_admin') {
             abort(403, "Lacking required capability ({$requiredCap}) to approve request.");
         }
     }
@@ -72,8 +65,8 @@ class ApprovalService
         }
 
         if ($approval->submitted_by === $decidedBy) {
-            $deciderRoles = \App\Models\RoleAssignment::getRolesForUser($decidedBy);
-            if (in_array('super_admin', $deciderRoles)) {
+            $deciderActiveRole = User::findOrFail($decidedBy)->resolveActiveRole();
+            if ($deciderActiveRole === 'super_admin') {
                 $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
                 if ($superAdminCount > 1) {
                     abort(403, "You cannot approve your own request. Another Super Admin must approve it.");
@@ -124,8 +117,8 @@ class ApprovalService
         }
 
         if ($approval->submitted_by === $decidedBy) {
-            $deciderRoles = \App\Models\RoleAssignment::getRolesForUser($decidedBy);
-            if (in_array('super_admin', $deciderRoles)) {
+            $deciderActiveRole = User::findOrFail($decidedBy)->resolveActiveRole();
+            if ($deciderActiveRole === 'super_admin') {
                 $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
                 if ($superAdminCount > 1) {
                     abort(403, "You cannot reject your own request. Another Super Admin must review it.");
@@ -156,6 +149,14 @@ class ApprovalService
                         $days = $leave->getWorkingDays();
                         $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
                         $balance->decrement('used', min($days, $balance->used));
+                        
+                        $startDate = \Carbon\Carbon::parse($leave->start_date);
+                        $endDate = \Carbon\Carbon::parse($leave->end_date);
+                        $currentDate = $startDate->copy();
+                        while ($currentDate->lte($endDate)) {
+                            \App\Services\AttendanceService::reconcileDay($leave->user_id, $currentDate->toDateString(), true);
+                            $currentDate->addDay();
+                        }
                     }
                 }
             }

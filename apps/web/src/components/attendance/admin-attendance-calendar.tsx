@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, isSameMonth, isToday, addMonths, subMonths, isFuture } from "date-fns";
 import { AppIcon, IconName, SemanticCalendar } from "@g4k/ui/components";
+import { heatmapIntensity, HeatmapLevel } from "@g4k/ui/theme";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@g4k/ui/components";
@@ -51,10 +52,10 @@ export function AdminAttendanceCalendar() {
         
         <div className="flex items-center gap-6">
           <div className="hidden sm:flex items-center gap-4 border-r border-neutral-200 dark:border-neutral-800 pr-6">
-            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /><span className="text-[11px] font-medium text-neutral-500">&ge; 90%</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-300" /><span className="text-[11px] font-medium text-neutral-500">70-89%</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-300" /><span className="text-[11px] font-medium text-neutral-500">50-69%</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-rose-400" /><span className="text-[11px] font-medium text-neutral-500">&lt; 50%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.high.bg}`} /><span className="text-[11px] font-medium text-neutral-500">&ge; 90%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.medium.bg}`} /><span className="text-[11px] font-medium text-neutral-500">70-89%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.low.bg}`} /><span className="text-[11px] font-medium text-neutral-500">50-69%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.critical.bg}`} /><span className="text-[11px] font-medium text-neutral-500">&lt; 50%</span></div>
           </div>
           <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded-lg border border-neutral-100 dark:border-neutral-800">
             <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm">
@@ -82,24 +83,19 @@ export function AdminAttendanceCalendar() {
                 const dateStr = format(date, "yyyy-MM-dd");
                 const stat = statsByDate[dateStr];
                 
-                let bgColor = "bg-neutral-100 dark:bg-neutral-800";
-                let textColor = "text-neutral-500 dark:text-neutral-400";
+                let bgColor: string = heatmapIntensity.empty.bg;
+                let textColor: string = heatmapIntensity.empty.text;
                 
                 if (stat && stat.total > 0 && isCurrentMonth) {
                   const presentRate = stat.present / stat.total;
-                  if (presentRate >= 0.9) {
-                    bgColor = "bg-emerald-500 dark:bg-emerald-600";
-                    textColor = "text-white";
-                  } else if (presentRate >= 0.7) {
-                    bgColor = "bg-emerald-300 dark:bg-emerald-500/80";
-                    textColor = "text-emerald-950 dark:text-emerald-50";
-                  } else if (presentRate >= 0.5) {
-                    bgColor = "bg-amber-300 dark:bg-amber-500/80";
-                    textColor = "text-amber-950 dark:text-amber-50";
-                  } else {
-                    bgColor = "bg-rose-400 dark:bg-rose-500/80";
-                    textColor = "text-white";
-                  }
+                  let intensity: HeatmapLevel = heatmapIntensity.empty;
+                  if (presentRate >= 0.9) intensity = heatmapIntensity.high;
+                  else if (presentRate >= 0.7) intensity = heatmapIntensity.medium;
+                  else if (presentRate >= 0.5) intensity = heatmapIntensity.low;
+                  else intensity = heatmapIntensity.critical;
+                  
+                  bgColor = intensity.bg;
+                  textColor = intensity.text;
                 }
 
                 return (

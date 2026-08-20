@@ -40,14 +40,21 @@ interface TrendStat {
   overtime_seconds?: number;
 }
 
-export function HrAttendanceGraph() {
-  const [groupBy, setGroupBy] = useState<"date" | "employee">("date");
+export interface AttendanceGraphProps {
+  endpoint: string;
+  queryKeyBase: string[];
+  groupByOptions?: Array<{ label: string, value: string }>;
+  defaultGroupBy?: string;
+}
+
+export function AttendanceGraph({ endpoint, queryKeyBase, groupByOptions = [], defaultGroupBy = "" }: AttendanceGraphProps) {
+  const [groupBy, setGroupBy] = useState<string>(defaultGroupBy);
   const [mode, setMode] = useState<"weekly" | "monthly">("weekly");
   const [date] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.hrAttendanceGraph(groupBy, mode, date),
-    queryFn: () => apiFetch(`/attendance/hr/graph?groupBy=${groupBy}&mode=${mode}&date=${date}`),
+    queryKey: [...queryKeyBase, groupBy, mode, date],
+    queryFn: () => apiFetch(`${endpoint}?mode=${mode}&date=${date}${groupBy ? `&groupBy=${groupBy}` : ""}`),
   });
 
   const chartData = useMemo(() => {
@@ -157,28 +164,25 @@ export function HrAttendanceGraph() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card p-4 rounded-xl border border-border shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <div className="flex items-center gap-2 bg-secondary p-1 rounded-[var(--radius)]">
-          <button
-            onClick={() => setGroupBy("date")}
-            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
-              groupBy === "date" 
-                ? "bg-card text-foreground shadow-e1" 
-                : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
-            }`}
-          >
-            Team Overview
-          </button>
-          <button
-            onClick={() => setGroupBy("employee")}
-            className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
-              groupBy === "employee" 
-                ? "bg-card text-foreground shadow-e1" 
-                : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
-            }`}
-          >
-            Per Employee
-          </button>
-        </div>
+        {groupByOptions.length > 0 ? (
+          <div className="flex items-center gap-2 bg-secondary p-1 rounded-[var(--radius)]">
+            {groupByOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setGroupBy(opt.value)}
+                className={`px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-colors ${
+                  groupBy === opt.value
+                    ? "bg-card text-foreground shadow-e1"
+                    : "text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div />
+        )}
 
         <div className="flex items-center gap-2 bg-secondary p-1 rounded-[var(--radius)]">
           <button

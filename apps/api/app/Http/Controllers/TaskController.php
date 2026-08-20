@@ -25,10 +25,10 @@ class TaskController extends Controller
                 ->first();
             
             if ($conv) {
-                // Find a valid sender to satisfy foreign key (auth user, or first user in chat, or project creator)
+                // Find a valid sender to satisfy foreign key (auth user, or task reporter, or first user in chat)
                 $senderId = auth()->id();
                 if (!$senderId) {
-                    $senderId = $conv->users()->first()?->id ?? \App\Models\User::first()?->id;
+                    $senderId = $task->reporter_id ?? ($conv->users()->first()?->id ?? \App\Models\User::first()?->id);
                 }
 
                 if ($senderId) {
@@ -38,7 +38,9 @@ class TaskController extends Controller
                         'body' => $body,
                         'type' => 'text', // Avoid 'system' as it is not in the DB enum ['text', 'image', 'file']
                     ]);
-                    broadcast(new MessageSent($msg))->toOthers();
+                    try {
+                        broadcast(new MessageSent($msg))->toOthers();
+                    } catch (\Throwable $e) {}
                 }
             }
         } catch (\Exception $e) {
@@ -92,6 +94,9 @@ class TaskController extends Controller
             if (!$canEdit) continue;
 
             if ($validated['action'] === 'delete') {
+                if (!$hasManage && $task->reporter_id !== $userId) {
+                    continue; // Skip assignees for deletion
+                }
                 $task->delete();
                 $updatedCount++;
             } elseif ($validated['action'] === 'complete') {
@@ -159,7 +164,7 @@ class TaskController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('title', 'ilike', '%' . $request->query('search') . '%');
+            $query->where('title', 'like', '%' . $request->query('search') . '%');
         }
 
         $sortBy = $request->query('sort_by', 'created_at');
@@ -268,9 +273,7 @@ class TaskController extends Controller
                 ]);
                 try {
                     broadcast(new \App\Events\MessageSent($msg))->toOthers();
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning("Failed to broadcast MessageSent event: " . $e->getMessage());
-                }
+                } catch (\Throwable $e) {}
             }
         }
 
@@ -341,6 +344,9 @@ class TaskController extends Controller
             if ($validated['status'] === 'done' && $task->qa_form_id) {
                 return response()->json(['message' => 'This task requires QA. Please use the submit for review option.'], 422);
             }
+            if ($validated['status'] === 'review' && $task->qa_form_id) {
+                return response()->json(['message' => 'This task requires QA form submission. Please use the submit for review option.'], 422);
+            }
 
             TaskService::updateStatus($task, $validated['status'], $user->id);
             if ($validated['status'] === 'done') {
@@ -351,7 +357,7 @@ class TaskController extends Controller
                     $this->notifyProjectConversation($task, "✅ **Task Completed**: \"{$task->title}\" was marked as done by " . $user->name);
                 }
 
-                $shouldNotify = $request->input('notify_global_chat', true);
+                $shouldNotify = $request->input('notify_global_chat', false);
                 if ($shouldNotify) {
                     try {
                         event(new \App\Events\TaskCompleted($task, $user));
@@ -398,7 +404,7 @@ class TaskController extends Controller
             'tasks' => 'required|array',
             'tasks.*.id' => 'required|exists:tasks,id',
             'tasks.*.order' => 'required|integer',
-            'tasks.*.status' => 'required|string',
+            'tasks.*.status' => 'required|string|in:backlog,todo,in_progress,review,done',
         ]);
 
         $isManage = $this->userHasManage($request);
@@ -411,7 +417,13 @@ class TaskController extends Controller
                     continue;
                 }
                 if ($task->status !== $taskData['status']) {
-                    TaskService::updateStatus($task, $taskData['status'], $request->user()->id);
+                    try {
+                        TaskService::updateStatus($task, $taskData['status'], $request->user()->id);
+                    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+                        return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
+                    } catch (\Exception $e) {
+                        return response()->json(['message' => $e->getMessage()], 422);
+                    }
                 }
                 $task->update(['order' => $taskData['order']]);
             }
@@ -440,8 +452,37 @@ class TaskController extends Controller
             if ($form) {
                 $qaValues = $validated['qa_values'] ?? [];
                 foreach ($form->fields as $field) {
-                    if ($field->required && (!isset($qaValues[$field->id]) || $qaValues[$field->id] === '' || $qaValues[$field->id] === null)) {
+                    $val = $qaValues[$field->id] ?? null;
+
+                    if ($field->required && ($val === '' || $val === null || (is_array($val) && empty($val)))) {
                         return response()->json(['message' => "QA Field '{$field->label}' is required."], 422);
+                    }
+
+                    if ($val !== null && $val !== '') {
+                        if (in_array($field->field_type, ['dropdown', 'multiple_choice', 'checkbox']) && !empty($field->options)) {
+                            $vals = is_array($val) ? $val : [$val];
+                            foreach ($vals as $v) {
+                                if (!in_array($v, $field->options)) {
+                                    return response()->json(['message' => "Invalid option '{$v}' for '{$field->label}'."], 422);
+                                }
+                            }
+                        }
+
+                        if (in_array($field->field_type, ['number', 'linear_scale', 'rating', 'slider'])) {
+                            if (!is_numeric($val)) {
+                                return response()->json(['message' => "QA Field '{$field->label}' must be a number."], 422);
+                            }
+                            $numVal = (float)$val;
+                            $min = $field->config['scale_min'] ?? $field->validation['min'] ?? null;
+                            $max = $field->config['scale_max'] ?? $field->validation['max'] ?? ($field->field_type === 'rating' ? ($field->config['rating_max'] ?? 5) : null);
+                            
+                            if ($min !== null && $numVal < (float)$min) {
+                                return response()->json(['message' => "QA Field '{$field->label}' must be at least {$min}."], 422);
+                            }
+                            if ($max !== null && $numVal > (float)$max) {
+                                return response()->json(['message' => "QA Field '{$field->label}' must not exceed {$max}."], 422);
+                            }
+                        }
                     }
                 }
             }
@@ -515,8 +556,8 @@ class TaskController extends Controller
         \App\Models\TaskActivity::create([
             'task_id' => $task->id,
             'user_id' => $request->user()->id,
-            'action' => 'deleted',
-            'description' => 'Task was deleted.'
+            'event' => 'deleted',
+            'metadata' => ['description' => 'Task was deleted.']
         ]);
 
         $task->delete();
@@ -527,8 +568,13 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
 
-        if (!$this->userHasManage($request) && $task->reporter_id !== $request->user()->id) {
+        if (!$this->userHasManage($request)) {
             return response()->json(['message' => 'You do not have permission to review this task.'], 403);
+        }
+        
+        $hasAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
+        if (!$hasAdmin && ($task->assignee_id === $request->user()->id || $task->assignees->contains('id', $request->user()->id))) {
+            return response()->json(['message' => 'You cannot review your own task.'], 403);
         }
         
         $approval = \App\Models\Approval::where('approvable_type', get_class($task))
@@ -585,8 +631,13 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
 
-        if (!$this->userHasManage($request) && $task->reporter_id !== $request->user()->id) {
+        if (!$this->userHasManage($request)) {
             return response()->json(['message' => 'You do not have permission to review this task.'], 403);
+        }
+        
+        $hasAdmin = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin', 'hr'])->isNotEmpty();
+        if (!$hasAdmin && ($task->assignee_id === $request->user()->id || $task->assignees->contains('id', $request->user()->id))) {
+            return response()->json(['message' => 'You cannot review your own task.'], 403);
         }
         
         $approval = \App\Models\Approval::where('approvable_type', get_class($task))

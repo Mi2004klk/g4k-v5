@@ -110,14 +110,21 @@ export const NavItem = memo(function NavItem({
 
 export const NavGroup = memo(function NavGroup({ 
   group, 
-  userCapabilities, 
+  userCapabilities,
+  authUser,
   isCollapsed, 
   isSheet, 
   getAccent 
 }: any) {
-  // Filter items by capability
+  // Filter items by capability and admin roles
   const visibleItems = group.items.filter(
-    (item: any) => !item.capability || hasCapability(userCapabilities, item.capability)
+    (item: any) => {
+      if (item.adminOnly) {
+        const activeRole = authUser?.active_role || authUser?.roles?.[0] || 'employee';
+        return activeRole === 'super_admin' || activeRole === 'hr';
+      }
+      return !item.capability || hasCapability(userCapabilities, item.capability);
+    }
   );
 
   if (visibleItems.length === 0) return null;

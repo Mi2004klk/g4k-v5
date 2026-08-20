@@ -21,6 +21,7 @@ export interface KanbanTask {
   comments?: any[];
   blocked_by?: number;
   order?: number;
+  qa_form_id?: number;
 }
 
 
@@ -61,24 +62,24 @@ export function TaskCard({
             </h4>
             <div className="flex flex-wrap gap-1.5">
               {task.scope && task.scope !== "global" && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700">
+                <StatusBadge status="neutral" className="border border-neutral-200 dark:border-neutral-700">
                   {task.scope}
-                </span>
+                </StatusBadge>
               )}
               {task.tags?.map(tag => (
-                <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 border border-primary-100 dark:border-primary-800/50">
+                <StatusBadge key={tag} status="info" className="border border-info/20">
                   {tag}
-                </span>
+                </StatusBadge>
               ))}
               {task.status === "review" && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                <StatusBadge status="warning" className="border border-warning/20">
                   Review
-                </span>
+                </StatusBadge>
               )}
               {task.blocked_by && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                <StatusBadge status="danger" className="border border-danger/20">
                   <AppIcon name="error" size="xs" className="mr-1 h-3 w-3" /> Blocked
-                </span>
+                </StatusBadge>
               )}
             </div>
           </div>

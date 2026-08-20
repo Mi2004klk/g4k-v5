@@ -11,9 +11,11 @@ class VersionController extends Controller
 {
     public function index()
     {
-        $output = new BufferedOutput();
-        Artisan::call('migrate:status', [], $output);
-        $status = $output->fetch();
+        $status = \Illuminate\Support\Facades\Cache::remember('migration_status_cmd', 3600, function () {
+            $output = new BufferedOutput();
+            Artisan::call('migrate:status', [], $output);
+            return $output->fetch();
+        });
         
         $pending = str_contains($status, 'Pending');
 

@@ -11,7 +11,7 @@ export function VersionGuard() {
 
     const checkVersion = async () => {
       try {
-        const res = await fetch("/api/version");
+        const res = await fetch("/api/frontend-version");
         if (!res.ok) return;
         const data = await res.json();
         if (data?.buildId) {

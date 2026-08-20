@@ -4,16 +4,19 @@ import { ReportBuilder } from "@/components/reports/report-builder";
 import { ExportHistory } from "@/components/reports/export-history";
 import { AdminReportsView } from "@/components/reports/admin-reports-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
+import { useUrlState } from "@/hooks/use-url-state";
+import { PageContainer } from "@/components/layout/page-container";
 
 export default function ReportsPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Reports Hub</h1>
-        <p className="text-sm text-neutral-500 mt-1">Manage data exports, attendance summaries, and HR reports in one place.</p>
-      </div>
+  const [tab, setTab] = useUrlState("tab", "admin");
 
-      <Tabs defaultValue="admin" className="w-full">
+  return (
+    <PageContainer 
+      title="Reports Hub"
+      description="Manage data exports, attendance summaries, and HR reports in one place."
+    >
+
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="admin">HR & Admin Reports</TabsTrigger>
           <TabsTrigger value="general">General Data Exports</TabsTrigger>
@@ -32,6 +35,6 @@ export default function ReportsPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

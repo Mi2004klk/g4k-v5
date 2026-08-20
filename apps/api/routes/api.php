@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CompanyProfileController;
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\UserController;
@@ -49,23 +48,17 @@ Route::get('/health', function () {
     ]);
 });
 
-Route::get('/test-pusher', function () {
-    try {
-        broadcast(new \App\Events\TestPusherEvent('Hello from backend via Pusher!'));
-        return response()->json(['status' => 'Event broadcasted to Pusher successfully. Check your browser alert.']);
-    } catch (\Throwable $e) {
-        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-    }
-});
+
 Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
-Route::get('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
+Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 
 Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate'])
-    ->middleware(['auth:sanctum']);
-Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
+    ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class]);
+
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class, 'throttle:api', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
     Route::get('/me/capabilities', [AuthController::class, 'capabilities']);
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -130,15 +123,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     });
 
     Route::get('/attendance/admin/overview', [AttendanceController::class, 'overview'])->middleware('capability:admin.view-all-attendance');
-    Route::get('/attendance/admin/analytics', [AttendanceController::class, 'adminAnalytics'])->middleware('capability:admin.view-all-attendance');
-    Route::get('/attendance/admin/graph', [AttendanceController::class, 'adminGraph'])->middleware('capability:admin.view-all-attendance');
     Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:admin.view-all-attendance');
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
         Route::get('/attendance/team-today', [AttendanceController::class, 'teamToday']);
         Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
-        Route::get('/attendance/hr/analytics', [AttendanceController::class, 'hrAnalytics']);
-        Route::get('/attendance/hr/graph', [AttendanceController::class, 'hrGraph']);
         Route::get('/attendance/hr/day/{date}/{userId}', [AttendanceController::class, 'hrDay']);
         Route::get('/attendance/hr/history/{userId}', [AttendanceController::class, 'hrHistory']);
     });
@@ -178,14 +167,6 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::get('/projects/export', [ProjectController::class, 'export']);
         Route::get('/projects/{id}', [ProjectController::class, 'show']);
         Route::get('/projects/{id}/history', [ProjectController::class, 'history']);
-        
-        Route::middleware('capability:timer.track')->group(function () {
-            Route::post('/timer/log', [TimerController::class, 'logTime']);
-            Route::post('/timer/logs', [TimerController::class, 'logTime']);
-            Route::post('/timer/active', [TimerController::class, 'setActive']);
-            Route::post('/timer/active/clear', [TimerController::class, 'clearActive']);
-            Route::get('/timer/logs', [TimerController::class, 'index']);
-        });
         Route::post('/projects/{id}/submit', [ProjectController::class, 'submit']);
     });
     Route::middleware('capability:projects.manage')->group(function () {
@@ -211,11 +192,14 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
         Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);
-        Route::post('/tasks/{id}/approve', [TaskController::class, 'approve']);
-        Route::post('/tasks/{id}/redo', [TaskController::class, 'redo']);
         Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
         Route::post('/tasks/{id}/reminders', [TaskReminderController::class, 'store']);
         Route::delete('/tasks/reminders/{id}', [TaskReminderController::class, 'destroy']);
+    });
+
+    Route::middleware('capability:tasks.manage')->group(function () {
+        Route::post('/tasks/{id}/approve', [TaskController::class, 'approve']);
+        Route::post('/tasks/{id}/redo', [TaskController::class, 'redo']);
     });
 
     Route::middleware('capability:qa.view|qa.manage')->group(function () {
@@ -230,10 +214,10 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     Route::middleware('capability:timer.track')->group(function () {
         Route::post('/timer/log', [TimerController::class, 'logTime']);
-    });
-
-    Route::middleware('capability:settings.manage')->group(function () {
-        // Any other settings endpoints if present...
+        Route::post('/timer/logs', [TimerController::class, 'logTime']);
+        Route::post('/timer/active', [TimerController::class, 'setActive']);
+        Route::post('/timer/active/clear', [TimerController::class, 'clearActive']);
+        Route::get('/timer/logs', [TimerController::class, 'index']);
     });
 
     Route::middleware('capability:reports.view')->group(function () {
@@ -257,11 +241,11 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
         Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
         Route::post('/conversations/{id}/pin', [\App\Http\Controllers\ChatController::class, 'pinChat']);
         Route::post('/conversations/{id}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinChat']);
+        Route::post('/conversations/{id}/messages/{msgId}/pin', [\App\Http\Controllers\ChatController::class, 'pinMessage']);
+        Route::post('/conversations/{id}/messages/{msgId}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinMessage']);
     });
     Route::middleware('capability:chat.manage')->group(function () {
         Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroup']);
-        Route::post('/conversations/{id}/messages/{msgId}/pin', [\App\Http\Controllers\ChatController::class, 'pinMessage']);
-        Route::post('/conversations/{id}/messages/{msgId}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinMessage']);
     });
 
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);

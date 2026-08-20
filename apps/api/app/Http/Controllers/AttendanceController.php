@@ -90,7 +90,9 @@ class AttendanceController extends Controller
         \Illuminate\Support\Facades\Cache::forget("attendanceSummary_{$user->id}");
         \Illuminate\Support\Facades\Cache::forget("attendance_day_{$user->id}_{$today}");
 
-        broadcast(new \App\Events\AttendanceUpdated($user->id, $type));
+        try {
+            broadcast(new \App\Events\AttendanceUpdated($user->id, $type));
+        } catch (\Throwable $e) {}
 
         return response()->json([
             'day' => $dayRecord,
@@ -359,23 +361,6 @@ class AttendanceController extends Controller
         return $this->overview($request);
     }
 
-    public function hrAnalytics(Request $request)
-    {
-        return $this->adminAnalytics($request);
-    }
-
-    public function adminAnalytics(Request $request)
-    {
-        $query = $this->buildOverviewQuery($request);
-        $all = $query->get();
-        
-        return response()->json([
-            'present' => $all->where('status', 'present')->count(),
-            'absent' => $all->where('status', 'absent')->count(),
-            'late' => $all->where('status', 'late')->count(),
-            'on_leave' => $all->where('status', 'on_leave')->count(),
-        ]);
-    }
 
     public function overview(Request $request)
     {
@@ -618,140 +603,6 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function hrGraph(Request $request)
-    {
-        $validated = $request->validate([
-            'mode' => 'nullable|in:weekly,monthly,yearly',
-            'groupBy' => 'nullable|in:date,employee',
-            'date' => 'nullable|date',
-            'user_id' => 'nullable|integer|exists:users,id',
-        ]);
-
-        $mode = $validated['mode'] ?? 'weekly';
-        $date = $validated['date'] ?? now()->toDateString();
-        $groupBy = $validated['groupBy'] ?? 'date';
-        $carbonDate = Carbon::parse($date);
-
-        $query = DB::table('attendance_days')
-            ->join('users', 'users.id', '=', 'attendance_days.user_id');
-            
-        $this->applyHrScoping($query, $request->user());
-
-        if ($request->filled('user_id')) {
-            $query->where('users.id', $request->query('user_id'));
-        }
-
-        if ($mode === 'weekly') {
-            $start = $carbonDate->copy()->startOfWeek();
-            $end = $carbonDate->copy()->endOfWeek();
-            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-        } elseif ($mode === 'monthly') {
-            $start = $carbonDate->copy()->startOfMonth();
-            $end = $carbonDate->copy()->endOfMonth();
-            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-        } else {
-            // Yearly mode for Heat Map
-            $start = $carbonDate->copy()->startOfYear();
-            $end = $carbonDate->copy()->endOfYear();
-            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-        }
-
-        if ($groupBy === 'employee') {
-            $stats = $query->select(
-                'users.id', 'users.name',
-                DB::raw('count(*) as total'),
-                DB::raw("sum(case when attendance_days.status='present' then 1 else 0 end) as present"),
-                DB::raw("sum(case when attendance_days.status='late' then 1 else 0 end) as late"),
-                DB::raw("sum(case when attendance_days.status='absent' then 1 else 0 end) as absent"),
-                DB::raw('sum(COALESCE(attendance_days.total_seconds, 0)) as total_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.overtime_seconds, 0)) as overtime_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.break_seconds, 0)) as break_seconds')
-            )
-                ->groupBy('users.id', 'users.name')
-                ->orderBy('users.name', 'asc')
-                ->get();
-        } else {
-            $stats = $query->select(
-                'date',
-                DB::raw('count(*) as total'),
-                DB::raw("sum(case when attendance_days.status='present' then 1 else 0 end) as present"),
-                DB::raw("sum(case when attendance_days.status='late' then 1 else 0 end) as late"),
-                DB::raw("sum(case when attendance_days.status='absent' then 1 else 0 end) as absent"),
-                DB::raw('sum(COALESCE(attendance_days.total_seconds, 0)) as total_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.overtime_seconds, 0)) as overtime_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.break_seconds, 0)) as break_seconds')
-            )
-                ->groupBy('date')
-                ->orderBy('date', 'asc')
-                ->get();
-        }
-
-        return response()->json(['stats' => $stats, 'mode' => $mode]);
-    }
-
-    public function adminGraph(Request $request)
-    {
-        $validated = $request->validate([
-            'mode' => 'nullable|in:weekly,monthly',
-            'groupBy' => 'nullable|in:date,employee',
-            'date' => 'nullable|date',
-            'user_id' => 'nullable|integer|exists:users,id',
-        ]);
-
-        $mode = $validated['mode'] ?? 'weekly';
-        $date = $validated['date'] ?? now()->toDateString();
-        $groupBy = $validated['groupBy'] ?? 'date';
-        $carbonDate = Carbon::parse($date);
-
-        $query = DB::table('attendance_days')
-            ->join('users', 'users.id', '=', 'attendance_days.user_id');
-            
-        if ($request->filled('user_id')) {
-            $query->where('users.id', $request->query('user_id'));
-        }
-            
-        if ($mode === 'weekly') {
-            $start = $carbonDate->copy()->startOfWeek();
-            $end = $carbonDate->copy()->endOfWeek();
-            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-        } else {
-            $start = $carbonDate->copy()->startOfMonth();
-            $end = $carbonDate->copy()->endOfMonth();
-            $query->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
-        }
-
-        if ($groupBy === 'employee') {
-            $stats = $query->select(
-                'users.id', 'users.name',
-                DB::raw('count(*) as total'),
-                DB::raw("sum(case when attendance_days.status='present' then 1 else 0 end) as present"),
-                DB::raw("sum(case when attendance_days.status='late' then 1 else 0 end) as late"),
-                DB::raw("sum(case when attendance_days.status='absent' then 1 else 0 end) as absent"),
-                DB::raw('sum(COALESCE(attendance_days.total_seconds, 0)) as total_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.overtime_seconds, 0)) as overtime_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.break_seconds, 0)) as break_seconds')
-            )
-                ->groupBy('users.id', 'users.name')
-                ->orderBy('users.name', 'asc')
-                ->get();
-        } else {
-            $stats = $query->select(
-                'date',
-                DB::raw('count(*) as total'),
-                DB::raw("sum(case when attendance_days.status='present' then 1 else 0 end) as present"),
-                DB::raw("sum(case when attendance_days.status='late' then 1 else 0 end) as late"),
-                DB::raw("sum(case when attendance_days.status='absent' then 1 else 0 end) as absent"),
-                DB::raw('sum(COALESCE(attendance_days.total_seconds, 0)) as total_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.overtime_seconds, 0)) as overtime_seconds'),
-                DB::raw('sum(COALESCE(attendance_days.break_seconds, 0)) as break_seconds')
-            )
-                ->groupBy('date')
-                ->orderBy('date', 'asc')
-                ->get();
-        }
-
-        return response()->json(['stats' => $stats, 'mode' => $mode]);
-    }
 
     public function correct(CorrectAttendanceRequest $request)
     {
@@ -794,6 +645,9 @@ class AttendanceController extends Controller
                 $newValue = $ev->toArray();
             } elseif ($action === 'edit_event') {
                 $ev = AttendanceEvent::findOrFail($validated['event_id']);
+                if ($ev->user_id !== $day->user_id || $ev->timestamp->toDateString() !== Carbon::parse($day->date)->toDateString()) {
+                    return response()->json(['message' => 'Event does not belong to this attendance day.'], 422);
+                }
                 $oldValue = $ev->toArray();
                 if ($request->filled('type')) $ev->type = $validated['type'];
                 if ($request->filled('timestamp')) $ev->timestamp = Carbon::parse($validated['timestamp']);
@@ -802,6 +656,9 @@ class AttendanceController extends Controller
                 $newValue = $ev->toArray();
             } elseif ($action === 'remove_event') {
                 $ev = AttendanceEvent::findOrFail($validated['event_id']);
+                if ($ev->user_id !== $day->user_id || $ev->timestamp->toDateString() !== Carbon::parse($day->date)->toDateString()) {
+                    return response()->json(['message' => 'Event does not belong to this attendance day.'], 422);
+                }
                 $oldValue = $ev->toArray();
                 $ev->delete();
             }
@@ -832,6 +689,15 @@ class AttendanceController extends Controller
         
         $updatedDay = AttendanceDay::where('id', $day->id)->first();
         AuditLogger::log($request, 'correct_event', 'attendance_day', $day->id, ['action' => $action, 'old' => $oldValue], $updatedDay->toArray());
+
+        $today = \Carbon\Carbon::now()->toDateString();
+        foreach (['employee', 'hr', 'super_admin'] as $r) {
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$targetUser->id}_{$r}_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$targetUser->id}_{$r}_{$today}");
+        }
+        \Illuminate\Support\Facades\Cache::forget("dashboard_global");
+        \Illuminate\Support\Facades\Cache::forget("attendanceSummary_{$targetUser->id}");
+        \Illuminate\Support\Facades\Cache::forget("attendance_day_{$targetUser->id}_{$day->date}");
 
         // Notify affected employee
         if ($day->user_id !== $actor->id) {
@@ -914,7 +780,8 @@ class AttendanceController extends Controller
                         'title' => 'Open Shift Alert',
                         'body' => "Employee {$day->user->name} has an open shift for {$day->date}.",
                         'type' => 'warning',
-                        'link' => "/dashboard/org/attendance?date={$day->date}",
+                        'link' => "/dashboard/attendance?date={$day->date}",
+                        'data' => ['day_id' => $day->id],
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];

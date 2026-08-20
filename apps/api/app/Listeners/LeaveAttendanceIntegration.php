@@ -79,18 +79,18 @@ class LeaveAttendanceIntegration implements ShouldQueue
                         ->first();
 
                     if ($existing) {
-                        if ($existing->status !== 'absent' && $existing->status !== 'on_leave') {
-                            Log::warning("Leave approval overwriting active attendance day status for user {$userId} on {$dateStr}. Old status: {$existing->status}");
+                        if (in_array($existing->status, ['present', 'late'])) {
+                            Log::info("Leave approval skipping active attendance day for user {$userId} on {$dateStr} because they actually worked (status: {$existing->status}).");
+                        } else {
+                            DB::table('attendance_days')
+                                ->where('id', $existing->id)
+                                ->update([
+                                    'status' => 'on_leave',
+                                    'source' => 'server',
+                                    'updated_at' => now(),
+                                    'version' => DB::raw('version + 1')
+                                ]);
                         }
-
-                        DB::table('attendance_days')
-                            ->where('id', $existing->id)
-                            ->update([
-                                'status' => 'on_leave',
-                                'source' => 'server',
-                                'updated_at' => now(),
-                                'version' => DB::raw('version + 1')
-                            ]);
                     } else {
                         DB::table('attendance_days')->insert([
                             'user_id' => $userId,

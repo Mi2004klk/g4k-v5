@@ -20,7 +20,7 @@ export function getToken(): string | null {
 export function unwrapOne<T = any>(res: any): T | null {
   if (!res) return null;
   if (res && typeof res === "object" && "data" in res) {
-    if (res.data && typeof res.data === "object" && !Array.isArray(res.data) && "id" in res.data) {
+    if (res.data && typeof res.data === "object" && !Array.isArray(res.data)) {
       return res.data as T;
     }
   }
@@ -109,7 +109,7 @@ export async function apiFetch<T = any>(
               refreshPromise = (async () => {
                 const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
                 const refreshRes = await fetch(refreshUrl, {
-                  method: "GET",
+                  method: "POST",
                   headers: {
                     "Accept": "application/json",
                     "X-Refresh-Token": useAuthStore.getState().refreshToken || "",

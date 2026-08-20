@@ -1,7 +1,7 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
 export default defineConfig({
-  input: './openapi.yaml',
+  input: '../../apps/api/openapi.yaml',
   output: 'src/api',
   plugins: [
     '@hey-api/client-fetch'

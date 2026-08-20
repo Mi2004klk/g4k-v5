@@ -1,13 +1,14 @@
 "use client";
 
 import { useUrlState } from '@/hooks/use-url-state';
+import dynamic from 'next/dynamic';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 
 // Admin Components
 import { AdminAttendanceTable } from '@/components/attendance/admin-attendance-table';
 import { AdminAttendanceAnalytics } from '@/components/attendance/admin-attendance-analytics';
-import { AdminAttendanceTrendsGraph } from '@/components/attendance/admin-attendance-trends-graph';
+const AttendanceGraph = dynamic(() => import('@/components/attendance/attendance-graph').then(mod => mod.AttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 import { AdminOpenShiftsTable } from '@/components/attendance/admin-open-shifts-table';
 import { AdminAttendanceCalendar } from '@/components/attendance/admin-attendance-calendar';
 import { AdminLeaveHolidaysView } from '@/components/leave/admin-leave-holidays-view';
@@ -54,7 +55,15 @@ export function AdminAttendanceView() {
         
         <TabsContent value="analytics" className="outline-none m-0 focus-visible:ring-0 space-y-6">
           <AdminAttendanceAnalytics />
-          <AdminAttendanceTrendsGraph />
+          <AttendanceGraph
+            endpoint="/attendance/admin/graph"
+            queryKeyBase={['admin-attendance-graph']}
+            defaultGroupBy="date"
+            groupByOptions={[
+              { label: "Company Trends", value: "date" },
+              { label: "By Department", value: "department" }
+            ]}
+          />
         </TabsContent>
 
         <TabsContent value="leave" className="outline-none m-0 focus-visible:ring-0">

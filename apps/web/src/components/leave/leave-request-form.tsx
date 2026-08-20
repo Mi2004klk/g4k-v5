@@ -81,7 +81,7 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
   };
 
   const { data: balanceData } = useQuery({
-    queryKey: ["leave-balances"],
+    queryKey: queryKeys.leaveBalance,
     queryFn: async () => {
       return apiFetch("/leave-requests/balance");
     },

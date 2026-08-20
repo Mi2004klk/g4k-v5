@@ -34,13 +34,17 @@ class HrScope
         if ($role === 'hr') {
             $deptIds = self::managedDepartmentIds($actor);
             
+            if (empty($deptIds)) {
+                return $query->whereRaw('1 = 0');
+            }
+            
             // If the query is directly on a table with department_id
             if ($relationOrColumn === 'department_id') {
                 return $query->whereIn('department_id', $deptIds);
             }
             
-            // If the target column is user_id, join or subquery through users table
-            if ($relationOrColumn === 'user_id' || str_ends_with($relationOrColumn, '.user_id')) {
+            // If the target column is user_id or another user-referencing column, join or subquery through users table
+            if ($relationOrColumn === 'user_id' || str_ends_with($relationOrColumn, '.user_id') || $relationOrColumn === 'assignee_id' || $relationOrColumn === 'created_by') {
                 return $query->whereIn($relationOrColumn, function ($sub) use ($deptIds) {
                     $sub->select('id')->from('users')->whereIn('department_id', $deptIds);
                 });
@@ -59,6 +63,6 @@ class HrScope
             });
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
     }
 }

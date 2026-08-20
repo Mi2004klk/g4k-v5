@@ -26,12 +26,12 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
     let currentSectionLabel = title || "Form";
 
     // If the first field isn't a section, we add a default one
-    if (fields.length > 0 && fields[0].field_type !== "section") {
+    if (fields.length > 0 && (fields[0].field_type || (fields[0] as any).type) !== "section") {
       result.push({ id: currentSectionId, label: currentSectionLabel, fields: [] });
     }
 
     fields.forEach((field) => {
-      if (field.field_type === "section") {
+      if ((field.field_type || (field as any).type) === "section") {
         if (currentFields.length > 0 || result.length > 0) {
           const last = result[result.length - 1];
           if (last && last.fields.length === 0) {

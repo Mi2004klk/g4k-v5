@@ -58,7 +58,9 @@ class FeedbackController extends Controller
             ]);
 
             try {
-                broadcast(new \App\Events\MessageSent($msg))->toOthers();
+                try {
+                    broadcast(new \App\Events\MessageSent($msg))->toOthers();
+                } catch (\Throwable $e) {}
             } catch (\Exception $e) {
                 // Ignore broadcast errors
             }

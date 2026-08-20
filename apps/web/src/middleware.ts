@@ -2,15 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PROTECTED: Record<string, string> = {
-  "/dashboard/org/users": "users.employee.manage",
-  "/dashboard/org/attendance": "hr.view-team-attendance",
-  "/dashboard/org/leave": "leave.approve-employee",
-  "/dashboard/org/departments": "departments.manage",
-  "/dashboard/org/designations": "designations.manage",
+  "/dashboard/admin/attendance": "admin.view-all-attendance",
+  "/dashboard/admin/reports": "reports.manage",
   "/dashboard/settings": "settings.manage",
   "/dashboard/audit": "audit.view",
   "/dashboard/reports": "reports.view",
-  "/dashboard/admin": "_super_admin_only_",
+  "/dashboard/admin": "settings.manage",
 };
 
 export function middleware(req: NextRequest) {
@@ -65,7 +62,7 @@ export function middleware(req: NextRequest) {
   const response = NextResponse.next();
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    script-src 'self' ${process.env.NODE_ENV !== 'production' ? "'unsafe-eval'" : ""} 'unsafe-inline';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https:;
     font-src 'self' https://fonts.gstatic.com;

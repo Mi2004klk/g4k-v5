@@ -40,7 +40,7 @@ export function QuickTaskWidget() {
       toast.success("Task assigned successfully!");
       setTitle("");
       setAssigneeId("");
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: Error & { errors?: Record<string, string[]> }) => {

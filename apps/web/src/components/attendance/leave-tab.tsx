@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ import { ErrorBoundary } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useDebounce } from "@/hooks/use-debounce";
 import { usePaginatedList } from "@/lib/pagination";
+import { ConfirmDialog } from "@g4k/ui/components";
 
 interface LeaveRecord {
   id: number;
@@ -62,15 +64,23 @@ export function LeaveTab() {
     }
   });
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to cancel this leave request?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   const paginatedData = usePaginatedList<LeaveRecord>(data);
   const records = paginatedData.data;
   const totalPages = paginatedData.last_page || 1;
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const requestDelete = (id: number) => {
+    setDeleteId(id);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteId) {
+      deleteMutation.mutate(deleteId);
+    }
+  };
 
   return (
     <ErrorBoundary>
@@ -88,22 +98,15 @@ export function LeaveTab() {
             </div>
 
             {/* Right Column: History */}
-            <div className="flex-1 flex flex-col min-w-0">
-              <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-full flex flex-col min-h-[500px]">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold">My Leave History</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-                  <LeaveHistoryTable 
-                    records={records as any} 
-                    isLoading={isPending} 
-                    page={parseInt(page)}
-                    totalPages={totalPages}
-                    onPageChange={(p) => setPage(p.toString())}
-                    onDeleteAction={handleDelete}
-                  />
-                </CardContent>
-              </Card>
+            <div className="flex-1 flex flex-col min-w-0 min-h-[500px]">
+              <LeaveHistoryTable 
+                records={records as any} 
+                isLoading={isPending} 
+                page={parseInt(page)}
+                totalPages={totalPages}
+                onPageChange={(p) => setPage(p.toString())}
+                onDeleteAction={requestDelete}
+              />
             </div>
           </div>
         </TabsContent>
@@ -114,6 +117,17 @@ export function LeaveTab() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Cancel Leave Request"
+        description="Are you sure you want to cancel this leave request? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        confirmText="Cancel Leave"
+        variant="destructive"
+        isPending={deleteMutation.isPending}
+      />
     </ErrorBoundary>
   );
 }

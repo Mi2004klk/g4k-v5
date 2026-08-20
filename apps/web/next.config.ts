@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
     if (process.env.NEXT_PUBLIC_API_URL) return [];
     return [{ source: '/api/:path*', destination: 'http://127.0.0.1:8000/api/:path*' }];
   },
+  async redirects() {
+    return [
+      { source: '/dashboard/org/users', destination: '/dashboard/directory', permanent: false },
+      { source: '/dashboard/org/users/:id', destination: '/dashboard/directory', permanent: false },
+      { source: '/dashboard/org/projects', destination: '/dashboard/projects', permanent: false },
+      { source: '/dashboard/org/tasks', destination: '/dashboard/projects', permanent: false },
+    ];
+  },
   productionBrowserSourceMaps: false,
   transpilePackages: ["@g4k/ui"],
   experimental: {

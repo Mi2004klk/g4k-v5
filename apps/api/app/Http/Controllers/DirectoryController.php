@@ -73,7 +73,8 @@ class DirectoryController extends Controller
             $query->where('designation_id', $request->query('designation_id'));
         }
 
-        $perPage = $request->query('per_page', 24);
+        $perPage = min((int) $request->query('per_page', 24), 100);
+        $perPage = max($perPage, 1);
         $users = $query->orderBy('name', 'asc')->paginate($perPage);
         
         $users->getCollection()->transform(function ($user) {

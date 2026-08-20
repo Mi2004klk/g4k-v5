@@ -32,6 +32,7 @@ export default function RoleSelectPage() {
       });
 
       setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
+      queryClient.clear();
       queryClient.setQueryData(queryKeys.capabilities(), data.capabilities);
       router.push("/dashboard");
     } catch (error) {

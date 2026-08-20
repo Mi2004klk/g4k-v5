@@ -34,7 +34,7 @@ class TimerController extends Controller
                                      $task->project->created_by === $userId || 
                                      $task->project->members->contains('id', $userId)
                                  ));
-                $hasManage = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin', 'hr'])->isNotEmpty();
+                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
 
                 if (!$isParticipant && !$hasManage) {
                     return response()->json(['message' => 'You are not authorized to log time on this task.'], 403);
@@ -48,7 +48,9 @@ class TimerController extends Controller
         ]));
 
         Cache::forget("user_active_task_{$request->user()->id}");
-        broadcast(new ActiveTaskUpdated($request->user()->id));
+        try {
+            broadcast(new ActiveTaskUpdated($request->user()->id));
+        } catch (\Throwable $e) {}
 
         return response()->json($log->load(['task', 'project', 'user']));
     }
@@ -83,6 +85,35 @@ class TimerController extends Controller
             'task_title' => 'nullable|string'
         ]);
 
+        $userId = $request->user()->id;
+
+        if (!empty($validated['task_id'])) {
+            $task = \App\Models\Task::with(['assignees', 'project.members'])->find($validated['task_id']);
+            if ($task) {
+                $isParticipant = $task->reporter_id === $userId || 
+                                 $task->assignee_id === $userId || 
+                                 $task->assignees->contains('id', $userId) || 
+                                 ($task->project && (
+                                     $task->project->created_by === $userId || 
+                                     $task->project->members->contains('id', $userId)
+                                 ));
+                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+
+                if (!$isParticipant && !$hasManage) {
+                    return response()->json(['message' => 'You are not authorized to start a timer on this task.'], 403);
+                }
+            }
+        } elseif (!empty($validated['project_id'])) {
+            $project = \App\Models\Project::with('members')->find($validated['project_id']);
+            if ($project) {
+                $isParticipant = $project->created_by === $userId || $project->members->contains('id', $userId);
+                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+                if (!$isParticipant && !$hasManage) {
+                    return response()->json(['message' => 'You are not authorized to start a timer on this project.'], 403);
+                }
+            }
+        }
+
         Cache::put("user_active_task_{$request->user()->id}", [
             'task_id' => $validated['task_id'],
             'project_id' => $validated['project_id'],
@@ -90,7 +121,9 @@ class TimerController extends Controller
             'started_at' => now()->toIso8601String(),
         ], 43200);
 
-        broadcast(new ActiveTaskUpdated($request->user()->id, $validated['task_id'], $validated['project_id']));
+        try {
+            broadcast(new ActiveTaskUpdated($request->user()->id, $validated['task_id'], $validated['project_id']));
+        } catch (\Throwable $e) {}
 
         return response()->json(['message' => 'Active task synced']);
     }
@@ -98,7 +131,9 @@ class TimerController extends Controller
     public function clearActive(Request $request)
     {
         Cache::forget("user_active_task_{$request->user()->id}");
-        broadcast(new ActiveTaskUpdated($request->user()->id));
+        try {
+            broadcast(new ActiveTaskUpdated($request->user()->id));
+        } catch (\Throwable $e) {}
 
         return response()->json(['message' => 'Active task cleared']);
     }

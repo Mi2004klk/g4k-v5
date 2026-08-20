@@ -139,7 +139,11 @@ class OfflineEngine {
 
     if (options.headers) {
       const h: Record<string, string> = {};
-      new Headers(options.headers).forEach((value, key) => { h[key] = value; });
+      new Headers(options.headers).forEach((value, key) => { 
+        if (key.toLowerCase() !== 'authorization') {
+          h[key] = value; 
+        }
+      });
       serializableOptions.headers = h;
     }
 

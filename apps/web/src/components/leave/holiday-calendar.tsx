@@ -204,23 +204,22 @@ export function HolidayCalendar() {
           <div className="h-full flex flex-col">
             <SemanticCalendar
               currentDate={currentDate}
-              renderDay={(day, { isCurrentMonth }) => {
+              renderDay={(day, { isCurrentMonth, isWeekend }) => {
                 const holiday = holidayList.find((h: Holiday) => isSameDay(new Date(h.date), day));
-                const isWeeklyOff = getDay(day) === 0 || getDay(day) === 6;
                 
                 const CellContent = (
                   <div
-                    className={`relative flex flex-col items-center justify-center p-1 rounded-[var(--radius)] text-xs transition-all min-h-[50px] sm:min-h-[70px]
+                    className={`relative flex flex-col items-center justify-center p-1 rounded-[var(--radius)] text-xs transition-all aspect-square w-full
                       ${isCurrentMonth ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-600 opacity-50"}
                       ${holiday ? 
                         "bg-primary-50 dark:bg-primary-900/20 font-semibold border border-primary-100 dark:border-primary-800/50 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/40" 
-                        : isWeeklyOff ? "bg-neutral-50 dark:bg-neutral-800/40 text-neutral-500" : ""}`}
+                        : isWeekend ? "bg-neutral-50 dark:bg-neutral-800/40 text-neutral-500" : ""}`}
                   >
                     <span>{format(day, "d")}</span>
                     {holiday && (
                       <span className={`w-1 h-1 rounded-full mt-1 bg-primary-500`} />
                     )}
-                    {!holiday && isWeeklyOff && isCurrentMonth && (
+                    {!holiday && isWeekend && isCurrentMonth && (
                       <span className="text-[9px] text-neutral-400 mt-0.5">Off</span>
                     )}
                   </div>

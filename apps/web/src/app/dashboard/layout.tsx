@@ -26,6 +26,7 @@ import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { NotificationsBell } from "@/components/app-shell/notifications-bell";
 import { ProjectTimerWidget } from "@/components/app-shell/project-timer-widget";
 import { NavGroup } from "@/components/app-shell/nav-group";
+import { ShellPolish } from "@/components/app-shell/shell-polish";
 import { PinnedItems } from "@/components/layout/pinned-items";
 import { ReverbProvider } from "@/hooks/use-reverb";
 import { ErrorBoundary } from "@g4k/ui/components";
@@ -45,18 +46,20 @@ export const navGroups = [
   { label: "Overview", items: [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
     { name: "Quick Notes", href: "/dashboard/notes", icon: "edit" },
-    { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance", capability: "attendance.clock-self" },
+    { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance" },
     { name: "Projects & Tasks", href: "/dashboard/projects", icon: "projects", capability: "projects.view" },
     { name: "Communications", href: "/dashboard/chat", icon: "chat", capability: "chat.access" },
   ]},
   { label: "Organization", items: [
     { name: "Directory", href: "/dashboard/directory", icon: "directory", capability: "directory.view" },
+    { name: "User Management", href: "/dashboard/directory", icon: "users", adminOnly: true },
     { name: "Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
     { name: "Reports & Analytics", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },
   ]},
   { label: "Account", items: [
     { name: "My Profile", href: "/dashboard/profile", icon: "userCircle" },
-    { name: "System Settings", href: "/dashboard/settings", icon: "settings", capability: "settings.manage" },
+    { name: "Audit Logs", href: "/dashboard/audit", icon: "audit", adminOnly: true },
+    { name: "System Settings", href: "/dashboard/settings", icon: "settings", adminOnly: true },
   ]},
 ];
 
@@ -195,10 +198,10 @@ export default function DashboardLayout({
   }
 
   return (
-    <ReverbProvider>
-      <AuthGuard>
-
-        <TooltipProvider>
+      <ReverbProvider>
+        <AuthGuard>
+          <ShellPolish />
+          <TooltipProvider>
         <HelpOverlay />
         <CommandPalette />
         <div className={cn(
@@ -224,6 +227,7 @@ export default function DashboardLayout({
                   key={group.label}
                   group={group}
                   userCapabilities={userCapabilities}
+                  authUser={authUser}
                   isCollapsed={isCollapsed}
                   isSheet={false}
                   getAccent={getAccent}
@@ -291,6 +295,7 @@ export default function DashboardLayout({
                             key={group.label}
                             group={group}
                             userCapabilities={userCapabilities}
+                            authUser={authUser}
                             isCollapsed={false}
                             isSheet={true}
                             getAccent={getAccent}
@@ -421,7 +426,7 @@ export default function DashboardLayout({
               </div>
             </header>
 
-            <main id="main-content" className="flex-1 overflow-y-auto relative z-10 bg-app p-4 pb-24 md:pb-6 md:p-6 lg:p-8">
+            <main id="main-content" className="flex-1 overflow-y-auto relative z-10 bg-app p-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-6 md:p-6 lg:p-8">
               <div key={pathname} className="mx-auto max-w-[1440px] animate-page-in">
                 <ErrorBoundary resetKeys={[pathname]}>
                   <Breadcrumb />
@@ -458,7 +463,7 @@ export default function DashboardLayout({
                 </Link>
               )}
 
-              {hasCapability(userCapabilities, "attendance.clock-self") && (
+              {(hasCapability(userCapabilities, "attendance.clock-self") || hasCapability(userCapabilities, "leave.request-self")) && (
                 <Link
                   href="/dashboard/attendance"
                   prefetch={false}

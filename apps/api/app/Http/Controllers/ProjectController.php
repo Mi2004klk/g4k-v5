@@ -25,7 +25,7 @@ class ProjectController extends Controller
             'status' => 'pending',
             'filters' => [
                 'search' => $request->input('search'),
-                '_has_manage' => $this->hasManageCapability($request),
+                '_has_manage' => $this->userHasManage($request),
                 '_user_id' => $request->user()->id,
             ],
         ]);
@@ -55,7 +55,7 @@ class ProjectController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('name', 'ilike', '%' . $request->query('search') . '%');
+            $query->where('name', 'like', '%' . $request->query('search') . '%');
         }
 
         if ($request->filled('sort')) {
@@ -70,7 +70,8 @@ class ProjectController extends Controller
             $query->orderBy('updated_at', 'desc');
         }
 
-        $perPage = $request->query('per_page', 15);
+        $perPage = min((int) $request->query('per_page', 15), 100);
+        $perPage = max($perPage, 1);
         return response()->json($query->paginate($perPage));
     }
 
@@ -175,7 +176,7 @@ class ProjectController extends Controller
             'status' => 'sometimes|in:active,completed,archived',
             'priority' => 'sometimes|in:low,medium,high,urgent',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'deadline' => 'nullable|date',
             'team_id' => 'nullable|exists:teams,id',
             'department_id' => 'nullable|exists:departments,id',
@@ -215,11 +216,16 @@ class ProjectController extends Controller
             \App\Models\TaskActivity::create([
                 'task_id' => $task->id,
                 'user_id' => $request->user()->id,
-                'action' => 'deleted',
-                'description' => 'Task was deleted along with its project.'
+                'event' => 'deleted',
+                'metadata' => ['description' => 'Task was deleted along with its project.']
             ]);
             $task->delete();
         });
+
+        $conversation = \App\Models\Conversation::where('scope', 'project')->where('project_id', $project->id)->first();
+        if ($conversation) {
+            $conversation->delete();
+        }
 
         $project->delete(); // Soft delete
         
@@ -316,6 +322,8 @@ class ProjectController extends Controller
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['message' => $e->getMessage(), 'errors' => $e->errors()], 422);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
         }
 
         // T-52: Clear pending approvals cache for HR/Admin

@@ -70,7 +70,7 @@ class GenerateReportJob implements ShouldQueue
                 'file_path' => $filename,
             ]);
 
-            broadcast(new ExportCompleted($this->exportJob))->toOthers();
+            broadcast(new ExportCompleted($this->exportJob));
 
         } catch (\Throwable $e) {
             $this->exportJob->update([
@@ -92,13 +92,16 @@ class GenerateReportJob implements ShouldQueue
             case 'tasks':
                 $query = Task::with(['project', 'assignee']);
                 if ($search) {
-                    $query->where('title', 'ilike', '%' . $search . '%');
+                    $query->whereRaw('LOWER(title) LIKE LOWER(?)', ['%' . $search . '%']);
                 }
                 if (!$hasManage) {
                     $query->where(function ($q) use ($userId) {
                         $q->where('assignee_id', $userId)
                           ->orWhere('reporter_id', $userId);
                     });
+                } else {
+                    $jobUser = \App\Models\User::find($userId);
+                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'assignee_id');
                 }
                 $query->chunk(1000, function($chunk) use ($chunkCallback) {
                     $chunkCallback($chunk->map(fn($t) => [
@@ -116,13 +119,16 @@ class GenerateReportJob implements ShouldQueue
             case 'projects':
                 $query = Project::with(['creator', 'members']);
                 if ($search) {
-                    $query->where('name', 'ilike', '%' . $search . '%');
+                    $query->whereRaw('LOWER(name) LIKE LOWER(?)', ['%' . $search . '%']);
                 }
                 if (!$hasManage) {
                     $query->where(function ($q) use ($userId) {
                         $q->where('created_by', $userId)
                           ->orWhereHas('members', fn ($m) => $m->where('users.id', $userId));
                     });
+                } else {
+                    $jobUser = \App\Models\User::find($userId);
+                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'created_by');
                 }
                 $query->chunk(1000, function($chunk) use ($chunkCallback) {
                     $chunkCallback($chunk->map(fn($p) => [
@@ -138,7 +144,7 @@ class GenerateReportJob implements ShouldQueue
             case 'departments':
                 $query = Department::withCount('users')->with('teams');
                 if ($search) {
-                    $query->where('name', 'ilike', '%' . $search . '%');
+                    $query->whereRaw('LOWER(name) LIKE LOWER(?)', ['%' . $search . '%']);
                 }
                 $status = $filters['status'] ?? null;
                 if ($status === 'active') {
@@ -165,7 +171,7 @@ class GenerateReportJob implements ShouldQueue
             case 'designations':
                 $query = Designation::withCount('users');
                 if ($search) {
-                    $query->where('name', 'ilike', '%' . $search . '%');
+                    $query->whereRaw('LOWER(name) LIKE LOWER(?)', ['%' . $search . '%']);
                 }
                 $status = $filters['status'] ?? null;
                 if ($status === 'active') {
@@ -208,8 +214,8 @@ class GenerateReportJob implements ShouldQueue
                 if (!empty($filters['search'])) {
                     $search = $filters['search'];
                     $query->where(fn($sub) => 
-                        $sub->where('users.name', 'ilike', "%{$search}%")
-                            ->orWhere('users.email', 'ilike', "%{$search}%")
+                        $sub->whereRaw('LOWER(users.name) LIKE LOWER(?)', ["%{$search}%"])
+                            ->orWhereRaw('LOWER(users.email) LIKE LOWER(?)', ["%{$search}%"])
                     );
                 }
 
@@ -348,10 +354,13 @@ class GenerateReportJob implements ShouldQueue
             case 'productivity':
                 $query = User::with(['department', 'roleAssignments']);
                 if ($search) {
-                    $query->where('name', 'ilike', '%' . $search . '%');
+                    $query->whereRaw('LOWER(name) LIKE LOWER(?)', ['%' . $search . '%']);
                 }
                 if (!$hasManage) {
                     $query->where('id', $userId);
+                } else {
+                    $jobUser = \App\Models\User::find($userId);
+                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'users.department_id');
                 }
                 if (!empty($filters['ids'])) {
                     $query->whereIn('id', is_array($filters['ids']) ? $filters['ids'] : explode(',', $filters['ids']));

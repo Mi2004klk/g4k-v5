@@ -36,11 +36,11 @@ class LeaveRequestController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $roles = $user->getCachedRoles();
+        $activeRole = $user->resolveActiveRole();
 
         $query = LeaveRequest::with(['approval', 'user']);
 
-        $isAdmin = in_array('super_admin', $roles);
+        $isAdmin = $activeRole === 'super_admin';
         $isHR = \App\Services\CapabilityMatrix::hasCapability($user->resolveActiveRole(), 'leave.approve-employee');
 
         // Scope
@@ -78,10 +78,10 @@ class LeaveRequestController extends Controller
         if ($request->filled('search')) {
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
-                $q->where('reason', 'ilike', "%{$search}%")
+                $q->whereRaw('LOWER(reason) LIKE LOWER(?)', ["%{$search}%"])
                   ->orWhereHas('user', function($q2) use ($search) {
-                      $q2->where('name', 'ilike', "%{$search}%")
-                         ->orWhere('email', 'ilike', "%{$search}%");
+                      $q2->whereRaw('LOWER(name) LIKE LOWER(?)', ["%{$search}%"])
+                         ->orWhereRaw('LOWER(email) LIKE LOWER(?)', ["%{$search}%"]);
                   });
             });
         }
@@ -210,7 +210,11 @@ class LeaveRequestController extends Controller
         $user = $request->user();
         $leaveRequest = LeaveRequest::findOrFail($approval->approvable_id);
 
-        if (!in_array('super_admin', $user->getCachedRoles()) && $leaveRequest->user_id !== $user->id) {
+        if ($leaveRequest->user_id === $user->id) {
+            return response()->json(['message' => 'You cannot approve or reject your own leave request.'], 403);
+        }
+
+        if ($user->resolveActiveRole() !== 'super_admin' && $leaveRequest->user_id !== $user->id) {
             $targetUser = \App\Models\User::find($leaveRequest->user_id);
             if ($targetUser) {
                 if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $user)->exists()) {
@@ -257,8 +261,8 @@ class LeaveRequestController extends Controller
         $leave = LeaveRequest::with(['approval', 'user'])->findOrFail($id);
         
         $user = $request->user();
-        $roles = $user->getCachedRoles();
-        $isHrOrAdmin = count(array_intersect(['hr', 'super_admin'], $roles)) > 0;
+        $activeRole = $user->resolveActiveRole();
+        $isHrOrAdmin = in_array($activeRole, ['hr', 'super_admin']);
 
         if ($leave->user_id !== $user->id && !$isHrOrAdmin) {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -289,7 +293,7 @@ class LeaveRequestController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->query('search');
-            $query->where('reason', 'ilike', "%{$search}%");
+            $query->whereRaw('LOWER(reason) LIKE LOWER(?)', ["%{$search}%"]);
         }
 
         $query->orderBy('start_date', 'desc');
@@ -302,15 +306,15 @@ class LeaveRequestController extends Controller
     public function adminHistory(Request $request)
     {
         $user = $request->user();
-        $roles = $user->getCachedRoles();
+        $activeRole = $user->resolveActiveRole();
         
-        if (!in_array('hr', $roles) && !in_array('super_admin', $roles)) {
+        if (!in_array($activeRole, ['hr', 'super_admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         $query = LeaveRequest::with(['approval', 'user']);
 
-        if (!in_array('super_admin', $roles)) {
+        if ($activeRole !== 'super_admin') {
             $query->whereHas('user', function($q) use ($user) {
                 \App\Support\HrScope::apply($q, $user);
             });
@@ -332,10 +336,10 @@ class LeaveRequestController extends Controller
         if ($request->filled('search')) {
             $search = $request->query('search');
             $query->where(function ($q) use ($search) {
-                $q->where('reason', 'ilike', "%{$search}%")
+                $q->whereRaw('LOWER(reason) LIKE LOWER(?)', ["%{$search}%"])
                   ->orWhereHas('user', function($q2) use ($search) {
-                      $q2->where('name', 'ilike', "%{$search}%")
-                         ->orWhere('email', 'ilike', "%{$search}%");
+                      $q2->whereRaw('LOWER(name) LIKE LOWER(?)', ["%{$search}%"])
+                         ->orWhereRaw('LOWER(email) LIKE LOWER(?)', ["%{$search}%"]);
                   });
             });
         }
@@ -354,13 +358,13 @@ class LeaveRequestController extends Controller
     public function pending(Request $request)
     {
         $user = $request->user();
-        $roles = $user->getCachedRoles();
+        $activeRole = $user->resolveActiveRole();
 
         $query = LeaveRequest::with(['approval', 'user'])->where('status', 'pending');
 
-        if (in_array('super_admin', $roles)) {
+        if ($activeRole === 'super_admin') {
             // Can see all pending
-        } elseif (in_array('hr', $roles)) {
+        } elseif ($activeRole === 'hr') {
             $query->whereHas('user', function($q) use ($user) {
                 \App\Support\HrScope::apply($q, $user);
             });
@@ -403,27 +407,65 @@ class LeaveRequestController extends Controller
         $leave = LeaveRequest::findOrFail($id);
         
         $user = $request->user();
-        $roles = $user->getCachedRoles();
-        $isHrOrAdmin = count(array_intersect(['hr', 'super_admin'], $roles)) > 0;
+        $activeRole = $user->resolveActiveRole();
+        $isHrOrAdmin = in_array($activeRole, ['hr', 'super_admin']);
 
         if ($leave->user_id === $user->id) {
-            // Employee can only cancel their own pending requests
-            if ($leave->status !== 'pending') {
-                return response()->json(['message' => 'You can only cancel pending leave requests.'], 403);
+            // Employee can only cancel pending or future approved requests
+            if ($leave->status === 'rejected' || $leave->status === 'cancelled') {
+                return response()->json(['message' => 'Cannot cancel a leave request in this status.'], 403);
             }
+            if ($leave->status === 'approved' && \Carbon\Carbon::parse($leave->start_date)->startOfDay()->isPast()) {
+                return response()->json(['message' => 'Cannot cancel an approved leave that has already started.'], 403);
+            }
+            $wasApproved = $leave->status === 'approved';
             $leave->status = 'cancelled';
             $leave->save();
+            
+            if ($wasApproved) {
+                $days = $leave->getWorkingDays();
+                $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
+                $balance->decrement('used', min($days, $balance->used));
+                
+                $startDate = \Carbon\Carbon::parse($leave->start_date);
+                $endDate = \Carbon\Carbon::parse($leave->end_date);
+                $currentDate = $startDate->copy();
+                while ($currentDate->lte($endDate)) {
+                    \App\Services\AttendanceService::reconcileDay($leave->user_id, $currentDate->toDateString(), true);
+                    $currentDate->addDay();
+                }
+            }
             return response()->json(['message' => 'Leave request cancelled successfully.']);
         } else if ($isHrOrAdmin) {
             // Admin/HR can delete
-            if (!in_array('super_admin', $roles)) {
+            if ($activeRole !== 'super_admin') {
                 // Ensure HR is authorized to manage this user
                 if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $leave->user_id), $user)->exists()) {
                     return response()->json(['message' => 'Unauthorized'], 403);
                 }
             }
-            $leave->delete(); // Assuming we just hard delete or soft delete it
-            return response()->json(['message' => 'Leave request deleted successfully.']);
+            
+            $wasApproved = $leave->status === 'approved';
+            $leave->status = 'cancelled';
+            $leave->save();
+            
+            if ($wasApproved) {
+                $days = $leave->getWorkingDays();
+                $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
+                $balance->decrement('used', min($days, $balance->used));
+                
+                $startDate = \Carbon\Carbon::parse($leave->start_date);
+                $endDate = \Carbon\Carbon::parse($leave->end_date);
+                $currentDate = $startDate->copy();
+                while ($currentDate->lte($endDate)) {
+                    \App\Services\AttendanceService::reconcileDay($leave->user_id, $currentDate->toDateString(), true);
+                    $currentDate->addDay();
+                }
+            }
+            
+            \App\Support\AuditLogger::log($request, 'cancel', 'leave_request', $leave->id, null, ['reason' => 'Administratively cancelled via destroy endpoint']);
+            
+            return response()->json(['message' => 'Leave request cancelled successfully.']);
         }
 
         return response()->json(['message' => 'Unauthorized'], 403);

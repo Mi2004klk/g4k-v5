@@ -14,7 +14,7 @@ import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { useReverb } from "@/hooks/use-reverb";
 import { useExport } from "@/hooks/use-export";
-import { Button, Checkbox, DataTable, StatusBadge, FilterBar } from "@g4k/ui/components";
+import { Button, Checkbox, StatusBadge, ListScaffold } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 
@@ -315,90 +315,75 @@ export function HrAttendanceTable() {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col xl:flex-row items-center justify-between gap-4 mb-6">
-        <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1 w-full xl:w-auto">
-        <FilterBar
-          searchQuery={search || ""}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search team members..."
-          filters={[
-            {
-              key: "date",
-              label: "Date",
-              type: "date",
-              value: selectedDate,
-              onChange: setSelectedDate,
-            },
-            {
-              key: "status",
-              label: "Status",
-              type: "checkbox-group",
-              value: statusFilter === "all" ? [] : [statusFilter],
-              onChange: (vals: string[]) => setStatusFilter(vals.length > 0 ? vals[0] : "all"),
-              options: statusOptions.filter(o => o.value !== "all"),
-            },
-            {
-              key: "department",
-              label: "Department",
-              type: "select",
-              value: deptFilter,
-              onChange: setDeptFilter,
-              options: [{ label: "All Departments", value: "all" }, ...departmentsList.map((d: { id: number; name: string }) => ({ label: d.name, value: d.id.toString() }))]
-            }
-          ]}
-          onClearAll={() => {
-            setSearch("");
-            setSelectedDate(format(new Date(), "yyyy-MM-dd"));
-            setStatusFilter("all");
-            setDeptFilter("all");
-          }}
-        />
-        </div>
-        <div className="flex items-center gap-2 shrink-0 w-full xl:w-auto mt-2 xl:mt-0">
-          <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
-            <AppIcon name="download" className="mr-1" />
-            {isExporting ? "Exporting..." : "Export"}
-          </Button>
-          <Button variant="outline" onClick={() => handleExport(true)} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
-            <AppIcon name="download" className="mr-1" />
-            {isExporting ? "Exporting All..." : "Export All"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="bg-card rounded-xl border border-border overflow-x-auto overflow-y-hidden w-full relative min-h-[400px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
-        <DataTable
-          columns={columns}
-          data={records}
-          isLoading={isLoading}
-          isError={!!error}
-          stickyHeader={true}
-          stickyFirstCol={true}
-          density="compact"
-          totalPages={totalPages}
-          page={page}
-          perPage={perPage}
-          onPageChange={setPage}
-          onPerPageChange={setPerPage}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          sorting={[{ id: sortBy, desc: sortOrder === "desc" }]}
-          onSortingChange={(sorting) => {
-            if (sorting.length > 0) {
-              setSortBy(sorting[0].id);
-              setSortOrder(sorting[0].desc ? "desc" : "asc");
-            } else {
-              setSortBy("date");
-              setSortOrder("desc");
-            }
-          }}
-          onRowClick={(row) => {
-            setSelectedUser(row.original.user_id);
-          }}
-          getRowId={(row: HrAttendanceRecord) => String(row.user_id || row.id)}
-        />
-      </div>
+    <div className="h-full py-4">
+      <ListScaffold
+        title="Team Attendance"
+        description="Monitor daily team attendance, clock-ins, and breaks."
+        searchQuery={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search team members..."
+        filters={[
+          {
+            key: "date",
+            label: "Date",
+            type: "date",
+            value: selectedDate,
+            onChange: setSelectedDate,
+          },
+          {
+            key: "status",
+            label: "Status",
+            type: "checkbox-group",
+            value: statusFilter === "all" ? [] : [statusFilter],
+            onChange: (vals: string[]) => setStatusFilter(vals.length > 0 ? vals[0] : "all"),
+            options: statusOptions.filter(o => o.value !== "all"),
+          },
+          {
+            key: "department",
+            label: "Department",
+            type: "select",
+            value: deptFilter,
+            onChange: setDeptFilter,
+            options: [{ label: "All Departments", value: "all" }, ...departmentsList.map((d: { id: number; name: string }) => ({ label: d.name, value: d.id.toString() }))]
+          }
+        ]}
+        onClearAll={() => {
+          setSearch("");
+          setSelectedDate(format(new Date(), "yyyy-MM-dd"));
+          setStatusFilter("all");
+          setDeptFilter("all");
+        }}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
+              <AppIcon name="download" className="mr-1" />
+              {isExporting ? "Exporting..." : "Export Selected"}
+            </Button>
+            <Button variant="outline" onClick={() => handleExport(true)} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
+              <AppIcon name="download" className="mr-1" />
+              {isExporting ? "Exporting All..." : "Export All"}
+            </Button>
+          </>
+        }
+        columns={columns}
+        data={records}
+        isLoading={isLoading}
+        isError={!!error}
+        onRowClick={(row) => {
+          setSelectedUser(row.user_id);
+          setSheetTab("day");
+        }}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        getRowId={(row: HrAttendanceRecord) => String(row.user_id || row.id)}
+        pagination={{
+          page,
+          perPage,
+          totalPages,
+          onPageChange: setPage,
+          onPerPageChange: setPerPage
+        }}
+      />
 
       <TeamMemberAttendanceSheet
         userId={selectedUser}

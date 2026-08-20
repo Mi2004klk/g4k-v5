@@ -68,7 +68,15 @@ class AuthController extends Controller
                       ->orWhere('username', $request->identifier);
             })->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        $credentialsValid = false;
+        if ($user) {
+            $credentialsValid = Hash::check($request->password, $user->password);
+        } else {
+            // Prevent timing attack enumeration by always computing a hash
+            Hash::check($request->password, '$2y$10$dummyhashdummyhashdummyhashdummyhashdummyhashdummyhash');
+        }
+
+        if (!$user || !$credentialsValid) {
             RateLimiter::hit($throttleKey, 600);
             
             if ($user) {
@@ -504,7 +512,7 @@ class AuthController extends Controller
         // Revoke all existing tokens to kick out attackers/old sessions (AUTH-2)
         $user->tokens()->delete();
 
-        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
 
         \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $user->email)->delete();
 
@@ -531,7 +539,7 @@ class AuthController extends Controller
         $user->password_changed_at = now();
         $user->save();
 
-        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
 
         $deviceName = $user->currentAccessToken()->name ?? 'Unknown Device';
         $user->tokens()->delete(); // Revoke ALL existing tokens
@@ -549,11 +557,14 @@ class AuthController extends Controller
         
         $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
 
+        $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($activeRole);
+
         return response()->json([
             'message' => 'Password changed successfully.',
             'token' => $accessToken,
             'refresh_token' => $refreshToken,
-            'user' => $user
+            'user' => $user,
+            'capabilities' => $capabilities
         ])->withCookie($cookie);
     }
 
@@ -586,7 +597,7 @@ class AuthController extends Controller
 
     public function sessions(Request $request)
     {
-        $tokens = $request->user()->tokens->map(function($t) use ($request) {
+        $tokens = $request->user()->tokens()->where('name', 'not like', '%_refresh')->get()->map(function($t) use ($request) {
             return [
                 'id' => $t->id,
                 'device_name' => $t->name,

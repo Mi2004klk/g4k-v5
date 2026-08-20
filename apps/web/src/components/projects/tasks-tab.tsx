@@ -12,12 +12,14 @@ import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { useSearchParams } from "next/navigation";
 import { useUrlState } from "@/hooks/use-url-state";
+import { useExport } from "@/hooks/use-export";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const TaskGantt = dynamic(() => import("@/components/tasks/task-gantt").then(mod => mod.TaskGantt), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent, DraftBanner } from "@g4k/ui/components";
+import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent } from "@g4k/ui/components";
+import { priority as priorityConfig, taskStatus } from "@g4k/ui/theme/semantic";
 import { FormError } from "@/components/forms/form-error";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
@@ -104,11 +106,13 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
   const { data: caps = [] } = useCapabilities();
   const canManageTasks = hasCapability(caps, "tasks.manage");
+  const canViewQA = hasCapability(caps, "qa.view") || hasCapability(caps, "qa.manage");
+  const canViewUsers = hasCapability(caps, "users.employee.manage") || hasCapability(caps, "users.hr.manage");
   
   const { data: usersData } = useQuery({ 
     queryKey: queryKeys.usersList, 
     queryFn: () => apiFetch<{ data: TaskUser[] }>("/users"),
-    enabled: canManageTasks
+    enabled: canViewUsers
   });
   const { data: projectsData } = useQuery({ 
     queryKey: queryKeys.projects(), 
@@ -128,7 +132,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const user = useAuthStore(s => s.user);
 
   const usersList = Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []);
-  const availableUsers = canManageTasks ? usersList : (user ? [user] : []);
+  const availableUsers = canViewUsers ? usersList : (user ? [user] : []);
   const projectsList = Array.isArray(projectsData?.data) ? projectsData.data : (Array.isArray(projectsData) ? projectsData : []);
   const availableProjects = canManageTasks ? projectsList : projectsList.filter((p: TaskProject) => p.allow_employee_tasks);
 
@@ -142,6 +146,28 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
   const [page, setPage] = useUrlState("page", "1");
   const [perPage, setPerPage] = useState(20);
+  const { triggerExport } = useExport();
+
+  const handleExport = async () => {
+    try {
+      const p = new URLSearchParams();
+      if (statusFilter !== "all") p.append("status", statusFilter);
+      if (scopeFilter !== "all") p.append("scope", scopeFilter);
+      if (searchQuery) p.append("search", searchQuery);
+      if (assigneeFilter === "me") {
+        if (user?.id) p.append("assignee_id", user.id.toString());
+      } else if (assigneeFilter !== "all") {
+        p.append("assignee_id", assigneeFilter);
+      }
+      if (defaultProjectId) p.append("project_id", defaultProjectId);
+      p.append("sort_by", sortBy);
+      p.append("sort_order", sortOrder);
+
+      await triggerExport(`/tasks/export?${p.toString()}`, "tasks_export.csv");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to export");
+    }
+  };
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [...queryKeys.tasks(defaultProjectId), statusFilter, scopeFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder, defaultProjectId],
@@ -220,7 +246,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     },
   });
 
@@ -258,7 +284,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     },
   });
 
@@ -303,7 +329,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     },
   });
 
@@ -314,7 +340,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     onSuccess: () => {
       toast.success("Task deleted successfully.");
       // T-46.2: invalidate without exact so parameterized keys are included
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     }
   });
 
@@ -330,7 +356,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       setRowSelection({});
       setIsBulkDeleteOpen(false);
       // T-46.2: invalidate without exact
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     },
     onError: () => toast.error("Failed to delete some tasks.")
   });
@@ -346,7 +372,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       toast.success("Tasks status updated.");
       setRowSelection({});
       // T-46.2: invalidate without exact
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     }
   });
 
@@ -402,7 +428,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       setDueDate(""); clearDraft();
       toast.success("Task created successfully.");
       // Drop exact:true so the parameterized list key is also invalidated (T-46.2)
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     },
     onError: (err: Error & { errors?: Record<string, string[]> }) => {
       if (err.errors) {
@@ -422,12 +448,12 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       accessorKey: "title",
       header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Title</span>,
       cell: ({ row }) => {
-        const p = row.getValue("priority") as string;
-        const pColor = p === "urgent" ? "bg-rose-500" : p === "high" ? "bg-amber-500" : p === "medium" ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-600";
+        const p = row.getValue("priority") as keyof typeof priorityConfig;
+        const pConfig = priorityConfig[p] || priorityConfig.low;
         return (
           <div className="flex flex-col gap-0.5 max-w-[300px] sm:max-w-[400px] group/title py-1">
             <div className="flex items-center gap-2">
-              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${pColor}`} title={`Priority: ${p}`} />
+              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${pConfig.bar}`} title={`Priority: ${pConfig.label}`} />
               <div className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-100 group-hover/title:text-primary-600 dark:group-hover/title:text-primary-400 transition-colors truncate">
                 {row.getValue("title")}
               </div>
@@ -443,21 +469,15 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       accessorKey: "status",
       header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Status</span>,
       cell: ({ row }) => {
-        const s = row.getValue("status") as string;
+        const s = row.getValue("status") as keyof typeof taskStatus;
         const task = row.original;
         
-        // Solid vibrant colors for statuses
-        let statusClass = "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
-        if (s === 'completed') statusClass = "bg-emerald-500 text-white";
-        else if (s === 'in_progress') statusClass = "bg-blue-500 text-white";
-        else if (s === 'review') statusClass = "bg-purple-500 text-white";
-        else if (s === 'todo') statusClass = "bg-neutral-200 text-neutral-700 dark:bg-neutral-700 dark:text-neutral-300";
-        else if (s === 'redo' || s === 'overdue') statusClass = "bg-rose-500 text-white";
+        const sConfig = taskStatus[s] || taskStatus.todo;
 
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`capitalize text-[10px] px-2 py-0.5 rounded-sm font-bold tracking-wide shadow-sm ${statusClass}`}>
-              {s.replace("_", " ")}
+            <span className={`capitalize text-[10px] px-2 py-0.5 rounded-sm font-bold tracking-wide shadow-sm ${sConfig.bg} ${sConfig.text}`}>
+              {sConfig.label}
             </span>
             {task.scope && (
               <span className="capitalize text-[10px] font-medium text-neutral-500 border border-neutral-200 dark:border-neutral-800 px-1.5 py-0.5 rounded-sm">
@@ -505,12 +525,14 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
       accessorKey: "priority",
       header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Priority</span>,
       cell: ({ row }) => {
-        const p = row.getValue("priority") as string;
-        const colorClass = p === "urgent" ? "text-rose-600" : p === "high" ? "text-amber-600" : p === "medium" ? "text-blue-600" : "text-neutral-500";
+        const p = row.getValue("priority") as keyof typeof priorityConfig;
+        const pConfig = priorityConfig[p] || priorityConfig.low;
+        // Text color for label: extract from bar class if possible, or fallback
+        const colorClass = pConfig.bar.replace('bg-', 'text-').replace('-500', '-600');
         return (
           <span className={`flex items-center capitalize text-[11px] font-bold ${colorClass}`}>
-            {p === "urgent" && <AppIcon name="flag" size="xs" className="mr-1.5" />}
-            {p}
+            {pConfig.icon && <AppIcon name={pConfig.icon as any} size="xs" className="mr-1.5" />}
+            {pConfig.label}
           </span>
         );
       }
@@ -563,7 +585,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         {/* Row 1: Views and Actions */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50">
-            {(["kanban", "list", "gantt", "qa"] as const).map(mode => (
+            {(["kanban", "list", "gantt", ...(canViewQA ? ["qa" as const] : [])] as const).map(mode => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
@@ -589,6 +611,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
               </div>
             )}
             
+            { (canManageTasks || hasCapability(caps, "tasks.create-own")) && (
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
                 <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shadow-sm shrink-0">
@@ -603,7 +626,13 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                 </DialogHeader>
 
                 {hasDraft && (
-                  <DraftBanner hasDraft={hasDraft} onRestore={handleRestoreDraft} onDiscard={clearDraft} />
+                  <div className="mx-5 mt-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center justify-between">
+                    <span className="text-sm text-amber-800 dark:text-amber-200">You have unsaved changes.</span>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={clearDraft} className="text-amber-800 dark:text-amber-200">Discard</Button>
+                      <Button variant="outline" size="sm" onClick={handleRestoreDraft} className="bg-amber-100 dark:bg-amber-900 border-amber-200 dark:border-amber-800">Restore</Button>
+                    </div>
+                  </div>
                 )}
 
                 <div className="overflow-y-auto max-h-[65dvh] p-5 space-y-5 thin-scrollbar">
@@ -845,14 +874,9 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                 </div>
               </DialogContent>
             </Dialog>
+            )}
 
-            <Button size="sm" variant="outline" onClick={() => {
-              toast.promise(apiFetch("/tasks/export?search=" + encodeURIComponent(searchQuery)), {
-                loading: 'Preparing export...',
-                success: 'Export started. You will be notified when it is ready.',
-                error: 'Failed to start export'
-              });
-            }} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
+            <Button size="sm" variant="outline" onClick={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
               <AppIcon name="download" size="sm" /> Export
             </Button>
           </div>

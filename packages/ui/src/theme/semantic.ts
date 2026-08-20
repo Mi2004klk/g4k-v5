@@ -43,25 +43,24 @@ export const userStatus = {
   locked:   { dot: 'bg-rose-500',    status: 'danger'  as StatusType, label: 'Locked' },
 } as const;
 
-// The navAccent factory takes a color name (like "emerald" or "violet") and returns the full set of Tailwind classes
-// for our brand theme navigation (bg, hoverBg, text, hoverText, bgDark, textDark, border, ring)
+type NavAccentConfig = {
+  bg: string; hoverBg: string; text: string; hoverText: string; bgDark: string; textDark: string; border: string; ring: string;
+};
+
+const navAccentMap: Record<string, NavAccentConfig> = {
+  violet: { bg: "bg-primary-100", hoverBg: "hover:bg-primary-100 dark:hover:bg-primary-950", text: "text-primary-700", hoverText: "hover:text-primary-700 dark:hover:text-primary-300", bgDark: "dark:bg-primary-950", textDark: "dark:text-primary-300", border: "bg-primary-600", ring: "ring-1 ring-inset ring-primary-500/50" },
+  blue: { bg: "bg-blue-100", hoverBg: "hover:bg-blue-100 dark:hover:bg-blue-950", text: "text-blue-700", hoverText: "hover:text-blue-700 dark:hover:text-blue-300", bgDark: "dark:bg-blue-950", textDark: "dark:text-blue-300", border: "bg-blue-600", ring: "ring-1 ring-inset ring-blue-500/50" },
+  green: { bg: "bg-green-100", hoverBg: "hover:bg-green-100 dark:hover:bg-green-950", text: "text-green-700", hoverText: "hover:text-green-700 dark:hover:text-green-300", bgDark: "dark:bg-green-950", textDark: "dark:text-green-300", border: "bg-green-600", ring: "ring-1 ring-inset ring-green-500/50" },
+  indigo: { bg: "bg-indigo-100", hoverBg: "hover:bg-indigo-100 dark:hover:bg-indigo-950", text: "text-indigo-700", hoverText: "hover:text-indigo-700 dark:hover:text-indigo-300", bgDark: "dark:bg-indigo-950", textDark: "dark:text-indigo-300", border: "bg-indigo-600", ring: "ring-1 ring-inset ring-indigo-500/50" },
+  pink: { bg: "bg-pink-100", hoverBg: "hover:bg-pink-100 dark:hover:bg-pink-950", text: "text-pink-700", hoverText: "hover:text-pink-700 dark:hover:text-pink-300", bgDark: "dark:bg-pink-950", textDark: "dark:text-pink-300", border: "bg-pink-600", ring: "ring-1 ring-inset ring-pink-500/50" },
+  amber: { bg: "bg-amber-100", hoverBg: "hover:bg-amber-100 dark:hover:bg-amber-950", text: "text-amber-700", hoverText: "hover:text-amber-700 dark:hover:text-amber-300", bgDark: "dark:bg-amber-950", textDark: "dark:text-amber-300", border: "bg-amber-600", ring: "ring-1 ring-inset ring-amber-500/50" },
+  cyan: { bg: "bg-cyan-100", hoverBg: "hover:bg-cyan-100 dark:hover:bg-cyan-950", text: "text-cyan-700", hoverText: "hover:text-cyan-700 dark:hover:text-cyan-300", bgDark: "dark:bg-cyan-950", textDark: "dark:text-cyan-300", border: "bg-cyan-600", ring: "ring-1 ring-inset ring-cyan-500/50" },
+  teal: { bg: "bg-teal-100", hoverBg: "hover:bg-teal-100 dark:hover:bg-teal-950", text: "text-teal-700", hoverText: "hover:text-teal-700 dark:hover:text-teal-300", bgDark: "dark:bg-teal-950", textDark: "dark:text-teal-300", border: "bg-teal-600", ring: "ring-1 ring-inset ring-teal-500/50" },
+  rose: { bg: "bg-rose-100", hoverBg: "hover:bg-rose-100 dark:hover:bg-rose-950", text: "text-rose-700", hoverText: "hover:text-rose-700 dark:hover:text-rose-300", bgDark: "dark:bg-rose-950", textDark: "dark:text-rose-300", border: "bg-rose-600", ring: "ring-1 ring-inset ring-rose-500/50" },
+};
+
 export function navAccent(color: string) {
-  // Primary (violet) is the default fallback, using our primary-xxx classes
-  if (color === "violet") {
-    return {
-      bg: "bg-primary-100", hoverBg: "hover:bg-primary-100 dark:hover:bg-primary-950",
-      text: "text-primary-700", hoverText: "hover:text-primary-700 dark:hover:text-primary-300",
-      bgDark: "dark:bg-primary-950", textDark: "dark:text-primary-300",
-      border: "bg-primary-600", ring: "ring-1 ring-inset ring-primary-500/50"
-    };
-  }
-  
-  return {
-    bg: `bg-${color}-100`, hoverBg: `hover:bg-${color}-100 dark:hover:bg-${color}-950`,
-    text: `text-${color}-700`, hoverText: `hover:text-${color}-700 dark:hover:text-${color}-300`,
-    bgDark: `dark:bg-${color}-950`, textDark: `dark:text-${color}-300`,
-    border: `bg-${color}-600`, ring: `ring-1 ring-inset ring-${color}-500/50`
-  };
+  return navAccentMap[color] ?? navAccentMap.violet;
 }
 
 export const typeScale = {
@@ -77,3 +76,16 @@ export const typeScale = {
 export function getPriorityColor(p: string) { return priority[p as keyof typeof priority] ?? priority.low; }
 export function getTaskStatusColor(s: string) { return taskStatus[s as keyof typeof taskStatus] ?? taskStatus.todo; }
 export function getAttendanceStatusColor(s: string) { return attendanceStatus[s as keyof typeof attendanceStatus] ?? attendanceStatus.nodata; }
+export function getProjectStatusColor(s: string) { return projectStatus[s as keyof typeof projectStatus] ?? projectStatus.archived; }
+export function getLeaveStatusColor(s: string) { return leaveStatus[s as keyof typeof leaveStatus] ?? leaveStatus.pending; }
+export function getUserStatusColor(s: string) { return userStatus[s as keyof typeof userStatus] ?? userStatus.inactive; }
+
+export const heatmapIntensity = {
+  high:   { bg: 'bg-emerald-500 dark:bg-emerald-600', text: 'text-white' },
+  medium: { bg: 'bg-emerald-300 dark:bg-emerald-500/80', text: 'text-emerald-950 dark:text-emerald-50' },
+  low:    { bg: 'bg-amber-300 dark:bg-amber-500/80', text: 'text-amber-950 dark:text-amber-50' },
+  critical: { bg: 'bg-rose-400 dark:bg-rose-500/80', text: 'text-white' },
+  empty:  { bg: 'bg-neutral-100 dark:bg-neutral-800', text: 'text-neutral-500 dark:text-neutral-400' },
+} as const;
+
+export type HeatmapLevel = typeof heatmapIntensity[keyof typeof heatmapIntensity];

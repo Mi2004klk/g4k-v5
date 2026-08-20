@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    private function userHasManage(Request $request): bool
+    private function hasElevatedReportAccess(Request $request): bool
     {
         $role = $request->user()->resolveActiveRole();
         return CapabilityMatrix::hasCapability($role, 'reports.manage') || CapabilityMatrix::hasCapability($role, 'reports.view');
@@ -21,7 +21,7 @@ class ReportController extends Controller
     public function data(Request $request)
     {
         $key = $request->query('key', 'tasks');
-        $hasManage = $this->userHasManage($request);
+        $hasManage = $this->hasElevatedReportAccess($request);
         $user = $request->user();
 
         switch ($key) {
@@ -32,12 +32,15 @@ class ReportController extends Controller
                         $q->where('assignee_id', $user->id)
                           ->orWhere('reporter_id', $user->id);
                     });
+                } else {
+                    \App\Support\HrScope::apply($query, $user, 'assignee_id');
                 }
                 if ($request->filled('search')) {
                     $search = $request->search;
-                    $query->where('title', 'ilike', "%{$search}%");
+                    $query->whereRaw('LOWER(title) LIKE LOWER(?)', ["%{$search}%"]);
                 }
-                $data = $query->latest()->paginate($request->query('per_page', 25));
+                $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+                $data = $query->latest()->paginate($perPage);
                 break;
             case 'projects':
                 $query = Project::with(['creator', 'members']);
@@ -46,12 +49,15 @@ class ReportController extends Controller
                         $q->where('created_by', $user->id)
                           ->orWhereHas('members', fn ($m) => $m->where('users.id', $user->id));
                     });
+                } else {
+                    \App\Support\HrScope::apply($query, $user, 'created_by');
                 }
                 if ($request->filled('search')) {
                     $search = $request->search;
-                    $query->where('name', 'ilike', "%{$search}%");
+                    $query->whereRaw('LOWER(name) LIKE LOWER(?)', ["%{$search}%"]);
                 }
-                $data = $query->latest()->paginate($request->query('per_page', 25));
+                $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+                $data = $query->latest()->paginate($perPage);
                 break;
             case 'users':
             case 'productivity':
@@ -60,6 +66,8 @@ class ReportController extends Controller
                 if (!$hasManage) {
                     // Employee: own data only (not department-wide)
                     $query->where('id', $user->id);
+                } else {
+                    \App\Support\HrScope::apply($query, $user, 'users.department_id');
                 }
                 
                 if ($key === 'productivity') {
@@ -73,10 +81,11 @@ class ReportController extends Controller
 
                 if ($request->filled('search')) {
                     $search = $request->search;
-                    $query->where('name', 'ilike', "%{$search}%");
+                    $query->whereRaw('LOWER(name) LIKE LOWER(?)', ["%{$search}%"]);
                 }
                 
-                $data = $query->latest()->paginate($request->query('per_page', 25));
+                $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+                $data = $query->latest()->paginate($perPage);
 
                 if ($key === 'productivity') {
                     $data->getCollection()->transform(function($u) {
@@ -102,7 +111,7 @@ class ReportController extends Controller
         ]);
 
         $filters = $validated['filters'] ?? [];
-        $filters['_has_manage'] = $this->userHasManage($request);
+        $filters['_has_manage'] = $this->hasElevatedReportAccess($request);
         $filters['_department_id'] = $request->user()->department_id;
         $filters['_user_id'] = $request->user()->id;
 
@@ -175,14 +184,15 @@ class ReportController extends Controller
         $dept = $request->query('dept');
         $page = $request->query('page', 1);
 
-        $hasManage = $this->userHasManage($request);
+        $hasManage = $this->hasElevatedReportAccess($request);
         $user = $request->user();
 
         // Also we need to include hasManage and user ID in the cache key so HR and Admin don't share the same cache!
         $cacheRole = $hasManage ? 'admin' : "u_{$user->id}";
-        $cacheKey = "report_attendance_summary_{$start}_{$end}_{$dept}_{$page}_{$cacheRole}";
+        $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+        $cacheKey = "report_attendance_summary_{$start}_{$end}_{$dept}_{$page}_{$perPage}_{$cacheRole}";
 
-        $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user) {
+        $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user, $perPage) {
             $query = User::query()
                 ->with('department')
                 ->withCount([
@@ -203,7 +213,7 @@ class ReportController extends Controller
                 }
             }
 
-            return $query->paginate($request->query('per_page', 25));
+            return $query->paginate($perPage);
         });
 
         return response()->json($results);
@@ -215,13 +225,16 @@ class ReportController extends Controller
         $end = $request->query('end', now()->toDateString());
         $dept = $request->query('dept');
 
-        $hasManage = $this->userHasManage($request);
+        $page = $request->query('page', 1);
+
+        $hasManage = $this->hasElevatedReportAccess($request);
         $user = $request->user();
 
         $cacheRole = $hasManage ? 'admin' : "u_{$user->id}";
-        $cacheKey = "report_leave_summary_{$start}_{$end}_{$dept}_{$cacheRole}";
+        $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+        $cacheKey = "report_leave_summary_{$start}_{$end}_{$dept}_{$page}_{$perPage}_{$cacheRole}";
 
-        $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user) {
+        $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user, $perPage) {
             $query = User::query()
                 ->with('department')
                 ->withCount([
@@ -240,7 +253,7 @@ class ReportController extends Controller
                 }
             }
 
-            return $query->paginate($request->query('per_page', 25));
+            return $query->paginate($perPage);
         });
 
         return response()->json($results);

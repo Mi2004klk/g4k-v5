@@ -6,8 +6,9 @@ import { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
-import { StatusBadge } from "@g4k/ui/components/badge";
+import { ListScaffold, Tabs, TabsList, TabsTrigger, TabsContent, Button, Card } from "@g4k/ui/components";
+import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
+import { getLeaveStatusColor } from "@g4k/ui/theme";
 import { FilterBar } from "@g4k/ui/components";
 import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
@@ -126,12 +127,14 @@ export function ApprovalsTab() {
         header: "Status",
         cell: ({ row }: { row: Row<LeaveRecord> }) => {
           const status = row.original.approval?.status || "pending";
+          const config = getLeaveStatusColor(status);
           return (
             <StatusBadge 
-              status={status === "approved" ? "success" : status === "rejected" ? "danger" : "warning"}
+              status={status as StatusType}
+              dot
               className="uppercase tracking-wide"
             >
-              {status}
+              {config.label}
             </StatusBadge>
           );
         },
@@ -192,46 +195,53 @@ export function ApprovalsTab() {
           <TabsTrigger value="history">All Leave History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="approvals" className="mt-0">
-          <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100dvh-250px)]">
-            <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
-              <FilterBar
-                searchQuery={search || ""}
-                onSearchChange={setSearch}
-                filters={[
-                  {
-                    key: "status",
-                    label: "Status",
-                    type: "select",
-                    value: statusFilter,
-                    onChange: setStatusFilter,
-                    options: [
-                      { label: "All", value: "all" },
-                      { label: "Pending", value: "pending" },
-                      { label: "Approved", value: "approved" },
-                      { label: "Rejected", value: "rejected" },
-                    ],
-                  },
-                ]}
-              />
-              <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-8 text-xs font-semibold">
-                <AppIcon name="download" size="sm" className=" mr-1.5" />
-                {isExporting ? "Exporting..." : "Export"}
-              </Button>
-            </div>
-            <div className="flex-1 min-h-[300px] flex flex-col">
-              <DataTable
-                columns={columns}
-                data={records}
-                isLoading={isLoading}
-                page={approvalsPage}
-                perPage={approvalsPerPage}
-                totalPages={approvalsTotalPages}
-                onPageChange={setApprovalsPage}
-                onPerPageChange={setApprovalsPerPage}
-              />
-            </div>
-          </Card>
+        <TabsContent value="approvals" className="mt-0 h-full">
+          <div className="h-[calc(100vh-200px)] py-4">
+            <ListScaffold
+              title="Pending Approvals"
+              description="Review and manage team time off requests."
+              searchQuery={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search approvals..."
+              filters={[
+                {
+                  key: "status",
+                  label: "Status",
+                  type: "select",
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  options: [
+                    { label: "All Statuses", value: "all" },
+                    { label: "Pending", value: "pending" },
+                    { label: "Approved", value: "approved" },
+                    { label: "Rejected", value: "rejected" }
+                  ]
+                }
+              ]}
+              onClearAll={() => {
+                setSearch("");
+                setStatusFilter("pending");
+                setUserIdFilter("");
+              }}
+              actions={
+                <Button variant="outline" onClick={handleExport} disabled={isExporting} className="gap-2 text-neutral-600 dark:text-neutral-300">
+                  <AppIcon name="download" className="mr-1" />
+                  {isExporting ? "Exporting..." : "Export"}
+                </Button>
+              }
+              columns={columns as any}
+              data={records}
+              isLoading={isLoading}
+              isError={false}
+              pagination={{
+                page: approvalsPage,
+                perPage: approvalsPerPage,
+                totalPages: approvalsTotalPages,
+                onPageChange: setApprovalsPage,
+                onPerPageChange: setApprovalsPerPage
+              }}
+            />
+          </div>
         </TabsContent>
         
         <TabsContent value="history" className="mt-0">

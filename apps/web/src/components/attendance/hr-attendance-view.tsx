@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic';
 import { AppIcon } from "@g4k/ui/components";
 import { HrAttendanceHeatmap } from "./hr-attendance-heatmap";
 
-const HrAttendanceGraph = dynamic(() => import('@/components/attendance/hr-attendance-graph').then(mod => mod.HrAttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
+const AttendanceGraph = dynamic(() => import('@/components/attendance/attendance-graph').then(mod => mod.AttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 
 export function HrAttendanceView() {
   const [tab, setTab] = useUrlState('tab', 'today');
@@ -33,7 +33,15 @@ export function HrAttendanceView() {
         </TabsContent>
         
         <TabsContent value="graph" className="outline-none m-0 focus-visible:ring-0">
-          <HrAttendanceGraph />
+          <AttendanceGraph
+            endpoint="/attendance/hr/graph"
+            queryKeyBase={['hr-attendance-graph']}
+            defaultGroupBy="date"
+            groupByOptions={[
+              { label: "Team Overview", value: "date" },
+              { label: "Per Employee", value: "employee" }
+            ]}
+          />
           <HrAttendanceHeatmap />
         </TabsContent>
       </Tabs>

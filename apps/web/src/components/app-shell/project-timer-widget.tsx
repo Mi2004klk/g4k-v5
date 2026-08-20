@@ -81,7 +81,7 @@ export function ProjectTimerWidget() {
     },
     onSuccess: () => {
       toast.success("Time logged successfully.");
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       if (projectId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
