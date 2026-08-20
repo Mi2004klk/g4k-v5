@@ -106,6 +106,11 @@ export default function DashboardPage() {
           id: "quick-task",
           component: <QuickTaskWidget />,
           defaultLayout: responsiveLayout({ x: 0, y: 12, w: 6, h: 7 }),
+        },
+        {
+          id: "quick-notes",
+          component: <QuickNotes />,
+          defaultLayout: responsiveLayout({ x: 6, y: 12, w: 4, h: 7 }),
         }
       ];
     }
@@ -141,6 +146,11 @@ export default function DashboardPage() {
           id: "upcoming-holidays",
           component: <UpcomingHolidaysWidget />,
           defaultLayout: responsiveLayout({ x: 8, y: 14, w: 4, h: 7 }),
+        },
+        {
+          id: "quick-notes",
+          component: <QuickNotes />,
+          defaultLayout: responsiveLayout({ x: 4, y: 14, w: 4, h: 7 }),
         },
       ];
       

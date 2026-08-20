@@ -55,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
             \App\Models\Task::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\AttendanceDay::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\LeaveRequest::class => \App\Observers\CacheInvalidationObserver::class,
+            \App\Models\User::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\Notification::class => \App\Observers\NotificationObserver::class,
         ];
 

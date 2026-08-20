@@ -123,13 +123,15 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     });
 
     Route::get('/attendance/admin/overview', [AttendanceController::class, 'overview'])->middleware('capability:admin.view-all-attendance');
-    Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:admin.view-all-attendance');
+    Route::get('/attendance/admin/graph', [AttendanceController::class, 'graph'])->middleware('capability:admin.view-all-attendance');
+    Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:hr.view-team-attendance');
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
         Route::get('/attendance/team-today', [AttendanceController::class, 'teamToday']);
         Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
         Route::get('/attendance/hr/day/{date}/{userId}', [AttendanceController::class, 'hrDay']);
         Route::get('/attendance/hr/history/{userId}', [AttendanceController::class, 'hrHistory']);
+        Route::get('/attendance/hr/graph', [AttendanceController::class, 'graph']);
     });
 
     Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware(['capability:admin.correct-attendance|attendance.correct-team']);

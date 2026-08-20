@@ -270,7 +270,7 @@ class AttendanceController extends Controller
         $isAdmin = $activeRole === 'super_admin';
         
         $cacheKey = "team_today_{$activeRole}_{$user->department_id}_{$date}";
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($date, $isAdmin, $user) {
+        $data = (function () use ($date, $isAdmin, $user) {
             $usersQuery = \App\Models\User::select('users.id', 'users.name as user_name', 'users.avatar_url', 'departments.name as department_name')
                 ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
                 ->where('users.status', 'active');
@@ -342,7 +342,7 @@ class AttendanceController extends Controller
                     return $order[$emp['category']] ?? 99;
                 })->values()->all(),
             ];
-        });
+        })();
         $sortBy = $request->query('sort_by');
         $sortDir = strtolower($request->query('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
@@ -803,15 +803,81 @@ class AttendanceController extends Controller
                 $n['priority'] ?? 'normal'
             );
         }
+        \App\Services\AuditLogger::log(
+            $request,
+            'notify_open_shifts',
+            'AttendanceDay',
+            null,
+            null,
+            ['count' => count($validated['ids'])]
+        );
 
         return response()->json(['message' => 'Notifications sent successfully.']);
     }
 
     private function userHasManage(Request $request): bool
     {
-        $role = $request->user()->resolveActiveRole();
-        return in_array($role, ['hr', 'super_admin']);
+        $user = $request->user();
+        return $user->hasRole(['super_admin', 'hr']);
+    }
+
+    public function graph(Request $request)
+    {
+        $mode = $request->query('mode', 'weekly');
+        $groupBy = $request->query('groupBy', 'date');
+        $dateStr = $request->query('date', \Carbon\Carbon::today()->toDateString());
+        $date = \Carbon\Carbon::parse($dateStr);
+        $user = $request->user();
+        $activeRole = $user->resolveActiveRole();
+        $isAdmin = $activeRole === 'super_admin';
+
+        if ($mode === 'yearly') {
+            $start = $date->copy()->startOfYear();
+            $end = $date->copy()->endOfYear();
+        } elseif ($mode === 'monthly') {
+            $start = $date->copy()->startOfMonth();
+            $end = $date->copy()->endOfMonth();
+        } else {
+            $start = $date->copy()->startOfWeek();
+            $end = $date->copy()->endOfWeek();
+        }
+
+        $query = \App\Models\AttendanceDay::query()
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()]);
+
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
+        }
+
+        if (!$isAdmin) {
+            $query->whereHas('user', function ($q) use ($user) {
+                \App\Support\HrScope::apply($q, $user, 'department_id');
+            });
+        }
+
+        if ($groupBy === 'employee') {
+            $query->join('users', 'attendance_days.user_id', '=', 'users.id')
+                ->select(
+                    'users.name',
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "present" THEN 1 ELSE 0 END) as present'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "absent" THEN 1 ELSE 0 END) as absent'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "late" THEN 1 ELSE 0 END) as late'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "on_leave" THEN 1 ELSE 0 END) as on_leave'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "holiday" THEN 1 ELSE 0 END) as holiday')
+                )
+                ->groupBy('users.id', 'users.name');
+        } else {
+            $query->select(
+                    'date',
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as late'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "on_leave" THEN 1 ELSE 0 END) as on_leave'),
+                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "holiday" THEN 1 ELSE 0 END) as holiday')
+                )
+                ->groupBy('date');
+        }
+
+        return response()->json($query->get());
     }
 }
-
-

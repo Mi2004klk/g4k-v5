@@ -305,7 +305,23 @@ class DashboardController extends Controller
                 \App\Support\HrScope::apply($leaveQuery, $user, 'user_id');
                 $leaveCount = $hasLeaveRequests ? $leaveQuery->count() : 0;
                 
-                $projectReviewCount = DB::table('projects')->where('status', 'review')->count(); // HR sees all projects pending review
+                $projectReviewQuery = DB::table('projects')->where('status', 'review');
+                if ($activeRole === 'hr') {
+                    $projectReviewQuery->where(function($q) use ($user) {
+                        $q->whereExists(function ($q2) use ($user) {
+                            $q2->select(DB::raw(1))->from('users')
+                               ->whereColumn('users.id', 'projects.created_by');
+                            \App\Support\HrScope::apply($q2, $user, 'department_id');
+                        })
+                        ->orWhereExists(function ($q2) use ($user) {
+                            $q2->select(DB::raw(1))->from('project_members')
+                               ->join('users', 'users.id', '=', 'project_members.user_id')
+                               ->whereColumn('project_members.project_id', 'projects.id');
+                            \App\Support\HrScope::apply($q2, $user, 'users.department_id');
+                        });
+                    });
+                }
+                $projectReviewCount = $projectReviewQuery->count();
                 $data['pending_approvals'] = $leaveCount + $projectReviewCount;
                 
                 $data['pending_submissions'] = $hasTasks 

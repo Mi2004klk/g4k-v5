@@ -250,11 +250,11 @@ class AttendanceService
             });
 
             $status = 'absent';
-            if ($isHoliday) {
+            if ($firstClockIn !== null) {
+                $status = ($lateMinutes > 0) ? 'late' : 'present';
+            } elseif ($isHoliday) {
                 $status = 'holiday';
                 $lateMinutes = 0;
-            } elseif ($firstClockIn !== null) {
-                $status = ($lateMinutes > 0) ? 'late' : 'present';
             }
 
             $existingSource = $existingDay ? $existingDay->source : 'server';
