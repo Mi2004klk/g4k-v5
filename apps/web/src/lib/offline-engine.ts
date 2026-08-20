@@ -71,9 +71,14 @@ class OfflineEngine {
       });
       
       // Update queue count initially and run smart sync poll only if queue has pending items
-      this.dbPromise.then(() => {
-        this.updateQueueCount();
+      this.dbPromise.then(async () => {
+        await this.updateQueueCount();
+        
         if (typeof document !== 'undefined') {
+          if (document.visibilityState === 'visible' && navigator.onLine && useOfflineStore.getState().queueCount > 0) {
+            this.syncAll();
+          }
+
           document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && navigator.onLine && useOfflineStore.getState().queueCount > 0) {
               this.syncAll();

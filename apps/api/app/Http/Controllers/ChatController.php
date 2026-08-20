@@ -32,13 +32,15 @@ class ChatController extends Controller
             ->when($search, function ($q) use ($search) {
                 $q->where(function($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%")
+                          ->orWhere('employee_id', 'like', "%{$search}%")
                           ->orWhereHas('department', function($q2) use ($search) {
                               $q2->where('name', 'like', "%{$search}%");
                           });
                 });
             })
             ->with('department:id,name')
-            ->select('id', 'name', 'avatar_url', 'department_id')
+            ->select('id', 'name', 'avatar_url', 'department_id', 'email', 'employee_id')
             ->limit(20)
             ->get();
             
@@ -80,7 +82,16 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
+        $clearedAt = null;
+        if ($conversation->scope !== 'global') {
+            $pivot = $conversation->users()->where('users.id', $request->user()->id)->first()?->pivot;
+            $clearedAt = $pivot?->cleared_at;
+        }
+
         $messages = Message::where('conversation_id', $conversation->id)
+            ->when($clearedAt, function ($q) use ($clearedAt) {
+                $q->where('created_at', '>', $clearedAt);
+            })
             ->with(['sender', 'replyTo', 'reads'])
             ->orderBy('created_at', 'desc')
             ->cursorPaginate(50);
@@ -94,7 +105,7 @@ class ChatController extends Controller
         $this->checkAccess($conversation, $request->user());
 
         $validated = $request->validate([
-            'body' => 'nullable|string',
+            'body' => 'required_without_all:attachment,attachment_url|nullable|string',
             'type' => 'nullable|in:text,image,file',
             'attachment_url' => 'nullable|string',
             'attachment' => 'nullable|file|max:10240',
@@ -191,7 +202,7 @@ class ChatController extends Controller
     public function startDirectMessage(Request $request)
     {
         $validated = $request->validate([
-            'recipient_id' => 'required|exists:users,id',
+            'recipient_id' => 'required|exists:users,id,status,active',
         ]);
 
         $user = $request->user();
@@ -322,9 +333,24 @@ class ChatController extends Controller
             abort(403, 'You can only delete your own messages');
         }
 
+        $msgIdForBroadcast = $message->id;
+        $attachmentUrl = $message->attachment_url;
         $message->delete();
 
-        // Optionally trigger a MessageDeleted broadcast here if needed in the future
+        if ($attachmentUrl) {
+            try {
+                $basename = basename(parse_url($attachmentUrl, PHP_URL_PATH));
+                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete('chat_attachments/' . $basename);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to delete chat attachment on message delete: ' . $e->getMessage());
+            }
+        }
+
+        try {
+            broadcast(new \App\Events\MessageDeleted($conversation->id, $msgIdForBroadcast))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessageDeleted event: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true]);
     }
@@ -334,18 +360,9 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
-        // For direct/group chats, just clear messages for this user using a soft delete
-        // or a tracking table. Since this app currently lacks a per-user message visibility pivot,
-        // we'll delete messages where the user is sender, or if it's a direct chat,
-        // this might need to actually just hide them. 
-        // A simple approach for this version is deleting the user's own messages in that chat,
-        // or wiping the entire chat if they are an admin.
-        // Actually, many apps allow "Delete Chat" which leaves the group but deletes history.
-        // Let's implement deleting the user's own messages for now to prevent deleting others' messages.
-        
-        Message::where('conversation_id', $id)
-            ->where('sender_id', $request->user()->id)
-            ->delete();
+        if ($conversation->scope !== 'global') {
+            $conversation->users()->updateExistingPivot($request->user()->id, ['cleared_at' => now()]);
+        }
 
         return response()->json(['success' => true]);
     }

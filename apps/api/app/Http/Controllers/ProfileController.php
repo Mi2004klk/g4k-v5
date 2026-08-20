@@ -28,19 +28,13 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
-            'avatar_url' => 'nullable|string',
             'preferences' => 'nullable|array',
-            'designation_id' => 'nullable|exists:designations,id',
         ]);
 
         $user->update($validated);
         $after = $user->fresh()->toArray();
 
         AuditLogger::log($request, 'update', 'user', $user->id, $before, $after);
-
-        if (array_key_exists('designation_id', $validated) && $before['designation_id'] !== $validated['designation_id']) {
-            AuditLogger::log($request, 'profile.designation_change', 'user', $user->id, ['designation_id' => $before['designation_id']], ['designation_id' => $validated['designation_id']]);
-        }
 
         return response()->json($user->load(['department', 'designation', 'roleAssignments']));
     }
@@ -62,11 +56,22 @@ class ProfileController extends Controller
                 throw new \Exception('Failed to store file');
             }
 
+            $oldAvatarUrl = $user->avatar_url;
+
             $avatarUrl = Storage::disk($disk)->url($path);
 
             $before = $user->toArray();
             $user->avatar_url = $avatarUrl;
             $user->save();
+
+            if ($oldAvatarUrl) {
+                try {
+                    $oldBasename = basename(parse_url($oldAvatarUrl, PHP_URL_PATH));
+                    Storage::disk($disk)->delete('avatars/' . $oldBasename);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to delete old avatar: ' . $e->getMessage());
+                }
+            }
 
             AuditLogger::log($request, 'upload_avatar', 'user', $user->id, $before, ['avatar_url' => $avatarUrl]);
 

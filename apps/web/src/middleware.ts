@@ -10,6 +10,7 @@ const PROTECTED: Record<string, string> = {
   "/dashboard/settings": "settings.manage",
   "/dashboard/audit": "audit.view",
   "/dashboard/reports": "reports.view",
+  "/dashboard/admin": "_super_admin_only_",
 };
 
 export function middleware(req: NextRequest) {
@@ -59,8 +60,29 @@ export function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard?error=unauthorized", req.url));
     }
   }
+
+  // Apply CSP headers
+  const response = NextResponse.next();
+  const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-eval' 'unsafe-inline';
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    img-src 'self' blob: data: https:;
+    font-src 'self' https://fonts.gstatic.com;
+    connect-src 'self' https: wss:;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
+  `.replace(/\s{2,}/g, ' ').trim();
   
-  return NextResponse.next();
+  response.headers.set('Content-Security-Policy', cspHeader);
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+
+  return response;
 }
 
 export const config = { matcher: ["/dashboard/:path*", "/login", "/forgot-password", "/reset-password", "/onboarding", "/role-select", "/change-password"] };

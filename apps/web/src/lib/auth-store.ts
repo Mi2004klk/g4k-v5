@@ -11,6 +11,7 @@ export interface UserProfile {
   must_change_password?: boolean;
   onboarded_at?: string | null;
   active_status: string;
+  timezone?: string;
   preferences?: {
     theme_mode?: string;
     density?: string;
@@ -87,6 +88,11 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "g4k-auth",
       skipHydration: true,
+      partialize: (state) => ({ 
+        user: state.user, 
+        activeRole: state.activeRole, 
+        density: state.density 
+      }),
     }
   )
 );
@@ -102,4 +108,14 @@ if (typeof window !== "undefined" && authChannel) {
   };
 }
 
-export const getAuthToken = () => useAuthStore.getState().token;
+export const getAuthToken = () => {
+  const stateToken = useAuthStore.getState().token;
+  if (stateToken) return stateToken;
+  
+  if (typeof document !== "undefined") {
+    const match = document.cookie.match(new RegExp('(^| )g4k_token=([^;]+)'));
+    if (match) return match[2];
+  }
+  
+  return null;
+};

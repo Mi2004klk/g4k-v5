@@ -197,6 +197,15 @@ export function DepartmentsTab() {
     onError: (err: ApiError) => toast.error(err.message || "Failed to restore department."),
   });
 
+  const reactivateMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/departments/${id}`, { method: "PUT", body: JSON.stringify({ is_active: true }) }),
+    onSuccess: () => {
+      toast.success("Department reactivated.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
+    },
+    onError: (err: ApiError) => toast.error(err.message || "Failed to reactivate department."),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/departments/${id}`, { method: "DELETE" }),
     onSuccess: () => {
@@ -416,13 +425,17 @@ export function DepartmentsTab() {
                     <DropdownMenuItem onClick={() => restoreMutation.mutate(dept.id)}>
                       <AppIcon name="archiveRestore" className=" mr-2 text-emerald-600" /> Restore
                     </DropdownMenuItem>
+                  ) : !dept.is_active ? (
+                    <DropdownMenuItem onClick={() => reactivateMutation.mutate(dept.id)}>
+                      <AppIcon name="play" className=" mr-2 text-emerald-600" /> Reactivate
+                    </DropdownMenuItem>
                   ) : (
                     <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "archive", payload: dept })}>
                       <AppIcon name="archive" className=" mr-2 text-amber-600" /> Archive
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: dept })}>
-                    <AppIcon name="trash" className=" mr-2 text-rose-600" /> Delete
+                    <AppIcon name="trash" className=" mr-2 text-rose-600" /> {dept.users_count && dept.users_count > 0 ? "Deactivate" : "Delete"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -433,7 +446,7 @@ export function DepartmentsTab() {
     }
 
     return baseColumns;
-  }, [isAdmin, reset, restoreMutation, archiveMutation, deleteMutation]);
+  }, [isAdmin, reset, restoreMutation, reactivateMutation, archiveMutation, deleteMutation]);
 
   return (
     <div className="space-y-6 mt-4">
@@ -452,6 +465,7 @@ export function DepartmentsTab() {
                 onChange: setStatusFilter,
                 options: [
                   { label: "Active", value: "active" },
+                  { label: "Inactive", value: "inactive" },
                   { label: "Archived", value: "archived" },
                 ],
               },

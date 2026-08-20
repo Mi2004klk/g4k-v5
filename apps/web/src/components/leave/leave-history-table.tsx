@@ -7,6 +7,7 @@ import { AppIcon } from "@g4k/ui/components";
 import { DataTable, EmptyState } from "@g4k/ui/components";
 
 interface LeaveRecord {
+  id: number;
   user?: { name: string };
   start_date: string;
   end_date: string;
@@ -29,6 +30,7 @@ interface LeaveHistoryTableProps {
   onPerPageChange?: (perPage: number) => void;
   emptyTitle?: string;
   emptyDescription?: string;
+  onDeleteAction?: (id: number) => void;
 }
 
 export function LeaveHistoryTable({ 
@@ -41,7 +43,8 @@ export function LeaveHistoryTable({
   onPageChange,
   onPerPageChange,
   emptyTitle = "No leave requests found.",
-  emptyDescription = "No leave records match your current filters."
+  emptyDescription = "No leave records match your current filters.",
+  onDeleteAction
 }: LeaveHistoryTableProps) {
   const columns = useMemo<ColumnDef<LeaveRecord>[]>(() => {
     const cols: ColumnDef<LeaveRecord>[] = [];
@@ -136,8 +139,32 @@ export function LeaveHistoryTable({
           );
         },
       },
+      {
+        id: "actions",
+        header: "",
+        cell: ({ row }) => {
+          if (!onDeleteAction) return null;
+          
+          const status = row.original.approval?.status || "pending";
+          const isPending = status === "pending";
+          const canDelete = isPending || showEmployee; // If showing employee, probably admin view
+          
+          if (!canDelete) return null;
+
+          return (
+            <div className="flex justify-end">
+              <button 
+                onClick={() => onDeleteAction(row.original.id)}
+                className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline px-2 py-1 rounded"
+              >
+                {isPending && !showEmployee ? "Cancel" : "Delete"}
+              </button>
+            </div>
+          );
+        },
+      },
     ];
-  }, [showEmployee]);
+  }, [showEmployee, onDeleteAction]);
 
   return (
     <div className="flex flex-col h-full">

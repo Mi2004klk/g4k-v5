@@ -18,6 +18,9 @@ class AttendanceService
     public static function recordEvent(int $userId, string $type, string $timestamp, string $clientId, ?array $deviceMeta = null): array
     {
         return DB::transaction(function () use ($userId, $type, $timestamp, $clientId, $deviceMeta) {
+            // Lock the user row to prevent race conditions during concurrent punches
+            \App\Models\User::where('id', $userId)->lockForUpdate()->first();
+
             $parsedTs = Carbon::parse($timestamp);
             $date = $parsedTs->toDateString();
 
@@ -214,7 +217,9 @@ class AttendanceService
             }
 
             $monthDay = Carbon::parse($date)->format('m-d');
-            $allHolidays = DB::table('holidays')->get();
+            $allHolidays = \Illuminate\Support\Facades\Cache::remember('all_holidays_array', 86400, function () {
+                return DB::table('holidays')->get();
+            });
             $isHoliday = $allHolidays->contains(function ($h) use ($date, $monthDay) {
                 if (!empty($h->date) && str_starts_with((string)$h->date, $date)) return true;
                 if (!empty($h->recurring) && !empty($h->date)) {
@@ -260,20 +265,13 @@ class AttendanceService
             return $dayRecord->fresh()->toArray();
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error("reconcileDay failed for user {$userId} on {$date}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-            if (app()->environment('testing')) {
-                throw $e;
-            }
-            return [
-                'user_id' => $userId,
-                'date' => $date,
-                'status' => 'error',
-                'first_event' => null,
-                'last_event' => null,
-                'total_seconds' => 0,
-                'break_seconds' => 0,
-                'has_open_shift' => false,
-            ];
+            
+            // Make the failure visible by creating or updating the day record with a flag
+            $dayRecord = AttendanceDay::updateOrCreate(
+                ['user_id' => $userId, 'date' => $date],
+                ['is_flagged' => true]
+            );
+            return $dayRecord->toArray();
         }
     }
 }
-

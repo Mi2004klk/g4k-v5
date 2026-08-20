@@ -97,8 +97,8 @@ export default function ProjectDetailPage() {
   });
   const { data: usersData } = useQuery({ 
     queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch("/users"),
-    enabled: canManageProjects
+    queryFn: () => apiFetch("/directory"),
+    enabled: hasCapability(caps, "directory.view") || canManageProjects
   });
   
   const departments = unwrapList(deptsData);

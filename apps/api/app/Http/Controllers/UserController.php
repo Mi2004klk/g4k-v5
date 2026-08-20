@@ -29,8 +29,7 @@ class UserController extends Controller
         $isSuperAdmin = $request->user()->resolveActiveRole() === 'super_admin';
         
         if ($isHR && !$isSuperAdmin) {
-            $managedDeptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
-            $query->whereIn('department_id', $managedDeptIds);
+            \App\Support\HrScope::apply($query, $request->user());
         }
 
         $query->when($request->boolean('only_trashed'), fn($q) => $q->onlyTrashed());
@@ -132,7 +131,9 @@ class UserController extends Controller
         $forceChange = \App\Models\Setting::where('category', 'security')->where('key', 'force_password_change')->value('value');
         $mustChange = filter_var($forceChange, FILTER_VALIDATE_BOOLEAN);
 
-        $user = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $employeeCode, $mustChange, $roles) {
+        $password = \Illuminate\Support\Str::random(12);
+
+        $user = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $employeeCode, $mustChange, $roles, $password) {
             $user = User::forceCreate([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -142,7 +143,7 @@ class UserController extends Controller
                 'department_id' => $validated['department_id'] ?? null,
                 'team_id' => $validated['team_id'] ?? null,
                 'designation_id' => $validated['designation_id'] ?? null,
-                'password' => Hash::make(\Illuminate\Support\Str::random(16)),
+                'password' => Hash::make($password),
                 'must_change_password' => $mustChange,
                 'password_changed_at' => now(),
                 'status' => 'active',
@@ -158,6 +159,12 @@ class UserController extends Controller
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'create', 'user', $user->id, null, $user->toArray());
 
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserCredentialsMail($user, $password));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send credentials: ' . $e->getMessage());
+        }
+
         return response()->json($user, 201);
     }
 
@@ -168,31 +175,40 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
-        // Access check for updating roles
+        // Access check for updating roles or HR users
+        $targetHasHR = $user->roleAssignments->pluck('role')->contains('hr') || $user->roleAssignments->pluck('role')->contains('super_admin');
+        if ($targetHasHR && !$this->hasCapability($request, 'users.hr.manage')) {
+            return response()->json(['message' => 'Unauthorized to update HR/Admin users.'], 403);
+        }
+
         if (isset($validated['roles'])) {
             $roles = $validated['roles'];
-            $isHR = in_array('hr', $roles) || in_array('super_admin', $roles);
+            $isHR = in_array('hr', $roles);
+            $isSuperAdmin = in_array('super_admin', $roles);
             $isEmployee = in_array('employee', $roles);
+
+            if ($isSuperAdmin && !$this->hasCapability($request, '*')) {
+                return response()->json(['message' => 'Unauthorized to assign Super Admin role. Only a Super Admin can do this.'], 403);
+            }
             if ($isHR && !$this->hasCapability($request, 'users.hr.manage')) {
-                return response()->json(['message' => 'Unauthorized to assign HR/Admin roles.'], 403);
+                return response()->json(['message' => 'Unauthorized to assign HR role.'], 403);
             }
             if ($isEmployee && !$this->hasCapability($request, 'users.employee.manage')) {
-                return response()->json(['message' => 'Unauthorized to assign Employee roles.'], 403);
+                return response()->json(['message' => 'Unauthorized to assign Employee role.'], 403);
             }
         }
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($user, $validated) {
-            $user->update([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'username' => $validated['username'] ?? $user->username,
-                'employee_id' => $validated['employee_id'] ?? $user->employee_id,
-                'phone' => $validated['phone'] ?? null,
-                'department_id' => $validated['department_id'] ?? null,
-                'team_id' => $validated['team_id'] ?? null,
-                'designation_id' => $validated['designation_id'] ?? null,
-                'work_schedule_id' => $validated['work_schedule_id'] ?? null,
-            ]);
+            $updateData = [];
+            $fields = ['name', 'email', 'username', 'employee_id', 'phone', 'department_id', 'team_id', 'designation_id', 'work_schedule_id'];
+            foreach ($fields as $field) {
+                if (array_key_exists($field, $validated)) {
+                    $updateData[$field] = $validated[$field];
+                }
+            }
+            if (!empty($updateData)) {
+                $user->update($updateData);
+            }
 
             if (isset($validated['roles']) && count($validated['roles']) > 0) {
                 $user->roleAssignments()->delete();
@@ -214,9 +230,16 @@ class UserController extends Controller
 
     public function show(Request $request, string $id)
     {
-        $user = User::with(['department', 'team', 'designation', 'roleAssignments'])->findOrFail($id);
+        $userQuery = User::with(['department', 'team', 'designation', 'roleAssignments'])->where('id', $id);
+        
+        $isSelf = (int) $request->user()->id === (int) $id;
+        
+        if (!$isSelf) {
+            \App\Support\HrScope::apply($userQuery, $request->user());
+        }
 
-        $isSelf = (int) $request->user()->id === (int) $user->id;
+        $user = $userQuery->firstOrFail();
+
         $canViewAny = $this->hasCapability($request, 'users.hr.manage');
         $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
 
@@ -312,7 +335,17 @@ class UserController extends Controller
         }
 
         $before = $user->toArray();
+        $avatarUrl = $user->avatar_url;
         $user->delete();
+        
+        if ($avatarUrl) {
+            try {
+                $basename = basename(parse_url($avatarUrl, PHP_URL_PATH));
+                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete('avatars/' . $basename);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to delete user avatar on destroy: ' . $e->getMessage());
+            }
+        }
         
         \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
         \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
@@ -325,10 +358,17 @@ class UserController extends Controller
 
     public function activity(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
+        $userQuery = User::where('id', $id);
+        
+        $isSelf = (int) $request->user()->id === (int) $id;
+        
+        if (!$isSelf) {
+            \App\Support\HrScope::apply($userQuery, $request->user());
+        }
+
+        $user = $userQuery->firstOrFail();
         
         // Ensure user can view this activity
-        $isSelf = $request->user()->id === $user->id;
         $canViewAny = $this->hasCapability($request, 'users.hr.manage');
         $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
         
@@ -367,25 +407,25 @@ class UserController extends Controller
 
         $tempPassword = \Illuminate\Support\Str::random(16);
 
-        $user->password = Hash::make($tempPassword);
-        $user->must_change_password = true;
-        $user->password_changed_at = now();
-        $user->save();
-        $user->tokens()->delete();
-
-        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
-
         try {
-            \Illuminate\Support\Facades\Mail::raw("Your password has been reset by an administrator. Your temporary password is: {$tempPassword}\nPlease login and change it immediately.", function ($message) use ($user) {
-                $message->to($user->email)->subject('Password Reset by Administrator');
-            });
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Failed to email temp password to {$user->email}: " . $e->getMessage());
-            // We've already changed the password, so it's a partial failure.
-            return response()->json(['message' => 'Password reset, but could not send the email.'], 200);
-        }
+            \Illuminate\Support\Facades\DB::transaction(function () use ($user, $tempPassword) {
+                $user->password = Hash::make($tempPassword);
+                $user->must_change_password = true;
+                $user->password_changed_at = now();
+                $user->save();
+                $user->tokens()->delete();
 
-        AuditLogger::log($request, 'reset_password', 'user', $user->id, null, ['status' => 'password_reset']);
+                \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+
+                \Illuminate\Support\Facades\Mail::raw("Your password has been reset by an administrator. Your temporary password is: {$tempPassword}\nPlease login and change it immediately.", function ($message) use ($user) {
+                    $message->to($user->email)->subject('Password Reset by Administrator');
+                });
+            });
+            AuditLogger::log($request, 'reset_password', 'user', $user->id, [], ['notified' => true]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Password reset email failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send password reset email. Password was not changed.'], 500);
+        }
 
         return response()->json(['message' => 'Password reset and temporary password emailed to user.']);
     }
@@ -412,20 +452,30 @@ class UserController extends Controller
                 })->count();
         }
 
+        $stats = [
+            'success' => 0,
+            'unauthorized' => 0,
+            'skipped_super_admin' => 0,
+            'skipped_same_status' => 0
+        ];
+
         foreach ($users as $user) {
             $targetRoles = $user->roleAssignments->pluck('role')->toArray();
             $isHRTarget = in_array('hr', $targetRoles) || in_array('super_admin', $targetRoles);
             
             if ($isHRTarget && !$canManageHR) {
+                $stats['unauthorized']++;
                 continue; // Skip unauthorized
             }
             if (!$isHRTarget && !$canManageEmployee) {
+                $stats['unauthorized']++;
                 continue; // Skip unauthorized
             }
 
             // Super Admin check for deactivate
             if ($status === 'inactive' && in_array('super_admin', $targetRoles)) {
                 if ($activeSuperAdminCount <= 1 && $user->status === 'active') {
+                    $stats['skipped_super_admin']++;
                     continue; // Skip last super admin
                 }
                 if ($user->status === 'active') {
@@ -433,12 +483,21 @@ class UserController extends Controller
                 }
             }
 
+            if ($user->status === $status) {
+                $stats['skipped_same_status']++;
+                continue;
+            }
+
             $before = $user->toArray();
             $user->forceFill(['status' => $status])->save();
+            $stats['success']++;
             AuditLogger::log($request, "bulk_{$status}", 'user', $user->id, $before, $user->toArray());
         }
 
-        return response()->json(['message' => 'Bulk action completed.']);
+        return response()->json([
+            'message' => "Bulk action completed.",
+            'stats' => $stats
+        ]);
     }
 
     public function leaveHistory(Request $request, string $id)
@@ -455,7 +514,7 @@ class UserController extends Controller
         $isHR = $this->hasCapability($request, 'users.hr.manage');
         $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
         
-        if ($isHR && !$isSuperAdmin && !in_array($user->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
+        if ($isHR && !$isSuperAdmin && !\App\Support\HrScope::apply(User::where('id', $user->id), $request->user())->exists()) {
             return response()->json(['message' => 'Unauthorized to view this user.'], 403);
         }
 
@@ -481,7 +540,7 @@ class UserController extends Controller
         $isHR = $this->hasCapability($request, 'users.hr.manage');
         $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
         
-        if ($isHR && !$isSuperAdmin && !in_array($user->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
+        if ($isHR && !$isSuperAdmin && !\App\Support\HrScope::apply(User::where('id', $user->id), $request->user())->exists()) {
             return response()->json(['message' => 'Unauthorized to view this user.'], 403);
         }
 

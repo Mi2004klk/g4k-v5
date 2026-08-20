@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -47,6 +48,26 @@ export function LeaveTab() {
     placeholderData: keepPreviousData,
   });
 
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiFetch(`/leave-requests/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("Leave request cancelled successfully");
+      queryClient.invalidateQueries({ queryKey: queryKeys.myLeaveHistory(typeFilter, statusFilter, debouncedSearch, page) });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to cancel leave request");
+    }
+  });
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to cancel this leave request?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
   const paginatedData = usePaginatedList<LeaveRecord>(data);
   const records = paginatedData.data;
   const totalPages = paginatedData.last_page || 1;
@@ -79,6 +100,7 @@ export function LeaveTab() {
                     page={parseInt(page)}
                     totalPages={totalPages}
                     onPageChange={(p) => setPage(p.toString())}
+                    onDeleteAction={handleDelete}
                   />
                 </CardContent>
               </Card>

@@ -73,7 +73,7 @@ export function TeamAttendanceWidget() {
             <div className="flex flex-wrap items-center gap-1.5">
               {counts.present > 0 && <StatusBadge status="success">{counts.present} Present</StatusBadge>}
               {counts.late > 0 && <StatusBadge status="warning">{counts.late} Late</StatusBadge>}
-              {counts.leave > 0 && <StatusBadge status="info">{counts.leave} Leave</StatusBadge>}
+              {counts.on_leave > 0 && <StatusBadge status="info">{counts.on_leave} Leave</StatusBadge>}
               {counts.leave_pending > 0 && <StatusBadge status="neutral">{counts.leave_pending} Pend. Leave</StatusBadge>}
               {counts.absent > 0 && <StatusBadge status="danger">{counts.absent} Absent</StatusBadge>}
             </div>

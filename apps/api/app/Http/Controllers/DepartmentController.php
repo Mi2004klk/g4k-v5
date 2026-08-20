@@ -13,6 +13,7 @@ class DepartmentController extends Controller
     private function buildIndexQuery(Request $request)
     {
         $query = Department::withCount('users')->with('teams');
+        \App\Support\HrScope::apply($query, $request->user(), 'id');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -97,6 +98,7 @@ class DepartmentController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:departments,name,' . $department->id,
             'description' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
         ]);
 
         $department->update($validated);
@@ -124,6 +126,7 @@ class DepartmentController extends Controller
         $before = $department->toArray();
 
         $department->restore();
+        $department->update(['is_active' => true]);
 
         AuditLogger::log($request, 'restore', 'department', $department->id, $before, $department->toArray());
 
@@ -134,12 +137,18 @@ class DepartmentController extends Controller
     {
         $department = Department::withTrashed()->findOrFail($id);
         
-        // In-use guard for hard delete
+        $before = $department->toArray();
+
+        // In-use guard: deactivate instead of delete if employees exist
         if ($department->users()->exists()) {
-            return response()->json(['message' => 'Cannot delete a department with assigned employees.'], 422);
+            $department->update(['is_active' => false]);
+            AuditLogger::log($request, 'deactivate', 'department', $department->id, $before, $department->toArray());
+            return response()->json([
+                'message' => 'Department deactivated because it has assigned employees. You can reactivate it later.', 
+                'department' => $department
+            ], 200);
         }
 
-        $before = $department->toArray();
         $department->delete();
         
         AuditLogger::log($request, 'delete', 'department', $department->id, $before, null);
@@ -185,6 +194,15 @@ class DepartmentController extends Controller
             'user_ids.*' => 'exists:users,id',
         ]);
         
+        $invalidUsers = \App\Models\User::whereIn('id', $validated['user_ids'])
+            ->whereDoesntHave('roleAssignments', function ($q) {
+                $q->whereIn('role', ['hr', 'super_admin']);
+            })->exists();
+
+        if ($invalidUsers) {
+            return response()->json(['message' => 'One or more users do not have HR/Admin roles.'], 422);
+        }
+
         $department->hrs()->sync($validated['user_ids']);
         AuditLogger::log($request, 'update', 'department_hrs', $department->id, null, ['user_ids' => $validated['user_ids']]);
         
@@ -194,6 +212,12 @@ class DepartmentController extends Controller
     public function addHr(Request $request, string $id, string $userId)
     {
         $department = Department::withTrashed()->findOrFail($id);
+        
+        $user = \App\Models\User::findOrFail($userId);
+        if (!$user->roleAssignments()->whereIn('role', ['hr', 'super_admin'])->exists()) {
+            return response()->json(['message' => 'User does not have an HR/Admin role.'], 422);
+        }
+
         $department->hrs()->syncWithoutDetaching([$userId]);
         AuditLogger::log($request, 'create', 'department_hr', $department->id, null, ['user_id' => $userId]);
         return response()->json(['message' => 'HR added successfully.']);

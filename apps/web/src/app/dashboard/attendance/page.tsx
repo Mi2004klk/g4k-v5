@@ -151,7 +151,7 @@ export default function PersonalAttendancePage() {
                           <DialogTrigger asChild>
                             <div className="flex items-center justify-between p-3 rounded-[var(--radius)] hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800 cursor-pointer">
                               <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full shrink-0 ${day.status === 'present' || day.status === 'overtime' ? 'bg-emerald-500' : day.status === 'late' ? 'bg-amber-500' : day.status === 'leave' ? 'bg-primary-500' : 'bg-neutral-300'}`} />
+                                <div className={`w-2 h-2 rounded-full shrink-0 ${day.status === 'present' || day.status === 'overtime' ? 'bg-emerald-500' : day.status === 'late' ? 'bg-amber-500' : day.status === 'on_leave' ? 'bg-primary-500' : 'bg-neutral-300'}`} />
                                 <div>
                                   <p className="text-sm font-semibold text-neutral-900 dark:text-white">
                                     {format(new Date(day.date), "EEE, MMM d")}

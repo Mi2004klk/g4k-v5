@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent, EmptyState } from "@g4k/ui/components";
@@ -80,6 +80,27 @@ export function AdminLeaveHolidaysView() {
     enabled: subTab === "history",
     placeholderData: keepPreviousData,
   });
+
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiFetch(`/leave-requests/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("Leave request deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ['admin_leave_history'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orgLeaveRequestsPaginated(statusFilter, search) });
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to delete leave request");
+    }
+  });
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to permanently delete this leave request?")) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const paginatedData = usePaginatedList<LeaveRecord>(data);
   const records = paginatedData.data;
@@ -294,6 +315,7 @@ export function AdminLeaveHolidaysView() {
                 totalPages={historyTotalPages}
                 onPageChange={setHistoryPage}
                 onPerPageChange={setHistoryPerPage}
+                onDeleteAction={handleDelete}
               />
             </div>
           </Card>

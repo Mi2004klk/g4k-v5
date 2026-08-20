@@ -68,29 +68,6 @@ class AuthController extends Controller
                       ->orWhere('username', $request->identifier);
             })->first();
 
-        if ($user && $user->status === 'inactive') {
-            throw ValidationException::withMessages([
-                'identifier' => ['Account is inactive.'],
-            ]);
-        }
-
-        if ($user && $user->status === 'locked') {
-            if ($user->lockout_until && now()->gt($user->lockout_until)) {
-                $user->update([
-                    'status' => 'active',
-                    'failed_attempts' => 0,
-                    'lockout_until' => null,
-                ]);
-            } else {
-                $msg = $user->lockout_until 
-                    ? 'Account locked due to multiple failed login attempts. Try again in ' . $user->lockout_until->diffForHumans(syntax: \Carbon\CarbonInterface::DIFF_ABSOLUTE) . '.'
-                    : 'Account locked due to multiple failed login attempts. Please contact your administrator.';
-                throw ValidationException::withMessages([
-                    'identifier' => [$msg],
-                ]);
-            }
-        }
-
         if (! $user || ! Hash::check($request->password, $user->password)) {
             RateLimiter::hit($throttleKey, 600);
             
@@ -115,15 +92,29 @@ class AuthController extends Controller
                 ]);
             });
 
-            if ($user && $user->status === 'locked') {
-                throw ValidationException::withMessages([
-                    'identifier' => ['Account locked due to multiple failed login attempts. Please contact your administrator.'],
-                ]);
-            }
-
             throw ValidationException::withMessages([
                 'identifier' => ['Invalid credentials.'],
             ]);
+        }
+
+        if ($user->status === 'inactive') {
+            throw ValidationException::withMessages([
+                'identifier' => ['Invalid credentials.'],
+            ]);
+        }
+
+        if ($user->status === 'locked') {
+            if ($user->lockout_until && now()->gt($user->lockout_until)) {
+                $user->update([
+                    'status' => 'active',
+                    'failed_attempts' => 0,
+                    'lockout_until' => null,
+                ]);
+            } else {
+                throw ValidationException::withMessages([
+                    'identifier' => ['Invalid credentials.'],
+                ]);
+            }
         }
 
         RateLimiter::clear($throttleKey);
@@ -204,8 +195,8 @@ class AuthController extends Controller
         // Password Expiry Check
         $passwordExpired = false;
         $expiryDays = $settings['password.expiry_days'] ?? null;
-        if ($expiryDays !== null && $expiryDays !== 'null' && $expiryDays !== '') {
-            $changedAt = $user->password_changed_at ?: $user->updated_at;
+        if ($expiryDays !== null && $expiryDays !== 'null' && $expiryDays !== '' && (int)$expiryDays > 0) {
+            $changedAt = $user->password_changed_at ?: $user->created_at;
             if (\Carbon\Carbon::parse($changedAt)->addDays((int)$expiryDays)->isPast()) {
                 $passwordExpired = true;
                 if (!$user->must_change_password) {
@@ -224,7 +215,7 @@ class AuthController extends Controller
         $accessToken = $accessTokenObj->plainTextToken;
 
         // Issue Refresh Token
-        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl));
+        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $primaryRole], now()->addDays($refreshTtl));
         $refreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -287,10 +278,18 @@ class AuthController extends Controller
         // Revoke the single used refresh token (token rotation)
         $tokenInstance->delete();
 
-        // Load roles and settings
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
-        $primaryRole = $user->resolveActiveRole();
+        
+        $primaryRole = null;
+        foreach ($tokenInstance->abilities ?? [] as $ability) {
+            if (str_starts_with($ability, 'role:')) {
+                $primaryRole = substr($ability, 5);
+            }
+        }
+        if (!$primaryRole) {
+            $primaryRole = $user->resolveActiveRole();
+        }
 
         $deviceName = $request->device_name ?? 'Unknown Device';
 
@@ -307,8 +306,8 @@ class AuthController extends Controller
         // Password Expiry Check
         $passwordExpired = false;
         $expiryDays = $settings['password.expiry_days'] ?? null;
-        if ($expiryDays !== null && $expiryDays !== 'null' && $expiryDays !== '') {
-            $changedAt = $user->password_changed_at ?: $user->updated_at;
+        if ($expiryDays !== null && $expiryDays !== 'null' && $expiryDays !== '' && (int)$expiryDays > 0) {
+            $changedAt = $user->password_changed_at ?: $user->created_at;
             if (\Carbon\Carbon::parse($changedAt)->addDays((int)$expiryDays)->isPast()) {
                 $passwordExpired = true;
                 if (!$user->must_change_password) {
@@ -327,7 +326,7 @@ class AuthController extends Controller
         $newAccessToken = $newAccessTokenObj->plainTextToken;
 
         // Issue new Refresh Token
-        $newRefreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl));
+        $newRefreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $primaryRole], now()->addDays($refreshTtl));
         $newRefreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -376,6 +375,9 @@ class AuthController extends Controller
         $deviceName = $user->currentAccessToken()->name;
         $user->currentAccessToken()->delete();
 
+        // Find and delete old refresh token for this device
+        $user->tokens()->where('name', $deviceName . '_refresh')->delete();
+
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
             return \Illuminate\Support\Facades\DB::table('settings')
                 ->where('category', 'security')
@@ -391,9 +393,19 @@ class AuthController extends Controller
         ])->saveQuietly();
         $token = $tokenObj->plainTextToken;
 
+        $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
+
+        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $request->role], now()->addDays($refreshTtl));
+        $refreshTokenObj->accessToken->forceFill([
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->header('User-Agent')
+        ])->saveQuietly();
+        $refreshToken = $refreshTokenObj->plainTextToken;
+
+        $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
+
         $user->roles = $roles;
-        $user->active_role = $request->role;
-        $user->save();
+        $user->update(['active_role' => $request->role]);
 
         $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($request->role);
 
@@ -402,7 +414,7 @@ class AuthController extends Controller
             'user' => $user,
             'active_role' => $request->role,
             'capabilities' => $capabilities,
-        ]);
+        ])->withCookie($cookie);
     }
 
     public function forgotPassword(Request $request)
@@ -533,7 +545,7 @@ class AuthController extends Controller
 
         $activeRole = $user->resolveActiveRole();
         $accessToken = $user->createToken($deviceName, ['role:' . $activeRole], now()->addMinutes($accessTtl))->plainTextToken;
-        $refreshToken = $user->createToken($deviceName . '_refresh', ['refresh'], now()->addDays($refreshTtl))->plainTextToken;
+        $refreshToken = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $activeRole], now()->addDays($refreshTtl))->plainTextToken;
         
         $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
 

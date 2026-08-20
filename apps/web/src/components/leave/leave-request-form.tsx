@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
@@ -15,11 +15,11 @@ import { Calendar } from "@g4k/ui/components";
 import { format, startOfDay, differenceInDays } from "date-fns";
 import { FormError } from "@/components/forms/form-error";
 import { queryKeys } from "@/lib/query-keys";
-import { triggerInvalidation } from "@/lib/invalidation-map";
 import { LEAVE_TYPES } from "@/lib/constants";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/auth-store";
 
 interface LeaveRequestFormProps {
   inDialog?: boolean;
@@ -34,6 +34,20 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
   const [type, setType] = useState("casual");
   const [reason, setReason] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  
+  const userTz = (useAuthStore((state) => state.user?.company) as any)?.timezone || useAuthStore((state) => state.user?.timezone) || "Asia/Kolkata";
+  const getTodayInTz = (tz: string) => {
+    try {
+      // 'en-CA' format is YYYY-MM-DD
+      const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
+      return new Date(`${todayStr}T00:00:00`);
+    } catch(e) {
+      const d = new Date();
+      d.setHours(0,0,0,0);
+      return d;
+    }
+  };
+  const todayDate = getTodayInTz(userTz);
 
   const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft<{
     start_date?: Date;
@@ -66,6 +80,14 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
     });
   };
 
+  const { data: balanceData } = useQuery({
+    queryKey: ["leave-balances"],
+    queryFn: async () => {
+      return apiFetch("/leave-requests/balance");
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   interface ApiError extends Error {
     errors?: Record<string, string[]>;
   }
@@ -84,7 +106,8 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
       setReason("");
       setType("casual");
       clearDraft();
-      triggerInvalidation(queryClient, "leave.request");
+      queryClient.invalidateQueries({ queryKey: queryKeys.myLeaveHistory() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: ApiError) => {
       toast.error(err.message || "Failed to submit leave request.");
@@ -104,9 +127,7 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
       return;
     }
 
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    if (activeStartDate < today) {
+    if (activeStartDate < todayDate) {
       toast.error("Start date cannot be in the past.");
       return;
     }
@@ -147,8 +168,6 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
     });
   };
 
-  const todayDate = startOfDay(new Date());
-
   // Helper to get an icon based on leave type
   const getLeaveIcon = (val: string) => {
     switch (val) {
@@ -186,7 +205,7 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
       {daysRequested > 0 && !inDialog && (
          <div className="flex justify-end">
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 border border-primary-200 dark:border-primary-800/50">
-            {daysRequested} {daysRequested === 1 ? 'Day' : 'Days'} Requested
+            {daysRequested} {daysRequested === 1 ? 'Day' : 'Days'} Span <span className="font-normal opacity-80">(adjusted for working days)</span>
           </span>
          </div>
       )}
@@ -263,8 +282,12 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
         <div className="space-y-1.5 flex-1 flex flex-col">
           <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Type *</label>
           <RadioGroup value={activeType} onValueChange={(val) => { setType(val); handleFieldChange({ type: val }); }} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-            {LEAVE_TYPES.map((item) => (
-              <div key={item.value}>
+            {LEAVE_TYPES.map((item) => {
+              const bal = balanceData ? balanceData[item.value] : null;
+              const isExhausted = bal ? bal.available <= 0 : false;
+              
+              return (
+              <div key={item.value} className="relative">
                 <RadioGroupItem
                   value={item.value}
                   id={`type-${formId}-${item.value}`}
@@ -272,19 +295,22 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
                 />
                 <Label
                   htmlFor={`type-${formId}-${item.value}`}
-                  className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-[11px] font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none"
+                  className={cn("flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-[11px] font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none", isExhausted ? "opacity-60 grayscale" : "")}
                 >
                   <AppIcon 
                     name={getLeaveIcon(item.value) as any} 
                     size="sm" 
-                    className={activeType === item.value ? "text-primary-600 dark:text-primary-400" : "text-neutral-400"} 
+                    className="text-neutral-500 peer-data-[state=checked]:text-primary-600 dark:peer-data-[state=checked]:text-primary-400" 
                   />
-                  <span className={activeType === item.value ? "text-primary-700 dark:text-primary-300" : "text-neutral-600 dark:text-neutral-300"}>
-                    {item.label}
-                  </span>
+                  <span>{item.label}</span>
+                  {bal && (
+                    <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", isExhausted ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" : "bg-neutral-200/70 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400")}>
+                      {bal.available} left
+                    </span>
+                  )}
                 </Label>
               </div>
-            ))}
+            )})}
           </RadioGroup>
           <FormError errors={fieldErrors.type} />
         </div>

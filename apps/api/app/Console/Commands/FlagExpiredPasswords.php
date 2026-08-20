@@ -30,9 +30,9 @@ class FlagExpiredPasswords extends Command
     {
         $expiryDays = DB::table('settings')->where('category', 'security')->where('key', 'password.expiry_days')->value('value');
         
-        if ($expiryDays === null || $expiryDays === 'null' || $expiryDays === '') {
-            $this->info('Password expiry is not configured or disabled.');
-            return;
+        if ($expiryDays === null || $expiryDays === 'null' || $expiryDays === '' || (int)$expiryDays <= 0) {
+            $this->info('Password expiry is not configured or disabled (<= 0).');
+            return 0;
         }
 
         $expiryDays = (int) $expiryDays;

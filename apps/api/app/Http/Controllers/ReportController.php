@@ -37,7 +37,7 @@ class ReportController extends Controller
                     $search = $request->search;
                     $query->where('title', 'ilike', "%{$search}%");
                 }
-                $data = $query->latest()->paginate(25);
+                $data = $query->latest()->paginate($request->query('per_page', 25));
                 break;
             case 'projects':
                 $query = Project::with(['creator', 'members']);
@@ -51,7 +51,7 @@ class ReportController extends Controller
                     $search = $request->search;
                     $query->where('name', 'ilike', "%{$search}%");
                 }
-                $data = $query->latest()->paginate(25);
+                $data = $query->latest()->paginate($request->query('per_page', 25));
                 break;
             case 'users':
             case 'productivity':
@@ -76,7 +76,7 @@ class ReportController extends Controller
                     $query->where('name', 'ilike', "%{$search}%");
                 }
                 
-                $data = $query->latest()->paginate(25);
+                $data = $query->latest()->paginate($request->query('per_page', 25));
 
                 if ($key === 'productivity') {
                     $data->getCollection()->transform(function($u) {
@@ -136,11 +136,13 @@ class ReportController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        if ($exportJob->status !== 'completed' || !$exportJob->file_data) {
-            abort(404, 'Export not ready or file missing');
+        if ($exportJob->status !== 'completed') {
+            abort(404, 'Export not ready');
         }
 
-        $decoded = base64_decode($exportJob->file_data);
+        if (!$exportJob->file_data && !$exportJob->file_path) {
+            abort(404, 'Export file missing');
+        }
 
         $contentType = 'application/octet-stream';
         if ($exportJob->format === 'pdf') $contentType = 'application/pdf';
@@ -149,10 +151,21 @@ class ReportController extends Controller
 
         $filename = "export-{$exportJob->report_key}-{$exportJob->id}.{$exportJob->format}";
 
-        return response($decoded, 200, [
-            'Content-Type' => $contentType,
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        if ($exportJob->file_path) {
+            $disk = \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'));
+            if (!$disk->exists($exportJob->file_path)) {
+                abort(404, 'Export file not found on disk');
+            }
+            return response()->streamDownload(function () use ($disk, $exportJob) {
+                echo $disk->get($exportJob->file_path);
+            }, $filename, ['Content-Type' => $contentType]);
+        } else {
+            $decoded = base64_decode($exportJob->file_data);
+            return response($decoded, 200, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
     }
 
     public function attendanceSummary(Request $request)
@@ -176,18 +189,21 @@ class ReportController extends Controller
                     'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
                     'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
                     'attendanceDays as absent_days' => fn($q) => $q->where('status', 'absent')->whereBetween('date', [$start, $end]),
-                    'attendanceDays as leave_days' => fn($q) => $q->where('status', 'leave')->whereBetween('date', [$start, $end]),
+                    'attendanceDays as leave_days' => fn($q) => $q->where('status', 'on_leave')->whereBetween('date', [$start, $end]),
                 ])
                 ->withSum(['attendanceDays as total_hours' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds')
                 ->withSum(['attendanceDays as overtime_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'overtime_seconds');
 
             if (!$hasManage) {
                 $query->where('id', $user->id);
-            } elseif ($dept && $dept !== 'all') {
-                $query->where('department_id', $dept);
+            } else {
+                \App\Support\HrScope::apply($query, $user);
+                if ($dept && $dept !== 'all') {
+                    $query->where('department_id', $dept);
+                }
             }
 
-            return $query->paginate(25);
+            return $query->paginate($request->query('per_page', 25));
         });
 
         return response()->json($results);
@@ -217,11 +233,14 @@ class ReportController extends Controller
 
             if (!$hasManage) {
                 $query->where('id', $user->id);
-            } elseif ($dept && $dept !== 'all') {
-                $query->where('department_id', $dept);
+            } else {
+                \App\Support\HrScope::apply($query, $user);
+                if ($dept && $dept !== 'all') {
+                    $query->where('department_id', $dept);
+                }
             }
 
-            return $query->paginate(25);
+            return $query->paginate($request->query('per_page', 25));
         });
 
         return response()->json($results);

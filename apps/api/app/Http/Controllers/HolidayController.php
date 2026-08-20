@@ -97,5 +97,6 @@ class HolidayController extends Controller
         Cache::forget("holidays_{$year}");
         Cache::forget("holidays_" . ($year + 1));
         Cache::forget("holidays_" . ($year - 1));
+        Cache::forget('all_holidays_array');
     }
 }

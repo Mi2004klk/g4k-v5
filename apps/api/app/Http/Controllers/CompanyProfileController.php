@@ -26,7 +26,6 @@ class CompanyProfileController extends Controller
             'name' => 'required|string|max:255',
             'short_name' => 'nullable|string|max:50',
             'timezone' => 'required|string',
-            'logo_url' => 'nullable|string',
             'branding' => 'nullable|array',
         ]);
 
@@ -57,15 +56,26 @@ class CompanyProfileController extends Controller
                 throw new \Exception('Failed to store file');
             }
 
+            $profile = CompanyProfile::first();
+            $oldLogoUrl = $profile->logo_url ?? null;
+
             $logoUrl = Storage::disk($disk)->url($path);
 
-            $profile = CompanyProfile::first();
             if (!$profile) {
                 $profile = new CompanyProfile();
             }
             $profile->logo_url = $logoUrl;
             $profile->updated_by = $request->user()->id;
             $profile->save();
+
+            if ($oldLogoUrl) {
+                try {
+                    $oldBasename = basename(parse_url($oldLogoUrl, PHP_URL_PATH));
+                    Storage::disk($disk)->delete('company-logos/' . $oldBasename);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to delete old company logo: ' . $e->getMessage());
+                }
+            }
 
             return response()->json(['logo_url' => $logoUrl]);
         } catch (\Exception $e) {

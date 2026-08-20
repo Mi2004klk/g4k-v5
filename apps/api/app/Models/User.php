@@ -105,18 +105,6 @@ class User extends Authenticatable
 
     public function resolveActiveRole(): string
     {
-        $token = $this->currentAccessToken();
-        if ($token) {
-            $abilities = $token->abilities ?? [];
-            if (is_array($abilities) || is_object($abilities)) {
-                foreach ($abilities as $ability) {
-                    if (str_starts_with($ability, 'role:')) {
-                        return substr($ability, 5);
-                    }
-                }
-            }
-        }
-
         if ($this->active_role) {
             return $this->active_role;
         }

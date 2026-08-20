@@ -43,7 +43,7 @@ export function AuditLogTable() {
 
   const { data: usersResponse } = useQuery({
     queryKey: queryKeys.usersList,
-    queryFn: () => apiFetch("/users?per_page=100"),
+    queryFn: () => apiFetch("/directory?per_page=100"),
   });
   const users = usersResponse?.data || [];
   const userOptions = [{ label: "All Users", value: "" }, { label: "System", value: "system" }].concat(

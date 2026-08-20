@@ -227,3 +227,16 @@ export const useTimerStore = create<TimerState>()(
   name: 'g4k-timer',
   skipHydration: true,
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'g4k-timer' && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (parsed.state) {
+          useTimerStore.setState(parsed.state);
+        }
+      } catch (err) {}
+    }
+  });
+}

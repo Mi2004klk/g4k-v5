@@ -149,6 +149,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Phase 6 API
     Route::middleware('capability:leave.request-self')->group(function () {
         Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
+        Route::get('/leave-requests/balance', [LeaveRequestController::class, 'balance']);
         Route::get('/leave-requests/history', [LeaveRequestController::class, 'history']);
         Route::post('/leave-requests', [LeaveRequestController::class, 'store']);
     });
@@ -161,6 +162,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     Route::middleware('capability:leave.request-self')->group(function () {
         Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
+        Route::delete('/leave-requests/{id}', [LeaveRequestController::class, 'destroy']);
     });
     
     Route::get('/holidays', [HolidayController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag');
@@ -173,6 +175,7 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     // Phase 7 API (Projects & Tasks)
     Route::middleware('capability:projects.view|projects.manage')->group(function () {
         Route::get('/projects', [ProjectController::class, 'index']);
+        Route::get('/projects/export', [ProjectController::class, 'export']);
         Route::get('/projects/{id}', [ProjectController::class, 'show']);
         Route::get('/projects/{id}/history', [ProjectController::class, 'history']);
         
@@ -195,12 +198,14 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
 
     Route::middleware('capability:tasks.view|tasks.manage')->group(function () {
         Route::get('/tasks', [TaskController::class, 'index']);
+        Route::get('/tasks/export', [TaskController::class, 'export']);
         Route::get('/tasks/submitted', [TaskController::class, 'submitted']);
         Route::get('/tasks/{id}', [TaskController::class, 'show']);
     });
     // Granular task policies (employee My-Tasks self-create, assignee edits and
     // submissions, project-level allow_employee_tasks) live in TaskController.
     Route::middleware(['capability:tasks.view|tasks.manage|tasks.create-own', 'throttle:30,1'])->group(function () {
+        Route::post('/tasks/bulk', [TaskController::class, 'bulk']);
         Route::post('/tasks/reorder', [TaskController::class, 'reorder']);
         Route::post('/tasks', [TaskController::class, 'store']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
@@ -228,6 +233,10 @@ Route::middleware(['auth:sanctum', 'throttle:api', \App\Http\Middleware\ForcePas
     });
 
     Route::middleware('capability:settings.manage')->group(function () {
+        // Any other settings endpoints if present...
+    });
+
+    Route::middleware('capability:reports.view')->group(function () {
         Route::get('/saved-views', [SavedViewController::class, 'index']);
         Route::post('/saved-views', [SavedViewController::class, 'store']);
         Route::delete('/saved-views/{id}', [SavedViewController::class, 'destroy']);

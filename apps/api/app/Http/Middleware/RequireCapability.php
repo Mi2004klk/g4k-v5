@@ -46,7 +46,7 @@ class RequireCapability
         }
 
         if (!$hasAny) {
-            return response()->json(['message' => 'Unauthorized action. Missing capability: ' . implode('|', $allCaps)], 403);
+            return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
         return $next($request);

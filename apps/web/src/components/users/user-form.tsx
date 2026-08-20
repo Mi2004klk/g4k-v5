@@ -40,9 +40,10 @@ interface UserFormProps {
   onValuesChange?: (values: UserFormValues) => void;
   isPending: boolean;
   submitLabel?: string;
+  isEdit?: boolean;
 }
 
-export function UserForm({ defaultValues, departments, designations, work_schedules, onSubmit, onCancel, onValuesChange, isPending, submitLabel = "Save" }: UserFormProps) {
+export function UserForm({ defaultValues, departments, designations, work_schedules, onSubmit, onCancel, onValuesChange, isPending, submitLabel = "Save", isEdit = false }: UserFormProps) {
   const {
     register,
     handleSubmit,
@@ -203,6 +204,11 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
         </div>
       </div>
       <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+        {!isEdit && (
+          <div className="flex-1 text-xs text-muted-foreground self-center">
+            Note: New users are created with a random password. You must use the "Reset Password" action after creation to send them credentials.
+          </div>
+        )}
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         <Button type="submit" disabled={isPending || !isValid}>
           {isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}

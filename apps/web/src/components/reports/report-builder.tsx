@@ -219,7 +219,15 @@ export function ReportBuilder() {
             />
           </div>
         ) : (
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto flex flex-col">
+            {items.length === 25 && (
+              <div className="bg-primary-50 dark:bg-primary-900/20 px-4 py-2 border-b border-primary-100 dark:border-primary-900/30 flex items-center gap-2 shrink-0">
+                <AppIcon name="info" size="sm" className="text-primary-600 dark:text-primary-400 shrink-0" />
+                <p className="text-xs text-primary-700 dark:text-primary-300 font-medium">
+                  Preview showing the first 25 rows. Use the Export button to download the full dataset.
+                </p>
+              </div>
+            )}
             <DataTable columns={columns} data={items} />
           </div>
         )}

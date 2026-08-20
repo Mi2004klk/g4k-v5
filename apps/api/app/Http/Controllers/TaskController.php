@@ -51,6 +51,58 @@ class TaskController extends Controller
         return CapabilityMatrix::hasCapability($role, 'tasks.manage');
     }
 
+    public function export(Request $request)
+    {
+        $job = \App\Models\ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => 'tasks',
+            'format' => 'csv',
+            'status' => 'pending',
+            'filters' => [
+                'search' => $request->input('search'),
+                '_has_manage' => $this->userHasManage($request),
+                '_user_id' => $request->user()->id,
+            ],
+        ]);
+
+        dispatch(new \App\Jobs\GenerateReportJob($job));
+
+        return response()->json([
+            'message' => 'Export started. You will be notified when it is ready.',
+            'job_id' => $job->id,
+        ]);
+    }
+
+    public function bulk(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:tasks,id',
+            'action' => 'required|string|in:delete,complete'
+        ]);
+
+        $hasManage = $this->userHasManage($request);
+        $userId = $request->user()->id;
+
+        $tasks = Task::whereIn('id', $validated['ids'])->get();
+        $updatedCount = 0;
+
+        foreach ($tasks as $task) {
+            $canEdit = $hasManage || $task->assignee_id === $userId || $task->reporter_id === $userId;
+            if (!$canEdit) continue;
+
+            if ($validated['action'] === 'delete') {
+                $task->delete();
+                $updatedCount++;
+            } elseif ($validated['action'] === 'complete') {
+                $task->update(['status' => 'completed']);
+                $updatedCount++;
+            }
+        }
+
+        return response()->json(['message' => "Bulk action {$validated['action']} applied to {$updatedCount} tasks."]);
+    }
+
     /**
      * Field-level policy for non-managers updating a task.
      * Reporters may fully manage their own task except assigning other users;
@@ -286,6 +338,10 @@ class TaskController extends Controller
         }
 
         if (isset($validated['status']) && $validated['status'] !== $task->status) {
+            if ($validated['status'] === 'done' && $task->qa_form_id) {
+                return response()->json(['message' => 'This task requires QA. Please use the submit for review option.'], 422);
+            }
+
             TaskService::updateStatus($task, $validated['status'], $user->id);
             if ($validated['status'] === 'done') {
                 RecurrenceService::handleCompletion($task);
@@ -456,6 +512,13 @@ class TaskController extends Controller
             return response()->json(['message' => 'You can only delete tasks you created.'], 403);
         }
 
+        \App\Models\TaskActivity::create([
+            'task_id' => $task->id,
+            'user_id' => $request->user()->id,
+            'action' => 'deleted',
+            'description' => 'Task was deleted.'
+        ]);
+
         $task->delete();
         return response()->json(['message' => 'Task deleted successfully']);
     }
@@ -463,6 +526,10 @@ class TaskController extends Controller
     public function approve(Request $request, $id)
     {
         $task = Task::findOrFail($id);
+
+        if (!$this->userHasManage($request) && $task->reporter_id !== $request->user()->id) {
+            return response()->json(['message' => 'You do not have permission to review this task.'], 403);
+        }
         
         $approval = \App\Models\Approval::where('approvable_type', get_class($task))
             ->where('approvable_id', $task->id)
@@ -477,7 +544,6 @@ class TaskController extends Controller
         ApprovalService::approve($approval, $request->user()->id);
 
         TaskService::updateStatus($task, 'done', $request->user()->id);
-        $task->update(['status' => 'done']);
 
         TaskActivity::create([
             'task_id' => $task->id,
@@ -501,6 +567,15 @@ class TaskController extends Controller
         foreach ($task->assignees as $assignee) {
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$assignee->id}_employee");
             \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$assignee->id}_employee_{$today}");
+            
+            \App\Services\NotificationService::send(
+                (int) $assignee->id,
+                'task_assigned', // Reusing task_assigned or system
+                'Task Approved',
+                "Your task '{$task->title}' has been approved.",
+                ['task_id' => $task->id],
+                "/dashboard/tasks/{$task->id}"
+            );
         }
 
         return response()->json($task->fresh(['approval']));
@@ -509,6 +584,10 @@ class TaskController extends Controller
     public function redo(Request $request, $id)
     {
         $task = Task::findOrFail($id);
+
+        if (!$this->userHasManage($request) && $task->reporter_id !== $request->user()->id) {
+            return response()->json(['message' => 'You do not have permission to review this task.'], 403);
+        }
         
         $approval = \App\Models\Approval::where('approvable_type', get_class($task))
             ->where('approvable_id', $task->id)
@@ -522,10 +601,9 @@ class TaskController extends Controller
 
         $validated = $request->validate(['reason' => 'required|string']);
         
-        ApprovalService::reject($approval, $request->user()->id, $validated['reason']);
+        ApprovalService::redo($approval, $request->user()->id, $validated['reason']);
 
         TaskService::updateStatus($task, 'in_progress', $request->user()->id);
-        $task->update(['status' => 'in_progress']);
 
         TaskActivity::create([
             'task_id' => $task->id,
@@ -549,6 +627,15 @@ class TaskController extends Controller
         foreach ($task->assignees as $assignee) {
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$assignee->id}_employee");
             \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$assignee->id}_employee_{$today}");
+
+            \App\Services\NotificationService::send(
+                (int) $assignee->id,
+                'task_assigned',
+                'Task Needs Redo',
+                "Your task '{$task->title}' needs redo. Reason: {$validated['reason']}",
+                ['task_id' => $task->id],
+                "/dashboard/tasks/{$task->id}"
+            );
         }
 
         return response()->json($task->fresh(['approval']));

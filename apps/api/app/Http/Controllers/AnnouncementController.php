@@ -19,18 +19,29 @@ class AnnouncementController extends Controller
             ->limit(100);
 
         if ($activeRole !== 'super_admin') {
-            $userTeams = $user->team_id ? [$user->team_id] : [];
-            if ($activeRole === 'hr') {
-                $managedDepts = \App\Support\HrScope::managedDepartmentIds($user);
-                $managedTeams = empty($managedDepts) ? [] : \App\Models\Team::whereIn('department_id', $managedDepts)->pluck('id')->toArray();
-                $userTeams = array_unique(array_merge($userTeams, $managedTeams));
-            }
-            
-            $query->where(function($q) use ($userTeams) {
+            $query->where(function($q) use ($user) {
                 $q->where('scope', 'company')
-                  ->orWhere(function($sub) use ($userTeams) {
-                      $sub->where('scope', 'team')
-                          ->whereIn('team_id', $userTeams);
+                  ->orWhere(function($sub) use ($user) {
+                      $sub->where('scope', 'team');
+                      $sub->where(function($teamQ) use ($user) {
+                          if ($user->team_id) {
+                              $teamQ->where('team_id', $user->team_id);
+                          }
+                          
+                          $teamQ->orWhere(function($hrQ) use ($user) {
+                              // We only want this clause to add the HR subquery if they are HR,
+                              // but HrScope applies its own checks. However, if they aren't HR, 
+                              // HrScope does nothing and we get an empty orWhere() which might be problematic,
+                              // or it might select all.
+                              // So we explicitly check:
+                              if ($user->resolveActiveRole() === 'hr') {
+                                  \App\Support\HrScope::apply($hrQ, $user, 'team_id');
+                              } else {
+                                  // ensure it evaluates to false if not HR so it doesn't match everything
+                                  $hrQ->whereRaw('1 = 0');
+                              }
+                          });
+                      });
                   });
             });
         }
@@ -95,7 +106,7 @@ class AnnouncementController extends Controller
             }
         }
         
-        \Illuminate\Support\Facades\Cache::forget("announcements_all");
+
 
         return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
@@ -130,7 +141,7 @@ class AnnouncementController extends Controller
 
         $announcement->update($validated);
         
-        \Illuminate\Support\Facades\Cache::forget("announcements_all");
+
 
         return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
@@ -147,7 +158,7 @@ class AnnouncementController extends Controller
 
         $announcement->delete();
         
-        \Illuminate\Support\Facades\Cache::forget("announcements_all");
+
 
         return response()->json(['message' => 'Announcement deleted successfully']);
     }

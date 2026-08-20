@@ -320,54 +320,32 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (taskIds: number[]) => {
-      for (const id of taskIds) {
-        await apiFetch(`/tasks/${id}`, { method: "DELETE" });
-      }
+      return apiFetch("/tasks/bulk", { 
+        method: "POST", 
+        body: JSON.stringify({ ids: taskIds, action: "delete" }) 
+      });
     },
     onSuccess: () => {
       toast.success("Tasks deleted successfully.");
       setRowSelection({});
+      setIsBulkDeleteOpen(false);
       // T-46.2: invalidate without exact
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    }
+    },
+    onError: () => toast.error("Failed to delete some tasks.")
   });
 
   const bulkStatusMutation = useMutation({
     mutationFn: async ({ taskIds, status }: { taskIds: number[], status: string }) => {
-      for (const id of taskIds) {
-        await apiFetch(`/tasks/${id}`, { method: "PUT", body: JSON.stringify({ status }) });
-      }
-    },
-    onMutate: async ({ taskIds, status }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.tasks(defaultProjectId) });
-      const previousTasks = queryClient.getQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) });
-
-      queryClient.setQueriesData({ queryKey: queryKeys.tasks(defaultProjectId) }, (old: unknown) => {
-        if (!old) return old;
-        const clone = JSON.parse(JSON.stringify(old));
-        let arr = Array.isArray(clone.data) ? clone.data : (Array.isArray(clone.data?.data) ? clone.data.data : []);
-        arr.forEach((t: Task) => {
-          if (taskIds.includes(t.id)) t.status = status;
-        });
-        return clone;
+      return apiFetch("/tasks/bulk", { 
+        method: "POST", 
+        body: JSON.stringify({ ids: taskIds, action: "complete" }) 
       });
-
-      return { previousTasks };
-    },
-    onError: (err: Error, variables, context: unknown) => {
-      toast.error("Failed to update tasks status.");
-      const ctx = context as { previousTasks?: [unknown, unknown][] };
-      if (ctx?.previousTasks) {
-        ctx.previousTasks.forEach(([key, data]) => {
-          queryClient.setQueryData(key as readonly unknown[], data);
-        });
-      }
     },
     onSuccess: () => {
       toast.success("Tasks status updated.");
       setRowSelection({});
-    },
-    onSettled: () => {
+      // T-46.2: invalidate without exact
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     }
   });
@@ -614,9 +592,10 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
                 <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shadow-sm shrink-0">
-                  <AppIcon name="plus" size="xs" /> New Task
+                  <AppIcon name="plus" size="sm" /> Create Task
                 </Button>
               </DialogTrigger>
+
               <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
                 <DialogHeader className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20">
                   <DialogTitle className="text-base font-semibold">Create New Task</DialogTitle>
@@ -866,10 +845,19 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                 </div>
               </DialogContent>
             </Dialog>
+
+            <Button size="sm" variant="outline" onClick={() => {
+              toast.promise(apiFetch("/tasks/export?search=" + encodeURIComponent(searchQuery)), {
+                loading: 'Preparing export...',
+                success: 'Export started. You will be notified when it is ready.',
+                error: 'Failed to start export'
+              });
+            }} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
+              <AppIcon name="download" size="sm" /> Export
+            </Button>
           </div>
         </div>
-
-        {/* Row 2: Filters */}
+      </div>    {/* Row 2: Filters */}
         {viewMode !== "qa" && (
           <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm flex flex-col md:flex-row md:items-center gap-2">
             <div className="flex items-center gap-2 px-2 border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800 pb-2 md:pb-0 shrink-0">
@@ -966,7 +954,6 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
           </div>
         </div>
         )}
-      </div>
 
       {isError ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-center mt-2">

@@ -24,12 +24,21 @@ export function ProfilePreferencesTab() {
   const dismissedWidgetsCount = useUIStore((s) => s.dismissedWidgets?.length ?? 0);
 
   const [visibility, setVisibility] = useState(authUser?.preferences?.directory_visibility || "internal");
+  const [notifications, setNotifications] = useState({
+    leave_approvals: true,
+    task_updates: true,
+    system_alerts: true,
+    ...((authUser?.preferences?.notifications as any) || {})
+  });
 
   useEffect(() => {
     if (authUser?.preferences?.directory_visibility) {
       setVisibility(authUser.preferences.directory_visibility);
     }
-  }, [authUser?.preferences?.directory_visibility]);
+    if (authUser?.preferences?.notifications) {
+      setNotifications((prev: any) => ({ ...prev, ...(authUser.preferences!.notifications as any) }));
+    }
+  }, [authUser?.preferences?.directory_visibility, authUser?.preferences?.notifications]);
 
   const updateVisibilityMutation = useMutation({
     mutationFn: async (val: string) => {
@@ -49,9 +58,33 @@ export function ProfilePreferencesTab() {
     },
   });
 
+  const updateNotificationsMutation = useMutation({
+    mutationFn: async (newNotifs: any) => {
+      return apiFetch("/auth/preferences", {
+        method: "PUT",
+        body: JSON.stringify({ preferences: { notifications: newNotifs } }),
+      });
+    },
+    onSuccess: (res: { preferences: Record<string, unknown> }) => {
+      toast.success("Notification preferences updated");
+      if (authUser) {
+        setAuth(useAuthStore.getState().token!, { ...authUser, preferences: res.preferences }, authUser.active_role);
+      }
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err.message || "Failed to update notifications.");
+    },
+  });
+
   const handleVisibilityChange = (val: string) => {
     setVisibility(val);
     updateVisibilityMutation.mutate(val);
+  };
+
+  const handleNotificationToggle = (key: keyof typeof notifications) => {
+    const newNotifs = { ...notifications, [key]: !notifications[key] };
+    setNotifications(newNotifs);
+    updateNotificationsMutation.mutate(newNotifs);
   };
 
   return (
@@ -109,6 +142,63 @@ export function ProfilePreferencesTab() {
                 <div className="text-xs text-neutral-500 leading-relaxed">Contact info completely hidden from directory searches.</div>
               </div>
             </button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Notification Preferences */}
+      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+        <div className="border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-900/50 px-6 py-4">
+          <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+            <AppIcon name="bell" size="sm" className="text-primary-600 dark:text-primary-400" />
+            Notification Preferences
+          </h2>
+          <p className="text-xs text-neutral-500 mt-1">Manage which email notifications you receive.</p>
+        </div>
+        
+        <div className="p-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+              <div>
+                <div className="text-sm font-semibold text-neutral-900 dark:text-white">Leave Approvals</div>
+                <div className="text-xs text-neutral-500">Receive emails when your leave is approved or rejected.</div>
+              </div>
+              <button 
+                onClick={() => handleNotificationToggle("leave_approvals")}
+                disabled={updateNotificationsMutation.isPending}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 ${notifications.leave_approvals ? 'bg-primary-600' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+              >
+                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.leave_approvals ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+              <div>
+                <div className="text-sm font-semibold text-neutral-900 dark:text-white">Task Updates</div>
+                <div className="text-xs text-neutral-500">Receive emails when tasks are assigned to you or changed.</div>
+              </div>
+              <button 
+                onClick={() => handleNotificationToggle("task_updates")}
+                disabled={updateNotificationsMutation.isPending}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 ${notifications.task_updates ? 'bg-primary-600' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+              >
+                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.task_updates ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+              <div>
+                <div className="text-sm font-semibold text-neutral-900 dark:text-white">System Alerts</div>
+                <div className="text-xs text-neutral-500">Important company announcements and security alerts.</div>
+              </div>
+              <button 
+                onClick={() => handleNotificationToggle("system_alerts")}
+                disabled={updateNotificationsMutation.isPending}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 ${notifications.system_alerts ? 'bg-primary-600' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+              >
+                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.system_alerts ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
           </div>
         </div>
       </Card>

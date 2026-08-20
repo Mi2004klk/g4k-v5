@@ -99,10 +99,8 @@ class ApprovalService
                 $leave = \App\Models\LeaveRequest::find($approval->approvable_id);
                 if ($leave) {
                     $leave->update(['status' => 'approved']);
-                    $startDate = \Carbon\Carbon::parse($leave->start_date);
-                    $endDate = \Carbon\Carbon::parse($leave->end_date);
-                    $days = $startDate->diffInDays($endDate) + 1;
-                    $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) $startDate->format('Y'));
+                    $days = $leave->getWorkingDays();
+                    $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
                     $balance->increment('used', $days);
                 }
             }
@@ -155,10 +153,8 @@ class ApprovalService
                     $wasApproved = $leave->status === 'approved';
                     $leave->update(['status' => 'rejected']);
                     if ($wasApproved) {
-                        $startDate = \Carbon\Carbon::parse($leave->start_date);
-                        $endDate = \Carbon\Carbon::parse($leave->end_date);
-                        $days = $startDate->diffInDays($endDate) + 1;
-                        $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) $startDate->format('Y'));
+                        $days = $leave->getWorkingDays();
+                        $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
                         $balance->decrement('used', min($days, $balance->used));
                     }
                 }

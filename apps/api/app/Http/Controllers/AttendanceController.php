@@ -98,77 +98,7 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function sync(Request $request)
-    {
-        $validated = $request->validate([
-            'events' => 'required|array',
-            'events.*.client_id' => 'required|string',
-            'events.*.type' => 'required|in:clock_in,clock_out,break_start,break_end',
-            'events.*.timestamp' => 'required|string',
-            'events.*.meta' => 'nullable|array',
-        ]);
 
-        $user = $request->user();
-        $syncedDates = [];
-        $now = now();
-
-        // Sort events chronologically to process them in order
-        $events = collect($validated['events'])->sortBy('timestamp')->values();
-
-        foreach ($events as $ev) {
-            $ts = Carbon::parse($ev['timestamp']);
-            
-            // Reject future timestamps (allow 5 min drift max)
-            if ($ts->gt($now->copy()->addMinutes(5))) {
-                continue;
-            }
-
-            try {
-                AttendanceService::recordEvent(
-                    $user->id,
-                    $ev['type'],
-                    $ev['timestamp'],
-                    $ev['client_id'],
-                    $ev['meta'] ?? null
-                );
-                $syncedDates[] = $ts->toDateString();
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                // If sequence is invalid during sync, we skip that event
-                // Usually client-side state machine prevents this, but server is authority
-                continue;
-            }
-        }
-
-        $syncedDates = array_unique($syncedDates);
-        $reconciledDays = [];
-        
-        $schedule = null;
-        if ($user->work_schedule_id) {
-            $schedule = \Illuminate\Support\Facades\Cache::remember("work_schedule_{$user->work_schedule_id}", 86400, function() use ($user) {
-                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('id', $user->work_schedule_id)->first();
-                return $res ? (array)$res : null;
-            });
-        }
-        if (!$schedule) {
-            $schedule = \Illuminate\Support\Facades\Cache::remember('default_work_schedule', 86400, function() {
-                $res = \Illuminate\Support\Facades\DB::table('work_schedules')->where('is_default', true)->first();
-                return $res ? (array)$res : null;
-            });
-        }
-
-        foreach ($syncedDates as $date) {
-            $reconciledDays[] = AttendanceService::reconcileDay($user->id, $date, false, $user, $schedule);
-        }
-
-        if (!empty($syncedDates)) {
-            broadcast(new \App\Events\AttendanceUpdated($user->id, 'sync'));
-        }
-
-        return response()->json([
-            'message' => 'Sync successful',
-            'reconciled_days' => $reconciledDays,
-        ]);
-    }
 
     public function meToday(Request $request)
     {
@@ -321,7 +251,7 @@ class AttendanceController extends Controller
         $isAdmin = \App\Services\CapabilityMatrix::hasCapability($activeRole, '*');
         
         if (!$isAdmin) {
-            $query->whereIn('users.department_id', \App\Support\HrScope::managedDepartmentIds($user));
+            \App\Support\HrScope::apply($query, $user, 'users.department_id');
         }
         return $query;
     }
@@ -341,7 +271,7 @@ class AttendanceController extends Controller
                 ->where('users.status', 'active');
                 
             if (!$isAdmin) {
-                $usersQuery->whereIn('users.department_id', \App\Support\HrScope::managedDepartmentIds($user));
+                \App\Support\HrScope::apply($usersQuery, $user, 'users.department_id');
             }
             
             $users = $usersQuery->get();
@@ -362,7 +292,7 @@ class AttendanceController extends Controller
                 ->get()
                 ->keyBy('user_id');
                 
-            $counts = ['present' => 0, 'late' => 0, 'leave' => 0, 'absent' => 0, 'leave_pending' => 0];
+            $counts = ['present' => 0, 'late' => 0, 'on_leave' => 0, 'absent' => 0, 'leave_pending' => 0];
             $employees = [];
             
             foreach ($users as $u) {
@@ -403,7 +333,7 @@ class AttendanceController extends Controller
                 'date' => $date,
                 'counts' => $counts,
                 'employees' => collect($employees)->sortBy(function ($emp) {
-                    $order = ['present' => 1, 'late' => 2, 'leave' => 3, 'leave_pending' => 4, 'absent' => 5];
+                    $order = ['present' => 1, 'late' => 2, 'on_leave' => 3, 'leave_pending' => 4, 'absent' => 5];
                     return $order[$emp['category']] ?? 99;
                 })->values()->all(),
             ];
@@ -443,7 +373,7 @@ class AttendanceController extends Controller
             'present' => $all->where('status', 'present')->count(),
             'absent' => $all->where('status', 'absent')->count(),
             'late' => $all->where('status', 'late')->count(),
-            'leave' => $all->where('status', 'leave')->count(),
+            'on_leave' => $all->where('status', 'on_leave')->count(),
         ]);
     }
 
@@ -575,7 +505,7 @@ class AttendanceController extends Controller
         $activeRole = $request->user()->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
             
-        if (!$isAdmin && !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
+        if (!$isAdmin && !\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $request->user())->exists()) {
             return response()->json(['message' => 'Unauthorized access to this user\'s attendance.'], 403);
         }
 
@@ -637,7 +567,7 @@ class AttendanceController extends Controller
         $activeRole = $request->user()->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
             
-        if (!$isAdmin && !in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($request->user()))) {
+        if (!$isAdmin && !\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $request->user())->exists()) {
             return response()->json(['message' => 'Unauthorized access to this user\'s history.'], 403);
         }
 
@@ -840,7 +770,7 @@ class AttendanceController extends Controller
         }
 
         if (!$isAdmin) {
-            if (!in_array($targetUser->department_id, \App\Support\HrScope::managedDepartmentIds($actor))) {
+            if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $actor)->exists()) {
                 return response()->json(['message' => 'Forbidden. HR users can only correct attendance within their assigned department/team.'], 403);
             }
         }
@@ -978,7 +908,7 @@ class AttendanceController extends Controller
             foreach ($hrUsers as $hr) {
                 // simple scoping: HR sees their own dept unless they are super admin
                 $isSuper = $hr->roleAssignments->pluck('role')->contains('super_admin');
-                if ($isSuper || in_array($day->user->department_id, \App\Support\HrScope::managedDepartmentIds($hr))) {
+                if ($isSuper || \App\Support\HrScope::apply(\App\Models\User::where('id', $day->user->id), $hr)->exists()) {
                     $notifications[] = [
                         'user_id' => $hr->id,
                         'title' => 'Open Shift Alert',

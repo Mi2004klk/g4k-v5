@@ -23,6 +23,7 @@ class SettingsController extends Controller
     {
         $validated = $request->validated();
         $bustSmtp = false;
+        $updatedCategories = [];
 
         foreach ($validated['settings'] as $settingData) {
             if ($settingData['category'] === 'mail' && $settingData['key'] === 'password') {
@@ -46,6 +47,7 @@ class SettingsController extends Controller
                     'updated_by' => $request->user()->id,
                 ]
             );
+            $updatedCategories[] = $settingData['category'];
         }
 
         if ($bustSmtp) {
@@ -53,6 +55,22 @@ class SettingsController extends Controller
         }
 
         \App\Services\CapabilityMatrix::clearCache();
+
+        $updatedCategories = array_unique($updatedCategories);
+        foreach ($updatedCategories as $category) {
+            \Illuminate\Support\Facades\Cache::forget("settings_{$category}");
+            \Illuminate\Support\Facades\Cache::forget("settings:{$category}");
+        }
+        
+        // Bust specific notification channels if notifications were updated
+        if (in_array('notifications', $updatedCategories)) {
+            // Since we can't easily wildcard forget in some cache drivers,
+            // we'll bust the known types.
+            $types = ['leave_request', 'attendance_reminder', 'weekly_summary', 'task_assigned', 'chat', 'security', 'warning', 'system'];
+            foreach ($types as $type) {
+                \Illuminate\Support\Facades\Cache::forget("settings:notifications:{$type}.channels");
+            }
+        }
 
         return response()->json(['message' => 'Settings updated successfully']);
     }

@@ -144,6 +144,16 @@ export function ProjectsTab() {
               <AppIcon name="plus" size="sm" /> Create Project
             </Button>
           )}
+
+          <Button size="sm" variant="outline" onClick={() => {
+            toast.promise(apiFetch("/projects/export?search=" + encodeURIComponent(debouncedSearch)), {
+              loading: 'Preparing export...',
+              success: 'Export started. You will be notified when it is ready.',
+              error: 'Failed to start export'
+            });
+          }} className="gap-2 shadow-sm h-[42px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
+            <AppIcon name="download" size="sm" /> Export
+          </Button>
         </div>
       </div>
 

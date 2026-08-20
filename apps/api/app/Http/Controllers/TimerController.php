@@ -22,8 +22,28 @@ class TimerController extends Controller
             'log_date' => 'nullable|date',
         ]);
 
+        $userId = $request->user()->id;
+
+        if (isset($validated['task_id'])) {
+            $task = \App\Models\Task::with(['assignees', 'project.members'])->find($validated['task_id']);
+            if ($task) {
+                $isParticipant = $task->reporter_id === $userId || 
+                                 $task->assignee_id === $userId || 
+                                 $task->assignees->contains('id', $userId) || 
+                                 ($task->project && (
+                                     $task->project->created_by === $userId || 
+                                     $task->project->members->contains('id', $userId)
+                                 ));
+                $hasManage = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin', 'hr'])->isNotEmpty();
+
+                if (!$isParticipant && !$hasManage) {
+                    return response()->json(['message' => 'You are not authorized to log time on this task.'], 403);
+                }
+            }
+        }
+
         $log = TaskTimeLog::create(array_merge($validated, [
-            'user_id' => $request->user()->id,
+            'user_id' => $userId,
             'log_date' => $validated['log_date'] ?? now()->toDateString(),
         ]));
 

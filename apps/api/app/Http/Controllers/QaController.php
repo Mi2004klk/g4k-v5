@@ -21,11 +21,13 @@ class QaController extends Controller
             'is_template' => 'boolean',
             'fields' => 'required|array|min:1',
             'fields.*.label' => 'required|string',
-            'fields.*.field_type' => 'required|string',
+            'fields.*.field_type' => 'required|string|in:input,textarea,checkbox,slider,select,multiselect,date,time,file,signature,rating,email,number',
             'fields.*.required' => 'boolean',
             'fields.*.options' => 'nullable|array',
             'fields.*.section_id' => 'nullable|string',
             'fields.*.branching_logic' => 'nullable|array',
+            'fields.*.config' => 'nullable|array',
+            'fields.*.validation' => 'nullable|array',
         ]);
 
         $qaForm = QaForm::create([
@@ -44,6 +46,8 @@ class QaController extends Controller
                 'options' => $field['options'] ?? null,
                 'section_id' => $field['section_id'] ?? null,
                 'branching_logic' => $field['branching_logic'] ?? null,
+                'config' => $field['config'] ?? null,
+                'validation' => $field['validation'] ?? null,
                 'order' => $index,
             ]);
         }
@@ -66,11 +70,13 @@ class QaController extends Controller
             'is_template' => 'boolean',
             'fields' => 'nullable|array',
             'fields.*.label' => 'required_with:fields|string',
-            'fields.*.field_type' => 'required_with:fields|string',
+            'fields.*.field_type' => 'required_with:fields|string|in:input,textarea,checkbox,slider,select,multiselect,date,time,file,signature,rating,email,number',
             'fields.*.required' => 'boolean',
             'fields.*.options' => 'nullable|array',
             'fields.*.section_id' => 'nullable|string',
             'fields.*.branching_logic' => 'nullable|array',
+            'fields.*.config' => 'nullable|array',
+            'fields.*.validation' => 'nullable|array',
         ]);
 
         if (isset($validated['title'])) $qaForm->title = $validated['title'];
@@ -89,6 +95,8 @@ class QaController extends Controller
                     'options' => $field['options'] ?? null,
                     'section_id' => $field['section_id'] ?? null,
                     'branching_logic' => $field['branching_logic'] ?? null,
+                    'config' => $field['config'] ?? null,
+                    'validation' => $field['validation'] ?? null,
                     'order' => $index,
                 ]);
             }
@@ -100,6 +108,15 @@ class QaController extends Controller
     public function destroy($id)
     {
         $qaForm = QaForm::findOrFail($id);
+
+        if (\App\Models\Task::where('qa_form_id', $qaForm->id)->exists()) {
+            return response()->json(['message' => 'Cannot delete QA Form because it is used by one or more tasks.'], 409);
+        }
+
+        if (\App\Models\Project::where('qa_form_id', $qaForm->id)->exists()) {
+            return response()->json(['message' => 'Cannot delete QA Form because it is used by one or more projects.'], 409);
+        }
+
         QaFormField::where('qa_form_id', $qaForm->id)->delete();
         $qaForm->delete();
 

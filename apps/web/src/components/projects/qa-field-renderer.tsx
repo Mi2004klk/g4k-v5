@@ -31,7 +31,7 @@ export interface QAField {
 }
 
 export function QAFieldRenderer({ field, value, onChange }: { field: QAField, value: any, onChange: (val: any) => void }) {
-  const fieldType = field.field_type ?? field.type;
+  const fieldType = field.field_type;
 
   if (fieldType === "textarea") {
     return (

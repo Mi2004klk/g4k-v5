@@ -53,7 +53,7 @@ class GenerateReportJob implements ShouldQueue
                 });
 
                 $writer->close();
-                $fileData = base64_encode(file_get_contents($tempPath));
+                $disk->put($filename, file_get_contents($tempPath));
                 @unlink($tempPath);
             } else if ($format === 'pdf') {
                 $rows = [];
@@ -61,12 +61,12 @@ class GenerateReportJob implements ShouldQueue
                     $rows = array_merge($rows, $chunk);
                 });
                 $pdf = Pdf::loadView('reports.pdf', ['key' => $key, 'rows' => $rows]);
-                $fileData = base64_encode($pdf->output());
+                $disk->put($filename, $pdf->output());
             }
 
             $this->exportJob->update([
                 'status' => 'completed',
-                'file_data' => $fileData ?? null,
+                'file_data' => null,
                 'file_path' => $filename,
             ]);
 
@@ -216,11 +216,9 @@ class GenerateReportJob implements ShouldQueue
                 if (!$hasManage) {
                     $query->where('users.id', $userId);
                 } else {
-                    // HR scoping logic inline or duplicated since we're in a job
-                    // Simplified: if HR, only their department (assuming $departmentId is set if they are HR, else they see all)
-                    $hrRole = \Illuminate\Support\Facades\DB::table('role_assignments')->where('user_id', $userId)->pluck('role')->toArray();
-                    if (!in_array('super_admin', $hrRole) && in_array('hr', $hrRole) && $departmentId) {
-                        $query->where('users.department_id', $departmentId);
+                    $jobUser = \App\Models\User::find($userId);
+                    if ($jobUser) {
+                        \App\Support\HrScope::apply($query, $jobUser, 'users.department_id');
                     }
                 }
 
@@ -250,11 +248,9 @@ class GenerateReportJob implements ShouldQueue
                 if (!$hasManage) {
                     $query->where('user_id', $userId);
                 } else {
-                    $hrRole = \Illuminate\Support\Facades\DB::table('role_assignments')->where('user_id', $userId)->pluck('role')->toArray();
-                    if (!in_array('super_admin', $hrRole) && in_array('hr', $hrRole) && $departmentId) {
-                        $query->whereHas('user', function($q) use ($departmentId) {
-                            $q->where('department_id', $departmentId);
-                        });
+                    $jobUser = \App\Models\User::find($userId);
+                    if ($jobUser) {
+                        \App\Support\HrScope::apply($query, $jobUser, 'user_id');
                     }
                 }
 
@@ -294,7 +290,7 @@ class GenerateReportJob implements ShouldQueue
                         'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
                         'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
                         'attendanceDays as absent_days' => fn($q) => $q->where('status', 'absent')->whereBetween('date', [$start, $end]),
-                        'attendanceDays as leave_days' => fn($q) => $q->where('status', 'leave')->whereBetween('date', [$start, $end]),
+                        'attendanceDays as leave_days' => fn($q) => $q->where('status', 'on_leave')->whereBetween('date', [$start, $end]),
                     ])
                     ->withSum(['attendanceDays as total_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds');
 

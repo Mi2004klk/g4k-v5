@@ -13,6 +13,25 @@ use App\Http\Requests\StoreLeaveRequestRequest;
 
 class LeaveRequestController extends Controller
 {
+    public function balance(Request $request)
+    {
+        $userId = $request->user()->id;
+        $year = (int) date('Y');
+        
+        $types = ['casual', 'sick', 'earned', 'unpaid'];
+        $balances = [];
+        
+        foreach ($types as $type) {
+            $balance = \App\Models\LeaveBalance::getOrCreate($userId, $type, $year);
+            $balances[$type] = [
+                'allowed' => $balance->allowed,
+                'used' => $balance->used,
+                'available' => max(0, $balance->allowed - $balance->used)
+            ];
+        }
+        
+        return response()->json($balances);
+    }
 
     public function index(Request $request)
     {
@@ -32,7 +51,7 @@ class LeaveRequestController extends Controller
                 $q->whereHas('approval', function($q2) {
                     $q2->where('current_approver_role', 'hr');
                 })->whereHas('user', function($q3) use ($user) {
-                    $q3->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
+                    \App\Support\HrScope::apply($q3, $user);
                 })->orWhere('user_id', $user->id);
             });
         } else {
@@ -74,6 +93,37 @@ class LeaveRequestController extends Controller
         return response()->json($query->paginate($perPage));
     }
 
+    private function calculateWorkingDays($user, $startDate, $endDate)
+    {
+        $days = 0;
+        $current = $startDate->copy();
+        
+        $workSchedule = null;
+        if ($user->work_schedule_id) {
+            $workSchedule = \App\Models\WorkSchedule::find($user->work_schedule_id);
+        }
+        if (!$workSchedule) {
+            $workSchedule = \App\Models\WorkSchedule::where('is_default', true)->first();
+        }
+        
+        $workingDays = $workSchedule ? $workSchedule->working_days : [1, 2, 3, 4, 5]; // Default Mon-Fri
+        if (!is_array($workingDays)) $workingDays = [1, 2, 3, 4, 5];
+        
+        $holidays = \App\Models\Holiday::whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])->pluck('date')->toArray();
+
+        while ($current <= $endDate) {
+            $isWorkingDay = in_array($current->isoWeekday(), $workingDays);
+            $isHoliday = in_array($current->format('Y-m-d'), $holidays);
+            
+            if ($isWorkingDay && !$isHoliday) {
+                $days++;
+            }
+            $current->addDay();
+        }
+        
+        return $days;
+    }
+
     public function store(StoreLeaveRequestRequest $request)
     {
         $validated = $request->validated();
@@ -100,7 +150,12 @@ class LeaveRequestController extends Controller
         // Leave Balance check
         $startDate = \Carbon\Carbon::parse($validated['start_date']);
         $endDate = \Carbon\Carbon::parse($validated['end_date']);
-        $requestedDays = $startDate->diffInDays($endDate) + 1;
+        $requestedDays = $this->calculateWorkingDays($request->user(), $startDate, $endDate);
+        
+        if ($requestedDays === 0) {
+            return response()->json(['message' => 'Requested date range does not contain any working days.'], 422);
+        }
+
         $balance = \App\Models\LeaveBalance::getOrCreate($userId, $validated['type'], (int) $startDate->format('Y'));
         
         if (($balance->allowed - $balance->used) < $requestedDays) {
@@ -158,8 +213,7 @@ class LeaveRequestController extends Controller
         if (!in_array('super_admin', $user->getCachedRoles()) && $leaveRequest->user_id !== $user->id) {
             $targetUser = \App\Models\User::find($leaveRequest->user_id);
             if ($targetUser) {
-                $managedDepts = \App\Support\HrScope::managedDepartmentIds($user);
-                if (!in_array($targetUser->department_id, $managedDepts)) {
+                if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $user)->exists()) {
                     return response()->json(['message' => 'Unauthorized: Employee is not in your managed departments'], 403);
                 }
             }
@@ -258,7 +312,7 @@ class LeaveRequestController extends Controller
 
         if (!in_array('super_admin', $roles)) {
             $query->whereHas('user', function($q) use ($user) {
-                $q->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
+                \App\Support\HrScope::apply($q, $user);
             });
         }
 
@@ -308,7 +362,7 @@ class LeaveRequestController extends Controller
             // Can see all pending
         } elseif (in_array('hr', $roles)) {
             $query->whereHas('user', function($q) use ($user) {
-                $q->whereIn('department_id', \App\Support\HrScope::managedDepartmentIds($user));
+                \App\Support\HrScope::apply($q, $user);
             });
         } else {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -342,6 +396,37 @@ class LeaveRequestController extends Controller
             'message' => 'Export started. You will be notified when it is ready.',
             'job_id' => $job->id,
         ]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $leave = LeaveRequest::findOrFail($id);
+        
+        $user = $request->user();
+        $roles = $user->getCachedRoles();
+        $isHrOrAdmin = count(array_intersect(['hr', 'super_admin'], $roles)) > 0;
+
+        if ($leave->user_id === $user->id) {
+            // Employee can only cancel their own pending requests
+            if ($leave->status !== 'pending') {
+                return response()->json(['message' => 'You can only cancel pending leave requests.'], 403);
+            }
+            $leave->status = 'cancelled';
+            $leave->save();
+            return response()->json(['message' => 'Leave request cancelled successfully.']);
+        } else if ($isHrOrAdmin) {
+            // Admin/HR can delete
+            if (!in_array('super_admin', $roles)) {
+                // Ensure HR is authorized to manage this user
+                if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $leave->user_id), $user)->exists()) {
+                    return response()->json(['message' => 'Unauthorized'], 403);
+                }
+            }
+            $leave->delete(); // Assuming we just hard delete or soft delete it
+            return response()->json(['message' => 'Leave request deleted successfully.']);
+        }
+
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
 }
 

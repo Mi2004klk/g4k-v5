@@ -27,9 +27,8 @@ import {
 import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
+  name: z.string().min(1, "Name is required"),
   phone: z.string().optional(),
-  designation_id: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -37,18 +36,14 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export function ProfileGeneralTab() {
   const queryClient = useQueryClient();
   
-  const { data: caps = [] } = useCapabilities();
-  const canManageDesignation = hasCapability(caps, "users.hr.manage") || hasCapability(caps, "designations.manage");
-
   const authUser = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: authUser?.name || "",
+      name: "",
       phone: "",
-      designation_id: "",
     },
   });
 
@@ -65,15 +60,9 @@ export function ProfileGeneralTab() {
       form.reset({
         name: profile.name || "",
         phone: profile.phone || "",
-        designation_id: profile.designation_id?.toString() || "",
       });
     }
   }, [profile, form]);
-
-  const { data: designations } = useQuery({
-    queryKey: ["designations"],
-    queryFn: () => apiFetch("/designations").then((res: { data?: unknown[] }) => Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])),
-  });
 
   const { data: companyProfile, isLoading: isCompanyLoading } = useQuery({
     queryKey: queryKeys.companyProfile,
@@ -103,7 +92,6 @@ export function ProfileGeneralTab() {
     updateProfileMutation.mutate({
       name: data.name,
       phone: data.phone || null,
-      designation_id: data.designation_id || null,
     });
   };
 
@@ -145,32 +133,6 @@ export function ProfileGeneralTab() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center justify-between">
-                    Designation
-                    {!canManageDesignation && <span className="text-[10px] text-neutral-400 font-normal">Contact HR to change</span>}
-                  </label>
-                  <Controller
-                    control={form.control}
-                    name="designation_id"
-                    render={({ field }) => (
-                      <Select disabled={!canManageDesignation} value={field.value || "unset"} onValueChange={(v) => field.onChange(v === "unset" ? "" : v)}>
-                        <SelectTrigger className="w-full h-9 text-sm">
-                          <SelectValue placeholder="Select Designation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="unset">Select Designation</SelectItem>
-                          {(designations as Array<{ id: number, name: string }> | undefined)?.map((d) => (
-                            <SelectItem key={d.id} value={String(d.id)}>
-                              {d.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Email Address</label>
                   <Input value={profile?.email || ""} disabled className="h-9 text-sm bg-neutral-50 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed" />

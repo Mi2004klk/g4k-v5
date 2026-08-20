@@ -60,9 +60,7 @@ class DashboardController extends Controller
                     if ($activeRole === 'employee') {
                         $leavesQuery->where('leave_requests.user_id', $user->id);
                     } elseif ($activeRole === 'hr') {
-                        $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
-                        $deptUserIds = empty($deptIds) ? [] : \App\Models\User::whereIn('department_id', $deptIds)->pluck('id')->toArray();
-                        $leavesQuery->whereIn('leave_requests.user_id', $deptUserIds);
+                        \App\Support\HrScope::apply($leavesQuery, $user, 'leave_requests.user_id');
                     }
                     
                     $leaves = $leavesQuery->get();
@@ -72,7 +70,7 @@ class DashboardController extends Controller
                             'id' => $l->approval_id ?? $l->leave_request_id,
                             'leave_request_id' => $l->leave_request_id,
                             'approval_id' => $l->approval_id,
-                            'type' => 'leave',
+                            'type' => 'on_leave',
                             'title' => $l->title ?? 'Leave Request',
                             'user_name' => $l->user_name,
                             'created_at' => $l->created_at,
@@ -97,15 +95,23 @@ class DashboardController extends Controller
                                   });
                             });
                         } elseif ($activeRole === 'hr') {
-                            $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
-                            $deptUserIds = empty($deptIds) ? [] : \App\Models\User::whereIn('department_id', $deptIds)->pluck('id')->toArray();
-                            $tasksQuery->where(function($q) use ($deptUserIds) {
-                                $q->whereIn('tasks.assignee_id', $deptUserIds)
-                                  ->orWhereExists(function ($q2) use ($deptUserIds) {
-                                      $q2->select(DB::raw(1))->from('task_assignees')
-                                         ->whereColumn('task_assignees.task_id', 'tasks.id')
-                                         ->whereIn('task_assignees.user_id', $deptUserIds);
-                                  });
+                            \App\Support\HrScope::apply($tasksQuery, $user, 'tasks.assignee_id'); // This will also need to cover task_assignees in HrScope if it isn't
+                            // Actually, tasks have multiple assignees. HrScope uses a subquery for assignee_id. But wait, tasks can also have task_assignees.
+                            // To be perfectly safe, I will just apply HrScope to task's assignee_id, AND task_assignees. 
+                            // HrScope subquery checks the column directly.
+                            // Let's implement it carefully.
+                            $tasksQuery->where(function($q) use ($user) {
+                                $q->whereExists(function ($q2) use ($user) {
+                                    $q2->select(DB::raw(1))->from('users')
+                                       ->whereColumn('users.id', 'tasks.assignee_id');
+                                    \App\Support\HrScope::apply($q2, $user, 'department_id');
+                                })
+                                ->orWhereExists(function ($q2) use ($user) {
+                                    $q2->select(DB::raw(1))->from('task_assignees')
+                                       ->join('users', 'users.id', '=', 'task_assignees.user_id')
+                                       ->whereColumn('task_assignees.task_id', 'tasks.id');
+                                    \App\Support\HrScope::apply($q2, $user, 'users.department_id');
+                                });
                             });
                         }
                         
@@ -141,16 +147,20 @@ class DashboardController extends Controller
                                   });
                             });
                         } elseif ($activeRole === 'hr') {
-                            $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
-                            $deptUserIds = empty($deptIds) ? [] : \App\Models\User::whereIn('department_id', $deptIds)->pluck('id')->toArray();
-                            $projectsQuery->where(function($q) use ($deptUserIds) {
-                                $q->whereIn('projects.created_by', $deptUserIds)
-                                  ->orWhereExists(function ($q2) use ($deptUserIds) {
-                                      $q2->select(DB::raw(1))
-                                         ->from('project_members')
-                                         ->whereColumn('project_members.project_id', 'projects.id')
-                                         ->whereIn('project_members.user_id', $deptUserIds);
-                                  });
+                            // Projects can be scoped by created_by or project_members.
+                            // To be safe:
+                            $projectsQuery->where(function($q) use ($user) {
+                                $q->whereExists(function ($q2) use ($user) {
+                                    $q2->select(DB::raw(1))->from('users')
+                                       ->whereColumn('users.id', 'projects.created_by');
+                                    \App\Support\HrScope::apply($q2, $user, 'department_id');
+                                })
+                                ->orWhereExists(function ($q2) use ($user) {
+                                    $q2->select(DB::raw(1))->from('project_members')
+                                       ->join('users', 'users.id', '=', 'project_members.user_id')
+                                       ->whereColumn('project_members.project_id', 'projects.id');
+                                    \App\Support\HrScope::apply($q2, $user, 'users.department_id');
+                                });
                             });
                         }
                         
@@ -231,7 +241,7 @@ class DashboardController extends Controller
                         SUM(CASE WHEN status = \'present\' THEN 1 ELSE 0 END) as present,
                         SUM(CASE WHEN status = \'absent\' THEN 1 ELSE 0 END) as absent,
                         SUM(CASE WHEN status = \'late\' THEN 1 ELSE 0 END) as late,
-                        SUM(CASE WHEN status = \'leave\' THEN 1 ELSE 0 END) as on_leave
+                        SUM(CASE WHEN status = \'on_leave\' THEN 1 ELSE 0 END) as on_leave
                     ')
                     ->first();
                     
@@ -270,49 +280,53 @@ class DashboardController extends Controller
             }
 
             if ($activeRole === 'hr') {
-                $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
-                
-                $deptUserIds = empty($deptIds) 
-                    ? User::select('id')->whereRaw('1 = 0') 
-                    : User::select('id')->whereIn('department_id', $deptIds);
-
-                $data['total_employees'] = $deptUserIds->count();
+                $usersQuery = User::query();
+                \App\Support\HrScope::apply($usersQuery, $user);
+                $data['total_employees'] = $usersQuery->count();
                 
                 $activeQuery = User::where('status', 'active');
-                if (!empty($deptIds)) {
-                    $activeQuery->whereIn('department_id', $deptIds);
-                }
+                \App\Support\HrScope::apply($activeQuery, $user);
                 $data['active_employees'] = $activeQuery->count();
                 
-                $attendance = DB::table('attendance_days')
-                    ->whereIn('user_id', $deptUserIds)
+                $attendanceQuery = DB::table('attendance_days')
                     ->where('date', $today)
                     ->selectRaw('
                         SUM(CASE WHEN status = \'present\' THEN 1 ELSE 0 END) as present,
                         SUM(CASE WHEN status = \'absent\' THEN 1 ELSE 0 END) as absent,
                         SUM(CASE WHEN status = \'late\' THEN 1 ELSE 0 END) as late,
-                        SUM(CASE WHEN status = \'leave\' THEN 1 ELSE 0 END) as on_leave
-                    ')
-                    ->first();
+                        SUM(CASE WHEN status = \'on_leave\' THEN 1 ELSE 0 END) as on_leave
+                    ');
+                \App\Support\HrScope::apply($attendanceQuery, $user, 'user_id');
+                $attendance = $attendanceQuery->first();
                     
                 $data['present_today'] = (int) ($attendance->present ?? 0);
                 $data['absent_today'] = (int) ($attendance->absent ?? 0);
                 $data['late_today'] = (int) ($attendance->late ?? 0);
                 $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
                 
-                $leaveCount = $hasLeaveRequests ? DB::table('leave_requests')->whereIn('user_id', $deptUserIds)->where('status', 'pending')->count() : 0;
+                $leaveQuery = DB::table('leave_requests')->where('status', 'pending');
+                \App\Support\HrScope::apply($leaveQuery, $user, 'user_id');
+                $leaveCount = $hasLeaveRequests ? $leaveQuery->count() : 0;
+                
                 $projectReviewCount = DB::table('projects')->where('status', 'review')->count(); // HR sees all projects pending review
                 $data['pending_approvals'] = $leaveCount + $projectReviewCount;
                 
                 $data['pending_submissions'] = $hasTasks 
-                    ? DB::table('tasks')->where(function($q) use ($deptUserIds) {
-                          $q->whereIn('assignee_id', $deptUserIds)
-                            ->orWhereExists(function ($q2) use ($deptUserIds) {
-                                $q2->select(DB::raw(1))->from('task_assignees')
-                                   ->whereColumn('task_assignees.task_id', 'tasks.id')
-                                   ->whereIn('task_assignees.user_id', $deptUserIds);
-                            });
-                      })->where('status', 'review')->count() 
+                    ? DB::table('tasks')
+                        ->where('status', 'review')
+                        ->where(function ($q) use ($user) {
+                             $q->whereExists(function ($q2) use ($user) {
+                                 $q2->select(DB::raw(1))->from('users')
+                                    ->whereColumn('users.id', 'tasks.assignee_id');
+                                 \App\Support\HrScope::apply($q2, $user, 'department_id');
+                             })
+                             ->orWhereExists(function ($q2) use ($user) {
+                                 $q2->select(DB::raw(1))->from('task_assignees')
+                                    ->join('users', 'users.id', '=', 'task_assignees.user_id')
+                                    ->whereColumn('task_assignees.task_id', 'tasks.id');
+                                 \App\Support\HrScope::apply($q2, $user, 'users.department_id');
+                             });
+                        })->count() 
                     : 0;
             }
 

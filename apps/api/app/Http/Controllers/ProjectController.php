@@ -15,6 +15,29 @@ class ProjectController extends Controller
         return CapabilityMatrix::hasCapability($role, 'projects.manage');
     }
 
+
+    public function export(Request $request)
+    {
+        $job = \App\Models\ExportJob::create([
+            'user_id' => $request->user()->id,
+            'report_key' => 'projects',
+            'format' => 'csv',
+            'status' => 'pending',
+            'filters' => [
+                'search' => $request->input('search'),
+                '_has_manage' => $this->hasManageCapability($request),
+                '_user_id' => $request->user()->id,
+            ],
+        ]);
+
+        dispatch(new \App\Jobs\GenerateReportJob($job));
+
+        return response()->json([
+            'message' => 'Export started. You will be notified when it is ready.',
+            'job_id' => $job->id,
+        ]);
+    }
+
     public function index(Request $request)
     {
         $query = Project::with(['team', 'department', 'creator', 'members']);
@@ -164,7 +187,17 @@ class ProjectController extends Controller
             'cover_image' => 'nullable|string'
         ]);
 
+        $oldCoverImage = $project->cover_image;
         $project->update($validated);
+
+        if (array_key_exists('cover_image', $validated) && $oldCoverImage && $oldCoverImage !== $project->cover_image) {
+            try {
+                $basename = basename(parse_url($oldCoverImage, PHP_URL_PATH));
+                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete('projects/covers/' . $basename);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to delete old project cover image on update: ' . $e->getMessage());
+            }
+        }
 
         if (isset($validated['member_ids'])) {
             $project->members()->sync($validated['member_ids']);
@@ -173,10 +206,23 @@ class ProjectController extends Controller
         return response()->json($project->load(['team', 'department', 'creator', 'members']));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $project = Project::findOrFail($id);
-        $project->delete();
+        
+        // Cascade soft delete to tasks and log activity
+        $project->tasks()->get()->each(function($task) use ($request) {
+            \App\Models\TaskActivity::create([
+                'task_id' => $task->id,
+                'user_id' => $request->user()->id,
+                'action' => 'deleted',
+                'description' => 'Task was deleted along with its project.'
+            ]);
+            $task->delete();
+        });
+
+        $project->delete(); // Soft delete
+        
         return response()->json(['message' => 'Project deleted successfully']);
     }
 

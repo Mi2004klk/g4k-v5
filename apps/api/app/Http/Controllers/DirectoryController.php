@@ -73,69 +73,13 @@ class DirectoryController extends Controller
             $query->where('designation_id', $request->query('designation_id'));
         }
 
-        $users = $query->orderBy('name', 'asc')->paginate(24);
+        $perPage = $request->query('per_page', 24);
+        $users = $query->orderBy('name', 'asc')->paginate($perPage);
         
         $users->getCollection()->transform(function ($user) {
             return $this->applyVisibilityRules($user);
         });
 
         return response()->json($users);
-    }
-    
-    public function show($id)
-    {
-        $user = User::with(['department', 'designation'])
-            ->where('status', 'active')
-            ->findOrFail($id);
-            
-        return response()->json($this->applyVisibilityRules($user));
-    }
-
-    public function sendMessage(Request $request, $id)
-    {
-        $request->validate(['message' => 'required|string']);
-        $recipient = User::findOrFail($id);
-        $senderId = $request->user()->id;
-
-        $conversation = \App\Models\Conversation::where('scope', 'direct')
-            ->whereHas('users', function ($q) use ($senderId) {
-                $q->where('users.id', $senderId);
-            })
-            ->whereHas('users', function ($q) use ($recipient) {
-                $q->where('users.id', $recipient->id);
-            })
-            ->first();
-
-        if (!$conversation) {
-            $conversation = \App\Models\Conversation::create(['scope' => 'direct']);
-            $conversation->users()->attach([$senderId, $recipient->id]);
-            
-            $conversation->load('users');
-            try {
-                broadcast(new \App\Events\ConversationCreated($conversation))->toOthers();
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to broadcast ConversationCreated event: ' . $e->getMessage());
-            }
-        }
-
-        $msg = \App\Models\Message::create([
-            'conversation_id' => $conversation->id,
-            'sender_id' => $senderId,
-            'body' => $request->input('message')
-        ]);
-
-        broadcast(new \App\Events\MessageSent($msg))->toOthers();
-
-        \App\Services\NotificationService::send(
-            userId: $recipient->id,
-            type: 'chat_message',
-            title: 'New Direct Message',
-            body: "{$request->user()->name} sent you a message: " . \Illuminate\Support\Str::limit($request->input('message'), 50),
-            data: ['conversation_id' => $conversation->id],
-            link: '/dashboard/chat',
-            priority: 'normal'
-        );
-
-        return response()->json($msg, 201);
     }
 }
