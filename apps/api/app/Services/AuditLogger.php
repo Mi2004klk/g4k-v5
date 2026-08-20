@@ -7,10 +7,10 @@ use App\Jobs\ProcessAuditLogJob;
 
 class AuditLogger
 {
-    public static function log($request, string $action, string $subjectType, $subjectId, ?array $before, ?array $after): void
+    public static function log($request, string $action, string $subjectType, $subjectId, ?array $before, ?array $after, ?int $actorId = null): void
     {
         ProcessAuditLogJob::dispatchSync(
-            $request->user()?->id,
+            $actorId ?? $request->user()?->id,
             $action,
             $subjectType,
             $subjectId,

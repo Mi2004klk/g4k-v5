@@ -585,7 +585,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
         {/* Row 1: Views and Actions */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50">
-            {(["kanban", "list", "gantt", ...(canViewQA ? ["qa" as const] : [])] as const).map(mode => (
+            {(["kanban", "list", ...(canManageTasks ? ["gantt" as const] : []), ...(canViewQA ? ["qa" as const] : [])] as const).map(mode => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}

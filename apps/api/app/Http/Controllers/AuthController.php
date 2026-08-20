@@ -244,7 +244,7 @@ class AuthController extends Controller
 
         $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
 
-        \App\Services\AuditLogger::log($request, 'login', 'User', $user->id, null, null);
+        \App\Services\AuditLogger::log($request, 'login', 'User', $user->id, null, null, $user->id);
 
         $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($primaryRole);
 
@@ -281,6 +281,10 @@ class AuthController extends Controller
 
         if (!$user) {
             return response()->json(['message' => 'User not found'], 401);
+        }
+
+        if ($user->status !== 'active') {
+            return response()->json(['message' => 'User account is deactivated.'], 403);
         }
 
         // Revoke the single used refresh token (token rotation)

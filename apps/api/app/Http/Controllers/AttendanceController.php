@@ -86,9 +86,12 @@ class AttendanceController extends Controller
         $today = Carbon::now()->toDateString();
         \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
         \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$user->id}_{$activeRole}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("user_metrics_{$user->id}_{$activeRole}");
         \Illuminate\Support\Facades\Cache::forget("dashboard_global");
         \Illuminate\Support\Facades\Cache::forget("attendanceSummary_{$user->id}");
         \Illuminate\Support\Facades\Cache::forget("attendance_day_{$user->id}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("team_today_{$activeRole}_{$user->department_id}_{$today}");
+        \Illuminate\Support\Facades\Cache::forget("team_today_{$activeRole}_all_{$today}");
 
         try {
             broadcast(new \App\Events\AttendanceUpdated($user->id, $type));

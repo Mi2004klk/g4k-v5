@@ -15,6 +15,15 @@ class ProjectController extends Controller
         return CapabilityMatrix::hasCapability($role, 'projects.manage');
     }
 
+    private function canManageProject(Request $request, Project $project): bool
+    {
+        if (!$this->userHasManage($request)) return false;
+        if ($request->user()->resolveActiveRole() === 'super_admin') return true;
+        
+        $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+        return in_array($project->department_id, $deptIds);
+    }
+
 
     public function export(Request $request)
     {
@@ -48,6 +57,13 @@ class ProjectController extends Controller
                 $q->where('created_by', $userId)
                   ->orWhereHas('members', fn ($m) => $m->where('users.id', $userId));
             });
+        } elseif ($request->user()->resolveActiveRole() === 'hr') {
+            $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+            if (empty($deptIds)) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereIn('department_id', $deptIds);
+            }
         }
 
         if ($request->filled('status')) {
@@ -79,6 +95,13 @@ class ProjectController extends Controller
     {
         if (!$this->userHasManage($request)) {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($request->user()->resolveActiveRole() === 'hr') {
+            $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+            if (empty($deptIds) || ($request->has('department_id') && !in_array($request->input('department_id'), $deptIds))) {
+                return response()->json(['message' => 'Unauthorized department for HR project creation.'], 403);
+            }
         }
 
         $validated = $request->validate([
@@ -126,7 +149,7 @@ class ProjectController extends Controller
     {
         $project = Project::with(['team', 'department', 'creator', 'members', 'tasks.assignee', 'timeLogs', 'qaForm', 'qaSubmission'])->findOrFail($id);
 
-        if (!$this->userHasManage($request)) {
+        if (!$this->canManageProject($request, $project)) {
             $userId = $request->user()->id;
             $isMember = $project->created_by === $userId || $project->members->contains('id', $userId);
             if (!$isMember) {
@@ -151,7 +174,7 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
 
-        if (!$this->userHasManage($request)) {
+        if (!$this->canManageProject($request, $project)) {
             $userId = $request->user()->id;
             $isMember = $project->created_by === $userId || $project->members->contains('id', $userId);
             if (!$isMember) {
@@ -169,6 +192,10 @@ class ProjectController extends Controller
     public function update(Request $request, $id)
     {
         $project = Project::findOrFail($id);
+
+        if (!$this->canManageProject($request, $project)) {
+            return response()->json(['message' => 'Unauthorized to update this project.'], 403);
+        }
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -202,6 +229,13 @@ class ProjectController extends Controller
 
         if (isset($validated['member_ids'])) {
             $project->members()->sync($validated['member_ids']);
+            
+            // Sync project conversation members as well (T-21.3)
+            $conversation = \App\Models\Conversation::where('project_id', $project->id)->first();
+            if ($conversation) {
+                $conversationMembers = array_unique(array_merge([$project->created_by], $validated['member_ids']));
+                $conversation->users()->sync($conversationMembers);
+            }
         }
 
         return response()->json($project->load(['team', 'department', 'creator', 'members']));
@@ -210,6 +244,10 @@ class ProjectController extends Controller
     public function destroy(Request $request, $id)
     {
         $project = Project::findOrFail($id);
+
+        if (!$this->canManageProject($request, $project)) {
+            return response()->json(['message' => 'Unauthorized to delete this project.'], 403);
+        }
         
         // Cascade soft delete to tasks and log activity
         $project->tasks()->get()->each(function($task) use ($request) {
@@ -236,7 +274,7 @@ class ProjectController extends Controller
     {
         $project = Project::with(['members'])->findOrFail($id);
 
-        if (!$this->userHasManage($request)) {
+        if (!$this->canManageProject($request, $project)) {
             $userId = $request->user()->id;
             $isMember = $project->created_by === $userId || $project->members->contains('id', $userId);
             if (!$isMember) {
@@ -297,6 +335,11 @@ class ProjectController extends Controller
     public function review(Request $request, $id)
     {
         $project = Project::findOrFail($id);
+        
+        if (!$this->canManageProject($request, $project)) {
+            return response()->json(['message' => 'Unauthorized to review this project.'], 403);
+        }
+
         $approval = $project->approval()->where('status', 'pending')->first();
         
         if (!$approval) {

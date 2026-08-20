@@ -14,6 +14,21 @@ class TaskReminderController extends Controller
             'type' => 'nullable|string|in:due_date,personal'
         ]);
 
+        $task = \App\Models\Task::with(['assignees', 'project.members'])->findOrFail($taskId);
+        $userId = $request->user()->id;
+        $isParticipant = $task->reporter_id === $userId || 
+                         $task->assignee_id === $userId || 
+                         $task->assignees->contains('id', $userId) || 
+                         ($task->project && (
+                             $task->project->created_by === $userId || 
+                             $task->project->members->contains('id', $userId)
+                         ));
+        $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+
+        if (!$isParticipant && !$hasManage) {
+            return response()->json(['message' => 'You are not authorized to set a reminder on this task.'], 403);
+        }
+
         $reminder = TaskReminder::create([
             'task_id' => $taskId,
             'user_id' => $request->user()->id,

@@ -24,6 +24,7 @@ class CacheInvalidationObserver
                 $roles = ['employee', 'hr', 'super_admin'];
                 foreach ($roles as $role) {
                     Cache::forget("dashboard_metrics_{$userId}_{$role}_{$today}");
+                    Cache::forget("user_metrics_{$userId}_{$role}");
                 }
             }
         } catch (\Throwable $e) {

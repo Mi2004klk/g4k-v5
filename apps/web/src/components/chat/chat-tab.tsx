@@ -32,8 +32,8 @@ export function ChatTab() {
   const canManageChat = hasCapability(caps, "chat.manage");
 
   // Mirrors the backend gate: only users.manage (HR) or projects.manage (Admin)
-  // may pin/unpin messages in conversations.
-  const canPinMessages = hasCapability(caps, "chat.manage") || hasCapability(caps, "projects.manage");
+  // may pin/unpin messages in project conversations.
+  const canPinMessages = (conv: any) => canManageChat && conv?.scope === 'project';
 
   const initialConvId = searchParams.get("conversation");
   const [selectedId, setSelectedId] = useState<number | string | null>(initialConvId ? parseInt(initialConvId) : null);
@@ -661,7 +661,7 @@ export function ChatTab() {
                 isFetchingNextPage={isFetchingNextPage}
                 onPinMessage={(msgId) => pinMutation.mutate(msgId)}
                 onUnpinMessage={(msgId) => unpinMutation.mutate(msgId)}
-                canManage={canPinMessages}
+                canManage={canPinMessages(selectedConv)}
                 onMarkRead={() => markReadMutation.mutate()}
                 onDeleteMessage={(msgId) => deleteMessageMutation.mutate(msgId)}
                 onReply={(msg) => setReplyingTo(msg as ChatMessage)}

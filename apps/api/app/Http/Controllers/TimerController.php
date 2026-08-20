@@ -40,6 +40,15 @@ class TimerController extends Controller
                     return response()->json(['message' => 'You are not authorized to log time on this task.'], 403);
                 }
             }
+        } elseif (isset($validated['project_id'])) {
+            $project = \App\Models\Project::with('members')->find($validated['project_id']);
+            if ($project) {
+                $isParticipant = $project->created_by === $userId || $project->members->contains('id', $userId);
+                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+                if (!$isParticipant && !$hasManage) {
+                    return response()->json(['message' => 'You are not authorized to log time on this project.'], 403);
+                }
+            }
         }
 
         $log = TaskTimeLog::create(array_merge($validated, [

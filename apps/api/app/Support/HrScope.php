@@ -11,9 +11,6 @@ class HrScope
     {
         try {
             $ids = $hr->managedDepartments()->pluck('departments.id')->all();
-            if ($hr->department_id && !in_array($hr->department_id, $ids)) {
-                $ids[] = $hr->department_id;
-            }
             return array_values(array_unique($ids));
         } catch (\Throwable $e) {
             return [];

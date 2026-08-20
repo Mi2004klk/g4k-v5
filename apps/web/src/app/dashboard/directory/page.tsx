@@ -14,6 +14,8 @@ export default function DirectoryModulePage() {
   
   const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
+  const canViewDepartments = hasCapability(capabilities, "departments.manage");
+  const canViewDesignations = hasCapability(capabilities, "designations.manage");
 
   return (
     <PageContainer
@@ -38,18 +40,22 @@ export default function DirectoryModulePage() {
                   Employee Management
                 </TabsTrigger>
               )}
-              <TabsTrigger 
-                value="departments" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
-              >
-                Departments
-              </TabsTrigger>
-              <TabsTrigger 
-                value="designations" 
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
-              >
-                Designations & Roles
-              </TabsTrigger>
+              {canViewDepartments && (
+                <TabsTrigger 
+                  value="departments" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
+                >
+                  Departments
+                </TabsTrigger>
+              )}
+              {canViewDesignations && (
+                <TabsTrigger 
+                  value="designations" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
+                >
+                  Designations & Roles
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -63,13 +69,17 @@ export default function DirectoryModulePage() {
             </TabsContent>
           )}
 
-          <TabsContent value="departments" className="mt-0">
-            <DepartmentsTab />
-          </TabsContent>
+          {canViewDepartments && (
+            <TabsContent value="departments" className="mt-0">
+              <DepartmentsTab />
+            </TabsContent>
+          )}
 
-          <TabsContent value="designations" className="mt-0">
-            <DesignationsTab />
-          </TabsContent>
+          {canViewDesignations && (
+            <TabsContent value="designations" className="mt-0">
+              <DesignationsTab />
+            </TabsContent>
+          )}
         </Tabs>
       </ErrorBoundary>
     </PageContainer>

@@ -188,7 +188,7 @@ class ReportController extends Controller
         $user = $request->user();
 
         // Also we need to include hasManage and user ID in the cache key so HR and Admin don't share the same cache!
-        $cacheRole = $hasManage ? 'admin' : "u_{$user->id}";
+        $cacheRole = $hasManage ? "admin_{$user->id}" : "u_{$user->id}";
         $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
         $cacheKey = "report_attendance_summary_{$start}_{$end}_{$dept}_{$page}_{$perPage}_{$cacheRole}";
 
@@ -230,7 +230,7 @@ class ReportController extends Controller
         $hasManage = $this->hasElevatedReportAccess($request);
         $user = $request->user();
 
-        $cacheRole = $hasManage ? 'admin' : "u_{$user->id}";
+        $cacheRole = $hasManage ? "admin_{$user->id}" : "u_{$user->id}";
         $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
         $cacheKey = "report_leave_summary_{$start}_{$end}_{$dept}_{$page}_{$perPage}_{$cacheRole}";
 

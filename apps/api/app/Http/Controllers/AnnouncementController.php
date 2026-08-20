@@ -69,11 +69,25 @@ class AnnouncementController extends Controller
         ]);
 
         $scope = $validated['scope'] ?? 'company';
+        $teamId = $validated['team_id'] ?? ($scope === 'team' ? $request->user()->team_id : null);
+
+        if ($activeRole === 'hr') {
+            if ($scope === 'company') {
+                return response()->json(['message' => 'HR cannot post company-wide announcements.'], 403);
+            }
+            if ($scope === 'team' && $teamId) {
+                $team = \App\Models\Team::find($teamId);
+                $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+                if (!$team || !in_array($team->department_id, $deptIds)) {
+                    return response()->json(['message' => 'Unauthorized. You do not manage the department this team belongs to.'], 403);
+                }
+            }
+        }
         $announcement = Announcement::create([
             'title' => $validated['title'],
             'body' => $validated['body'],
             'scope' => $scope,
-            'team_id' => $validated['team_id'] ?? ($scope === 'team' ? $request->user()->team_id : null),
+            'team_id' => $teamId,
             'created_by' => $request->user()->id,
             'pinned_at' => !empty($validated['pinned']) ? now() : null,
             'priority' => $validated['priority'] ?? 'normal',
@@ -109,7 +123,8 @@ class AnnouncementController extends Controller
             }
         }
         
-
+        $activeRole = $request->user()->resolveActiveRole();
+        \Illuminate\Support\Facades\Cache::forget("announcements_{$request->user()->id}_{$activeRole}");
 
         return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
@@ -142,9 +157,26 @@ class AnnouncementController extends Controller
             $validated['team_id'] = $request->user()->team_id;
         }
 
+        $newScope = $validated['scope'] ?? $announcement->scope;
+        $newTeamId = $validated['team_id'] ?? ($newScope === 'team' ? $announcement->team_id : null);
+
+        if ($activeRole === 'hr') {
+            if ($newScope === 'company') {
+                return response()->json(['message' => 'HR cannot post company-wide announcements.'], 403);
+            }
+            if ($newScope === 'team' && $newTeamId) {
+                $team = \App\Models\Team::find($newTeamId);
+                $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+                if (!$team || !in_array($team->department_id, $deptIds)) {
+                    return response()->json(['message' => 'Unauthorized. You do not manage the department this team belongs to.'], 403);
+                }
+            }
+        }
+
         $announcement->update($validated);
         
-
+        $activeRole = $request->user()->resolveActiveRole();
+        \Illuminate\Support\Facades\Cache::forget("announcements_{$request->user()->id}_{$activeRole}");
 
         return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
@@ -161,7 +193,7 @@ class AnnouncementController extends Controller
 
         $announcement->delete();
         
-
+        \Illuminate\Support\Facades\Cache::forget("announcements_{$request->user()->id}_{$activeRole}");
 
         return response()->json(['message' => 'Announcement deleted successfully']);
     }
@@ -236,6 +268,11 @@ class AnnouncementController extends Controller
         
         // Temporarily assign it to the object for the response (the model can have an accessor later)
         $announcement->reactions = $reactionsJson;
+
+        \Illuminate\Support\Facades\Cache::forget("announcements_{$request->user()->id}_{$activeRole}");
+        try {
+            broadcast(new \App\Events\AnnouncementCreated($announcement));
+        } catch (\Throwable $e) {}
 
         return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }

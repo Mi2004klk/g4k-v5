@@ -43,14 +43,31 @@ class ApprovalService
     private static function checkRoleGating(Approval $approval, int $decidedBy)
     {
         $deciderActiveRole = User::findOrFail($decidedBy)->resolveActiveRole();
-        if ($approval->current_approver_role !== $deciderActiveRole && $deciderActiveRole !== 'super_admin') {
+        
+        // AUD-LEAVE-5: A super_admin can self-approve their own requests, as they are the highest escalation point.
+        if ($deciderActiveRole === 'super_admin') {
+            return;
+        }
+
+        if ($approval->current_approver_role !== $deciderActiveRole) {
             throw new AuthorizationException("User {$decidedBy} does not have the correct active role ({$approval->current_approver_role}) to decide this approval. Active role: {$deciderActiveRole}");
         }
 
         // Capability Matrix defense-in-depth check
-        $requiredCap = ($approval->current_approver_role === 'super_admin') ? 'leave.approve-hr' : 'leave.approve-employee';
+        $requiredCap = null;
+        switch ($approval->approvable_type) {
+            case \App\Models\Project::class:
+                $requiredCap = 'projects.manage';
+                break;
+            case \App\Models\Task::class:
+                $requiredCap = 'tasks.manage';
+                break;
+            case \App\Models\LeaveRequest::class:
+                $requiredCap = ($approval->current_approver_role === 'super_admin') ? 'leave.approve-hr' : 'leave.approve-employee';
+                break;
+        }
         
-        if (!CapabilityMatrix::hasCapability($deciderActiveRole, $requiredCap) && $deciderActiveRole !== 'super_admin') {
+        if ($requiredCap && !CapabilityMatrix::hasCapability($deciderActiveRole, $requiredCap)) {
             abort(403, "Lacking required capability ({$requiredCap}) to approve request.");
         }
     }

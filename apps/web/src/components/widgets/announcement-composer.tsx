@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/auth-store";
 
 interface ComposerData {
   title: string;
@@ -38,6 +39,7 @@ export function AnnouncementComposer({
   const [attachment, setAttachment] = useState<File | null>(null);
 
   const { formData: draftData, setFormData: setDraftData, clearDraft } = useFormDraft("announcement_create", { title: "", body: "", scope: "company", pinned: false });
+  const activeRole = useAuthStore(s => s.activeRole);
 
   useEffect(() => {
     if (open) {
@@ -146,7 +148,9 @@ export function AnnouncementComposer({
                     onChange={(e) => handleFieldChange({ scope: e.target.value })}
                     className="h-8 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-2 outline-none focus:ring-1 focus:ring-primary-500"
                   >
-                    <option value="company">Company-wide</option>
+                    {activeRole === 'super_admin' && (
+                      <option value="company">Company-wide</option>
+                    )}
                     <option value="team">Team Only</option>
                   </select>
                 </div>

@@ -256,6 +256,8 @@ class DashboardController extends Controller
                         ->select('audit_logs.id', 'audit_logs.action', 'audit_logs.subject_type',
                                  'audit_logs.subject_id', 'audit_logs.at', 'audit_logs.ip', 'users.name as user_name', 'audit_logs.after')
                         ->whereNotIn('audit_logs.action', ['login', 'logout', 'viewed'])
+                        ->where('audit_logs.action', 'not like', 'attendance.%')
+                        ->where('audit_logs.action', '!=', 'correct_event')
                         ->orderBy('audit_logs.at', 'desc')
                         ->limit(15)
                         ->get();

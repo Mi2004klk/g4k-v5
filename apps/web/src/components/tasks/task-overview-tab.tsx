@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent, Avatar, AvatarFallback, Slider } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 import { QAFormViewer } from "@/components/projects/qa-form-viewer";
 
 interface TaskOverviewTabProps {
@@ -91,6 +92,8 @@ export function TaskOverviewTab({
     onSuccess: () => {
       toast.success("Task submitted for review");
       queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: ["project-tasks"] });
     },
     onError: (err: Error) => toast.error(err.message || "Failed to submit"),
   });

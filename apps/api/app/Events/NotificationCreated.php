@@ -46,13 +46,6 @@ class NotificationCreated implements ShouldBroadcast
             return false;
         }
 
-        $prefs = $user->preferences ?? [];
-        $soundEnabled = $prefs['notifications']['sound'] ?? true;
-        
-        if (!$soundEnabled) {
-            return false;
-        }
-
         // Ideally we would also check presence channel online status here to prevent duplicate Firebase/Pusher
         // if they are actively using the app.
 

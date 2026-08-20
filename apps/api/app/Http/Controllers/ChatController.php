@@ -91,6 +91,7 @@ class ChatController extends Controller
             })
             ->with(['sender', 'replyTo', 'reads'])
             ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->cursorPaginate(50);
 
         return response()->json($messages);
@@ -144,7 +145,9 @@ class ChatController extends Controller
 
         
         if (!empty($validated['mentions'])) {
-            foreach ($validated['mentions'] as $userId) {
+            $validMembers = $conversation->users()->pluck('users.id')->toArray();
+            $mentions = array_intersect($validated['mentions'], $validMembers);
+            foreach ($mentions as $userId) {
                 if ($userId !== $request->user()->id) {
                     NotificationService::send(
                         $userId,
@@ -286,11 +289,14 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($conversationId);
         $this->checkAccess($conversation, $request->user());
 
+        if ($conversation->scope !== 'project') {
+            abort(403, 'Message pinning is only supported in project conversations.');
+        }
+
         $role = $request->user()->resolveActiveRole();
         $hasChatManage = CapabilityMatrix::hasCapability($role, 'chat.manage');
-        $hasProjectManage = $conversation->project_id && CapabilityMatrix::hasCapability($role, 'projects.manage');
 
-        if (!$hasChatManage && !$hasProjectManage) {
+        if (!$hasChatManage && $role !== 'super_admin') {
             abort(403, 'Unauthorized to pin messages');
         }
 
@@ -307,11 +313,14 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($conversationId);
         $this->checkAccess($conversation, $request->user());
 
+        if ($conversation->scope !== 'project') {
+            abort(403, 'Message unpinning is only supported in project conversations.');
+        }
+
         $role = $request->user()->resolveActiveRole();
         $hasChatManage = CapabilityMatrix::hasCapability($role, 'chat.manage');
-        $hasProjectManage = $conversation->project_id && CapabilityMatrix::hasCapability($role, 'projects.manage');
 
-        if (!$hasChatManage && !$hasProjectManage) {
+        if (!$hasChatManage && $role !== 'super_admin') {
             abort(403, 'Unauthorized to unpin messages');
         }
 

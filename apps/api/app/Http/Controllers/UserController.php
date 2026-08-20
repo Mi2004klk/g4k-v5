@@ -328,6 +328,9 @@ class UserController extends Controller
         }
 
         $user->forceFill(['status' => $validated['status']])->save();
+        if ($validated['status'] === 'inactive') {
+            $user->tokens()->delete();
+        }
         AuditLogger::log($request, 'update_status', 'user', $user->id, $before, $user->toArray());
 
         return response()->json($user);
