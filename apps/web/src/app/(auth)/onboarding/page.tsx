@@ -44,6 +44,24 @@ export default function OnboardingPage() {
     }
   }, [token, user, router]);
 
+  useEffect(() => {
+    const saved = sessionStorage.getItem("onboarding_state");
+    if (saved) {
+      try {
+        const { s, p, e } = JSON.parse(saved);
+        if (s) setStep(s);
+        if (p) setPhone(p);
+        if (e) setEmergencyContact(e);
+      } catch (e) {
+        console.error("Failed to parse saved onboarding state", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem("onboarding_state", JSON.stringify({ s: step, p: phone, e: emergencyContact }));
+  }, [step, phone, emergencyContact]);
+
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {

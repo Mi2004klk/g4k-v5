@@ -19,7 +19,7 @@ class ForcePasswordChange
         if ($user && $user->must_change_password) {
             // AUTH-5: Always enforce force_password_change when must_change_password=true
             // (Ignoring the security.force_password_change setting from the database for stricter security)
-            if (!$request->is('api/auth/change-password') && !$request->is('api/auth/logout')) {
+            if (!$request->is('api/auth/change-password') && !$request->is('api/auth/logout') && !$request->is('api/auth/sessions') && !$request->is('api/auth/sessions/*') && !$request->is('api/auth/role-select')) {
                 return response()->json([
                     'message' => 'You must change your password before continuing.',
                     'must_change_password' => true

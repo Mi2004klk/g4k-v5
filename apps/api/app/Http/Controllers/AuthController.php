@@ -119,6 +119,12 @@ class AuthController extends Controller
                     'lockout_until' => null,
                 ]);
             } else {
+                if ($user->lockout_until) {
+                    return response()->json([
+                        'message' => 'Account locked due to multiple failed login attempts. Try again later.',
+                        'retry_after' => now()->diffInSeconds($user->lockout_until)
+                    ], 423);
+                }
                 throw ValidationException::withMessages([
                     'identifier' => ['Invalid credentials.'],
                 ]);
@@ -387,8 +393,14 @@ class AuthController extends Controller
         $deviceName = $user->currentAccessToken()->name;
         $user->currentAccessToken()->delete();
 
-        // Find and delete old refresh token for this device
-        $user->tokens()->where('name', $deviceName . '_refresh')->delete();
+        // Find and delete old refresh token for this device, matching exact IP and user-agent to prevent cross-device deletion
+        $user->tokens()
+            ->where('name', $deviceName . '_refresh')
+            ->where('ip_address', $request->ip())
+            ->where('user_agent', $request->header('User-Agent'))
+            ->latest()
+            ->limit(1)
+            ->delete();
 
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
             return \Illuminate\Support\Facades\DB::table('settings')
@@ -440,16 +452,13 @@ class AuthController extends Controller
             ->orWhere('employee_id', $request->identifier)
             ->first();
 
+        $emailSent = false;
+        $smtpConfigured = \App\Support\SmtpSettings::isConfigured();
+
         if ($user) {
             Log::info("Password reset request for User ID {$user->id}");
 
-            // Create in-app approval request
-            \App\Models\PasswordResetRequest::updateOrCreate(
-                ['user_id' => $user->id, 'status' => 'pending'],
-                ['created_at' => now(), 'updated_at' => now()]
-            );
-
-            if (\App\Support\SmtpSettings::isConfigured()) {
+            if ($smtpConfigured) {
                 \App\Support\SmtpSettings::apply();
 
                 $token = \Illuminate\Support\Str::random(60);
@@ -460,14 +469,25 @@ class AuthController extends Controller
                 
                 try {
                     \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($token, $user->email));
+                    $emailSent = true;
                 } catch (\Throwable $e) {
                     Log::error("Failed to send password reset email to {$user->email}: " . $e->getMessage());
                 }
             }
+
+            if (!$smtpConfigured || !$emailSent) {
+                // Create in-app approval request
+                \App\Models\PasswordResetRequest::updateOrCreate(
+                    ['user_id' => $user->id, 'status' => 'pending'],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
         }
 
         return response()->json([
-            'message' => 'If the account exists, password recovery instructions have been sent (via email and to your administrator).'
+            'message' => 'If the account exists, password recovery instructions have been sent (via email and/or to your administrator).',
+            'email_not_configured' => !$smtpConfigured,
+            'email_send_failed' => $smtpConfigured && !$emailSent,
         ], 202);
     }
 

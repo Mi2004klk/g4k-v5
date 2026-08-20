@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
       density: "compact",
       setAuth: (token, user, activeRole, refreshToken, capabilities, broadcast = true) => {
         if (typeof window !== "undefined") {
-          document.cookie = `g4k_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `g4k_token=${token}; path=/; max-age=604800; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
           if (capabilities && Array.isArray(capabilities)) {
             try {
               const encoded = encodeURIComponent(JSON.stringify(capabilities));

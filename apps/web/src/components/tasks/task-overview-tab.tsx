@@ -91,7 +91,7 @@ export function TaskOverviewTab({
     onSuccess: () => {
       toast.success("Task submitted for review");
       queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       queryClient.invalidateQueries({ queryKey: ["project-tasks"] });
     },
     onError: (err: Error) => toast.error(err.message || "Failed to submit"),
