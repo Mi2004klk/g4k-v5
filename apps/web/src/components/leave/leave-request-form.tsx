@@ -23,9 +23,10 @@ import { useAuthStore } from "@/lib/auth-store";
 
 interface LeaveRequestFormProps {
   inDialog?: boolean;
+  onSuccess?: () => void;
 }
 
-export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
+export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFormProps) {
   const queryClient = useQueryClient();
   const formId = React.useId();
   
@@ -108,6 +109,9 @@ export function LeaveRequestForm({ inDialog = false }: LeaveRequestFormProps) {
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.myLeaveHistory() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      if (onSuccess) {
+        onSuccess();
+      }
     },
     onError: (err: ApiError) => {
       toast.error(err.message || "Failed to submit leave request.");
