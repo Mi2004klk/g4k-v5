@@ -455,6 +455,20 @@ class LeaveRequestController extends Controller
                     $currentDate->addDay();
                 }
             }
+
+            // Notify the manager/approver if the leave had an approver
+            if ($leave->approver_id) {
+                \App\Services\NotificationService::send(
+                    $leave->approver_id,
+                    'info',
+                    'Leave Cancelled',
+                    "{$user->name} has cancelled their leave request for {$leave->start_date}.",
+                    ['leave_id' => $leave->id],
+                    '/dashboard/org/attendance',
+                    'normal'
+                );
+            }
+
             return response()->json(['message' => 'Leave request cancelled successfully.']);
         } else if ($isHrOrAdmin) {
             // Admin/HR can delete
