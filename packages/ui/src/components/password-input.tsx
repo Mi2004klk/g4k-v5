@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react";
 import { AppIcon } from "./icon/AppIcon";
 import { Input, type InputProps } from "./input";
