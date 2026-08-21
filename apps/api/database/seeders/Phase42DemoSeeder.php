@@ -299,13 +299,13 @@ class Phase42DemoSeeder extends Seeder
 
             DB::table('task_assignees')->updateOrInsert(
                 ['task_id' => $t->id, 'user_id' => $praveen->id],
-                ['assigned_by' => $dinesh->id, 'created_at' => now(), 'updated_at' => now()]
+                ['created_at' => now(), 'updated_at' => now()]
             );
             
             if ($i % 2 == 0) {
                 DB::table('task_assignees')->updateOrInsert(
                     ['task_id' => $t->id, 'user_id' => $rahul->id],
-                    ['assigned_by' => $dinesh->id, 'created_at' => now(), 'updated_at' => now()]
+                    ['created_at' => now(), 'updated_at' => now()]
                 );
             }
 
@@ -367,7 +367,7 @@ class Phase42DemoSeeder extends Seeder
 
             DB::table('task_assignees')->updateOrInsert(
                 ['task_id' => $t->id, 'user_id' => $ajith->id],
-                ['assigned_by' => $dinesh->id, 'created_at' => now(), 'updated_at' => now()]
+                ['created_at' => now(), 'updated_at' => now()]
             );
 
             if ($i === 2) {

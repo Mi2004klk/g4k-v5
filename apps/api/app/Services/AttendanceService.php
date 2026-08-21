@@ -237,9 +237,9 @@ class AttendanceService
 
             $monthDay = Carbon::parse($date)->format('m-d');
             $allHolidays = \Illuminate\Support\Facades\Cache::remember('all_holidays_array', 86400, function () {
-                return DB::table('holidays')->get();
+                return DB::table('holidays')->get()->toArray();
             });
-            $isHoliday = $allHolidays->contains(function ($h) use ($date, $monthDay) {
+            $isHoliday = collect($allHolidays)->contains(function ($h) use ($date, $monthDay) {
                 if (!empty($h->date) && str_starts_with((string)$h->date, $date)) return true;
                 if (!empty($h->recurring) && !empty($h->date)) {
                     $hMonthDay = Carbon::parse($h->date)->format('m-d');
