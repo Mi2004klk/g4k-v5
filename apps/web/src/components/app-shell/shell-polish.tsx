@@ -18,9 +18,9 @@ export function ShellPolish() {
     window.addEventListener("offline", handleOffline);
 
     // Check if pusher env vars are missing
-    const pusherKey = process.env.NEXT_PUBLIC_REVERB_APP_KEY;
-    const pusherHost = process.env.NEXT_PUBLIC_REVERB_HOST;
-    if (!pusherKey || !pusherHost) {
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_APP_KEY;
+    const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
+    if (!pusherKey || !pusherCluster) {
       setPusherMissing(true);
     }
 
