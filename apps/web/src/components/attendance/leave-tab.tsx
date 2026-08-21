@@ -29,8 +29,8 @@ interface LeaveRecord {
   reason?: string;
 }
 
-export function LeaveTab() {
-  const [subTab, setSubTab] = useUrlState("sub", "my-leave");
+export function LeaveTab({ userId }: { userId?: string }) {
+  const [subTab, setSubTab] = useUrlState("sub", userId ? "history" : "my-leave");
   const [typeFilter, setTypeFilter] = useUrlState("type", "all");
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [search, setSearch] = useUrlState("search", "");
@@ -38,12 +38,13 @@ export function LeaveTab() {
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isPending } = useQuery({
-    queryKey: queryKeys.myLeaveHistory(typeFilter, statusFilter, debouncedSearch, page),
+    queryKey: [...queryKeys.myLeaveHistory(typeFilter, statusFilter, debouncedSearch, page), userId],
     queryFn: () => {
       const params = new URLSearchParams();
       if (typeFilter !== "all") params.append("type", typeFilter);
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (debouncedSearch) params.append("search", debouncedSearch);
+      if (userId) params.append("user_id", userId);
       params.append("page", page);
       return apiFetch(`/leave-requests/history?${params.toString()}`);
     },
@@ -85,17 +86,34 @@ export function LeaveTab() {
   return (
     <ErrorBoundary>
       <Tabs value={subTab} onValueChange={setSubTab} className="w-full mt-4">
-        <TabsList className="mb-4">
-          <TabsTrigger value="my-leave" className="data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50 dark:data-[state=active]:bg-amber-950/30">My Leave</TabsTrigger>
-          <TabsTrigger value="holidays" className="data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50 dark:data-[state=active]:bg-amber-950/30">Holidays</TabsTrigger>
-        </TabsList>
+        {!userId && (
+          <TabsList className="mb-4">
+            <TabsTrigger value="my-leave">My Leave</TabsTrigger>
+            <TabsTrigger value="history">Leave History</TabsTrigger>
+          </TabsList>
+        )}
 
-        <TabsContent value="my-leave" className="space-y-6">
+        {!userId && (
+          <TabsContent value="my-leave" className="m-0 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <LeaveRequestForm onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: queryKeys.myLeaveHistory("all", "all", "", "1") });
+              }} />
+              <div className="h-[400px]">
+                <HolidayCalendar />
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
+        <TabsContent value={userId ? "history" : "history"} className="space-y-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left Column: Request Form */}
-            <div className="w-full md:w-1/3 flex flex-col min-h-[400px]">
-              <LeaveRequestForm />
-            </div>
+            {!userId && (
+              <div className="w-full md:w-1/3 flex flex-col min-h-[400px]">
+                <LeaveRequestForm />
+              </div>
+            )}
 
             {/* Right Column: History */}
             <div className="flex-1 flex flex-col min-w-0 min-h-[500px]">

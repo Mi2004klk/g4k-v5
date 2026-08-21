@@ -491,12 +491,17 @@ export default function DashboardLayout({
                   href="/dashboard/chat"
                   prefetch={false}
                   className={cn(
-                    "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                    "relative flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
                     pathname.startsWith("/dashboard/chat") ? "text-pink-600 dark:text-pink-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                   )}
                 >
                   <AppIcon name="chat" size="lg" className=" shrink-0" />
                   <span>Chat</span>
+                  {chatUnreadCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-neutral-900">
+                      {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                    </span>
+                  )}
                 </Link>
               )}
 

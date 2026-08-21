@@ -10,6 +10,7 @@ interface ComposerUser {
 }
 interface ComposerConversation {
   users?: ComposerUser[];
+  scope?: string;
 }
 interface ReplyMessage {
   id: number;
@@ -52,7 +53,7 @@ export function MessageComposer({
   if (text !== prevText) {
     setPrevText(text);
     const match = text.match(/@(\w*)$/);
-    if (match) {
+    if (match && conversation?.scope !== 'global') {
       setMentionQuery(match[1]);
       setMentionIndex(text.lastIndexOf("@"));
       setShowMentions(true);

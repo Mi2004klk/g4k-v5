@@ -26,6 +26,14 @@
                 <div class="label">Active Projects</div>
                 <div class="metric">{{ $metrics['active_projects'] ?? 0 }}</div>
             </div>
+            <div class="box">
+                <div class="label">Attendance Days Logged</div>
+                <div class="metric">{{ $metrics['attendance_count'] ?? 0 }}</div>
+            </div>
+            <div class="box">
+                <div class="label">Leaves Approved</div>
+                <div class="metric">{{ $metrics['leaves_approved'] ?? 0 }}</div>
+            </div>
         </div>
 
         <p>Log in to your dashboard to review detailed analytics.</p>

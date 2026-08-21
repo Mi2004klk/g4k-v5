@@ -278,8 +278,22 @@ class LeaveRequestController extends Controller
 
     public function history(Request $request)
     {
-        $query = LeaveRequest::with(['approval'])
-            ->where('user_id', $request->user()->id);
+        $user = $request->user();
+        $query = LeaveRequest::with(['approval']);
+
+        if ($request->filled('user_id') && $request->query('user_id') != $user->id) {
+            $targetUserId = $request->query('user_id');
+            $activeRole = $user->resolveActiveRole();
+            
+            if ($activeRole !== 'super_admin') {
+                if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUserId), $user)->exists()) {
+                    return response()->json(['message' => 'Unauthorized'], 403);
+                }
+            }
+            $query->where('user_id', $targetUserId);
+        } else {
+            $query->where('user_id', $user->id);
+        }
 
         if ($request->filled('status')) {
             $status = $request->query('status');
@@ -347,10 +361,6 @@ class LeaveRequestController extends Controller
                          ->orWhereRaw('LOWER(email) LIKE LOWER(?)', ["%{$search}%"]);
                   });
             });
-        }
-
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->query('user_id'));
         }
 
         $query->orderBy('start_date', 'desc');

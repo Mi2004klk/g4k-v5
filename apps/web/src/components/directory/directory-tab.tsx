@@ -14,7 +14,8 @@ import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/compone
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
-import { FilterBar } from "@g4k/ui/components";
+import { FilterBar, DataTable } from "@g4k/ui/components";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   Sheet,
   SheetContent,
@@ -65,6 +66,7 @@ export function CorporateDirectoryTab() {
   const [deptFilter, setDeptFilter] = useUrlState("department", "all");
   const [desigFilter, setDesigFilter] = useUrlState("designation", "all");
   const [visFilter] = useUrlState("visibility", "all");
+  const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
 
@@ -81,14 +83,14 @@ export function CorporateDirectoryTab() {
   );
 
   const { data: deptsData } = useQuery({
-    queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments?per_page=100"),
+    queryKey: [...queryKeys.departments, 'directory_view'],
+    queryFn: () => apiFetch("/departments?per_page=100&directory_view=1"),
     staleTime: STALE_TIME_DEPARTMENTS,
   });
 
   const { data: desigsData } = useQuery({
-    queryKey: queryKeys.designations,
-    queryFn: () => apiFetch("/designations?per_page=100"),
+    queryKey: [...queryKeys.designations, 'directory_view'],
+    queryFn: () => apiFetch("/designations?per_page=100&directory_view=1"),
     staleTime: STALE_TIME_DESIGNATIONS,
   });
 
@@ -181,6 +183,48 @@ export function CorporateDirectoryTab() {
           icon="users"
           description="Try broadening your search term."
         />
+      ) : viewMode === "list" ? (
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
+          <DataTable
+            columns={[
+              {
+                accessorKey: "name",
+                header: "Name",
+                cell: ({ row }) => (
+                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedUser(row.original)}>
+                    <Avatar className="w-8 h-8 border border-neutral-100 dark:border-neutral-800 shrink-0">
+                      <AvatarImage src={resolveAvatarUrl(row.original.avatar_url) || ""} />
+                      <AvatarFallback name={row.original.name} className="text-[10px]" />
+                    </Avatar>
+                    <span className="font-semibold text-neutral-900 dark:text-white">{row.original.name}</span>
+                  </div>
+                )
+              },
+              {
+                accessorKey: "designation.name",
+                header: "Designation",
+                cell: ({ row }) => row.original.designation?.name || "Team Member"
+              },
+              {
+                accessorKey: "department.name",
+                header: "Department",
+                cell: ({ row }) => row.original.department?.name || "-"
+              },
+              {
+                accessorKey: "email",
+                header: "Email",
+                cell: ({ row }) => row.original.email || "-"
+              },
+              {
+                accessorKey: "phone",
+                header: "Phone",
+                cell: ({ row }) => row.original.phone || "-"
+              }
+            ]}
+            data={users}
+            onRowClick={(row) => setSelectedUser(row)}
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {users.map((user: User) => (

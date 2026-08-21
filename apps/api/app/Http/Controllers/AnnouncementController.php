@@ -24,6 +24,7 @@ class AnnouncementController extends Controller
         if ($activeRole !== 'super_admin') {
             $query->where(function($q) use ($user) {
                 $q->where('scope', 'company')
+                  ->orWhere('priority', 'urgent')
                   ->orWhere(function($sub) use ($user) {
                       $sub->where('scope', 'team');
                       $sub->where(function($teamQ) use ($user) {
@@ -222,6 +223,7 @@ class AnnouncementController extends Controller
         if ($activeRole !== 'super_admin') {
             $query->where(function($q) use ($user) {
                 $q->where('scope', 'company')
+                  ->orWhere('priority', 'urgent')
                   ->orWhere(function($sub) use ($user) {
                       $sub->where('scope', 'team');
                       $sub->where(function($teamQ) use ($user) {

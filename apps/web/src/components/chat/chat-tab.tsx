@@ -379,12 +379,20 @@ export function ChatTab() {
 
   const pinChatMutation = useMutation({
     mutationFn: async () => apiFetch(`/conversations/${selectedId}/pin`, { method: "POST" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.conversations }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      toast.success("Chat pinned successfully");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to pin chat"),
   });
 
   const unpinChatMutation = useMutation({
     mutationFn: async () => apiFetch(`/conversations/${selectedId}/unpin`, { method: "POST" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.conversations }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      toast.success("Chat unpinned successfully");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to unpin chat"),
   });
 
   const sendMessageMutation = useMutation({
@@ -630,6 +638,10 @@ export function ChatTab() {
                           if (isPinned) {
                             unpinChatMutation.mutate();
                           } else {
+                            if (pinnedCount >= 100) {
+                              toast.error("You can only pin up to 100 conversations.");
+                              return;
+                            }
                             pinChatMutation.mutate();
                           }
                         }} disabled={pinChatMutation.isPending || unpinChatMutation.isPending}>

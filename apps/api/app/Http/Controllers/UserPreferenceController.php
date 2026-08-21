@@ -32,7 +32,7 @@ class UserPreferenceController extends Controller
         $validated = $request->validate([
             'theme_mode' => 'nullable|in:light,dark,system',
             'density' => 'nullable|in:compact,comfortable',
-            'directory_visibility' => 'nullable|in:public,internal,private',
+            'directory_visibility' => 'nullable|in:public,private',
             'preferences' => 'nullable|array'
         ]);
 
@@ -53,7 +53,7 @@ class UserPreferenceController extends Controller
 
         if (isset($validated['preferences'])) {
             $incomingPrefs = $validated['preferences'];
-            if (isset($incomingPrefs['directory_visibility']) && !in_array($incomingPrefs['directory_visibility'], ['public', 'internal', 'private'])) {
+            if (isset($incomingPrefs['directory_visibility']) && !in_array($incomingPrefs['directory_visibility'], ['public', 'private'])) {
                 unset($incomingPrefs['directory_visibility']);
             }
             $prefs = array_merge($prefs, $incomingPrefs);

@@ -23,7 +23,7 @@ export function ProfilePreferencesTab() {
   const restoreWidgets = useUIStore((s) => s.restoreWidgets);
   const dismissedWidgetsCount = useUIStore((s) => s.dismissedWidgets?.length ?? 0);
 
-  const [visibility, setVisibility] = useState(authUser?.preferences?.directory_visibility || "internal");
+  const [visibility, setVisibility] = useState(authUser?.preferences?.directory_visibility || "private");
   const [notifications, setNotifications] = useState({
     leave_approvals: true,
     task_updates: true,
@@ -114,20 +114,7 @@ export function ProfilePreferencesTab() {
                 <div className="text-xs text-neutral-500 leading-relaxed">Phone and email visible to all users across the organization.</div>
               </div>
             </button>
-            
-            <button
-              onClick={() => handleVisibilityChange("internal")}
-              disabled={updateVisibilityMutation.isPending}
-              className={`flex items-start gap-4 p-4 text-left border rounded-lg transition-all ${visibility === "internal" ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-1 ring-primary-500/20" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
-            >
-              <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${visibility === "internal" ? "border-primary-600" : "border-neutral-300 dark:border-neutral-700"}`}>
-                {visibility === "internal" && <div className="w-2 h-2 rounded-full bg-primary-600" />}
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-neutral-900 dark:text-white mb-1">Internal Only (Recommended)</div>
-                <div className="text-xs text-neutral-500 leading-relaxed">Contact info visible only to your department members and HR.</div>
-              </div>
-            </button>
+
             
             <button
               onClick={() => handleVisibilityChange("private")}

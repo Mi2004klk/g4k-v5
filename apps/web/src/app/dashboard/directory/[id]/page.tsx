@@ -7,6 +7,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { AppIcon } from "@g4k/ui/components";
 import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Skeleton, EmptyState, Avatar, AvatarFallback, AvatarImage, StatusBadge } from "@g4k/ui/components";
 import { resolveAvatarUrl } from "@/lib/utils";
+import { TasksTab } from "@/components/projects/tasks-tab";
+import { LeaveTab } from "@/components/attendance/leave-tab";
+import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
 
 export default function Employee360Page() {
   const params = useParams();
@@ -84,10 +87,10 @@ export default function Employee360Page() {
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="w-full justify-start border-b rounded-none bg-transparent h-auto p-0 space-x-6 overflow-x-auto">
           <TabsTrigger value="profile" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Profile</TabsTrigger>
+          <TabsTrigger value="attendance" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Attendance</TabsTrigger>
+          <TabsTrigger value="leave" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Leave</TabsTrigger>
+          <TabsTrigger value="tasks" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Projects & Tasks</TabsTrigger>
           <TabsTrigger value="activity" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Activity</TabsTrigger>
-          <TabsTrigger value="tasks" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Tasks</TabsTrigger>
-          <TabsTrigger value="time" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Time & Attendance</TabsTrigger>
-          <TabsTrigger value="hardware" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 px-1 text-sm">Hardware & Access</TabsTrigger>
         </TabsList>
         
         <div className="mt-6">
@@ -113,6 +116,24 @@ export default function Employee360Page() {
             </div>
           </TabsContent>
 
+          <TabsContent value="attendance" className="m-0">
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
+              <AttendanceHistoryCalendar days={[]} userId={Number(id)} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="leave" className="m-0">
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
+              <LeaveTab userId={id} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="tasks" className="m-0">
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
+              <TasksTab userId={id} />
+            </div>
+          </TabsContent>
+
           <TabsContent value="activity" className="m-0">
             <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
               <h3 className="font-semibold text-neutral-900 dark:text-white mb-4">Recent Activity</h3>
@@ -133,24 +154,6 @@ export default function Employee360Page() {
                   ))
                 )}
               </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="tasks" className="m-0">
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-12 text-center text-neutral-500">
-              Tasks integration coming soon.
-            </div>
-          </TabsContent>
-
-          <TabsContent value="time" className="m-0">
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-12 text-center text-neutral-500">
-              Time & Attendance integration coming soon.
-            </div>
-          </TabsContent>
-
-          <TabsContent value="hardware" className="m-0">
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-12 text-center text-neutral-500">
-              Hardware & Access integration coming soon.
             </div>
           </TabsContent>
         </div>

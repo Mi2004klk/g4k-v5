@@ -50,8 +50,12 @@ export interface Task {
   recurrence?: Record<string, unknown>;
   order?: number;
 }
-export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
+export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: string, userId?: string }) {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const isMe = searchParams.get("me") === "1";
+  const isReview = searchParams.get("review") === "1";
+  
   const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa" | "list">("kanban");
   const [groupBy, setGroupBy] = useState<"status" | "priority" | "assignee">("status");
   const [filterPreset, setFilterPreset] = useState("custom");
@@ -124,11 +128,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
     enabled: canManageTasks
   });
   
-  const searchParams = useSearchParams();
-  const isMe = searchParams.get("me") === "1";
-  const isReview = searchParams.get("review") === "1";
   const highlightId = searchParams.get("highlight");
-  const [assigneeFilter, setAssigneeFilter] = useState(isMe ? "me" : "all");
+  const [assigneeFilter, setAssigneeFilter] = useState(userId ? userId : isMe ? "me" : "all");
   const user = useAuthStore(s => s.user);
 
   const usersList = Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []);
