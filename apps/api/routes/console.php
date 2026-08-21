@@ -8,7 +8,11 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-$tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone');
+try {
+    $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone');
+} catch (\Throwable $e) {
+    $tz = config('app.timezone');
+}
 
 Schedule::job(new \App\Jobs\RemindShiftStart)->everyFiveMinutes()->withoutOverlapping()->timezone($tz);
 Schedule::job(new \App\Jobs\AlertMissedClockIn)->everyFiveMinutes()->withoutOverlapping()->timezone($tz);
