@@ -375,7 +375,7 @@ class Phase42DemoSeeder extends Seeder
                 $approval = \App\Models\Approval::firstOrCreate(
                     ['approvable_type' => Task::class, 'approvable_id' => $t->id],
                     [
-                        'user_id' => $ajith->id,
+                        'submitted_by' => $ajith->id,
                         'current_approver_role' => 'hr',
                         'status' => 'pending',
                         'payload' => [],
