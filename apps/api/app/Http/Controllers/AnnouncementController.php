@@ -14,6 +14,9 @@ class AnnouncementController extends Controller
         $activeRole = $user->resolveActiveRole();
 
         $query = Announcement::with(['creator', 'team', 'reactionsList'])
+            ->whereDoesntHave('dismissals', function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
             ->orderBy('pinned_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->limit(100);
@@ -71,6 +74,10 @@ class AnnouncementController extends Controller
         $scope = $validated['scope'] ?? 'company';
         $teamId = $validated['team_id'] ?? ($scope === 'team' ? $request->user()->team_id : null);
 
+        if ($scope === 'team' && !$teamId) {
+            return response()->json(['message' => 'Team ID is required for team announcements.'], 422);
+        }
+
         if ($activeRole === 'hr') {
             if ($scope === 'company') {
                 return response()->json(['message' => 'HR cannot post company-wide announcements.'], 403);
@@ -96,15 +103,19 @@ class AnnouncementController extends Controller
         try {
             try {
                 broadcast(new AnnouncementCreated($announcement))->toOthers();
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Inner broadcast error: " . $e->getMessage());
+            }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Failed to broadcast AnnouncementCreated event: " . $e->getMessage());
         }
 
         if (in_array($announcement->priority, ['high', 'urgent'])) {
             $userIds = [];
-            if ($announcement->scope === 'team' && $announcement->team_id) {
-                $userIds = \App\Models\User::where('department_id', $announcement->team_id)->where('status', 'active')->pluck('id')->toArray();
+            if ($announcement->priority === 'urgent') {
+                $userIds = \App\Models\User::where('status', 'active')->pluck('id')->toArray();
+            } elseif ($announcement->scope === 'team' && $announcement->team_id) {
+                $userIds = \App\Models\User::where('team_id', $announcement->team_id)->where('status', 'active')->pluck('id')->toArray();
             } else {
                 $userIds = \App\Models\User::where('status', 'active')->pluck('id')->toArray();
             }
@@ -231,6 +242,17 @@ class AnnouncementController extends Controller
         $announcement = $query->firstOrFail();
         $userId = $request->user()->id;
         $emoji = $validated['emoji'];
+        
+        $emojiMap = [
+            'like' => '👍',
+            'heart' => '❤️',
+            'party' => '🎉',
+            'laugh' => '😂',
+            'sad' => '😢',
+        ];
+        if (array_key_exists($emoji, $emojiMap)) {
+            $emoji = $emojiMap[$emoji];
+        }
 
         $existingReaction = \Illuminate\Support\Facades\DB::table('reactions')
             ->where('reactable_type', Announcement::class)
@@ -252,7 +274,6 @@ class AnnouncementController extends Controller
             ]);
         }
 
-        // We also need to map this back to the JSON structure expected by the frontend for announcements
         $reactionsDb = \Illuminate\Support\Facades\DB::table('reactions')
             ->where('reactable_type', Announcement::class)
             ->where('reactable_id', $announcement->id)
@@ -266,7 +287,6 @@ class AnnouncementController extends Controller
             $reactionsJson[$reaction->emoji][] = $reaction->user_id;
         }
         
-        // Temporarily assign it to the object for the response (the model can have an accessor later)
         $announcement->reactions = $reactionsJson;
 
         \Illuminate\Support\Facades\Cache::forget("announcements_{$request->user()->id}_{$activeRole}");
@@ -276,5 +296,14 @@ class AnnouncementController extends Controller
 
         return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }
-}
 
+    public function dismiss(Request $request, $id)
+    {
+        $user = $request->user();
+        $announcement = Announcement::findOrFail($id);
+        
+        $announcement->dismissals()->syncWithoutDetaching([$user->id]);
+
+        return response()->json(['message' => 'Announcement dismissed successfully']);
+    }
+}

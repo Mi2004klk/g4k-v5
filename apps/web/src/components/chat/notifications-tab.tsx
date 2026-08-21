@@ -35,27 +35,14 @@ interface NotificationItem {
  * (unknown types fall back to a prettified string instead of being hidden).
  */
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
-  leave_request: "Leave Requests",
-  leave_decision: "Leave Decisions",
-  task_assigned: "Task Assigned",
-  task_submitted: "Task Submissions",
-  task_decision: "Task Decisions",
-  task_reminder: "Task Reminders",
-  project_submitted: "Project Submissions",
-  project_decision: "Project Decisions",
-  announcement: "Announcements",
-  holiday_reminder: "Holiday Reminders",
-  shift_reminder: "Shift Reminders",
-  missed_clock: "Missed Clock-ins",
-  session: "Sessions",
-  suspicious_login: "Suspicious Logins",
-  feedback: "Feedback",
-  mention: "Mentions",
-  export: "Exports",
+  chat: "Chat",
   system: "System",
-  // Legacy types still emitted by older notification rows
-  message: "Messages",
-  security: "Security",
+  approval_pending: "Approval Pending",
+  approval_decided: "Approval Decided",
+  info: "Information",
+  alert: "Alerts",
+  task_assigned: "Task Assigned",
+  task_completed: "Task Completed",
 };
 
 function notificationTypeLabel(type?: string): string {

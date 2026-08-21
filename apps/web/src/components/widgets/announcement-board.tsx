@@ -33,7 +33,7 @@ export function AnnouncementBoard() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [initialData, setInitialData] = useState<{ title: string; body: string; scope: string; pinned: boolean } | undefined>();
+  const [initialData, setInitialData] = useState<{title: string, body: string, scope: string, priority: string, pinned: boolean} | undefined>();
 
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
@@ -93,6 +93,16 @@ export function AnnouncementBoard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       toast.success("Announcement deleted");
+      setConfirmState({ isOpen: false, id: null });
+    },
+  });
+
+  const dismissMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiFetch(`/announcements/${id}/dismiss`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
 
@@ -144,9 +154,25 @@ export function AnnouncementBoard() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => dismissMutation.mutate(item.id)}
+                        aria-label="Dismiss Announcement"
+                        className="h-6 w-6 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
+                      >
+                        <AppIcon name="close" size="xs" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">Dismiss</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider delayDuration={150}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => {
                           setEditingId(item.id);
-                          setInitialData({ title: item.title, body: item.body, scope: item.scope || "company", pinned: isPinned });
+                          setInitialData({ title: item.title, body: item.body, scope: item.scope || "company", priority: "normal", pinned: isPinned });
                           setShowCreate(true);
                         }}
                         aria-label="Edit Announcement"

@@ -37,7 +37,7 @@ class DashboardController extends Controller
         
         $data = Cache::remember($cacheKey, 120, function() use ($user, $activeRole, $safeCall) {
             return [
-                'metrics' => Cache::remember("user_metrics_{$user->id}_{$activeRole}", 300, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
+                'metrics' => Cache::remember("user_metrics_{$user->id}_{$activeRole}", 30, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
                 'preferences' => Cache::remember("user_prefs_{$user->id}", 300, fn() => $safeCall(UserPreferenceController::class, 'show')),
                 'pending_approvals' => Cache::remember("pending_approvals_{$user->id}_{$activeRole}", 60, function() use ($activeRole, $user) {
                     $approvals = [];

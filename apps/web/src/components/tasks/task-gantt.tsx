@@ -9,8 +9,10 @@ import { Tabs, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components/icon/AppIcon";
 
 export interface GanttTask extends TaskModel {
+  start_date?: string;
   created_at?: string;
   blocked_by?: number | string | null;
+  project?: { id: number; name: string };
 }
 
 export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: { 
@@ -38,21 +40,31 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
     // 1. Strict Data Sanitization
     const validTaskIds = new Set(tasks.map(t => String(t.id)));
     
-    const formattedTasks = tasks.map(task => {
+    const formattedTasks: any[] = [];
+    const projectBounds = new Map<number, { name: string, start: Date, end: Date }>();
+
+    tasks.forEach(task => {
       const parseDate = (d: string) => d.includes('T') ? new Date(d) : new Date(`${d}T00:00:00`);
       
-      let start = task.created_at ? parseDate(task.created_at) : new Date();
+      let start = task.start_date ? parseDate(task.start_date) : (task.created_at ? parseDate(task.created_at) : new Date());
       let end = task.due_date ? parseDate(task.due_date) : new Date(start.getTime() + 86400000);
       
-      // Fix invalid dates (end before start causes NaN crash in frappe-gantt)
       if (end.getTime() < start.getTime()) {
         end = new Date(start.getTime() + 86400000);
       }
 
-      // Check if it's a milestone
+      if (task.project) {
+        const bounds = projectBounds.get(task.project.id);
+        if (!bounds) {
+          projectBounds.set(task.project.id, { name: task.project.name, start, end });
+        } else {
+          if (start < bounds.start) bounds.start = start;
+          if (end > bounds.end) bounds.end = end;
+        }
+      }
+
       const isMilestone = (task as any).is_milestone || isSameDay(start, end);
 
-      // Verify dependencies exist in current dataset to prevent fatal JS crash
       let validDependency = "";
       if (task.blocked_by) {
         const depStr = String(task.blocked_by);
@@ -63,7 +75,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
         }
       }
 
-      return {
+      formattedTasks.push({
         id: String(task.id),
         name: task.title,
         start: format(start, "yyyy-MM-dd"),
@@ -71,7 +83,20 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
         progress: task.progress || 0,
         dependencies: validDependency,
         custom_class: isMilestone ? "gantt-task-milestone" : `gantt-task-${task.status}`,
-      };
+      });
+    });
+
+    // Add project bars at the beginning
+    Array.from(projectBounds.entries()).forEach(([id, bounds]) => {
+      formattedTasks.unshift({
+        id: `project-${id}`,
+        name: bounds.name,
+        start: format(bounds.start, "yyyy-MM-dd"),
+        end: format(bounds.end, "yyyy-MM-dd"),
+        progress: 100,
+        dependencies: "",
+        custom_class: "gantt-project-bar",
+      });
     });
 
     // 2. Clean DOM for React
@@ -83,10 +108,12 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
       if (svgElement) {
         ganttInstance.current = new Gantt(svgElement, formattedTasks, {
           on_click: (task: { id: string | number }) => {
+            if (String(task.id).startsWith("project-")) return;
             const originalTask = tasks.find(t => String(t.id) === task.id);
             if (originalTask) onTaskSelectRef.current?.(originalTask);
           },
           on_date_change: (task: { id: string | number }, start: Date, end: Date) => {
+            if (String(task.id).startsWith("project-")) return;
             const originalTask = tasks.find(t => String(t.id) === task.id);
             if (originalTask) {
               onTaskUpdateRef.current?.(originalTask, { start, end });
@@ -229,6 +256,19 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
         }
         .gantt .bar-wrapper.gantt-task-milestone .bar-progress { display: none; }
         .gantt .bar-wrapper.gantt-task-milestone .bar-label { display: none; }
+
+        /* Project Bars */
+        .gantt .bar-wrapper.gantt-project-bar .bar {
+          fill: #475569;
+          stroke: #334155;
+          stroke-width: 1px;
+          height: 8px !important;
+          y: 11px !important;
+          rx: 0; ry: 0;
+        }
+        .gantt .bar-wrapper.gantt-project-bar .bar-progress { display: none; }
+        .gantt .bar-wrapper.gantt-project-bar .bar-label { display: none; }
+        .gantt .bar-wrapper.gantt-project-bar:hover .bar { filter: brightness(1.2); }
 
         .dark .gantt .grid-header { fill: #171717; }
         .dark .gantt .grid-row:nth-child(even) { fill: #171717; }

@@ -8,13 +8,22 @@ use Illuminate\Support\Facades\Storage;
 
 class CompanyProfileController extends Controller
 {
+    public function publicConfig()
+    {
+        $profile = CompanyProfile::first();
+        return response()->json([
+            'name' => $profile ? $profile->name : 'My Company',
+            'logo_url' => $profile ? $profile->logo_url : null,
+        ]);
+    }
+
     public function show()
     {
         $profile = CompanyProfile::first();
         if (!$profile) {
             $profile = CompanyProfile::create([
                 'name' => 'My Company',
-                'timezone' => 'UTC',
+                'timezone' => 'Asia/Kolkata',
             ]);
         }
         return response()->json($profile);

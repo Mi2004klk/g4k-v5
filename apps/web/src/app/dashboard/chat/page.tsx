@@ -12,6 +12,13 @@ import { apiFetch } from "@/lib/api-client";
 export default function ChatModulePage() {
   const [tab, setTab] = useUrlState("tab", "chat");
 
+  const { data: notificationsCountData } = useQuery({
+    queryKey: ["notifications-unread-count"],
+    queryFn: () => apiFetch("/notifications/unread-count"),
+    refetchInterval: 30000,
+  });
+  const unreadNotifications = notificationsCountData?.count || 0;
+
   return (
     <PageContainer
       title="Communications & Inbox"
@@ -27,9 +34,11 @@ export default function ChatModulePage() {
               <AppIcon name="bell" size="xs" /> Announcements
             </TabsTrigger>
             <TabsTrigger value="notifications" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
-              <AppIcon name="bell" size="xs" /> 
+              <AppIcon name="bell" size="xs" />
               Notifications
-              <span className="flex items-center justify-center bg-rose-500 text-white text-[9px] font-bold h-4 w-4 rounded-full ml-0.5">3</span>
+              {unreadNotifications > 0 && (
+                <span className="flex items-center justify-center bg-rose-500 text-white text-[9px] font-bold h-4 w-4 rounded-full ml-0.5">{unreadNotifications > 99 ? '99+' : unreadNotifications}</span>
+              )}
             </TabsTrigger>
           </TabsList>
 

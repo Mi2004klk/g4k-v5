@@ -52,18 +52,21 @@ class AppServiceProvider extends ServiceProvider
 
         $observers = [
             \App\Models\Project::class => \App\Observers\CacheInvalidationObserver::class,
-            \App\Models\Task::class => \App\Observers\CacheInvalidationObserver::class,
+            \App\Models\Task::class => [\App\Observers\CacheInvalidationObserver::class, \App\Observers\TaskObserver::class],
             \App\Models\AttendanceDay::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\LeaveRequest::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\User::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\Notification::class => \App\Observers\NotificationObserver::class,
         ];
 
-        foreach ($observers as $model => $observer) {
-            try {
-                $model::observe($observer);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to register observer $observer for $model: " . $e->getMessage());
+        foreach ($observers as $model => $observerClasses) {
+            $classes = is_array($observerClasses) ? $observerClasses : [$observerClasses];
+            foreach ($classes as $observer) {
+                try {
+                    $model::observe($observer);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to register observer $observer for $model: " . $e->getMessage());
+                }
             }
         }
 

@@ -665,6 +665,7 @@ export function ChatTab() {
                 onMarkRead={() => markReadMutation.mutate()}
                 onDeleteMessage={(msgId) => deleteMessageMutation.mutate(msgId)}
                 onReply={(msg) => setReplyingTo(msg as ChatMessage)}
+                conversationType={selectedConv?.scope}
               />
 
               <MessageComposer

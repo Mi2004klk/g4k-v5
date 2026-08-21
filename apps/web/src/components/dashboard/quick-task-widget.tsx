@@ -31,7 +31,7 @@ export function QuickTaskWidget() {
   const users = Array.isArray(usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData) ? (usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData as QuickTaskUser[]) : [];
 
   const createTaskMutation = useMutation({
-    mutationFn: (payload: { title: string; assignee_id: string; notify_global_chat: boolean }) =>
+    mutationFn: (payload: { title: string; assignees: string[]; notify_global_chat: boolean }) =>
       apiFetch("/tasks", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -56,7 +56,7 @@ export function QuickTaskWidget() {
     setFieldErrors({});
     if (!title.trim()) return toast.error("Please enter a task title");
     if (!assigneeId) return toast.error("Please select an assignee");
-    createTaskMutation.mutate({ title, assignee_id: assigneeId, notify_global_chat: true });
+    createTaskMutation.mutate({ title, assignees: [assigneeId], notify_global_chat: true });
   };
 
   return (
@@ -88,7 +88,7 @@ export function QuickTaskWidget() {
 
           <div>
             <Select value={assigneeId} onValueChange={setAssigneeId}>
-              <SelectTrigger className={`h-10 text-[13px] w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.assignee_id ? "border-red-500" : ""}`}>
+              <SelectTrigger className={`h-10 text-[13px] w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.assignees ? "border-red-500" : ""}`}>
                 <SelectValue placeholder="Select Assignee" />
               </SelectTrigger>
               <SelectContent className="max-h-[200px]">
@@ -99,7 +99,7 @@ export function QuickTaskWidget() {
                 ))}
               </SelectContent>
             </Select>
-            <FormError errors={fieldErrors.assignee_id} />
+            <FormError errors={fieldErrors.assignees} />
           </div>
 
           <Button 

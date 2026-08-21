@@ -30,6 +30,11 @@ export interface ListScaffoldProps<TData, TValue> {
   // Bulk Actions
   bulkActions?: React.ReactNode;
   
+  // View Toggle
+  viewMode?: "list" | "grid";
+  onViewModeChange?: (mode: "list" | "grid") => void;
+  gridRenderer?: (row: TData) => React.ReactNode;
+  
   // DataTable Props
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -71,6 +76,9 @@ export function ListScaffold<TData, TValue>({
   sortOptions,
   hideToolbar,
   bulkActions,
+  viewMode,
+  onViewModeChange,
+  gridRenderer,
   columns,
   data,
   getRowId,
@@ -105,6 +113,24 @@ export function ListScaffold<TData, TValue>({
         {actions && (
           <div className="flex items-center gap-2">
             {actions}
+            {viewMode && onViewModeChange && (
+              <div className="flex bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg ml-2">
+                <button
+                  type="button"
+                  onClick={() => onViewModeChange("list")}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                >
+                  <AppIcon name="list" size="sm" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onViewModeChange("grid")}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                >
+                  <AppIcon name="grid" size="sm" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -160,26 +186,40 @@ export function ListScaffold<TData, TValue>({
             isMobile && mobileCardRenderer ? (
               <div className="space-y-3 p-4 flex-1 overflow-auto">
                 {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex gap-4 p-4 border border-neutral-200 dark:border-neutral-800 rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-800/50">
-                      <div className="h-4 w-1/4 rounded bg-neutral-200 dark:bg-neutral-700" />
-                      <div className="h-4 w-1/2 rounded bg-neutral-200 dark:bg-neutral-700" />
+                <div className="p-4 space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse flex space-x-4">
+                      <div className="rounded-full bg-neutral-200 dark:bg-neutral-800 h-10 w-10"></div>
+                      <div className="flex-1 space-y-2 py-1">
+                        <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-3/4"></div>
+                        <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-1/2"></div>
+                      </div>
                     </div>
-                  ))
-                ) : data.length === 0 ? (
-                  emptyState || (
-                    <div className="flex flex-col items-center justify-center py-12 text-neutral-500">
-                      No data found.
-                    </div>
-                  )
-                ) : (
-                  data.map((row, i) => (
-                    <div key={getRowId ? getRowId(row, i) : i} onClick={() => onRowClick?.(row)}>
-                      {mobileCardRenderer(row)}
-                    </div>
-                  ))
-                )}
-                {pagination && data.length > 0 && (
+                  ))}
+                </div>
+              ) : data.length === 0 ? (
+                emptyState || (
+                  <div className="flex items-center justify-center h-48 text-neutral-500">
+                    No data found.
+                  </div>
+                )
+              ) : viewMode === "grid" && gridRenderer ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+                  {data.map((row: any, i: number) => {
+                    const id = getRowId ? getRowId(row, i) : String(i);
+                    return <div key={id}>{gridRenderer(row)}</div>;
+                  })}
+                </div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  getRowId={getRowId}
+                  onRowClick={onRowClick}
+                  rowSelection={rowSelection}
+                  onRowSelectionChange={onRowSelectionChange}
+                />
+              )}  {pagination && data.length > 0 && (
                   <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 mt-4">
                     <Pagination 
                       variant="standard"

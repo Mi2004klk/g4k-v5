@@ -20,6 +20,7 @@ import { getTaskStatusColor } from "@g4k/ui/theme";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { usePins } from "@/hooks/use-pins";
+import { useAuthStore } from "@/lib/auth-store";
 
 export interface TaskModel {
   id: number | string;
@@ -40,6 +41,7 @@ export interface TaskModel {
   comments?: any[];
   personal_reminder?: { id: number | string; remind_at: string };
   submission_note?: string;
+  reporter_id?: number | string;
 }
 
 export function TaskDetailSheet({
@@ -53,7 +55,15 @@ export function TaskDetailSheet({
 }) {
   const queryClient = useQueryClient();
   const { data: caps = [] } = useCapabilities();
-  const canManage = hasCapability(caps, "tasks.manage");
+  const hasManageCap = hasCapability(caps, "tasks.manage");
+  
+  const user = useAuthStore(s => s.user);
+  const isParticipant = !!user && !!taskPreview && (
+    taskPreview.assignee_id === user.id || 
+    taskPreview.reporter_id === user.id || 
+    (taskPreview.assignees || []).some((a: any) => a.id === user.id)
+  );
+  const canManage = hasManageCap || isParticipant;
 
   const { pins, pin, unpin, isPinning, isUnpinning } = usePins();
   const pinnedItem = pins?.find(p => p.type === 'task' && p.target_id === String(taskPreview?.id));
@@ -94,7 +104,7 @@ export function TaskDetailSheet({
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<TaskModel & { assignee_ids: number[] }>>({});
 
-  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing && canManage });
+  const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing && hasManageCap });
   const { data: allTasksData } = useQuery({ queryKey: ["tasks", "all"], queryFn: () => apiFetch<{ data?: { data?: TaskModel[] } | TaskModel[] }>("/tasks?per_page=100"), enabled: isEditing });
 
   // T-46.5: Fetch the full task detail when the sheet is opened.
@@ -296,26 +306,35 @@ export function TaskDetailSheet({
                 </Select>
               </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium">Assignees</label>
-              <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-2 space-y-1 bg-white dark:bg-neutral-900">
-                {usersData?.data?.map((u: { id: number, name: string }) => (
-                  <label key={u.id} className="flex items-center gap-2 cursor-pointer p-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded">
-                    <Checkbox 
-                      checked={editForm.assignee_ids?.includes(u.id)}
-                      onCheckedChange={(checked) => {
-                        const current = editForm.assignee_ids || [];
-                        setEditForm({...editForm, assignee_ids: checked ? [...current, u.id] : current.filter((id: number) => id !== u.id)});
-                      }}
-                    />
-                    <span className="text-xs">{u.name}</span>
-                  </label>
-                ))}
+            {hasManageCap && (
+              <div className="space-y-1">
+                <label className="text-xs font-medium">Assignees</label>
+                <div className="border rounded-md p-2 max-h-[150px] overflow-y-auto space-y-1 dark:border-neutral-800">
+                  {usersData?.data?.map(u => (
+                    <div key={u.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`user-${u.id}`} 
+                        checked={editForm.assignee_ids?.includes(u.id)}
+                        onCheckedChange={(checked) => {
+                          const current = editForm.assignee_ids || [];
+                          if (checked) {
+                            setEditForm({...editForm, assignee_ids: [...current, u.id]});
+                          } else {
+                            setEditForm({...editForm, assignee_ids: current.filter(id => id !== u.id)});
+                          }
+                        }}
+                      />
+                      <label htmlFor={`user-${u.id}`} className="text-xs">{u.name}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button className="w-full" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
             </div>
-            <Button className="w-full" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
           </div>
         ) : (
           <>
@@ -355,7 +374,7 @@ export function TaskDetailSheet({
           </TabsContent>
 
           <TabsContent value="activity" className="mt-0">
-            <TaskActivityTab activities={activities} />
+            <TaskActivityTab activities={activities} comments={comments} timeLogs={timeLogs} />
           </TabsContent>
           </Tabs>
         </>

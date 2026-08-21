@@ -16,9 +16,9 @@ export function SystemJobsConfig() {
   });
 
   const retryMutation = useMutation({
-    mutationFn: () => apiFetch("/admin/jobs/retry", { method: "POST" }),
-    onSuccess: () => {
-      toast.success("Failed jobs queued for retry.");
+    mutationFn: (id: string = "all") => apiFetch("/admin/jobs/retry", { method: "POST", body: JSON.stringify({ id }) }),
+    onSuccess: (_, id) => {
+      toast.success(id === "all" ? "All failed jobs queued for retry." : `Job ${id} queued for retry.`);
       queryClient.invalidateQueries({ queryKey: ["admin_jobs"] });
     },
     onError: () => toast.error("Failed to retry jobs."),
@@ -37,7 +37,7 @@ export function SystemJobsConfig() {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => retryMutation.mutate()} 
+          onClick={() => retryMutation.mutate("all")} 
           disabled={failed_count === 0 || retryMutation.isPending}
         >
           {retryMutation.isPending ? <AppIcon name="loading" className="animate-spin mr-2" /> : <AppIcon name="refresh" className="mr-2" />}
@@ -68,7 +68,12 @@ export function SystemJobsConfig() {
                 <div key={job.id} className="p-3 border border-neutral-200 dark:border-neutral-800 rounded-[var(--radius)] text-xs space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="font-semibold text-rose-600 break-all pr-4">{job.queue}</span>
-                    <span className="text-neutral-500 shrink-0">{format(new Date(job.failed_at), "MMM d, yyyy HH:mm:ss")}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-neutral-500">{format(new Date(job.failed_at), "MMM d, yyyy HH:mm:ss")}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-500 hover:text-primary-600" onClick={() => retryMutation.mutate(job.id)}>
+                        <AppIcon name="refresh" size="sm" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="text-neutral-600 dark:text-neutral-400 font-mono text-[10px] break-all">
                     {(() => {

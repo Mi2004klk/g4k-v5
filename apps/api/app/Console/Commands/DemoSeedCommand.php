@@ -50,6 +50,15 @@ class DemoSeedCommand extends Command
                 ['value' => $version, 'category' => 'system']
             );
 
+            \App\Models\AuditLog::create([
+                'user_id' => auth()->id() ?? 1,
+                'action' => 'seeded_demo_data',
+                'subject_type' => 'System',
+                'subject_id' => 0,
+                'at' => now(),
+                'ip' => request()->ip() ?? '127.0.0.1'
+            ]);
+
             $this->info('Demo dataset seeded successfully.');
             return 0;
         } finally {

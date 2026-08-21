@@ -44,7 +44,7 @@ class DesignationController extends Controller
         $job = \App\Models\ExportJob::create([
             'user_id' => $request->user()->id,
             'report_key' => 'designations',
-            'format' => 'csv',
+            'format' => $request->input('format', 'xlsx'),
             'status' => 'pending',
             'filters' => [
                 'search' => $request->input('search'),

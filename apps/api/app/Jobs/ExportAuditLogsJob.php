@@ -51,8 +51,9 @@ class ExportAuditLogsJob implements ShouldQueue
             }
 
             $disk = Storage::disk('s3');
-            $filename = "exports/audit_logs_" . time() . ".csv";
-            $tempPath = sys_get_temp_dir() . '/' . uniqid('audit_') . ".csv";
+            $format = $this->exportJob->format ?? 'xlsx';
+            $filename = "exports/audit_logs_" . time() . ".{$format}";
+            $tempPath = sys_get_temp_dir() . '/' . uniqid('audit_') . ".{$format}";
 
             $writer = SimpleExcelWriter::create($tempPath);
             $writer->addHeader(['ID', 'Action', 'User', 'Subject Type', 'Subject ID', 'Before', 'After', 'IP', 'Meta', 'Timestamp']);
@@ -78,14 +79,22 @@ class ExportAuditLogsJob implements ShouldQueue
             $disk->put($filename, file_get_contents($tempPath));
             @unlink($tempPath);
 
-            $url = $disk->url($filename);
-
             $this->exportJob->update([
                 'status' => 'completed',
-                'file_path' => $url,
+                'file_path' => $filename,
+                'file_size' => $disk->size($filename),
             ]);
 
             broadcast(new ExportCompleted($this->exportJob))->toOthers();
+            
+            \App\Services\NotificationService::send(
+                userId: $this->exportJob->user_id,
+                type: 'system',
+                title: "Audit Logs Export Ready",
+                body: "Your audit logs export has completed successfully.",
+                data: ['export_job_id' => $this->exportJob->id],
+                link: "/dashboard"
+            );
 
         } catch (\Throwable $e) {
             $this->exportJob->update([

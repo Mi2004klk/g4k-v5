@@ -1,4 +1,5 @@
 export * from "./date-picker";
+export * from "./calendar";
 export * from "./inline-edit";
 export * from "./button";
 export * from "./input";

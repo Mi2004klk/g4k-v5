@@ -81,10 +81,12 @@ export function TaskTimeTab({ task, timeLogs }: TaskTimeTabProps) {
 
   const logTimeMutation = useMutation({
     mutationFn: async () => {
-      return apiFetch(`/tasks/${task.id}/time-logs`, {
+      return apiFetch(`/timer/log`, {
         method: "POST",
         body: JSON.stringify({
-          minutes: parseInt(minutesLogged, 10),
+          target_type: "task",
+          target_id: task.id,
+          minutes_logged: parseInt(minutesLogged, 10),
           description: logDescription
         }),
       });
@@ -196,8 +198,8 @@ export function TaskTimeTab({ task, timeLogs }: TaskTimeTabProps) {
                   </div>
                 </div>
                 <div className="font-semibold text-neutral-700 dark:text-neutral-300 tabular-nums">
-                  {Math.floor(log.minutes / 60) > 0 && `${Math.floor(log.minutes / 60)}h `}
-                  {log.minutes % 60}m
+                  {Math.floor(log.minutes_logged / 60) > 0 && `${Math.floor(log.minutes_logged / 60)}h `}
+                  {log.minutes_logged % 60}m
                 </div>
               </div>
             ))}

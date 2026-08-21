@@ -6,7 +6,6 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./api": "./src/api/index.ts",
     "./components": "./src/components/index.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks": "./src/hooks/index.ts",

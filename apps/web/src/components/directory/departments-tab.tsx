@@ -276,6 +276,16 @@ export function DepartmentsTab() {
     onError: (err: ApiError) => toast.error(err.message || "Failed to add team."),
   });
 
+  const updateTeamMutation = useMutation({
+    mutationFn: ({ deptId, teamId, name }: { deptId: number, teamId: number, name: string }) => apiFetch(`/departments/${deptId}/teams/${teamId}`, { method: "PUT", body: JSON.stringify({ name }) }),
+    onSuccess: () => {
+      toast.success("Team updated successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.departments });
+    },
+    onError: (err: ApiError) => toast.error(err.message || "Failed to update team."),
+  });
+
   const removeTeamMutation = useMutation({
     mutationFn: ({ deptId, teamId }: { deptId: number, teamId: number }) => apiFetch(`/departments/${deptId}/teams/${teamId}`, { method: "DELETE" }),
     onSuccess: () => {
@@ -765,8 +775,21 @@ export function DepartmentsTab() {
                             <div className="p-2 bg-neutral-100 dark:bg-neutral-800 rounded-[var(--radius)]">
                               <AppIcon name="directory" size="sm" className="text-neutral-500" />
                             </div>
-                            <div>
-                              <p className="font-semibold text-sm text-neutral-900 dark:text-white">{team.name}</p>
+                            <div className="flex-1">
+                              {isAdmin ? (
+                                <InlineEdit
+                                  value={team.name}
+                                  onSave={(val) => {
+                                    if (val && val !== team.name) {
+                                      updateTeamMutation.mutate({ deptId: selectedDeptMembers!.id, teamId: team.id, name: val });
+                                    }
+                                  }}
+                                  className="font-semibold text-sm"
+                                  placeholder="Team name"
+                                />
+                              ) : (
+                                <p className="font-semibold text-sm text-neutral-900 dark:text-white">{team.name}</p>
+                              )}
                             </div>
                           </div>
                           {isAdmin && (

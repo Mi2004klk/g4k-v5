@@ -113,7 +113,7 @@ class TaskController extends Controller
      * Reporters may fully manage their own task except assigning other users;
      * plain assignees may only progress the task (status/progress/due/description).
      */
-    private const ASSIGNEE_EDITABLE_FIELDS = ['status', 'progress', 'due_date', 'description', 'notify_global_chat'];
+    private const ASSIGNEE_EDITABLE_FIELDS = ['status', 'progress', 'start_date', 'due_date', 'description', 'notify_global_chat'];
 
     private function isTaskParticipant(Task $task, int $userId): bool
     {
@@ -163,13 +163,25 @@ class TaskController extends Controller
             $query->where('scope', $request->query('scope'));
         }
 
+        if ($request->filled('scope_id')) {
+            $query->where('scope_id', $request->query('scope_id'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('due_date', '>=', $request->query('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('due_date', '<=', $request->query('date_to'));
+        }
+
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->query('search') . '%');
         }
 
         $sortBy = $request->query('sort_by', 'created_at');
         $sortOrder = $request->query('sort_order', 'desc');
-        $allowedSortColumns = ['id', 'created_at', 'due_date', 'priority', 'status', 'title', 'order'];
+        $allowedSortColumns = ['id', 'created_at', 'start_date', 'due_date', 'priority', 'status', 'title', 'order'];
         
         if (in_array($sortBy, $allowedSortColumns)) {
             $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
@@ -190,9 +202,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'status' => 'nullable|in:todo,in_progress,review,done',
             'priority' => 'nullable|in:low,medium,high,urgent',
-            'scope' => 'nullable|in:global,department,role',
+            'scope' => 'nullable|in:global,department,role,individual',
+            'scope_id' => 'nullable|integer',
             'assignees' => 'nullable|array',
             'assignees.*' => 'exists:users,id',
+            'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'parent_id' => 'nullable|exists:tasks,id',
             'blocked_by' => 'nullable|exists:tasks,id',
@@ -201,12 +215,6 @@ class TaskController extends Controller
         ]);
 
         $user = $request->user();
-
-        if (!empty($validated['blocked_by']) && isset($validated['parent_id'])) {
-            if (TaskService::hasDependencyCycle($validated['parent_id'], $validated['blocked_by'])) {
-                return response()->json(['message' => 'Dependency cycle detected.'], 422);
-            }
-        }
 
         // Task-creation policy (T-22.2 / T-52.6): managers create anything.
         // Employees may always create their own personal (My Tasks) entry, and
@@ -324,8 +332,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'status' => 'sometimes|in:todo,in_progress,review,done',
             'priority' => 'sometimes|in:low,medium,high,urgent',
+            'scope' => 'sometimes|in:global,department,role,individual',
+            'scope_id' => 'nullable|integer',
             'assignees' => 'nullable|array',
             'assignees.*' => 'exists:users,id',
+            'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'progress' => 'sometimes|integer|min:0|max:100',
             'blocked_by' => 'nullable|exists:tasks,id',
@@ -341,6 +352,9 @@ class TaskController extends Controller
         }
 
         if (isset($validated['status']) && $validated['status'] !== $task->status) {
+            if (in_array($validated['status'], ['review', 'done']) && !$request->has('submission_note')) {
+                return response()->json(['message' => "A submission note is required to move the task to {$validated['status']}. Please use the submit for review option."], 422);
+            }
             if ($validated['status'] === 'done' && $task->qa_form_id) {
                 return response()->json(['message' => 'This task requires QA. Please use the submit for review option.'], 422);
             }
@@ -404,7 +418,7 @@ class TaskController extends Controller
             'tasks' => 'required|array',
             'tasks.*.id' => 'required|exists:tasks,id',
             'tasks.*.order' => 'required|integer',
-            'tasks.*.status' => 'required|string|in:backlog,todo,in_progress,review,done',
+            'tasks.*.status' => 'required|string|in:todo,in_progress,review,done',
         ]);
 
         $isManage = $this->userHasManage($request);
@@ -488,6 +502,13 @@ class TaskController extends Controller
             }
         }
 
+        if ($task->blocked_by) {
+            $blocker = Task::find($task->blocked_by);
+            if ($blocker && $blocker->status !== 'done') {
+                return response()->json(['message' => "Cannot submit for review because it is blocked by task #{$blocker->id} ({$blocker->title})."], 422);
+            }
+        }
+
         if ($task->qa_form_id && !empty($validated['qa_values'])) {
             QaSubmission::updateOrCreate(
                 ['task_id' => $task->id],
@@ -534,15 +555,27 @@ class TaskController extends Controller
 
         $validated = $request->validate([
             'body' => 'required|string',
+            'parent_id' => 'nullable|exists:task_comments,id',
         ]);
 
         $comment = TaskComment::create([
             'task_id' => $task->id,
             'user_id' => $request->user()->id,
             'body' => $validated['body'],
+            'parent_id' => $validated['parent_id'] ?? null,
         ]);
 
         return response()->json($comment->load('user'));
+    }
+
+    public function deleteComment(Request $request, $id)
+    {
+        $comment = TaskComment::findOrFail($id);
+        if (!$this->userHasManage($request) && $comment->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized to delete this comment'], 403);
+        }
+        $comment->delete();
+        return response()->json(['message' => 'Comment deleted']);
     }
 
     public function destroy(Request $request, $id)
@@ -572,7 +605,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'You do not have permission to review this task.'], 403);
         }
         
-        $hasAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
+        $hasAdmin = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin'])->isNotEmpty();
         if (!$hasAdmin && ($task->assignee_id === $request->user()->id || $task->assignees->contains('id', $request->user()->id))) {
             return response()->json(['message' => 'You cannot review your own task.'], 403);
         }
@@ -597,6 +630,16 @@ class TaskController extends Controller
             'event' => 'approved',
             'metadata' => [],
         ]);
+
+        \App\Services\RecurrenceService::handleCompletion($task);
+
+        if ($task->project_id) {
+            $msg = "✅ **Task Approved & Completed**: \"{$task->title}\" was approved by " . $request->user()->name;
+            if ($request->filled('optional_message')) {
+                $msg .= "\n\n**Note**: " . $request->input('optional_message');
+            }
+            $this->notifyProjectConversation($task, $msg);
+        }
 
         $today = \Carbon\Carbon::now()->toDateString();
         $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
@@ -635,7 +678,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'You do not have permission to review this task.'], 403);
         }
         
-        $hasAdmin = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin', 'hr'])->isNotEmpty();
+        $hasAdmin = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin'])->isNotEmpty();
         if (!$hasAdmin && ($task->assignee_id === $request->user()->id || $task->assignees->contains('id', $request->user()->id))) {
             return response()->json(['message' => 'You cannot review your own task.'], 403);
         }

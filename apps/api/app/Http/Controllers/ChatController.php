@@ -12,6 +12,26 @@ use App\Events\MessageRead;
 
 class ChatController extends Controller
 {
+    public function unreadCount(Request $request)
+    {
+        $user = $request->user();
+        
+        $count = Message::where('sender_id', '!=', $user->id)
+            ->whereDoesntHave('reads', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->whereHas('conversation', function ($q) use ($user) {
+                $q->where('scope', 'global')
+                  ->orWhereHas('users', function ($q2) use ($user) {
+                      $q2->where('users.id', $user->id);
+                  });
+            })
+            ->whereRaw("IF((SELECT scope FROM conversations WHERE conversations.id = messages.conversation_id LIMIT 1) = 'global', messages.created_at >= ?, true)", [$user->created_at])
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
+
     private function checkAccess(Conversation $conversation, $user): void
     {
         if ($conversation->scope === 'global') {
@@ -68,6 +88,7 @@ class ChatController extends Controller
         ->with(['users', 'latestMessage.sender', 'project'])
         ->withCount(['messages as unread_count' => function ($query) use ($user) {
             $query->where('sender_id', '!=', $user->id)
+                  ->whereRaw("IF(conversations.scope = 'global', messages.created_at >= ?, true)", [$user->created_at])
                   ->whereDoesntHave('reads', function ($q) use ($user) {
                       $q->where('user_id', $user->id);
                   });
@@ -337,6 +358,19 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
 
+        if ($conversation->scope === 'global') {
+            return response()->json(['message' => 'Global chat cannot be pinned.'], 422);
+        }
+
+        $pinnedCount = \Illuminate\Support\Facades\DB::table('conversation_user')
+            ->where('user_id', $request->user()->id)
+            ->where('is_pinned', true)
+            ->count();
+
+        if ($pinnedCount >= 100) {
+            return response()->json(['message' => 'You can only pin up to 100 conversations.'], 422);
+        }
+
         if (!$conversation->users()->where('users.id', $request->user()->id)->exists()) {
             $conversation->users()->attach($request->user()->id, ['is_pinned' => true]);
         } else {
@@ -350,6 +384,10 @@ class ChatController extends Controller
     {
         $conversation = Conversation::findOrFail($id);
         $this->checkAccess($conversation, $request->user());
+
+        if ($conversation->scope === 'global') {
+            return response()->json(['message' => 'Global chat cannot be unpinned.'], 422);
+        }
 
         if (!$conversation->users()->where('users.id', $request->user()->id)->exists()) {
             $conversation->users()->attach($request->user()->id, ['is_pinned' => false]);

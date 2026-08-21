@@ -45,6 +45,8 @@ export function CreateProjectDialog({
   const [priority, setPriority] = useState("medium");
   const [departmentId, setDepartmentId] = useState("none");
   const [qaFormId, setQaFormId] = useState("none");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [deadline, setDeadline] = useState("");
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [coverImagePath, setCoverImagePath] = useState<string | null>(null);
@@ -59,6 +61,8 @@ export function CreateProjectDialog({
     priority: "medium",
     departmentId: "none",
     qaFormId: "none",
+    startDate: "",
+    endDate: "",
     deadline: "",
     memberIds: [] as string[],
     allowEmployeeTasks: false
@@ -69,6 +73,8 @@ export function CreateProjectDialog({
   const activePriority = priority !== "medium" ? priority : (draftData.priority || "medium");
   const activeDepartmentId = departmentId !== "none" ? departmentId : (draftData.departmentId || "none");
   const activeQaFormId = qaFormId !== "none" ? qaFormId : (draftData.qaFormId || "none");
+  const activeStartDate = startDate || draftData.startDate || "";
+  const activeEndDate = endDate || draftData.endDate || "";
   const activeDeadline = deadline || draftData.deadline || "";
   const activeMemberIds = memberIds.length > 0 ? memberIds : (draftData.memberIds || []);
   const activeAllowEmployeeTasks = allowEmployeeTasks || draftData.allowEmployeeTasks || false;
@@ -80,6 +86,8 @@ export function CreateProjectDialog({
       priority: activePriority,
       departmentId: activeDepartmentId,
       qaFormId: activeQaFormId,
+      startDate: activeStartDate,
+      endDate: activeEndDate,
       deadline: activeDeadline,
       memberIds: activeMemberIds,
       allowEmployeeTasks: activeAllowEmployeeTasks,
@@ -102,6 +110,8 @@ export function CreateProjectDialog({
             priority: activePriority,
             department_id: activeDepartmentId === "none" ? null : activeDepartmentId,
             qa_form_id: activeQaFormId === "none" ? null : activeQaFormId,
+            start_date: activeStartDate || null,
+            end_date: activeEndDate || null,
             deadline: activeDeadline || null,
             member_ids: activeMemberIds,
             cover_image: coverImagePath,
@@ -160,6 +170,8 @@ export function CreateProjectDialog({
                   setPriority(draftData.priority);
                   setDepartmentId(draftData.departmentId);
                   setQaFormId(draftData.qaFormId);
+                  setStartDate(draftData.startDate || "");
+                  setEndDate(draftData.endDate || "");
                   setDeadline(draftData.deadline);
                   setMemberIds(draftData.memberIds);
                   setAllowEmployeeTasks(draftData.allowEmployeeTasks);
@@ -252,6 +264,36 @@ export function CreateProjectDialog({
                 className={`w-full ${fieldErrors.deadline ? "border-red-500" : ""}`}
               />
               <FormError errors={fieldErrors.deadline} />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Start Date</label>
+              <DatePicker
+                value={activeStartDate ? new Date(activeStartDate) : undefined}
+                onChange={(date) => {
+                  const formatted = date ? format(date, "yyyy-MM-dd") : "";
+                  setStartDate(formatted);
+                  handleFieldChange({ startDate: formatted });
+                }}
+                className={`w-full ${fieldErrors.start_date ? "border-red-500" : ""}`}
+              />
+              <FormError errors={fieldErrors.start_date} />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">End Date</label>
+              <DatePicker
+                value={activeEndDate ? new Date(activeEndDate) : undefined}
+                onChange={(date) => {
+                  const formatted = date ? format(date, "yyyy-MM-dd") : "";
+                  setEndDate(formatted);
+                  handleFieldChange({ endDate: formatted });
+                }}
+                className={`w-full ${fieldErrors.end_date ? "border-red-500" : ""}`}
+              />
+              <FormError errors={fieldErrors.end_date} />
             </div>
           </div>
 

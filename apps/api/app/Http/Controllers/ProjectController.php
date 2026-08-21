@@ -74,11 +74,17 @@ class ProjectController extends Controller
             $query->where('name', 'like', '%' . $request->query('search') . '%');
         }
 
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->query('priority'));
+        }
+
         if ($request->filled('sort')) {
             $sort = $request->query('sort');
             $direction = $request->query('direction', 'desc');
-            if (in_array($sort, ['created_at', 'deadline', 'priority', 'name'])) {
+            if (in_array($sort, ['created_at', 'deadline', 'name'])) {
                 $query->orderBy($sort, $direction);
+            } elseif ($sort === 'priority') {
+                $query->orderByRaw("FIELD(priority, 'low', 'medium', 'high', 'urgent') " . ($direction === 'desc' ? 'DESC' : 'ASC'));
             } else {
                 $query->orderBy('updated_at', 'desc');
             }
@@ -131,6 +137,17 @@ class ProjectController extends Controller
         $memberIds = $validated['member_ids'] ?? [];
         if (!empty($memberIds)) {
             $project->members()->sync($memberIds);
+            foreach ($memberIds as $memberId) {
+                if ($memberId !== $request->user()->id) {
+                    \App\Services\NotificationService::send(
+                        $memberId,
+                        'Added to Project',
+                        "You have been assigned to project: {$project->name}",
+                        "/dashboard/projects",
+                        'project'
+                    );
+                }
+            }
         }
 
         // T-21.3: Auto-create a project chat conversation with creator + all members
@@ -276,14 +293,17 @@ class ProjectController extends Controller
 
         if (!$this->canManageProject($request, $project)) {
             $userId = $request->user()->id;
-            $isMember = $project->created_by === $userId || $project->members->contains('id', $userId);
-            if (!$isMember) {
-                return response()->json(['message' => 'Unauthorized access to project'], 403);
+            if ($project->created_by !== $userId) {
+                return response()->json(['message' => 'Only project managers or the creator can submit this project for review.'], 403);
             }
         }
 
+        if ($project->status === 'review') {
+            return response()->json(['message' => 'Project is already under review.'], 422);
+        }
+
         $validated = $request->validate([
-            'notes' => 'nullable|string',
+            'notes' => 'required|string',
             'qa_values' => 'nullable|array',
         ]);
 

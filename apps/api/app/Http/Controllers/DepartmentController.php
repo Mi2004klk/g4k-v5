@@ -13,7 +13,9 @@ class DepartmentController extends Controller
     private function buildIndexQuery(Request $request)
     {
         $query = Department::withCount('users')->with('teams');
-        \App\Support\HrScope::apply($query, $request->user(), 'id');
+        if (!$request->boolean('directory_view')) {
+            \App\Support\HrScope::apply($query, $request->user(), 'id');
+        }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -54,7 +56,7 @@ class DepartmentController extends Controller
         $job = \App\Models\ExportJob::create([
             'user_id' => $request->user()->id,
             'report_key' => 'departments',
-            'format' => 'csv',
+            'format' => $request->input('format', 'xlsx'),
             'status' => 'pending',
             'filters' => [
                 'search' => $request->input('search'),
@@ -139,14 +141,11 @@ class DepartmentController extends Controller
         
         $before = $department->toArray();
 
-        // In-use guard: deactivate instead of delete if employees exist
+        // In-use guard: block deletion/deactivation if employees exist
         if ($department->users()->exists()) {
-            $department->update(['is_active' => false]);
-            AuditLogger::log($request, 'deactivate', 'department', $department->id, $before, $department->toArray());
             return response()->json([
-                'message' => 'Department deactivated because it has assigned employees. You can reactivate it later.', 
-                'department' => $department
-            ], 200);
+                'message' => 'Cannot archive department because it has assigned employees.'
+            ], 422);
         }
 
         $department->delete();
@@ -175,10 +174,26 @@ class DepartmentController extends Controller
         return response()->json($team, 201);
     }
 
+    public function updateTeam(Request $request, string $departmentId, string $teamId)
+    {
+        $team = Team::where('department_id', $departmentId)->findOrFail($teamId);
+        $before = $team->toArray();
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+        
+        $team->update($validated);
+        AuditLogger::log($request, 'update', 'team', $team->id, $before, $team->toArray());
+
+        return response()->json($team);
+    }
+
     public function destroyTeam(Request $request, string $departmentId, string $teamId)
     {
         $team = Team::where('department_id', $departmentId)->findOrFail($teamId);
         $before = $team->toArray();
+        \App\Models\User::where('team_id', $team->id)->update(['team_id' => null]);
         $team->delete();
         
         AuditLogger::log($request, 'delete', 'team', $team->id, $before, null);

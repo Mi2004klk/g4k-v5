@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
+import { usePublicConfig } from "@/lib/use-public-config";
 import { apiFetch } from "@/lib/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
@@ -38,7 +39,10 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo');
   const queryClient = useQueryClient();
+  const { data: config } = usePublicConfig();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
@@ -106,7 +110,7 @@ export default function LoginPage() {
     <div className="h-full min-h-screen flex items-center justify-center p-4 bg-transparent">
       <Card className="w-full max-w-md shadow-e1 border border-border overflow-hidden bg-card rounded-xl relative">
         <div className="w-full pt-10 pb-2 relative flex items-center justify-center bg-card">
-          <Image src="/landscape-logo.png" alt="Games4King" width={280} height={100} priority
+          <Image src={config?.logo_url || "/landscape-logo.png"} alt={config?.name || "Games4King"} width={280} height={100} priority
                  className="object-contain w-[260px] md:w-[300px] h-auto drop-shadow-e1" />
         </div>
 

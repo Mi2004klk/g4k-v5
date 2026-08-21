@@ -29,6 +29,7 @@ const MessageItem = memo(function MessageItem({
   onMarkRead,
   onDeleteMessage,
   onReply,
+  conversationType,
 }: {
   msg: ListMessage;
   isMe: boolean;
@@ -39,6 +40,7 @@ const MessageItem = memo(function MessageItem({
   onMarkRead?: () => void;
   onDeleteMessage?: (msgId: number) => void;
   onReply?: (msg: ListMessage) => void;
+  conversationType?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -100,7 +102,7 @@ const MessageItem = memo(function MessageItem({
         )}
 
         <p className="leading-relaxed whitespace-pre-wrap">
-          {msg.body?.split(/(@[a-zA-Z0-9_-]+)/g).map((part: string, i: number) => 
+          {msg.body?.split(/(@[a-zA-Z0-9_ -]+?\b)/g).map((part: string, i: number) => 
             part.startsWith('@') ? (
               <span key={i} className="text-amber-500 font-semibold">{part}</span>
             ) : (
@@ -194,7 +196,7 @@ const MessageItem = memo(function MessageItem({
           )}
         </div>
         
-        {isMe && (
+        {isMe && conversationType === 'direct' && (
           <div className="text-[10px] text-neutral-400 mr-1 flex items-center justify-end gap-1">
             {msg.reads && msg.reads.length > 0 ? (
               <AppIcon name="read" size="xs" className=" text-primary-500" />
@@ -250,6 +252,7 @@ export function MessageList({
   onMarkRead,
   onDeleteMessage,
   onReply,
+  conversationType,
 }: {
   messages: ListMessage[];
   currentUserId: number;
@@ -262,6 +265,7 @@ export function MessageList({
   onMarkRead?: () => void;
   onDeleteMessage?: (msgId: number) => void;
   onReply?: (msg: ListMessage) => void;
+  conversationType?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousScrollHeight = useRef<number>(0);
@@ -401,6 +405,7 @@ export function MessageList({
                 onMarkRead={onMarkRead}
                 onDeleteMessage={onDeleteMessage}
                 onReply={onReply}
+                conversationType={conversationType}
               />
             </div>
           );

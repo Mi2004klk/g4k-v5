@@ -60,9 +60,14 @@ export function useUserActions() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/users/${id}/reset-password`, { method: "POST" }),
-    onSuccess: (res: { message?: string } | unknown) => {
-      const msg = res && typeof res === 'object' && 'message' in res ? (res as { message: string }).message : "Password reset to default.";
-      toast.success(msg);
+    onSuccess: (res: any) => {
+      const msg = res?.message || "Password reset to default.";
+      const tempPassword = res?._temp_password;
+      if (tempPassword) {
+        toast.success(`Password reset. Temp password: ${tempPassword}`, { duration: 10000 });
+      } else {
+        toast.success(msg);
+      }
       setConfirmState({ isOpen: false, type: "" });
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to reset password."),

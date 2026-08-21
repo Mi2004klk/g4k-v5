@@ -125,8 +125,7 @@ export function LeaveTab() {
         description="Are you sure you want to cancel this leave request? This action cannot be undone."
         onConfirm={handleConfirmDelete}
         confirmText="Cancel Leave"
-        variant="destructive"
-        isPending={deleteMutation.isPending}
+        isLoading={deleteMutation.isPending}
       />
     </ErrorBoundary>
   );

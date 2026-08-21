@@ -47,4 +47,9 @@ class Announcement extends Model
     {
         return $this->morphMany(Reaction::class, 'reactable');
     }
+
+    public function dismissals()
+    {
+        return $this->belongsToMany(User::class, 'announcement_user_dismissal', 'announcement_id', 'user_id')->withTimestamps();
+    }
 }

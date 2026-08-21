@@ -37,6 +37,7 @@ export function TaskOverviewTab({
   const [submissionNote, setSubmissionNote] = useState("");
   const [qaValues, setQaValues] = useState<Record<string, unknown>>({});
   const [redoReason, setRedoReason] = useState("");
+  const [approveMessage, setApproveMessage] = useState("");
   const [isQAFormOpen, setIsQAFormOpen] = useState(true);
   const [customReminderDate, setCustomReminderDate] = useState("");
 
@@ -83,7 +84,7 @@ export function TaskOverviewTab({
       return apiFetch(`/tasks/${task.id}/submit-review`, {
         method: "POST",
         body: JSON.stringify({
-          notes: submissionNote,
+          submission_note: submissionNote,
           qa_values: Object.keys(qaValues).length > 0 ? qaValues : null,
         }),
       });
@@ -101,12 +102,14 @@ export function TaskOverviewTab({
     mutationFn: async () => {
       return apiFetch(`/tasks/${task.id}/approve`, {
         method: "POST",
-        body: JSON.stringify({ decision: "approved" }),
+        body: JSON.stringify({ decision: "approved", optional_message: approveMessage }),
       });
     },
     onSuccess: () => {
       toast.success("Task approved");
+      toast.success("Task approved");
       queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
+      setApproveMessage("");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to approve"),
   });
@@ -189,6 +192,19 @@ export function TaskOverviewTab({
             ) : (
               <span className="text-xs text-neutral-400 font-medium italic">Unassigned</span>
             )}
+          </div>
+        </div>
+
+        {/* Scope */}
+        <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+            <AppIcon name="shield" size="xs" className="opacity-70" /> Scope
+          </div>
+          <div className="flex-1 px-3 py-2 flex items-center gap-2">
+            <span className="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-medium text-neutral-800 dark:text-neutral-200 capitalize">
+              {task.scope || "global"}
+              {task.scope_id ? ` #${task.scope_id}` : ""}
+            </span>
           </div>
         </div>
 
@@ -303,6 +319,32 @@ export function TaskOverviewTab({
           </div>
         </div>
 
+        {/* Recurrence */}
+        {task.recurrence && (
+          <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
+            <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+              <AppIcon name="refresh" size="xs" className="opacity-70" /> Recurrence
+            </div>
+            <div className="flex-1 px-3 py-2 flex items-center justify-between">
+              <span className="text-xs font-semibold capitalize text-neutral-700 dark:text-neutral-300">
+                {task.recurrence.pattern}
+              </span>
+              {canManage && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7 text-[10px] text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                  onClick={() => inlineUpdateMutation.mutate({ recurrence: null })}
+                  disabled={inlineUpdateMutation.isPending}
+                >
+                  Turn Off
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+
         {/* Blocked By */}
         {task.blocker && (
           <div className="flex items-center min-h-[40px] bg-rose-50/50 dark:bg-rose-950/20">
@@ -365,6 +407,20 @@ export function TaskOverviewTab({
               &quot;{task.submission_note}&quot;
             </div>
           )}
+          <div className="flex gap-2 mb-2">
+            <Textarea
+              placeholder="Optional message for approval..."
+              value={approveMessage}
+              onChange={(e) => setApproveMessage(e.target.value)}
+              className="w-full text-xs h-16 min-h-[64px]"
+            />
+            <Textarea
+              placeholder="Reason for redo (required)..."
+              value={redoReason}
+              onChange={(e) => setRedoReason(e.target.value)}
+              className="w-full text-xs h-16 min-h-[64px]"
+            />
+          </div>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -384,12 +440,6 @@ export function TaskOverviewTab({
               {redoMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : "Request Redo"}
             </Button>
           </div>
-          <Textarea
-            placeholder="Reason for redo (required)..."
-            value={redoReason}
-            onChange={(e) => setRedoReason(e.target.value)}
-            className="w-full text-xs h-16 min-h-[64px]"
-          />
         </div>
       )}
 

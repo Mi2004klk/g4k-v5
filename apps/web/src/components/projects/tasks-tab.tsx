@@ -139,6 +139,8 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(isReview ? "review" : "all");
   const [scopeFilter, setScopeFilter] = useUrlState("scope", "all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [sortBy, setSortBy] = useState("id");
   const [sortOrder, setSortOrder] = useState("desc");
   const [rowSelection, setRowSelection] = useState({});
@@ -170,19 +172,32 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   };
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: [...queryKeys.tasks(defaultProjectId), statusFilter, scopeFilter, searchQuery, assigneeFilter, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder, defaultProjectId],
+    queryKey: [...queryKeys.tasks(defaultProjectId), filterPreset, statusFilter, scopeFilter, searchQuery, assigneeFilter, fromDate, toDate, viewMode === "list" ? page : "1", viewMode === "list" ? perPage : 100, sortBy, sortOrder, defaultProjectId],
     queryFn: () => {
       const p = new URLSearchParams();
       p.append("per_page", viewMode === "list" ? perPage.toString() : "100");
       p.append("page", viewMode === "list" ? page : "1");
-      if (statusFilter !== "all") p.append("status", statusFilter);
+      
+      if (filterPreset === "my_active") {
+        if (user?.id) p.append("assignee_id", user.id.toString());
+        p.append("status", "in_progress");
+      } else if (filterPreset === "high_priority") {
+        p.append("priority", "high");
+      } else if (filterPreset === "overdue") {
+        p.append("overdue", "true");
+      } else {
+        if (statusFilter !== "all") p.append("status", statusFilter);
+        if (assigneeFilter === "me") {
+          if (user?.id) p.append("assignee_id", user.id.toString());
+        } else if (assigneeFilter !== "all") {
+          p.append("assignee_id", assigneeFilter);
+        }
+      }
+      
       if (scopeFilter !== "all") p.append("scope", scopeFilter);
       if (searchQuery) p.append("search", searchQuery);
-      if (assigneeFilter === "me") {
-        if (user?.id) p.append("assignee_id", user.id.toString());
-      } else if (assigneeFilter !== "all") {
-        p.append("assignee_id", assigneeFilter);
-      }
+      if (fromDate) p.append("date_from", fromDate);
+      if (toDate) p.append("date_to", toDate);
       if (defaultProjectId) p.append("project_id", defaultProjectId);
       p.append("sort_by", sortBy);
       p.append("sort_order", sortOrder);
@@ -253,9 +268,10 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
   const updateTaskDatesMutation = useMutation({
     mutationFn: async ({ taskId, start, end }: { taskId: number; start: Date; end: Date }) => {
       const due_date = format(end, "yyyy-MM-dd");
+      const start_date = format(start, "yyyy-MM-dd");
       return apiFetch(`/tasks/${taskId}`, {
         method: "PUT",
-        body: JSON.stringify({ due_date }),
+        body: JSON.stringify({ start_date, due_date }),
       });
     },
     onMutate: async ({ taskId, end }) => {
@@ -938,7 +954,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                     { label: "To Do", value: "todo" },
                     { label: "In Progress", value: "in_progress" },
                     { label: "In Review", value: "review" },
-                    { label: "Done", value: "completed" },
+                    { label: "Done", value: "done" },
                     { label: "Redo", value: "redo" },
                   ]
                 },
@@ -964,6 +980,19 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                     { label: "Department", value: "department" },
                     { label: "Role", value: "role" },
                   ]
+                },
+                {
+                  key: "dateRange",
+                  label: "Due Date",
+                  type: "date-range",
+                  value: { 
+                    from: fromDate ? new Date(fromDate) : undefined, 
+                    to: toDate ? new Date(toDate) : undefined 
+                  },
+                  onChange: (range: any) => {
+                    setFromDate(range?.from ? format(range.from, 'yyyy-MM-dd') : "");
+                    setToDate(range?.to ? format(range.to, 'yyyy-MM-dd') : "");
+                  }
                 }
               ]}
               onClearAll={() => {
@@ -971,12 +1000,22 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
                 setStatusFilter("all");
                 setAssigneeFilter("all");
                 setScopeFilter("all");
+                setFilterPreset("custom");
+                setFromDate("");
+                setToDate("");
                 setSortBy("id");
                 setSortOrder("desc");
               }}
             />
+            </div>
+            {viewMode === "list" && (
+              <div className="flex items-center gap-2 pr-2 shrink-0 border-l border-neutral-200 dark:border-neutral-800 pl-2">
+                <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="text-xs h-8 w-28 rounded border border-neutral-200 dark:border-neutral-800 bg-transparent px-2 text-neutral-600 dark:text-neutral-400" />
+                <span className="text-xs text-neutral-400">to</span>
+                <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="text-xs h-8 w-28 rounded border border-neutral-200 dark:border-neutral-800 bg-transparent px-2 text-neutral-600 dark:text-neutral-400" />
+              </div>
+            )}
           </div>
-        </div>
         )}
 
       {isError ? (
@@ -1095,7 +1134,7 @@ export function TasksTab({ defaultProjectId }: { defaultProjectId?: string }) {
             </span>
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5 pr-1">
-            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "completed" })} className="h-7 text-[10px] sm:text-[11px] px-2 sm:px-3 shadow-sm rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
+            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-[10px] sm:text-[11px] px-2 sm:px-3 shadow-sm rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
               <AppIcon name="success" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Mark Done</span>
             </Button>
             <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-[10px] sm:text-[11px] px-2 sm:px-3 shadow-sm rounded-full">

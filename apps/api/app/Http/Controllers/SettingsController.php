@@ -125,9 +125,10 @@ class SettingsController extends Controller
         }
     }
 
-    public function retryJobs()
+    public function retryJobs(\Illuminate\Http\Request $request)
     {
-        \Illuminate\Support\Facades\Artisan::call('queue:retry', ['id' => 'all']);
+        $id = $request->input('id', 'all');
+        \Illuminate\Support\Facades\Artisan::call('queue:retry', ['id' => $id]);
         return response()->json(['message' => 'Failed jobs queued for retry.']);
     }
 }

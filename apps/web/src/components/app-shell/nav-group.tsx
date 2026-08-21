@@ -101,6 +101,14 @@ export const NavItem = memo(function NavItem({
             {isActive && <span className="sr-only"> (Current)</span>}
           </span>
         )}
+        {item.badge !== undefined && item.badge > 0 && (
+          <span className={cn(
+            "absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center bg-rose-500 text-white text-[9px] font-bold h-4 min-w-[16px] px-1 rounded-full",
+            currentlyCollapsed ? "right-1 top-1 translate-y-0" : ""
+          )}>
+            {item.badge > 99 ? '99+' : item.badge}
+          </span>
+        )}
       </Link>
     </div>
   );

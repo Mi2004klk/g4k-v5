@@ -98,6 +98,7 @@ export function EmployeeManagementTab() {
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
 
   const [search, setSearch] = useUrlState("search", "");
+  const [viewMode, setViewMode] = useUrlState("viewMode", "list");
   const [roleFilter, setRoleFilter] = useUrlState("role", "all");
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("department_id", "all");
@@ -131,8 +132,6 @@ export function EmployeeManagementTab() {
 
   // Modals
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isActivityOpen, setIsActivityOpen] = useState(false);
-  const [activityUser, setActivityUser] = useState<User | null>(null);
 
   const {
     confirmState, setConfirmState,
@@ -192,7 +191,7 @@ export function EmployeeManagementTab() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments").then((res: { data?: Department[] }) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/departments?per_page=100").then((res: { data?: Department[] }) => Array.isArray(res?.data) ? res.data : []),
     staleTime: STALE_TIME_DEPARTMENTS,
     enabled: canManageUsers,
   });
@@ -214,12 +213,6 @@ export function EmployeeManagementTab() {
     enabled: hasCapability(capabilities, "settings.manage") || hasCapability(capabilities, "users.hr.manage"),
   });
 
-  const { data: activityData, isLoading: isLoadingActivity } = useQuery({
-    queryKey: queryKeys.userActivity(activityUser?.id as number),
-    queryFn: () => apiFetch(`/users/${activityUser?.id}/activity`),
-    enabled: !!activityUser && isActivityOpen,
-  });
-
   // Mutations
   const onSubmitCreate = (data: UserFormValues) => {
     createMutation.mutate(data);
@@ -231,8 +224,13 @@ export function EmployeeManagementTab() {
 
   const createMutation = useMutation({
     mutationFn: (payload: UserFormValues) => apiFetch("/users", { method: "POST", body: JSON.stringify(payload) }),
-    onSuccess: () => {
-      toast.success("User created successfully!");
+    onSuccess: (res: any) => {
+      const tempPassword = res?._temp_password;
+      if (tempPassword) {
+        toast.success(`User created! Temp password: ${tempPassword}`, { duration: 10000 });
+      } else {
+        toast.success("User created successfully!");
+      }
       setIsCreateOpen(false);
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
@@ -407,12 +405,6 @@ export function EmployeeManagementTab() {
                   </DropdownMenuItem>
                 ) : (
                   <>
-                    <DropdownMenuItem onClick={() => {
-                      setActivityUser(user);
-                      setIsActivityOpen(true);
-                    }} className="gap-2 text-blue-600">
-                      <AppIcon name="activity" /> View Activity
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2 text-amber-600">
                       <AppIcon name="key" /> Reset Password
                     </DropdownMenuItem>
@@ -501,6 +493,27 @@ export function EmployeeManagementTab() {
             options: [...deptOptions],
           },
         ]}
+        viewMode={viewMode as "list" | "grid"}
+        onViewModeChange={(val) => setViewMode(val)}
+        gridRenderer={(user) => (
+          <Card key={user.id} className="h-full flex flex-col hover:border-primary-200 transition-colors cursor-pointer group" onClick={() => router.push(`/dashboard/directory/${user.id}`)}>
+            <CardContent className="p-4 flex flex-col items-center text-center">
+              <Avatar className="h-16 w-16 mb-3 ring-2 ring-transparent group-hover:ring-primary-100 transition-all">
+                <AvatarImage src={resolveAvatarUrl(user.avatar_url)} />
+                <AvatarFallback>{user.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <h3 className="font-semibold text-sm text-neutral-900 dark:text-white line-clamp-1">{user.name}</h3>
+              <p className="text-xs text-neutral-500 mb-2">{user.employee_id}</p>
+              
+              <div className="mt-auto pt-3 flex flex-col items-center gap-2">
+                <StatusBadge status={user.status} />
+                <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                  {user.designation?.name || "No Designation"}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         columns={columns}
         data={usersList}
         getRowId={(r: any) => String(r.id)}
@@ -572,28 +585,6 @@ export function EmployeeManagementTab() {
         />
       )}
 
-      <Sheet open={isActivityOpen} onOpenChange={setIsActivityOpen}>
-        <SheetContent className="w-full sm:w-[540px]">
-          <SheetHeader>
-            <SheetTitle>Activity Log</SheetTitle>
-            <SheetDescription>Recent actions performed by {activityUser?.name}</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4">
-            {isLoadingActivity ? (
-              <div className="space-y-2"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
-            ) : activityData?.data?.length === 0 ? (
-              <EmptyState title="No activity" description="No recent actions recorded." icon={<AppIcon name="history" size="2xl" className=" text-neutral-400" />} />
-            ) : (
-              activityData?.data?.map((log: ActivityLog) => (
-                <div key={log.id} className="p-3 border rounded-[var(--radius)] text-sm bg-neutral-50 dark:bg-neutral-900 flex flex-col gap-1">
-                  <span className="font-semibold text-neutral-800 dark:text-neutral-200">{log.action} {log.subject_type}</span>
-                  <span className="text-xs text-neutral-500">{new Date(log.at).toLocaleString()} - IP: {log.ip_address || 'N/A'}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
 
       <ConfirmDialog
         open={confirmState.isOpen}
@@ -610,7 +601,7 @@ export function EmployeeManagementTab() {
           confirmState.type === "restore" ? `Are you sure you want to restore ${(confirmState.payload as any)?.name}? Their account will be reactivated.` :
           confirmState.type === "deactivate" ? `Deactivating ${(confirmState.payload as any)?.name} will prevent them from logging in.` :
           confirmState.type === "bulk-deactivate" ? `Are you sure you want to deactivate ${(confirmState.payload as any)?.ids?.length} users?` :
-          `Are you sure you want to reset the password for ${(confirmState.payload as any)?.name}? It will be reset to the default "Password@123".`
+          "Are you sure you want to reset this user's password? A new random 16-character password will be generated and shown to you."
         }
         confirmText={
           confirmState.type === "delete" ? "Delete" :

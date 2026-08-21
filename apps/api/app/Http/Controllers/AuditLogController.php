@@ -36,7 +36,7 @@ class AuditLogController extends Controller
         $exportJob = ExportJob::create([
             'user_id' => $request->user()->id,
             'report_key' => 'audit_logs',
-            'format' => 'csv',
+            'format' => $request->input('format', 'xlsx'),
             'status' => 'pending',
             'filters' => $request->all(),
         ]);

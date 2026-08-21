@@ -17,6 +17,7 @@ interface TaskCommentsTabProps {
 export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
   const queryClient = useQueryClient();
   const [comment, setComment] = useState("");
+  const [replyTo, setReplyTo] = useState<number | null>(null);
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -24,12 +25,13 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
     mutationFn: async () => {
       return apiFetch(`/tasks/${taskId}/comments`, {
         method: "POST",
-        body: JSON.stringify({ content: comment }),
+        body: JSON.stringify({ body: comment, parent_id: replyTo }),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
       setComment("");
+      setReplyTo(null);
       setTimeout(() => {
         commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -57,37 +59,81 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
             <span className="text-[13px] font-medium">No comments yet</span>
           </div>
         ) : (
-          comments.map((c: any) => (
-            <div key={c.id} className="flex gap-3 group relative">
-              <Avatar className="w-8 h-8 shrink-0 mt-0.5 border border-neutral-200/50 dark:border-neutral-800/50">
-                {c.user?.avatar_url && <img src={resolveAvatarUrl(c.user.avatar_url)} alt={c.user?.name} />}
-                <AvatarFallback name={c.user?.name} className="text-[10px]" />
-              </Avatar>
-              <div className="flex-1 min-w-0 bg-neutral-50 dark:bg-neutral-900 rounded-xl rounded-tl-none p-3 border border-neutral-100 dark:border-neutral-800">
-                <div className="flex justify-between items-start mb-1">
-                  <span className="font-bold text-[13px] text-neutral-900 dark:text-neutral-100">{c.user?.name}</span>
-                  <span className="text-[11px] font-medium text-neutral-400">
-                    {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
-                  </span>
+          (() => {
+            const topLevel = comments.filter(c => !c.parent_id);
+            const repliesByParent = comments.reduce((acc, c) => {
+              if (c.parent_id) {
+                if (!acc[c.parent_id]) acc[c.parent_id] = [];
+                acc[c.parent_id].push(c);
+              }
+              return acc;
+            }, {} as Record<number, any[]>);
+
+            const renderComment = (c: any, isReply = false) => (
+              <div key={c.id} className={`flex gap-3 group relative ${isReply ? 'ml-11 mt-3' : 'mt-4'}`}>
+                <Avatar className="w-8 h-8 shrink-0 mt-0.5 border border-neutral-200/50 dark:border-neutral-800/50">
+                  {c.user?.avatar_url && <img src={resolveAvatarUrl(c.user.avatar_url)} alt={c.user?.name} />}
+                  <AvatarFallback name={c.user?.name} className="text-[10px]" />
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl rounded-tl-none p-3 border border-neutral-100 dark:border-neutral-800">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-bold text-[13px] text-neutral-900 dark:text-neutral-100">{c.user?.name}</span>
+                      <span className="text-[11px] font-medium text-neutral-400">
+                        {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{c.body}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 mt-1.5 ml-1">
+                    {!isReply && (
+                      <button 
+                        onClick={() => {
+                          setReplyTo(c.id);
+                          commentInputRef.current?.focus();
+                        }}
+                        className="text-[11px] font-semibold text-neutral-500 hover:text-primary-600 transition-colors"
+                      >
+                        Reply
+                      </button>
+                    )}
+                  </div>
+                  
+                  {repliesByParent[c.id]?.map((reply: any) => renderComment(reply, true))}
                 </div>
-                <p className="text-[13px] text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{c.content}</p>
+                
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute -right-2 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                  onClick={() => deleteCommentMutation.mutate(c.id)}
+                >
+                  <AppIcon name="trash" className="w-3.5 h-3.5" />
+                </Button>
               </div>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute -right-2 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                onClick={() => deleteCommentMutation.mutate(c.id)}
-              >
-                <AppIcon name="trash" className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          ))
+            );
+            return topLevel.map(c => renderComment(c));
+          })()
         )}
         <div ref={commentsEndRef} />
       </div>
 
-      <div className="flex gap-2 items-end pt-2 border-t border-neutral-100 dark:border-neutral-800/50">
+      <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800/50">
+        {replyTo && (
+          <div className="flex items-center justify-between bg-primary-50 dark:bg-primary-950/30 px-3 py-1.5 rounded-md">
+            <span className="text-[11px] font-medium text-primary-700 dark:text-primary-300">
+              Replying to comment...
+            </span>
+            <button 
+              onClick={() => setReplyTo(null)}
+              className="text-primary-500 hover:text-primary-700"
+            >
+              <AppIcon name="close" size="xs" />
+            </button>
+          </div>
+        )}
+        <div className="flex gap-2 items-end">
         <Textarea 
           ref={commentInputRef}
           value={comment}
@@ -107,7 +153,8 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
           onClick={() => addCommentMutation.mutate()}
         >
           {addCommentMutation.isPending ? <AppIcon name="loading" className="animate-spin w-4 h-4" /> : <AppIcon name="send" className="w-4 h-4" />}
-        </Button>
+          </Button>
+        </div>
       </div>
     </div>
   );

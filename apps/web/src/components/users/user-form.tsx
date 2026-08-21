@@ -206,7 +206,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
       <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
         {!isEdit && (
           <div className="flex-1 text-xs text-muted-foreground self-center">
-            Note: New users are created with a random password. You must use the "Reset Password" action after creation to send them credentials.
+            Note: The new user's temporary password will be shown after creation.
           </div>
         )}
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>

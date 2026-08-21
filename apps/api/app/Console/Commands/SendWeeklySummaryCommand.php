@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Models\Task;
 use App\Models\Project;
+use App\Models\AttendanceDay;
+use App\Models\LeaveRequest;
 use App\Mail\WeeklySummaryMail;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -17,7 +19,7 @@ class SendWeeklySummaryCommand extends Command
     public function handle(): void
     {
         $recipients = User::whereHas('roleAssignments', function ($q) {
-            $q->whereIn('role', ['hr', 'super_admin']);
+            $q->whereIn('role', ['hr', 'admin', 'super_admin']);
         })->get();
 
         $start = now()->startOfWeek();
@@ -29,6 +31,11 @@ class SendWeeklySummaryCommand extends Command
                 ->count(),
             'active_projects' => Project::where('status', 'active')
                 ->whereBetween('created_at', [$start, $end])
+                ->count(),
+            'attendance_count' => AttendanceDay::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+                ->count(),
+            'leaves_approved' => LeaveRequest::where('status', 'approved')
+                ->whereBetween('updated_at', [$start, $end])
                 ->count(),
         ];
 

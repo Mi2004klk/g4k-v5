@@ -24,7 +24,7 @@ class RecurrenceService
                 $nextDueDate = $dueDate->addDay();
                 break;
             case 'weekly':
-                $nextDueDate = $dueDate->addWeek();
+                $nextDueDate = $dueDate->copy()->addWeek();
                 if (isset($task->recurrence['days']) && is_array($task->recurrence['days']) && count($task->recurrence['days']) > 0) {
                     $days = $task->recurrence['days'];
                     // Find the next day in the list of days (0=Sun, 1=Mon, ..., 6=Sat)
@@ -39,7 +39,7 @@ class RecurrenceService
                     if ($nextDayOfWeek === null) {
                         // Move to next week and pick the first day in the array
                         $nextDayOfWeek = $days[0];
-                        $nextDueDate = $dueDate->addWeek()->startOfWeek()->addDays($nextDayOfWeek === 0 ? 6 : $nextDayOfWeek - 1);
+                        $nextDueDate = $dueDate->copy()->addWeek()->startOfWeek()->addDays($nextDayOfWeek === 0 ? 6 : $nextDayOfWeek - 1);
                     } else {
                         $nextDueDate = $dueDate->copy()->next($nextDayOfWeek);
                     }

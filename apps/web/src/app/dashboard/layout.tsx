@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AppIcon } from "@g4k/ui/components";
 import { SheetDescription, Button } from "@g4k/ui/components";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
@@ -100,6 +100,22 @@ export default function DashboardLayout({
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  const { data: chatUnreadData } = useQuery({
+    queryKey: ["chat-unread-count"],
+    queryFn: () => apiFetch("/chat/unread-count"),
+    refetchInterval: 30000,
+    enabled: !!authUser,
+  });
+  const chatUnreadCount = chatUnreadData?.count || 0;
+
+  const dynamicNavGroups = navGroups.map(group => ({
+    ...group,
+    items: group.items.map(item => ({
+      ...item,
+      badge: item.href === "/dashboard/chat" ? chatUnreadCount : undefined
+    }))
+  }));
 
   const [showError, setShowError] = useState(false);
 
@@ -218,7 +234,7 @@ export default function DashboardLayout({
             </div>
 
             <div className="flex-1 overflow-y-auto py-3 px-2.5 flex flex-col gap-1 thin-scrollbar">
-              {navGroups.map(group => (
+              {dynamicNavGroups.map(group => (
                 <NavGroup
                   key={group.label}
                   group={group}
@@ -286,7 +302,7 @@ export default function DashboardLayout({
                         </div>
                       </div>
                       <div className="flex-1 overflow-y-auto py-4 px-4 flex flex-col gap-1 thin-scrollbar">
-                        {navGroups.map(group => (
+                        {dynamicNavGroups.map(group => (
                           <NavGroup
                             key={group.label}
                             group={group}

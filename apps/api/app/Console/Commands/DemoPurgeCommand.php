@@ -63,9 +63,9 @@ class DemoPurgeCommand extends Command
             }
 
             // 3.5 Truncate residues
-            DB::table('notifications')->truncate();
-            DB::table('conversation_message_reads')->truncate();
-            DB::table('audit_logs')->truncate();
+            DB::table('notifications')->whereNotNull('demo_tag')->delete();
+            DB::table('conversation_message_reads')->whereNotNull('demo_tag')->delete();
+            DB::table('audit_logs')->whereNotNull('demo_tag')->delete();
 
             // 4. Delete demo users
             $userCount = DB::table('users')->where('is_demo', true)->delete();
@@ -89,6 +89,15 @@ class DemoPurgeCommand extends Command
             if ($orphans > 0) {
                 throw new \Exception("Orphan demo data detected: $orphans rows remain with demo_tag.");
             }
+
+            \App\Models\AuditLog::create([
+                'user_id' => auth()->id() ?? 1,
+                'action' => 'purged_demo_data',
+                'subject_type' => 'System',
+                'subject_id' => 0,
+                'at' => now(),
+                'ip' => request()->ip() ?? '127.0.0.1'
+            ]);
         });
 
         // Targeted cache clearing

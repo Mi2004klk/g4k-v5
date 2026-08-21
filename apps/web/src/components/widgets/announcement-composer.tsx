@@ -15,6 +15,7 @@ interface ComposerData {
   body: string;
   scope: string;
   pinned: boolean;
+  priority: string;
   attachment?: File | null;
 }
 
@@ -34,11 +35,11 @@ export function AnnouncementComposer({
   onSuccess
 }: AnnouncementComposerProps) {
   const queryClient = useQueryClient();
-  const [createData, setCreateData] = useState<ComposerData>({ title: "", body: "", scope: "company", pinned: false });
+  const [createData, setCreateData] = useState<ComposerData>({ title: "", body: "", scope: "company", pinned: false, priority: "normal" });
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [attachment, setAttachment] = useState<File | null>(null);
 
-  const { formData: draftData, setFormData: setDraftData, clearDraft } = useFormDraft("announcement_create", { title: "", body: "", scope: "company", pinned: false });
+  const { formData: draftData, setFormData: setDraftData, clearDraft } = useFormDraft("announcement_create", { title: "", body: "", scope: "company", pinned: false, priority: "normal" });
   const activeRole = useAuthStore(s => s.activeRole);
 
   useEffect(() => {
@@ -51,7 +52,8 @@ export function AnnouncementComposer({
           title: draftData.title || "",
           body: draftData.body || "",
           scope: draftData.scope || "company",
-          pinned: draftData.pinned || false
+          pinned: draftData.pinned || false,
+          priority: draftData.priority || "normal"
         });
         setAttachment(null);
       }
@@ -66,7 +68,8 @@ export function AnnouncementComposer({
         title: newData.title,
         body: newData.body,
         scope: newData.scope,
-        pinned: newData.pinned
+        pinned: newData.pinned,
+        priority: newData.priority
       });
     }
   };
@@ -82,6 +85,7 @@ export function AnnouncementComposer({
         formData.append("body", data.body);
         formData.append("scope", data.scope);
         formData.append("pinned", data.pinned ? "1" : "0");
+        formData.append("priority", data.priority);
         formData.append("attachment", attachment);
         if (data.id) {
             formData.append("_method", "PUT");
@@ -163,9 +167,22 @@ export function AnnouncementComposer({
                     className="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 h-4 w-4"
                   />
                   <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                    <AppIcon name="pin" size="xs" className="text-amber-500" /> Pin to top
+                    <AppIcon name="pin" size="xs" className="text-amber-500" /> <span className="text-sm">Pin to top of board</span>
                   </span>
                 </label>
+                
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                  <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">Priority:</label>
+                  <select
+                    value={createData.priority}
+                    onChange={(e) => handleFieldChange({ priority: e.target.value })}
+                    className="h-8 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-2 outline-none focus:ring-1 focus:ring-primary-500"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
               </div>
             </div>
 

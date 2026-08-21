@@ -13,12 +13,13 @@ class DirectoryController extends Controller
     private function applyVisibilityRules(User $user)
     {
         $prefs = $user->preferences ?? [];
-        $visibility = $prefs['directory_visibility'] ?? $prefs['profile_visibility'] ?? 'internal';
+        $visibility = $prefs['directory_visibility'] ?? $prefs['profile_visibility'] ?? 'private';
 
         $data = [
             'id' => $user->id,
             'name' => $user->name,
             'employee_id' => $user->employee_id,
+            'status' => $user->status,
             'avatar_url' => $user->avatar_url,
             'department' => $user->department,
             'designation' => $user->designation,
@@ -31,7 +32,7 @@ class DirectoryController extends Controller
             $data['email'] = $user->email;
             $data['phone'] = $user->phone ?? null;
         } else {
-            // 'internal' (default) - accessible to authenticated colleagues
+            // 'internal' - accessible to authenticated colleagues
             $data['email'] = $user->email;
             $data['phone'] = $user->phone ?? null;
         }

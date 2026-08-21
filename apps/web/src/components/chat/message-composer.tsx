@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { AppIcon, Avatar, AvatarFallback, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@g4k/ui/components";
+import { cn } from "@/lib/utils";
 import { Button } from "@g4k/ui/components";
 import { FileUploadPopup } from "@g4k/ui/components";
 
@@ -32,6 +33,8 @@ export function MessageComposer({
   onCancelReply?: () => void;
 }) {
   const [text, setText] = useState("");
+  const [isOffline, setIsOffline] = useState(typeof window !== "undefined" ? !navigator.onLine : false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   // Mentions state
   const [showMentions, setShowMentions] = useState(false);
@@ -79,10 +82,11 @@ export function MessageComposer({
   };
 
   const handleSend = () => {
-    if (text.trim()) {
-      onSend(text.trim(), selectedMentions);
+    if (text.trim() || selectedFile) {
+      onSend(text.trim(), selectedMentions, selectedFile);
       setText("");
       setSelectedMentions([]);
+      setSelectedFile(null);
       if (onCancelReply) onCancelReply();
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -157,22 +161,12 @@ export function MessageComposer({
         maxSizeMB={10}
         acceptedTypes={[]} 
         onUpload={async (file) => {
-          onSend(text.trim() || '', selectedMentions, file);
-          setText("");
-          setSelectedMentions([]);
+          setSelectedFile(file);
           setShowUploadPopup(false);
         }} 
       />
 
-      <Button 
-        size="icon" 
-        variant="ghost" 
-        className="h-9 w-9 text-neutral-400 shrink-0" 
-        aria-label="Add attachment"
-        onClick={() => setShowUploadPopup(true)}
-      >
-        <AppIcon name="paperclip" />
-      </Button>
+
 
       <div className="flex flex-col flex-1 min-w-0 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-e1 focus-within:shadow-e2 focus-within:ring-1 focus-within:ring-primary-500 transition-all">
         {replyTo && (
@@ -207,41 +201,41 @@ export function MessageComposer({
         </div>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-9 w-9 text-neutral-400 shrink-0 hover:text-neutral-600 dark:hover:text-neutral-200"
-            aria-label="Add emoji"
+      <div className="flex items-end gap-2 relative">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0 text-neutral-500 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            disabled={disabled}
+            onClick={() => setShowUploadPopup(true)}
+            title="Attach file"
           >
-            <AppIcon name="plus" size="sm" />
+            <AppIcon name="paperclip" className="h-5 w-5" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64 p-2 bg-card">
-          <div className="grid grid-cols-5 gap-1">
-            {COMMON_EMOJIS.map(emoji => (
-              <button
-                key={emoji}
-                onClick={() => handleEmojiSelect(emoji)}
-                className="h-8 w-8 flex items-center justify-center text-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
 
-      <Button
-        size="icon"
-        disabled={disabled || !text.trim()}
-        onClick={handleSend}
-        className="h-9 w-9 bg-primary-600 hover:bg-primary-700 text-white rounded-xl shrink-0"
-        aria-label="Send message"
-      >
-        <AppIcon name="send" />
-      </Button>
+          {isOffline && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-500 text-xs font-medium rounded-full shrink-0 mr-1" title="Messages will be sent when you reconnect">
+              <AppIcon name="wifiOff" className="h-3 w-3" />
+              <span className="hidden sm:inline">Offline (Queuing)</span>
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            size="icon"
+            onClick={handleSend}
+            className={cn(
+              "h-10 w-10 shrink-0 rounded-full shadow-sm transition-all",
+              text.trim() || selectedFile
+                ? "bg-primary hover:bg-primary/90 text-white shadow-md scale-100"
+                : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500"
+            )}
+            disabled={disabled || (!text.trim() && !selectedFile)}
+          >
+            <AppIcon name="send" className="h-4 w-4 ml-0.5" />
+          </Button>
+        </div>
     </div>
   );
 }

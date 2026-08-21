@@ -46,9 +46,21 @@ class GenerateReportJob implements ShouldQueue
                 $tempPath = sys_get_temp_dir() . '/' . uniqid('exp_') . ".{$format}";
                 $writer = SimpleExcelWriter::create($tempPath);
                 
-                $this->fetchData($key, function($chunk) use ($writer) {
+                $this->fetchData($key, function($chunk) use ($writer, $format) {
                     foreach ($chunk as $row) {
-                        $writer->addRow($row);
+                        if ($format === 'csv') {
+                            $sanitizedRow = [];
+                            foreach ($row as $k => $v) {
+                                if (is_string($v) && preg_match('/^[=\+\-@]/', $v)) {
+                                    $sanitizedRow[$k] = "'" . $v;
+                                } else {
+                                    $sanitizedRow[$k] = $v;
+                                }
+                            }
+                            $writer->addRow($sanitizedRow);
+                        } else {
+                            $writer->addRow($row);
+                        }
                     }
                 });
 
@@ -62,15 +74,42 @@ class GenerateReportJob implements ShouldQueue
                 });
                 $pdf = Pdf::loadView('reports.pdf', ['key' => $key, 'rows' => $rows]);
                 $disk->put($filename, $pdf->output());
+            } elseif ($format === 'json') {
+                $tempPath = sys_get_temp_dir() . '/' . uniqid('exp_') . ".json";
+                $fp = fopen($tempPath, 'w');
+                fwrite($fp, '[');
+                $first = true;
+                $this->fetchData($key, function($chunk) use ($fp, &$first) {
+                    foreach ($chunk as $row) {
+                        if (!$first) fwrite($fp, ',');
+                        fwrite($fp, json_encode($row));
+                        $first = false;
+                    }
+                });
+                fwrite($fp, ']');
+                fclose($fp);
+                $disk->put($filename, file_get_contents($tempPath));
+                @unlink($tempPath);
             }
+
+            $fileSize = $disk->size($filename);
 
             $this->exportJob->update([
                 'status' => 'completed',
                 'file_data' => null,
                 'file_path' => $filename,
+                'file_size' => $fileSize,
             ]);
-
             broadcast(new ExportCompleted($this->exportJob));
+            
+            \App\Services\NotificationService::send(
+                userId: $this->exportJob->user_id,
+                type: 'system',
+                title: "Export Ready",
+                body: "Your {$key} export has completed successfully.",
+                data: ['export_job_id' => $this->exportJob->id],
+                link: "/dashboard"
+            );
 
         } catch (\Throwable $e) {
             $this->exportJob->update([
@@ -287,6 +326,7 @@ class GenerateReportJob implements ShouldQueue
                     ])->toArray());
                 });
                 break;
+            case 'attendance-summary':
                 $start = $filters['start'] ?? now()->subDays(30)->toDateString();
                 $end = $filters['end'] ?? now()->toDateString();
                 $dept = $filters['dept'] ?? null;
@@ -376,9 +416,10 @@ class GenerateReportJob implements ShouldQueue
                 $query->chunk(1000, function($chunk) use ($chunkCallback, $key) {
                     if ($key === 'productivity') {
                         $chunk->transform(function($u) {
-                            $rate = $u->total_tasks > 0 ? ($u->completed_tasks / $u->total_tasks) : 0;
+                            $rate = $u->total_tasks > 0 ? (($u->completed_tasks / $u->total_tasks) * 100) : 0;
                             $hours = ($u->total_minutes ?? 0) / 60;
-                            $u->productivity_score = round($rate * $hours, 2);
+                            $timeScore = min(100, ($hours / 160) * 100);
+                            $u->productivity_score = round(($rate * 0.8) + ($timeScore * 0.2), 1);
                             return $u;
                         });
                     }

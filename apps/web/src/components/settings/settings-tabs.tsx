@@ -29,6 +29,7 @@ import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/s
 
 const profileSchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters"),
+  short_name: z.string().optional(),
   timezone: z.string().default("Asia/Kolkata"),
 });
 
@@ -54,7 +55,8 @@ export function SettingsTabs() {
     resolver: zodResolver(profileSchema) as any,
     defaultValues: {
       name: "",
-      timezone: "Asia/Kolkata"
+      short_name: "",
+      timezone: "Asia/Kolkata",
     },
     mode: "onTouched",
     delayError: 400,
@@ -64,6 +66,7 @@ export function SettingsTabs() {
     if (profile) {
       profileForm.reset({
         name: profile.name || "",
+        short_name: profile.short_name || "",
         timezone: profile.timezone || "Asia/Kolkata"
       });
     }
@@ -124,9 +127,9 @@ export function SettingsTabs() {
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">
       <TabsList className="mb-4">
-        <TabsTrigger value="company">Company Profile</TabsTrigger>
         {canManageSettings && (
           <>
+            <TabsTrigger value="company">Company Profile</TabsTrigger>
             <TabsTrigger value="schedule">Work Schedules</TabsTrigger>
             <TabsTrigger value="policies">Policies</TabsTrigger>
             <TabsTrigger value="holidays">Holidays</TabsTrigger>
@@ -142,8 +145,9 @@ export function SettingsTabs() {
         )}
       </TabsList>
 
-      <TabsContent value="company">
-        <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+      {canManageSettings && (
+        <TabsContent value="company">
+          <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
           <CardHeader>
             <CardTitle className="text-base">Company Information</CardTitle>
           </CardHeader>
@@ -160,6 +164,16 @@ export function SettingsTabs() {
                     type="text"
                     {...profileForm.register("name")}
                     error={profileForm.formState.errors.name?.message}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="company-short-name" className="text-xs font-medium">Short Name</label>
+                  <Input
+                    id="company-short-name"
+                    type="text"
+                    {...profileForm.register("short_name")}
+                    error={profileForm.formState.errors.short_name?.message}
                     className="mt-1"
                   />
                 </div>
@@ -220,7 +234,8 @@ export function SettingsTabs() {
           onUpload={async (file) => { await uploadLogoMutation.mutateAsync(file); }}
           isLoading={uploadLogoMutation.isPending}
         />
-      </TabsContent>
+        </TabsContent>
+      )}
 
       {canManageSettings && (
         <>

@@ -52,7 +52,11 @@ class UserPreferenceController extends Controller
         }
 
         if (isset($validated['preferences'])) {
-            $prefs = array_merge($prefs, $validated['preferences']);
+            $incomingPrefs = $validated['preferences'];
+            if (isset($incomingPrefs['directory_visibility']) && !in_array($incomingPrefs['directory_visibility'], ['public', 'internal', 'private'])) {
+                unset($incomingPrefs['directory_visibility']);
+            }
+            $prefs = array_merge($prefs, $incomingPrefs);
         }
         
         $user->preferences = $prefs;

@@ -641,6 +641,14 @@ class AuthController extends Controller
         if ($token) {
             $token->delete();
             SessionRevoked::dispatch($request->user()->id, (string)$id);
+            \App\Services\NotificationService::send(
+                userId: $request->user()->id,
+                type: 'system',
+                title: "Session Revoked",
+                body: "A session was manually revoked.",
+                data: ['token_id' => $id],
+                link: "/dashboard/settings"
+            );
         }
         return response()->json(['message' => 'Session revoked.']);
     }

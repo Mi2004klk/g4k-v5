@@ -48,6 +48,7 @@ Route::get('/health', function () {
     ]);
 });
 
+Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
 
 Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
@@ -195,6 +196,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
         Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);
         Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
+        Route::delete('/tasks/comments/{id}', [TaskController::class, 'deleteComment']);
         Route::post('/tasks/{id}/reminders', [TaskReminderController::class, 'store']);
         Route::delete('/tasks/reminders/{id}', [TaskReminderController::class, 'destroy']);
     });
@@ -231,6 +233,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     // Phase 8 API (Chat & Communication)
     Route::middleware('capability:chat.access')->group(function () {
         // Chat API
+        Route::get('/chat/unread-count', [\App\Http\Controllers\ChatController::class, 'unreadCount']);
         Route::get('/chat/users', [\App\Http\Controllers\ChatController::class, 'searchUsers']);
         Route::get('/conversations', [\App\Http\Controllers\ChatController::class, 'index']);
         Route::middleware('throttle:30,1')->group(function () {
@@ -252,6 +255,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
 
     Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
     Route::post('/announcements/{id}/react', [\App\Http\Controllers\AnnouncementController::class, 'react']);
+    Route::post('/announcements/{id}/dismiss', [\App\Http\Controllers\AnnouncementController::class, 'dismiss']);
     
     Route::middleware('capability:announcements.manage')->group(function () {
         Route::post('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'store']);
@@ -333,6 +337,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     
     Route::middleware('capability:departments.manage')->group(function () {
         Route::post('/departments/{id}/teams', [DepartmentController::class, 'storeTeam']);
+        Route::put('/departments/{id}/teams/{teamId}', [DepartmentController::class, 'updateTeam']);
         Route::delete('/departments/{id}/teams/{teamId}', [DepartmentController::class, 'destroyTeam']);
         Route::get('/departments/export', [DepartmentController::class, 'export']);
         Route::patch('/departments/{id}/archive', [DepartmentController::class, 'archive']);

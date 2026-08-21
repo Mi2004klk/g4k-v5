@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Button, Input, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverContent, PopoverTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
+import { Button, Input, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useIsMobile } from "@g4k/ui/hooks";
 import { queryKeys } from "@/lib/query-keys";
@@ -46,6 +46,16 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiFetch(`/saved-views/${id}`, {
+      method: "DELETE",
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
+      toast.success("View deleted successfully");
+    }
+  });
+
   const handleSave = () => {
     if (!saveName.trim()) return;
     saveMutation.mutate(saveName.trim());
@@ -54,27 +64,49 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
   return (
     <div className="relative">
       <div className="flex items-center gap-2">
-        {/* Simple Select implementation for saved views if DropdownMenu is not fully available */}
-        <Select
-          value=""
-          onValueChange={(val) => {
-            if (!val) return;
-            const view = views.find((v: SavedReportView) => v.id.toString() === val);
-            if (view && view.filters) {
-              onApplyFilters(view.filters);
-              toast.info(`Applied view: ${view.name}`);
-            }
-          }}
-        >
-          <SelectTrigger className="w-full sm:min-w-[200px] h-10 bg-surface">
-            <SelectValue placeholder="Load saved view..." />
-          </SelectTrigger>
-          <SelectContent>
-            {views.map((v: SavedReportView) => (
-              <SelectItem key={v.id} value={v.id.toString()}>{v.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full sm:min-w-[200px] h-10 justify-between bg-surface text-neutral-500 font-normal">
+              Load saved view...
+              <AppIcon name="chevronDown" className="ml-2 h-4 w-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-full sm:min-w-[200px]">
+            {views.length === 0 ? (
+              <div className="p-2 text-sm text-neutral-500 italic">No saved views</div>
+            ) : (
+              views.map((v: SavedReportView) => (
+                <div key={v.id} className="flex items-center justify-between group">
+                  <DropdownMenuItem
+                    className="flex-1 cursor-pointer"
+                    onClick={() => {
+                      if (v.filters) {
+                        onApplyFilters(v.filters);
+                        toast.info(`Applied view: ${v.name}`);
+                      }
+                    }}
+                  >
+                    {v.name}
+                  </DropdownMenuItem>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-neutral-400 hover:text-red-500 opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 mr-1"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (confirm(`Delete saved view "${v.name}"?`)) {
+                        deleteMutation.mutate(v.id);
+                      }
+                    }}
+                  >
+                    <AppIcon name="trash" className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {isMobile ? (
           <Sheet open={isSaving} onOpenChange={setIsSaving}>

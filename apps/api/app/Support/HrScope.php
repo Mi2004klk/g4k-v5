@@ -36,8 +36,8 @@ class HrScope
             }
             
             // If the query is directly on a table with department_id
-            if ($relationOrColumn === 'department_id') {
-                return $query->whereIn('department_id', $deptIds);
+            if ($relationOrColumn === 'department_id' || str_ends_with($relationOrColumn, '.department_id')) {
+                return $query->whereIn($relationOrColumn, $deptIds);
             }
             
             // If the target column is user_id or another user-referencing column, join or subquery through users table

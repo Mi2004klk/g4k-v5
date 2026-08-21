@@ -15,6 +15,7 @@ class ExportJob extends Model
         'status',
         'file_path',
         'file_data',
+        'file_size',
         'error_message', 'demo_tag'];
 
     protected $casts = [

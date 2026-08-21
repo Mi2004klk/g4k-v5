@@ -214,7 +214,12 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'You cannot approve or reject your own leave request.'], 403);
         }
 
-        if ($user->resolveActiveRole() !== 'super_admin' && $leaveRequest->user_id !== $user->id) {
+        $activeRole = $user->resolveActiveRole();
+        if ($activeRole !== 'super_admin' && $approval->current_approver_role !== $activeRole) {
+            return response()->json(['message' => 'You are not authorized to make a decision at this stage.'], 403);
+        }
+
+        if ($activeRole !== 'super_admin' && $leaveRequest->user_id !== $user->id) {
             $targetUser = \App\Models\User::find($leaveRequest->user_id);
             if ($targetUser) {
                 if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $user)->exists()) {
@@ -381,6 +386,10 @@ class LeaveRequestController extends Controller
 
     public function export(Request $request)
     {
+        $user = $request->user();
+        $activeRole = $user->resolveActiveRole();
+        $hasManage = $activeRole === 'super_admin' || \App\Services\CapabilityMatrix::hasCapability($activeRole, 'leave.approve-employee');
+
         $job = \App\Models\ExportJob::create([
             'user_id' => $request->user()->id,
             'report_key' => 'leave-export',
@@ -389,8 +398,9 @@ class LeaveRequestController extends Controller
             'filters' => [
                 'status' => $request->query('status'),
                 'type' => $request->query('type'),
-                '_department_id' => $request->user()->department_id,
-                '_user_id' => $request->user()->id,
+                '_department_id' => $user->department_id,
+                '_user_id' => $user->id,
+                '_has_manage' => $hasManage,
             ],
         ]);
 
@@ -465,6 +475,16 @@ class LeaveRequestController extends Controller
             
             \App\Support\AuditLogger::log($request, 'cancel', 'leave_request', $leave->id, null, ['reason' => 'Administratively cancelled via destroy endpoint']);
             
+            \App\Services\NotificationService::send(
+                $leave->user_id,
+                'info',
+                'Leave Cancelled',
+                "Your leave request for {$leave->start_date} was cancelled by an administrator.",
+                ['leave_id' => $leave->id],
+                '/dashboard/leave',
+                'normal'
+            );
+
             return response()->json(['message' => 'Leave request cancelled successfully.']);
         }
 

@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('short_name')->nullable();
             $table->string('logo_url')->nullable();
-            $table->string('timezone')->default('UTC');
+            $table->string('timezone')->default('Asia/Kolkata');
             $table->json('branding')->nullable();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

@@ -16,6 +16,7 @@ import { SettingItem } from "./notifications-config";
 
 const passwordSchema = z.object({
   min_length: z.coerce.number().min(8, "Minimum 8 characters required").max(32, "Maximum 32 characters allowed"),
+  expiry_days: z.coerce.number().min(0, "Cannot be negative").max(365, "Maximum 365 days"),
   require_mixed: z.boolean(),
   require_number: z.boolean(),
   require_symbol: z.boolean(),
@@ -43,6 +44,7 @@ export function PoliciesConfig() {
     resolver: zodResolver(passwordSchema) as unknown as import('react-hook-form').Resolver<PasswordFormValues>,
     defaultValues: {
       min_length: 8,
+      expiry_days: 90,
       require_mixed: true,
       require_number: true,
       require_symbol: true,
@@ -66,21 +68,18 @@ export function PoliciesConfig() {
   useEffect(() => {
     const groupedData = settingsGrouped as Record<string, SettingItem[]> | undefined;
     if (groupedData?.security) {
-      const securityMap: Record<string, string> = {};
-      groupedData.security.forEach((s: SettingItem) => {
-        securityMap[s.key] = s.value;
-      });
       passwordForm.reset({
-        min_length: parseInt(securityMap["password.min_length"]) || 8,
-        require_mixed: securityMap["password.require_mixed"] === "true",
-        require_number: securityMap["password.require_number"] === "true",
-        require_symbol: securityMap["password.require_symbol"] === "true",
-        force_password_change: securityMap["force_password_change"] === "true" || (securityMap["force_password_change"] as unknown as boolean) === true,
+        min_length: parseInt(groupedData.security.find((s: SettingItem) => s.key === "password.min_length")?.value || "8"),
+        expiry_days: parseInt(groupedData.security.find((s: SettingItem) => s.key === "password.expiry_days")?.value || "90"),
+        require_mixed: groupedData.security.find((s: SettingItem) => s.key === "password.require_mixed")?.value === "true",
+        require_number: groupedData.security.find((s: SettingItem) => s.key === "password.require_number")?.value === "true",
+        require_symbol: groupedData.security.find((s: SettingItem) => s.key === "password.require_symbol")?.value === "true",
+        force_password_change: groupedData.security.find((s: SettingItem) => s.key === "force_password_change")?.value === "true",
       });
       sessionForm.reset({
-        access_token_ttl: parseInt(securityMap["session.access_token_ttl"]) || 15,
-        refresh_token_ttl: parseInt(securityMap["session.refresh_token_ttl"]) || 7,
-        max_devices: parseInt(securityMap["session.max_devices"]) || 3,
+        access_token_ttl: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.access_token_ttl")?.value || "15"),
+        refresh_token_ttl: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.refresh_token_ttl")?.value || "7"),
+        max_devices: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.max_devices")?.value || "3"),
       });
     }
   }, [settingsGrouped, passwordForm, sessionForm]);
@@ -100,6 +99,7 @@ export function PoliciesConfig() {
   const handlePasswordSubmit = (data: PasswordFormValues) => {
     const updates = [
       { category: "security", key: "password.min_length", value: data.min_length.toString() },
+      { category: "security", key: "password.expiry_days", value: data.expiry_days.toString() },
       { category: "security", key: "password.require_mixed", value: data.require_mixed.toString() },
       { category: "security", key: "password.require_number", value: data.require_number.toString() },
       { category: "security", key: "password.require_symbol", value: data.require_symbol.toString() },
@@ -137,6 +137,16 @@ export function PoliciesConfig() {
               className={`w-full text-sm rounded-[var(--radius)] border ${passwordForm.formState.errors.min_length ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
             />
             {passwordForm.formState.errors.min_length && <p className="text-[10px] text-red-500 mt-1">{passwordForm.formState.errors.min_length.message}</p>}
+          </div>
+          <div>
+            <label className="text-xs font-medium">Password Expiry (Days) <span className="text-red-500">*</span></label>
+            <p className="text-xs text-neutral-500">Set to 0 to disable password expiry</p>
+            <input
+              type="number"
+              {...passwordForm.register("expiry_days")}
+              className={`w-full text-sm rounded-[var(--radius)] border ${passwordForm.formState.errors.expiry_days ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
+            />
+            {passwordForm.formState.errors.expiry_days && <p className="text-[10px] text-red-500 mt-1">{passwordForm.formState.errors.expiry_days.message}</p>}
           </div>
           
           <div className="flex items-center gap-2">

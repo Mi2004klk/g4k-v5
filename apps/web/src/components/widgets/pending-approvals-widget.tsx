@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/api-client";
 import { Card, Button, Skeleton, ConfirmDialog, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
+import { queryKeys } from "@/lib/query-keys";
 import { WidgetInfo } from "./widget-info";
 
 export interface PendingRequest {

@@ -15,7 +15,7 @@ class Task extends Model
     use \App\Traits\HasDemoTag;
     use SoftDeletes;
     protected $fillable = ['project_id', 'title', 'description', 'status', 'priority',
-        'scope', 'assignee_id', 'reporter_id', 'due_date', 'progress',
+        'scope', 'assignee_id', 'reporter_id', 'start_date', 'due_date', 'progress',
         'parent_id', 'blocked_by', 'qa_form_id', 'recurrence',
         'submitted_at', 'submission_note', 'demo_tag'];
 
@@ -25,6 +25,25 @@ class Task extends Model
         'recurrence' => 'array',
         'submitted_at' => 'datetime',
     ];
+
+    protected static function booted()
+    {
+        static::saved(function ($task) {
+            $task->updateProjectProgress();
+        });
+
+        static::deleted(function ($task) {
+            $task->updateProjectProgress();
+        });
+    }
+
+    public function updateProjectProgress()
+    {
+        if ($this->project_id) {
+            $avg = self::where('project_id', $this->project_id)->avg('progress') ?? 0;
+            \App\Models\Project::where('id', $this->project_id)->update(['progress' => round($avg)]);
+        }
+    }
 
     public function project(): BelongsTo
     {

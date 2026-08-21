@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useReverb } from "./use-reverb";
+import { useAuthStore } from "@/lib/auth-store";
 
 export function useExport() {
   const [isExporting, setIsExporting] = useState(false);
@@ -16,6 +17,36 @@ export function useExport() {
       });
     };
   }, [downloadUrls]);
+
+  const { subscribe } = useReverb();
+  const user = useAuthStore(s => s.user);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const channel = subscribe(`private-user.${user.id}`);
+    if (!channel) return;
+
+    channel.listen(".export-completed", (e: any) => {
+      const job = e.exportJob;
+      if (job && job.status === "completed" && job.file_path) {
+        toast.success(`Export ${job.report_key} is ready.`, {
+          description: "Click to view your exports.",
+          action: { label: "View Exports", onClick: () => window.location.href = "/dashboard/reports?tab=general" },
+          duration: 10000,
+        });
+      } else if (job && job.status === "failed") {
+        toast.error(`Export ${job.report_key} failed.`, {
+          description: job.error_message || "An unknown error occurred.",
+          duration: 10000,
+        });
+      }
+    });
+
+    return () => {
+      // ReverbContext manages unsubscription when component unmounts
+    };
+  }, [user?.id, subscribe]);
 
   const triggerExport = useCallback(
     async (endpoint: string, filename: string, options?: RequestInit) => {

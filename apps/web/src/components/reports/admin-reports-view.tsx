@@ -30,7 +30,7 @@ export interface ReportEmployeeRow {
 }
 
 export function AdminReportsView() {
-  const [reportType, setReportType] = useState<"attendance-summary" | "leave-summary">("attendance-summary");
+  const [reportType, setReportType] = useState<"attendance-summary" | "leave-summary" | "projects" | "tasks" | "productivity">("attendance-summary");
   const [filters, setFilters] = useState({
     start: format(subDays(new Date(), 30), "yyyy-MM-dd"),
     end: format(new Date(), "yyyy-MM-dd"),
@@ -51,6 +51,10 @@ export function AdminReportsView() {
       if (filters.end) params.append("end", filters.end);
       if (filters.dept && filters.dept !== "all") params.append("dept", filters.dept);
       
+      if (reportType === "projects" || reportType === "tasks" || reportType === "productivity") {
+        params.append("key", reportType);
+        return apiFetch(`/reports/data?${params.toString()}`);
+      }
       return apiFetch(`/reports/${reportType}?${params.toString()}`);
     }
   });
@@ -90,6 +94,41 @@ export function AdminReportsView() {
     }
   ];
 
+  const projectsColumns = [
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "creator.name", header: "Owner", cell: ({ row }: any) => row.original.creator?.name || "—" },
+    { accessorKey: "status", header: "Status", cell: ({ row }: any) => <span className="capitalize">{row.original.status?.replace('_', ' ') || "—"}</span> },
+    { accessorKey: "budget", header: "Budget", cell: ({ row }: any) => row.original.budget ? "$" + row.original.budget : "—" },
+  ];
+
+  const tasksColumns = [
+    { accessorKey: "title", header: "Title" },
+    { accessorKey: "project.name", header: "Project", cell: ({ row }: any) => row.original.project?.name || "—" },
+    { accessorKey: "assignee.name", header: "Assignee", cell: ({ row }: any) => row.original.assignee?.name || "Unassigned" },
+    { accessorKey: "status", header: "Status", cell: ({ row }: any) => <span className="capitalize">{row.original.status?.replace('_', ' ') || "—"}</span> },
+    { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => <span className="capitalize">{row.original.priority || "—"}</span> },
+  ];
+
+  const productivityColumns = [
+    { accessorKey: "name", header: "Employee" },
+    { accessorKey: "department.name", header: "Department", cell: ({ row }: any) => row.original.department?.name || "—" },
+    { accessorKey: "total_tasks", header: "Total Tasks" },
+    { accessorKey: "completed_tasks", header: "Completed Tasks" },
+    { accessorKey: "total_minutes", header: "Total Hours", cell: ({ row }: any) => (row.original.total_minutes ? (row.original.total_minutes / 60).toFixed(1) + "h" : "0h") },
+    { accessorKey: "productivity_score", header: "Productivity Score", cell: ({ row }: any) => (row.original.productivity_score ? row.original.productivity_score + "%" : "0%") },
+  ];
+
+  const getColumns = () => {
+    switch (reportType) {
+      case "attendance-summary": return attendanceColumns;
+      case "leave-summary": return leaveColumns;
+      case "projects": return projectsColumns;
+      case "tasks": return tasksColumns;
+      case "productivity": return productivityColumns;
+      default: return [];
+    }
+  };
+
   const leaveColumns = [
     { accessorKey: "name", header: "Employee" },
     { accessorKey: "department.name", header: "Department", cell: ({ row }: { row: { original: ReportEmployeeRow } }) => row.original.department?.name || "—" },
@@ -121,10 +160,13 @@ export function AdminReportsView() {
       </div>
 
       <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 mb-6 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-        <Tabs value={reportType} onValueChange={(v) => setReportType(v as "attendance-summary" | "leave-summary")} className="w-full xl:w-auto shrink-0">
+        <Tabs value={reportType} onValueChange={(v) => setReportType(v as any)} className="w-full xl:w-auto overflow-x-auto shrink-0">
           <TabsList className="bg-neutral-100/50 dark:bg-neutral-800/50 p-1">
             <TabsTrigger value="attendance-summary" className="text-sm px-4">Attendance Summary</TabsTrigger>
             <TabsTrigger value="leave-summary" className="text-sm px-4">Leave Summary</TabsTrigger>
+            <TabsTrigger value="projects" className="text-sm px-4">Projects</TabsTrigger>
+            <TabsTrigger value="tasks" className="text-sm px-4">Tasks</TabsTrigger>
+            <TabsTrigger value="productivity" className="text-sm px-4">Productivity</TabsTrigger>
           </TabsList>
         </Tabs>
         
@@ -168,9 +210,36 @@ export function AdminReportsView() {
         </div>
       </Card>
 
+      {reportType === "attendance-summary" && data?.data?.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {(() => {
+            let p = 0, l = 0, a = 0;
+            const rows = data?.data || [];
+            rows.forEach((r: any) => { p += (r.present_days || 0); l += (r.late_days || 0); a += (r.absent_days || 0); });
+            const total = p + l + a;
+            return (
+              <>
+                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900">
+                  <div className="text-sm text-neutral-500 font-medium">Present Rate</div>
+                  <div className="text-2xl font-bold mt-1">{total > 0 ? Math.round((p / total) * 100) : 0}%</div>
+                </Card>
+                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900">
+                  <div className="text-sm text-neutral-500 font-medium">Late Rate</div>
+                  <div className="text-2xl font-bold mt-1 text-orange-500">{total > 0 ? Math.round((l / total) * 100) : 0}%</div>
+                </Card>
+                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900">
+                  <div className="text-sm text-neutral-500 font-medium">Absent Rate</div>
+                  <div className="text-2xl font-bold mt-1 text-red-500">{total > 0 ? Math.round((a / total) * 100) : 0}%</div>
+                </Card>
+              </>
+            );
+          })()}
+        </div>
+      )}
+
       <Card className="border-none shadow-e1 overflow-hidden">
           <DataTable 
-            columns={reportType === "attendance-summary" ? attendanceColumns : leaveColumns} 
+            columns={getColumns()} 
             data={data?.data || []} 
             isLoading={isLoading}
             isError={isError}
