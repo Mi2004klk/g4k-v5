@@ -16,7 +16,7 @@ import { faHouse, faGaugeHigh, faCalendarCheck, faClock, faUsers, faMessage,
   faTableColumns, faBorderAll, faCalculator, faCreditCard, faMap, faFaceSmile,
   faCircleQuestion, faLock, faUnlock, faBell as faBellAlt,
   faArrowTrendUp, faClockRotateLeft, faEnvelopeOpen, faCheckDouble, faHashtag,
-  faTableList, faKeyboard, faBullhorn, faRightToBracket, faRightFromBracket
+  faTableList, faKeyboard, faBullhorn, faRightToBracket, faRightFromBracket, faUserCircle
 } from "@fortawesome/free-solid-svg-icons";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
@@ -51,8 +51,9 @@ export const iconRegistry = {
   audit:           { icon: faShieldHalved, tone: "danger" },
   profile:         { icon: faUser, tone: "neutral" },
   user:            { icon: faUser, tone: "neutral" },
+  userCircle:      { icon: faUserCircle, tone: "neutral" },
   // actions
-  plus: { icon: faPlus }, edit: { icon: faPenToSquare }, trash: { icon: faTrashCan, tone: "danger" },
+  plus: { icon: faPlus }, add: { icon: faPlus }, edit: { icon: faPenToSquare }, trash: { icon: faTrashCan, tone: "danger" },
   save: { icon: faFloppyDisk }, download: { icon: faDownload }, upload: { icon: faUpload },
   send: { icon: faPaperPlane, tone: "primary" }, search: { icon: faMagnifyingGlass },
   filter: { icon: faFilter }, sliders: { icon: faSliders }, refresh: { icon: faRotateRight },

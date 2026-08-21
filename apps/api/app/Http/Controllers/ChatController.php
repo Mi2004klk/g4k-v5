@@ -26,7 +26,7 @@ class ChatController extends Controller
                       $q2->where('users.id', $user->id);
                   });
             })
-            ->whereRaw("IF((SELECT scope FROM conversations WHERE conversations.id = messages.conversation_id LIMIT 1) = 'global', messages.created_at >= ?, true)", [$user->created_at])
+            ->whereRaw("CASE WHEN (SELECT scope FROM conversations WHERE conversations.id = messages.conversation_id LIMIT 1) = 'global' THEN messages.created_at >= ? ELSE true END", [$user->created_at])
             ->count();
 
         return response()->json(['count' => $count]);
@@ -88,7 +88,7 @@ class ChatController extends Controller
         ->with(['users', 'latestMessage.sender', 'project'])
         ->withCount(['messages as unread_count' => function ($query) use ($user) {
             $query->where('sender_id', '!=', $user->id)
-                  ->whereRaw("IF(conversations.scope = 'global', messages.created_at >= ?, true)", [$user->created_at])
+                  ->whereRaw("CASE WHEN conversations.scope = 'global' THEN messages.created_at >= ? ELSE true END", [$user->created_at])
                   ->whereDoesntHave('reads', function ($q) use ($user) {
                       $q->where('user_id', $user->id);
                   });

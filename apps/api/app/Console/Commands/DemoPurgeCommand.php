@@ -91,7 +91,7 @@ class DemoPurgeCommand extends Command
             }
 
             \App\Models\AuditLog::create([
-                'user_id' => auth()->id() ?? 1,
+                'user_id' => null,
                 'action' => 'purged_demo_data',
                 'subject_type' => 'System',
                 'subject_id' => 0,

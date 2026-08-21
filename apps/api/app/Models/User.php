@@ -103,6 +103,11 @@ class User extends Authenticatable
         return $this->hasMany(TaskReminder::class);
     }
 
+    public function taskTimeLogs()
+    {
+        return $this->hasMany(TaskTimeLog::class);
+    }
+
     public function resolveActiveRole(): string
     {
         $roles = $this->getCachedRoles();
