@@ -196,6 +196,8 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
     <div className="w-full h-full flex flex-col bg-card dark:bg-neutral-900 border border-border/80 rounded-xl shadow-sm overflow-hidden">
       <style>{`
         /* Core Styling */
+        .gantt-container { overflow: auto !important; padding-bottom: 20px; }
+        .gantt-container svg { overflow: visible !important; }
         .gantt { font-family: inherit; }
         .gantt .grid-header { fill: var(--muted, #f1f5f9); }
         .gantt .grid-row { fill: transparent; }
@@ -289,11 +291,11 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
           <h3 className="text-[13px] font-bold text-neutral-700 dark:text-neutral-300 hidden sm:block">Timeline</h3>
           <button 
             onClick={() => {
-              const todayEl = ganttContainerRef.current?.querySelector('.today-highlight');
-              const container = ganttContainerRef.current;
+              const container = ganttContainerRef.current?.querySelector('.gantt-container');
+              const todayEl = container?.querySelector('.today-highlight') as SVGRectElement;
               if (todayEl && container) {
-                const scrollPos = (todayEl as HTMLElement).offsetLeft - (container.clientWidth / 2);
-                container.scrollTo({ left: scrollPos, behavior: 'smooth' });
+                const x = todayEl.x?.baseVal?.value || 0;
+                container.scrollTo({ left: Math.max(0, x - (container.clientWidth / 2)), behavior: 'smooth' });
               }
             }}
             className="ml-2 px-2 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded text-[10px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"

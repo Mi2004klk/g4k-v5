@@ -48,13 +48,7 @@ export function TaskCard({
           : "shadow-none hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 border"
       )}
     >
-      {/* Priority Left Border */}
-      <div className={cn(
-        "absolute left-0 top-0 bottom-0 w-1",
-        getPriorityColor(task.priority).bar
-      )} />
-
-      <CardContent className="p-3 pl-4 space-y-2.5">
+      <CardContent className="p-3 space-y-2.5">
         <div className="flex items-start justify-between gap-2 relative">
           <div className="flex flex-col gap-1.5 w-full">
             <h4 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100 leading-snug">

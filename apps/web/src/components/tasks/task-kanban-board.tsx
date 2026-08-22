@@ -158,7 +158,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-2 w-[85vw] md:w-auto md:min-w-[280px] md:max-w-[320px] flex-shrink-0 snap-center p-2 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
+      className={`flex flex-col gap-3 w-[85vw] md:w-auto md:min-w-[320px] md:max-w-[360px] flex-shrink-0 snap-center px-4 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
         isOver
           ? "bg-secondary/20"
           : "bg-transparent"

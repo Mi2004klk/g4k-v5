@@ -127,8 +127,11 @@ export const NavGroup = memo(function NavGroup({
   // Filter items by capability and admin roles
   const visibleItems = group.items.filter(
     (item: any) => {
+      const activeRole = authUser?.active_role || authUser?.roles?.[0] || 'employee';
+      if (item.hideForAdmin && activeRole === 'super_admin') {
+        return false;
+      }
       if (item.adminOnly) {
-        const activeRole = authUser?.active_role || authUser?.roles?.[0] || 'employee';
         return activeRole === 'super_admin' || activeRole === 'hr';
       }
       return !item.capability || hasCapability(userCapabilities, item.capability);

@@ -86,8 +86,8 @@ export function CreateGroupDialog({
         if (onSuccess) onSuccess(data.id);
       });
     },
-    onError: () => {
-      toast.error(activeTab === "dm" ? "Failed to start direct message" : "Failed to create group");
+    onError: (error: any) => {
+      toast.error(error.message || (activeTab === "dm" ? "Failed to start direct message" : "Failed to create group"));
     },
   });
 

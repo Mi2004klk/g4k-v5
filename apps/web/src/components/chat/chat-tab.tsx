@@ -136,6 +136,11 @@ export function ChatTab() {
         setSelectedId(data.id);
         setSearchQuery("");
       });
+    },
+    onError: (error: any) => {
+      import("sonner").then(({ toast }) => {
+        toast.error(error.message || "Failed to start direct message");
+      });
     }
   });
 

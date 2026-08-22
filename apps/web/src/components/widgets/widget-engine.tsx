@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { apiFetch } from "@/lib/api-client";
 import { reconcileLayout, GRID_COLS } from "@/lib/reconcile-layout";
-import { ErrorBoundary, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, AppIcon } from "@g4k/ui/components";
+import { ErrorBoundary, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, AppIcon } from "@g4k/ui/components";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUIStore } from "@/lib/ui-store";
 import { useShallow } from "zustand/react/shallow";
@@ -229,6 +229,12 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     isDirtyRef.current = true;
   };
 
+  const handleSaveLayout = () => {
+    savePreferences(layouts, dismissedWidgets, widgetStates);
+    isDirtyRef.current = false;
+    import("sonner").then(({ toast }) => toast.success("Dashboard layout saved"));
+  };
+
   return (
     <div 
       className={`w-full min-h-[500px] ${isDragging ? "is-dragging-widget" : ""}`}
@@ -262,7 +268,10 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
                 {!dismissedWidgets.includes(w.id) && <AppIcon name="check" className="h-4 w-4 text-primary" />}
               </DropdownMenuItem>
             ))}
-            <div className="h-px bg-neutral-200 dark:bg-neutral-800 my-1" />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={handleSaveLayout} className="text-primary-600 focus:text-primary-700 font-semibold">
+              <AppIcon name="check" className="mr-2 h-4 w-4" /> Save Layout
+            </DropdownMenuItem>
             <DropdownMenuItem onSelect={handleResetLayout} className="text-rose-600 focus:text-rose-700">
               <AppIcon name="refresh" className="mr-2 h-4 w-4" /> Reset to Default
             </DropdownMenuItem>

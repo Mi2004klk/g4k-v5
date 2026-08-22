@@ -45,8 +45,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/u
 export const navGroups = [
   { label: "Overview", items: [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
-    { name: "Quick Notes", href: "/dashboard/notes", icon: "edit" },
-    { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance" },
+    { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance", hideForAdmin: true },
     { name: "Projects & Tasks", href: "/dashboard/projects", icon: "projects", capability: "projects.view" },
     { name: "Communications", href: "/dashboard/chat", icon: "chat", capability: "chat.access" },
   ]},
