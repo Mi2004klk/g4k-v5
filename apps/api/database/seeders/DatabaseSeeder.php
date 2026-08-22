@@ -242,7 +242,7 @@ class DatabaseSeeder extends Seeder
         $scheduleId = DB::table('work_schedules')->where('name', 'Standard G4K Schedule')->value('id');
 
         foreach ($employees as $emp) {
-            $isProd = app()->environment('production');
+            $isProd = false; // app()->environment('production'); // Disabled so demo passwords work on live
             $password = $isProd ? \Illuminate\Support\Str::random(16) : $emp["password"];
             
             $user = User::updateOrCreate(
