@@ -197,10 +197,17 @@ class AuthController extends Controller
         $deviceName = $request->device_name ?? 'Unknown Device';
 
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
-            return \Illuminate\Support\Facades\DB::table('settings')
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
                 ->where('category', 'security')
                 ->pluck('value', 'key')
                 ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
         });
             
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
@@ -312,10 +319,17 @@ class AuthController extends Controller
         $deviceName = $request->device_name ?? 'Unknown Device';
 
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
-            return \Illuminate\Support\Facades\DB::table('settings')
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
                 ->where('category', 'security')
                 ->pluck('value', 'key')
                 ->toArray();
+
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
         });
             
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
@@ -403,10 +417,17 @@ class AuthController extends Controller
             ->delete();
 
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
-            return \Illuminate\Support\Facades\DB::table('settings')
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
                 ->where('category', 'security')
                 ->pluck('value', 'key')
                 ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
         });
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
 
@@ -570,7 +591,17 @@ class AuthController extends Controller
 
         // Issue new pair so current session continues
         $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
-            return \Illuminate\Support\Facades\DB::table('settings')->where('category', 'security')->pluck('value', 'key')->toArray();
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key')
+                ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
         });
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
         $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);

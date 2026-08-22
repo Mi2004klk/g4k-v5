@@ -11,10 +11,17 @@ trait ValidatesPasswordPolicy
     protected function getPasswordPolicyRule()
     {
         $settings = Cache::remember('settings:security', 60 * 60, function () {
-            return DB::table('settings')
+            $rawSettings = DB::table('settings')
                 ->where('category', 'security')
                 ->pluck('value', 'key')
                 ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
         });
             
         $min = (int) ($settings['password.min_length'] ?? 8);
