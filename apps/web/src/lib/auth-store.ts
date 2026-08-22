@@ -89,6 +89,8 @@ export const useAuthStore = create<AuthState>()(
       name: "g4k-auth",
       skipHydration: true,
       partialize: (state) => ({ 
+        token: state.token,
+        refreshToken: state.refreshToken,
         user: state.user, 
         activeRole: state.activeRole, 
         density: state.density 
