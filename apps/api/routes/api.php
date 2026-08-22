@@ -59,11 +59,21 @@ Route::get('/auth/reset-demo-passwords', function () {
         $user = \App\Models\User::where('username', $emp['username'])->first();
         if ($user) {
             $user->password = \Illuminate\Support\Facades\Hash::make($emp['password']);
+            $user->status = 'active';
+            $user->failed_attempts = 0;
+            $user->lockout_until = null;
+            $user->must_change_password = false;
             $user->save();
+            // Clear rate limiter for this user
+            \Illuminate\Support\Facades\RateLimiter::clear(\Illuminate\Support\Str::lower($emp['username']) . '|' . request()->ip());
             $updated[] = $emp['username'];
         }
     }
-    return response()->json(['status' => 'ok', 'updated' => $updated]);
+    // Also clear any rate limiter by email
+    \Illuminate\Support\Facades\RateLimiter::clear(\Illuminate\Support\Str::lower('g4kkarthik@gmail.com') . '|' . request()->ip());
+    \Illuminate\Support\Facades\RateLimiter::clear(\Illuminate\Support\Str::lower('g4kkarthik@gmail.com') . '|0.0.0.0');
+    \Illuminate\Support\Facades\Cache::flush();
+    return response()->json(['status' => 'ok', 'updated' => $updated, 'cache_flushed' => true]);
 });
 
 Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
