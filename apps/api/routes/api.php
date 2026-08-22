@@ -91,6 +91,27 @@ Route::get('/auth/reset-demo-passwords', function () {
     return response()->json(['status' => 'ok', 'updated' => $updated, 'cache_flushed' => true]);
 });
 
+Route::get('/auth/debug-token', function () {
+    $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+        return \Illuminate\Support\Facades\DB::table('settings')
+            ->where('category', 'security')
+            ->pluck('value', 'key')
+            ->toArray();
+    });
+    $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
+    $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
+
+    return response()->json([
+        'settings' => $settings,
+        'accessTtl' => $accessTtl,
+        'refreshTtl' => $refreshTtl,
+        'now' => now()->toIso8601String(),
+        'expires_at' => now()->addMinutes($accessTtl)->toIso8601String(),
+        'timezone' => config('app.timezone'),
+        'db_time' => \Illuminate\Support\Facades\DB::select('SELECT NOW() as db_time')[0]->db_time
+    ]);
+});
+
 Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
 
 Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
