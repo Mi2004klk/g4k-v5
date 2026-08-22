@@ -253,6 +253,7 @@ class DatabaseSeeder extends Seeder
                     "email" => $emp["email"],
                     "password" => Hash::make($password),
                     "must_change_password" => $isProd ? true : false,
+                    "password_changed_at" => now(),
                     "department_id" => $emp["dept"],
                     "designation_id" => $desigMap[$emp["designation"]]->id,
                     "phone" => $emp["mobile"],
