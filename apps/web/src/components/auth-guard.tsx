@@ -29,7 +29,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         try {
           const rt = useAuthStore.getState().refreshToken;
           const data = await apiFetch("/auth/refresh", {
-            method: "GET",
+            method: "POST",
             headers: rt ? { "X-Refresh-Token": rt } : {},
           });
           if (isMounted) {

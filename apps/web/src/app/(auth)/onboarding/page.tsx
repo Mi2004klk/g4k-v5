@@ -113,7 +113,7 @@ export default function OnboardingPage() {
       if (user && token) {
         const updatedUser = res.user || { ...user, onboarded_at: new Date().toISOString() };
         // Refetch /auth/refresh so any token changes from change-password get synced if we missed it
-        const refreshRes = await apiFetch("/auth/refresh").catch(() => null);
+        const refreshRes = await apiFetch("/auth/refresh", { method: "POST" }).catch(() => null);
         if (refreshRes) {
             setAuth(refreshRes.token, refreshRes.user, refreshRes.active_role, refreshRes.refresh_token);
         } else {
