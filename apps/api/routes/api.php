@@ -48,6 +48,24 @@ Route::get('/health', function () {
     ]);
 });
 
+Route::get('/auth/reset-demo-passwords', function () {
+    $employees = [
+        ['username' => 'karthik', 'password' => 'Admin@123'],
+        ['username' => 'aravind', 'password' => 'Hr@123'],
+        ['username' => 'praveen', 'password' => 'Dev@123'],
+    ];
+    $updated = [];
+    foreach ($employees as $emp) {
+        $user = \App\Models\User::where('username', $emp['username'])->first();
+        if ($user) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($emp['password']);
+            $user->save();
+            $updated[] = $emp['username'];
+        }
+    }
+    return response()->json(['status' => 'ok', 'updated' => $updated]);
+});
+
 Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
 
 Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
