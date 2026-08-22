@@ -21,7 +21,7 @@ export function DemoDataConfig() {
 
   const purgeMutation = useMutation({
     mutationFn: async () => {
-      await apiFetch("/demo-data/purge", { method: "DELETE", body: JSON.stringify({ confirmation: "REMOVE DEMO DATA" }) });
+      await apiFetch("/demo-data/purge", { method: "DELETE", body: JSON.stringify({ confirmation: confirmText }) });
     },
     onSuccess: () => {
       toast.success("Demo purge job dispatched. Data will be removed shortly.");

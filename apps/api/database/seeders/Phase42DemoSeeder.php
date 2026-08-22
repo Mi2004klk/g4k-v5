@@ -382,7 +382,6 @@ class Phase42DemoSeeder extends Seeder
                         'demo_tag' => $this->tag
                     ]
                 );
-                $t->update(['approval_id' => $approval->id]);
             }
         }
 

@@ -434,7 +434,6 @@ export function EmployeeManagementTab() {
       }
     }
   ], [canManageUsers, router, setConfirmState, setEditingUser, setIsEditOpen, statusMutation]);
-
   const deptOptions = (Array.isArray(departments) ? departments : []).map((d: Department) => ({ label: d.name, value: d.id.toString() }));
 
   return (
@@ -442,6 +441,7 @@ export function EmployeeManagementTab() {
       <ListScaffold
         title="Directory"
         description="Manage company employees and roles."
+        onRowClick={(user) => router.push(`/dashboard/directory/${user.id}`)}
         actions={
           <>
             <Button variant="outline" size="sm" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full md:w-auto">

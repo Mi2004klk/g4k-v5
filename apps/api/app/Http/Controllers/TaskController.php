@@ -461,6 +461,13 @@ class TaskController extends Controller
             'qa_values' => 'nullable|array',
         ]);
 
+        if ($task->blocked_by) {
+            $blocker = Task::find($task->blocked_by);
+            if ($blocker && $blocker->status !== 'done') {
+                return response()->json(['message' => "Cannot submit task for review because it is blocked by task #{$blocker->id} ({$blocker->title})."], 422);
+            }
+        }
+
         if ($task->qa_form_id) {
             $form = \App\Models\QaForm::with('fields')->find($task->qa_form_id);
             if ($form) {
