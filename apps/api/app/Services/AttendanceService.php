@@ -100,7 +100,7 @@ class AttendanceService
             $hasStartedOnDate = false;
 
             foreach ($allEvents as $ev) {
-                $evDate = $ev->timestamp->toDateString();
+                $evDate = $ev->timestamp->copy()->setTimezone($tz)->toDateString();
                 
                 if ($ev->type === 'clock_in') {
                     if ($evDate === $date) {

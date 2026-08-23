@@ -619,7 +619,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             ))}
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
             {viewMode !== "qa" && (
               <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
                 <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
@@ -1009,13 +1009,6 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               }}
             />
             </div>
-            {viewMode === "list" && (
-              <div className="flex items-center gap-2 pr-2 shrink-0 border-l border-neutral-200 dark:border-neutral-800 pl-2">
-                <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="text-xs h-8 w-28 rounded border border-neutral-200 dark:border-neutral-800 bg-transparent px-2 text-neutral-600 dark:text-neutral-400" />
-                <span className="text-xs text-neutral-400">to</span>
-                <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="text-xs h-8 w-28 rounded border border-neutral-200 dark:border-neutral-800 bg-transparent px-2 text-neutral-600 dark:text-neutral-400" />
-              </div>
-            )}
           </div>
         )}
 

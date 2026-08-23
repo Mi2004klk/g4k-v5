@@ -47,19 +47,23 @@ export function TimeClockWidget({ className }: { className?: string }) {
   const startBreak = useTimerStore((s) => s.startBreak);
   const endBreak = useTimerStore((s) => s.endBreak);
 
-  const { data: todayData, isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: { attendance_today?: AttendanceToday } & Record<string, unknown>) => data?.attendance_today ?? null,
+  const { data: dashData, isPending, isFetching, isError, refetch } = useDashboardInit({
+    select: (data: any) => ({
+      attendance_today: data?.attendance_today ?? null,
+      active_task: data?.active_task ?? null
+    }),
     placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
+    const todayData = dashData?.attendance_today;
     if (todayData) {
       if (todayData.standard_seconds) {
         setStandardSeconds(todayData.standard_seconds);
       }
-      syncWithServer(todayData.day, todayData.events || [], todayData.standard_seconds);
+      syncWithServer(todayData.day, todayData.events || [], todayData.standard_seconds, dashData?.active_task);
     }
-  }, [todayData, syncWithServer]);
+  }, [dashData, syncWithServer]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);

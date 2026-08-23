@@ -38,6 +38,7 @@ class LeaveTest extends TestCase
 
         $department = \App\Models\Department::create(['name' => 'Test HR Dept']);
         $this->hr->update(['department_id' => $department->id]);
+        $this->hr->managedDepartments()->attach($department->id);
 
         $this->employee = User::factory()->create([
             'must_change_password' => false,
@@ -106,13 +107,13 @@ class LeaveTest extends TestCase
         
         $request = $this->withHeaders(['Authorization' => 'Bearer ' . $empToken])
             ->postJson('/api/leave-requests', [
-            'start_date' => '2026-10-10',
-            'end_date' => '2026-10-10',
+            'start_date' => '2026-10-12', // Monday
+            'end_date' => '2026-10-12',
             'type' => 'sick',
             'reason' => 'Fever'
         ])->json();
 
-        $leaveId = $request['id'] ?? $request['data']['id'];
+        $leaveId = $request['id'] ?? $request['data']['id'] ?? null;
 
         $approvalId = $request['approval_id'] ?? $request['approval']['id'] ?? $request['data']['approval']['id'] ?? null;
 
@@ -139,13 +140,13 @@ class LeaveTest extends TestCase
 
         $req2 = $this->withHeaders(['Authorization' => 'Bearer ' . $empToken])
             ->postJson('/api/leave-requests', [
-            'start_date' => '2026-10-12', // Monday
-            'end_date' => '2026-10-12',
+            'start_date' => '2026-10-14', // Wednesday
+            'end_date' => '2026-10-14',
             'type' => 'casual',
             'reason' => 'Rest'
         ])->json();
         
-        $leaveId2 = $req2['id'] ?? $req2['data']['id'];
+        $leaveId2 = $req2['id'] ?? $req2['data']['id'] ?? null;
 
         app('auth')->forgetGuards();
 
@@ -160,12 +161,12 @@ class LeaveTest extends TestCase
 
         $this->assertDatabaseHas('attendance_days', [
             'user_id' => $this->employee->id,
-            'date' => '2026-10-10',
+            'date' => '2026-10-12',
             'status' => 'on_leave'
         ]);
         $this->assertDatabaseHas('attendance_days', [
             'user_id' => $this->employee->id,
-            'date' => '2026-10-12',
+            'date' => '2026-10-14',
             'status' => 'on_leave'
         ]);
         
@@ -181,8 +182,10 @@ class LeaveTest extends TestCase
         $hr2 = User::factory()->create([
             'must_change_password' => false,
             'onboarded_at' => now(),
+            'department_id' => $this->hr->department_id,
         ]);
         $hr2->roleAssignments()->create(['role' => 'hr']);
+        $hr2->managedDepartments()->attach($this->hr->department_id);
 
         $hr2Token = $hr2->createToken('test', ['role:hr', 'leave.request-self'])->plainTextToken;
         $request = $this->withHeaders(['Authorization' => 'Bearer ' . $hr2Token])
@@ -197,13 +200,24 @@ class LeaveTest extends TestCase
 
         app('auth')->forgetGuards();
 
-        $hrToken = $this->hr->createToken('test', ['role:hr', 'leave.approve-employee'])->plainTextToken;
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $hrToken])
+        // Self-approval should be 403
+        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $hr2Token])
             ->postJson("/api/approvals/{$leaveId}/decision", [
             'decision' => 'approved'
         ]);
 
         $response->assertStatus(403);
+
+        app('auth')->forgetGuards();
+
+        // Another HR can approve it
+        $hrToken = $this->hr->createToken('test', ['role:hr', 'leave.approve-employee'])->plainTextToken;
+        $response2 = $this->withHeaders(['Authorization' => 'Bearer ' . $hrToken])
+            ->postJson("/api/approvals/{$leaveId}/decision", [
+            'decision' => 'approved'
+        ]);
+
+        $response2->assertStatus(200);
     }
 
     public function test_admin_can_approve_hr_leave()

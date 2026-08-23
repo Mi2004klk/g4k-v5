@@ -68,13 +68,13 @@ export function ProjectTimerWidget() {
   }, [isProjectTimerRunning, projectTimerAccumulatedSeconds, projectTimerStartedAt]);
 
   const timerMutation = useMutation({
-    mutationFn: async (minutes: number) => {
+    mutationFn: async (data: { minutes: number; projectId: string; taskId: string | null }) => {
       return apiFetch("/timer/log", {
         method: "POST",
         body: JSON.stringify({
-          project_id: projectId,
-          task_id: taskId === "none" ? null : taskId,
-          minutes_logged: minutes,
+          project_id: data.projectId,
+          task_id: data.taskId === "none" ? null : data.taskId,
+          minutes_logged: data.minutes,
           description: logDescription || undefined,
         }),
       });
@@ -94,7 +94,7 @@ export function ProjectTimerWidget() {
     const { elapsedSeconds: total, taskId: stoppedTaskId, projectId: stoppedProjectId } = stopProjectTimer();
     const mins = Math.ceil(total / 60);
     if (mins > 0 && stoppedProjectId) {
-      timerMutation.mutate(mins);
+      timerMutation.mutate({ minutes: mins, projectId: stoppedProjectId, taskId: stoppedTaskId });
     }
     setElapsedSeconds(0);
     setProjectId("");

@@ -92,7 +92,19 @@ export const useTimerStore = create<TimerState>()(
     });
   },
 
-  syncWithServer: (day: any, events: any[], providedStandardSeconds?: number) => {
+  syncWithServer: (day: any, events: any[], providedStandardSeconds?: number, activeTask?: any) => {
+    // If activeTask exists from server and we are not locally running, restore it
+    if (activeTask && !get().isProjectTimerRunning && !get().activeProjectId) {
+      set({
+        activeProjectId: activeTask.project_id,
+        activeTaskId: activeTask.task_id,
+        activeTaskTitle: activeTask.task_title,
+        projectTimerStartedAt: new Date(activeTask.started_at).getTime(),
+        projectTimerAccumulatedSeconds: 0,
+        isProjectTimerRunning: true,
+      });
+    }
+
     if (!day || events.length === 0) {
       get().stopTimer();
       set({ baseSeconds: 0, lastActiveTimestamp: null });

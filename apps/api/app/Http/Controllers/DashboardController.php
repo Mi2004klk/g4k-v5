@@ -66,6 +66,11 @@ class DashboardController extends Controller
                     $leaves = $leavesQuery->get();
 
                     foreach ($leaves as $l) {
+                        $route = '/dashboard/attendance?tab=leave';
+                        if ($activeRole === 'super_admin' || $activeRole === 'hr') {
+                            $route = '/dashboard/org/attendance?tab=leave&sub=approvals';
+                        }
+                        
                         $approvals[] = [
                             'id' => $l->approval_id ?? $l->leave_request_id,
                             'leave_request_id' => $l->leave_request_id,
@@ -74,7 +79,7 @@ class DashboardController extends Controller
                             'title' => $l->title ?? 'Leave Request',
                             'user_name' => $l->user_name,
                             'created_at' => $l->created_at,
-                            'route' => '/dashboard/attendance?tab=leave'
+                            'route' => $route
                         ];
                     }
 
@@ -184,6 +189,7 @@ class DashboardController extends Controller
 
         // Exclude attendance_today from the outer cache due to volatility
         $data['attendance_today'] = $safeCall(AttendanceController::class, 'meToday');
+        $data['active_task'] = \Illuminate\Support\Facades\Cache::get("user_active_task_{$user->id}");
 
         return response()->json($data);
     }

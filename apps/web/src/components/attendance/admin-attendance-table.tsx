@@ -318,7 +318,7 @@ export function AdminAttendanceTable() {
             )}
             {status === "leave" && (
               <Link 
-                href={`/dashboard/org/leave?user_id=${row.original.user_id}&date=${row.original.date}`}
+                href={`/dashboard/org/attendance?tab=leave&sub=history&user_id=${row.original.user_id}`}
                 className="text-xs text-primary-600 hover:underline flex items-center gap-1"
                 onClick={(e) => e.stopPropagation()}
               >

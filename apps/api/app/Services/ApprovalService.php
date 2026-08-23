@@ -22,6 +22,9 @@ class ApprovalService
 
         // Determine next approver role based on submitter's highest role
         $currentApproverRole = $activeRole === 'hr' ? 'super_admin' : 'hr';
+        if ($approvable instanceof \App\Models\LeaveRequest && $activeRole !== 'super_admin') {
+            $currentApproverRole = 'hr';
+        }
         if ($activeRole === 'super_admin') {
             $currentApproverRole = 'super_admin';
         }

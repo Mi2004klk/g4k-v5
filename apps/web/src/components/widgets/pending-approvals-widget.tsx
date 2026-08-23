@@ -122,7 +122,7 @@ export function PendingApprovalsWidget() {
                 </div>
 
                 <div className="flex items-center gap-1">
-                  {item.type === 'leave' && item.route?.includes('tab=approvals') ? (
+                  {item.type === 'on_leave' && item.route?.includes('approvals') ? (
                       <>
                         <TooltipProvider delayDuration={150}>
                           <Tooltip>

@@ -48,7 +48,7 @@ class NotifyApprovalSubmitted
         }
 
         $type = class_basename($approval->approvable_type);
-        $link = '/dashboard/org/leave';
+        $link = '/dashboard/org/attendance?tab=leave&sub=approvals';
         if ($approval->approvable_type === \App\Models\Project::class || str_ends_with($approval->approvable_type, 'Project')) {
             $link = "/dashboard/projects/{$approval->approvable_id}";
         } elseif ($approval->approvable_type === \App\Models\Task::class || str_ends_with($approval->approvable_type, 'Task')) {

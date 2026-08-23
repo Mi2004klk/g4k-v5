@@ -288,7 +288,7 @@ export function FilterBar({
         )}
 
         {/* Desktop Filters */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex flex-wrap items-center gap-3">
           {filters.map((filter) => (
             <div key={filter.key}>{renderFilterControl(filter)}</div>
           ))}

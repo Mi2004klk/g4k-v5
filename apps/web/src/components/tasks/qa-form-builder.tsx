@@ -679,13 +679,13 @@ export function QAFormBuilder() {
         <div className="flex-1 flex flex-col h-full bg-[#f0f4f9] dark:bg-neutral-950 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-inner form-builder-canvas relative">
           
           {/* Sticky Toolbar */}
-          <div className="h-14 shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 z-20 shadow-sm">
-            <div className="flex items-center gap-3">
-              <AppIcon name="tasks" className="text-primary-600" />
-              <h2 className="font-bold text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-xs">{title || "Untitled Form"}</h2>
+          <div className="min-h-[56px] shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 gap-3 z-20 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              <AppIcon name="tasks" className="text-primary-600 shrink-0" />
+              <h2 className="font-bold text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-[200px] sm:max-w-xs">{title || "Untitled Form"}</h2>
               {editingId && <Badge className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 border-none ml-2 text-[10px]">Editing Template</Badge>}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(true)} className="h-8 text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-400">
                 <AppIcon name="eye" size="xs" className="mr-2" /> Preview
               </Button>
