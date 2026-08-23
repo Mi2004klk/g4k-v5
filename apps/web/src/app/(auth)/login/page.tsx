@@ -99,7 +99,8 @@ export default function LoginPage() {
       } else if (e.status === 429) {
         form.setError("root", { type: "manual", message: "Too many login attempts. Please try again later." });
       } else {
-        form.setError("root", { type: "manual", message: e.message || "Invalid credentials. Please try again." });
+        const errorMsg = (!e.message || e.message === "Server Error") ? "Wrong Username or Password." : e.message;
+        form.setError("root", { type: "manual", message: errorMsg });
       }
     } finally {
       setIsLoading(false);

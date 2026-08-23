@@ -75,7 +75,12 @@ class ProfileController extends Controller
 
             AuditLogger::log($request, 'upload_avatar', 'user', $user->id, $before, ['avatar_url' => $avatarUrl]);
 
-            return response()->json(['avatar_url' => $avatarUrl, 'user' => $user]);
+            return response()->json([
+                'url' => $avatarUrl,
+                'path' => $path,
+                'avatar_url' => $avatarUrl,
+                'user' => $user->only(['id', 'first_name', 'last_name', 'avatar_url'])
+            ]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Avatar upload failed: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to upload avatar. Please check server storage permissions.'], 500);

@@ -72,6 +72,8 @@ class CompanyProfileController extends Controller
 
             if (!$profile) {
                 $profile = new CompanyProfile();
+                $profile->name = 'My Company';
+                $profile->timezone = 'Asia/Kolkata';
             }
             $profile->logo_url = $logoUrl;
             $profile->updated_by = $request->user()->id;
@@ -86,7 +88,11 @@ class CompanyProfileController extends Controller
                 }
             }
 
-            return response()->json(['logo_url' => $logoUrl]);
+            return response()->json([
+                'url' => $logoUrl,
+                'path' => $path,
+                'logo_url' => $logoUrl // keep for backward compatibility if any frontend code uses it
+            ]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Company logo upload failed: ' . $e->getMessage());
             return response()->json(['message' => 'Failed to upload logo. Please check server storage permissions.'], 500);

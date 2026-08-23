@@ -91,6 +91,13 @@ class AnnouncementController extends Controller
                 }
             }
         }
+        $attachmentUrl = null;
+        if ($request->hasFile('attachment')) {
+            $disk = config('filesystems.default');
+            $path = $request->file('attachment')->store('announcements', $disk);
+            $attachmentUrl = \Illuminate\Support\Facades\Storage::disk($disk)->url($path);
+        }
+
         $announcement = Announcement::create([
             'title' => $validated['title'],
             'body' => $validated['body'],
@@ -99,6 +106,7 @@ class AnnouncementController extends Controller
             'created_by' => $request->user()->id,
             'pinned_at' => !empty($validated['pinned']) ? now() : null,
             'priority' => $validated['priority'] ?? 'normal',
+            'attachment_url' => $attachmentUrl,
         ]);
 
         try {

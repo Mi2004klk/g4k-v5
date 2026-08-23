@@ -101,13 +101,13 @@ class AuthController extends Controller
             });
 
             throw ValidationException::withMessages([
-                'identifier' => ['Invalid credentials.'],
+                'identifier' => ['Wrong Username or Password.'],
             ]);
         }
 
         if ($user->status === 'inactive') {
             throw ValidationException::withMessages([
-                'identifier' => ['Invalid credentials.'],
+                'identifier' => ['Wrong Username or Password.'],
             ]);
         }
 
@@ -126,7 +126,7 @@ class AuthController extends Controller
                     ], 423);
                 }
                 throw ValidationException::withMessages([
-                    'identifier' => ['Invalid credentials.'],
+                    'identifier' => ['Wrong Username or Password.'],
                 ]);
             }
         }
