@@ -53,6 +53,31 @@ class TaskController extends Controller
         return CapabilityMatrix::hasCapability($role, 'tasks.manage');
     }
 
+    private function canManageTask(Request $request, Task $task): bool
+    {
+        if (!$this->userHasManage($request)) return false;
+        if ($request->user()->resolveActiveRole() === 'super_admin') return true;
+        
+        $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+        
+        if ($task->project_id) {
+            $task->loadMissing('project');
+            if ($task->project && in_array($task->project->department_id, $deptIds)) {
+                return true;
+            }
+        }
+        
+        $task->loadMissing(['assignees', 'reporter']);
+        foreach ($task->assignees as $assignee) {
+            if (in_array($assignee->department_id, $deptIds)) return true;
+        }
+        if ($task->reporter && in_array($task->reporter->department_id, $deptIds)) {
+            return true;
+        }
+        
+        return false;
+    }
+
     public function export(Request $request)
     {
         $job = \App\Models\ExportJob::create([
@@ -86,21 +111,29 @@ class TaskController extends Controller
         $hasManage = $this->userHasManage($request);
         $userId = $request->user()->id;
 
+        if ($validated['action'] === 'complete' && !$hasManage) {
+            return response()->json(['message' => 'You do not have permission to bulk complete tasks.'], 403);
+        }
+
         $tasks = Task::whereIn('id', $validated['ids'])->get();
         $updatedCount = 0;
 
         foreach ($tasks as $task) {
-            $canEdit = $hasManage || $task->assignee_id === $userId || $task->reporter_id === $userId;
+            $canEdit = $this->canManageTask($request, $task) || $task->assignee_id === $userId || $task->reporter_id === $userId;
             if (!$canEdit) continue;
 
             if ($validated['action'] === 'delete') {
-                if (!$hasManage && $task->reporter_id !== $userId) {
+                if (!$this->canManageTask($request, $task) && $task->reporter_id !== $userId) {
                     continue; // Skip assignees for deletion
                 }
                 $task->delete();
                 $updatedCount++;
             } elseif ($validated['action'] === 'complete') {
-                $task->update(['status' => 'completed']);
+                $hasAdmin = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin'])->isNotEmpty();
+                if (!$hasAdmin && ($task->assignee_id === $userId || $task->assignees->contains('id', $userId))) {
+                    continue; // Skip their own tasks
+                }
+                $task->update(['status' => 'done']);
                 $updatedCount++;
             }
         }
@@ -130,6 +163,8 @@ class TaskController extends Controller
     {
         $query = Task::with(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm', 'personalReminder']);
 
+        $activeRole = $request->user()->resolveActiveRole();
+
         if (!$this->userHasManage($request)) {
             $userId = $request->user()->id;
             $query->where(function ($q) use ($userId) {
@@ -141,6 +176,26 @@ class TaskController extends Controller
                         ->orWhereHas('members', fn ($m) => $m->where('users.id', $userId));
                   });
             });
+        } elseif ($activeRole === 'hr') {
+            $userId = $request->user()->id;
+            $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+            if (empty($deptIds)) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where(function ($q) use ($userId, $deptIds) {
+                    $q->whereHas('project', function($pq) use ($deptIds) {
+                          $pq->whereIn('department_id', $deptIds);
+                      })
+                      ->orWhereHas('assignees', function($aq) use ($deptIds) {
+                          $aq->whereIn('users.department_id', $deptIds);
+                      })
+                      ->orWhereHas('reporter', function($rq) use ($deptIds) {
+                          $rq->whereIn('users.department_id', $deptIds);
+                      })
+                      ->orWhere('assignee_id', $userId)
+                      ->orWhere('reporter_id', $userId);
+                });
+            }
         }
 
         if ($request->filled('project_id')) {
@@ -209,12 +264,14 @@ class TaskController extends Controller
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'parent_id' => 'nullable|exists:tasks,id',
+            'phase_id' => 'nullable|exists:project_phases,id',
             'blocked_by' => 'nullable|exists:tasks,id',
             'qa_form_id' => 'nullable|exists:qa_forms,id',
             'recurrence' => 'nullable|array',
         ]);
 
         $user = $request->user();
+        $activeRole = $request->user()->resolveActiveRole();
 
         // Task-creation policy (T-22.2 / T-52.6): managers create anything.
         // Employees may always create their own personal (My Tasks) entry, and
@@ -233,6 +290,24 @@ class TaskController extends Controller
                 return response()->json(['message' => 'You can only assign personal tasks to yourself.'], 403);
             }
             $validated['assignees'] = $selfAssignments;
+        } elseif ($activeRole === 'hr') {
+            $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+            
+            if (!empty($validated['project_id'])) {
+                $project = \App\Models\Project::find($validated['project_id']);
+                if ($project && !in_array($project->department_id, $deptIds)) {
+                    return response()->json(['message' => 'You can only add tasks to projects within your managed departments.'], 403);
+                }
+            }
+            
+            if (!empty($validated['assignees'])) {
+                $assignees = \App\Models\User::whereIn('id', $validated['assignees'])->get();
+                foreach ($assignees as $assignee) {
+                    if (!in_array($assignee->department_id, $deptIds)) {
+                        return response()->json(['message' => 'You can only assign tasks to employees within your managed departments.'], 403);
+                    }
+                }
+            }
         }
 
         $assigneeId = null;
@@ -312,7 +387,7 @@ class TaskController extends Controller
     {
         $task = Task::with(['assignees', 'project'])->findOrFail($id);
         $user = $request->user();
-        $isManage = $this->userHasManage($request);
+        $isManage = $this->canManageTask($request, $task);
         $isReporter = $task->reporter_id === $user->id;
 
         if (!$isManage && !$isReporter && !$task->assignees->contains('id', $user->id)) {
@@ -339,6 +414,7 @@ class TaskController extends Controller
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'progress' => 'sometimes|integer|min:0|max:100',
+            'phase_id' => 'nullable|exists:project_phases,id',
             'blocked_by' => 'nullable|exists:tasks,id',
             'qa_form_id' => 'nullable|exists:qa_forms,id',
             'recurrence' => 'nullable|array',
@@ -352,6 +428,17 @@ class TaskController extends Controller
         }
 
         if (isset($validated['status']) && $validated['status'] !== $task->status) {
+            if (!$isManage && in_array($validated['status'], ['review', 'done'])) {
+                return response()->json(['message' => "You cannot change the status directly to {$validated['status']}. Please use the 'Submit for Review' option."], 403);
+            }
+
+            if ($validated['status'] === 'done') {
+                $hasAdmin = $user->roleAssignments->pluck('role')->intersect(['super_admin'])->isNotEmpty();
+                if (!$hasAdmin && ($task->assignee_id === $user->id || $task->assignees->contains('id', $user->id))) {
+                    return response()->json(['message' => 'You cannot approve your own task.'], 403);
+                }
+            }
+
             if (in_array($validated['status'], ['review', 'done']) && !$request->has('submission_note')) {
                 return response()->json(['message' => "A submission note is required to move the task to {$validated['status']}. Please use the submit for review option."], 422);
             }
@@ -425,7 +512,7 @@ class TaskController extends Controller
         foreach ($validated['tasks'] as $taskData) {
             $task = Task::with('assignees')->find($taskData['id']);
             if ($task) {
-                if (!$isManage
+                if (!$this->canManageTask($request, $task)
                     && $task->reporter_id !== $request->user()->id
                     && !$task->assignees->contains('id', $request->user()->id)) {
                     continue;
@@ -450,7 +537,7 @@ class TaskController extends Controller
     {
         $task = Task::with('assignees')->findOrFail($id);
 
-        if (!$this->userHasManage($request)
+        if (!$this->canManageTask($request, $task)
             && $task->reporter_id !== $request->user()->id
             && !$task->assignees->contains('id', $request->user()->id)) {
             return response()->json(['message' => 'Only the task assignee can submit this task for review.'], 403);
@@ -556,7 +643,7 @@ class TaskController extends Controller
     {
         $task = Task::with(['assignees', 'project.members'])->findOrFail($id);
 
-        if (!$this->userHasManage($request) && !$this->isTaskParticipant($task, $request->user()->id)) {
+        if (!$this->canManageTask($request, $task) && !$this->isTaskParticipant($task, $request->user()->id)) {
             return response()->json(['message' => 'Unauthorized access to task'], 403);
         }
 
@@ -577,8 +664,8 @@ class TaskController extends Controller
 
     public function deleteComment(Request $request, $id)
     {
-        $comment = TaskComment::findOrFail($id);
-        if (!$this->userHasManage($request) && $comment->user_id !== $request->user()->id) {
+        $comment = TaskComment::with('task')->findOrFail($id);
+        if (!$this->canManageTask($request, $comment->task) && $comment->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized to delete this comment'], 403);
         }
         $comment->delete();
@@ -589,7 +676,7 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
 
-        if (!$this->userHasManage($request) && $task->reporter_id !== $request->user()->id) {
+        if (!$this->canManageTask($request, $task) && $task->reporter_id !== $request->user()->id) {
             return response()->json(['message' => 'You can only delete tasks you created.'], 403);
         }
 
@@ -608,7 +695,7 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
 
-        if (!$this->userHasManage($request)) {
+        if (!$this->canManageTask($request, $task)) {
             return response()->json(['message' => 'You do not have permission to review this task.'], 403);
         }
         
@@ -681,7 +768,7 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
 
-        if (!$this->userHasManage($request)) {
+        if (!$this->canManageTask($request, $task)) {
             return response()->json(['message' => 'You do not have permission to review this task.'], 403);
         }
         
@@ -746,9 +833,11 @@ class TaskController extends Controller
     {
         // Reviewers (tasks.manage) see every submission in their queue;
         // everyone else sees only their own submitted work.
-        $query = Task::with(['project', 'approval', 'assignee', 'reporter'])
+        $query = Task::with(['project', 'phase', 'approval', 'assignee', 'reporter'])
             ->where('status', 'review')
             ->orderBy('submitted_at', 'desc');
+
+        $activeRole = $request->user()->resolveActiveRole();
 
         if (!$this->userHasManage($request)) {
             $userId = $request->user()->id;
@@ -757,6 +846,26 @@ class TaskController extends Controller
                   ->orWhere('reporter_id', $userId)
                   ->orWhereHas('assignees', fn ($aq) => $aq->where('users.id', $userId));
             });
+        } elseif ($activeRole === 'hr') {
+            $userId = $request->user()->id;
+            $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+            if (empty($deptIds)) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where(function ($q) use ($userId, $deptIds) {
+                    $q->whereHas('project', function($pq) use ($deptIds) {
+                          $pq->whereIn('department_id', $deptIds);
+                      })
+                      ->orWhereHas('assignees', function($aq) use ($deptIds) {
+                          $aq->whereIn('users.department_id', $deptIds);
+                      })
+                      ->orWhereHas('reporter', function($rq) use ($deptIds) {
+                          $rq->whereIn('users.department_id', $deptIds);
+                      })
+                      ->orWhere('assignee_id', $userId)
+                      ->orWhere('reporter_id', $userId);
+                });
+            }
         }
 
         $tasks = $query->get()->map(function ($task) {

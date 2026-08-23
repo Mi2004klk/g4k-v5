@@ -19,6 +19,7 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PhaseController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\QaController;
 use App\Http\Controllers\TimerController;
@@ -189,6 +190,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
 
     Route::get('/attendance/admin/overview', [AttendanceController::class, 'overview'])->middleware('capability:admin.view-all-attendance');
     Route::get('/attendance/admin/graph', [AttendanceController::class, 'graph'])->middleware('capability:admin.view-all-attendance');
+    Route::get('/attendance/live', [AttendanceController::class, 'liveShifts'])->middleware(['capability:admin.view-all-attendance|hr.view-team-attendance']);
     Route::post('/attendance/admin/notify-open-shifts', [AttendanceController::class, 'notifyOpenShifts'])->middleware('capability:hr.view-team-attendance');
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
@@ -235,6 +237,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::get('/projects/{id}', [ProjectController::class, 'show']);
         Route::get('/projects/{id}/history', [ProjectController::class, 'history']);
         Route::post('/projects/{id}/submit', [ProjectController::class, 'submit']);
+        
+        // Project Phases
+        Route::get('/projects/{id}/phases', [PhaseController::class, 'index']);
     });
     Route::middleware('capability:projects.manage')->group(function () {
         Route::post('/projects/cover', [ProjectController::class, 'uploadCover']);
@@ -242,6 +247,14 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
         Route::post('/projects/{id}/review', [ProjectController::class, 'review']);
+        
+        // Project Phases
+        Route::post('/projects/{id}/phases', [PhaseController::class, 'store']);
+        Route::put('/projects/{id}/phases/{phaseId}', [PhaseController::class, 'update']);
+        Route::delete('/projects/{id}/phases/{phaseId}', [PhaseController::class, 'destroy']);
+        Route::post('/projects/{id}/phases/reorder', [PhaseController::class, 'reorder']);
+        Route::post('/projects/{id}/phases/{phaseId}/complete', [PhaseController::class, 'complete']);
+        Route::post('/projects/{id}/phases/{phaseId}/reopen', [PhaseController::class, 'reopen']);
     });
 
     Route::middleware('capability:tasks.view|tasks.manage')->group(function () {
@@ -263,6 +276,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::delete('/tasks/comments/{id}', [TaskController::class, 'deleteComment']);
         Route::post('/tasks/{id}/reminders', [TaskReminderController::class, 'store']);
         Route::delete('/tasks/reminders/{id}', [TaskReminderController::class, 'destroy']);
+        Route::post('/tasks/{id}/move-phase', [TaskController::class, 'movePhase']);
     });
 
     Route::middleware('capability:tasks.manage')->group(function () {

@@ -62,6 +62,11 @@ class Project extends Model
         return $this->morphOne(Approval::class, 'approvable')->latestOfMany();
     }
 
+    public function phases(): HasMany
+    {
+        return $this->hasMany(ProjectPhase::class)->orderBy('sort_order', 'asc');
+    }
+
     public function qaForm(): BelongsTo
     {
         return $this->belongsTo(QaForm::class);

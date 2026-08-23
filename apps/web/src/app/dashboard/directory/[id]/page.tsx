@@ -10,11 +10,14 @@ import { resolveAvatarUrl } from "@/lib/utils";
 import { TasksTab } from "@/components/projects/tasks-tab";
 import { LeaveTab } from "@/components/attendance/leave-tab";
 import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
+import { useChatWithUser } from "@/hooks/use-chat-with-user";
 
 export default function Employee360Page() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
+
+  const sendMessageMutation = useChatWithUser();
 
   const { data: user, isLoading } = useQuery({
     queryKey: queryKeys.user(Number(id)),
@@ -79,6 +82,17 @@ export default function Employee360Page() {
               <AppIcon name="mail" size="sm" /> {user.email || 'Hidden'}
               {user.phone && <span className="flex items-center gap-1 ml-3"><AppIcon name="phone" size="sm" /> {user.phone}</span>}
             </p>
+          </div>
+
+          <div className="flex gap-2 shrink-0 mt-2 md:mt-0">
+            <Button
+              onClick={() => sendMessageMutation.mutate(user.id)}
+              disabled={sendMessageMutation.isPending}
+              className="bg-primary-600 hover:bg-primary-700 text-white gap-2"
+            >
+              <AppIcon name="chat" size="sm" />
+              Send Message
+            </Button>
           </div>
         </div>
       </div>

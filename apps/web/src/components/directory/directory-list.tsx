@@ -400,16 +400,17 @@ export function EmployeeManagementTab() {
               </TooltipProvider>
               <DropdownMenuContent align="end" className="w-56 font-sans">
                 {user.deleted_at ? (
-                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "restore", payload: user })} className="gap-2 text-emerald-600 font-medium">
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setConfirmState({ isOpen: true, type: "restore", payload: user }); }} className="gap-2 text-emerald-600 font-medium">
                     <AppIcon name="history" /> Restore User
                   </DropdownMenuItem>
                 ) : (
                   <>
-                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2 text-amber-600">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setConfirmState({ isOpen: true, type: "reset-password", payload: user }); }} className="gap-2 text-amber-600">
                       <AppIcon name="key" /> Reset Password
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => {
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
                       if (isInactive) {
                         statusMutation.mutate({ id: user.id, status: 'active' });
                       } else {
@@ -419,10 +420,10 @@ export function EmployeeManagementTab() {
                       {isInactive ? <AppIcon name="userCheck" /> : <AppIcon name="userX" />}
                       {isInactive ? "Activate" : "Deactivate"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setConfirmState({ isOpen: true, type: "delete", payload: user }); }} className="gap-2 text-rose-600">
                       <AppIcon name="trash" /> Delete
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setEditingUser(row.original); setIsEditOpen(true); }} className="gap-2">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingUser(row.original); setIsEditOpen(true); }} className="gap-2">
                       <AppIcon name="edit" /> Edit
                     </DropdownMenuItem>
                   </>

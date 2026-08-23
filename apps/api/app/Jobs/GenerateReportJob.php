@@ -140,7 +140,26 @@ class GenerateReportJob implements ShouldQueue
                     });
                 } else {
                     $jobUser = \App\Models\User::find($userId);
-                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'assignee_id');
+                    if ($jobUser && $jobUser->resolveActiveRole() === 'hr') {
+                        $deptIds = \App\Support\HrScope::managedDepartmentIds($jobUser);
+                        if (empty($deptIds)) {
+                            $query->whereRaw('1 = 0');
+                        } else {
+                            $query->where(function ($q) use ($userId, $deptIds) {
+                                $q->whereHas('project', function($pq) use ($deptIds) {
+                                      $pq->whereIn('department_id', $deptIds);
+                                  })
+                                  ->orWhereHas('assignees', function($aq) use ($deptIds) {
+                                      $aq->whereIn('users.department_id', $deptIds);
+                                  })
+                                  ->orWhereHas('reporter', function($rq) use ($deptIds) {
+                                      $rq->whereIn('users.department_id', $deptIds);
+                                  })
+                                  ->orWhere('assignee_id', $userId)
+                                  ->orWhere('reporter_id', $userId);
+                            });
+                        }
+                    }
                 }
                 $query->chunk(1000, function($chunk) use ($chunkCallback) {
                     $chunkCallback($chunk->map(fn($t) => [
@@ -167,7 +186,7 @@ class GenerateReportJob implements ShouldQueue
                     });
                 } else {
                     $jobUser = \App\Models\User::find($userId);
-                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'created_by');
+                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'department_id');
                 }
                 $query->chunk(1000, function($chunk) use ($chunkCallback) {
                     $chunkCallback($chunk->map(fn($p) => [

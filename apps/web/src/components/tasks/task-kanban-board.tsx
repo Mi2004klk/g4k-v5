@@ -50,11 +50,12 @@ const COLUMNS = [
   { id: "done", title: taskStatus.done.label, color: taskStatus.done.dot, border: taskStatus.done.border },
 ];
 
-function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: {
+function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove, hasManageCap }: {
   task: KanbanTask;
   onTaskSelect: (task: KanbanTask) => void;
   onDeleteTask: (id: number) => void;
   onTaskMove?: (id: number, status: string) => void;
+  hasManageCap?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `task-${task.id}`,
@@ -93,15 +94,21 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: {
             </ContextMenuItem>
             <ContextMenuSeparator />
             <div className="px-2 py-1.5 text-xs font-semibold text-neutral-500">Change Status</div>
-            {COLUMNS.map((col) => (
-              <ContextMenuItem
-                key={col.id}
-                disabled={task.status === col.id}
-                onClick={() => onTaskMove?.(task.id as number, col.id)}
-              >
-                Move to {col.title}
-              </ContextMenuItem>
-            ))}
+            {COLUMNS.map((col) => {
+              const disabled = task.status === col.id || (!hasManageCap && (col.id === "review" || col.id === "done"));
+              return (
+                <ContextMenuItem
+                  key={col.id}
+                  disabled={disabled}
+                  onClick={() => {
+                    if (disabled) return;
+                    onTaskMove?.(task.id as number, col.id);
+                  }}
+                >
+                  Move to {col.title}
+                </ContextMenuItem>
+              );
+            })}
             <ContextMenuSeparator />
             <ContextMenuItem
               className="text-destructive focus:bg-destructive/10 focus:text-destructive"
@@ -125,13 +132,14 @@ function DraggableTask({ task, onTaskSelect, onDeleteTask, onTaskMove }: {
   );
 }
 
-function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, isLoading }: {
+function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, isLoading, hasManageCap }: {
   col: typeof COLUMNS[0];
   tasks: KanbanTask[];
   onTaskSelect: (task: KanbanTask) => void;
   onDeleteTask: (id: number) => void;
   onTaskMove?: (id: number, status: string) => void;
   isLoading?: boolean;
+  hasManageCap?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: col.id,
@@ -158,7 +166,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-3 w-[85vw] md:w-auto md:min-w-[320px] md:max-w-[360px] flex-shrink-0 snap-center px-4 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
+      className={`flex flex-col gap-3 h-full min-h-0 w-[85vw] md:w-auto md:min-w-[320px] md:max-w-[360px] flex-shrink-0 snap-center px-4 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
         isOver
           ? "bg-secondary/20"
           : "bg-transparent"
@@ -186,7 +194,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col gap-3 min-h-[300px]">
+      <div className="flex-1 overflow-y-auto thin-scrollbar flex flex-col gap-3 min-h-0 pb-4">
         <SortableContext items={tasks.map((t: KanbanTask) => `task-${t.id}`)} strategy={verticalListSortingStrategy}>
           {isLoading ? (
             <div className="flex flex-col gap-2">
@@ -210,6 +218,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
               onTaskSelect={onTaskSelect}
               onDeleteTask={onDeleteTask}
               onTaskMove={onTaskMove}
+              hasManageCap={hasManageCap}
             />
           ))}
         </SortableContext>
@@ -226,6 +235,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   onTaskReorder,
   isLoading,
   statusFilter,
+  hasManageCap,
 }: {
   tasks: KanbanTask[];
   onTaskMove?: (taskId: number, newStatus: string) => void;
@@ -234,6 +244,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   onTaskReorder?: (tasks: { id: number; status: string; order: number }[]) => void;
   isLoading?: boolean;
   statusFilter?: string;
+  hasManageCap?: boolean;
 }) {
   const [activeTask, setActiveTask] = useState<KanbanTask | null>(null);
   const [localTasks, setLocalTasks] = useState<KanbanTask[]>(tasks);
@@ -308,6 +319,11 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
     if (!finalTask || !originalTask) return;
 
     if (finalTask.status !== originalTask.status) {
+       if (!hasManageCap && (finalTask.status === "review" || finalTask.status === "done")) {
+         toast.error(`Please use the 'Submit for Review' option inside the task details to move to ${COLUMNS.find(c => c.id === finalTask.status)?.title}.`);
+         setLocalTasks([...tasks]);
+         return;
+       }
        if (finalTask.qa_form_id && (finalTask.status === "review" || finalTask.status === "done")) {
          toast.error("This task requires QA verification and cannot be dragged to this column.");
          setLocalTasks([...tasks]);
@@ -359,9 +375,10 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="relative group/board">
-        <div className={`flex flex-nowrap md:grid ${statusFilter && statusFilter !== 'all' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 relative`}>
-          {COLUMNS.filter(col => !statusFilter || statusFilter === "all" || col.id === statusFilter).map((col) => (
+      <div className="relative group/board h-full flex-1 min-h-0">
+        <div className="absolute inset-0">
+          <div className={`h-full flex flex-nowrap md:grid ${statusFilter && statusFilter !== 'all' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 relative`}>
+            {COLUMNS.filter(col => !statusFilter || statusFilter === "all" || col.id === statusFilter).map((col) => (
             <DroppableColumn
               key={col.id}
               col={col}
@@ -370,13 +387,14 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
               onDeleteTask={onDeleteTask}
               onTaskMove={onTaskMove}
               isLoading={isLoading}
+              hasManageCap={hasManageCap}
             />
           ))}
         </div>
         
-        {/* Mobile scroll indicator */}
-        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden flex items-center justify-end pr-2 opacity-100 group-hover/board:opacity-0 transition-opacity z-20">
-          <AppIcon name="chevronRight" className="text-neutral-400 animate-pulse" />
+            <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden flex items-center justify-end pr-2 opacity-100 group-hover/board:opacity-0 transition-opacity z-20">
+              <AppIcon name="chevronRight" className="text-neutral-400 animate-pulse" />
+            </div>
         </div>
       </div>
 

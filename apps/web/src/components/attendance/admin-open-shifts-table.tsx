@@ -26,24 +26,33 @@ interface OpenShiftRecord {
   clock_in?: string;
   break_seconds?: number;
   active_task_title?: string;
+  active_task_started_at?: string;
+  status?: string;
 }
 
-function LiveDuration({ clockIn }: { clockIn: string }) {
+function LiveDuration({ clockIn, breakSeconds = 0, status }: { clockIn: string; breakSeconds?: number; status?: string }) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     const updateElapsed = () => {
-      setElapsed(differenceInSeconds(new Date(), new Date(clockIn)));
+      setElapsed(Math.max(0, differenceInSeconds(new Date(), new Date(clockIn)) - breakSeconds));
     };
     updateElapsed();
+    
+    if (status === 'break') return; // Pause ticking if currently on break
+    
     const int = setInterval(updateElapsed, 1000);
     return () => clearInterval(int);
-  }, [clockIn]);
+  }, [clockIn, breakSeconds, status]);
 
   const h = Math.floor(elapsed / 3600);
   const m = Math.floor((elapsed % 3600) / 60);
   const s = elapsed % 60;
-  return <span className="font-mono">{h}h {m}m {s}s</span>;
+  return (
+    <span className={`font-mono ${status === 'break' ? 'text-amber-600 opacity-70' : ''}`}>
+      {h}h {m}m {s}s
+    </span>
+  );
 }
 
 export function AdminOpenShiftsTable() {
@@ -105,7 +114,7 @@ export function AdminOpenShiftsTable() {
       params.append("status", "open");
       params.append("page", page.toString());
       params.append("per_page", perPage.toString());
-      return apiFetch(`/attendance/admin/overview?${params.toString()}`);
+      return apiFetch(`/attendance/live?${params.toString()}`);
     },
     staleTime: STALE_TIME_ATTENDANCE,
   });
@@ -175,13 +184,27 @@ export function AdminOpenShiftsTable() {
       header: "Clock In",
       cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
         const val = row.getValue("clock_in") as string;
+        const status = row.original.status || "open";
+        
         return (
           <div className="flex items-center gap-2">
             <span className="font-mono text-muted-foreground">{val ? format(new Date(val), "hh:mm a") : "—"}</span>
-            <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide">
-              <AppIcon name="error" size="xs" />
-              OPEN
-            </StatusBadge>
+            {status === "break" ? (
+              <StatusBadge status="warning" className="gap-1 px-1.5 py-0.5 tracking-wide bg-amber-50 text-amber-600">
+                <AppIcon name="clock" size="xs" />
+                ON BREAK
+              </StatusBadge>
+            ) : status === "absent" ? (
+              <StatusBadge status="danger" className="gap-1 px-1.5 py-0.5 tracking-wide">
+                <AppIcon name="close" size="xs" />
+                ABSENT
+              </StatusBadge>
+            ) : (
+              <StatusBadge status="success" className="gap-1 px-1.5 py-0.5 tracking-wide">
+                <AppIcon name="play" size="xs" />
+                WORKING
+              </StatusBadge>
+            )}
           </div>
         );
       },
@@ -191,7 +214,7 @@ export function AdminOpenShiftsTable() {
       header: "Duration",
       cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
         const val = row.original.clock_in;
-        return <div className="text-sm font-medium">{val ? <LiveDuration clockIn={val} /> : "—"}</div>;
+        return <div className="text-sm font-medium">{val ? <LiveDuration clockIn={val} breakSeconds={row.original.break_seconds} status={row.original.status} /> : "—"}</div>;
       }
     },
     {
@@ -209,11 +232,19 @@ export function AdminOpenShiftsTable() {
       header: "Current Activity",
       cell: ({ row }: { row: Row<OpenShiftRecord> }) => {
         const activity = row.original.active_task_title;
+        const startedAt = row.original.active_task_started_at;
         return activity ? (
-          <StatusBadge status="info" className="gap-1 truncate max-w-[200px]">
-            <AppIcon name="timer" size="xs" className="animate-pulse" />
-            <span className="truncate">{activity}</span>
-          </StatusBadge>
+          <div className="flex flex-col gap-0.5">
+            <StatusBadge status="info" className="gap-1 truncate max-w-[200px]">
+              <AppIcon name="timer" size="xs" className="animate-pulse" />
+              <span className="truncate">{activity}</span>
+            </StatusBadge>
+            {startedAt && (
+              <span className="text-[10px] text-muted-foreground/80 pl-1">
+                Started {format(new Date(startedAt), "h:mm a")}
+              </span>
+            )}
+          </div>
         ) : (
           <span className="text-muted-foreground text-xs italic">Idle</span>
         );

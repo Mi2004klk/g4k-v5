@@ -17,7 +17,7 @@ interface TimerState {
   stopTimer: () => void;
   startBreak: (breakStartTime: string) => void;
   endBreak: (endBreakTime: string) => void;
-  syncWithServer: (day: any, events: any[], standardSeconds?: number) => void;
+  syncWithServer: (day: any, events: any[], standardSeconds?: number, activeTask?: any) => void;
   // Project/Task Timer
   activeProjectId: string | null;
   activeTaskId: string | null;
@@ -252,6 +252,8 @@ export const useTimerStore = create<TimerState>()(
 }));
 
 if (typeof window !== 'undefined') {
+  useTimerStore.persist.rehydrate();
+  
   const channel = new BroadcastChannel('g4k_timer_sync');
   channel.onmessage = (event) => {
     if (event.data && event.data.type === 'SYNC_STATE') {

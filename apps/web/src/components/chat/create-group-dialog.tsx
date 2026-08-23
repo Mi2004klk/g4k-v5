@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, EmptyState } from "@g4k/ui/components";
 import { Button, Input, Label, ScrollArea, Checkbox } from "@g4k/ui/components";
-import { apiFetch, unwrapList } from "@/lib/api-client";
+import { apiFetch, unwrapList, isQueued } from "@/lib/api-client";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/lib/auth-store";
@@ -72,19 +72,17 @@ export function CreateGroupDialog({
       }
     },
     onSuccess: (data) => {
-      import("@/lib/api-client").then(({ isQueued }) => {
-        if (isQueued(data)) {
-          onOpenChange(false);
-          setName(""); clearDraft(); setSelectedUsers([]);
-          return;
-        }
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-        toast.success(activeTab === "dm" ? "Direct message started" : "Group created successfully");
+      if (isQueued(data)) {
         onOpenChange(false);
-        setName(""); clearDraft();
-        setSelectedUsers([]);
-        if (onSuccess) onSuccess(data.id);
-      });
+        setName(""); clearDraft(); setSelectedUsers([]);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      toast.success(activeTab === "dm" ? "Direct message started" : "Group created successfully");
+      onOpenChange(false);
+      setName(""); clearDraft();
+      setSelectedUsers([]);
+      if (onSuccess) onSuccess(data?.id || data?.conversation_id || (data?.data && (data.data.id || data.data.conversation_id)));
     },
     onError: (error: any) => {
       toast.error(error.message || (activeTab === "dm" ? "Failed to start direct message" : "Failed to create group"));

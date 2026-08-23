@@ -106,7 +106,8 @@ export function ProfileSecurityTab() {
   const uniqueSessions = useMemo(() => {
     if (!sessions) return [];
     const seen = new Set<string>();
-    return (sessions as SessionRecord[]).filter((s) => {
+    const sessionList = Array.isArray(sessions) ? sessions : (sessions as any)?.data || [];
+    return sessionList.filter((s: SessionRecord) => {
       const key = `${s.device_name || ""}-${s.user_agent || ""}-${s.ip_address || ""}`;
       if (seen.has(key)) return false;
       seen.add(key);

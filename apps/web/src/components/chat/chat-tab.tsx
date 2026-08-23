@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { isChatPinned } from "@/lib/chat-utils";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch, unwrapList } from "@/lib/api-client";
+import { apiFetch, unwrapList, isQueued } from "@/lib/api-client";
 import { asArray } from "@/lib/utils";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Avatar, AvatarFallback, MeaningfulEmpty } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
@@ -104,8 +105,15 @@ export function ChatTab() {
       
       channel.listen(".message-sent", handler);
       
+      const deleteHandler = (e: { message_id: number, conversation_id: number }) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      };
+      
+      channel.listen(".message-deleted", deleteHandler);
+      
       return () => {
         channel.stopListening(".message-sent");
+        channel.stopListening(".message-deleted");
         leaveChannel(userChannelName);
       };
     }
@@ -127,20 +135,19 @@ export function ChatTab() {
       });
     },
     onSuccess: (data) => {
-      import("@/lib/api-client").then(({ isQueued }) => {
-        if (isQueued(data)) {
-          setSearchQuery("");
-          return;
-        }
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-        setSelectedId(data.id);
+      if (isQueued(data)) {
         setSearchQuery("");
-      });
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      const convId = data?.id || data?.conversation_id || (data?.data && (data.data.id || data.data.conversation_id));
+      if (convId) {
+        setSelectedId(convId);
+      }
+      setSearchQuery("");
     },
     onError: (error: any) => {
-      import("sonner").then(({ toast }) => {
-        toast.error(error.message || "Failed to start direct message");
-      });
+      toast.error(error.message || "Failed to start direct message");
     }
   });
 
@@ -198,14 +205,14 @@ export function ChatTab() {
   const sortedItems = [...allItems].sort((a: ChatConversation, b: ChatConversation) => {
     const aCurrentUserData = a.users?.find((u: ChatUser) => u.id === user?.id);
     const aLastReadAt = aCurrentUserData?.pivot?.last_read_at;
-    const aIsPinned = (aCurrentUserData as any)?.pivot?.is_pinned === 1 || (aCurrentUserData as any)?.pivot?.is_pinned === true;
+    const aIsPinned = isChatPinned(a, user?.id);
     const aIsUnread = (a.unread_count && a.unread_count > 0) || (a.latestMessage &&
       a.latestMessage.sender_id !== 0 && a.latestMessage.sender_id !== user?.id &&
       (!aLastReadAt || new Date(a.latestMessage.created_at) > new Date(aLastReadAt)));
 
     const bCurrentUserData = b.users?.find((u: ChatUser) => u.id === user?.id);
     const bLastReadAt = bCurrentUserData?.pivot?.last_read_at;
-    const bIsPinned = (bCurrentUserData as any)?.pivot?.is_pinned === 1 || (bCurrentUserData as any)?.pivot?.is_pinned === true;
+    const bIsPinned = isChatPinned(b, user?.id);
     const bIsUnread = (b.unread_count && b.unread_count > 0) || (b.latestMessage &&
       b.latestMessage.sender_id !== 0 && b.latestMessage.sender_id !== user?.id &&
       (!bLastReadAt || new Date(b.latestMessage.created_at) > new Date(bLastReadAt)));
@@ -222,8 +229,7 @@ export function ChatTab() {
   });
 
   const pinnedCount = sortedItems.filter(c => {
-    const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
-    return (uData as any)?.pivot?.is_pinned === 1 || (uData as any)?.pivot?.is_pinned === true;
+    return isChatPinned(c, user?.id);
   }).length;
 
   // Compute total unread count across all conversations
@@ -250,12 +256,10 @@ export function ChatTab() {
   const conversations: ChatConversation[] = [];
   if (pinnedCount > 0 && !searchQuery && scopeFilter === "all") {
     const pinnedItems = scopeFilteredItems.filter(c => {
-      const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
-      return (uData as any)?.pivot?.is_pinned === 1 || (uData as any)?.pivot?.is_pinned === true;
+      return isChatPinned(c, user?.id);
     });
     const unpinnedItems = scopeFilteredItems.filter(c => {
-      const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
-      return !((uData as any)?.pivot?.is_pinned === 1 || (uData as any)?.pivot?.is_pinned === true);
+      return !isChatPinned(c, user?.id);
     });
     if (pinnedItems.length > 0) {
       conversations.push({ id: 'divider-pinned', is_divider: true, title: 'Pinned' });
@@ -334,9 +338,25 @@ export function ChatTab() {
 
       channel.listen(".message-read", readHandler);
 
+      const deleteHandler = (e: { message_id: number, conversation_id: number }) => {
+        queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: InfiniteQueryData<ChatMessage> | undefined) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: PaginatedResponse<ChatMessage>) => ({
+              ...page,
+              data: page.data.filter((msg: ChatMessage) => msg.id !== e.message_id)
+            }))
+          };
+        });
+      };
+
+      channel.listen(".message-deleted", deleteHandler);
+
       return () => {
         channel.stopListening(".message-sent");
         channel.stopListening(".message-read");
+        channel.stopListening(".message-deleted");
         leaveChannel(channelName);
       };
     }
@@ -639,7 +659,7 @@ export function ChatTab() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => {
-                          const isPinned = (selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned;
+                          const isPinned = isChatPinned(selectedConv, user?.id);
                           if (isPinned) {
                             unpinChatMutation.mutate();
                           } else {
@@ -651,7 +671,7 @@ export function ChatTab() {
                           }
                         }} disabled={pinChatMutation.isPending || unpinChatMutation.isPending}>
                           <AppIcon name="pin" className="mr-2" />
-                          {((selectedConv?.users?.find((u: ChatUser) => u.id === user?.id) as any)?.pivot?.is_pinned) ? "Unpin chat" : "Pin chat"}
+                          {isChatPinned(selectedConv, user?.id) ? "Unpin chat" : "Pin chat"}
                         </DropdownMenuItem>
                         
                         <DropdownMenuItem onClick={() => {

@@ -56,8 +56,8 @@ export const navGroups = [
   ]},
   { label: "Account", items: [
     { name: "My Profile", href: "/dashboard/profile", icon: "userCircle" },
-    { name: "Audit Logs", href: "/dashboard/audit", icon: "audit", adminOnly: true },
-    { name: "System Settings", href: "/dashboard/settings", icon: "settings", adminOnly: true },
+    { name: "Audit Logs", href: "/dashboard/audit", icon: "audit", capability: "audit.view" },
+    { name: "System Settings", href: "/dashboard/settings", icon: "settings", capability: "settings.manage" },
   ]},
 ];
 

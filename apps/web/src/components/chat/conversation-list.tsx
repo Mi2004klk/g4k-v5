@@ -4,9 +4,10 @@ import { useRef, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage, AppIcon, EmptyState } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { isChatPinned } from "@/lib/chat-utils";
 
-interface ChatUser { id: number; name?: string; pivot?: { last_read_at?: string } }
-interface ChatMessage { id: number; sender_id: number; created_at: string; body?: string }
+export interface ChatUser { id: number; name?: string; pivot?: { last_read_at?: string, is_pinned?: boolean | number } }
+export interface ChatMessage { id: number; sender_id: number; created_at: string; body?: string }
 export interface ChatConversation {
   id: number | string;
   unread_count?: number;
@@ -132,6 +133,7 @@ export function ConversationList({
             (!lastReadAt || new Date(conv.latestMessage.created_at) > new Date(lastReadAt)));
           
           const unreadCount = conv.unread_count || (isUnread ? 1 : 0);
+          const isPinned = isChatPinned(conv as any, currentUserId);
 
           const title = conv.name || (conv.scope === "direct" ? conv.users?.find((u: ChatUser) => u.id !== currentUserId)?.name || "Direct Message" : "Chat");
 
@@ -162,9 +164,12 @@ export function ConversationList({
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h4 className={`text-xs truncate ${isUnread ? "font-bold text-neutral-900 dark:text-white" : "font-semibold text-neutral-700 dark:text-neutral-300"}`}>
-                    {title}
-                  </h4>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <h4 className={`text-xs truncate ${isUnread ? "font-bold text-neutral-900 dark:text-white" : "font-semibold text-neutral-700 dark:text-neutral-300"}`}>
+                      {title}
+                    </h4>
+                    {isPinned && <AppIcon name="pin" size="xs" className="text-primary-500 shrink-0" />}
+                  </div>
                   {conv.latestMessage && (
                     <div className="flex items-center gap-1.5 shrink-0 pl-2">
                       {isUnread && (

@@ -16,7 +16,7 @@ import { MailSmtpConfig } from "./mail-smtp-config";
 import { PoliciesConfig } from "./policies-config";
 import { HolidayCalendar } from "@/components/leave/holiday-calendar";
 import { WorkSchedulesConfig } from "./work-schedules-config";
-import { AuditLogTable } from "./audit-log-table";
+
 import { NotificationsConfig } from "./notifications-config";
 import { AutoNumberingConfig } from "./auto-numbering-config";
 import { RemindersConfig } from "./reminders-config";
@@ -138,7 +138,7 @@ export function SettingsTabs() {
             <TabsTrigger value="autonumber">Auto-Numbering</TabsTrigger>
             <TabsTrigger value="reminders">Reminders</TabsTrigger>
             <TabsTrigger value="security">Security Requests</TabsTrigger>
-            <TabsTrigger value="audit">Audit Log</TabsTrigger>
+
             <TabsTrigger value="demo">Demo Data</TabsTrigger>
             <TabsTrigger value="jobs">System Jobs</TabsTrigger>
           </>
@@ -272,9 +272,6 @@ export function SettingsTabs() {
         <SecurityRequestsConfig />
       </TabsContent>
 
-      <TabsContent value="audit">
-        <AuditLogTable />
-      </TabsContent>
 
       <TabsContent value="demo">
         <DemoDataConfig />

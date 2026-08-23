@@ -259,9 +259,7 @@ class ChatController extends Controller
             ->whereHas('users', function ($q) use ($recipientId) {
                 $q->where('users.id', $recipientId);
             })
-            ->where(function ($q) {
-                $q->whereRaw('(SELECT COUNT(*) FROM conversation_user WHERE conversation_user.conversation_id = conversations.id) = 2');
-            })
+            ->has('users', '=', 2)
             ->first();
 
         if ($existing) {

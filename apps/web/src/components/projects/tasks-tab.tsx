@@ -601,7 +601,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
       <div className="flex flex-col gap-3 mb-3 shrink-0">
         {/* Row 1: Views and Actions */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50">
+          <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50 overflow-x-auto no-scrollbar">
             {(["kanban", "list", ...(canManageTasks ? ["gantt" as const] : []), ...(canViewQA ? ["qa" as const] : [])] as const).map(mode => (
               <button
                 key={mode}
@@ -1064,7 +1064,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               )}
 
               {viewMode === "kanban" && (
-                <div className="flex-1 min-h-0 -mx-4 sm:-mx-6 lg:mx-0 lg:bg-neutral-50/50 lg:dark:bg-neutral-950/50 lg:border lg:border-neutral-200 lg:dark:border-neutral-800 lg:rounded-lg overflow-hidden">
+                <div className="flex-1 flex flex-col min-h-0 -mx-4 sm:-mx-6 lg:mx-0 lg:bg-neutral-50/50 lg:dark:bg-neutral-950/50 lg:border lg:border-neutral-200 lg:dark:border-neutral-800 lg:rounded-lg overflow-hidden">
                   <TaskKanbanBoard
                     tasks={filteredTasks as any}
                     onTaskMove={handleTaskMove}
@@ -1073,6 +1073,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                     onTaskReorder={(tasks) => reorderTaskMutation.mutate(tasks as any)}
                     isLoading={isLoading}
                     statusFilter={statusFilter}
+                    hasManageCap={canManageTasks}
                   />
                 </div>
               )}

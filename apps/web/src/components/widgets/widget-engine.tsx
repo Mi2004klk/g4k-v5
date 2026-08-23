@@ -245,7 +245,15 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         }
       }}
     >
-      <div className="flex justify-end mb-4 px-2">
+      <div className="flex justify-end gap-2 mb-4 px-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-8 shadow-sm text-neutral-600 hover:text-neutral-900"
+          onClick={() => queryClient.invalidateQueries()}
+        >
+          <AppIcon name="refresh" className="mr-2 h-4 w-4" /> Refresh Dashboard
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 shadow-sm">
@@ -334,13 +342,6 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         {availableWidgets.filter(w => !dismissedWidgets.includes(w.id)).map((widget) => (
           <div key={widget.id} className="h-full group/widget relative">
             <div className="absolute top-2 right-2 opacity-0 group-hover/widget:opacity-100 transition-opacity z-50 flex items-center bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm px-1.5 py-1 rounded shadow-sm border border-neutral-200/50 dark:border-neutral-700/50">
-              <button 
-                onClick={() => queryClient.invalidateQueries()}
-                className="p-1 text-neutral-400 hover:text-primary-600 transition-colors mr-1"
-                title="Refresh Widget Data"
-              >
-                <AppIcon name="refresh" size="xs" />
-              </button>
               <div className="widget-drag-handle cursor-grab active:cursor-grabbing p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors" title="Drag to move">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="9" cy="12" r="1.5" />

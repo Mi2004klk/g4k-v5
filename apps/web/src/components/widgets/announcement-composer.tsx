@@ -48,10 +48,11 @@ export function AnnouncementComposer({
         setCreateData(initialData);
         setAttachment(null);
       } else {
+        const defaultScope = ['super_admin', 'admin'].includes(activeRole || '') ? 'company' : 'team';
         setCreateData({
           title: draftData.title || "",
           body: draftData.body || "",
-          scope: draftData.scope || "company",
+          scope: draftData.scope === 'company' && !['super_admin', 'admin'].includes(activeRole || '') ? 'team' : (draftData.scope || defaultScope),
           pinned: draftData.pinned || false,
           priority: draftData.priority || "normal"
         });
@@ -152,7 +153,7 @@ export function AnnouncementComposer({
                     onChange={(e) => handleFieldChange({ scope: e.target.value })}
                     className="h-8 text-xs rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-2 outline-none focus:ring-1 focus:ring-primary-500"
                   >
-                    {activeRole === 'super_admin' && (
+                    {['super_admin', 'admin'].includes(activeRole || '') && (
                       <option value="company">Company-wide</option>
                     )}
                     <option value="team">Team Only</option>

@@ -55,8 +55,9 @@ export function TimeClockWidget({ className }: { className?: string }) {
     placeholderData: keepPreviousData,
   });
 
+  const todayData = dashData?.attendance_today;
+
   useEffect(() => {
-    const todayData = dashData?.attendance_today;
     if (todayData) {
       if (todayData.standard_seconds) {
         setStandardSeconds(todayData.standard_seconds);

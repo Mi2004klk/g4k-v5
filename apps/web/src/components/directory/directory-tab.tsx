@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DIRECTORY, STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
 
 import { Button } from "@g4k/ui/components";
@@ -25,6 +25,8 @@ import {
 } from "@g4k/ui/components";
 import { useTrackRecent } from "@/hooks/use-track-recent";
 import { resolveAvatarUrl } from "@/lib/utils";
+
+import { useChatWithUser } from "@/hooks/use-chat-with-user";
 
 interface User {
   id: number;
@@ -48,10 +50,6 @@ interface Designation {
   name: string;
 }
 
-interface ApiError extends Error {
-  errors?: Record<string, string[]>;
-}
-
 interface PageData {
   data?: User[] | { data: User[] };
   current_page?: number;
@@ -69,6 +67,7 @@ export function CorporateDirectoryTab() {
   const [viewMode, setViewMode] = useUrlState("view", "grid");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  const sendMessageMutation = useChatWithUser();
 
   useTrackRecent(
     selectedUser
@@ -77,7 +76,7 @@ export function CorporateDirectoryTab() {
         type: "employee",
         title: selectedUser.name,
         subtitle: selectedUser.designation?.name || "Employee",
-        url: `/dashboard/directory?search=${selectedUser.name}`, // Preserving search context roughly
+        url: `/dashboard/directory?search=${selectedUser.name}`,
       }
       : null
   );
@@ -116,22 +115,6 @@ export function CorporateDirectoryTab() {
     initialPageParam: 1,
     placeholderData: keepPreviousData,
     staleTime: STALE_TIME_DIRECTORY,
-  });
-
-  const sendMessageMutation = useMutation({
-    mutationFn: (recipientId: number) => apiFetch("/conversations/dm", {
-      method: "POST",
-      body: JSON.stringify({ recipient_id: recipientId }),
-    }),
-    onSuccess: (conversation: any) => {
-      const convId = conversation?.id || conversation?.conversation_id || conversation?.data?.id || conversation?.data?.conversation_id;
-      if (convId) {
-        router.push(`/dashboard/chat?conversation=${convId}`);
-      } else {
-        toast.error("Failed to extract conversation ID.");
-      }
-    },
-    onError: (err: ApiError) => toast.error(err.message || "Failed to start chat."),
   });
 
   const users = data?.pages.flatMap((page: PageData) => {

@@ -365,6 +365,58 @@ class AttendanceController extends Controller
     }
 
 
+    public function liveShifts(Request $request)
+    {
+        $user = $request->user();
+        $isAdmin = clone $user;
+        $activeRole = $user->resolveActiveRole();
+        $isAdmin = $activeRole === 'super_admin';
+
+        $query = DB::table('users')
+            ->join('attendance_days', function ($join) {
+                $join->on('users.id', '=', 'attendance_days.user_id')
+                     ->where('attendance_days.date', '=', now()->toDateString())
+                     ->whereNotNull('attendance_days.clock_in')
+                     ->whereNull('attendance_days.clock_out');
+            })
+            ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
+            ->select(
+                'attendance_days.*', 
+                'users.id as user_id',
+                'users.name as user_name', 
+                'users.email as user_email', 
+                'users.avatar_url',
+                'users.department_id', 
+                'departments.name as department_name'
+            );
+
+        if (!$isAdmin) {
+            \App\Support\HrScope::apply($query, $user, 'users.department_id');
+        }
+
+        $request->validate([
+            'per_page' => 'nullable|integer|in:20,50,100'
+        ]);
+        $perPage = $request->input('per_page', 20);
+        $results = $query->paginate($perPage);
+
+        $items = $results->items();
+
+        foreach ($items as $item) {
+            $item->avatar_url = $item->avatar_url ? url('storage/' . $item->avatar_url) : null;
+            $activeTask = \Illuminate\Support\Facades\Cache::get("user_active_task_{$item->user_id}");
+            if ($activeTask) {
+                $item->active_task_id = $activeTask['task_id'] ?? null;
+                $item->active_project_id = $activeTask['project_id'] ?? null;
+                $item->active_task_title = $activeTask['task_title'] ?? null;
+                $item->active_task_started_at = $activeTask['started_at'] ?? null;
+            }
+            $item->status = 'working';
+        }
+
+        return response()->json($results);
+    }
+
     public function overview(Request $request)
     {
         $query = $this->buildOverviewQuery($request);
@@ -376,6 +428,28 @@ class AttendanceController extends Controller
         $results = $query->paginate($perPage);
 
         $items = $results->items();
+        
+        $userIds = collect($items)->pluck('user_id')->filter()->unique()->toArray();
+        $dates = collect($items)->pluck('date')->filter()->unique()->toArray();
+
+        if (!empty($userIds) && !empty($dates)) {
+            $latestEvents = \Illuminate\Support\Facades\DB::table('attendance_events')
+                ->whereIn('user_id', $userIds)
+                ->where(function($q) use ($dates) {
+                    foreach($dates as $date) {
+                        $q->orWhereDate('timestamp', $date);
+                    }
+                })
+                ->orderBy('timestamp', 'desc')
+                ->get()
+                ->groupBy(function($item) {
+                    return $item->user_id . '_' . \Carbon\Carbon::parse($item->timestamp)->toDateString();
+                })
+                ->map(fn($events) => $events->first());
+        } else {
+            $latestEvents = collect();
+        }
+
         foreach ($items as $item) {
             if (isset($item->user_id)) {
                 $activeTask = \Illuminate\Support\Facades\Cache::get("user_active_task_{$item->user_id}");
@@ -384,6 +458,17 @@ class AttendanceController extends Controller
                     $item->active_project_id = $activeTask['project_id'] ?? null;
                     $item->active_task_title = $activeTask['task_title'] ?? null;
                     $item->active_task_started_at = $activeTask['started_at'] ?? null;
+                }
+                
+                if (isset($item->date)) {
+                    $lastEvent = $latestEvents->get($item->user_id . '_' . $item->date);
+                    if ($lastEvent) {
+                        if ($lastEvent->type === 'break_start') {
+                            $item->status = 'break';
+                        } elseif ($item->clock_in && !$item->clock_out) {
+                            $item->status = 'working';
+                        }
+                    }
                 }
             }
         }
@@ -869,6 +954,7 @@ class AttendanceController extends Controller
         } else {
             $query->select(
                     'date',
+                    \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'),
                     \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present'),
                     \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent'),
                     \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as late'),

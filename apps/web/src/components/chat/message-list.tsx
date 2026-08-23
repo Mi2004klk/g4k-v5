@@ -228,7 +228,11 @@ const MessageItem = memo(function MessageItem({
                 </DropdownMenuItem>
               ))}
               {isMe && (
-                <DropdownMenuItem onClick={() => onDeleteMessage?.(msg.id)} className="text-red-500 hover:text-red-600 focus:text-red-600">
+                <DropdownMenuItem onClick={() => {
+                  if (window.confirm("Are you sure you want to delete this message? This action cannot be undone.")) {
+                    onDeleteMessage?.(msg.id);
+                  }
+                }} className="text-red-500 hover:text-red-600 focus:text-red-600">
                   <AppIcon name="trash" className="mr-2" /> Delete Message
                 </DropdownMenuItem>
               )}

@@ -9,10 +9,12 @@ import { apiFetch } from "@/lib/api-client";
 import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent, Avatar, AvatarFallback, Slider } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { QAFormViewer } from "@/components/projects/qa-form-viewer";
+import { cn } from "@/lib/utils";
 
 interface TaskOverviewTabProps {
   task: any;
   canManage: boolean;
+  hasManageCap: boolean;
   effectiveStatus: string;
   optimisticStatus: string | null;
   setOptimisticStatus: (val: string | null) => void;
@@ -25,6 +27,7 @@ interface TaskOverviewTabProps {
 export function TaskOverviewTab({
   task,
   canManage,
+  hasManageCap,
   effectiveStatus,
   optimisticStatus,
   setOptimisticStatus,
@@ -157,8 +160,8 @@ export function TaskOverviewTab({
                  <SelectContent>
                     <SelectItem value="todo">To Do</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="review">Review</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
+                    {hasManageCap && <SelectItem value="review">Review</SelectItem>}
+                    {hasManageCap && <SelectItem value="done">Done</SelectItem>}
                  </SelectContent>
               </Select>
             ) : (
@@ -248,7 +251,7 @@ export function TaskOverviewTab({
               />
             ) : (
               <div className="flex-1 max-w-[200px] h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                <div className="h-full bg-primary-500" style={{ width: `${progress}%` }} />
+                <div className={cn("h-full transition-all duration-300", progress === 100 ? "bg-success" : "bg-primary-500")} style={{ width: `${progress}%` }} />
               </div>
             )}
             <span className="text-[10px] font-bold text-neutral-500 w-8">{progress}%</span>

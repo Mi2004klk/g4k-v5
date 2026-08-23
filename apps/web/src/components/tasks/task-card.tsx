@@ -101,7 +101,7 @@ export function TaskCard({
           <div className="flex items-center gap-2 mt-1 mb-2 group/progress">
             <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
               <div 
-                className={cn("h-full transition-all duration-300", task.progress === 100 ? "bg-success-500" : "bg-primary-500")} 
+                className={cn("h-full transition-all duration-300", task.progress === 100 ? "bg-success" : "bg-primary-500")} 
                 style={{ width: `${task.progress}%` }} 
               />
             </div>

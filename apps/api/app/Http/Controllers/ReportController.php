@@ -30,10 +30,28 @@ class ReportController extends Controller
                 if (!$hasManage) {
                     $query->where(function ($q) use ($user) {
                         $q->where('assignee_id', $user->id)
-                          ->orWhere('reporter_id', $user->id);
+                          ->orWhere('reporter_id', $user->id)
+                          ->orWhereHas('assignees', fn ($aq) => $aq->where('users.id', $user->id));
                     });
-                } else {
-                    \App\Support\HrScope::apply($query, $user, 'assignee_id');
+                } elseif ($user->resolveActiveRole() === 'hr') {
+                    $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
+                    if (empty($deptIds)) {
+                        $query->whereRaw('1 = 0');
+                    } else {
+                        $query->where(function ($q) use ($user, $deptIds) {
+                            $q->whereHas('project', function($pq) use ($deptIds) {
+                                  $pq->whereIn('department_id', $deptIds);
+                              })
+                              ->orWhereHas('assignees', function($aq) use ($deptIds) {
+                                  $aq->whereIn('users.department_id', $deptIds);
+                              })
+                              ->orWhereHas('reporter', function($rq) use ($deptIds) {
+                                  $rq->whereIn('users.department_id', $deptIds);
+                              })
+                              ->orWhere('assignee_id', $user->id)
+                              ->orWhere('reporter_id', $user->id);
+                        });
+                    }
                 }
                 if ($request->filled('search')) {
                     $search = $request->search;
@@ -50,7 +68,7 @@ class ReportController extends Controller
                           ->orWhereHas('members', fn ($m) => $m->where('users.id', $user->id));
                     });
                 } else {
-                    \App\Support\HrScope::apply($query, $user, 'created_by');
+                    \App\Support\HrScope::apply($query, $user, 'department_id');
                 }
                 if ($request->filled('search')) {
                     $search = $request->search;

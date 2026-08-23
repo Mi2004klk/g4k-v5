@@ -404,8 +404,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Role not assigned to user'], 403);
         }
 
-        $deviceName = $user->currentAccessToken()->name;
-        $user->currentAccessToken()->delete();
+        $deviceName = $user->currentAccessToken()?->name ?? 'Unknown Device';
+        $user->currentAccessToken()?->delete();
 
         // Find and delete old refresh token for this device, matching exact IP and user-agent to prevent cross-device deletion
         $user->tokens()
@@ -587,7 +587,7 @@ class AuthController extends Controller
 
         \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
 
-        $deviceName = $user->currentAccessToken()->name ?? 'Unknown Device';
+        $deviceName = $user->currentAccessToken()?->name ?? 'Unknown Device';
         $user->tokens()->delete(); // Revoke ALL existing tokens
 
         // Issue new pair so current session continues
@@ -660,7 +660,7 @@ class AuthController extends Controller
                 'ip_address' => $t->ip_address,
                 'user_agent' => $t->user_agent,
                 'last_used_at' => $t->last_used_at,
-                'is_current' => $t->id === $request->user()->currentAccessToken()->id
+                'is_current' => $request->user()->currentAccessToken() ? $t->id === $request->user()->currentAccessToken()->id : false
             ];
         });
 

@@ -558,6 +558,9 @@ class UserController extends Controller
 
             $before = $user->toArray();
             $user->forceFill(['status' => $status])->save();
+            if ($status === 'inactive') {
+                $user->tokens()->delete();
+            }
             $stats['success']++;
             AuditLogger::log($request, "bulk_{$status}", 'user', $user->id, $before, $user->toArray());
         }

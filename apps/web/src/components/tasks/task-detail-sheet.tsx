@@ -102,10 +102,16 @@ export function TaskDetailSheet({
 
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<TaskModel & { assignee_ids: number[] }>>({});
+  const [editForm, setEditForm] = useState<Partial<TaskModel & { assignee_ids: number[], phase_id?: number | string | null }>>({});
 
   const { data: usersData } = useQuery({ queryKey: queryKeys.usersList, queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"), enabled: isEditing && hasManageCap });
   const { data: allTasksData } = useQuery({ queryKey: ["tasks", "all"], queryFn: () => apiFetch<{ data?: { data?: TaskModel[] } | TaskModel[] }>("/tasks?per_page=100"), enabled: isEditing });
+  
+  const { data: phasesData } = useQuery({ 
+    queryKey: ["project-phases", taskPreview?.project_id], 
+    queryFn: () => apiFetch(`/projects/${taskPreview?.project_id}/phases`), 
+    enabled: isEditing && !!taskPreview?.project_id 
+  });
 
   // T-46.5: Fetch the full task detail when the sheet is opened.
   // The list endpoint doesn't include comments/activities/timeLogs/qa_form.
@@ -170,6 +176,7 @@ export function TaskDetailSheet({
         description: editForm.description,
         due_date: editForm.due_date || null,
         blocked_by: editForm.blocked_by && editForm.blocked_by !== "none" ? editForm.blocked_by : null,
+        phase_id: editForm.phase_id && editForm.phase_id !== "none" ? editForm.phase_id : null,
         assignees: editForm.assignee_ids || [],
       };
       return apiFetch(`/tasks/${task.id}`, {
@@ -259,6 +266,7 @@ export function TaskDetailSheet({
                         description: task.description || "",
                         due_date: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd") : "",
                         blocked_by: task.blocked_by ? String(task.blocked_by) : "none",
+                        phase_id: task.phase_id ? String(task.phase_id) : "none",
                         assignee_ids: task.assignees?.map((a: { id: number }) => a.id) || (task.assignee_id ? [task.assignee_id] : [])
                       });
                       setIsEditing(!isEditing);
@@ -305,6 +313,21 @@ export function TaskDetailSheet({
                   </SelectContent>
                 </Select>
               </div>
+              
+              {task?.project_id && (
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Phase</label>
+                  <Select value={(editForm.phase_id as string) || "none"} onValueChange={v => setEditForm({...editForm, phase_id: v})}>
+                    <SelectTrigger className="w-full h-9 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {Array.isArray(phasesData?.data) && phasesData.data.map((p: any) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             {hasManageCap && (
               <div className="space-y-1">
@@ -354,6 +377,7 @@ export function TaskDetailSheet({
               <TaskOverviewTab 
                 task={task} 
                 canManage={canManage}
+                hasManageCap={hasManageCap}
                 effectiveStatus={effectiveStatus}
                 optimisticStatus={optimisticStatus}
                 setOptimisticStatus={setOptimisticStatus}

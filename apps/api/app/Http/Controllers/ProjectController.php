@@ -127,44 +127,49 @@ class ProjectController extends Controller
             'allow_employee_tasks' => 'boolean',
         ]);
 
-        $project = Project::create(array_merge($validated, [
-            'created_by' => $request->user()->id,
-            'status' => $validated['status'] ?? 'active',
-            'qa_form_id' => $validated['qa_form_id'] ?? null,
-            'allow_employee_tasks' => $validated['allow_employee_tasks'] ?? false,
-        ]));
+        $project = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $request) {
+            $project = Project::create(array_merge($validated, [
+                'created_by' => $request->user()->id,
+                'status' => $validated['status'] ?? 'active',
+                'qa_form_id' => $validated['qa_form_id'] ?? null,
+                'allow_employee_tasks' => $validated['allow_employee_tasks'] ?? false,
+            ]));
 
-        $memberIds = $validated['member_ids'] ?? [];
-        if (!empty($memberIds)) {
-            $project->members()->sync($memberIds);
-            foreach ($memberIds as $memberId) {
-                if ($memberId !== $request->user()->id) {
-                    \App\Services\NotificationService::send(
-                        $memberId,
-                        'Added to Project',
-                        "You have been assigned to project: {$project->name}",
-                        "/dashboard/projects",
-                        'project'
-                    );
+            $memberIds = $validated['member_ids'] ?? [];
+            if (!empty($memberIds)) {
+                $project->members()->sync($memberIds);
+                foreach ($memberIds as $memberId) {
+                    if ($memberId !== $request->user()->id) {
+                        \App\Services\NotificationService::send(
+                            $memberId,
+                            'project',
+                            'Added to Project',
+                            "You have been assigned to project: {$project->name}",
+                            null,
+                            "/dashboard/projects"
+                        );
+                    }
                 }
             }
-        }
 
-        // T-21.3: Auto-create a project chat conversation with creator + all members
-        $conversationMembers = array_unique(array_merge([$request->user()->id], $memberIds));
-        $conversation = \App\Models\Conversation::create([
-            'name' => $project->name,
-            'scope' => 'project',
-            'project_id' => $project->id,
-        ]);
-        $conversation->users()->sync($conversationMembers);
+            // T-21.3: Auto-create a project chat conversation with creator + all members
+            $conversationMembers = array_unique(array_merge([$request->user()->id], $memberIds ?? []));
+            $conversation = \App\Models\Conversation::create([
+                'name' => $project->name,
+                'scope' => 'project',
+                'project_id' => $project->id,
+            ]);
+            $conversation->users()->sync($conversationMembers);
+
+            return $project;
+        });
 
         return response()->json($project->load(['team', 'department', 'creator', 'members']), 201);
     }
 
     public function show(Request $request, $id)
     {
-        $project = Project::with(['team', 'department', 'creator', 'members', 'tasks.assignee', 'timeLogs', 'qaForm', 'qaSubmission'])->findOrFail($id);
+        $project = Project::with(['team', 'department', 'creator', 'members', 'phases', 'tasks.assignee', 'tasks.phase', 'timeLogs', 'qaForm', 'qaSubmission'])->findOrFail($id);
 
         if (!$this->canManageProject($request, $project)) {
             $userId = $request->user()->id;

@@ -33,9 +33,19 @@ class MessageDeleted implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('conversation.' . $this->conversationId),
         ];
+
+        // Also broadcast to the user channel of all participants
+        $conversation = \App\Models\Conversation::with('users')->find($this->conversationId);
+        if ($conversation && $conversation->scope !== 'global') {
+            foreach ($conversation->users as $user) {
+                $channels[] = new PrivateChannel('user.' . $user->id);
+            }
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string

@@ -21,7 +21,7 @@ class AnnouncementController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(100);
 
-        if ($activeRole !== 'super_admin') {
+        if (!in_array($activeRole, ['super_admin', 'admin'])) {
             $query->where(function($q) use ($user) {
                 $q->where('scope', 'company')
                   ->orWhere('priority', 'urgent')

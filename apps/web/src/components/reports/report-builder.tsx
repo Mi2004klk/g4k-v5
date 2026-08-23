@@ -127,28 +127,30 @@ export function ReportBuilder() {
             <p className="text-xs text-neutral-500">Select a report type to preview data and export.</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-            <FilterBar
-              searchQuery={search}
-              onSearchChange={setSearch}
-              filters={[
-                {
-                  key: "reportKey",
-                  label: "Report Type",
-                  type: "select",
-                  options: [
-                    { label: "Tasks & Deliverables", value: "tasks" },
-                    { label: "Projects & Milestones", value: "projects" },
-                    { label: "Employee Directory", value: "users" },
-                    { label: "Productivity", value: "productivity" }
-                  ],
-                  value: reportKey,
-                  onChange: setReportKey
-                }
-              ]}
-            />
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full xl:w-auto flex-1 xl:justify-end flex-wrap overflow-visible">
+            <div className="flex-1 w-full md:w-auto min-w-[200px]">
+              <FilterBar
+                searchQuery={search}
+                onSearchChange={setSearch}
+                filters={[
+                  {
+                    key: "reportKey",
+                    label: "Report Type",
+                    type: "select",
+                    options: [
+                      { label: "Tasks & Deliverables", value: "tasks" },
+                      { label: "Projects & Milestones", value: "projects" },
+                      { label: "Employee Directory", value: "users" },
+                      { label: "Productivity", value: "productivity" }
+                    ],
+                    value: reportKey,
+                    onChange: setReportKey
+                  }
+                ]}
+              />
+            </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 justify-end">
               <Button
                 size="icon"
                 variant="outline"
