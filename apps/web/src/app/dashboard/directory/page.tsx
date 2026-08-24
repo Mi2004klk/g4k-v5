@@ -21,7 +21,7 @@ export default function DirectoryModulePage() {
       title="Team Directory & Org"
       description="Browse corporate team members, roles, contact info, and departments."
     >
-      <div className="p-4 sm:p-6 lg:p-8 h-full flex flex-col">
+      <div className="h-[calc(100vh-180px)] min-h-[500px] w-full flex flex-col">
         <ErrorBoundary resetKeys={[tab]}>
           <Tabs value={tab} onValueChange={setTab} className="w-full h-full flex flex-col">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">

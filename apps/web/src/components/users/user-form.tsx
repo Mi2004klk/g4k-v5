@@ -11,6 +11,7 @@ import { FormError } from "@/components/forms/form-error";
 import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
 import { resolveAvatarUrl } from "@/lib/utils";
+import { useAuthStore } from "@/lib/auth-store";
 
 export const userSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -110,6 +111,12 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
         setLocalAvatarUrl(response.avatar_url);
         toast.success("Profile photo updated successfully");
         queryClient.invalidateQueries({ queryKey: ["users"] });
+        
+        const authStore = useAuthStore.getState();
+        if (authStore.user?.id === userId) {
+          authStore.updateUser({ avatar_url: response.avatar_url });
+        }
+        
         setShowUploadPopup(false);
       }
     } catch (err: any) {

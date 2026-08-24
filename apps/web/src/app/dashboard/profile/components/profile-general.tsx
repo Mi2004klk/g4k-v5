@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
@@ -12,6 +12,7 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 import {
   Button,
@@ -22,7 +23,11 @@ import {
   SelectValue,
   Input,
   Card,
-  Skeleton
+  Skeleton,
+  FileUploadPopup,
+  Avatar,
+  AvatarFallback,
+  AvatarImage
 } from "@g4k/ui/components";
 import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
 
@@ -39,6 +44,9 @@ export function ProfileGeneralSection() {
   const authUser = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
 
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -54,6 +62,33 @@ export function ProfileGeneralSection() {
       return data;
     },
   });
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!authUser?.id) return;
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const response = await apiFetch(`/users/${authUser.id}/avatar`, {
+        method: "POST",
+        body: formData,
+      });
+      if (response && response.avatar_url) {
+        toast.success("Profile photo updated successfully");
+        queryClient.invalidateQueries({ queryKey: queryKeys.profile });
+        
+        const authStore = useAuthStore.getState();
+        authStore.updateUser({ avatar_url: response.avatar_url });
+        
+        setShowUploadPopup(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (profile) {
@@ -109,6 +144,35 @@ export function ProfileGeneralSection() {
         
         <DisabledWhileSubmitting isSubmitting={updateProfileMutation.isPending}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex flex-col items-center justify-center mb-8 pb-6 border-b border-neutral-100 dark:border-neutral-800">
+              <div className="relative group cursor-pointer" onClick={() => setShowUploadPopup(true)}>
+                <Avatar className="w-24 h-24 shadow-sm border border-neutral-200 dark:border-neutral-800 transition-opacity group-hover:opacity-80">
+                  <AvatarImage src={resolveAvatarUrl(authUser?.avatar_url)} alt={authUser?.name || "User avatar"} />
+                  <AvatarFallback className="text-2xl">{authUser?.name?.substring(0, 2)?.toUpperCase() || "UN"}</AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <AppIcon name="upload" className="w-6 h-6 text-white" />
+                </div>
+                {isUploading && (
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                    <AppIcon name="loading" className="w-6 h-6 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground font-medium">Click to change photo</p>
+              
+              <FileUploadPopup
+                open={showUploadPopup}
+                onOpenChange={setShowUploadPopup}
+                title="Upload Profile Photo"
+                description="Upload a new profile photo (JPG, PNG, WebP up to 2MB)"
+                acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
+                maxSizeMB={2}
+                onUpload={handleAvatarUpload}
+                isLoading={isUploading}
+              />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
               {/* Full Name */}
