@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Input, Checkbox, Combobox, FileUploadPopup, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { FormError } from "@/components/forms/form-error";
@@ -52,6 +53,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | undefined>(avatarUrl);
   const [isUploading, setIsUploading] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setLocalAvatarUrl(avatarUrl);
@@ -107,6 +109,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
       if (response && response.avatar_url) {
         setLocalAvatarUrl(response.avatar_url);
         toast.success("Profile photo updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["users"] });
         setShowUploadPopup(false);
       }
     } catch (err: any) {
