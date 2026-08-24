@@ -9,7 +9,7 @@ import { apiFetch } from "@/lib/api-client";
 import { ListScaffold, Tabs, TabsList, TabsTrigger, TabsContent, Button, Card } from "@g4k/ui/components";
 import { StatusBadge, StatusType } from "@g4k/ui/components/badge";
 import { getLeaveStatusColor } from "@g4k/ui/theme";
-import { FilterBar } from "@g4k/ui/components";
+import { Toolbar } from "@g4k/ui/components";
 import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -247,7 +247,7 @@ export function ApprovalsTab() {
         <TabsContent value="history" className="mt-0">
           <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100dvh-250px)]">
             <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
-              <FilterBar
+              <Toolbar
                 searchQuery={search || ""}
                 onSearchChange={setSearch}
                 filters={[

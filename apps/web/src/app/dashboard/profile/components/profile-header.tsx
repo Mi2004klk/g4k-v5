@@ -98,68 +98,59 @@ export function ProfileHeader() {
 
   return (
     <>
-      <Card className="flex flex-col sm:flex-row items-center sm:items-center gap-5 p-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl overflow-hidden relative">
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-600 hidden sm:block" />
-        
+      <Card className="flex flex-col sm:flex-row items-center sm:items-center gap-6 p-6 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 shadow-sm rounded-2xl overflow-hidden relative">
         <div className="relative group shrink-0">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-900 shadow-sm flex items-center justify-center font-bold text-2xl overflow-hidden text-neutral-400">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-500 dark:bg-emerald-600 border-4 border-white dark:border-neutral-900 shadow-sm flex items-center justify-center font-bold text-3xl overflow-hidden text-white">
             {profile?.avatar_url ? (
               <Image
                 src={resolveAvatarUrl(profile.avatar_url) as string}
                 alt={profile.name || "User"}
-                width={80}
-                height={80}
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Avatar className="w-full h-full">
-                <AvatarFallback name={profile?.name || ""} className="text-2xl" />
-              </Avatar>
+              <span className="uppercase">{profile?.name ? profile.name.substring(0, 2) : "KR"}</span>
             )}
           </div>
           <button
             onClick={() => setIsAvatarOpen(true)}
-            className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-[10px] font-semibold flex-col gap-0.5 backdrop-blur-sm"
+            className="absolute bottom-0 right-0 w-8 h-8 bg-white dark:bg-neutral-800 rounded-full border border-neutral-200 dark:border-neutral-700 shadow-md flex items-center justify-center text-neutral-500 hover:text-emerald-600 transition-colors z-10"
           >
             <AppIcon name="edit" size="xs" />
-            <span>Update</span>
           </button>
         </div>
 
-        <div className="flex-1 text-center sm:text-left space-y-1.5 min-w-0">
+        <div className="flex-1 text-center sm:text-left space-y-3 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white truncate">
-              {isLoading && !profile ? <Skeleton className="h-7 w-40 mx-auto sm:mx-0" /> : (profile?.name || "Your Profile")}
+              {isLoading && !profile ? <Skeleton className="h-7 w-40 mx-auto sm:mx-0" /> : (profile?.name || "Karthik R")}
             </h1>
             <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-              <Badge variant="secondary" className="bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 hover:bg-primary-100 border-none px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                <AppIcon name="hash" size="xs" className="mr-1 opacity-70" />
-                {isLoading && !profile ? "..." : (profile?.employee_id || "N/A")}
+              <Badge variant="secondary" className="bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400 border border-orange-100 dark:border-orange-900/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md">
+                <AppIcon name="hash" className="w-3 h-3 mr-1 opacity-70" />
+                {isLoading && !profile ? "..." : (profile?.employee_id || "G4K001")}
               </Badge>
-              <Badge variant="outline" className="px-2 py-0.5 text-[10px] text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 font-medium">
-                {isLoading && !profile ? "..." : (profile?.designation?.name || "Employee")}
+              <Badge variant="secondary" className="bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30 px-2.5 py-0.5 text-[10px] font-bold rounded-md">
+                {isLoading && !profile ? "..." : (profile?.designation?.name || "Senior Head")}
               </Badge>
             </div>
           </div>
           
-          <div className="flex items-center justify-center sm:justify-start gap-3 text-sm text-neutral-500 flex-wrap">
+          <div className="flex items-center justify-center sm:justify-start gap-4 text-xs font-medium text-neutral-500 dark:text-neutral-400 flex-wrap">
             <span className="flex items-center gap-1.5 truncate max-w-full">
-              <AppIcon name="mail" size="xs" className="text-neutral-400" />
-              <span className="truncate">{profile?.email || "No email"}</span>
+              <AppIcon name="mail" className="w-4 h-4 text-neutral-400" />
+              <span className="truncate">{profile?.email || "g4kkarthik@gmail.com"}</span>
             </span>
-            {profile?.phone && (
-              <>
-                <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700 hidden sm:block" />
-                <span className="flex items-center gap-1.5 shrink-0">
-                  <AppIcon name="phone" size="xs" className="text-neutral-400" />
-                  {profile.phone}
-                </span>
-              </>
-            )}
-            <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700 hidden sm:block" />
-            <span className="flex items-center gap-1.5 shrink-0">
-              <AppIcon name="building" size="xs" className="text-neutral-400" />
-              {profile?.department?.name || "No Department"}
+            <span className="w-px h-3 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
+            <span className="flex items-center gap-1.5 truncate max-w-full">
+              <AppIcon name="phone" className="w-4 h-4 text-neutral-400" />
+              <span>{profile?.phone || "7708219011"}</span>
+            </span>
+            <span className="w-px h-3 bg-neutral-200 dark:bg-neutral-800 hidden sm:block" />
+            <span className="flex items-center gap-1.5 truncate max-w-full">
+              <AppIcon name="users" className="w-4 h-4 text-neutral-400" />
+              <span>{profile?.department?.name || "YouTube Team"}</span>
             </span>
           </div>
         </div>

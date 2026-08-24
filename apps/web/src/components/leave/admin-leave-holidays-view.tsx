@@ -8,7 +8,7 @@ import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent, EmptyState } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
-import { FilterBar } from "@g4k/ui/components";
+import { Toolbar } from "@g4k/ui/components";
 import dynamic from "next/dynamic";
 const HolidayCalendar = dynamic(() => import("@/components/leave/holiday-calendar").then(mod => mod.HolidayCalendar), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 import { LeaveApprovalActionsCell } from "@/components/leave/leave-approval-actions-cell";
@@ -223,7 +223,7 @@ export function AdminLeaveHolidaysView() {
         <TabsContent value="approvals" className="mt-0">
           <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100dvh-250px)]">
             <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
-              <FilterBar
+              <Toolbar
                 searchQuery={search || ""}
                 onSearchChange={setSearch}
                 filters={[
@@ -277,7 +277,7 @@ export function AdminLeaveHolidaysView() {
         <TabsContent value="history" className="mt-0">
           <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100dvh-250px)]">
             <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
-              <FilterBar
+              <Toolbar
                 searchQuery={search || ""}
                 onSearchChange={setSearch}
                 filters={[

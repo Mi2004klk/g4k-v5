@@ -14,7 +14,7 @@ import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/compone
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
-import { FilterBar, DataTable } from "@g4k/ui/components";
+import { Toolbar, DataTable } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
 import {
   Sheet,
@@ -129,7 +129,7 @@ export function CorporateDirectoryTab() {
       {/* Search Bar & View Toggle */}
       <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
         <div className="flex-1 w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-2 py-1">
-          <FilterBar
+          <Toolbar
             searchQuery={search}
             onSearchChange={setSearch}
             searchPlaceholder="Search by name, email, designation..."

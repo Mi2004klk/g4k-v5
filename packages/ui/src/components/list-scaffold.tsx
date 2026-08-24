@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FilterBar, FilterOption } from "./filter-bar";
+import { Toolbar, FilterOption } from "./toolbar";
 import { DataTable } from "./data-table";
 import { Pagination } from "./pagination";
 import { Button } from "./button";
@@ -14,7 +14,7 @@ export interface ListScaffoldProps<TData, TValue> {
   description?: React.ReactNode;
   actions?: React.ReactNode;
   
-  // FilterBar Props
+  // Toolbar Props
   searchQuery?: string;
   onSearchChange?: (val: string) => void;
   searchPlaceholder?: string;
@@ -26,6 +26,7 @@ export interface ListScaffoldProps<TData, TValue> {
   onSortChange?: (sortBy: string, direction: "asc" | "desc") => void;
   sortOptions?: { label: string; value: string }[];
   hideToolbar?: boolean;
+  toolbarActions?: React.ReactNode;
 
   // Bulk Actions
   bulkActions?: React.ReactNode;
@@ -75,6 +76,7 @@ export function ListScaffold<TData, TValue>({
   onSortChange,
   sortOptions,
   hideToolbar,
+  toolbarActions,
   bulkActions,
   viewMode,
   onViewModeChange,
@@ -148,7 +150,7 @@ export function ListScaffold<TData, TValue>({
               </div>
             </div>
           ) : (
-            <FilterBar
+            <Toolbar
               searchQuery={searchQuery}
               onSearchChange={onSearchChange}
               searchPlaceholder={searchPlaceholder}
@@ -159,6 +161,7 @@ export function ListScaffold<TData, TValue>({
               sortDirection={sortDirection}
               onSortChange={onSortChange}
               sortOptions={sortOptions}
+              actions={toolbarActions}
             />
           )}
         </div>

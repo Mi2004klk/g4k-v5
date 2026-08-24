@@ -9,7 +9,6 @@ import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Button } from "@g4k/ui/components";
 import { ListScaffold } from "@g4k/ui/components";
-import { DatePicker } from "@g4k/ui/components";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
@@ -157,30 +156,26 @@ export function AuditLogTable() {
             options: userOptions,
             value: filters.user_id,
             onChange: (v) => setUserId(v as string)
+          },
+          {
+            key: "date_range",
+            label: "Date Range",
+            type: "date-range",
+            value: { 
+              from: filters.start_date ? new Date(filters.start_date) : undefined, 
+              to: filters.end_date ? new Date(filters.end_date) : undefined 
+            },
+            onChange: (range: any) => {
+              setStartDate(range?.from ? format(range.from, "yyyy-MM-dd") : "");
+              setEndDate(range?.to ? format(range.to, "yyyy-MM-dd") : "");
+            }
           }
         ]}
-        actions={
-          <>
-            <div className="hidden md:flex items-center gap-2 text-sm text-neutral-500 mr-2">
-              <DatePicker
-                value={filters.start_date ? new Date(filters.start_date) : undefined}
-                onChange={(date) => setStartDate(date ? format(date, "yyyy-MM-dd") : "")}
-                className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
-                placeholder="Start date"
-              />
-              <span>to</span>
-              <DatePicker
-                value={filters.end_date ? new Date(filters.end_date) : undefined}
-                onChange={(date) => setEndDate(date ? format(date, "yyyy-MM-dd") : "")}
-                className="h-9 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900"
-                placeholder="End date"
-              />
-            </div>
-            <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap shadow-sm text-neutral-600 dark:text-neutral-300">
-              <AppIcon name="download" />
-              {isExporting ? "Queuing..." : "Export CSV"}
-            </Button>
-          </>
+        toolbarActions={
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap shadow-sm text-neutral-600 dark:text-neutral-300">
+            <AppIcon name="download" />
+            {isExporting ? "Queuing..." : "Export CSV"}
+          </Button>
         }
         columns={columns}
         data={logs}

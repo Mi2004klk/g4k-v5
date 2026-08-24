@@ -33,57 +33,53 @@ export function ProfileStats() {
   const pendingTasks = taskData.filter((t: { status: string }) => t.status === "pending" || t.status === "in_progress").length;
 
   return (
-    <div className="flex flex-col sm:flex-row xl:flex-col gap-3">
-      <Card className="flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl min-w-[200px]">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg">
-            <AppIcon name="calendar" size="sm" />
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Leaves Card */}
+      <Card className="flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 shadow-sm rounded-2xl cursor-pointer hover:border-orange-200 transition-colors group">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-orange-50 dark:bg-orange-500/10 text-orange-500 rounded-xl">
+            <AppIcon name="calendar" className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Attendance</h3>
-            <p className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
-              {presentCount} <span className="text-xs font-medium text-neutral-400 ml-1">Present</span>
+            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Leaves</h3>
+            <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5 flex items-end gap-1.5">
+              {leaveData.length} <span className="text-xs font-medium text-neutral-500 mb-1">Total</span>
             </p>
           </div>
         </div>
-        {lateCount > 0 && (
-          <div className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
-            {lateCount} Late
-          </div>
-        )}
+        <AppIcon name="chevronRight" className="w-4 h-4 text-neutral-300 group-hover:text-orange-400 transition-colors" />
       </Card>
 
-      <Card className="flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl min-w-[200px]">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg">
-            <AppIcon name="fileText" size="sm" />
+      {/* Attendance Card */}
+      <Card className="flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 shadow-sm rounded-2xl cursor-pointer hover:border-blue-200 transition-colors group">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-500 rounded-xl">
+            <AppIcon name="calendar" className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Leaves</h3>
-            <p className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
-              {leaveData.length} <span className="text-xs font-medium text-neutral-400 ml-1">Total</span>
+            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Attendance</h3>
+            <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5 flex items-end gap-1.5">
+              {presentCount} <span className="text-xs font-medium text-neutral-500 mb-1">Present</span>
             </p>
           </div>
         </div>
-        {pendingLeaves > 0 && (
-          <div className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
-            {pendingLeaves} Pending
-          </div>
-        )}
+        <AppIcon name="chevronRight" className="w-4 h-4 text-neutral-300 group-hover:text-blue-400 transition-colors" />
       </Card>
 
-      <Card className="flex items-center justify-between p-3.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl min-w-[200px]">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 rounded-lg">
-            <AppIcon name="tasks" size="sm" />
+      {/* Tasks Card */}
+      <Card className="flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 shadow-sm rounded-2xl cursor-pointer hover:border-emerald-200 transition-colors group">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 rounded-xl">
+            <AppIcon name="tasks" className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Tasks</h3>
-            <p className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
-              {pendingTasks} <span className="text-xs font-medium text-neutral-400 ml-1">Active</span>
+            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Tasks</h3>
+            <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5 flex items-end gap-1.5">
+              {pendingTasks} <span className="text-xs font-medium text-neutral-500 mb-1">Active</span>
             </p>
           </div>
         </div>
+        <AppIcon name="chevronRight" className="w-4 h-4 text-neutral-300 group-hover:text-emerald-400 transition-colors" />
       </Card>
     </div>
   );

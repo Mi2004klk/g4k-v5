@@ -11,7 +11,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
 import { ProjectCard } from "@/components/projects/project-card";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
-import { Button, FilterBar } from "@g4k/ui/components";
+import { Button, Toolbar } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -98,7 +98,7 @@ export function ProjectsTab() {
 
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1 flex items-center overflow-x-auto overflow-y-hidden scrollbar-hide shadow-sm">
-            <FilterBar
+            <Toolbar
               searchQuery={search}
               onSearchChange={setSearch}
               searchPlaceholder="Search projects..."

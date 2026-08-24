@@ -37,7 +37,6 @@ export * from "./popover";
 export * from "./command";
 export * from "./combobox";
 export * from "./data-table";
-export * from "./filter-bar";
 export * from "./pagination";
 export * from "./breadcrumb";
 export * from "./help-overlay";
@@ -53,3 +52,6 @@ export * from "./semantic-calendar";
 export * from "./list-scaffold";
 
 export * from "./inline-edit";
+export * from './form-draft-alert';
+export * from "./toolbar";
+export * from './wizard';

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, FormDraftAlert } from "@g4k/ui/components";
 import { Button, AppIcon, FileUploadPopup } from "@g4k/ui/components";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,7 +39,7 @@ export function AnnouncementComposer({
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [attachment, setAttachment] = useState<File | null>(null);
 
-  const { formData: draftData, setFormData: setDraftData, clearDraft } = useFormDraft("announcement_create", { title: "", body: "", scope: "company", pinned: false, priority: "normal" });
+  const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft("announcement_create", { title: "", body: "", scope: "company", pinned: false, priority: "normal" });
   const activeRole = useAuthStore(s => s.activeRole);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export function AnnouncementComposer({
         setAttachment(null);
       }
     }
-  }, [open, editingId, initialData, draftData]);
+  }, [open, editingId, initialData]);
 
   const handleFieldChange = (updates: Partial<ComposerData>) => {
     const newData = { ...createData, ...updates };
@@ -71,6 +71,19 @@ export function AnnouncementComposer({
         scope: newData.scope,
         pinned: newData.pinned,
         priority: newData.priority
+      });
+    }
+  };
+
+  const handleRestoreDraft = async () => {
+    const saved = await restoreDraft();
+    if (saved) {
+      setCreateData({
+        title: saved.title || "",
+        body: saved.body || "",
+        scope: saved.scope || "company",
+        pinned: saved.pinned || false,
+        priority: saved.priority || "normal"
       });
     }
   };
@@ -119,6 +132,17 @@ export function AnnouncementComposer({
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit Announcement" : "Post Announcement"}</DialogTitle>
           </DialogHeader>
+
+          {!editingId && hasDraft && (
+            <FormDraftAlert 
+              onRestore={handleRestoreDraft} 
+              onDiscard={clearDraft}
+              className="mb-2 bg-amber-50/50 border-amber-200"
+              title="Unsaved draft"
+              description="You have an unsaved announcement draft."
+            />
+          )}
+
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <label htmlFor="title" className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Title</label>

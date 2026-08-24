@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Button, DataTable, Card, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger } from "@g4k/ui/components";
+import { Button, DataTable, Card, Toolbar, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsList, TabsTrigger } from "@g4k/ui/components";
 import { SavedReportViews } from "@/components/reports/saved-report-views";
 import { toast } from "sonner";
 import { STALE_TIME_DEPARTMENTS, queryKeys } from "@/lib/query-keys";
@@ -159,7 +159,7 @@ export function AdminReportsView() {
         </div>
       </div>
 
-      <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 mb-6 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between overflow-visible">
+      <div className="mb-6 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between overflow-visible w-full">
         <div className="w-full xl:w-auto overflow-x-auto shrink-0 pb-1 xl:pb-0">
           <Tabs value={reportType} onValueChange={(v) => setReportType(v as any)} className="w-max">
             <TabsList className="bg-neutral-100/50 dark:bg-neutral-800/50 p-1 flex">
@@ -172,45 +172,49 @@ export function AdminReportsView() {
           </Tabs>
         </div>
         
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full xl:w-auto flex-1 xl:justify-end flex-wrap">
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full md:w-auto">
-            <span className="text-xs font-semibold text-neutral-500 uppercase whitespace-nowrap hidden sm:inline-block">Date Range:</span>
-            <DatePicker
-              value={filters.start ? new Date(filters.start) : undefined}
-              onChange={(date) => setFilters({ ...filters, start: date ? format(date, "yyyy-MM-dd") : "" })}
-              className="w-full sm:w-[130px] h-9"
-            />
-            <span className="text-neutral-400 hidden sm:inline-block">-</span>
-            <DatePicker
-              value={filters.end ? new Date(filters.end) : undefined}
-              onChange={(date) => setFilters({ ...filters, end: date ? format(date, "yyyy-MM-dd") : "" })}
-              className="w-full sm:w-[130px] h-9"
-            />
-          </div>
-          <Select value={filters.dept} onValueChange={(v) => setFilters({ ...filters, dept: v })}>
-            <SelectTrigger id="dept-filter" className="w-full md:w-[180px] h-9 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shrink-0">
-              <SelectValue placeholder="All Departments" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
-              {(Array.isArray(departments) ? departments : ((departments as any)?.data || [])).map((d: ReportDepartment) => (
-                <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="shrink-0 w-full md:w-auto flex justify-end">
-            <SavedReportViews 
-              module="reports"
-              currentFilters={{ reportType, ...filters }}
-              onApplyFilters={(f) => {
-                if (f.reportType) setReportType(f.reportType as any);
-                setFilters({ start: (f.start || filters.start) as string, end: (f.end || filters.end) as string, dept: (f.dept || filters.dept) as string });
-              }}
-            />
-          </div>
+        <div className="w-full xl:w-auto flex-1 xl:justify-end flex">
+          <Toolbar
+            hideSearch={true}
+            filters={[
+              {
+                key: "date_range",
+                label: "Date Range",
+                type: "date-range",
+                value: { 
+                  from: filters.start ? new Date(filters.start) : undefined, 
+                  to: filters.end ? new Date(filters.end) : undefined 
+                },
+                onChange: (range: any) => setFilters({
+                  ...filters,
+                  start: range?.from ? format(range.from, "yyyy-MM-dd") : "",
+                  end: range?.to ? format(range.to, "yyyy-MM-dd") : ""
+                })
+              },
+              {
+                key: "dept",
+                label: "Department",
+                type: "select",
+                value: filters.dept,
+                onChange: (v) => setFilters({ ...filters, dept: v }),
+                options: (Array.isArray(departments) ? departments : ((departments as any)?.data || [])).map((d: ReportDepartment) => ({
+                  label: d.name,
+                  value: d.id.toString()
+                }))
+              }
+            ]}
+            actions={
+              <SavedReportViews 
+                module="reports"
+                currentFilters={{ reportType, ...filters }}
+                onApplyFilters={(f) => {
+                  if (f.reportType) setReportType(f.reportType as any);
+                  setFilters({ start: (f.start || filters.start) as string, end: (f.end || filters.end) as string, dept: (f.dept || filters.dept) as string });
+                }}
+              />
+            }
+          />
         </div>
-      </Card>
+      </div>
 
       {reportType === "attendance-summary" && data?.data?.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

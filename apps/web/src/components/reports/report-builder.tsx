@@ -11,7 +11,7 @@ import {
   CardTitle, 
   CardContent, 
   DataTable, 
-  FilterBar,
+  Toolbar,
   EmptyState,
   Button,
   Badge,
@@ -127,68 +127,67 @@ export function ReportBuilder() {
             <p className="text-xs text-neutral-500">Select a report type to preview data and export.</p>
           </div>
           
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full xl:w-auto flex-1 xl:justify-end flex-wrap overflow-visible">
-            <div className="flex-1 w-full md:w-auto min-w-[200px]">
-              <FilterBar
-                searchQuery={search}
-                onSearchChange={setSearch}
-                filters={[
-                  {
-                    key: "reportKey",
-                    label: "Report Type",
-                    type: "select",
-                    options: [
-                      { label: "Tasks & Deliverables", value: "tasks" },
-                      { label: "Projects & Milestones", value: "projects" },
-                      { label: "Employee Directory", value: "users" },
-                      { label: "Productivity", value: "productivity" }
-                    ],
-                    value: reportKey,
-                    onChange: setReportKey
-                  }
-                ]}
-              />
-            </div>
-            
-            <div className="flex items-center gap-2 shrink-0 justify-end">
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => refetch()}
-                disabled={isLoading || isRefetching}
-                className="h-9 w-9 shrink-0"
-                title="Refresh Data"
-              >
-                <AppIcon name="refresh" size="sm" className={isRefetching ? "animate-spin" : ""} />
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    className="h-9 gap-2 shrink-0 w-full sm:w-auto bg-primary-600 hover:bg-primary-700 text-white" 
-                    disabled={exportMutation.isPending || items.length === 0}
+          <div className="w-full xl:w-auto flex-1 overflow-visible">
+            <Toolbar
+              searchQuery={search}
+              onSearchChange={setSearch}
+              filters={[
+                {
+                  key: "reportKey",
+                  label: "Report Type",
+                  type: "select",
+                  options: [
+                    { label: "Tasks & Deliverables", value: "tasks" },
+                    { label: "Projects & Milestones", value: "projects" },
+                    { label: "Employee Directory", value: "users" },
+                    { label: "Productivity", value: "productivity" }
+                  ],
+                  value: reportKey,
+                  onChange: setReportKey
+                }
+              ]}
+              actions={
+                <>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => refetch()}
+                    disabled={isLoading || isRefetching}
+                    className="h-9 w-9 shrink-0 bg-neutral-50 dark:bg-neutral-900 border-dashed"
+                    title="Refresh Data"
                   >
-                    {exportMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : <AppIcon name="download" size="sm" />}
-                    Export Data
-                    <AppIcon name="chevronDown" size="xs" className="opacity-70 ml-1" />
+                    <AppIcon name="refresh" size="sm" className={isRefetching ? "animate-spin" : ""} />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[180px]">
-                  <DropdownMenuItem onClick={() => exportMutation.mutate("xlsx")} className="gap-2 cursor-pointer">
-                    <AppIcon name="spreadsheet" size="sm" className="text-emerald-600" />
-                    Export to Excel (.xlsx)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => exportMutation.mutate("csv")} className="gap-2 cursor-pointer">
-                    <AppIcon name="fileText" size="sm" className="text-neutral-500" />
-                    Export to CSV (.csv)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => exportMutation.mutate("pdf")} className="gap-2 cursor-pointer">
-                    <AppIcon name="fileText" size="sm" className="text-rose-600" />
-                    Export to PDF (.pdf)
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        className="h-9 gap-2 shrink-0 bg-primary-600 hover:bg-primary-700 text-white" 
+                        disabled={exportMutation.isPending || items.length === 0}
+                      >
+                        {exportMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : <AppIcon name="download" size="sm" />}
+                        Export Data
+                        <AppIcon name="chevronDown" size="xs" className="opacity-70 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[180px]">
+                      <DropdownMenuItem onClick={() => exportMutation.mutate("xlsx")} className="gap-2 cursor-pointer">
+                        <AppIcon name="spreadsheet" size="sm" className="text-emerald-600" />
+                        Export to Excel (.xlsx)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportMutation.mutate("csv")} className="gap-2 cursor-pointer">
+                        <AppIcon name="fileText" size="sm" className="text-neutral-500" />
+                        Export to CSV (.csv)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportMutation.mutate("pdf")} className="gap-2 cursor-pointer">
+                        <AppIcon name="fileText" size="sm" className="text-rose-600" />
+                        Export to PDF (.pdf)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              }
+            />
           </div>
         </div>
       </CardHeader>

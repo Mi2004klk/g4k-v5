@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { openDB } from "idb";
 
@@ -19,6 +19,10 @@ export function useFormDraft<T extends Record<string, unknown>>(key: string, ini
   const [hasDraft, setHasDraft] = useState(false);
   const dataRef = useRef(formData);
 
+  // We use useMemo for the stringification to only compute it when the reference actually changes
+  // and keep a stable reference.
+  const initialValuesString = useMemo(() => JSON.stringify(initialValues), [initialValues]);
+
   useEffect(() => {
     dataRef.current = formData;
   }, [formData]);
@@ -29,7 +33,7 @@ export function useFormDraft<T extends Record<string, unknown>>(key: string, ini
       try {
         const db = await initDB();
         const saved = await db.get('drafts', key);
-        if (saved) {
+        if (saved && JSON.stringify(saved) !== initialValuesString) {
           setHasDraft(true);
         }
       } catch (e) {
@@ -37,13 +41,13 @@ export function useFormDraft<T extends Record<string, unknown>>(key: string, ini
       }
     };
     checkDraft();
-  }, [key]);
+  }, [key, initialValuesString]);
 
   // 30-second autosave timer
   useEffect(() => {
     const timer = setInterval(async () => {
       const currentData = dataRef.current;
-      if (currentData && Object.keys(currentData).some((k) => currentData[k] !== initialValues[k])) {
+      if (currentData && JSON.stringify(currentData) !== initialValuesString) {
         try {
           const db = await initDB();
           await db.put('drafts', currentData, key);
@@ -54,7 +58,7 @@ export function useFormDraft<T extends Record<string, unknown>>(key: string, ini
     }, 30000);
 
     return () => clearInterval(timer);
-  }, [key, initialValues]);
+  }, [key, initialValuesString]);
 
   const saveDraft = useCallback(async () => {
     try {
@@ -73,6 +77,7 @@ export function useFormDraft<T extends Record<string, unknown>>(key: string, ini
       const saved = await db.get('drafts', key);
       if (saved) {
         setFormData(saved);
+        setHasDraft(false); // Clear banner when restored
         toast.info("Form draft restored!");
         return saved;
       }

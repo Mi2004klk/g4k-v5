@@ -15,7 +15,7 @@ import {
   Card
 } from "@g4k/ui/components";
 
-export function ProfilePreferencesTab() {
+export function ProfileNotificationSection() {
   const router = useRouter();
   const authUser = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -88,104 +88,58 @@ export function ProfilePreferencesTab() {
   };
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
-      {/* Privacy & Visibility Preferences */}
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
-        <div className="border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-900/50 px-6 py-4">
+    <div className="flex flex-col gap-6 w-full">
+      <Card className="border border-neutral-100 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden p-6 relative">
+        {/* Header */}
+        <div className="mb-6">
           <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-            <AppIcon name="eye" size="sm" className="text-primary-600 dark:text-primary-400" />
-            Privacy & Visibility
-          </h2>
-          <p className="text-xs text-neutral-500 mt-1">Control who can see your contact information in the company directory.</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => handleVisibilityChange("public")}
-              disabled={updateVisibilityMutation.isPending}
-              className={`flex items-start gap-4 p-4 text-left border rounded-lg transition-all ${visibility === "public" ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-1 ring-primary-500/20" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
-            >
-              <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${visibility === "public" ? "border-primary-600" : "border-neutral-300 dark:border-neutral-700"}`}>
-                {visibility === "public" && <div className="w-2 h-2 rounded-full bg-primary-600" />}
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-neutral-900 dark:text-white mb-1">Public</div>
-                <div className="text-xs text-neutral-500 leading-relaxed">Phone and email visible to all users across the organization.</div>
-              </div>
-            </button>
-
-            
-            <button
-              onClick={() => handleVisibilityChange("private")}
-              disabled={updateVisibilityMutation.isPending}
-              className={`flex items-start gap-4 p-4 text-left border rounded-lg transition-all ${visibility === "private" ? "border-primary-500 bg-primary-50 dark:bg-primary-900/10 ring-1 ring-primary-500/20" : "border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50"}`}
-            >
-              <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${visibility === "private" ? "border-primary-600" : "border-neutral-300 dark:border-neutral-700"}`}>
-                {visibility === "private" && <div className="w-2 h-2 rounded-full bg-primary-600" />}
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-neutral-900 dark:text-white mb-1">Private</div>
-                <div className="text-xs text-neutral-500 leading-relaxed">Contact info completely hidden from directory searches.</div>
-              </div>
-            </button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Notification Preferences */}
-      <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
-        <div className="border-b border-neutral-100 dark:border-neutral-800/50 bg-neutral-50/50 dark:bg-neutral-900/50 px-6 py-4">
-          <h2 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-            <AppIcon name="bell" size="sm" className="text-primary-600 dark:text-primary-400" />
+            <AppIcon name="bell" className="text-orange-500 w-5 h-5" />
             Notification Preferences
           </h2>
-          <p className="text-xs text-neutral-500 mt-1">Manage which email notifications you receive.</p>
+          <p className="text-xs text-neutral-500 mt-1 pl-7">Manage which email notifications you receive.</p>
         </div>
         
-        <div className="p-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-              <div>
-                <div className="text-sm font-semibold text-neutral-900 dark:text-white">Leave Approvals</div>
-                <div className="text-xs text-neutral-500">Receive emails when your leave is approved or rejected.</div>
-              </div>
-              <button 
-                onClick={() => handleNotificationToggle("leave_approvals")}
-                disabled={updateNotificationsMutation.isPending}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 ${notifications.leave_approvals ? 'bg-primary-600' : 'bg-neutral-200 dark:bg-neutral-700'}`}
-              >
-                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.leave_approvals ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
+        <div className="flex flex-col gap-4 pl-0 sm:pl-7">
+          <div className="flex items-center justify-between p-4 border border-neutral-100 dark:border-neutral-800/50 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800/20 transition-colors bg-white dark:bg-neutral-900 shadow-sm">
+            <div>
+              <div className="text-sm font-bold text-neutral-900 dark:text-white">Email Notifications</div>
+              <div className="text-xs text-neutral-500 mt-0.5">Receive general company updates via email.</div>
             </div>
+            <button 
+              onClick={() => handleNotificationToggle("system_alerts")}
+              disabled={updateNotificationsMutation.isPending}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${notifications.system_alerts ? 'bg-orange-500' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+            >
+              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.system_alerts ? 'translate-x-2.5' : '-translate-x-2.5'}`} />
+            </button>
+          </div>
 
-            <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-              <div>
-                <div className="text-sm font-semibold text-neutral-900 dark:text-white">Task Updates</div>
-                <div className="text-xs text-neutral-500">Receive emails when tasks are assigned to you or changed.</div>
-              </div>
-              <button 
-                onClick={() => handleNotificationToggle("task_updates")}
-                disabled={updateNotificationsMutation.isPending}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 ${notifications.task_updates ? 'bg-primary-600' : 'bg-neutral-200 dark:bg-neutral-700'}`}
-              >
-                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.task_updates ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
+          <div className="flex items-center justify-between p-4 border border-neutral-100 dark:border-neutral-800/50 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800/20 transition-colors bg-white dark:bg-neutral-900 shadow-sm">
+            <div>
+              <div className="text-sm font-bold text-neutral-900 dark:text-white">Task Updates</div>
+              <div className="text-xs text-neutral-500 mt-0.5">Receive emails when tasks are assigned to you or changed.</div>
             </div>
+            <button 
+              onClick={() => handleNotificationToggle("task_updates")}
+              disabled={updateNotificationsMutation.isPending}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${notifications.task_updates ? 'bg-orange-500' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+            >
+              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.task_updates ? 'translate-x-2.5' : '-translate-x-2.5'}`} />
+            </button>
+          </div>
 
-            <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-              <div>
-                <div className="text-sm font-semibold text-neutral-900 dark:text-white">System Alerts</div>
-                <div className="text-xs text-neutral-500">Important company announcements and security alerts.</div>
-              </div>
-              <button 
-                onClick={() => handleNotificationToggle("system_alerts")}
-                disabled={updateNotificationsMutation.isPending}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 ${notifications.system_alerts ? 'bg-primary-600' : 'bg-neutral-200 dark:bg-neutral-700'}`}
-              >
-                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.system_alerts ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
+          <div className="flex items-center justify-between p-4 border border-neutral-100 dark:border-neutral-800/50 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800/20 transition-colors bg-white dark:bg-neutral-900 shadow-sm">
+            <div>
+              <div className="text-sm font-bold text-neutral-900 dark:text-white">Leave Updates</div>
+              <div className="text-xs text-neutral-500 mt-0.5">Receive emails when your leave is approved or rejected.</div>
             </div>
+            <button 
+              onClick={() => handleNotificationToggle("leave_approvals")}
+              disabled={updateNotificationsMutation.isPending}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${notifications.leave_approvals ? 'bg-orange-500' : 'bg-neutral-200 dark:bg-neutral-700'}`}
+            >
+              <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${notifications.leave_approvals ? 'translate-x-2.5' : '-translate-x-2.5'}`} />
+            </button>
           </div>
         </div>
       </Card>

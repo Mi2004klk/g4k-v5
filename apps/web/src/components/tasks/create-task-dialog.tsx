@@ -1,16 +1,15 @@
 "use client";
 
-
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { AppIcon, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox } from "@g4k/ui/components";
+import { AppIcon, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Wizard, WizardStep, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { PhaseBuilder, BuilderPhase } from "../projects/phase-builder";
 
 export interface CreateTaskDialogProps {
   open: boolean;
@@ -19,18 +18,26 @@ export interface CreateTaskDialogProps {
   defaultPhaseId?: number | string;
 }
 
-export function CreateTaskDialog({ open, onOpenChange, projectId, defaultPhaseId }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ open, onOpenChange, projectId: initialProjectId, defaultPhaseId }: CreateTaskDialogProps) {
   const queryClient = useQueryClient();
   const user = useAuthStore(s => s.user);
   const { data: caps = [] } = useCapabilities();
   const canManageTasks = hasCapability(caps, "tasks.manage");
 
+  const [mode, setMode] = useState<"single" | "bulk">("single");
+  const [projectId, setProjectId] = useState<string>(initialProjectId ? initialProjectId.toString() : "none");
+  const [currentStep, setCurrentStep] = useState(0);
+
+  // Single Task State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [assigneeId, setAssigneeId] = useState(user?.id ? user.id.toString() : "none");
   const [phaseId, setPhaseId] = useState<string>(defaultPhaseId ? defaultPhaseId.toString() : "none");
   const [dueDate, setDueDate] = useState<Date | undefined>();
+
+  // Bulk Task State (PhaseBuilder)
+  const [phasesState, setPhasesState] = useState<BuilderPhase[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -40,160 +47,299 @@ export function CreateTaskDialog({ open, onOpenChange, projectId, defaultPhaseId
       setAssigneeId(user?.id ? user.id.toString() : "none");
       setPhaseId(defaultPhaseId ? defaultPhaseId.toString() : "none");
       setDueDate(undefined);
+      setProjectId(initialProjectId ? initialProjectId.toString() : "none");
+      setCurrentStep(0);
     }
-  }, [open, defaultPhaseId, user?.id]);
+  }, [open, defaultPhaseId, user?.id, initialProjectId]);
 
   const { data: usersData } = useQuery({ 
     queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch<{ data?: { id: number, name: string }[] }>("/users"),
+    queryFn: () => apiFetch<{ data?: { id: number, name: string, avatar_url?: string }[] }>("/directory?per_page=100"),
     enabled: open && canManageTasks
   });
+  
+  const { data: projectsData } = useQuery({ 
+    queryKey: queryKeys.projects(), 
+    queryFn: () => apiFetch(`/projects`),
+    enabled: open && projectId === "none"
+  });
 
-  const { data: phasesData } = useQuery({ 
+  const { data: phasesData, isSuccess: phasesLoaded } = useQuery({ 
     queryKey: ["project-phases", projectId], 
     queryFn: () => apiFetch(`/projects/${projectId}/phases`),
-    enabled: open && !!projectId
+    enabled: open && projectId !== "none"
   });
+
+  // Sync loaded phases into Builder state
+  useEffect(() => {
+    if (phasesLoaded && Array.isArray(phasesData?.data) && mode === "bulk") {
+      setPhasesState(phasesData.data.map((p: any) => ({
+        id: p.id.toString(),
+        name: p.name,
+        tasks: []
+      })));
+    }
+  }, [phasesLoaded, phasesData, mode, projectId]);
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const payload: any = {
-        title,
-        description,
-        priority,
-        status: "todo",
-      };
+      if (mode === "single") {
+        const payload: any = {
+          title,
+          description,
+          priority,
+          status: "todo",
+        };
 
-      if (projectId) payload.project_id = projectId;
-      if (phaseId && phaseId !== "none") payload.phase_id = phaseId;
-      if (dueDate) payload.due_date = format(dueDate, "yyyy-MM-dd");
-      
-      const selectedAssignee = assigneeId === "none" ? (user?.id ? [user.id] : []) : [parseInt(assigneeId)];
-      if (selectedAssignee.length > 0) {
-        payload.assignees = selectedAssignee;
+        if (projectId !== "none") payload.project_id = parseInt(projectId);
+        if (phaseId && phaseId !== "none") payload.phase_id = parseInt(phaseId);
+        if (dueDate) payload.due_date = format(dueDate, "yyyy-MM-dd");
+        
+        const selectedAssignee = assigneeId === "none" ? (user?.id ? [user.id] : []) : [parseInt(assigneeId)];
+        if (selectedAssignee.length > 0) payload.assignees = selectedAssignee;
+
+        return apiFetch("/tasks", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // Bulk creation
+        for (const phase of phasesState) {
+          let actualPhaseId = phase.id.startsWith("phase-") ? null : parseInt(phase.id);
+          
+          // If this is a newly added phase and we have a project, create it first
+          if (!actualPhaseId && projectId !== "none" && phase.tasks.length > 0) {
+            const newPhaseRes = await apiFetch(`/projects/${projectId}/phases`, {
+              method: "POST",
+              body: JSON.stringify({
+                name: phase.name,
+                status: "pending"
+              })
+            });
+            actualPhaseId = newPhaseRes.id || newPhaseRes.data?.id;
+          }
+          
+          for (const task of phase.tasks) {
+            if (!task.title) continue;
+            
+            await apiFetch("/tasks", {
+              method: "POST",
+              body: JSON.stringify({
+                title: task.title,
+                description: task.description,
+                project_id: projectId !== "none" ? parseInt(projectId) : undefined,
+                phase_id: actualPhaseId,
+                status: "todo",
+                assignees: task.assigneeId && task.assigneeId !== "none" ? [parseInt(task.assigneeId)] : [],
+                due_date: task.dueDate || null,
+              })
+            });
+          }
+        }
+        return { success: true };
       }
-
-      return apiFetch("/tasks", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
     },
     onSuccess: () => {
-      toast.success("Task created successfully");
+      toast.success(mode === "single" ? "Task created successfully" : "Tasks created successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
-      if (projectId) {
-        queryClient.invalidateQueries({ queryKey: [...queryKeys.project(projectId.toString()), "phases"] });
-        queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId.toString()) });
+      if (projectId && projectId !== "none") {
+        queryClient.invalidateQueries({ queryKey: [...queryKeys.project(projectId), "phases"] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
       }
       onOpenChange(false);
     },
     onError: (err: any) => {
-      toast.error(err.message || "Failed to create task");
+      toast.error(err.message || "Failed to create tasks");
     }
   });
 
+  const step1Content = (
+    <div className="flex flex-col gap-6">
+      <div className="text-center space-y-1">
+        <h3 className="text-lg font-bold text-neutral-900 dark:text-white">How do you want to create tasks?</h3>
+        <p className="text-sm text-neutral-500">Choose between creating a single task or adding multiple tasks phase-by-phase.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto w-full">
+        <div 
+          onClick={() => setMode("single")}
+          className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 cursor-pointer transition-all ${
+            mode === "single" 
+              ? 'border-primary-600 bg-primary-50 dark:bg-primary-950/30' 
+              : 'border-neutral-200 dark:border-neutral-800 hover:border-primary-300'
+          }`}
+        >
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${mode === "single" ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/50' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800'}`}>
+            <AppIcon name="check" className="w-6 h-6" />
+          </div>
+          <h4 className="font-bold text-neutral-900 dark:text-white mb-1">Single Task</h4>
+          <p className="text-xs text-center text-neutral-500">Create one specific task quickly.</p>
+        </div>
+
+        <div 
+          onClick={() => setMode("bulk")}
+          className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 cursor-pointer transition-all ${
+            mode === "bulk" 
+              ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/30' 
+              : 'border-neutral-200 dark:border-neutral-800 hover:border-emerald-300'
+          }`}
+        >
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${mode === "bulk" ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800'}`}>
+            <AppIcon name="list" className="w-6 h-6" />
+          </div>
+          <h4 className="font-bold text-neutral-900 dark:text-white mb-1">Phase by Phase</h4>
+          <p className="text-xs text-center text-neutral-500">Add multiple tasks to project phases at once.</p>
+        </div>
+      </div>
+
+      {!initialProjectId && (
+        <div className="space-y-1.5 max-w-lg mx-auto w-full mt-4">
+          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Target Project (Optional)</label>
+          <Select value={projectId} onValueChange={setProjectId}>
+            <SelectTrigger className="w-full h-11 rounded-xl">
+              <SelectValue placeholder="Select Project" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Project (Standalone)</SelectItem>
+              {Array.isArray(projectsData?.data) && projectsData.data.map((p: any) => (
+                <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {mode === "bulk" && projectId === "none" && (
+             <p className="text-xs text-amber-600 mt-2">Phase-by-phase creation requires a project. If no project is selected, phases won't be saved, only tasks.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  const singleTaskContent = (
+    <div className="p-1 flex flex-col gap-4">
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Task Title *</label>
+        <Input 
+          value={title} 
+          onChange={e => setTitle(e.target.value)} 
+          placeholder="e.g. Design homepage mockup" 
+          className="text-sm h-11 rounded-xl"
+          autoFocus
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Description</label>
+        <Textarea 
+          value={description} 
+          onChange={e => setDescription(e.target.value)} 
+          placeholder="Add details, requirements..." 
+          className="text-sm rounded-xl min-h-[100px]"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5 flex flex-col">
+          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Due Date</label>
+          <DatePicker 
+            value={dueDate} 
+            onChange={setDueDate as any} 
+            placeholder="Select date"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Priority</label>
+          <Select value={priority} onValueChange={setPriority}>
+            <SelectTrigger className="w-full h-10 rounded-lg">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {projectId !== "none" && Array.isArray(phasesData?.data) && phasesData.data.length > 0 && (
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Phase</label>
+          <Select value={phaseId} onValueChange={setPhaseId}>
+            <SelectTrigger className="w-full h-10 rounded-lg">
+              <SelectValue placeholder="Select Phase" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Phase</SelectItem>
+              {phasesData.data.map((p: any) => (
+                <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {canManageTasks && (
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Assignee</label>
+          <Select value={assigneeId} onValueChange={setAssigneeId}>
+            <SelectTrigger className="w-full h-10 rounded-lg">
+              <SelectValue placeholder="Select Assignee" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Assign to me ({user?.name})</SelectItem>
+              {Array.isArray(usersData?.data) && usersData.data.map((u: any) => (
+                <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+    </div>
+  );
+
+  const bulkTaskContent = (
+    <div className="p-1">
+      <PhaseBuilder 
+        phases={phasesState}
+        onChange={setPhasesState}
+        users={usersData?.data || []}
+      />
+    </div>
+  );
+
+  const steps: WizardStep[] = [
+    {
+      id: "mode",
+      title: "Task Mode",
+      description: "Single or bulk creation",
+      content: step1Content,
+      isValid: true
+    },
+    {
+      id: "details",
+      title: mode === "single" ? "Task Details" : "Build Phases",
+      description: mode === "single" ? "Configure your task" : "Add tasks to phases",
+      content: mode === "single" ? singleTaskContent : bulkTaskContent,
+      isValid: mode === "single" ? title.trim().length > 0 : phasesState.some(p => p.tasks.length > 0) && phasesState.every(p => p.tasks.every(t => t.title.trim().length > 0))
+    }
+  ];
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none shadow-e2 bg-white dark:bg-neutral-900 rounded-xl">
-        <DialogHeader className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/20">
-          <DialogTitle className="text-lg font-bold text-neutral-900 dark:text-white">Create New Task</DialogTitle>
-        </DialogHeader>
-        
-        <div className="p-5 flex flex-col gap-4 overflow-y-auto max-h-[60vh]">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Task Title *</label>
-            <Input 
-              value={title} 
-              onChange={e => setTitle(e.target.value)} 
-              placeholder="e.g. Design homepage mockup" 
-              className="text-[13px] h-10 rounded-lg"
-              autoFocus
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Description</label>
-            <Textarea 
-              value={description} 
-              onChange={e => setDescription(e.target.value)} 
-              placeholder="Add details, requirements..." 
-              className="text-[13px] rounded-lg min-h-[80px]"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5 flex flex-col">
-              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Due Date</label>
-              <DatePicker 
-                value={dueDate} 
-                onChange={setDueDate as any} 
-                placeholder="Select date"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Priority</label>
-              <Select value={priority} onValueChange={setPriority}>
-                <SelectTrigger className="w-full text-[13px] h-10 rounded-lg">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {projectId && Array.isArray(phasesData?.data) && phasesData.data.length > 0 && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Phase</label>
-              <Select value={phaseId} onValueChange={setPhaseId}>
-                <SelectTrigger className="w-full text-[13px] h-10 rounded-lg">
-                  <SelectValue placeholder="Select Phase" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Phase</SelectItem>
-                  {phasesData.data.map((p: any) => (
-                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {canManageTasks && (
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Assignee</label>
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
-                <SelectTrigger className="w-full text-[13px] h-10 rounded-lg">
-                  <SelectValue placeholder="Select Assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Assign to me ({user?.name})</SelectItem>
-                  {Array.isArray(usersData?.data) && usersData.data.map((u: any) => (
-                    <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-
-        <div className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/20 flex justify-end gap-3 rounded-b-xl">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-neutral-600 font-semibold h-9 px-4">
-            Cancel
-          </Button>
-          <Button 
-            onClick={() => createMutation.mutate()} 
-            disabled={createMutation.isPending || !title.trim()}
-            className="bg-primary-600 hover:bg-primary-700 text-white font-bold h-9 px-6 rounded-lg shadow-sm"
-          >
-            {createMutation.isPending ? <AppIcon name="loading" className="animate-spin mr-2 w-4 h-4" /> : null}
-            Create Task
-          </Button>
-        </div>
+    <Dialog open={open} onOpenChange={(val) => {
+      if (!val) setCurrentStep(0);
+      onOpenChange(val);
+    }}>
+      <DialogContent className="sm:max-w-4xl p-0 h-[85vh] flex flex-col border-none shadow-2xl bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+        <Wizard
+          steps={steps}
+          currentStep={currentStep}
+          onStepChange={setCurrentStep}
+          onComplete={() => createMutation.mutate()}
+          onCancel={() => onOpenChange(false)}
+          isSubmitting={createMutation.isPending}
+          submitLabel={mode === "single" ? "Create Task" : "Create All Tasks"}
+        />
       </DialogContent>
     </Dialog>
   );

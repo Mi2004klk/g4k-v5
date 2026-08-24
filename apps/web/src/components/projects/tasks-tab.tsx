@@ -6,7 +6,6 @@ import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useAuthStore } from "@/lib/auth-store";
 import { useFormDraft } from "@/hooks/use-form-draft";
-import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
@@ -18,7 +17,7 @@ import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const TaskGantt = dynamic(() => import("@/components/tasks/task-gantt").then(mod => mod.TaskGantt), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, FilterBar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent } from "@g4k/ui/components";
+import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, Toolbar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent, FormDraftAlert } from "@g4k/ui/components";
 import { priority as priorityConfig, taskStatus } from "@g4k/ui/theme/semantic";
 import { FormError } from "@/components/forms/form-error";
 import { toast } from "sonner";
@@ -643,13 +642,13 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 </DialogHeader>
 
                 {hasDraft && (
-                  <div className="mx-5 mt-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center justify-between">
-                    <span className="text-sm text-amber-800 dark:text-amber-200">You have unsaved changes.</span>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={clearDraft} className="text-amber-800 dark:text-amber-200">Discard</Button>
-                      <Button variant="outline" size="sm" onClick={handleRestoreDraft} className="bg-amber-100 dark:bg-amber-900 border-amber-200 dark:border-amber-800">Restore</Button>
-                    </div>
-                  </div>
+                  <FormDraftAlert 
+                    onRestore={handleRestoreDraft} 
+                    onDiscard={clearDraft} 
+                    className="mx-5 mt-5 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+                    title="Unsaved changes"
+                    description="You have unsaved changes in your task draft."
+                  />
                 )}
 
                 <div className="overflow-y-auto max-h-[65dvh] p-5 space-y-5 thin-scrollbar">
@@ -929,7 +928,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               )}
             </div>
             <div className="flex-1">
-            <FilterBar
+            <Toolbar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               searchPlaceholder="Search tasks..."

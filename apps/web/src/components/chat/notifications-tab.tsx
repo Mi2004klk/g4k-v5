@@ -12,7 +12,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 
 import { Skeleton, ErrorBoundary, MeaningfulEmpty } from "@g4k/ui/components";
-import { FilterBar } from "@g4k/ui/components";
+import { Toolbar } from "@g4k/ui/components";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys, STALE_TIME_NOTIFICATIONS } from "@/lib/query-keys";

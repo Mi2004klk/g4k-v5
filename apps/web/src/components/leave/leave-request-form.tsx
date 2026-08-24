@@ -5,7 +5,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, FormDraftAlert } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
@@ -17,7 +17,6 @@ import { FormError } from "@/components/forms/form-error";
 import { queryKeys } from "@/lib/query-keys";
 import { LEAVE_TYPES } from "@/lib/constants";
 import { useFormDraft } from "@/hooks/use-form-draft";
-import { Alert, AlertDescription, AlertTitle } from "@g4k/ui/components";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/lib/auth-store";
 
@@ -30,10 +29,6 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
   const queryClient = useQueryClient();
   const formId = React.useId();
   
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [type, setType] = useState("casual");
-  const [reason, setReason] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   
   const userTz = (useAuthStore((state) => state.user?.company) as any)?.timezone || useAuthStore((state) => state.user?.timezone) || "Asia/Kolkata";
@@ -60,26 +55,10 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
     reason: "",
   });
 
-  const activeStartDate = startDate ?? draftData.start_date;
-  const activeEndDate = endDate ?? draftData.end_date;
-  const activeType = type !== "casual" ? type : (draftData.type || "casual");
-  const activeReason = reason || draftData.reason || "";
-
   // Calculate days requested
-  const daysRequested = (activeStartDate && activeEndDate) 
-    ? differenceInDays(activeEndDate, activeStartDate) + 1 
-    : (activeStartDate ? 1 : 0);
-
-  // Update draft whenever fields change
-  const handleFieldChange = (updates: Partial<typeof draftData>) => {
-    setDraftData({
-      start_date: activeStartDate,
-      end_date: activeEndDate,
-      type: activeType,
-      reason: activeReason,
-      ...updates
-    });
-  };
+  const daysRequested = (draftData.start_date && draftData.end_date) 
+    ? differenceInDays(draftData.end_date, draftData.start_date) + 1 
+    : (draftData.start_date ? 1 : 0);
 
   const { data: balanceData } = useQuery({
     queryKey: queryKeys.leaveBalance,
@@ -102,10 +81,12 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
     },
     onSuccess: () => {
       toast.success("Leave request submitted successfully.");
-      setStartDate(undefined);
-      setEndDate(undefined);
-      setReason("");
-      setType("casual");
+      setDraftData({
+        start_date: undefined,
+        end_date: undefined,
+        reason: "",
+        type: "casual"
+      });
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.myLeaveHistory() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
@@ -124,14 +105,14 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
-    if (!activeStartDate || !activeEndDate) return;
+    if (!draftData.start_date || !draftData.end_date) return;
 
-    if (activeEndDate < activeStartDate) {
+    if (draftData.end_date < draftData.start_date) {
       toast.error("End date must be on or after start date.");
       return;
     }
 
-    if (activeStartDate < todayDate) {
+    if (draftData.start_date < todayDate) {
       toast.error("Start date cannot be in the past.");
       return;
     }
@@ -156,7 +137,8 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
       if (leave.approval?.status !== "pending" && leave.approval?.status !== "approved") return false;
       const existStart = new Date(leave.start_date);
       const existEnd = new Date(leave.end_date);
-      return activeStartDate <= existEnd && activeEndDate >= existStart;
+      // @ts-ignore
+      return draftData.start_date <= existEnd && draftData.end_date >= existStart;
     });
 
     if (hasOverlap) {
@@ -165,10 +147,10 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
     }
 
     submitMutation.mutate({ 
-      start_date: format(activeStartDate, "yyyy-MM-dd"), 
-      end_date: format(activeEndDate, "yyyy-MM-dd"), 
-      type: activeType, 
-      reason: activeReason 
+      start_date: format(draftData.start_date, "yyyy-MM-dd"), 
+      end_date: format(draftData.end_date, "yyyy-MM-dd"), 
+      type: draftData.type, 
+      reason: draftData.reason 
     });
   };
 
@@ -186,23 +168,13 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
   const FormContent = (
     <div className="flex flex-col h-full space-y-5">
       {hasDraft && (
-        <Alert className="bg-amber-50/50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900">
-          <AppIcon name="warning" className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800 dark:text-amber-400">Unsaved draft</AlertTitle>
-          <AlertDescription className="text-amber-700/80 dark:text-amber-500/80 flex items-center justify-between">
-            <span>Continue from where you left off?</span>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => {
-                restoreDraft();
-                setStartDate(draftData.start_date);
-                setEndDate(draftData.end_date);
-                setType(draftData.type || "casual");
-                setReason(draftData.reason || "");
-              }} className="h-6 px-2 text-[10px] bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800">Restore</Button>
-              <Button variant="ghost" size="sm" onClick={clearDraft} className="h-6 px-2 text-[10px] hover:bg-amber-100/50 dark:hover:bg-amber-900/50">Discard</Button>
-            </div>
-          </AlertDescription>
-        </Alert>
+        <FormDraftAlert 
+          onRestore={restoreDraft} 
+          onDiscard={clearDraft} 
+          className="bg-amber-50/50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900"
+          title="Unsaved draft"
+          description="Continue from where you left off?"
+        />
       )}
 
       {/* Header for days requested calculation */}
@@ -230,23 +202,21 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
                 <button type="button"
                   className={cn(
                     "flex h-10 w-full items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-800 bg-background px-3 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900",
-                    !activeStartDate && "text-neutral-400 dark:text-neutral-500"
+                    !draftData.start_date && "text-neutral-400 dark:text-neutral-500"
                   )}>
-                  {activeStartDate ? format(activeStartDate, "MMM d, yyyy") : <span>Select date</span>}
+                  {draftData.start_date ? format(draftData.start_date, "MMM d, yyyy") : <span>Select date</span>}
                   <AppIcon name="calendar" className="text-neutral-400 dark:text-neutral-500" size="sm" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar 
                   mode="single" 
-                  selected={activeStartDate} 
+                  selected={draftData.start_date} 
                   onSelect={(date) => { 
-                    setStartDate(date); 
-                    handleFieldChange({ start_date: date }); 
+                    setDraftData({ ...draftData, start_date: date }); 
                     // Automatically clear end date if it's before the new start date
-                    if (date && activeEndDate && activeEndDate < date) {
-                      setEndDate(undefined);
-                      handleFieldChange({ end_date: undefined });
+                    if (date && draftData.end_date && draftData.end_date < date) {
+                      setDraftData({ ...draftData, start_date: date, end_date: undefined });
                     }
                   }}
                   disabled={{ before: todayDate }}
@@ -263,18 +233,18 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
                 <button type="button"
                   className={cn(
                     "flex h-10 w-full items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-800 bg-background px-3 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900",
-                    !activeEndDate && "text-neutral-400 dark:text-neutral-500"
+                    !draftData.end_date && "text-neutral-400 dark:text-neutral-500"
                   )}>
-                  {activeEndDate ? format(activeEndDate, "MMM d, yyyy") : <span>Select date</span>}
+                  {draftData.end_date ? format(draftData.end_date, "MMM d, yyyy") : <span>Select date</span>}
                   <AppIcon name="calendar" className="text-neutral-400 dark:text-neutral-500" size="sm" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar 
                   mode="single" 
-                  selected={activeEndDate} 
-                  onSelect={(date) => { setEndDate(date); handleFieldChange({ end_date: date }); }}
-                  disabled={{ before: activeStartDate ?? todayDate }}
+                  selected={draftData.end_date} 
+                  onSelect={(date) => { setDraftData({ ...draftData, end_date: date }); }}
+                  disabled={{ before: draftData.start_date ?? todayDate }}
                   initialFocus 
                 />
               </PopoverContent>
@@ -285,7 +255,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
         
         <div className="space-y-1.5 flex-1 flex flex-col">
           <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Type *</label>
-          <RadioGroup value={activeType} onValueChange={(val) => { setType(val); handleFieldChange({ type: val }); }} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+          <RadioGroup value={draftData.type} onValueChange={(val) => setDraftData({ ...draftData, type: val })} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {LEAVE_TYPES.map((item) => {
               const bal = balanceData ? balanceData[item.value] : null;
               const isExhausted = bal ? bal.available <= 0 : false;
@@ -325,8 +295,8 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
             required
             id={`reason-${formId}`}
             rows={3}
-            value={activeReason}
-            onChange={(e) => { setReason(e.target.value); handleFieldChange({ reason: e.target.value }); }}
+            value={draftData.reason}
+            onChange={(e) => setDraftData({ ...draftData, reason: e.target.value })}
             className={`text-sm resize-none flex-1 min-h-[80px] rounded-lg border-neutral-200 dark:border-neutral-800 focus-visible:ring-1 focus-visible:ring-primary-500 ${fieldErrors.reason ? "border-red-500 focus-visible:ring-red-500" : ""}`}
             placeholder="Briefly explain the reason for your time off..."
           />
@@ -336,7 +306,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
         <div className="pt-2">
           <Button
             type="submit"
-            disabled={submitMutation.isPending || !activeStartDate || !activeEndDate || !activeReason}
+            disabled={submitMutation.isPending || !draftData.start_date || !draftData.end_date || !draftData.reason}
             className="w-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 font-medium h-10 shadow-sm transition-colors"
           >
             {submitMutation.isPending ? <AppIcon name="loading" className="animate-spin" /> : "Submit Request"}

@@ -38,9 +38,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  FormDraftAlert
 } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
-import { FilterBar, ListScaffold } from "@g4k/ui/components";
+import { Toolbar, ListScaffold } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import Link from "next/link";
 import { EmptyState } from "@g4k/ui/components";
@@ -141,7 +142,7 @@ export function EmployeeManagementTab() {
   } = useUserActions();
 
   // Forms
-  const { formData: draftData, setFormData: setDraftData, hasDraft, clearDraft } = useFormDraft<UserFormValues>("create_user", {
+  const { formData: draftData, setFormData: setDraftData, hasDraft, restoreDraft, clearDraft } = useFormDraft<UserFormValues>("create_user", {
     name: "",
     email: "",
     username: "",
@@ -558,6 +559,15 @@ export function EmployeeManagementTab() {
               <DialogTitle>Create New Employee</DialogTitle>
               <DialogDescription>Add a new employee to the directory.</DialogDescription>
             </DialogHeader>
+            {hasDraft && (
+              <FormDraftAlert 
+                onRestore={restoreDraft} 
+                onDiscard={clearDraft}
+                className="mb-4 bg-amber-50/50 border-amber-200 mt-4"
+                title="Unsaved draft"
+                description="Continue creating this employee?"
+              />
+            )}
             <UserForm
               defaultValues={draftData}
               onValuesChange={setDraftData}
