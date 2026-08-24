@@ -23,7 +23,7 @@ class DemoPurgeCommand extends Command
                 'conversation_message_reads', 'reactions', 'notifications', 'messages',
                 'conversation_user', 'conversations', 'task_time_logs', 'task_comments',
                 'task_activities', 'task_reminders', 'qa_submissions', 'qa_form_fields',
-                'qa_forms', 'approvals', 'tasks', 'leave_balances', 'leave_requests',
+                'qa_forms', 'approvals', 'task_assignees', 'tasks', 'project_phases', 'leave_balances', 'leave_requests',
                 'attendance_events', 'attendance_days', 'announcements', 'quick_notes',
                 'pins', 'feedback', 'export_jobs', 'saved_views', 'scheduled_reports',
                 'audit_logs', 'projects', 'department_hr', 'role_assignments', 'users',
