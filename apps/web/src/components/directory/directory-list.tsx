@@ -539,7 +539,9 @@ export function EmployeeManagementTab() {
         }
 
         viewMode={viewMode as "list" | "grid"}
-        gridRenderer={(user) => (
+        gridRenderer={(user) => {
+          const statusConfig = getUserStatusColor(user.status);
+          return (
           <Card key={user.id} className="h-full flex flex-col hover:border-primary-200 transition-colors cursor-pointer group" onClick={() => router.push(`/dashboard/directory/${user.id}`)}>
             <CardContent className="p-4 flex flex-col items-center text-center">
               <Avatar className="h-16 w-16 mb-3 ring-2 ring-transparent group-hover:ring-primary-100 transition-all">
@@ -550,14 +552,14 @@ export function EmployeeManagementTab() {
               <p className="text-xs text-neutral-500 mb-2">{user.employee_id}</p>
               
               <div className="mt-auto pt-3 flex flex-col items-center gap-2">
-                <StatusBadge status={user.status} />
+                <StatusBadge status={statusConfig.status as any} dot={!!statusConfig.dot}>{statusConfig.label}</StatusBadge>
                 <div className="text-xs text-neutral-600 dark:text-neutral-400">
                   {user.designation?.name || "No Designation"}
                 </div>
               </div>
             </CardContent>
           </Card>
-        )}
+        )}}
         columns={columns}
         data={usersList}
         getRowId={(r: any) => String(r.id)}
