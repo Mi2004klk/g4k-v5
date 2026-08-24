@@ -263,38 +263,51 @@ export function DesignationsTab() {
           const desig = row.original;
           const isInactive = !desig.is_active;
           return (
-            <div className="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <AppIcon name="more" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => {
-                    setEditingDesig(desig);
-                    reset({ name: desig.name, description: desig.description || "" });
-                    setIsModalOpen(true);
-                  }}>
-                    <AppIcon name="edit" className=" mr-2 text-primary-600" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => {
-                    if (isInactive) {
-                      statusMutation.mutate({ id: desig.id, status: 'active' });
-                    } else {
-                      setConfirmState({ isOpen: true, type: "deactivate", payload: desig });
-                    }
-                  }} className={`gap-2 ${isInactive ? "text-emerald-600" : "text-amber-600"}`}>
-                    {isInactive ? <AppIcon name="userCheck" /> : <AppIcon name="userX" />}
-                    {isInactive ? "Activate" : "Deactivate"}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: desig })}>
-                    <AppIcon name="trash" className=" mr-2 text-rose-600" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center justify-end gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-neutral-500 hover:text-primary-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingDesig(desig);
+                  reset({ name: desig.name, description: desig.description || "" });
+                  setIsModalOpen(true);
+                }}
+                title="Edit"
+              >
+                <AppIcon name="edit" size="sm" />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isInactive ? "text-emerald-500 hover:text-emerald-600" : "text-amber-500 hover:text-amber-600"}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isInactive) {
+                    statusMutation.mutate({ id: desig.id, status: 'active' });
+                  } else {
+                    setConfirmState({ isOpen: true, type: "deactivate", payload: desig });
+                  }
+                }}
+                title={isInactive ? "Activate" : "Deactivate"}
+              >
+                {isInactive ? <AppIcon name="userCheck" size="sm" /> : <AppIcon name="userX" size="sm" />}
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-neutral-400 hover:text-rose-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmState({ isOpen: true, type: "delete", payload: desig });
+                }}
+                title="Delete"
+              >
+                <AppIcon name="trash" size="sm" />
+              </Button>
             </div>
           );
         },

@@ -215,86 +215,123 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
   );
 
   const singleTaskContent = (
-    <div className="p-1 flex flex-col gap-4">
-      <div className="space-y-1.5">
-        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Task Title *</label>
-        <Input 
-          value={title} 
-          onChange={e => setTitle(e.target.value)} 
-          placeholder="e.g. Design homepage mockup" 
-          className="text-sm h-11 rounded-xl"
-          autoFocus
-        />
-      </div>
+    <div className="space-y-6">
+      {/* Basic Info Section (Blue Theme) */}
+      <div className="p-5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <AppIcon name="info" className="w-4 h-4" />
+          </div>
+          <h4 className="font-semibold text-blue-900 dark:text-blue-100">Task Information</h4>
+        </div>
 
-      <div className="space-y-1.5">
-        <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Description</label>
-        <Textarea 
-          value={description} 
-          onChange={e => setDescription(e.target.value)} 
-          placeholder="Add details, requirements..." 
-          className="text-sm rounded-xl min-h-[100px]"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5 flex flex-col">
-          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Due Date</label>
-          <DatePicker 
-            value={dueDate} 
-            onChange={setDueDate as any} 
-            placeholder="Select date"
+          <label className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wide">Task Title *</label>
+          <Input 
+            value={title} 
+            onChange={e => setTitle(e.target.value)} 
+            placeholder="e.g. Design homepage mockup" 
+            className="h-11 rounded-xl bg-white dark:bg-neutral-900 border-blue-200 dark:border-blue-800"
+            autoFocus
           />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Priority</label>
-          <Select value={priority} onValueChange={setPriority}>
-            <SelectTrigger className="w-full h-10 rounded-lg">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">Low</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-            </SelectContent>
-          </Select>
+
+        <div className="space-y-1.5 flex flex-col">
+          <label className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wide">Description</label>
+          <Textarea 
+            value={description} 
+            onChange={e => setDescription(e.target.value)} 
+            placeholder="Add details, requirements..." 
+            className="rounded-xl min-h-[100px] bg-white dark:bg-neutral-900 border-blue-200 dark:border-blue-800"
+          />
         </div>
       </div>
 
-      {projectId !== "none" && Array.isArray(phasesData?.data) && phasesData.data.length > 0 && (
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Phase</label>
-          <Select value={phaseId} onValueChange={setPhaseId}>
-            <SelectTrigger className="w-full h-10 rounded-lg">
-              <SelectValue placeholder="Select Phase" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No Phase</SelectItem>
-              {phasesData.data.map((p: any) => (
-                <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Schedule & Priority Section (Purple Theme) */}
+      <div className="p-5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/30 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">
+            <AppIcon name="calendar" className="w-4 h-4" />
+          </div>
+          <h4 className="font-semibold text-purple-900 dark:text-purple-100">Schedule & Priority</h4>
         </div>
-      )}
 
-      {canManageTasks && (
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Assignee</label>
-          <Select value={assigneeId} onValueChange={setAssigneeId}>
-            <SelectTrigger className="w-full h-10 rounded-lg">
-              <SelectValue placeholder="Select Assignee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Assign to me ({user?.name})</SelectItem>
-              {Array.isArray(usersData?.data) && usersData.data.map((u: any) => (
-                <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5 flex flex-col">
+            <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wide">Due Date</label>
+            <DatePicker 
+              value={dueDate} 
+              onChange={setDueDate as any} 
+              placeholder="Select date"
+              className="h-11 w-full bg-white dark:bg-neutral-900 border-purple-200 dark:border-purple-800 rounded-xl"
+            />
+          </div>
+          <div className="space-y-1.5 flex flex-col">
+            <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wide">Priority</label>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger className="h-11 w-full bg-white dark:bg-neutral-900 border-purple-200 dark:border-purple-800 rounded-xl">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      )}
+      </div>
+
+      {/* Assignment Section (Orange Theme) */}
+      <div className="p-5 rounded-2xl bg-orange-50/50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center text-orange-600 dark:text-orange-400">
+            <AppIcon name="users" className="w-4 h-4" />
+          </div>
+          <h4 className="font-semibold text-orange-900 dark:text-orange-100">Assignment & Project</h4>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {canManageTasks ? (
+            <div className="space-y-1.5 flex flex-col">
+              <label className="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wide">Assignee</label>
+              <Select value={assigneeId} onValueChange={setAssigneeId}>
+                <SelectTrigger className="h-11 w-full bg-white dark:bg-neutral-900 border-orange-200 dark:border-orange-800 rounded-xl">
+                  <SelectValue placeholder="Select Assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Assign to me ({user?.name})</SelectItem>
+                  {Array.isArray(usersData?.data) && usersData.data.map((u: any) => (
+                    <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+             <div className="space-y-1.5 flex flex-col">
+               {/* Spacer if no manage tasks capability, to keep grid balanced if needed, or leave empty */}
+             </div>
+          )}
+
+          {projectId !== "none" && Array.isArray(phasesData?.data) && phasesData.data.length > 0 && (
+            <div className="space-y-1.5 flex flex-col">
+              <label className="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wide">Phase</label>
+              <Select value={phaseId} onValueChange={setPhaseId}>
+                <SelectTrigger className="h-11 w-full bg-white dark:bg-neutral-900 border-orange-200 dark:border-orange-800 rounded-xl">
+                  <SelectValue placeholder="Select Phase" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Phase</SelectItem>
+                  {phasesData.data.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 

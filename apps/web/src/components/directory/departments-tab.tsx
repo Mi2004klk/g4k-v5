@@ -90,7 +90,7 @@ export function DepartmentsTab() {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
-  const [statusFilter, setStatusFilter] = useUrlState("status", "active");
+  const [statusFilter, setStatusFilter] = useUrlState("status", "all");
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -372,25 +372,7 @@ export function DepartmentsTab() {
           );
         }
       },
-      {
-        accessorKey: "teams",
-        header: "Sub-teams",
-        cell: ({ row }) => {
-          const teams = row.original.teams || [];
-          return (
-            <div className="flex flex-wrap gap-1">
-              {teams.length > 0 ? (
-                teams.map((team: TeamRef) => (
-                  <span key={team.id} className="px-2 py-0.5 rounded-[var(--radius)] text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
-                    <AppIcon name="directory" size="xs" className=" text-neutral-400" />
-                    {team.name}
-                  </span>
-                ))
-              ) : <span className="text-neutral-400 text-xs italic">No teams</span>}
-            </div>
-          );
-        },
-      },
+
       {
         accessorKey: "status",
         header: "Status",

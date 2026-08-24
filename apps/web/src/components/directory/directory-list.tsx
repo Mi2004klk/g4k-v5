@@ -344,15 +344,22 @@ export function EmployeeManagementTab() {
           || (row.original.active_role ? [row.original.active_role] : []);
         const activeRoles = Array.from(new Set(rawRoles.filter(Boolean))) as string[];
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-2">
             {activeRoles.length > 0 ? (
-              activeRoles.map((r: string) => (
-                <span key={r} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300 capitalize">
-                  {r.replace("_", " ")}
-                </span>
-              ))
+              activeRoles.map((r: string) => {
+                const isOrange = r === 'super_admin' || r === 'hr';
+                const colorClasses = isOrange 
+                  ? 'bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' 
+                  : 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+                  
+                return (
+                  <span key={r} className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold capitalize tracking-wide ${colorClasses}`}>
+                    {r.replace("_", " ")}
+                  </span>
+                )
+              })
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-neutral-100 text-neutral-600">Employee</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">Employee</span>
             )}
           </div>
         );
@@ -365,13 +372,7 @@ export function EmployeeManagementTab() {
         const status = row.original.status || "active";
         const config = getUserStatusColor(status);
         return (
-          <StatusBadge 
-            status={config.status} 
-            dot 
-            className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0"
-          >
-            {config.label}
-          </StatusBadge>
+          <StatusBadge status={config.status as any} dot={!!config.dot}>{config.label}</StatusBadge>
         );
       }
     },
@@ -439,64 +440,105 @@ export function EmployeeManagementTab() {
   const deptOptions = (Array.isArray(departments) ? departments : []).map((d: Department) => ({ label: d.name, value: d.id.toString() }));
 
   return (
-    <div className="space-y-6 mt-4">
+    <div className="space-y-6 h-full flex flex-col">
       <ListScaffold
-        title="Directory"
-        description="Manage company employees and roles."
+        title="Employees"
+        description="Manage and view all employees in your organization."
         onRowClick={(user) => router.push(`/dashboard/directory/${user.id}`)}
+        hideToolbar={true}
         actions={
-          <>
-            <Button variant="outline" size="sm" onClick={bulkExport} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full md:w-auto">
-              {isExporting ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="download" />}
-              Export
-            </Button>
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="relative">
+              <AppIcon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <input 
+                type="text" 
+                placeholder="Search employees..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 pl-9 pr-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-64 shadow-sm"
+              />
+            </div>
+
+            {/* Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-10 gap-2 shadow-sm text-neutral-700 dark:text-neutral-300">
+                  <AppIcon name="filter" size="sm" />
+                  Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-2">
+                <div className="px-2 py-1.5 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Role</div>
+                <div className="grid grid-cols-2 gap-1 mb-2">
+                  {[
+                    { label: "All", value: "all" },
+                    { label: "Super Admin", value: "super_admin" },
+                    { label: "HR", value: "hr" },
+                    { label: "Employee", value: "employee" },
+                  ].map(opt => (
+                    <Button 
+                      key={opt.value} 
+                      variant={roleFilter === opt.value ? "secondary" : "ghost"} 
+                      size="sm" 
+                      onClick={() => setRoleFilter(opt.value)}
+                      className="justify-start h-8"
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+                
+                <div className="px-2 py-1.5 text-xs font-semibold text-neutral-500 uppercase tracking-wider border-t pt-2">Status</div>
+                <div className="grid grid-cols-2 gap-1 mb-2">
+                  {[
+                    { label: "All", value: "all" },
+                    { label: "Active", value: "active" },
+                    { label: "Inactive", value: "inactive" },
+                    { label: "Deleted", value: "trashed" },
+                  ].map(opt => (
+                    <Button 
+                      key={opt.value} 
+                      variant={statusFilter === opt.value ? "secondary" : "ghost"} 
+                      size="sm" 
+                      onClick={() => setStatusFilter(opt.value)}
+                      className="justify-start h-8"
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* View Toggle */}
+            <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-0.5 rounded-lg border border-neutral-200/50 dark:border-neutral-800 shadow-inner">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${viewMode === "list" ? "bg-white dark:bg-neutral-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+              >
+                <AppIcon name="list" size="sm" />
+                View
+              </button>
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${viewMode === "grid" ? "bg-white dark:bg-neutral-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+              >
+                <AppIcon name="grid" size="sm" />
+              </button>
+            </div>
+
+            {/* Add Employee */}
             {canManageUsers && (
-              <Button size="sm" onClick={() => setIsCreateOpen(true)} className="gap-2 shadow-sm h-10 w-full md:w-auto">
-                <AppIcon name="plus" />
+              <Button onClick={() => setIsCreateOpen(true)} className="h-10 gap-2 shadow-sm font-medium px-4 bg-blue-600 hover:bg-blue-700 text-white border-0">
+                <AppIcon name="plus" size="sm" />
                 Add Employee
               </Button>
             )}
-          </>
+          </div>
         }
-        searchQuery={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search by name, email, code..."
-        filters={[
-          {
-            type: "select",
-            key: "role",
-            label: "Role",
-            value: roleFilter,
-            onChange: setRoleFilter,
-            options: [
-              { label: "Super Admin", value: "super_admin" },
-              { label: "HR", value: "hr" },
-              { label: "Employee", value: "employee" },
-            ],
-          },
-          {
-            type: "select",
-            key: "status",
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { label: "Active", value: "active" },
-              { label: "Inactive", value: "inactive" },
-              { label: "Deleted", value: "trashed" },
-            ],
-          },
-          {
-            type: "select",
-            key: "dept",
-            label: "Department",
-            value: deptFilter,
-            onChange: setDeptFilter,
-            options: [...deptOptions],
-          },
-        ]}
+
         viewMode={viewMode as "list" | "grid"}
-        onViewModeChange={(val) => setViewMode(val)}
         gridRenderer={(user) => (
           <Card key={user.id} className="h-full flex flex-col hover:border-primary-200 transition-colors cursor-pointer group" onClick={() => router.push(`/dashboard/directory/${user.id}`)}>
             <CardContent className="p-4 flex flex-col items-center text-center">

@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button, Input, Checkbox, Combobox } from "@g4k/ui/components";
+import { Button, Input, Checkbox, Combobox, FileUploadPopup, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { FormError } from "@/components/forms/form-error";
+import { apiFetch } from "@/lib/api-client";
+import { toast } from "sonner";
+import { resolveAvatarUrl } from "@/lib/utils";
 
 export const userSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -41,9 +44,19 @@ interface UserFormProps {
   isPending: boolean;
   submitLabel?: string;
   isEdit?: boolean;
+  userId?: number;
+  avatarUrl?: string;
 }
 
-export function UserForm({ defaultValues, departments, designations, work_schedules, onSubmit, onCancel, onValuesChange, isPending, submitLabel = "Save", isEdit = false }: UserFormProps) {
+export function UserForm({ defaultValues, departments, designations, work_schedules, onSubmit, onCancel, onValuesChange, isPending, submitLabel = "Save", isEdit = false, userId, avatarUrl }: UserFormProps) {
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | undefined>(avatarUrl);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    setLocalAvatarUrl(avatarUrl);
+  }, [avatarUrl]);
+
   const {
     register,
     handleSubmit,
@@ -80,9 +93,63 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
     }
   }, [watch, onValuesChange]);
 
+  const handleAvatarUpload = async (file: File) => {
+    if (!userId) return;
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const response = await apiFetch(`/users/${userId}/avatar`, {
+        method: "POST",
+        body: formData,
+      });
+      if (response && response.avatar_url) {
+        setLocalAvatarUrl(response.avatar_url);
+        toast.success("Profile photo updated successfully");
+        setShowUploadPopup(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-4 py-2 text-xs max-h-[60dvh] overflow-y-auto px-1 mt-2">
+        {userId && (
+          <div className="flex flex-col items-center justify-center mb-6">
+            <div className="relative group cursor-pointer" onClick={() => setShowUploadPopup(true)}>
+              <Avatar className="w-20 h-20 shadow-sm border border-neutral-200 dark:border-neutral-800 transition-opacity group-hover:opacity-80">
+                <AvatarImage src={resolveAvatarUrl(localAvatarUrl)} alt={watch("name") || "User avatar"} />
+                <AvatarFallback className="text-xl">{watch("name")?.substring(0, 2)?.toUpperCase() || "UN"}</AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <AppIcon name="upload" className="w-6 h-6 text-white" />
+              </div>
+              {isUploading && (
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                  <AppIcon name="loading" className="w-6 h-6 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground font-medium">Click to change photo</p>
+            
+            <FileUploadPopup
+              open={showUploadPopup}
+              onOpenChange={setShowUploadPopup}
+              title="Upload Profile Photo"
+              description="Upload a new profile photo (JPG, PNG, WebP up to 2MB)"
+              acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
+              maxSizeMB={2}
+              onUpload={handleAvatarUpload}
+              isLoading={isUploading}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="user-name" className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>

@@ -168,8 +168,8 @@ export function ListScaffold<TData, TValue>({
       )}
 
       {/* Data Table */}
-      <div className="flex-1 min-h-0 bg-white dark:bg-neutral-900 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800 flex flex-col">
-        <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 flex flex-col mt-2">
+        <div className="flex-1 overflow-auto rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm relative">
           {isError ? (
             <div className="flex flex-col items-center justify-center p-8 h-full text-center">
               <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center mb-4 text-rose-600 dark:text-rose-400">
@@ -222,43 +222,70 @@ export function ListScaffold<TData, TValue>({
                   rowSelection={rowSelection}
                   onRowSelectionChange={onRowSelectionChange}
                 />
-              )}  {pagination && data.length > 0 && (
-                  <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 mt-4">
-                    <Pagination 
-                      variant="standard"
-                      currentPage={pagination.page}
-                      totalPages={pagination.totalPages}
-                      pageSize={pagination.perPage}
-                      hasNextPage={pagination.page < pagination.totalPages}
-                      hasPreviousPage={pagination.page > 1}
-                      onNextPage={() => pagination.onPageChange(pagination.page + 1)}
-                      onPreviousPage={() => pagination.onPageChange(pagination.page - 1)}
-                      onPageSizeChange={pagination.onPerPageChange}
+              )}
+              </div>
+            ) : (
+              <div className="h-full flex flex-col">
+                {isLoading ? (
+                  <div className="p-4 space-y-4 flex-1">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse flex space-x-4">
+                        <div className="rounded-full bg-neutral-200 dark:bg-neutral-800 h-10 w-10"></div>
+                        <div className="flex-1 space-y-2 py-1">
+                          <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-3/4"></div>
+                          <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : data.length === 0 ? (
+                  emptyState || (
+                    <div className="flex items-center justify-center h-48 text-neutral-500">
+                      No data found.
+                    </div>
+                  )
+                ) : viewMode === "grid" && gridRenderer ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-6 overflow-y-auto flex-1">
+                    {data.map((row: any, i: number) => {
+                      const id = getRowId ? getRowId(row, i) : String(i);
+                      return <div key={id}>{gridRenderer(row)}</div>;
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex-1 overflow-y-auto">
+                    <DataTable
+                      columns={columns}
+                      data={data}
+                      getRowId={getRowId}
+                      onRowClick={onRowClick}
+                      rowSelection={rowSelection}
+                      onRowSelectionChange={onRowSelectionChange}
+                      isLoading={isLoading}
+                      emptyState={emptyState}
                     />
                   </div>
                 )}
               </div>
-            ) : (
-              <DataTable
-                columns={columns}
-                data={data}
-                getRowId={getRowId}
-                onRowClick={onRowClick}
-                rowSelection={rowSelection}
-                onRowSelectionChange={onRowSelectionChange}
-                isLoading={isLoading}
-                emptyState={emptyState}
-                {...(pagination ? {
-                  page: pagination.page,
-                  perPage: pagination.perPage,
-                  totalPages: pagination.totalPages,
-                  onPageChange: pagination.onPageChange,
-                  onPerPageChange: pagination.onPerPageChange
-                } : {})}
-              />
             )
           )}
         </div>
+        
+        {/* Pagination below the rounded card container */}
+        {pagination && data.length > 0 && (
+          <div className="mt-6 flex justify-end px-2">
+            <Pagination 
+              variant="standard"
+              currentPage={pagination.page}
+              totalPages={pagination.totalPages}
+              pageSize={pagination.perPage}
+              hasNextPage={pagination.page < pagination.totalPages}
+              hasPreviousPage={pagination.page > 1}
+              onNextPage={() => pagination.onPageChange(pagination.page + 1)}
+              onPreviousPage={() => pagination.onPageChange(pagination.page - 1)}
+              onPageSizeChange={pagination.onPerPageChange}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

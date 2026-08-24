@@ -268,6 +268,56 @@ class UserController extends Controller
         return response()->json($user);
     }
 
+    public function uploadAvatar(Request $request, string $id)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048', // 2MB max
+        ]);
+
+        $user = User::with('roleAssignments')->findOrFail($id);
+        
+        if (!$this->checkHrScope($request, $user)) {
+            return response()->json(['message' => 'Unauthorized to update this user avatar.'], 403);
+        }
+
+        try {
+            $disk = config('filesystems.default');
+            $path = $request->file('avatar')->store('avatars', $disk);
+
+            if (!$path) {
+                throw new \Exception('Failed to store file');
+            }
+
+            $oldAvatarUrl = $user->avatar_url;
+            $avatarUrl = \Illuminate\Support\Facades\Storage::disk($disk)->url($path);
+
+            $before = $user->toArray();
+            $user->avatar_url = $avatarUrl;
+            $user->save();
+
+            if ($oldAvatarUrl) {
+                try {
+                    $oldBasename = basename(parse_url($oldAvatarUrl, PHP_URL_PATH));
+                    \Illuminate\Support\Facades\Storage::disk($disk)->delete('avatars/' . $oldBasename);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to delete old avatar: ' . $e->getMessage());
+                }
+            }
+
+            AuditLogger::log($request, 'upload_avatar', 'user', $user->id, $before, ['avatar_url' => $avatarUrl]);
+
+            return response()->json([
+                'url' => $avatarUrl,
+                'path' => $path,
+                'avatar_url' => $avatarUrl,
+                'user' => $user->only(['id', 'name', 'avatar_url'])
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Avatar upload failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to upload avatar. Please check server storage permissions.'], 500);
+        }
+    }
+
     public function show(Request $request, string $id)
     {
         $userQuery = User::with(['department', 'team', 'designation', 'roleAssignments'])->where('id', $id);

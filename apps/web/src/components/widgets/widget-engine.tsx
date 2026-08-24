@@ -140,8 +140,8 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     }
   }, [preferencesData, availableWidgets, hydrateFromServer]);
 
-  const savePreferences = (allLayouts: Record<string, unknown[]>, dismissed: string[], states: Record<string, any>) => {
-    if (!preferencesData || !isDirtyRef.current) return;
+  const savePreferences = (allLayouts: Record<string, unknown[]>, dismissed: string[], states: Record<string, any>, force = false) => {
+    if (!preferencesData || (!isDirtyRef.current && !force)) return;
 
     if (layoutTimeoutRef.current) {
       clearTimeout(layoutTimeoutRef.current);
@@ -158,6 +158,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
               widget_states: states,
             },
           }),
+        });
+        import("@/lib/query-keys").then(({ queryKeys }) => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
         });
       } catch {
         // Ignore layout save errors silently
@@ -176,6 +179,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
     const isDifferent = JSON.stringify(layouts) !== JSON.stringify(allLayouts);
     if (!isDifferent) return; // Prevent unnecessary re-renders (Fix for #2)
 
+    isDirtyRef.current = true;
     setLayouts((prev) => (JSON.stringify(prev) === JSON.stringify(allLayouts) ? prev : allLayouts));
     savePreferences(allLayouts, dismissedWidgets, widgetStates);
   };
@@ -202,6 +206,9 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
             widget_states: {},
           },
         }),
+      });
+      import("@/lib/query-keys").then(({ queryKeys }) => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       });
     } catch {
       // Ignore
@@ -230,7 +237,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   };
 
   const handleSaveLayout = () => {
-    savePreferences(layouts, dismissedWidgets, widgetStates);
+    savePreferences(layouts, dismissedWidgets, widgetStates, true);
     isDirtyRef.current = false;
     import("sonner").then(({ toast }) => toast.success("Dashboard layout saved"));
   };

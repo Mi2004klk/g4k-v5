@@ -388,6 +388,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     // Admin & Master Data APIs
     Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage');
     Route::middleware('capability:users.hr.manage|users.employee.manage')->group(function () {
+        Route::post('/users/{id}/avatar', [UserController::class, 'uploadAvatar']);
         Route::post('/users/bulk', [UserController::class, 'bulk']);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::patch('/users/{id}/status', [UserController::class, 'updateStatus']);

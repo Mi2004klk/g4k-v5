@@ -23,6 +23,7 @@ export interface User {
   work_schedule_id?: number | string;
   roles?: string[];
   role_assignments?: { role: string }[];
+  avatar_url?: string;
 }
 
 interface UserEditDialogProps {
@@ -45,6 +46,8 @@ export function UserEditDialog({ isOpen, onOpenChange, user, departments, design
           <DialogDescription className="sr-only">Edit an existing employee record.</DialogDescription>
         </DialogHeader>
         <UserForm
+          userId={user?.id}
+          avatarUrl={user?.avatar_url}
           defaultValues={user ? {
             name: user.name,
             email: user.email,
