@@ -720,29 +720,29 @@
 - [x] Export (selected/filtered) to Excel
 
 ## 9.4 Department Management (Admin Only)
-- [ ] Create dept (name, description)
-- [ ] Auto-assigned code (DEP-001)
-- [ ] Edit name + description
-- [ ] Archive/delete (blocked if employees assigned)
-- [ ] View headcount + active/inactive status
-- [ ] Department Detail — 3 tabs:
-  - [ ] Employees (sync membership)
-  - [ ] HRs (assign HR managers — controls scoping everywhere)
-  - [ ] Teams (create/rename/delete sub-teams)
-- [ ] Cannot delete dept with assigned employees (enforced)
+- [x] Create dept (name, description)
+- [x] Auto-assigned code (DEP-001)
+- [x] Edit name + description
+- [x] Archive/delete (blocked if employees assigned)
+- [x] View headcount + active/inactive status
+- [x] Department Detail — 3 tabs:
+  - [x] Employees (sync membership)
+  - [x] HRs (assign HR managers — controls scoping everywhere)
+  - [x] Teams (create/rename/delete sub-teams)
+- [x] Cannot delete dept with assigned employees (enforced)
 
 ## 9.5 Designations
-- [ ] View all + count per title
-- [ ] Add new
-- [ ] Cannot delete title held by any employee
-- [ ] Used in employee create/edit forms
+- [x] View all + count per title
+- [x] Add new
+- [x] Cannot delete title held by any employee
+- [x] Used in employee create/edit forms
 
 ## 9.6 Full Employee Record (360° View) for all employee
-- [ ] Personal Info tab
-- [ ] Attendance tab (color-coded calendar)
-- [ ] Leave History tab
-- [ ] Projects & Tasks tab (all assignments + statuses)
-- [ ] Activity Log tab (logins, profile changes, actions)
+- [x] Personal Info tab
+- [x] Attendance tab (color-coded calendar)
+- [x] Leave History tab
+- [x] Projects & Tasks tab (all assignments + statuses)
+- [x] Activity Log tab (logins, profile changes, actions)
 
 ---
 

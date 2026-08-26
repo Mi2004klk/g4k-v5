@@ -299,12 +299,13 @@ export function DesignationsTab() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8 text-neutral-400 hover:text-rose-600"
+                className="h-8 w-8 text-neutral-400 hover:text-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={(desig.users_count || 0) > 0}
                 onClick={(e) => {
                   e.stopPropagation();
                   setConfirmState({ isOpen: true, type: "delete", payload: desig });
                 }}
-                title="Delete"
+                title={(desig.users_count || 0) > 0 ? "Cannot delete designation with assigned employees" : "Delete"}
               >
                 <AppIcon name="trash" size="sm" />
               </Button>
