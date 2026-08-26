@@ -245,9 +245,9 @@ export default function DashboardLayout({
           )}>
             <div className="flex items-center h-24 shrink-0 px-4 justify-center overflow-hidden py-4">
               {isCollapsed ? (
-                <Image src="/icon.png" alt="Logo" width={56} height={56} className="rounded-[var(--radius)] shrink-0 transition-opacity duration-300" priority />
+                <Image src="/icon.png" alt="Logo" width={56} height={56} className="rounded-[var(--radius)] shrink-0 transition-opacity duration-300 dark:invert" priority />
               ) : (
-                <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={200} height={60} className="object-contain w-full max-w-[200px] h-auto max-h-14 transition-opacity duration-300" priority />
+                <Image src="/landscape-logo.png" alt="Workplace OS Logo" width={200} height={60} className="object-contain w-full max-w-[200px] h-auto max-h-14 transition-opacity duration-300 dark:invert" priority />
               )}
             </div>
 

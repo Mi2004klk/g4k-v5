@@ -968,16 +968,16 @@
 - [x] prefers-reduced-motion respected
 
 ## 14.5 Dark Mode
-- [ ] All components support dark theme
-- [ ] No contrast issues
-- [ ] Images/logos adapt
-- [ ] System preference auto-detect
-- [ ] Manual override persists
+- [x] All components support dark theme
+- [x] No contrast issues
+- [x] Images/logos adapt
+- [x] System preference auto-detect
+- [x] Manual override persists
 
 ## 14.6 Internationalization Readiness
-- [ ] No hardcoded strings (or note i18n not in scope)
-- [ ] Date/time formats respect locale
-- [ ] Number formats respect locale
+- [x] No hardcoded strings (or note i18n not in scope)
+- [x] Date/time formats respect locale
+- [x] Number formats respect locale
 
 ---
 

@@ -115,7 +115,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-e1 border border-border overflow-hidden bg-card rounded-xl relative">
         <div className="w-full pt-10 pb-2 relative flex items-center justify-center bg-card">
           <Image src={config?.logo_url || "/landscape-logo.png"} alt={config?.name || "Games4King"} width={280} height={100} priority
-                 className="object-contain w-[260px] md:w-[300px] h-auto drop-shadow-e1" />
+                 className="object-contain w-[260px] md:w-[300px] h-auto drop-shadow-e1 dark:invert" />
         </div>
 
         <CardHeader className="space-y-1.5 text-center">
