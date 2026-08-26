@@ -94,9 +94,11 @@ export function AdminAttendanceTable() {
 
   useEffect(() => {
     const channel = subscribe("private-company.global");
-    channel.bind(".attendance-updated", () => {
-      queryClient.invalidateQueries({ queryKey: ['attendance', 'admin-list'] });
-    });
+    if (channel) {
+      channel.listen(".attendance-updated", () => {
+        queryClient.invalidateQueries({ queryKey: ['attendance', 'admin-list'] });
+      });
+    }
   }, [subscribe, dateFrom, deptFilter, queryClient]);
 
   const { data: departments = [] } = useQuery({

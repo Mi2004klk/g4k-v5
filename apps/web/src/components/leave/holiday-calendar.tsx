@@ -209,7 +209,7 @@ export function HolidayCalendar() {
                 
                 const CellContent = (
                   <div
-                    className={`relative flex flex-col items-center justify-center p-1 rounded-[var(--radius)] text-xs transition-all aspect-square w-full
+                    className={`relative flex flex-col items-center justify-center p-1 rounded-[var(--radius)] text-xs transition-all min-h-[80px] sm:min-h-[100px] w-full
                       ${isCurrentMonth ? "text-neutral-900 dark:text-neutral-100" : "text-neutral-400 dark:text-neutral-600 opacity-50"}
                       ${holiday ? 
                         "bg-primary-50 dark:bg-primary-900/20 font-semibold border border-primary-100 dark:border-primary-800/50 cursor-pointer hover:bg-primary-100 dark:hover:bg-primary-900/40" 

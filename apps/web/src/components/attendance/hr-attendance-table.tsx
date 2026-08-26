@@ -98,7 +98,7 @@ export function HrAttendanceTable() {
   useEffect(() => {
     const channel = subscribe("private-company.global");
     if (channel) {
-      channel.bind(".attendance-updated", () => {
+      channel.listen(".attendance-updated", () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.hrAttendance(selectedDate, deptFilter) });
       });
     }
