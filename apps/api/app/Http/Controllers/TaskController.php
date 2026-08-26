@@ -819,6 +819,9 @@ class TaskController extends Controller
         }
 
         foreach ($task->assignees as $assignee) {
+            if ($approval && $assignee->id === $approval->submitted_by) {
+                continue; // ProcessApprovalDecision already notified this user
+            }
             
             \App\Services\NotificationService::send(
                 (int) $assignee->id,
@@ -874,6 +877,9 @@ class TaskController extends Controller
         \App\Services\DashboardCacheService::invalidateGlobal();
 
         foreach ($task->assignees as $assignee) {
+            if ($approval && $assignee->id === $approval->submitted_by) {
+                continue; // ProcessApprovalDecision already notified this user
+            }
             \App\Services\NotificationService::send(
                 (int) $assignee->id,
                 'task_assigned',

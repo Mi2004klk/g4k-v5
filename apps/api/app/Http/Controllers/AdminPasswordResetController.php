@@ -43,13 +43,15 @@ class AdminPasswordResetController extends Controller
             $frontendUrl = config('app.frontend_url');
             $resetLink = rtrim($frontendUrl, '/') . "/reset-password?token={$token}&email=" . urlencode($user->email);
 
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Password Reset Approved',
-                'body' => "Your password reset request was approved. You can reset it here: {$resetLink}",
-                'type' => 'security',
-                'priority' => 'urgent',
-            ]);
+            \App\Services\NotificationService::send(
+                $user->id,
+                'security',
+                'Password Reset Approved',
+                "Your password reset request was approved. You can reset it here: {$resetLink}",
+                null,
+                $resetLink,
+                'urgent'
+            );
         }
 
         return response()->json([
@@ -70,13 +72,14 @@ class AdminPasswordResetController extends Controller
         $resetRequest->admin_id = $request->user()->id;
         $resetRequest->save();
 
-        Notification::create([
-            'user_id' => $resetRequest->user_id,
-            'title' => 'Password Reset Rejected',
-            'body' => "Your password reset request was rejected by an administrator.",
-            'type' => 'security',
-            'priority' => 'normal',
-        ]);
+        \App\Services\NotificationService::send(
+            $resetRequest->user_id,
+            'security',
+            'Password Reset Rejected',
+            "Your password reset request was rejected by an administrator.",
+            null,
+            '/dashboard'
+        );
 
         return response()->json(['message' => 'Password reset request rejected']);
     }

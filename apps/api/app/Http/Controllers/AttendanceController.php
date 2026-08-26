@@ -963,12 +963,14 @@ class AttendanceController extends Controller
 
         // Notify affected employee
         if ($day->user_id !== $actor->id) {
-            \App\Models\Notification::create([
-                'user_id' => $day->user_id,
-                'title' => 'Attendance Corrected',
-                'body' => "Your attendance for {$day->date} was corrected by {$actor->name}.",
-                'type' => 'info',
-            ]);
+            \App\Services\NotificationService::send(
+                $day->user_id,
+                'attendance_correction',
+                'Attendance Corrected',
+                "Your attendance for {$day->date} was corrected by {$actor->name}.",
+                null,
+                '/dashboard/attendance'
+            );
         }
 
         $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');

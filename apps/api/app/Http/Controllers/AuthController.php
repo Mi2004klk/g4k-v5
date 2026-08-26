@@ -243,13 +243,15 @@ class AuthController extends Controller
                 
                 $adminIds = RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
                 foreach ($adminIds as $adminId) {
-                    \App\Models\Notification::create([
-                        'user_id' => $adminId,
-                        'title' => 'Suspicious Login Detected',
-                        'body' => "User {$user->name} ({$user->email}) logged in from an unrecognized IP: {$ip} (" . ($location ?? 'Unknown Location') . ") (User-Agent: {$request->header('User-Agent')}).",
-                        'type' => 'security',
-                        'priority' => 'urgent'
-                    ]);
+                    \App\Services\NotificationService::send(
+                        $adminId,
+                        'security',
+                        'Suspicious Login Detected',
+                        "User {$user->name} ({$user->email}) logged in from an unrecognized IP: {$ip} (" . ($location ?? 'Unknown Location') . ") (User-Agent: {$request->header('User-Agent')}).",
+                        null,
+                        '/dashboard/settings',
+                        'urgent'
+                    );
                 }
                 
                 if (\App\Support\SmtpSettings::isConfigured() && $user->email) {
