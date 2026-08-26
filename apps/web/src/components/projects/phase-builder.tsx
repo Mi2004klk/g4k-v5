@@ -290,6 +290,7 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
                         <AppIcon name="plus" className="w-4 h-4 mr-2" />
                         Add Task to Phase
                       </Button>
+                      </div>
                     </div>
                   )}
                 </div>
