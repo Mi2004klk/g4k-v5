@@ -66,7 +66,7 @@ export function QuickTaskWidget() {
     if (!title.trim()) return toast.error("Please enter a task title");
     if (!assigneeId) return toast.error("Please select an assignee");
     
-    const payload: any = { title, assignees: [assigneeId], priority, notify_global_chat: true };
+    const payload: any = { title, assignees: [assigneeId], priority, notify_global_chat: true, scope: "global" };
     if (description.trim()) payload.description = description;
     if (startDate) payload.start_date = startDate;
     if (dueDate) payload.due_date = dueDate;

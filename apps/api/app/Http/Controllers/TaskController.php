@@ -485,7 +485,7 @@ class TaskController extends Controller
                     $this->notifyProjectConversation($task, "✅ **Task Completed**: \"{$task->title}\" was marked as done by " . $user->name);
                 }
 
-                $shouldNotify = $request->input('notify_global_chat', false);
+                $shouldNotify = $request->input('notify_global_chat', false) || $task->scope === 'global';
                 if ($shouldNotify) {
                     try {
                         event(new \App\Events\TaskCompleted($task, $user));
@@ -771,6 +771,14 @@ class TaskController extends Controller
                 $msg .= "\n\n**Note**: " . $request->input('optional_message');
             }
             $this->notifyProjectConversation($task, $msg);
+        }
+
+        if ($task->scope === 'global') {
+            try {
+                event(new \App\Events\TaskCompleted($task, $request->user()));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to dispatch TaskCompleted event: " . $e->getMessage());
+            }
         }
 
         foreach ($task->assignees as $assignee) {

@@ -236,19 +236,19 @@
 - [x] Personal Time Clock widget
 
 ## 4.4 Admin Dashboard
-- [ ] Total Employees widget (active/inactive + dept breakdown)
-- [ ] Active Projects widget (company-wide count)
-- [ ] Today's Attendance widget (present/absent/late)
-- [ ] Pending Approvals widget (leave + task + project)
-- [ ] Recent Activity widget (audit feed)
-- [ ] Quick Task widget
+- [x] Total Employees widget (active/inactive + dept breakdown)
+- [x] Active Projects widget (company-wide count)
+- [x] Today's Attendance widget (present/absent/late)
+- [x] Pending Approvals widget (leave + task + project)
+- [x] Recent Activity widget (audit feed)
+- [x] Quick Task widget
 
 ## 4.5 Quick Task Widget
 - [x] Search/select employee
 - [x] Title, description, priority, due date inputs
-- [ ] Create → task appears in employee's list
-- [ ] Employee receives instant notification
-- [ ] On employee completion → auto-post to Global Chat
+- [x] Create → task appears in employee's list
+- [x] Employee receives instant notification
+- [x] On employee completion → auto-post to Global Chat
 
 ---
 
