@@ -925,39 +925,42 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             </Button>
           </div>
         </div>
-      </div>    {/* Row 2: Filters */}
-        {viewMode !== "qa" && (
-          <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm flex flex-col md:flex-row md:items-center gap-2">
-            <div className="flex items-center gap-2 px-2 border-b md:border-b-0 md:border-r border-neutral-200 dark:border-neutral-800 pb-2 md:pb-0 shrink-0">
-              <Select value={filterPreset} onValueChange={setFilterPreset}>
-                <SelectTrigger className="w-[140px] h-8 text-[11px] font-bold bg-neutral-50 dark:bg-neutral-800 border-none shadow-none text-primary-600 dark:text-primary-400">
-                  <SelectValue placeholder="Saved Filters" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom" className="text-xs">Custom Filter</SelectItem>
-                  <SelectItem value="my_active" className="text-xs">My Active Tasks</SelectItem>
-                  <SelectItem value="high_priority" className="text-xs">High Priority</SelectItem>
-                  <SelectItem value="overdue" className="text-xs">Overdue</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {viewMode === "kanban" && (
-                <Select value={groupBy} onValueChange={(v) => setGroupBy(v as any)}>
-                  <SelectTrigger className="w-[120px] h-8 text-[11px] font-bold border-none shadow-none">
-                    <AppIcon name="list" size="xs" className="mr-1.5 text-neutral-400" />
-                    <SelectValue placeholder="Group By" />
+      </div>
+      
+      {/* Row 2: Filters */}
+      {viewMode !== "qa" && (
+        <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm w-full">
+          <Toolbar
+            prependFilters={
+              <div className="flex items-center gap-2 pr-2 border-r border-neutral-200 dark:border-neutral-800 shrink-0">
+                <Select value={filterPreset} onValueChange={setFilterPreset}>
+                  <SelectTrigger className="w-[140px] h-8 text-[11px] font-bold bg-neutral-50 dark:bg-neutral-800 border-none shadow-none text-primary-600 dark:text-primary-400">
+                    <SelectValue placeholder="Saved Filters" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="status" className="text-xs">Group: Status</SelectItem>
-                    <SelectItem value="priority" className="text-xs">Group: Priority</SelectItem>
-                    <SelectItem value="assignee" className="text-xs">Group: Assignee</SelectItem>
+                    <SelectItem value="custom" className="text-xs">Custom Filter</SelectItem>
+                    <SelectItem value="my_active" className="text-xs">My Active Tasks</SelectItem>
+                    <SelectItem value="high_priority" className="text-xs">High Priority</SelectItem>
+                    <SelectItem value="overdue" className="text-xs">Overdue</SelectItem>
                   </SelectContent>
                 </Select>
-              )}
-            </div>
-            <div className="flex-1">
-            <Toolbar
-              searchQuery={searchQuery}
+                
+                {viewMode === "kanban" && (
+                  <Select value={groupBy} onValueChange={(v) => setGroupBy(v as any)}>
+                    <SelectTrigger className="w-[120px] h-8 text-[11px] font-bold border-none shadow-none">
+                      <AppIcon name="list" size="xs" className="mr-1.5 text-neutral-400" />
+                      <SelectValue placeholder="Group By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="status" className="text-xs">Group: Status</SelectItem>
+                      <SelectItem value="priority" className="text-xs">Group: Priority</SelectItem>
+                      <SelectItem value="assignee" className="text-xs">Group: Assignee</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            }
+            searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               searchPlaceholder="Search tasks..."
               sortBy={sortBy}
@@ -1034,9 +1037,8 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 setSortOrder("desc");
               }}
             />
-            </div>
-          </div>
-        )}
+        </div>
+      )}
 
       {isError ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-center mt-2">

@@ -41,6 +41,7 @@ export interface ToolbarProps {
   sortOptions?: { label: string; value: string }[]
   searchInputId?: string
   actions?: React.ReactNode
+  prependFilters?: React.ReactNode
 }
 
 function useDebounce<T>(value: T, delay?: number): T {
@@ -65,6 +66,7 @@ export function Toolbar({
   sortOptions = [],
   searchInputId,
   actions,
+  prependFilters,
 }: ToolbarProps): React.JSX.Element {
   const [localSearch, setLocalSearch] = useState(searchQuery)
   const debouncedSearch = useDebounce(localSearch, 250)
@@ -83,6 +85,7 @@ export function Toolbar({
 
   const activeFiltersCount = filters.reduce((acc, f) => {
     if (f.type === "checkbox-group" && Array.isArray(f.value)) return acc + f.value.length
+    if (f.type === "date-range") return acc + (f.value?.from || f.value?.to ? 1 : 0)
     if (f.value && f.value !== "all") return acc + 1
     return acc
   }, 0)
@@ -226,10 +229,11 @@ export function Toolbar({
   const [isSearchExpanded, setIsSearchExpanded] = useState(!!searchQuery)
 
   return (
-    <div className="flex flex-col w-full gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3 w-full">
-        {/* Left Side: Search */}
-        <div className="flex items-center gap-2 shrink-0 flex-1 min-w-[200px]">
+    <div className="flex flex-col w-full gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+        {/* Left Side: Search & Prepend Filters */}
+        <div className="flex items-center gap-2 shrink-0 flex-1 min-w-0">
+          {prependFilters}
           {!hideSearch && (
             <div className={cn("transition-all duration-300 ease-in-out relative shrink-0", isSearchExpanded ? "w-full max-w-[260px] md:max-w-[300px]" : "w-9")}>
               {isSearchExpanded ? (

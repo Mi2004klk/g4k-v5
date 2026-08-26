@@ -166,7 +166,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col gap-3 h-full min-h-0 w-[85vw] md:w-auto md:min-w-[320px] md:max-w-[360px] flex-shrink-0 snap-center px-4 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
+      className={`flex flex-col gap-3 h-full min-h-0 w-[85vw] md:w-auto md:min-w-[320px] md:max-w-[360px] flex-shrink-0 snap-center px-3 pt-0 transition-colors border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 ${
         isOver
           ? "bg-secondary/20"
           : "bg-transparent"
@@ -377,7 +377,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
     >
       <div className="relative group/board h-full flex-1 min-h-0">
         <div className="absolute inset-0">
-          <div className={`h-full flex flex-nowrap md:grid ${statusFilter && statusFilter !== 'all' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 relative`}>
+          <div className={`h-full flex flex-nowrap md:grid ${statusFilter && statusFilter !== 'all' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-3 overflow-x-auto pb-4 snap-x snap-mandatory md:snap-none hide-scrollbar -mx-3 px-3 md:mx-0 md:px-0 relative`}>
             {COLUMNS.filter(col => !statusFilter || statusFilter === "all" || col.id === statusFilter).map((col) => (
             <DroppableColumn
               key={col.id}

@@ -2,15 +2,15 @@ import { StatusType } from "../components/badge";
 
 export const taskStatus = {
   todo:        { dot: 'bg-neutral-400', bg: 'bg-neutral-100 dark:bg-neutral-800', text: 'text-neutral-600 dark:text-neutral-400', border: 'border-t-neutral-400/50', label: 'To Do' },
-  in_progress: { dot: 'bg-primary-500', bg: 'bg-primary-50 dark:bg-primary-950', text: 'text-primary-700 dark:text-primary-300', border: 'border-t-primary-500/50', label: 'In Progress' },
+  in_progress: { dot: 'bg-blue-500', bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', border: 'border-t-blue-500/50', label: 'In Progress' },
   review:      { dot: 'bg-amber-500',   bg: 'bg-amber-50 dark:bg-amber-950',     text: 'text-amber-700 dark:text-amber-300',   border: 'border-t-amber-500/50',   label: 'In Review' },
   done:        { dot: 'bg-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-t-emerald-500/50', label: 'Done' },
 } as const;
 
 export const priority = {
   urgent: { bar: 'bg-rose-500',    status: 'danger'  as StatusType, icon: 'flag',     label: 'Urgent' },
-  high:   { bar: 'bg-orange-500',  status: 'warning' as StatusType, icon: 'arrowUp',  label: 'High' },
-  medium: { bar: 'bg-yellow-500',  status: 'info'    as StatusType, icon: 'minus',    label: 'Medium' },
+  high:   { bar: 'bg-amber-500',   status: 'warning' as StatusType, icon: 'arrowUp',  label: 'High' },
+  medium: { bar: 'bg-blue-500',    status: 'info'    as StatusType, icon: 'minus',    label: 'Medium' },
   low:    { bar: 'bg-neutral-300 dark:bg-neutral-600', status: 'neutral' as StatusType, icon: 'arrowDown', label: 'Low' },
 } as const;
 
