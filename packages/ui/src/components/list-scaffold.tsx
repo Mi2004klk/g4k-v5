@@ -101,41 +101,45 @@ export function ListScaffold<TData, TValue>({
   return (
     <div className="flex flex-col h-full space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
-            {title}
-          </h1>
-          {description && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              {description}
-            </p>
-          )}
-        </div>
-        {actions && (
-          <div className="flex items-center gap-2">
-            {actions}
-            {viewMode && onViewModeChange && (
-              <div className="flex bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg ml-2">
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("list")}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
-                >
-                  <AppIcon name="list" size="sm" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onViewModeChange("grid")}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
-                >
-                  <AppIcon name="grid" size="sm" />
-                </button>
-              </div>
+      {(title || description || actions || (viewMode && onViewModeChange)) && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            {title && (
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-900 dark:text-white">
+                {title}
+              </h1>
+            )}
+            {description && (
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                {description}
+              </p>
             )}
           </div>
-        )}
-      </div>
+          {actions && (
+            <div className="flex items-center gap-2">
+              {actions}
+              {viewMode && onViewModeChange && (
+                <div className="flex bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg ml-2">
+                  <button
+                    type="button"
+                    onClick={() => onViewModeChange("list")}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                  >
+                    <AppIcon name="list" size="sm" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onViewModeChange("grid")}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                  >
+                    <AppIcon name="grid" size="sm" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Bulk Actions or Toolbar */}
       {!hideToolbar && (

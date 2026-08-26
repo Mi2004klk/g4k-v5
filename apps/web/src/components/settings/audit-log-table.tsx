@@ -129,10 +129,8 @@ export function AuditLogTable() {
   ];
 
   return (
-    <div className="h-full py-4">
-      <ListScaffold
-        title="Audit Log"
-        hideSearch={true}
+    <ListScaffold
+      hideSearch={true}
         filters={[
           {
             key: "action",
@@ -205,7 +203,6 @@ export function AuditLogTable() {
             </div>
           </div>
         )}
-      />
-    </div>
+    </ListScaffold>
   );
 }

@@ -118,10 +118,8 @@ export function LoginAttemptsTable() {
   ];
 
   return (
-    <div className="h-full py-4">
-      <ListScaffold
-        title="Login Attempts"
-        hideSearch={true}
+    <ListScaffold
+      hideSearch={true}
         filters={[
           {
             key: "status",
@@ -188,7 +186,6 @@ export function LoginAttemptsTable() {
             </div>
           </div>
         )}
-      />
-    </div>
+    </ListScaffold>
   );
 }

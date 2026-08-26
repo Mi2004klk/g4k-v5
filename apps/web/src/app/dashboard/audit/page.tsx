@@ -17,7 +17,7 @@ export default function AuditLogsPage() {
       maxWidth="readable"
     >
       <Tabs value={tab} onValueChange={setTab} className="w-full h-full flex flex-col">
-        <div className="flex-none pb-4 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="flex-none border-b border-neutral-200 dark:border-neutral-800">
           <TabsList className="bg-transparent space-x-6 w-full justify-start h-auto p-0">
             <TabsTrigger 
               value="events" 

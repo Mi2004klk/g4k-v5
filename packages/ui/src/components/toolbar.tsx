@@ -86,11 +86,11 @@ export function Toolbar({
   const activeFiltersCount = filters.reduce((acc, f) => {
     if (f.type === "checkbox-group" && Array.isArray(f.value)) return acc + f.value.length
     if (f.type === "date-range") return acc + (f.value?.from || f.value?.to ? 1 : 0)
-    if (f.value && f.value !== "all") return acc + 1
+    if (f.value && f.value !== "all" && f.value !== "") return acc + 1
     return acc
   }, 0)
 
-  const hasActiveFilters = activeFiltersCount > 0 || (searchQuery?.length || 0) > 0
+  const hasActiveFilters = activeFiltersCount > 0 || (searchQuery && searchQuery.trim().length > 0)
 
   const handleClearAll = () => {
     setLocalSearch("")
