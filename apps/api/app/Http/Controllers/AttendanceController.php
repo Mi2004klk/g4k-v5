@@ -199,8 +199,24 @@ class AttendanceController extends Controller
 
         foreach ($items as $day) {
             $dayLogs = $logsByDate->get($day->date, collect());
-            $projects = $dayLogs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
-            $tasks = $dayLogs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
+            
+            $projectLogs = [];
+            $taskLogs = [];
+            foreach ($dayLogs as $l) {
+                $p = $l->project->name ?? 'Unknown';
+                $t = $l->task->title ?? $l->description;
+                $projectLogs[$p] = ($projectLogs[$p] ?? 0) + (int)$l->minutes_logged;
+                $taskLogs[$t] = ($taskLogs[$t] ?? 0) + (int)$l->minutes_logged;
+            }
+
+            $projects = [];
+            foreach ($projectLogs as $name => $mins) {
+                $projects[] = ['name' => $name, 'duration_minutes' => $mins];
+            }
+            $tasks = [];
+            foreach ($taskLogs as $name => $mins) {
+                $tasks[] = ['name' => $name, 'duration_minutes' => $mins];
+            }
             
             $day->projects = $projects;
             $day->tasks = $tasks;
@@ -253,10 +269,23 @@ class AttendanceController extends Controller
             ->where('user_id', $user->id)
             ->where('log_date', $date)
             ->get();
-            
-        $projects = $logs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
-        $tasks = $logs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
+        $projectLogs = [];
+        $taskLogs = [];
+        foreach ($logs as $l) {
+            $p = $l->project->name ?? 'Unknown';
+            $t = $l->task->title ?? $l->description;
+            $projectLogs[$p] = ($projectLogs[$p] ?? 0) + (int)$l->minutes_logged;
+            $taskLogs[$t] = ($taskLogs[$t] ?? 0) + (int)$l->minutes_logged;
+        }
 
+        $projects = [];
+        foreach ($projectLogs as $name => $mins) {
+            $projects[] = ['name' => $name, 'duration_minutes' => $mins];
+        }
+        $tasks = [];
+        foreach ($taskLogs as $name => $mins) {
+            $tasks[] = ['name' => $name, 'duration_minutes' => $mins];
+        }
         $scheduleId = $user->work_schedule_id;
         $schedule = null;
         if ($scheduleId) {
@@ -720,9 +749,23 @@ class AttendanceController extends Controller
             ->where('log_date', $date)
             ->get();
             
-        $projects = $logs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
-        $tasks = $logs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
+        $projectLogs = [];
+        $taskLogs = [];
+        foreach ($logs as $l) {
+            $p = $l->project->name ?? 'Unknown';
+            $t = $l->task->title ?? $l->description;
+            $projectLogs[$p] = ($projectLogs[$p] ?? 0) + (int)$l->minutes_logged;
+            $taskLogs[$t] = ($taskLogs[$t] ?? 0) + (int)$l->minutes_logged;
+        }
 
+        $projects = [];
+        foreach ($projectLogs as $name => $mins) {
+            $projects[] = ['name' => $name, 'duration_minutes' => $mins];
+        }
+        $tasks = [];
+        foreach ($taskLogs as $name => $mins) {
+            $tasks[] = ['name' => $name, 'duration_minutes' => $mins];
+        }
         // Calculate standard seconds for hrDay and meDay
         $scheduleId = $targetUser->work_schedule_id;
         $schedule = null;
@@ -795,8 +838,24 @@ class AttendanceController extends Controller
 
         foreach ($items as $day) {
             $dayLogs = $logsByDate->get($day->date, collect());
-            $projects = $dayLogs->map(fn($l) => $l->project->name ?? 'Unknown')->unique()->values();
-            $tasks = $dayLogs->map(fn($l) => $l->task->title ?? $l->description)->unique()->values();
+            
+            $projectLogs = [];
+            $taskLogs = [];
+            foreach ($dayLogs as $l) {
+                $p = $l->project->name ?? 'Unknown';
+                $t = $l->task->title ?? $l->description;
+                $projectLogs[$p] = ($projectLogs[$p] ?? 0) + (int)$l->minutes_logged;
+                $taskLogs[$t] = ($taskLogs[$t] ?? 0) + (int)$l->minutes_logged;
+            }
+
+            $projects = [];
+            foreach ($projectLogs as $name => $mins) {
+                $projects[] = ['name' => $name, 'duration_minutes' => $mins];
+            }
+            $tasks = [];
+            foreach ($taskLogs as $name => $mins) {
+                $tasks[] = ['name' => $name, 'duration_minutes' => $mins];
+            }
             
             $day->projects = $projects;
             $day->tasks = $tasks;

@@ -71,8 +71,8 @@ interface AttendanceDay {
   late_minutes: number;
   status: string;
   has_open_shift: boolean;
-  projects?: string[];
-  tasks?: string[];
+  projects?: { name: string; duration_minutes: number }[];
+  tasks?: { name: string; duration_minutes: number }[];
 }
 
 type DayStatus = "present" | "overtime" | "late" | "on_leave" | "absent" | "holiday" | "nodata";
@@ -382,12 +382,29 @@ export function AttendanceHistoryCalendar({
       </div>
 
       {/* ── Calendar / Strip ───────────────────────────── */}
-      <MonthCalendarGrid
-        days={allDays}
-        holidays={holidays}
-        currentDate={currentDate}
-        onDayClick={handleDayClick}
-      />
+      <div 
+        className="touch-pan-y"
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          e.currentTarget.dataset.touchStartX = touch.clientX.toString();
+        }}
+        onTouchEnd={(e) => {
+          const startX = e.currentTarget.dataset.touchStartX;
+          if (!startX) return;
+          const endX = e.changedTouches[0].clientX;
+          const diff = parseFloat(startX) - endX;
+          if (diff > 50) nextMonth();
+          if (diff < -50) prevMonth();
+          delete e.currentTarget.dataset.touchStartX;
+        }}
+      >
+        <MonthCalendarGrid
+          days={allDays}
+          holidays={holidays}
+          currentDate={currentDate}
+          onDayClick={handleDayClick}
+        />
+      </div>
 
       {/* ── Legend ─────────────────────────────────────── */}
       <CalendarLegend compact={isMobile} />
@@ -538,12 +555,17 @@ function DayDetailContent({
         <div>
           <h4 className="text-sm font-bold mb-2">Projects Worked</h4>
           <div className="flex flex-wrap gap-2">
-            {data.projects.map((p: string, i: number) => (
+            {data.projects.map((p: { name: string; duration_minutes: number }, i: number) => (
               <span
                 key={i}
-                className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full"
+                className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full flex items-center gap-1.5"
               >
-                {p}
+                <span>{p.name}</span>
+                {p.duration_minutes > 0 && (
+                  <span className="text-neutral-400 font-mono text-[9px] font-medium border-l border-neutral-300 dark:border-neutral-700 pl-1.5">
+                    {Math.floor(p.duration_minutes / 60)}h {p.duration_minutes % 60}m
+                  </span>
+                )}
               </span>
             ))}
           </div>
@@ -555,12 +577,17 @@ function DayDetailContent({
         <div>
           <h4 className="text-sm font-bold mb-2">Tasks Completed</h4>
           <div className="flex flex-wrap gap-2">
-            {data.tasks.map((t: string, i: number) => (
+            {data.tasks.map((t: { name: string; duration_minutes: number }, i: number) => (
               <span
                 key={i}
-                className="text-[10px] bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 px-2 py-1 rounded-full"
+                className="text-[10px] bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 px-2 py-1 rounded-full flex items-center gap-1.5"
               >
-                {t}
+                <span>{t.name}</span>
+                {t.duration_minutes > 0 && (
+                  <span className="opacity-60 font-mono text-[9px] font-medium border-l border-primary-200 dark:border-primary-800 pl-1.5">
+                    {Math.floor(t.duration_minutes / 60)}h {t.duration_minutes % 60}m
+                  </span>
+                )}
               </span>
             ))}
           </div>

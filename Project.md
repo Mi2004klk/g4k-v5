@@ -282,27 +282,27 @@
 - [x] Timer persists across page refresh (uses server state, not just client)
 
 ## 5.4 Late & Overtime Tracking
-- [ ] Late = clock-in > scheduled start + grace period
-- [ ] Late badge shown on calendar for that day
-- [ ] Overtime = hours beyond standard schedule
-- [ ] Overtime shown in distinct color on calendar
-- [ ] Timezone: company-configured (default Asia/Kolkata)
-- [ ] Timezone respected in all date/time calculations server-side
+- [x] Late = clock-in > scheduled start + grace period
+- [x] Late badge shown on calendar for that day
+- [x] Overtime = hours beyond standard schedule
+- [x] Overtime shown in distinct color on calendar
+- [x] Timezone: company-configured (default Asia/Kolkata)
+- [x] Timezone respected in all date/time calculations server-side
 
 ## 5.5 Attendance History Calendar
-- [ ] Color legend: 🟢 Present · 🟡 Late · 🔵 Overtime · 🟣 Leave · ⬜ Absent · 🏖️ Holiday
-- [ ] Click day → full punch timeline (clock-in, breaks, clock-out)
-- [ ] Device/location used per punch
-- [ ] Time logged per project/task for the day
-- [ ] Total hours + overtime
-- [ ] Projects worked + tasks completed
-- [ ] Calendar responsive on mobile (swipe between months)
+- [x] Color legend: 🟢 Present · 🟡 Late · 🔵 Overtime · 🟣 Leave · ⬜ Absent · 🏖️ Holiday
+- [x] Click day → full punch timeline (clock-in, breaks, clock-out)
+- [x] Device/location used per punch
+- [x] Time logged per project/task for the day
+- [x] Total hours + overtime
+- [x] Projects worked + tasks completed
+- [x] Calendar responsive on mobile (swipe between months)
 
 ## 5.6 Shift Reminders
-- [ ] Shift start alert: 15 min before (configurable) → employee
-- [ ] Missed clock-in alert: 30 min after start (configurable) → HR
-- [ ] Both times configurable in System Settings → Reminders
-- [ ] Reminders fire even if app closed (server-side cron/scheduler)
+- [x] Shift start alert: 15 min before (configurable) → employee
+- [x] Missed clock-in alert: 30 min after start (configurable) → HR
+- [x] Both times configurable in System Settings → Reminders
+- [x] Reminders fire even if app closed (server-side cron/scheduler)
 
 ## 5.7 Attendance Corrections (HR/Admin)
 - [ ] Open team attendance console
