@@ -60,7 +60,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 export function ProfileSecuritySection() {
   const queryClient = useQueryClient();
   const authUser = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const router = useRouter();
 
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
@@ -112,7 +112,7 @@ export function ProfileSecuritySection() {
       
       const revokedSession = uniqueSessions.find((s) => String(s.id) === String(sessionId));
       if (revokedSession?.is_current) {
-        logout();
+        clearAuth();
         router.push("/login");
         toast.info("You have been logged out because your current session was revoked.");
         return;
@@ -314,7 +314,7 @@ export function ProfileSecuritySection() {
                         <div key={session.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
                           <div className="flex items-start gap-4">
                             <div className="w-10 h-10 rounded-full bg-white dark:bg-neutral-800 shadow-sm border border-neutral-100 dark:border-neutral-700 flex items-center justify-center shrink-0">
-                              <AppIcon name={getDeviceIcon(session.user_agent) as any} className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+                              <AppIcon name={getDeviceIcon(session.user_agent) === "monitor" ? "computer" : getDeviceIcon(session.user_agent) as any} className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export function ProfileSecuritySection() {
                                 )}
                               </div>
                               <div className="text-xs text-neutral-500 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <span className="flex items-center gap-1"><AppIcon name="mapPin" className="w-3 h-3" /> {session.ip_address || "Unknown IP"}</span>
+                                <span className="flex items-center gap-1"><AppIcon name="location" className="w-3 h-3" /> {session.ip_address || "Unknown IP"}</span>
                                 <span>•</span>
                                 <span>{session.last_used_at ? `Active ${formatDistanceToNow(new Date(session.last_used_at), { addSuffix: true })}` : "Unknown Activity"}</span>
                               </div>
@@ -344,7 +344,7 @@ export function ProfileSecuritySection() {
                             className="shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-900/50 h-8 text-xs font-semibold"
                             onClick={() => setRevokeState({ isOpen: true, session })}
                           >
-                            <AppIcon name="logOut" className="w-3.5 h-3.5 mr-1" />
+                            <AppIcon name="logout" className="w-3.5 h-3.5 mr-1" />
                             Revoke
                           </Button>
                         </div>
