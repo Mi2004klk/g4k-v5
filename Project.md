@@ -59,13 +59,13 @@
 # SECTION 2 — AUTHENTICATION & ONBOARDING
 
 ## 2.1 Login Screen UI/UX
-- [ ] Login supports: email, employee ID (G4K-###), username
-- [ ] "Sign In" button shows loading animation on submit
-- [ ] Failed login shows clear, friendly error message
-- [ ] Form is responsive on all screen sizes perfectly
-- [ ] Keyboard accessible (Tab order, Enter to submit)
-- [ ] Autofill/autocomplete attributes set correctly
-- [ ] Remember Me: Persist the authenticated session securely so users remain logged in across app close, reopen, and subsequent launches without needing to sign in again.
+- [x] Login supports: email, employee ID (G4K-###), username
+- [x] "Sign In" button shows loading animation on submit
+- [x] Failed login shows clear, friendly error message
+- [x] Form is responsive on all screen sizes perfectly
+- [x] Keyboard accessible (Tab order, Enter to submit)
+- [x] Autofill/autocomplete attributes set correctly
+- [x] Remember Me: Persist the authenticated session securely so users remain logged in across app close, reopen, and subsequent launches without needing to sign in again.
 
 ## 2.2 Multi-Role Login (Dual-Role)
 - [x] Role Selection screen appears when user has multiple roles
@@ -76,12 +76,12 @@
 - [x] Role-scoped queries respect selected role (not just UI)
 
 ## 2.3 Account Lockout
-- [ ] After 5 failed login attempts → account locked 10 minutes
-- [ ] Live countdown timer shown during lockout
-- [ ] Auto-unlock after 10 minutes (no admin intervention needed)
-- [ ] Failed attempts counter resets after successful login
-- [ ] Failed login attempts logged (audit trail)
-- [ ] Rate limiting on auth endpoint (server-side enforcement)
+- [x] After 5 failed login attempts → account locked 10 minutes
+- [x] Live countdown timer shown during lockout
+- [x] Auto-unlock after 10 minutes (no admin intervention needed)
+- [x] Failed attempts counter resets after successful login
+- [x] Failed login attempts logged (audit trail)
+- [x] Rate limiting on auth endpoint (server-side enforcement)
 
 ## 2.4 First-Login Forced Password Change
 - [ ] Forced password change screen blocks all other access

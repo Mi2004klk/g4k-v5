@@ -198,7 +198,7 @@ export default function LoginPage() {
                       <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   ) : lockoutSeconds > 0 ? (
-                    `Try again in ${Math.ceil(lockoutSeconds / 60)}m ${lockoutSeconds % 60}s`
+                    `Try again in ${Math.floor(lockoutSeconds / 60)}m ${String(lockoutSeconds % 60).padStart(2, '0')}s`
                   ) : (
                     "Sign In"
                   )}
