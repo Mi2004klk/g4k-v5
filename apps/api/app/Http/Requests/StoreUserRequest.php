@@ -34,6 +34,9 @@ class StoreUserRequest extends FormRequest
             'roles' => 'required|array|min:1',
             'roles.*' => 'string|in:employee,hr,super_admin',
             'work_schedule_id' => 'nullable|exists:work_schedules,id',
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_contact_phone' => 'nullable|string|max:50',
+            'emergency_contact_relation' => 'nullable|string|max:100',
         ];
     }
 }

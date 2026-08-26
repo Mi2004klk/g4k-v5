@@ -59,6 +59,9 @@ export function UserEditDialog({ isOpen, onOpenChange, user, departments, design
             employee_id: user.employee_code || user.employee_id || "",
             work_schedule_id: user.work_schedule_id?.toString() || "",
             roles: user.roles || user.role_assignments?.map((r: { role: string }) => r.role) || ["employee"],
+            emergency_contact_name: (user as any).emergency_contact_name || "",
+            emergency_contact_phone: (user as any).emergency_contact_phone || "",
+            emergency_contact_relation: (user as any).emergency_contact_relation || "",
           } : undefined}
           departments={departments}
           designations={designations}

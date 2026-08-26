@@ -703,21 +703,21 @@
 - [x] Privacy: Public shows contact, Private shows name + role only
 
 ## 9.2 Create Employee Account (HR/Admin)
-- [ ] "Add Employee" button
-- [ ] Form: Full Name, Email (unique), Username, Phone, Employee ID (auto G4K-### if blank), Department, Team (auto-filtered by dept), Job Designation (multiple role), Work Schedule (shift), Role(s) (multi), profile photo, emergency contact.
-- [ ] Email uniqueness validated
-- [ ] Auto-generated secure temp password
-- [ ] Welcome email sent if SMTP configured, else HR sees temp password
-- [ ] Force password change on first login
-- [ ] Auto-onboarding triggered
+- [x] "Add Employee" button
+- [x] Form: Full Name, Email (unique), Username, Phone, Employee ID (auto G4K-### if blank), Department, Team (auto-filtered by dept), Job Designation (multiple role), Work Schedule (shift), Role(s) (multi), profile photo, emergency contact.
+- [x] Email uniqueness validated
+- [x] Auto-generated secure temp password
+- [x] Welcome email sent if SMTP configured, else HR sees temp password
+- [x] Force password change on first login
+- [x] Auto-onboarding triggered
 
 ## 9.3 Manage Existing Employees
-- [ ] Edit profile
-- [ ] Activate (restore access)
-- [ ] Deactivate (block login, preserve data)
-- [ ] Reset Password (new temp + force change)
-- [ ] Delete (soft-delete, recoverable, revoke sessions immediately)
-- [ ] Export (selected/filtered) to Excel
+- [x] Edit profile
+- [x] Activate (restore access)
+- [x] Deactivate (block login, preserve data)
+- [x] Reset Password (new temp + force change)
+- [x] Delete (soft-delete, recoverable, revoke sessions immediately)
+- [x] Export (selected/filtered) to Excel
 
 ## 9.4 Department Management (Admin Only)
 - [ ] Create dept (name, description)

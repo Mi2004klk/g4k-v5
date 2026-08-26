@@ -24,6 +24,9 @@ export const userSchema = z.object({
   employee_id: z.string().optional(),
   work_schedule_id: z.string().optional(),
   roles: z.array(z.string()).min(1, "At least one role is required"),
+  emergency_contact_name: z.string().optional(),
+  emergency_contact_phone: z.string().optional(),
+  emergency_contact_relation: z.string().optional(),
 });
 
 export type UserFormValues = z.infer<typeof userSchema>;
@@ -81,6 +84,9 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
       employee_id: "",
       work_schedule_id: "",
       roles: ["employee"],
+      emergency_contact_name: "",
+      emergency_contact_phone: "",
+      emergency_contact_relation: "",
     },
   });
 
@@ -253,7 +259,24 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
             />
           </div>
         </div>
-        <div>
+        <div className="pt-4 mt-2 border-t">
+          <h4 className="font-semibold mb-3 text-neutral-800 dark:text-neutral-200">Emergency Contact (Optional)</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="ec-name" className="block mb-1 font-semibold">Contact Name</label>
+              <Input id="ec-name" {...register("emergency_contact_name")} placeholder="Jane Doe" />
+            </div>
+            <div>
+              <label htmlFor="ec-phone" className="block mb-1 font-semibold">Contact Phone</label>
+              <Input id="ec-phone" {...register("emergency_contact_phone")} placeholder="+1 234 567 8900" />
+            </div>
+            <div>
+              <label htmlFor="ec-relation" className="block mb-1 font-semibold">Relation</label>
+              <Input id="ec-relation" {...register("emergency_contact_relation")} placeholder="Spouse" />
+            </div>
+          </div>
+        </div>
+        <div className="pt-4 mt-2 border-t">
           <label className="block mb-2 font-semibold">Roles</label>
           <Controller
             name="roles"

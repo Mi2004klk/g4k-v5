@@ -25,6 +25,8 @@ class User extends Authenticatable
     public $autoNumberField = 'employee_id';
     public $autoNumberType = 'employee';
 
+    protected $appends = ['emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -120,5 +122,23 @@ class User extends Authenticatable
         if (in_array('hr', $roles)) return 'hr';
 
         return 'employee';
+    }
+
+    public function getEmergencyContactNameAttribute()
+    {
+        $data = json_decode($this->emergency_contact, true);
+        return $data['name'] ?? null;
+    }
+
+    public function getEmergencyContactPhoneAttribute()
+    {
+        $data = json_decode($this->emergency_contact, true);
+        return $data['phone'] ?? null;
+    }
+
+    public function getEmergencyContactRelationAttribute()
+    {
+        $data = json_decode($this->emergency_contact, true);
+        return $data['relation'] ?? null;
     }
 }

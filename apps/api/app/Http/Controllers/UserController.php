@@ -160,6 +160,11 @@ class UserController extends Controller
                 'must_change_password' => $mustChange,
                 'password_changed_at' => now(),
                 'status' => 'active',
+                'emergency_contact' => json_encode([
+                    'name' => $validated['emergency_contact_name'] ?? null,
+                    'phone' => $validated['emergency_contact_phone'] ?? null,
+                    'relation' => $validated['emergency_contact_relation'] ?? null,
+                ]),
             ]);
 
             foreach ($roles as $roleName) {
@@ -237,6 +242,15 @@ class UserController extends Controller
                     $updateData[$field] = $validated[$field];
                 }
             }
+            
+            if (array_key_exists('emergency_contact_name', $validated) || array_key_exists('emergency_contact_phone', $validated) || array_key_exists('emergency_contact_relation', $validated)) {
+                $emergencyContact = json_decode($user->emergency_contact, true) ?? [];
+                if (array_key_exists('emergency_contact_name', $validated)) $emergencyContact['name'] = $validated['emergency_contact_name'];
+                if (array_key_exists('emergency_contact_phone', $validated)) $emergencyContact['phone'] = $validated['emergency_contact_phone'];
+                if (array_key_exists('emergency_contact_relation', $validated)) $emergencyContact['relation'] = $validated['emergency_contact_relation'];
+                $updateData['emergency_contact'] = json_encode($emergencyContact);
+            }
+
             if (!empty($updateData)) {
                 $user->update($updateData);
             }
