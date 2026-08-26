@@ -305,38 +305,38 @@
 - [x] Reminders fire even if app closed (server-side cron/scheduler)
 
 ## 5.7 Attendance Corrections (HR/Admin)
-- [ ] Open team attendance console
-- [ ] Find employee + day
-- [ ] "Correct Attendance" action
-- [ ] Add/edit/remove punch events
-- [ ] Preview corrected totals before save
-- [ ] Reason field required (cannot save empty)
-- [ ] After save:
-  - [ ] Employee auto-notified
-  - [ ] Audit record: before + after values
-  - [ ] Correction attributed to corrector
-- [ ] Corrections immutable (cannot edit a correction; only new correction)
+- [x] Open team attendance console
+- [x] Find employee + day
+- [x] "Correct Attendance" action
+- [x] Add/edit/remove punch events
+- [x] Preview corrected totals before save
+- [x] Reason field required (cannot save empty)
+- [x] After save:
+  - [x] Employee auto-notified
+  - [x] Audit record: before + after values
+  - [x] Correction attributed to corrector
+- [x] Corrections immutable (cannot edit a correction; only new correction)
 
 ## 5.8 HR Team Attendance Console
 ### Today's Status Tab
-- [ ] Live table: every team member's status (working/break/absent/leave)
-- [ ] Clock-in/out times, break durations, hours worked
-- [ ] Click row → full day breakdown + history + trends
-- [ ] Table auto-updates via realtime (no manual refresh)
+- [x] Live table: every team member's status (working/break/absent/leave)
+- [x] Clock-in/out times, break durations, hours worked
+- [x] Click row → full day breakdown + history + trends
+- [x] Table auto-updates via realtime (no manual refresh)
 ### Trends & Graphs Tab
-- [ ] Weekly/monthly attendance charts per employee
-- [ ] Year-view heatmap
-- [ ] HR-level team consistency graphs
+- [x] Weekly/monthly attendance charts per employee
+- [x] Year-view heatmap
+- [x] HR-level team consistency graphs
 
 ## 5.9 Admin Company Attendance Console
-- [ ] Calendar Heatmap tab (per-day attendance rate, click for detail)
-- [ ] Overview Table tab (filter by date range, dept, employee, status; exportable)
-- [ ] Analytics & Trends tab (KPI cards + weekly/monthly trends)
+- [x] Calendar Heatmap tab (per-day attendance rate, click for detail)
+- [x] Overview Table tab (filter by date range, dept, employee, status; exportable)
+- [x] Analytics & Trends tab (KPI cards + weekly/monthly trends)
 
 ## 5.10 Weekly Summary Email
-- [ ] Auto-sent to Admins every Sunday 9:00 AM
-- [ ] Contains: attendance metrics, leave overview, task completions, project status
-- [ ] Fails gracefully if SMTP not configured
+- [x] Auto-sent to Admins every Sunday 9:00 AM
+- [x] Contains: attendance metrics, leave overview, task completions, project status
+- [x] Fails gracefully if SMTP not configured
 
 ---
 

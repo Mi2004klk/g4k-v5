@@ -40,7 +40,11 @@ class SendWeeklySummaryCommand extends Command
         ];
 
         foreach ($recipients as $user) {
-            Mail::to($user->email)->send(new WeeklySummaryMail($user, $metrics));
+            try {
+                Mail::to($user->email)->send(new WeeklySummaryMail($user, $metrics));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send weekly summary to {$user->email}: " . $e->getMessage());
+            }
         }
 
         $this->info("Weekly summary sent to " . count($recipients) . " recipients.");
