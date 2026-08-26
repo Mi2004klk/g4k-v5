@@ -132,7 +132,7 @@ export function ProfileGeneralSection() {
               <div className="relative group cursor-pointer" onClick={() => setShowUploadPopup(true)}>
                 <Avatar className="w-24 h-24 shadow-sm border border-neutral-200 dark:border-neutral-800 transition-opacity group-hover:opacity-80">
                   <AvatarImage src={resolveAvatarUrl(authUser?.avatar_url)} alt={authUser?.name || "User avatar"} />
-                  <AvatarFallback className="text-2xl">{authUser?.name?.substring(0, 2)?.toUpperCase() || "UN"}</AvatarFallback>
+                  <AvatarFallback name={authUser?.name || "UN"} className="text-2xl" />
                 </Avatar>
                 <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <AppIcon name="upload" className="w-6 h-6 text-white" />

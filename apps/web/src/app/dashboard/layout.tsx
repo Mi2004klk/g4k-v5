@@ -33,7 +33,8 @@ import { PinnedItems } from "@/components/layout/pinned-items";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { ReverbProvider } from "@/hooks/use-reverb";
 import { ErrorBoundary } from "@g4k/ui/components";
-import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
+import { HelpOverlay, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
+import { resolveAvatarUrl } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -360,6 +361,7 @@ export default function DashboardLayout({
                         <DropdownMenuTrigger asChild>
                           <button className="outline-none shrink-0 rounded-full focus-visible:ring-2 focus-visible:ring-primary-500" aria-label="User menu">
                             <Avatar size="md">
+                              {authUser?.avatar_url && <AvatarImage src={resolveAvatarUrl(authUser.avatar_url)} alt={authUser?.name || "User"} />}
                               <AvatarFallback name={authUser?.name || "U"} />
                             </Avatar>
                           </button>

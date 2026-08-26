@@ -140,7 +140,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
             <div className="relative group cursor-pointer" onClick={() => setShowUploadPopup(true)}>
               <Avatar className="w-20 h-20 shadow-sm border border-neutral-200 dark:border-neutral-800 transition-opacity group-hover:opacity-80">
                 <AvatarImage src={resolveAvatarUrl(localAvatarUrl)} alt={watch("name") || "User avatar"} />
-                <AvatarFallback className="text-xl">{watch("name")?.substring(0, 2)?.toUpperCase() || "UN"}</AvatarFallback>
+                <AvatarFallback name={watch("name") || "UN"} className="text-xl" />
               </Avatar>
               <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <AppIcon name="upload" className="w-6 h-6 text-white" />
