@@ -306,7 +306,7 @@ export function CreateProjectDialog({
           <div className="flex items-center gap-3">
             {coverImagePreview && (
               <div className="relative h-12 w-12 shrink-0">
-                <Image src={coverImagePreview} alt="Cover Preview" fill className="object-cover rounded-xl border border-orange-200 dark:border-orange-800 shadow-sm" />
+                <Image src={coverImagePreview} alt="Cover Preview" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover rounded-xl border border-orange-200 dark:border-orange-800 shadow-sm" />
               </div>
             )}
             <Button type="button" variant="outline" onClick={() => setShowUploadPopup(true)} className="h-11 bg-white dark:bg-neutral-900 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-xl">

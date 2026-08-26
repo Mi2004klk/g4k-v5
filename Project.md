@@ -924,15 +924,15 @@
 - [x] Queued actions show pending state
 
 ## 13.5 Responsive Breakpoints
-- [ ] 320px (small phones) — usable, no overflow
-- [ ] 375px (iPhone SE/standard)
-- [ ] 414px (large phones)
-- [ ] 768px (tablets)
-- [ ] 1024px (small desktops)
-- [ ] 1440px+ (large desktops)
-- [ ] No element overflows viewport
-- [ ] Text scales appropriately
-- [ ] Images lazy-loaded + responsive (srcset/sizes)
+- [x] 320px (small phones) — usable, no overflow
+- [x] 375px (iPhone SE/standard)
+- [x] 414px (large phones)
+- [x] 768px (tablets)
+- [x] 1024px (small desktops)
+- [x] 1440px+ (large desktops)
+- [x] No element overflows viewport
+- [x] Text scales appropriately
+- [x] Images lazy-loaded + responsive (srcset/sizes)
 
 ---
 

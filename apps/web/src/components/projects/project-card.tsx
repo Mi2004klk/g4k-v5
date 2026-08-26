@@ -51,7 +51,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
         {/* Cover Image Thumbnail */}
         {project.cover_image ? (
           <div className="relative h-12 w-12 rounded-lg bg-neutral-100 dark:bg-neutral-800 shrink-0 border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-            <Image src={project.cover_image} alt="Project Cover" fill className="object-cover" />
+            <Image src={project.cover_image} alt="Project Cover" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
           </div>
         ) : (
           <div className="relative h-12 w-12 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center shrink-0 border border-primary-100 dark:border-primary-800/50 text-primary-500">
@@ -144,7 +144,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
       {/* Cover Image Block (separated from content) */}
       {project.cover_image && (
         <div className="relative h-28 w-full bg-neutral-100 dark:bg-neutral-800 shrink-0 border-b border-neutral-100 dark:border-neutral-800">
-          <Image src={project.cover_image} alt="Project Cover" fill className="object-cover" />
+          <Image src={project.cover_image} alt="Project Cover" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
         </div>
       )}
 

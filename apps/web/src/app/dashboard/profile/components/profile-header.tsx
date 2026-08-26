@@ -87,6 +87,7 @@ export function ProfileHeader() {
                 width={96}
                 height={96}
                 className="w-full h-full object-cover"
+                sizes="(max-width: 768px) 100vw, 33vw"
               />
             ) : (
               <span className="uppercase">{profile?.name ? profile.name.substring(0, 2) : "KR"}</span>
@@ -164,7 +165,7 @@ export function ProfileHeader() {
             ) : (
               <div className="w-full flex flex-col items-center py-4 relative">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-neutral-900 shadow-md relative group">
-                  <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                  <Image src={previewUrl} alt="Preview" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Button
                       variant="ghost"
