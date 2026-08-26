@@ -807,16 +807,16 @@
 - [x] All settings enforced server-side
 
 ## 11.4 Holidays
-- [ ] Add/edit/remove holidays
-- [ ] Recurring toggle
-- [ ] Feb 29 → Feb 28 in non-leap years
-- [ ] Appear in dashboard widget
+- [x] Add/edit/remove holidays
+- [x] Recurring toggle
+- [x] Feb 29 → Feb 28 in non-leap years
+- [x] Appear in dashboard widget
 
 ## 11.5 Mail / SMTP
-- [ ] SMTP config form
-- [ ] Send Test Email button
-- [ ] Saved credentials masked after save
-- [ ] Triggers: welcome emails, password resets, weekly summary, suspicious login alerts
+- [x] SMTP config form
+- [x] Send Test Email button
+- [x] Saved credentials masked after save
+- [x] Triggers: welcome emails, password resets, weekly summary, suspicious login alerts
 
 ## 11.6 Notification Preferences
 - [ ] Per-event-type control: email vs in-app
