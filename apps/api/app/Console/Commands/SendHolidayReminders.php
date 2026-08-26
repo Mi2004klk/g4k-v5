@@ -72,14 +72,17 @@ class SendHolidayReminders extends Command
             }
 
             foreach ($users as $user) {
-                $notificationService->sendGlobalNotification(
-                    $user,
-                    "📌 Upcoming {$typeLabel}: {$holiday->name} is coming up on " . Carbon::parse($holiday->date)->format('M d, Y') . ".",
-                    "/dashboard",
-                    [
+                $notificationService->send(
+                    userId: $user->id,
+                    type: 'holiday_reminder',
+                    title: 'Holiday & Event Reminder',
+                    body: "📌 Upcoming {$typeLabel}: {$holiday->name} is coming up on " . Carbon::parse($holiday->date)->format('M d, Y') . ".",
+                    data: [
                         'lock_key' => $lockKey,
                         'holiday_id' => $holiday->id,
-                    ]
+                    ],
+                    link: "/dashboard",
+                    priority: 'normal'
                 );
             }
             $this->info("Sent reminders for {$typeLabel}: {$holiday->name}");

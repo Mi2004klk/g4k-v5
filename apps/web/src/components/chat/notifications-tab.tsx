@@ -42,7 +42,17 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   info: "Information",
   alert: "Alerts",
   task_assigned: "Task Assigned",
+  task_status: "Task Status",
   task_completed: "Task Completed",
+  task_reminder: "Task Reminders",
+  project: "Project Updates",
+  message: "Chat Messages",
+  security: "Security Alerts",
+  feedback: "Feedback & Complaints",
+  holiday_reminder: "Holiday Reminders",
+  shift_reminder: "Shift Reminders",
+  missed_clock_in: "Missed Clock-in",
+  attendance_correction: "Attendance Correction",
 };
 
 function notificationTypeLabel(type?: string): string {
@@ -114,21 +124,35 @@ export function NotificationsTab() {
 
   const getIcon = (type: string) => {
     switch (type) {
+      case "approval_decided":
       case "leave_decision":
         return <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center shrink-0"><AppIcon name="success" className="text-emerald-600 dark:text-emerald-400" /></div>;
+      case "approval_pending":
       case "task_assigned":
+      case "task_status":
+      case "task_completed":
+      case "project":
       case "project_submission":
         return <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center shrink-0"><AppIcon name="briefcase" className="text-primary-600 dark:text-primary-400" /></div>;
       case "message":
+      case "chat":
         return <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center shrink-0"><AppIcon name="chat" className="text-blue-600 dark:text-blue-400" /></div>;
       case "security":
+      case "missed_clock_in":
         return <div className="h-10 w-10 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center shrink-0"><AppIcon name="error" className="text-rose-600 dark:text-rose-400" /></div>;
       case "announcement":
         return <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-950 flex items-center justify-center shrink-0"><AppIcon name="mailOpen" className="text-amber-600 dark:text-amber-400" /></div>;
       case "holiday_reminder":
+      case "task_reminder":
         return <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0"><AppIcon name="clock" className="text-green-600 dark:text-green-400" /></div>;
       case "feedback":
         return <div className="h-10 w-10 rounded-full bg-cyan-100 dark:bg-cyan-950 flex items-center justify-center shrink-0"><AppIcon name="info" className="text-cyan-600 dark:text-cyan-400" /></div>;
+      case "shift_reminder":
+        return <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-950 flex items-center justify-center shrink-0"><AppIcon name="teamAttendance" className="text-amber-600 dark:text-amber-400" /></div>;
+      case "attendance_correction":
+        return <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center shrink-0"><AppIcon name="edit" className="text-blue-600 dark:text-blue-400" /></div>;
+      case "system":
+        return <div className="h-10 w-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0"><AppIcon name="settings" className="text-neutral-500" /></div>;
       default:
         return <div className="h-10 w-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0"><AppIcon name="bell" className="text-neutral-500" /></div>;
     }

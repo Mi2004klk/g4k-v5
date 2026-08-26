@@ -23,6 +23,13 @@ class NotificationController extends Controller
             $query->whereIn('priority', ['high', 'urgent']);
         }
 
+        if ($request->query('bell') === 'true') {
+            $query->where(function($q) {
+                $q->whereIn('priority', ['high', 'urgent'])
+                  ->orWhere('type', 'system');
+            });
+        }
+
         if ($request->filled('type') && $request->type !== 'all') {
             $query->where('type', $request->type);
         }

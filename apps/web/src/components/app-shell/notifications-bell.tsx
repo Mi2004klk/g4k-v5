@@ -19,7 +19,7 @@ export function NotificationsBell() {
   const { subscribe, leaveChannel, isConnected } = useReverb();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [filter, setFilter] = useState<"recent" | "unread" | "important">("recent");
+  const [filter, setFilter] = useState<"recent" | "unread">("recent");
 
   const dismissedNotificationIds = useUIStore(useShallow((s) => s.dismissedNotificationIds));
   const clearPopupNotifications = useUIStore((s) => s.clearPopupNotifications);
@@ -34,9 +34,8 @@ export function NotificationsBell() {
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.notifications(filter),
     queryFn: () => {
-      let qs = "";
-      if (filter === "unread") qs = "?unreadOnly=true";
-      else if (filter === "important") qs = "?importantOnly=true";
+      let qs = "?bell=true";
+      if (filter === "unread") qs += "&unreadOnly=true";
       return apiFetch(`/notifications${qs}`);
     },
     enabled: !!user,
@@ -158,20 +157,32 @@ export function NotificationsBell() {
 
   const getIcon = (type: string) => {
     switch (type) {
+      case "approval_decided":
       case "leave_decision":
         return <AppIcon name="success" className=" text-emerald-500 shrink-0" />;
+      case "approval_pending":
       case "task_assigned":
+      case "project":
         return <AppIcon name="briefcase" className=" text-primary-500 shrink-0" />;
       case "message":
         return <AppIcon name="chat" className=" text-blue-500 shrink-0" />;
+      case "security":
       case "missed_clock_in":
         return <AppIcon name="error" className=" text-rose-600 shrink-0" />;
+      case "holiday_reminder":
+        return <AppIcon name="clock" className=" text-green-500 shrink-0" />;
       case "shift_reminder":
         return <AppIcon name="teamAttendance" className=" text-amber-500 shrink-0" />;
       case "attendance_correction":
         return <AppIcon name="edit" className=" text-blue-500 shrink-0" />;
+      case "announcement":
+        return <AppIcon name="mailOpen" className=" text-amber-500 shrink-0" />;
+      case "feedback":
+        return <AppIcon name="info" className=" text-cyan-500 shrink-0" />;
+      case "system":
+        return <AppIcon name="settings" className=" text-neutral-500 shrink-0" />;
       default:
-        return <AppIcon name="error" className=" text-amber-500 shrink-0" />;
+        return <AppIcon name="bell" className=" text-neutral-500 shrink-0" />;
     }
   };
 
@@ -267,16 +278,6 @@ export function NotificationsBell() {
               }`}
             >
               Unread
-            </button>
-            <button 
-              onClick={() => setFilter("important")} 
-              className={`px-3 py-1 text-xs font-semibold rounded-[var(--radius)] transition-colors ${
-                filter === "important" 
-                  ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" 
-                  : "text-neutral-500 hover:bg-surface-2"
-              }`}
-            >
-              Important
             </button>
           </div>
           
