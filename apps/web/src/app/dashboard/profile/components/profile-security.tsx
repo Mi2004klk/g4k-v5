@@ -75,6 +75,7 @@ export function ProfileSecuritySection() {
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
+    mode: "onChange",
     defaultValues: {
       currentPassword: "",
       newPassword: "",

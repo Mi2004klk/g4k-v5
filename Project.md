@@ -878,11 +878,11 @@
 - [x] Company (read-only)
 
 ## 12.3 Security & Devices Tab
-- [ ] Change password form (current + new)
-- [ ] New password meets policy
-- [ ] Validation feedback as user types
-- [ ] Active sessions: device, IP, last active
-- [ ] Revoke session (current = immediate logout)
+- [x] Change password form (current + new)
+- [x] New password meets policy
+- [x] Validation feedback as user types
+- [x] Active sessions: device, IP, last active
+- [x] Revoke session (current = immediate logout)
 
 ## 12.4 Preferences & Support Tab
 - [ ] Directory visibility (Public/Private)
