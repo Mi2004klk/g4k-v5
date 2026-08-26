@@ -13,6 +13,7 @@ export interface GanttTask extends TaskModel {
   created_at?: string;
   blocked_by?: number | string | null;
   project?: { id: number; name: string };
+  priority?: string;
 }
 
 export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: { 
