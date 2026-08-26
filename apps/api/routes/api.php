@@ -320,7 +320,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         // Demo Data Management
         Route::prefix('demo-data')->group(function () {
             Route::get('/', [\App\Http\Controllers\DemoDataController::class, 'getStatus']);
-            Route::delete('/', [\App\Http\Controllers\DemoDataController::class, 'purge']);
+            Route::delete('/purge', [\App\Http\Controllers\DemoDataController::class, 'purge']);
             Route::post('/seed', [\App\Http\Controllers\DemoDataController::class, 'seed']);
         });
     });

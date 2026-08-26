@@ -846,20 +846,20 @@
 - [x] Read-only enforced at DB level
 
 ## 11.11 Demo Data
-- [ ] Populate with sample data
-- [ ] Uses same underlying system (all features work)
-- [ ] Remove Demo Data:
-  - [ ] Typed confirmation required
-  - [ ] Preview with exact counts
-  - [ ] Deletes only demo data, preserves real
-  - [ ] Logged in audit trail
-  - [ ] Re-runnable for re-seeding
-- [ ] After removal: clean production instance
+- [x] Populate with sample data
+- [x] Uses same underlying system (all features work)
+- [x] Remove Demo Data:
+  - [x] Typed confirmation required
+  - [x] Preview with exact counts
+  - [x] Deletes only demo data, preserves real
+  - [x] Logged in audit trail
+  - [x] Re-runnable for re-seeding
+- [x] After removal: clean production instance
 
 ## 11.12 System Jobs
-- [ ] Pending + failed job counts
-- [ ] Retry failed jobs individually
-- [ ] Diagnose missing exports/reminders
+- [x] Pending + failed job counts
+- [x] Retry failed jobs individually
+- [x] Diagnose missing exports/reminders
 
 ---
 
