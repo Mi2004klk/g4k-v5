@@ -21,9 +21,11 @@ use App\Traits\ValidatesPasswordPolicy;
 class AuthController extends Controller
 {
     use ValidatesPasswordPolicy;
-    private function createAuthCookies($refreshToken, $refreshTtlDays = 7)
+    private function createAuthCookies($refreshToken, $refreshTtlDays = 7, $isSession = false)
     {
         $isProduction = config('app.env') === 'production';
+        
+        $minutes = $isSession ? 0 : (60 * 24 * $refreshTtlDays);
         
         // Task 257 (CSRF Protection Documentation):
         // Since `/auth/refresh` is a GET endpoint, it doesn't mutate state and cannot be exploited cross-origin.
@@ -32,7 +34,7 @@ class AuthController extends Controller
         return cookie(
             'g4k_refresh_token',
             $refreshToken,
-            60 * 24 * $refreshTtlDays, // Dynamic days in minutes
+            $minutes,
             '/',
             null, // domain defaults to request domain
             $isProduction, // secure
@@ -50,8 +52,10 @@ class AuthController extends Controller
             'identifier' => 'required|string',
             'password' => 'required|string',
             'device_name' => 'nullable|string',
+            'remember' => 'nullable|boolean',
         ]);
 
+        $remember = $request->input('remember', false);
         $throttleKey = Str::lower($request->input('identifier')) . '|' . $request->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
@@ -227,8 +231,10 @@ class AuthController extends Controller
             }
         }
 
+        $rememberAbility = $remember ? 'remember:true' : 'remember:false';
+
         // Issue Access Token
-        $accessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole], now()->addMinutes($accessTtl));
+        $accessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole, $rememberAbility], now()->addMinutes($accessTtl));
         $accessTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -236,7 +242,7 @@ class AuthController extends Controller
         $accessToken = $accessTokenObj->plainTextToken;
 
         // Issue Refresh Token
-        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $primaryRole], now()->addDays($refreshTtl));
+        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $primaryRole, $rememberAbility], now()->addDays($refreshTtl));
         $refreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -255,7 +261,7 @@ class AuthController extends Controller
             }
         }
 
-        $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
+        $cookie = $this->createAuthCookies($refreshToken, $refreshTtl, !$remember);
 
         \App\Services\AuditLogger::log($request, 'login', 'User', $user->id, null, null, $user->id);
 
@@ -306,10 +312,15 @@ class AuthController extends Controller
         $rolesCollection = RoleAssignment::where('user_id', $user->id)->pluck('role');
         $user->roles = $rolesCollection->toArray();
         
+        // Extract role and remember status from current token
         $primaryRole = null;
+        $isRemember = false;
         foreach ($tokenInstance->abilities ?? [] as $ability) {
             if (str_starts_with($ability, 'role:')) {
                 $primaryRole = substr($ability, 5);
+            }
+            if ($ability === 'remember:true') {
+                $isRemember = true;
             }
         }
         if (!$primaryRole || !in_array($primaryRole, $user->roles)) {
@@ -349,8 +360,10 @@ class AuthController extends Controller
             }
         }
 
+        $rememberAbility = $isRemember ? 'remember:true' : 'remember:false';
+
         // Issue new Access Token
-        $newAccessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole], now()->addMinutes($accessTtl));
+        $newAccessTokenObj = $user->createToken($deviceName, ['role:' . $primaryRole, $rememberAbility], now()->addMinutes($accessTtl));
         $newAccessTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -358,7 +371,7 @@ class AuthController extends Controller
         $newAccessToken = $newAccessTokenObj->plainTextToken;
 
         // Issue new Refresh Token
-        $newRefreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $primaryRole], now()->addDays($refreshTtl));
+        $newRefreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $primaryRole, $rememberAbility], now()->addDays($refreshTtl));
         $newRefreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -376,7 +389,7 @@ class AuthController extends Controller
             }
         }
 
-        $cookie = $this->createAuthCookies($newRefreshToken, $refreshTtl);
+        $cookie = $this->createAuthCookies($newRefreshToken, $refreshTtl, !$isRemember);
         $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($primaryRole);
 
         return response()->json([
@@ -405,6 +418,16 @@ class AuthController extends Controller
         }
 
         $deviceName = $user->currentAccessToken()?->name ?? 'Unknown Device';
+        
+        $isRemember = false;
+        foreach ($user->currentAccessToken()?->abilities ?? [] as $ability) {
+            if ($ability === 'remember:true') {
+                $isRemember = true;
+                break;
+            }
+        }
+        $rememberAbility = $isRemember ? 'remember:true' : 'remember:false';
+
         $user->currentAccessToken()?->delete();
 
         // Find and delete old refresh token for this device, matching exact IP and user-agent to prevent cross-device deletion
@@ -431,7 +454,7 @@ class AuthController extends Controller
         });
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
 
-        $tokenObj = $user->createToken($deviceName, ['role:' . $request->role], now()->addMinutes($accessTtl));
+        $tokenObj = $user->createToken($deviceName, ['role:' . $request->role, $rememberAbility], now()->addMinutes($accessTtl));
         $tokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
@@ -440,14 +463,14 @@ class AuthController extends Controller
 
         $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
 
-        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $request->role], now()->addDays($refreshTtl));
+        $refreshTokenObj = $user->createToken($deviceName . '_refresh', ['refresh', 'role:' . $request->role, $rememberAbility], now()->addDays($refreshTtl));
         $refreshTokenObj->accessToken->forceFill([
             'ip_address' => $request->ip(),
             'user_agent' => $request->header('User-Agent')
         ])->saveQuietly();
         $refreshToken = $refreshTokenObj->plainTextToken;
 
-        $cookie = $this->createAuthCookies($refreshToken, $refreshTtl);
+        $cookie = $this->createAuthCookies($refreshToken, $refreshTtl, !$isRemember);
 
         $user->roles = $roles;
         $user->update(['active_role' => $request->role]);

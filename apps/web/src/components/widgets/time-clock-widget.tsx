@@ -9,6 +9,7 @@ import { StatusBadge } from "@g4k/ui/components/badge";
 import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
+import { useAttendanceToday } from "@/hooks/use-attendance-today";
 import { offlineEngine } from "@/lib/offline-engine";
 import {
   ConfirmDialog,
@@ -50,13 +51,12 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
   const { data: dashData, isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => ({
-      attendance_today: data?.attendance_today ?? null,
       active_task: data?.active_task ?? null
     }),
     placeholderData: keepPreviousData,
   });
 
-  const todayData = dashData?.attendance_today;
+  const { data: todayData } = useAttendanceToday();
 
   useEffect(() => {
     if (todayData) {

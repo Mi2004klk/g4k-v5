@@ -117,9 +117,15 @@ export const useTimerStore = create<TimerState>()(
       });
     }
 
-    if (!day || events.length === 0) {
+    if (!day) {
       get().stopTimer();
       set({ baseSeconds: 0, lastActiveTimestamp: null });
+      return;
+    }
+
+    if (events.length === 0) {
+      get().stopTimer();
+      set({ baseSeconds: day.total_seconds || 0, lastActiveTimestamp: null });
       return;
     }
 

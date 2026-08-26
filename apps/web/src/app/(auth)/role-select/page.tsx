@@ -34,7 +34,8 @@ export default function RoleSelectPage() {
       setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
       queryClient.clear();
       queryClient.setQueryData(queryKeys.capabilities(), data.capabilities);
-      router.push("/dashboard");
+      const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+      router.push(returnTo || "/dashboard");
     } catch (error) {
       const e = error as { status?: number; message?: string };
       if (e.status === 429) {
@@ -65,8 +66,10 @@ export default function RoleSelectPage() {
       case "hr":
         return { icon: "briefcase", title: "HR Manager", desc: "Manage employees & attendance" };
       case "employee":
-      default:
         return { icon: "profile", title: "Employee", desc: "Access your personal workspace" };
+      default:
+        const formattedTitle = role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        return { icon: "command", title: formattedTitle, desc: "Access your workspace" };
     }
   };
 

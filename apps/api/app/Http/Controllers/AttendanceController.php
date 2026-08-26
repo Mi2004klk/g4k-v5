@@ -107,10 +107,31 @@ class AttendanceController extends Controller
             ->where('date', $date)
             ->first();
 
-        $events = AttendanceEvent::where('user_id', $user->id)
-            ->whereBetween('timestamp', [$date . ' 00:00:00', $date . ' 23:59:59'])
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $startWindow = \Carbon\Carbon::parse($date, $tz)->startOfDay()->utc();
+        $endWindow = \Carbon\Carbon::parse($date, $tz)->addHours(48)->utc();
+
+        $allEvents = AttendanceEvent::where('user_id', $user->id)
+            ->whereBetween('timestamp', [$startWindow, $endWindow])
             ->orderBy('timestamp', 'asc')
             ->get();
+
+        $events = [];
+        $hasStartedOnDate = false;
+        foreach ($allEvents as $ev) {
+            $evDate = $ev->timestamp->copy()->setTimezone($tz)->toDateString();
+            if ($ev->type === 'clock_in') {
+                if ($evDate === $date) {
+                    $hasStartedOnDate = true;
+                } elseif ($evDate !== $date && $hasStartedOnDate) {
+                    break;
+                }
+            }
+            if ($hasStartedOnDate) {
+                $events[] = $ev;
+            }
+        }
+        $events = collect($events);
 
         // Pass work_schedules standard_seconds to frontend
         $scheduleId = $user->work_schedule_id;
@@ -203,13 +224,30 @@ class AttendanceController extends Controller
             ->first();
 
         $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
-        $start = \Carbon\Carbon::parse($date)->setTimezone($tz)->startOfDay()->utc();
-        $end = \Carbon\Carbon::parse($date)->setTimezone($tz)->endOfDay()->utc();
+        $startWindow = \Carbon\Carbon::parse($date)->setTimezone($tz)->startOfDay()->utc();
+        $endWindow = \Carbon\Carbon::parse($date)->setTimezone($tz)->addHours(48)->utc();
 
-        $events = AttendanceEvent::where('user_id', $user->id)
-            ->whereBetween('timestamp', [$start, $end])
+        $allEvents = AttendanceEvent::where('user_id', $user->id)
+            ->whereBetween('timestamp', [$startWindow, $endWindow])
             ->orderBy('timestamp', 'asc')
             ->get();
+            
+        $events = [];
+        $hasStartedOnDate = false;
+        foreach ($allEvents as $ev) {
+            $evDate = $ev->timestamp->copy()->setTimezone($tz)->toDateString();
+            if ($ev->type === 'clock_in') {
+                if ($evDate === $date) {
+                    $hasStartedOnDate = true;
+                } elseif ($evDate !== $date && $hasStartedOnDate) {
+                    break;
+                }
+            }
+            if ($hasStartedOnDate) {
+                $events[] = $ev;
+            }
+        }
+        $events = collect($events);
             
         $logs = \App\Models\TaskTimeLog::with(['project', 'task'])
             ->where('user_id', $user->id)
@@ -266,8 +304,9 @@ class AttendanceController extends Controller
         $activeRole = $user->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
         
-        $cacheKey = "team_today_u{$user->id}_{$date}";
-        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($date, $isAdmin, $user) {
+        $version = \App\Services\DashboardCacheService::getVersion();
+        $cacheKey = "team_today_v{$version}_u{$user->id}_{$date}";
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($date, $isAdmin, $user) {
             $usersQuery = \App\Models\User::select('users.id', 'users.name as user_name', 'users.avatar_url', 'departments.name as department_name')
                 ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
                 ->where('users.status', 'active');
@@ -795,6 +834,8 @@ class AttendanceController extends Controller
         $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
         $start = \Carbon\Carbon::parse($day->date)->setTimezone($tz)->startOfDay()->utc();
         $end = \Carbon\Carbon::parse($day->date)->setTimezone($tz)->endOfDay()->utc();
+
+        \App\Services\DashboardCacheService::invalidateGlobal();
 
         return response()->json([
             'message' => 'Attendance event corrected successfully.',

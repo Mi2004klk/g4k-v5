@@ -44,4 +44,17 @@ class AttendanceUpdated implements ShouldBroadcastNow
     {
         return 'attendance-updated';
     }
+
+    /**
+     * Get the data to broadcast.
+     * Restrict payload to prevent metadata leakage on the global channel.
+     *
+     * @return array<string, mixed>
+     */
+    public function broadcastWith(): array
+    {
+        return [
+            'timestamp' => now()->timestamp
+        ];
+    }
 }

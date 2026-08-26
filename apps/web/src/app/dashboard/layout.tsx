@@ -12,6 +12,7 @@ import { AppIcon } from "@g4k/ui/components";
 import { SheetDescription, Button } from "@g4k/ui/components";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
+import { useAttendanceToday } from "@/hooks/use-attendance-today";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
 import { useTheme } from "next-themes";
@@ -88,7 +89,7 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { data: userCapabilities = EMPTY_CAPABILITIES, isError: isErrorCapabilities, refetch: refetchCapabilities } = useCapabilities();
+  const { data: userCapabilities = EMPTY_CAPABILITIES, isError: isErrorCapabilities, error: errorCapabilities, refetch: refetchCapabilities } = useCapabilities();
   const authUser = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const density = useAuthStore((s) => s.density);
@@ -120,23 +121,30 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (isErrorCapabilities) {
+      const err = errorCapabilities as any;
+      if (err && (err.status === 401 || err.status === 403)) {
+        handleLogout();
+        return;
+      }
       const timer = setTimeout(() => setShowError(true), 3000);
       return () => clearTimeout(timer);
     } else {
       setShowError(false);
     }
-  }, [isErrorCapabilities]);
+  }, [isErrorCapabilities, errorCapabilities]);
 
   const { data: initData } = useDashboardInit({
     staleTime: 5 * 60_000,
   });
   const preferencesData = useMemo(() => initData?.preferences ? { preferences: initData.preferences } : null, [initData]);
 
+  const { data: attendanceData } = useAttendanceToday();
+
   useEffect(() => {
-    if (initData?.attendance_today) {
-      syncWithServer(initData.attendance_today.day, initData.attendance_today.events || [], initData.attendance_today.standard_seconds);
+    if (attendanceData) {
+      syncWithServer(attendanceData.day, attendanceData.events || [], attendanceData.standard_seconds);
     }
-  }, [initData, syncWithServer]);
+  }, [attendanceData, syncWithServer]);
 
 
 
@@ -204,7 +212,10 @@ export default function DashboardLayout({
             <p className="text-sm text-neutral-500">We couldn&apos;t verify your permissions.</p>
           </div>
           <div className="flex items-center gap-3 mt-2">
-            <Button variant="outline" onClick={() => refetchCapabilities()}>Retry</Button>
+            <Button variant="outline" onClick={() => {
+              useAuthStore.getState().clearAuth();
+              window.location.href = "/login";
+            }}>Log in again</Button>
             <Button variant="ghost" onClick={handleLogout}>Log out</Button>
           </div>
         </div>

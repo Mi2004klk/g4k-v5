@@ -361,15 +361,7 @@ class ProjectController extends Controller
         ]);
         
         // T-52: Clear pending approvals cache for HR/Admin
-        $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
-        $today = \Carbon\Carbon::now()->toDateString();
-        foreach ($adminIds as $adminId) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("projects_metrics_{$adminId}");
-        }
+        \App\Services\DashboardCacheService::invalidateGlobal();
 
         return response()->json($project->fresh()->load(['approval']));
     }
@@ -412,15 +404,7 @@ class ProjectController extends Controller
         }
 
         // T-52: Clear pending approvals cache for HR/Admin
-        $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
-        $today = \Carbon\Carbon::now()->toDateString();
-        foreach ($adminIds as $adminId) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("projects_metrics_{$adminId}");
-        }
+        \App\Services\DashboardCacheService::invalidateGlobal();
 
         return response()->json($project->fresh()->load(['approval']));
     }

@@ -143,12 +143,7 @@ class TaskController extends Controller
         }
 
         if ($validated['action'] === 'complete' && $updatedCount > 0) {
-            $today = \Carbon\Carbon::now()->toDateString();
-            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-            foreach ($admins as $adminId) {
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
-            }
+            \App\Services\DashboardCacheService::invalidateGlobal();
         }
 
         return response()->json(['message' => "Bulk action {$validated['action']} applied to {$updatedCount} tasks."]);
@@ -461,7 +456,12 @@ class TaskController extends Controller
 
             if (in_array($validated['status'], ['review', 'done']) && !$request->has('submission_note')) {
                 if (!$isManage || $task->qa_form_id) {
-                    return response()->json(['message' => "A submission note is required to move the task to {$validated['status']}. Please use the submit for review option."], 422);
+                    // Default to a system note instead of rejecting, for smooth Kanban drag-and-drop
+                    if (!$task->qa_form_id) {
+                        $request->merge(['submission_note' => "Moved to {$validated['status']} via Kanban."]);
+                    } else {
+                        return response()->json(['message' => "A submission note is required to move the task to {$validated['status']}. Please use the submit for review option."], 422);
+                    }
                 }
             }
             if ($validated['status'] === 'done' && $task->qa_form_id) {
@@ -666,15 +666,7 @@ class TaskController extends Controller
         }
 
         // T-52: Clear pending approvals cache for HR/Admin
-        $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
-        $today = \Carbon\Carbon::now()->toDateString();
-        foreach ($adminIds as $adminId) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("tasks_metrics_{$adminId}");
-        }
+        \App\Services\DashboardCacheService::invalidateGlobal();
 
         return response()->json($task->load(['approval', 'qaSubmission']));
     }
@@ -777,23 +769,7 @@ class TaskController extends Controller
             $this->notifyProjectConversation($task, $msg);
         }
 
-        $today = \Carbon\Carbon::now()->toDateString();
-        $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-        foreach ($admins as $adminId) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
-        }
-        if ($task->assignee_id) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$task->assignee_id}_employee");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$task->assignee_id}_employee_{$today}");
-        }
         foreach ($task->assignees as $assignee) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$assignee->id}_employee");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$assignee->id}_employee_{$today}");
             
             \App\Services\NotificationService::send(
                 (int) $assignee->id,
@@ -804,6 +780,8 @@ class TaskController extends Controller
                 "/dashboard/tasks/{$task->id}"
             );
         }
+
+        \App\Services\DashboardCacheService::invalidateGlobal();
 
         return response()->json($task->fresh(['approval']));
     }
@@ -844,22 +822,9 @@ class TaskController extends Controller
             'metadata' => ['reason' => $validated['reason']],
         ]);
 
-        $today = \Carbon\Carbon::now()->toDateString();
-        $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-        foreach ($admins as $adminId) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-        }
-        if ($task->assignee_id) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$task->assignee_id}_employee");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$task->assignee_id}_employee_{$today}");
-        }
-        foreach ($task->assignees as $assignee) {
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$assignee->id}_employee");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$assignee->id}_employee_{$today}");
+        \App\Services\DashboardCacheService::invalidateGlobal();
 
+        foreach ($task->assignees as $assignee) {
             \App\Services\NotificationService::send(
                 (int) $assignee->id,
                 'task_assigned',

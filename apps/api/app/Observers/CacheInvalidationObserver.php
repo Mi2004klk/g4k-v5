@@ -10,31 +10,7 @@ class CacheInvalidationObserver
     private function clearDashboardCaches(Model $model)
     {
         try {
-            // Global and Admin caches
-            Cache::forget('dashboard_global');
-            Cache::forget('dashboard_recent_activity');
-            Cache::forget('dashboard_pending_tasks_count');
-
-            // If it's related to a user, clear their specific caches
-            $userId = $model->user_id ?? $model->assignee_id ?? null;
-            if ($userId) {
-                $today = \Carbon\Carbon::now()->toDateString();
-                
-                // We can't know the role precisely here, so we clear for all known roles
-                $roles = ['employee', 'hr', 'super_admin'];
-                foreach ($roles as $role) {
-                    Cache::forget("dashboard_metrics_{$userId}_{$role}_{$today}");
-                    Cache::forget("user_metrics_{$userId}_{$role}");
-                    Cache::forget("pending_approvals_{$userId}_{$role}");
-                }
-            }
-
-            // Always clear admin pending_approvals since Tasks/Projects affect organization-wide pending reviews
-            $adminIds = \App\Models\RoleAssignment::whereIn('role', ['hr', 'super_admin'])->pluck('user_id')->unique();
-            foreach ($adminIds as $adminId) {
-                Cache::forget("pending_approvals_{$adminId}_hr");
-                Cache::forget("pending_approvals_{$adminId}_super_admin");
-            }
+            \App\Services\DashboardCacheService::invalidateGlobal();
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to clear dashboard caches: ' . $e->getMessage());
         }

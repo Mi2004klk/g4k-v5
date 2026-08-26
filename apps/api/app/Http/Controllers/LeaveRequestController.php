@@ -218,18 +218,7 @@ class LeaveRequestController extends Controller
 
         if ($leaveRequest) {
             $today = \Carbon\Carbon::now()->toDateString();
-            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-            foreach ($admins as $adminId) {
-                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
-            }
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leaveRequest->user_id}_employee");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leaveRequest->user_id}_employee_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$leaveRequest->user_id}_employee_{$today}");
+            \App\Services\DashboardCacheService::invalidateGlobal();
         }
 
         return response()->json($approval);
@@ -448,11 +437,15 @@ class LeaveRequestController extends Controller
                 $approverIds[] = $approval->decided_by;
             } else {
                 $targetUser = \App\Models\User::find($leave->user_id);
-                if ($targetUser && $targetUser->department_id) {
-                    $hrUsers = \App\Models\User::whereHas('roleAssignments', function($q) {
-                        $q->where('role', 'hr');
-                    })->where('department_id', $targetUser->department_id)->pluck('id')->toArray();
-                    $approverIds = $hrUsers;
+                if ($targetUser) {
+                    if ($approval && $approval->current_approver_role === 'manager' && $targetUser->manager_id) {
+                        $approverIds[] = $targetUser->manager_id;
+                    } elseif ($targetUser->department_id) {
+                        $hrUsers = \App\Models\User::whereHas('roleAssignments', function($q) {
+                            $q->where('role', 'hr');
+                        })->where('department_id', $targetUser->department_id)->pluck('id')->toArray();
+                        $approverIds = $hrUsers;
+                    }
                 }
             }
 
@@ -468,19 +461,7 @@ class LeaveRequestController extends Controller
                 );
             }
 
-            $today = \Carbon\Carbon::now()->toDateString();
-            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-            foreach ($admins as $adminId) {
-                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
-            }
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leave->user_id}_employee");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leave->user_id}_employee_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$leave->user_id}_employee_{$today}");
+            \App\Services\DashboardCacheService::invalidateGlobal();
 
             return response()->json(['message' => 'Leave request cancelled successfully.']);
         } else if ($isHrOrAdmin) {
@@ -526,19 +507,7 @@ class LeaveRequestController extends Controller
                 'normal'
             );
 
-            $today = \Carbon\Carbon::now()->toDateString();
-            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-            foreach ($admins as $adminId) {
-                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
-                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
-                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
-            }
-            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leave->user_id}_employee");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leave->user_id}_employee_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$leave->user_id}_employee_{$today}");
+            \App\Services\DashboardCacheService::invalidateGlobal();
 
             return response()->json(['message' => 'Leave request cancelled successfully.']);
         }

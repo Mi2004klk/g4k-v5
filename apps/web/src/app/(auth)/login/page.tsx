@@ -26,6 +26,7 @@ import {
 } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { PasswordInput } from "@g4k/ui/components";
+import { Checkbox } from "@g4k/ui/components";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/state-helpers";
@@ -33,6 +34,7 @@ import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/s
 const loginSchema = z.object({
   identifier: z.string().min(1, "Email or Employee ID is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  remember: z.boolean().optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -52,6 +54,7 @@ export default function LoginPage() {
     defaultValues: {
       identifier: "",
       password: "",
+      remember: false,
     },
     mode: "onChange",
   });
@@ -78,7 +81,7 @@ export default function LoginPage() {
         body: JSON.stringify(data),
       });
 
-      setAuth(result.token, result.user, result.active_role, result.refresh_token, result.capabilities);
+      setAuth(result.token, result.user, result.active_role, result.refresh_token, result.capabilities, true, data.remember);
       queryClient.setQueryData(queryKeys.capabilities(), result.capabilities);
       toast.success("Login successful!");
 
@@ -87,8 +90,8 @@ export default function LoginPage() {
         : !result.onboarded
         ? "/onboarding"
         : (result.user?.roles?.length > 1 || result.user?.role_assignments?.length > 1)
-        ? "/role-select"
-        : "/dashboard";
+        ? (returnTo ? `/role-select?returnTo=${encodeURIComponent(returnTo)}` : "/role-select")
+        : (returnTo || "/dashboard");
 
       router.push(targetRoute);
     } catch (error) {
@@ -156,6 +159,27 @@ export default function LoginPage() {
                       <PasswordInput id="password" placeholder="••••••••" {...field} disabled={lockoutSeconds > 0} autoComplete="current-password" />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="remember"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-2 space-y-0 p-1">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={lockoutSeconds > 0}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-normal text-muted-foreground cursor-pointer">
+                        Keep me signed in
+                      </FormLabel>
+                    </div>
                   </FormItem>
                 )}
               />

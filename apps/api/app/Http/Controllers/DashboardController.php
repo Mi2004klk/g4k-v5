@@ -22,23 +22,20 @@ class DashboardController extends Controller
         $safeCall = function($controller, $method, $fallback = null) use ($request) {
             try {
                 $res = app($controller)->$method($request);
-                $data = method_exists($res, 'getData') ? $res->getData(true) : $res;
-                if (is_array($data) && count($data) === 1 && isset($data['data'])) {
-                    return $data['data'];
-                }
-                return $data;
+                return method_exists($res, 'getData') ? $res->getData(true) : $res;
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error("init() failed for {$controller}::{$method}: " . $e->getMessage());
                 return $fallback;
             }
         };
 
-        $cacheKey = "dashboard_init_{$user->id}_{$activeRole}_{$today}";
+        $version = \App\Services\DashboardCacheService::getVersion();
+        $cacheKey = "dashboard_init_v{$version}_{$user->id}_{$activeRole}_{$today}";
         
         $data = [
-            'metrics' => Cache::remember("user_metrics_{$user->id}_{$activeRole}", 30, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
-            'preferences' => Cache::remember("user_prefs_{$user->id}", 300, fn() => $safeCall(UserPreferenceController::class, 'show')),
-            'pending_approvals' => Cache::remember("pending_approvals_{$user->id}_{$activeRole}", 60, function() use ($activeRole, $user) {
+            'metrics' => Cache::remember("user_metrics_v{$version}_{$user->id}_{$activeRole}", 3600, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
+            'preferences' => Cache::remember("user_prefs_{$user->id}", 3600, fn() => $safeCall(UserPreferenceController::class, 'show')),
+            'pending_approvals' => Cache::remember("pending_approvals_v{$version}_{$user->id}_{$activeRole}", 3600, function() use ($activeRole, $user) {
                 $approvals = [];
                 // Leaves
                 $leavesQuery = DB::table('leave_requests')
@@ -181,12 +178,10 @@ class DashboardController extends Controller
                     return array_slice($approvals, 0, 10); // Return top 10 recent approvals
             }),
             'announcements' => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', []),
-            'quick_notes' => Cache::remember("quick_notes_{$user->id}", 120, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
+            'quick_notes' => Cache::remember("quick_notes_v{$version}_{$user->id}", 3600, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
             'role' => $activeRole
         ];
 
-        // Exclude attendance_today from the outer cache due to volatility
-        $data['attendance_today'] = $safeCall(AttendanceController::class, 'meToday');
         $data['active_task'] = \Illuminate\Support\Facades\Cache::get("user_active_task_{$user->id}");
 
         return response()->json($data);
@@ -205,9 +200,10 @@ class DashboardController extends Controller
         $activeRole = $user->resolveActiveRole();
 
         $today = Carbon::now()->toDateString();
-        $cacheKey = "dashboard_metrics_{$user->id}_{$activeRole}_{$today}";
+        $version = \App\Services\DashboardCacheService::getVersion();
+        $cacheKey = "dashboard_metrics_v{$version}_{$user->id}_{$activeRole}_{$today}";
 
-        $metrics = Cache::remember($cacheKey, 30, function () use ($user, $activeRole, $today) {
+        $metrics = Cache::remember($cacheKey, 3600, function () use ($user, $activeRole, $today, $version) {
             $data = [];
 
             // Modules are confirmed to exist in production
@@ -221,7 +217,7 @@ class DashboardController extends Controller
 
             if ($activeRole === 'super_admin') {
                 // Shared role-agnostic global stats
-                $globalStats = Cache::remember('dashboard_global', 300, function () {
+                $globalStats = Cache::remember("dashboard_global_v{$version}", 3600, function () {
                     return [
                         'total_employees' => User::count(),
                         'active_employees' => User::where('status', 'active')->count(),
@@ -250,7 +246,11 @@ class DashboardController extends Controller
                 $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
                 $data['half_day_today'] = (int) ($attendance->half_day ?? 0);
                 $data['holiday_today'] = (int) ($attendance->holiday ?? 0);
-                $data['absent_today'] = max(0, $data['total_employees'] - $data['present_today'] - $data['late_today'] - $data['leave_today'] - $data['half_day_today'] - $data['holiday_today']);
+                
+                $isWorkingDay = \App\Support\WorkingDayCalculator::calculate(null, $today, $today) > 0;
+                $data['absent_today'] = $isWorkingDay 
+                    ? max(0, $data['total_employees'] - $data['present_today'] - $data['late_today'] - $data['leave_today'] - $data['half_day_today'] - $data['holiday_today'])
+                    : 0;
                 
                 $leaveCount = 0;
                 if ($hasLeaveRequests) {
@@ -319,7 +319,11 @@ class DashboardController extends Controller
                 $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
                 $data['half_day_today'] = (int) ($attendance->half_day ?? 0);
                 $data['holiday_today'] = (int) ($attendance->holiday ?? 0);
-                $data['absent_today'] = max(0, $data['total_employees'] - $data['present_today'] - $data['late_today'] - $data['leave_today'] - $data['half_day_today'] - $data['holiday_today']);
+
+                $isWorkingDay = \App\Support\WorkingDayCalculator::calculate(null, $today, $today) > 0;
+                $data['absent_today'] = $isWorkingDay 
+                    ? max(0, $data['total_employees'] - $data['present_today'] - $data['late_today'] - $data['leave_today'] - $data['half_day_today'] - $data['holiday_today'])
+                    : 0;
                 
                 $leaveCount = 0;
                 if ($hasLeaveRequests) {
@@ -452,7 +456,18 @@ class DashboardController extends Controller
                     ->where('project_members.user_id', $user->id)
                     ->where('projects.status', 'review')
                     ->count();
-                $data['pending_approvals'] = $leaveCount + $projectReviewCount;
+                $taskReviewCount = $hasTasks ? DB::table('tasks')
+                    ->where(function($q) use ($user) {
+                        $q->where('assignee_id', $user->id)
+                          ->orWhereExists(function ($q2) use ($user) {
+                              $q2->select(DB::raw(1))->from('task_assignees')
+                                 ->whereColumn('task_assignees.task_id', 'tasks.id')
+                                 ->where('task_assignees.user_id', $user->id);
+                          });
+                    })
+                    ->where('status', 'review')
+                    ->count() : 0;
+                $data['pending_approvals'] = $leaveCount + $projectReviewCount + $taskReviewCount;
                 
                 $recentTask = null;
                 if ($hasTasks) {

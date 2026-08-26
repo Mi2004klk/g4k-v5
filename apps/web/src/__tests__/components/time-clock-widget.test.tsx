@@ -50,12 +50,17 @@ describe('TimeClockWidget', () => {
       lastActiveTimestamp: null,
     });
 
-    (apiFetch as Mock).mockResolvedValue({
-      attendance_today: {
+    (apiFetch as Mock).mockImplementation(async (url: string) => {
+      if (url.includes('/dashboard/init')) {
+        return {
+          active_task: null
+        };
+      }
+      return {
         day: { total_seconds: 0 },
         events: [],
         standard_seconds: 28800
-      }
+      };
     });
   });
 
@@ -69,17 +74,19 @@ describe('TimeClockWidget', () => {
     });
     
     expect(apiFetch).toHaveBeenCalledWith('/dashboard/init');
+    expect(apiFetch).toHaveBeenCalledWith('/attendance/me/today');
   });
 
   it('handles clock in punch optimistically', async () => {
     (offlineEngine.recordPunch as Mock).mockResolvedValueOnce(undefined);
     // Mock the subsequent refetch triggered by invalidateQueries
-    (apiFetch as Mock).mockResolvedValue({
-      attendance_today: {
+    (apiFetch as Mock).mockImplementation(async (url: string) => {
+      if (url.includes('/dashboard/init')) return { active_task: null };
+      return {
         day: { total_seconds: 0 },
         events: [{ type: 'clock_in', timestamp: new Date().toISOString() }],
         standard_seconds: 28800
-      }
+      };
     });
 
     renderWithProviders(<TimeClockWidget />);
@@ -93,53 +100,46 @@ describe('TimeClockWidget', () => {
     });
     
     await waitFor(() => {
-      expect(useTimerStore.getState().isActive).toBe(true);
-      expect(offlineEngine.recordPunch).toHaveBeenCalledWith('clock_in', expect.any(String));
       expect(screen.getByText('End Shift')).toBeInTheDocument();
     });
+    
+    expect(offlineEngine.recordPunch).toHaveBeenCalledWith('clock_in');
   });
 
   it('handles clock out and break states correctly', async () => {
-    // Set initial active state to avoid race conditions with queries
-    useTimerStore.setState({
-      isActive: true,
-      isOnBreak: false,
-      baseSeconds: 3600,
-      clockInTimestamp: new Date().toISOString(),
-    });
-    
-    (offlineEngine.recordPunch as Mock).mockResolvedValueOnce(undefined);
-    (apiFetch as Mock).mockResolvedValue({
-      attendance_today: {
+    // Start with a clocked-in state
+    (apiFetch as Mock).mockImplementation(async (url: string) => {
+      if (url.includes('/dashboard/init')) return { active_task: null };
+      return {
         day: { total_seconds: 3600 },
-        events: [
-          { type: 'clock_in', timestamp: new Date().toISOString() },
-          { type: 'break_start', timestamp: new Date().toISOString() }
-        ],
+        events: [{ type: 'clock_in', timestamp: new Date(Date.now() - 3600000).toISOString() }],
         standard_seconds: 28800
-      }
+      };
     });
 
     renderWithProviders(<TimeClockWidget />);
     
     await waitFor(() => {
-      expect(screen.getByText('Pause for Break')).toBeInTheDocument();
+      expect(screen.getByText('End Shift')).toBeInTheDocument();
+      expect(screen.getByText('Start Break')).toBeInTheDocument();
     });
 
+    // Test going on break
+    (offlineEngine.recordPunch as Mock).mockResolvedValueOnce(undefined);
     await act(async () => {
-      fireEvent.click(screen.getByText('Pause for Break'));
+      fireEvent.click(screen.getByText('Start Break'));
     });
     
     await waitFor(() => {
-      expect(useTimerStore.getState().isOnBreak).toBe(true);
-      expect(offlineEngine.recordPunch).toHaveBeenCalledWith('break_start', expect.any(String));
+      expect(screen.getByText('End Break')).toBeInTheDocument();
     });
+    
+    expect(offlineEngine.recordPunch).toHaveBeenCalledWith('break_start');
   });
 
   it('rolls back state on punch failure', async () => {
-    const error = new Error('Network failure');
-    (offlineEngine.recordPunch as Mock).mockRejectedValueOnce(error);
-
+    (offlineEngine.recordPunch as Mock).mockRejectedValueOnce(new Error('Network error'));
+    
     renderWithProviders(<TimeClockWidget />);
     
     await waitFor(() => {
@@ -151,8 +151,11 @@ describe('TimeClockWidget', () => {
     });
     
     await waitFor(() => {
-      // It should revert back to original state if api fetch fails/invalidates
       expect(toast.error).toHaveBeenCalled();
+      // It should revert back to original state if api fetch fails/in.
+      // The button text should remain 'Start Shift' because the mutation failed and query invalidate restored state,
+      // actually the optimistic update is rolled back by react-query.
+      expect(screen.getByText('Start Shift')).toBeInTheDocument();
     });
   });
 });

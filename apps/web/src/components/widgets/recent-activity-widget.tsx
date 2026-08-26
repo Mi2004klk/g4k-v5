@@ -69,12 +69,14 @@ export function RecentActivityWidget() {
               }
 
               // Humanize the action
-              let actionText = activity.action.replace(/[._]/g, ' ');
+              let actionText = (activity.action || '').replace(/[._]/g, ' ');
               let detailText = null;
 
-              if (activity.action === 'create') actionText = `Created ${activity.subject_type.toLowerCase()}`;
-              else if (activity.action === 'update') actionText = `Updated ${activity.subject_type.toLowerCase()}`;
-              else if (activity.action === 'delete') actionText = `Deleted ${activity.subject_type.toLowerCase()}`;
+              const subject = activity.subject_type?.toLowerCase() || 'item';
+
+              if (activity.action === 'create') actionText = `Created ${subject}`;
+              else if (activity.action === 'update') actionText = `Updated ${subject}`;
+              else if (activity.action === 'delete') actionText = `Deleted ${subject}`;
               else if (activity.action === 'profile.designation_change') actionText = `Changed designation`;
               else if (activity.action === 'attendance.clock_in') actionText = `Clocked in for the day`;
               else if (activity.action === 'attendance.clock_out') actionText = `Clocked out for the day`;

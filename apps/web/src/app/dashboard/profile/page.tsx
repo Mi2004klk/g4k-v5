@@ -16,9 +16,11 @@ import { ProfileWorkAddressSection } from "./components/profile-work-address";
 import { ProfileEmergencyContactSection } from "./components/profile-emergency-contact";
 import { ProfilePrivacySection } from "./components/profile-privacy";
 import { ProfileConnectedAccountsSection } from "./components/profile-connected-accounts";
+import { ProfileWorkspaceSection } from "./components/profile-workspace-section";
 
 const SECTIONS = [
   { id: "general", label: "General Info", icon: "profile" as const, color: "orange" },
+  { id: "workspace", label: "Workspace & Roles", icon: "command" as const, color: "violet" },
   { id: "security", label: "Security & Devices", icon: "shield" as const, color: "blue" },
   { id: "preferences", label: "Preferences & Support", icon: "settings" as const, color: "slate" },
   { id: "notifications", label: "Notification Preferences", icon: "bell" as const, color: "indigo" },
@@ -30,6 +32,10 @@ const COLOR_VARIANTS: Record<string, { active: string, icon: string }> = {
   orange: {
     active: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-500 shadow-sm",
     icon: "text-orange-500",
+  },
+  violet: {
+    active: "bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-900/50 text-violet-600 dark:text-violet-500 shadow-sm",
+    icon: "text-violet-500",
   },
   blue: {
     active: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-500 shadow-sm",
@@ -153,6 +159,10 @@ export default function ProfilePage() {
 
           <div id="general" className="scroll-mt-24">
             <ProfileGeneralSection />
+          </div>
+
+          <div id="workspace" className="scroll-mt-24">
+            <ProfileWorkspaceSection />
           </div>
 
           <div id="security" className="scroll-mt-24 flex flex-col gap-6">
