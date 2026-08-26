@@ -54,6 +54,18 @@ class AttendanceService
             // Idempotency check via client_id
             $existing = AttendanceEvent::where('client_id', $clientId)->first();
             if (!$existing) {
+                // If clocking out while on break, automatically generate a break_end event first
+                if ($type === 'clock_out' && $lastType === 'break_start') {
+                    AttendanceEvent::create([
+                        'client_id' => $clientId . '_auto_break_end',
+                        'user_id' => $userId,
+                        'type' => 'break_end',
+                        'timestamp' => $parsedTs,
+                        'device_meta' => ['note' => 'Auto-ended by clock out'],
+                        'source' => 'server',
+                    ]);
+                }
+
                 AttendanceEvent::create([
                     'client_id' => $clientId,
                     'user_id' => $userId,

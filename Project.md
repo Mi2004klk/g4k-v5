@@ -257,29 +257,29 @@
 ## 5.1 Clock State Machine
 > **Reasoning:** Attendance accuracy is business-critical. State transitions must be unambiguous and idempotent.
 
-- [ ] State: Not Started → Clock In → Working (timer counting)
-- [ ] State: Working → Start Break → On Break (timer paused)
-- [ ] State: On Break → End Break → Working (timer resumes)
-- [ ] State: Working → Clock Out → Day Complete
-- [ ] State: On Break → Clock Out → Break auto-ends, then clock-out
-- [ ] State transitions enforced server-side (no client-only logic)
-- [ ] Invalid transitions rejected (e.g., End Break when not on break)
+- [x] State: Not Started → Clock In → Working (timer counting)
+- [x] State: Working → Start Break → On Break (timer paused)
+- [x] State: On Break → End Break → Working (timer resumes)
+- [x] State: Working → Clock Out → Day Complete
+- [x] State: On Break → Clock Out → Break auto-ends, then clock-out
+- [x] State transitions enforced server-side (no client-only logic)
+- [x] Invalid transitions rejected (e.g., End Break when not on break)
 
 ## 5.2 Smart Clock Behaviors
-- [ ] Clock out while on break → break ends first, then clock-out
-- [ ] App closed mid-shift → "Continue Shift" prompt on reopen
-- [ ] Offline punches saved locally + auto-sync on reconnect
-- [ ] Duplicate punch prevention (debounce + server idempotency)
-- [ ] Punches are immutable once saved (corrections create new audit records)
+- [x] Clock out while on break → break ends first, then clock-out
+- [x] App closed mid-shift → "Continue Shift" prompt on reopen
+- [x] Offline punches saved locally + auto-sync on reconnect
+- [x] Duplicate punch prevention (debounce + server idempotency)
+- [x] Punches are immutable once saved (corrections create new audit records)
 
 ## 5.3 Live Timer Display
-- [ ] HH:MM:SS timer counts up continuously while working
-- [ ] "Late" badge if clock-in after scheduled start + grace
-- [ ] "Overtime" indicator (timer turns amber beyond scheduled hours)
-- [ ] Break history list (each break: start time + duration)
-- [ ] Timer continues when navigating away
-- [ ] Timer only stops on explicit Clock Out / End Session
-- [ ] Timer persists across page refresh (uses server state, not just client)
+- [x] HH:MM:SS timer counts up continuously while working
+- [x] "Late" badge if clock-in after scheduled start + grace
+- [x] "Overtime" indicator (timer turns amber beyond scheduled hours)
+- [x] Break history list (each break: start time + duration)
+- [x] Timer continues when navigating away
+- [x] Timer only stops on explicit Clock Out / End Session
+- [x] Timer persists across page refresh (uses server state, not just client)
 
 ## 5.4 Late & Overtime Tracking
 - [ ] Late = clock-in > scheduled start + grace period

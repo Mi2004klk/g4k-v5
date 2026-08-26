@@ -108,8 +108,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
     // Check auto-end break on clock out
     if (type === "clock_out" && isOnBreak) {
-      await offlineEngine.recordPunch("break_end", timestamp);
-      endBreak(timestamp);
+      // Handled entirely by the server now. Just issue clock_out.
     }
 
     if (type === "clock_in") {
