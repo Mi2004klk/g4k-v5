@@ -281,7 +281,7 @@ export function Toolbar({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-4 shadow-e2 rounded-xl" align="end">
+              <PopoverContent className="w-[320px] p-4 shadow-e2 rounded-xl max-sm:w-full max-sm:!fixed max-sm:!bottom-0 max-sm:!top-auto max-sm:!left-0 max-sm:!transform-none max-sm:rounded-t-[24px] max-sm:rounded-b-none max-sm:border-b-0 max-sm:pb-10 max-sm:data-[state=open]:animate-in max-sm:data-[state=closed]:animate-out max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=open]:slide-in-from-bottom" align="end">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Filters</h4>
                   {activeFiltersCount > 0 && (
@@ -315,7 +315,7 @@ export function Toolbar({
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-3 shadow-e2 rounded-xl" align="end">
+              <PopoverContent className="w-56 p-3 shadow-e2 rounded-xl max-sm:w-full max-sm:!fixed max-sm:!bottom-0 max-sm:!top-auto max-sm:!left-0 max-sm:!transform-none max-sm:rounded-t-[24px] max-sm:rounded-b-none max-sm:border-b-0 max-sm:pb-10 max-sm:data-[state=open]:animate-in max-sm:data-[state=closed]:animate-out max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=open]:slide-in-from-bottom" align="end">
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-[10px] font-bold text-neutral-500 mb-2 px-1 uppercase tracking-wider">Sort By</h4>

@@ -3,6 +3,7 @@
 import { useRef, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage, AppIcon, EmptyState } from "@g4k/ui/components";
+import { SwipeToReveal } from "./swipe-to-reveal";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isChatPinned } from "@/lib/chat-utils";
 
@@ -138,55 +139,76 @@ export function ConversationList({
           const title = conv.name || (conv.scope === "direct" ? conv.users?.find((u: ChatUser) => u.id !== currentUserId)?.name || "Direct Message" : "Chat");
 
           return (
+          return (
             <div
               key={conv.id || virtualRow.index}
               data-index={virtualRow.index}
               ref={rowVirtualizer.measureElement}
-              onClick={() => onSelect(conv.id)}
-              className={`absolute top-0 left-0 w-full px-3 py-2.5 flex items-center gap-2.5 cursor-pointer transition-all ${
-                isSelected
-                  ? "bg-primary-50/60 dark:bg-primary-950/30 border-l-2 border-l-primary-600"
-                  : isUnread 
-                    ? "bg-neutral-50/50 dark:bg-neutral-900/30 border-l-2 border-l-primary-400 dark:border-l-primary-600 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40" 
-                    : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50 border-l-2 border-l-transparent"
-              }`}
+              className="absolute top-0 left-0 w-full"
               style={{
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              {/* Avatar: initials for DMs, icon for channels */}
-              {conv.scope === 'direct' ? (
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarFallback name={title} className="text-[10px]" />
-                </Avatar>
-              ) : (
-                getIcon(conv.scope)
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <h4 className={`text-xs truncate ${isUnread ? "font-bold text-neutral-900 dark:text-white" : "font-semibold text-neutral-700 dark:text-neutral-300"}`}>
-                      {title}
-                    </h4>
-                    {isPinned && <AppIcon name="pin" size="xs" className="text-primary-500 shrink-0" />}
+              <SwipeToReveal
+                actionWidth={140}
+                actions={
+                  <div className="flex items-center h-full">
+                    <button className="h-full px-4 bg-primary-500 text-white flex flex-col items-center justify-center gap-1 active:bg-primary-600 transition-colors">
+                      <AppIcon name={isPinned ? "close" : "pin"} size="sm" />
+                      <span className="text-[10px] font-semibold">{isPinned ? "Unpin" : "Pin"}</span>
+                    </button>
+                    <button className="h-full px-4 bg-neutral-500 text-white flex flex-col items-center justify-center gap-1 active:bg-neutral-600 transition-colors">
+                      <AppIcon name="archive" size="sm" />
+                      <span className="text-[10px] font-semibold">Archive</span>
+                    </button>
                   </div>
-                  {conv.latestMessage && (
-                    <div className="flex items-center gap-1.5 shrink-0 pl-2">
-                      {isUnread && (
-                        <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[16px] px-1 rounded-full shadow-sm shadow-primary-500/30">
-                          {unreadCount > 99 ? '99+' : unreadCount}
-                        </span>
-                      )}
-                      <span className={`text-[9px] tabular-nums ${isUnread ? "text-primary-600 dark:text-primary-400 font-bold" : "text-neutral-400 font-medium"}`}>
-                        {format(new Date(conv.latestMessage.created_at), "h:mm a")}
-                      </span>
-                    </div>
+                }
+              >
+                <div
+                  onClick={() => onSelect(conv.id)}
+                  className={`w-full px-3 py-2.5 flex items-center gap-2.5 cursor-pointer transition-all ${
+                    isSelected
+                      ? "bg-primary-50/60 dark:bg-primary-950/30 border-l-2 border-l-primary-600"
+                      : isUnread 
+                        ? "bg-neutral-50/50 dark:bg-neutral-900/30 border-l-2 border-l-primary-400 dark:border-l-primary-600 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40" 
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-900/50 border-l-2 border-l-transparent"
+                  }`}
+                >
+                  {/* Avatar: initials for DMs, icon for channels */}
+                  {conv.scope === 'direct' ? (
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback name={title} className="text-[10px]" />
+                    </Avatar>
+                  ) : (
+                    getIcon(conv.scope)
                   )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <h4 className={`text-xs truncate ${isUnread ? "font-bold text-neutral-900 dark:text-white" : "font-semibold text-neutral-700 dark:text-neutral-300"}`}>
+                          {title}
+                        </h4>
+                        {isPinned && <AppIcon name="pin" size="xs" className="text-primary-500 shrink-0" />}
+                      </div>
+                      {conv.latestMessage && (
+                        <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                          {isUnread && (
+                            <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[16px] px-1 rounded-full shadow-sm shadow-primary-500/30">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                          <span className={`text-[9px] tabular-nums ${isUnread ? "text-primary-600 dark:text-primary-400 font-bold" : "text-neutral-400 font-medium"}`}>
+                            {format(new Date(conv.latestMessage.created_at), "h:mm a")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <p className={`text-[10px] truncate mt-0.5 ${isUnread ? "font-medium text-neutral-700 dark:text-neutral-300" : "text-neutral-500"}`}>
+                      {conv.latestMessage ? conv.latestMessage.body : "No messages yet"}
+                    </p>
+                  </div>
                 </div>
-                <p className={`text-[10px] truncate mt-0.5 ${isUnread ? "font-medium text-neutral-700 dark:text-neutral-300" : "text-neutral-500"}`}>
-                  {conv.latestMessage ? conv.latestMessage.body : "No messages yet"}
-                </p>
-              </div>
+              </SwipeToReveal>
             </div>
           );
         })}

@@ -909,19 +909,19 @@
 - [x] Pull-to-refresh where appropriate
 
 ## 13.3 Mobile-Specific Behaviors
-- [ ] Kanban: swipe between columns, long-press to drag
-- [ ] Calendar: swipe between months/days
-- [ ] Chat: swipe to reveal actions (pin, mute, archive)
-- [ ] Modals become bottom sheets on mobile
-- [ ] Tables become cards on mobile
-- [ ] Filter bars collapse into expandable sheet
+- [x] Kanban: swipe between columns, long-press to drag
+- [x] Calendar: swipe between months/days
+- [x] Chat: swipe to reveal actions (pin, mute, archive)
+- [x] Modals become bottom sheets on mobile
+- [x] Tables become cards on mobile
+- [x] Filter bars collapse into expandable sheet
 
 ## 13.4 Offline Support
-- [ ] Clock in/out works offline (queued locally)
-- [ ] Auto-sync on reconnect (with conflict resolution)
-- [ ] Read-only cached data for last-viewed pages
-- [ ] Clear "offline mode" indicator
-- [ ] Queued actions show pending state
+- [x] Clock in/out works offline (queued locally)
+- [x] Auto-sync on reconnect (with conflict resolution)
+- [x] Read-only cached data for last-viewed pages
+- [x] Clear "offline mode" indicator
+- [x] Queued actions show pending state
 
 ## 13.5 Responsive Breakpoints
 - [ ] 320px (small phones) — usable, no overflow
