@@ -226,7 +226,7 @@ class LeaveRequestController extends Controller
 
     public function show(Request $request, $id)
     {
-        $leave = LeaveRequest::with(['approval', 'user'])->findOrFail($id);
+        $leave = LeaveRequest::with(['approval.decider', 'user'])->findOrFail($id);
         
         $user = $request->user();
         $activeRole = $user->resolveActiveRole();
@@ -301,7 +301,7 @@ class LeaveRequestController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $query = LeaveRequest::with(['approval', 'user']);
+        $query = LeaveRequest::with(['approval.decider', 'user']);
 
         if ($activeRole !== 'super_admin') {
             $query->whereHas('user', function($q) use ($user) {
@@ -345,7 +345,7 @@ class LeaveRequestController extends Controller
         $user = $request->user();
         $activeRole = $user->resolveActiveRole();
 
-        $query = LeaveRequest::with(['approval', 'user'])->where('status', 'pending');
+        $query = LeaveRequest::with(['approval.decider', 'user'])->where('status', 'pending');
 
         if ($activeRole === 'super_admin') {
             // Can see all pending
@@ -401,34 +401,15 @@ class LeaveRequestController extends Controller
         $isHrOrAdmin = in_array($activeRole, ['hr', 'super_admin']);
 
         if ($leave->user_id === $user->id) {
-            // Employee can only cancel pending or future approved requests
-            if ($leave->status === 'rejected' || $leave->status === 'cancelled') {
-                return response()->json(['message' => 'Cannot cancel a leave request in this status.'], 403);
+            if ($leave->status !== 'pending') {
+                return response()->json(['message' => 'Only pending leave requests can be cancelled.'], 403);
             }
-            if ($leave->status === 'approved' && \Carbon\Carbon::parse($leave->start_date)->startOfDay()->isPast()) {
-                return response()->json(['message' => 'Cannot cancel an approved leave that has already started.'], 403);
-            }
-            $wasApproved = $leave->status === 'approved';
             $leave->status = 'cancelled';
             $leave->save();
             
             \App\Models\Approval::where('approvable_type', get_class($leave))
                 ->where('approvable_id', $leave->id)
                 ->update(['status' => 'resolved', 'decision' => 'cancelled']);
-            
-            if ($wasApproved) {
-                $days = $leave->getWorkingDays();
-                $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
-                $balance->decrement('used', min($days, $balance->used));
-                
-                $startDate = \Carbon\Carbon::parse($leave->start_date);
-                $endDate = \Carbon\Carbon::parse($leave->end_date);
-                $currentDate = $startDate->copy();
-                while ($currentDate->lte($endDate)) {
-                    \App\Services\AttendanceService::reconcileDay($leave->user_id, $currentDate->toDateString(), true);
-                    $currentDate->addDay();
-                }
-            }
 
             // Notify the manager/approver if the leave had an approver
             $approval = $leave->approval;

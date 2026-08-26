@@ -383,21 +383,21 @@
 - [x] On rejection: employee notified with reason
 
 ## 6.5 Leave History
-- [ ] All historical requests with dates, type, reason
-- [ ] Status: Pending / Approved / Rejected
-- [ ] Decision-maker name + date
-- [ ] Rejection reason shown
+- [x] All historical requests with dates, type, reason
+- [x] Status: Pending / Approved / Rejected
+- [x] Decision-maker name + date
+- [x] Rejection reason shown
 
 ## 6.6 Cancel Leave Request
-- [ ] Employee can cancel own PENDING request
-- [ ] Cannot cancel already-approved request
-- [ ] Cancellation restores no balance (only approval deducts)
+- [x] Employee can cancel own PENDING request
+- [x] Cannot cancel already-approved request
+- [x] Cancellation restores no balance (only approval deducts)
 
 ## 6.7 Public Holidays
-- [ ] Holidays sub-tab shows company holidays
-- [ ] Recurring holidays repeat yearly
-- [ ] Feb 29 in non-leap year → auto-shift to Feb 28
-- [ ] 10-day pre-holiday reminder sent to HR + employees
+- [x] Holidays sub-tab shows company holidays
+- [x] Recurring holidays repeat yearly
+- [x] Feb 29 in non-leap year → auto-shift to Feb 28
+- [x] 10-day pre-holiday reminder sent to HR + employees
 
 ---
 
@@ -406,14 +406,14 @@
 ## 7.1 Project Visibility by Role
 - [ ] Employee: only projects they're members of
 - [ ] HR: projects they created + dept projects + projects their employees are on
-- [ ] Admin: all projects company-wide
+- [ ] Admin: all projects company-wide, properly grouped by department
 - [ ] Server-side scoping (not just UI hiding)
 
 ## 7.2 Project Card Display
 - [ ] Name, description, priority
 - [ ] Deadline, status
 - [ ] Progress % (auto-calculated from task completions)
-- [ ] Team member avatars
+- [ ] Team member avatars (profile photo loads)
 - [ ] Cover image (if uploaded)
 - [ ] Click → project detail page
 

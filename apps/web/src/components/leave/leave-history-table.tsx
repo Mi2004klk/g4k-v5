@@ -17,6 +17,8 @@ interface LeaveRecord {
   approval?: {
     status: string;
     decision_reason?: string;
+    decider?: { name: string };
+    decided_at?: string;
   };
 }
 
@@ -118,12 +120,18 @@ export function LeaveHistoryTable({
             return <span className="text-neutral-400 italic">Pending...</span>;
           }
           return (
-            <div className="flex items-center gap-2">
-              {approval.status === "approved" ? (
-                <AppIcon name="check" className=" text-emerald-500" />
-              ) : (
-                <AppIcon name="close" className=" text-rose-600" />
-              )}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                {approval.status === "approved" ? (
+                  <AppIcon name="check" className=" text-emerald-500" />
+                ) : (
+                  <AppIcon name="close" className=" text-rose-600" />
+                )}
+                <span className="text-sm font-medium">{approval.decider?.name || "System"}</span>
+              </div>
+              <div className="text-xs text-neutral-500">
+                {approval.decided_at && format(new Date(approval.decided_at), "MMM d, yyyy")}
+              </div>
               {approval.decision_reason && (
                 <span className="text-neutral-500 text-xs truncate max-w-[150px] block" title={approval.decision_reason}>
                   {approval.decision_reason}
