@@ -112,16 +112,16 @@
 - [x] Link expires after single use or time window
 
 ## 2.8 Session Management
-- [ ] Sessions silently refresh every 15 minutes (no UX interruption)
-- [ ] Sessions valid up to 7 days with activity
-- [ ] Active sessions viewable: My Profile → Security & Devices
-- [ ] Sessions show device type, IP, last active
-- [ ] Remote session revoke works
-- [ ] Revoking current session logs user out immediately
-- [ ] Max active devices enforced (per company policy) from admin settings
+- [x] Sessions silently refresh every 15 minutes (no UX interruption)
+- [x] Sessions valid up to 7 days with activity
+- [x] Active sessions viewable: My Profile → Security & Devices
+- [x] Sessions show device type, IP, last active
+- [x] Remote session revoke works
+- [x] Revoking current session logs user out immediately
+- [x] Max active devices enforced (per company policy) from admin settings
 
 ## 2.9 Suspicious Login Detection
-- [ ] Unrecognized IP/location login flagged
+- [ ] Unrecognized IP/location login flagged (desabled by default on admin settings area and every IP and Location is Good for now. admin can desable it and add recognized location & ip manually if this function has to work perfectly, admin can blacklist any spefific ip/location from this area even the option is desabled.)
 - [ ] All HR + Admin users notified immediately
 - [ ] Email alert sent (if SMTP configured)
 - [ ] Logged in audit trail with IP, user-agent, geo

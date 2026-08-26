@@ -728,7 +728,17 @@ class AuthController extends Controller
     {
         $token = $request->user()->tokens()->where('id', $id)->first();
         if ($token) {
+            // Find corresponding refresh token (created at exact same time, with '_refresh' suffix)
+            $refreshToken = $request->user()->tokens()
+                ->where('name', $token->name . '_refresh')
+                ->where('created_at', $token->created_at)
+                ->first();
+
             $token->delete();
+            if ($refreshToken) {
+                $refreshToken->delete();
+            }
+
             SessionRevoked::dispatch($request->user()->id, (string)$id);
             \App\Services\NotificationService::send(
                 userId: $request->user()->id,
