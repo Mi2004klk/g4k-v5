@@ -299,9 +299,20 @@ export function ChatTab() {
         queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: InfiniteQueryData<ChatMessage> | undefined) => {
           if (!old?.pages) return old;
           const firstPage = old.pages[0];
+          
+          // Deduplicate incoming messages to prevent double-rendering on slow networks
+          if (firstPage.data.some(m => m.id === e.message.id)) {
+            return old;
+          }
+
+          // Remove any pending optimistic message with the same body sent by the same user
+          const filteredData = firstPage.data.filter(m => 
+            !(m.pending && m.sender_id === e.message.sender_id && m.body === e.message.body)
+          );
+
           const updatedFirstPage = {
             ...firstPage,
-            data: [e.message, ...firstPage.data],
+            data: [e.message, ...filteredData],
           };
           return {
             ...old,
@@ -648,15 +659,6 @@ export function ChatTab() {
                 </div>
 
                 <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                  {!isConnected && (
-                    <span
-                      className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400 text-[10px] font-semibold shrink-0"
-                      title="Real-time connection lost — falling back to periodic refresh"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      Offline
-                    </span>
-                  )}
                   {selectedConv?.scope !== 'global' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

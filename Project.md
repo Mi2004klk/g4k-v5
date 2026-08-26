@@ -1048,18 +1048,18 @@
 - [x] Department channel (HR scoping)
 
 ## 16.2 Sync Behaviors
-- [ ] Multi-device: action on one device reflects on others within 2s
-- [ ] No duplicate messages on slow networks (client dedup by message ID)
-- [ ] No duplicate punches (server idempotency)
-- [ ] Conflict resolution: last-write-wins for non-critical, server-authoritative for attendance
-- [ ] Offline queue replays in order on reconnect
-- [ ] Queue persistence (survives app close)
+- [x] Multi-device: action on one device reflects on others within 2s
+- [x] No duplicate messages on slow networks (client dedup by message ID)
+- [x] No duplicate punches (server idempotency)
+- [x] Conflict resolution: last-write-wins for non-critical, server-authoritative for attendance
+- [x] Offline queue replays in order on reconnect
+- [x] Queue persistence (survives app close)
 
 ## 16.3 Connection Health
-- [ ] Connection status indicator (online/offline/reconnecting)
-- [ ] Auto-reconnect with exponential backoff
-- [ ] No memory leaks on reconnect cycles
-- [ ] Subscriptions cleaned up on logout
+- [x] Connection status indicator (online/offline/reconnecting)
+- [x] Auto-reconnect with exponential backoff
+- [x] No memory leaks on reconnect cycles
+- [x] Subscriptions cleaned up on logout
 
 ---
 
