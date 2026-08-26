@@ -133,26 +133,26 @@
 ## 3.1 Permissions Matrix Enforcement (Server-Side)
 > **Reasoning:** Client-side visibility is UX; server-side enforcement is security. Both must be verified independently.
 
-### Employee Permissions
-- [ ] Can clock in/out
-- [ ] Can view own attendance history only
-- [ ] Cannot view team attendance
-- [ ] Cannot correct attendance entries
-- [ ] Cannot export attendance
-- [ ] Can submit leave requests
-- [ ] Cannot approve any leave
-- [ ] Can view own leave history only
-- [ ] Cannot create employee/HR/admin accounts
-- [ ] Cannot manage departments or designations
-- [ ] Can view own assigned projects only
-- [ ] Cannot create/assign projects
-- [ ] Can create own personal tasks
-- [ ] Cannot assign tasks to others
-- [ ] Cannot build QA forms
-- [ ] Can chat, DM, mention, share files
-- [ ] Cannot post announcements
-- [ ] Cannot create group chats
-- [ ] Cannot pin messages
+### Employee Permissions (✅ Verified)
+- [x] Can clock in/out
+- [x] Can view own attendance history only
+- [x] Cannot view team attendance
+- [x] Cannot correct attendance entries
+- [x] Cannot export attendance
+- [x] Can submit leave requests
+- [x] Cannot approve any leave
+- [x] Can view own leave history only
+- [x] Cannot create employee/HR/admin accounts
+- [x] Cannot manage departments or designations
+- [x] Can view own assigned projects only
+- [x] Cannot create/assign projects
+- [x] Can create own personal tasks
+- [x] Cannot assign tasks to others
+- [x] Cannot build QA forms
+- [x] Can chat, DM, mention, share files
+- [x] Cannot post announcements
+- [x] Cannot create group chats
+- [x] Cannot pin messages
 
 ### HR Permissions
 - [ ] Can clock in/out

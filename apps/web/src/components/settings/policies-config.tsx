@@ -97,7 +97,6 @@ export function PoliciesConfig() {
         require_symbol: groupedData.security.find((s: SettingItem) => s.key === "password.require_symbol")?.value === "true",
         force_password_change: groupedData.security.find((s: SettingItem) => s.key === "force_password_change")?.value === "true",
       });
-      });
       sessionForm.reset({
         access_token_ttl: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.access_token_ttl")?.value || "15"),
         refresh_token_ttl: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.refresh_token_ttl")?.value || "7"),

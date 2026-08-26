@@ -296,7 +296,7 @@ export function ProfileSecuritySection() {
                 <DialogContent className="sm:max-w-2xl font-sans max-h-[85vh] overflow-y-auto">
                   <DialogHeader className="mb-2">
                     <DialogTitle className="font-display flex items-center gap-2">
-                      <AppIcon name="monitor" size="sm" className="text-neutral-500" />
+                      <AppIcon name="computer" size="lg" className="text-neutral-400" />
                       Active Sessions
                     </DialogTitle>
                   </DialogHeader>
