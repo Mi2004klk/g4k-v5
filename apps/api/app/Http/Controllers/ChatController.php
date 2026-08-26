@@ -147,7 +147,7 @@ class ChatController extends Controller
 
         if ($request->hasFile('attachment')) {
             $disk = config('filesystems.default');
-            $path = $request->file('attachment')->store('chat_attachments', $disk);
+            $path = $request->file('attachment')->store("chat_attachments/{$request->user()->id}", $disk);
             $attachmentUrl = \Illuminate\Support\Facades\Storage::disk($disk)->url($path);
             
             if (!isset($validated['type'])) {

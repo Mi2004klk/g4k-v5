@@ -1132,20 +1132,21 @@
 # SECTION 19 — SECURITY AUDIT
 
 ## 19.1 Authentication Security
-- [ ] JWT tokens short-lived
-- [ ] Refresh token rotation
-- [ ] Refresh token revocation on logout
-- [ ] No tokens in localStorage (httpOnly cookies preferred) — or documented tradeoff
-- [ ] Password hashing (bcrypt/argon2)
-- [ ] Password never returned in any API response
-- [ ] Temp passwords expire after first use + time window
+- [x] JWT tokens short-lived
+- [x] Refresh token rotation
+- [x] Refresh token revocation on logout
+- [x] No tokens in localStorage (httpOnly cookies preferred) — or documented tradeoff
+      > **Tradeoff:** Access token is short-lived (15m) and stored in memory/localStorage (managed by Zustand) for quick SPA API access. Refresh token is long-lived and securely stored in an HttpOnly, SameSite=Lax cookie, mitigating XSS exfiltration of long-lived credentials.
+- [x] Password hashing (bcrypt/argon2)
+- [x] Password never returned in any API response
+- [x] Temp passwords expire after first use + time window
 
 ## 19.2 Authorization Security
-- [ ] RLS on every table
-- [ ] API endpoints check permissions (not just UI)
-- [ ] No IDOR (Insecure Direct Object Reference) — verify object ownership
-- [ ] No mass assignment (whitelist fields in updates)
-- [ ] File upload paths scoped to user
+- [x] RLS on every table
+- [x] API endpoints check permissions (not just UI)
+- [x] No IDOR (Insecure Direct Object Reference) — verify object ownership
+- [x] No mass assignment (whitelist fields in updates)
+- [x] File upload paths scoped to user
 
 ## 19.3 Data Protection
 - [ ] PII encrypted at rest (where required)

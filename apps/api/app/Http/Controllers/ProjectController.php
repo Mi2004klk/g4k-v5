@@ -445,7 +445,7 @@ class ProjectController extends Controller
 
         try {
             $disk = config('filesystems.default');
-            $path = $request->file('cover_image')->store('projects/covers', $disk);
+            $path = $request->file('cover_image')->store("projects/{$id}/covers", $disk);
 
             if (!$path) {
                 throw new \Exception('Failed to store file');

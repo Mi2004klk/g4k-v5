@@ -296,7 +296,7 @@ class UserController extends Controller
 
         try {
             $disk = config('filesystems.default');
-            $path = $request->file('avatar')->store('avatars', $disk);
+            $path = $request->file('avatar')->store("avatars/{$user->id}", $disk);
 
             if (!$path) {
                 throw new \Exception('Failed to store file');

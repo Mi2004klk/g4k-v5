@@ -58,7 +58,7 @@ class ProfileController extends Controller
         try {
             // Use S3 (Supabase) Storage for avatars
             $disk = config('filesystems.default');
-            $path = $request->file('avatar')->store('avatars', $disk);
+            $path = $request->file('avatar')->store("avatars/{$request->user()->id}", $disk);
 
             if (!$path) {
                 throw new \Exception('Failed to store file');
