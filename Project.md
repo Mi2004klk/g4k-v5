@@ -154,31 +154,31 @@
 - [x] Cannot create group chats
 - [x] Cannot pin messages
 
-### HR Permissions
-- [ ] Can clock in/out
-- [ ] Can view attendance for own departments ONLY (scoping enforced server-side)
-- [ ] Cannot see employees outside assigned departments
-- [ ] Can correct attendance for own departments
-- [ ] Can export scoped attendance
-- [ ] Can approve employee leave (own departments)
-- [ ] Cannot approve HR leave (goes to Admin)
-- [ ] Can create employee accounts
-- [ ] Cannot create HR/Admin accounts
-- [ ] Can edit employee profiles (scoped)
-- [ ] Can deactivate/delete accounts (scoped)
-- [ ] Cannot manage departments
-- [ ] Cannot manage designations
-- [ ] Can create/manage projects (scoped)
-- [ ] Can create/assign tasks
-- [ ] Can approve tasks/projects
-- [ ] Can build QA forms
-- [ ] Can post team-level announcements (scoped)
-- [ ] Can create custom group chats
-- [ ] Can pin messages in project chats
-- [ ] Limited reports (scoped to departments)
+### HR Permissions (✅ Verified)
+- [x] Can clock in/out
+- [x] Can view attendance for own departments ONLY (scoping enforced server-side)
+- [x] Cannot see employees outside assigned departments
+- [x] Can correct attendance for own departments
+- [x] Can export scoped attendance
+- [x] Can approve employee leave (own departments)
+- [x] Cannot approve HR leave (goes to Admin)
+- [x] Can create employee accounts
+- [x] Cannot create HR/Admin accounts
+- [x] Can edit employee profiles (scoped)
+- [x] Can deactivate/delete accounts (scoped)
+- [x] Cannot manage departments
+- [x] Cannot manage designations
+- [x] Can create/manage projects (scoped)
+- [x] Can create/assign tasks
+- [x] Can approve tasks/projects
+- [x] Can build QA forms
+- [x] Can post team-level announcements (scoped)
+- [x] Can create custom group chats
+- [x] Can pin messages in project chats
+- [x] Limited reports (scoped to departments)
 
 ### Admin Permissions
-- [ ] Does NOT clock in/out (UI hidden + server rejection)
+- [ ] Does NOT clock in/out, project timer, personal task area (UI hidden + server rejection)
 - [ ] Can view own attendance history (if applicable)
 - [ ] Full visibility: all departments, all employees
 - [ ] Approves HR leave requests
