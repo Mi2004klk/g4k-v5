@@ -170,7 +170,6 @@ export function ProjectsTab() {
             </Button>
           </div>
         </div>
-      </div>
 
       <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
 

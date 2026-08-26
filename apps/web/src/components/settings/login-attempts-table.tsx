@@ -186,6 +186,6 @@ export function LoginAttemptsTable() {
             </div>
           </div>
         )}
-    </ListScaffold>
+    />
   );
 }
