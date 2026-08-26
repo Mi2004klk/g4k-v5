@@ -488,12 +488,12 @@
 - [x] Real-time updates
 
 ### Time Tab
-- [ ] Log time (min 1 min per entry)
-- [ ] Time-log history
-- [ ] Rolls up into project/productivity reports
+- [x] Log time (min 1 min per entry)
+- [x] Time-log history
+- [x] Rolls up into project/productivity reports
 
 ### Activity Tab
-- [ ] Chronological history (created, assigned, progress updates, submitted, approved)
+- [x] Chronological history (created, assigned, progress updates, submitted, approved)
 
 ## 7.8 Task Priority Levels
 - [x] Low: Gray/Blue

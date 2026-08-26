@@ -84,8 +84,7 @@ export function TaskTimeTab({ task, timeLogs }: TaskTimeTabProps) {
       return apiFetch(`/timer/log`, {
         method: "POST",
         body: JSON.stringify({
-          target_type: "task",
-          target_id: task.id,
+          task_id: task.id,
           minutes_logged: parseInt(minutesLogged, 10),
           description: logDescription
         }),
