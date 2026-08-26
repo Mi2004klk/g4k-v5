@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.a.run.app" },
       { protocol: "https", hostname: "*.supabase.co" },
+      { protocol: "https", hostname: "ui-avatars.com" },
     ],
   },
   typescript: {

@@ -80,7 +80,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
     
     const content = (
-      <button className={cn(buttonVariants({ variant, size, className }))} ref={ref}
+      <button type={props.type || "button"} className={cn(buttonVariants({ variant, size, className }))} ref={ref}
               disabled={isLoading || disabled} {...props}>
         {isLoading && <span className="absolute inset-0 flex items-center justify-center"><DotLoader/></span>}
         <span className={cn("inline-flex items-center gap-2", isLoading && "opacity-0")}>{children}</span>

@@ -144,7 +144,6 @@ export function ConversationList({
           const title = conv.name || (conv.scope === "direct" ? conv.users?.find((u: ChatUser) => u.id !== currentUserId)?.name || "Direct Message" : "Chat");
 
           return (
-          return (
             <div
               key={conv.id || virtualRow.index}
               data-index={virtualRow.index}
@@ -158,11 +157,11 @@ export function ConversationList({
                 actionWidth={140}
                 actions={
                   <div className="flex items-center h-full">
-                    <button className="h-full px-4 bg-primary-500 text-white flex flex-col items-center justify-center gap-1 active:bg-primary-600 transition-colors">
+                    <button type="button" className="h-full px-4 bg-primary-500 text-white flex flex-col items-center justify-center gap-1 active:bg-primary-600 transition-colors">
                       <AppIcon name={isPinned ? "close" : "pin"} size="sm" />
                       <span className="text-[10px] font-semibold">{isPinned ? "Unpin" : "Pin"}</span>
                     </button>
-                    <button className="h-full px-4 bg-neutral-500 text-white flex flex-col items-center justify-center gap-1 active:bg-neutral-600 transition-colors">
+                    <button type="button" className="h-full px-4 bg-neutral-500 text-white flex flex-col items-center justify-center gap-1 active:bg-neutral-600 transition-colors">
                       <AppIcon name="archive" size="sm" />
                       <span className="text-[10px] font-semibold">Archive</span>
                     </button>

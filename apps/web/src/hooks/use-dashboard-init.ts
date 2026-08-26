@@ -5,22 +5,23 @@ import { useReverb } from "@/hooks/use-reverb";
 import { useEffect } from "react";
 
 import { useCapabilities } from "@/lib/capabilities";
-import { useAuth } from "@/lib/auth-store";
+import { useAuthStore } from "@/lib/auth-store";
 
 export function useDashboardInit<TData = any>(options?: Omit<UseQueryOptions<any, Error, TData>, "queryKey" | "queryFn">) {
   const queryClient = useQueryClient();
   const { subscribe } = useReverb();
   const { data: caps } = useCapabilities();
-  const { user } = useAuth();
+  const user = useAuthStore(s => s.user);
 
   useEffect(() => {
     let channelName = "private-company.global";
     
     // For regular users, subscribe to their department channel for scoped updates
-    if (user && user.department_id && caps) {
-        const isHR = caps['departments.manage']; // simplified check for HR/Admin
+    const deptId = (user as any)?.department_id || (user?.department as any)?.id;
+    if (user && deptId && caps) {
+        const isHR = Array.isArray(caps) ? caps.includes('departments.manage') : false; // simplified check for HR/Admin
         if (!isHR) {
-            channelName = `private-department.${user.department_id}`;
+            channelName = `private-department.${deptId}`;
         }
     }
 

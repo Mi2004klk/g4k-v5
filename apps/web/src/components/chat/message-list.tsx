@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { Avatar, AvatarFallback } from "@g4k/ui/components";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import Image from "next/image";
 
 interface ListMessage {
   id: number;
@@ -116,7 +117,7 @@ const MessageItem = memo(function MessageItem({
             {/\.(jpe?g|png|gif|webp|pdf)$/i.test(msg.attachment_url) ? (
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="text-left w-full max-w-full">
+                  <button type="button" className="text-left w-full max-w-full">
                     {/\.(pdf)$/i.test(msg.attachment_url) ? (
                       <div className="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:opacity-80 transition-opacity">
                         <AppIcon name="fileText" className="w-8 h-8 text-rose-500" />
@@ -127,14 +128,16 @@ const MessageItem = memo(function MessageItem({
                       </div>
                     ) : (
                       <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
+                      <div className="relative w-full h-48 max-w-sm rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 hover:opacity-90 transition-opacity">
+                        <Image
                           src={msg.attachment_url} 
-                          alt="Attachment" 
-                          onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
-                          className="max-w-full max-h-48 rounded-lg object-contain cursor-pointer hover:opacity-90 transition-opacity border border-neutral-200 dark:border-neutral-700"
+                          alt="Attachment"
+                          fill
+                          unoptimized
+                          className="object-contain"
                         />
-                        <div className="hidden flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:opacity-80 transition-opacity">
+                      </div>
+                      <div className="hidden flex items-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:opacity-80 transition-opacity">
                           <AppIcon name="fileText" className="w-8 h-8 text-neutral-400" />
                           <div className="flex flex-col truncate text-left">
                             <span className="text-xs font-semibold truncate">Open Attachment</span>
@@ -151,13 +154,15 @@ const MessageItem = memo(function MessageItem({
                       <iframe src={msg.attachment_url} className="w-full h-full rounded-md bg-white" />
                     ) : (
                       <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
-                        src={msg.attachment_url} 
-                        className="max-w-full max-h-full object-contain rounded-md" 
-                        alt="Preview" 
-                        onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
-                      />
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={msg.attachment_url} 
+                          alt="Preview"
+                          fill
+                          unoptimized
+                          className="object-contain rounded-md"
+                        />
+                      </div>
                       </>
                     )}
                     <div className="hidden text-white flex flex-col items-center gap-4">

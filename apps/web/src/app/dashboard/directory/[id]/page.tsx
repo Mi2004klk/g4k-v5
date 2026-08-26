@@ -11,7 +11,7 @@ import { TasksTab } from "@/components/projects/tasks-tab";
 import { LeaveTab } from "@/components/attendance/leave-tab";
 import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-history-calendar";
 import { useChatWithUser } from "@/hooks/use-chat-with-user";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuthStore } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 export default function Employee360Page() {
@@ -19,7 +19,7 @@ export default function Employee360Page() {
   const router = useRouter();
   const id = params?.id as string;
 
-  const { user: currentUser } = useAuth();
+  const currentUser = useAuthStore(state => state.user);
   const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
   const isSelf = currentUser?.id === Number(id);

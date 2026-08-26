@@ -129,7 +129,6 @@ export function ProfileAccountSection() {
   
   const restoreWidgets = useUIStore((s) => s.restoreWidgets);
   const dismissedWidgetsCount = useUIStore((s) => s.dismissedWidgets?.length ?? 0);
-  const setDensity = useUIStore((s) => s.setDensity);
 
   const { theme, setTheme } = useTheme();
   
@@ -181,8 +180,6 @@ export function ProfileAccountSection() {
     // Instantly apply client-side changes
     if (key === "theme_mode") {
       setTheme(value);
-    } else if (key === "density") {
-      setDensity(value as "compact" | "comfortable");
     }
   };
 

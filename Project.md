@@ -1066,30 +1066,30 @@
 # SECTION 17 — FRONTEND ISSUES & PERFORMANCE
 
 ## 17.1 Performance
-- [ ] Initial page load < 3s on 4G
-- [ ] Time to interactive < 5s
-- [ ] LCP < 2.5s
-- [ ] CLS < 0.1
-- [ ] FID < 100ms
-- [ ] Bundle size reasonable (code-splitting per route)
-- [ ] No unnecessary re-renders (React.memo, useMemo, useCallback where needed)
-- [ ] Virtualized lists for >100 items (chat messages, task lists)
-- [ ] Image optimization (next/image or equivalent)
-- [ ] Lazy-loaded routes + components
+- [x] Initial page load < 3s on 4G
+- [x] Time to interactive < 5s
+- [x] LCP < 2.5s
+- [x] CLS < 0.1
+- [x] FID < 100ms
+- [x] Bundle size reasonable (code-splitting per route)
+- [x] No unnecessary re-renders (React.memo, useMemo, useCallback where needed)
+- [x] Virtualized lists for >100 items (chat messages, task lists)
+- [x] Image optimization (next/image or equivalent)
+- [x] Lazy-loaded routes + components
 
 ## 17.2 Frontend Code Quality
-- [ ] No `any` types in TS (or escape hatches documented)
-- [ ] No unused imports/variables
-- [ ] Consistent naming conventions
-- [ ] Component composition (not deeply nested props)
-- [ ] State management clear (no prop drilling > 3 levels)
-- [ ] Error boundaries per major route
+- [x] No `any` types in TS (or escape hatches documented)
+- [x] No unused imports/variables
+- [x] Consistent naming conventions
+- [x] Component composition (not deeply nested props)
+- [x] State management clear (no prop drilling > 3 levels)
+- [x] Error boundaries per major route
 
 ## 17.3 Frontend-Specific Audit Items
-- [ ] All forms prevent default on submit
-- [ ] All buttons have type="button" (except submit)
-- [ ] All inputs controlled
-- [ ] All async actions show loading state
+- [x] All forms prevent default on submit
+- [x] All buttons have type="button" (except submit)
+- [x] All inputs controlled
+- [x] All async actions show loading state
 - [ ] All mutations invalidate/refetch relevant queries
 - [ ] No stale closures in useEffect
 - [ ] No memory leaks (cleanup in useEffect returns)
