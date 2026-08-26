@@ -704,7 +704,7 @@
 
 ## 9.2 Create Employee Account (HR/Admin)
 - [ ] "Add Employee" button
-- [ ] Form: Full Name, Email (unique), Username, Phone, Employee ID (auto G4K-### if blank), Department, Team (auto-filtered by dept), Job Designation, Work Schedule, Role(s) (multi)
+- [ ] Form: Full Name, Email (unique), Username, Phone, Employee ID (auto G4K-### if blank), Department, Team (auto-filtered by dept), Job Designation (multiple role), Work Schedule (shift), Role(s) (multi), profile photo, emergency contact.
 - [ ] Email uniqueness validated
 - [ ] Auto-generated secure temp password
 - [ ] Welcome email sent if SMTP configured, else HR sees temp password
@@ -737,7 +737,7 @@
 - [ ] Cannot delete title held by any employee
 - [ ] Used in employee create/edit forms
 
-## 9.6 Full Employee Record (360° View)
+## 9.6 Full Employee Record (360° View) for all employee
 - [ ] Personal Info tab
 - [ ] Attendance tab (color-coded calendar)
 - [ ] Leave History tab

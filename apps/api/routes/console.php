@@ -24,4 +24,5 @@ Schedule::command('passwords:expire-flag')->daily()->withoutOverlapping()->onOne
 Schedule::command('reminders:holidays')->daily()->withoutOverlapping()->onOneServer()->timezone($tz);
 Schedule::command('notifications:cleanup')->daily()->withoutOverlapping()->onOneServer()->timezone($tz);
 Schedule::command('tasks:reminders')->everyMinute()->withoutOverlapping()->onOneServer()->timezone($tz);
+Schedule::command('reminders:personal')->everyMinute()->withoutOverlapping()->onOneServer()->timezone($tz);
 Schedule::command('reports:cleanup-exports')->daily()->withoutOverlapping()->onOneServer()->timezone($tz);

@@ -6,6 +6,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { ChatTab } from "@/components/chat/chat-tab";
 import { NotificationsTab } from "@/components/chat/notifications-tab";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
+import { PersonalRemindersWidget } from "@/components/widgets/personal-reminders-widget";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -32,7 +33,7 @@ export default function ChatModulePage() {
               <AppIcon name="chat" size="xs" /> Chat
             </TabsTrigger>
             <TabsTrigger value="announcements" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
-              <AppIcon name="bell" size="xs" /> Announcements
+              <AppIcon name="bell" size="xs" /> Announcements & Reminders
             </TabsTrigger>
             <TabsTrigger value="notifications" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
               <AppIcon name="bell" size="xs" />
@@ -47,9 +48,14 @@ export default function ChatModulePage() {
             <ChatTab />
           </TabsContent>
 
-          <TabsContent value="announcements" className="mt-0 space-y-6">
-            <div className="max-w-4xl pt-4">
-              <AnnouncementBoard />
+          <TabsContent value="announcements" className="mt-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+              <div className="col-span-1 lg:col-span-2">
+                <AnnouncementBoard />
+              </div>
+              <div className="col-span-1">
+                <PersonalRemindersWidget />
+              </div>
             </div>
           </TabsContent>
 

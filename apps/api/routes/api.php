@@ -281,6 +281,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::delete('/announcements/{id}', [\App\Http\Controllers\AnnouncementController::class, 'destroy']);
     });
 
+    Route::apiResource('personal-reminders', \App\Http\Controllers\PersonalReminderController::class)->only(['index', 'store', 'destroy']);
+
     Route::get('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'index']);
     Route::post('/quick-notes', [\App\Http\Controllers\QuickNoteController::class, 'store']);
     Route::put('/quick-notes/{id}', [\App\Http\Controllers\QuickNoteController::class, 'update']);
