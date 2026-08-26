@@ -96,20 +96,20 @@
 - [x] Onboarding completion flag stored in DB
 
 ## 2.6 Forgot Password — Email Configured
-- [ ] "Forgot Password" link on login page
-- [ ] Accepts email, employee ID, or username
-- [ ] Reset link emailed (60-minute validity) - (only if SMTP Settings Updated from admin settings area)
-- [ ] Link opens reset form, redirects to login after success
-- [ ] Used links invalidated (cannot be reused)
-- [ ] Rate limiting on reset requests
+- [x] "Forgot Password" link on login page
+- [x] Accepts email, employee ID, or username
+- [x] Reset link is emailed with 60-minute validity when SMTP is configured in Admin Settings; otherwise, Admin/HR receives notifications for manual change requests from employee and handle password changes from Employee Management Area.
+- [x] Link opens reset form, redirects to login after success
+- [x] Used links invalidated (cannot be reused)
+- [x] Rate limiting on reset requests
 
 ## 2.7 Forgot Password — Email Not Configured
-- [ ] In-app reset request submission works
-- [ ] Request appears under Settings → Security Requests (Admin)
-- [ ] Admin approve → generates one-time secure link
-- [ ] Admin reject → request closed
-- [ ] Link shared manually with employee
-- [ ] Link expires after single use or time window
+- [x] In-app reset request submission works
+- [x] Request appears under Settings → Security Requests (Admin)
+- [x] Admin approve → generates one-time secure link
+- [x] Admin reject → request closed
+- [x] Link shared manually with employee
+- [x] Link expires after single use or time window
 
 ## 2.8 Session Management
 - [ ] Sessions silently refresh every 15 minutes (no UX interruption)
@@ -118,7 +118,7 @@
 - [ ] Sessions show device type, IP, last active
 - [ ] Remote session revoke works
 - [ ] Revoking current session logs user out immediately
-- [ ] Max active devices enforced (per company policy)
+- [ ] Max active devices enforced (per company policy) from admin settings
 
 ## 2.9 Suspicious Login Detection
 - [ ] Unrecognized IP/location login flagged

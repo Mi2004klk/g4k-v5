@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { usePublicConfig } from "@/lib/use-public-config";
 
 import { Button } from "@g4k/ui/components";
 import {
@@ -22,28 +23,44 @@ import {
 import { Input, PasswordInput } from "@g4k/ui/components";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@g4k/ui/components";
 
-import { strongPasswordSchema } from "@/lib/validations";
+const createResetSchema = (policy: any) => {
+  const min = policy?.min_length || 8;
+  
+  let passwordRule = z.string().min(min, `Password must be at least ${min} characters`);
+  
+  if (policy?.require_mixed) {
+    passwordRule = passwordRule.regex(/[A-Z]/, "Must contain uppercase letter")
+                               .regex(/[a-z]/, "Must contain lowercase letter");
+  }
+  if (policy?.require_number) {
+    passwordRule = passwordRule.regex(/[0-9]/, "Must contain a number");
+  }
+  if (policy?.require_symbol) {
+    passwordRule = passwordRule.regex(/[^A-Za-z0-9]/, "Must contain a symbol");
+  }
 
-// Strong password policy: min 8, mixed case, numbers, symbols
-const resetSchema = z.object({
-  identifier: z.string().min(1, "Identifier is required"),
-  token: z.string().min(1, "Reset token is required"),
-  password: strongPasswordSchema,
-  password_confirmation: z.string()
-}).refine((data) => data.password === data.password_confirmation, {
-  message: "Passwords do not match",
-  path: ["password_confirmation"],
-});
-
-type FormValues = z.infer<typeof resetSchema>;
+  return z.object({
+    identifier: z.string().min(1, "Identifier is required"),
+    token: z.string().min(1, "Reset token is required"),
+    password: passwordRule,
+    password_confirmation: z.string()
+  }).refine((data) => data.password === data.password_confirmation, {
+    message: "Passwords do not match",
+    path: ["password_confirmation"],
+  });
+};
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: config } = usePublicConfig();
   const [isLoading, setIsLoading] = useState(false);
 
+  const dynamicSchema = createResetSchema(config?.password_policy);
+  type FormValues = z.infer<typeof dynamicSchema>;
+
   const form = useForm<FormValues>({
-    resolver: zodResolver(resetSchema),
+    resolver: zodResolver(dynamicSchema),
     defaultValues: {
       identifier: "",
       token: "",
@@ -64,6 +81,21 @@ function ResetPasswordForm() {
       form.setValue("identifier", email);
     }
   }, [searchParams, form]);
+
+  const passwordValue = form.watch("password");
+
+  // Calculate password strength
+  const getStrength = (pass: string) => {
+    let score = 0;
+    const policy = config?.password_policy || { min_length: 8, require_mixed: true, require_number: true, require_symbol: true };
+    if (pass.length >= (policy.min_length || 8)) score++;
+    if (!policy.require_mixed || (/[A-Z]/.test(pass) && /[a-z]/.test(pass))) score++;
+    if (!policy.require_number || /[0-9]/.test(pass)) score++;
+    if (!policy.require_symbol || /[^A-Za-z0-9]/.test(pass)) score++;
+    return score; // Max 4
+  };
+  const strengthScore = getStrength(passwordValue || "");
+  const strengthColors = ["bg-neutral-200 dark:bg-neutral-800", "bg-red-500", "bg-amber-500", "bg-emerald-400", "bg-emerald-600"];
 
   async function onSubmit(data: FormValues) {
     setIsLoading(true);
@@ -154,7 +186,7 @@ function ResetPasswordForm() {
                 control={form.control}
                 name="token"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="hidden">
                     <FormLabel className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
                       Reset Token
                     </FormLabel>
@@ -177,6 +209,28 @@ function ResetPasswordForm() {
                     <FormControl>
                       <PasswordInput placeholder="••••••••" {...field} className="font-sans" disabled={isLoading} />
                     </FormControl>
+                    {passwordValue?.length > 0 && (
+                      <div className="mt-2 space-y-1.5 animate-in fade-in zoom-in duration-200">
+                        <div className="flex gap-1 h-1.5 w-full">
+                          {[1, 2, 3, 4].map((step) => (
+                            <div
+                              key={step}
+                              className={`h-full flex-1 rounded-full transition-colors duration-300 ${
+                                step <= strengthScore ? strengthColors[strengthScore] : "bg-neutral-200 dark:bg-neutral-800"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="text-[10px] text-neutral-500 flex justify-between font-medium">
+                          <span>
+                            {strengthScore === 0 ? "Very Weak" : 
+                             strengthScore === 1 ? "Weak" : 
+                             strengthScore === 2 ? "Fair" : 
+                             strengthScore === 3 ? "Good" : "Strong"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     <FormMessage className="font-sans" />
                   </FormItem>
                 )}
