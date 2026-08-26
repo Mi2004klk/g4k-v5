@@ -183,26 +183,53 @@ export function ProjectsTab() {
         />
       ) : (
         <div className="space-y-6">
-          <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
-            {projects.map((project: {
-              id: number;
-              name: string;
-              description?: string;
-              priority: string;
-              progress: number;
-              deadline?: string;
-              cover_image?: string;
-              members?: { id: number; name: string }[];
-            }) => (
-              <ProjectCard 
-                key={project.id} 
-                project={project} 
-                viewMode={viewMode as "grid" | "list"}
-                onClick={() => router.push(`/dashboard/projects/${project.id}`)}
-                onUpdateName={canManageProjects ? (name) => updateProjectMutation.mutate({ id: project.id, name }) : undefined}
-              />
-            ))}
-          </div>
+          {(() => {
+            if (caps.includes("super_admin")) {
+              const grouped = projects.reduce((acc: any, project: any) => {
+                const deptName = project.department?.name || "Company-wide / Unassigned";
+                if (!acc[deptName]) acc[deptName] = [];
+                acc[deptName].push(project);
+                return acc;
+              }, {});
+
+              return (
+                <div className="space-y-8">
+                  {Object.entries(grouped).map(([dept, deptProjects]: [string, any]) => (
+                    <div key={dept} className="space-y-3">
+                      <h3 className="text-sm font-bold text-neutral-800 dark:text-neutral-200 border-b border-neutral-100 dark:border-neutral-800 pb-2">
+                        {dept} <span className="text-neutral-400 font-normal ml-1">({deptProjects.length})</span>
+                      </h3>
+                      <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
+                        {deptProjects.map((project: any) => (
+                          <ProjectCard 
+                            key={project.id} 
+                            project={project} 
+                            viewMode={viewMode as "grid" | "list"}
+                            onClick={() => router.push(`/dashboard/projects/${project.id}`)}
+                            onUpdateName={canManageProjects ? (name) => updateProjectMutation.mutate({ id: project.id, name }) : undefined}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+
+            return (
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
+                {projects.map((project: any) => (
+                  <ProjectCard 
+                    key={project.id} 
+                    project={project} 
+                    viewMode={viewMode as "grid" | "list"}
+                    onClick={() => router.push(`/dashboard/projects/${project.id}`)}
+                    onUpdateName={canManageProjects ? (name) => updateProjectMutation.mutate({ id: project.id, name }) : undefined}
+                  />
+                ))}
+              </div>
+            );
+          })()}
           
           {(data?.last_page || data?.meta?.last_page) > 1 && (
             <div className="flex justify-center items-center gap-2 pt-4">

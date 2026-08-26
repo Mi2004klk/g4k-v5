@@ -21,10 +21,13 @@ class ProjectController extends Controller
         if ($request->user()->resolveActiveRole() === 'super_admin') return true;
         
         $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
-        if (!$project->department_id) {
-            return $project->created_by === $request->user()->id || $project->members()->where('users.id', $request->user()->id)->exists();
+        $userId = $request->user()->id;
+        
+        if (in_array($project->department_id, $deptIds) || $project->created_by === $userId) {
+            return true;
         }
-        return in_array($project->department_id, $deptIds);
+        
+        return $project->members()->whereIn('users.department_id', $deptIds)->exists();
     }
 
 
@@ -61,12 +64,15 @@ class ProjectController extends Controller
                   ->orWhereHas('members', fn ($m) => $m->where('users.id', $userId));
             });
         } elseif ($request->user()->resolveActiveRole() === 'hr') {
+            $userId = $request->user()->id;
             $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
-            if (empty($deptIds)) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->whereIn('department_id', $deptIds);
-            }
+            $query->where(function ($q) use ($userId, $deptIds) {
+                $q->where('created_by', $userId)
+                  ->orWhereIn('department_id', $deptIds)
+                  ->orWhereHas('members', function($q2) use ($deptIds) {
+                      $q2->whereIn('users.department_id', $deptIds);
+                  });
+            });
         }
 
         if ($request->filled('status')) {

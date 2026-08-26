@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
-import { Card, CardContent, Avatar, AvatarFallback, InlineEdit, StatusBadge, Progress } from "@g4k/ui/components";
+import { Card, CardContent, Avatar, AvatarFallback, AvatarImage, InlineEdit, StatusBadge, Progress } from "@g4k/ui/components";
 import { getPriorityColor } from "@g4k/ui/theme";
 import { usePins } from "@/hooks/use-pins";
 import { Button } from "@g4k/ui/components";
@@ -16,7 +16,7 @@ interface Project {
   progress: number;
   deadline?: string;
   cover_image?: string;
-  members?: { id: number; name: string }[];
+  members?: { id: number; name: string; avatar_url?: string }[];
 }
 
 export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName }: { project: Project; viewMode?: "grid" | "list"; onClick?: () => void; onUpdateName?: (name: string) => void }) {
@@ -91,6 +91,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
               {project.members && project.members.length > 0 ? (
                 project.members.slice(0, 3).map((m) => (
                   <Avatar key={m.id} className="inline-block h-6 w-6 rounded-full ring-2 ring-card" title={m.name}>
+                    {m.avatar_url && <AvatarImage src={m.avatar_url} alt={m.name} />}
                     <AvatarFallback name={m.name} className="text-[9px]" />
                   </Avatar>
                 ))
@@ -193,6 +194,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
                     className="inline-block h-6 w-6 rounded-full ring-2 ring-card"
                     title={m.name}
                   >
+                    {m.avatar_url && <AvatarImage src={m.avatar_url} alt={m.name} />}
                     <AvatarFallback name={m.name} className="text-[9px]" />
                   </Avatar>
                 ))
