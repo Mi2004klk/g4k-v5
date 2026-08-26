@@ -20,7 +20,7 @@ export function ProjectsTab() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [sort, setSort] = useUrlState("sort", "created_at");
-  const [sortDirection, setSortDirection] = useUrlState<"asc" | "desc">("direction", "desc");
+  const [sortDirection, setSortDirection] = useUrlState("direction", "desc");
   const [status, setStatus] = useState("all");
   const [priority, setPriority] = useState("all");
   const [viewMode, setViewMode] = useUrlState("view", "grid");
@@ -103,7 +103,7 @@ export function ProjectsTab() {
               onSearchChange={setSearch}
               searchPlaceholder="Search projects..."
               sortBy={sort}
-              sortDirection={sortDirection}
+              sortDirection={sortDirection as "asc" | "desc"}
               onSortChange={(val, dir) => {
                 setSort(val);
                 setSortDirection(dir);
