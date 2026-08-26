@@ -207,14 +207,14 @@
 # SECTION 4 — DASHBOARDS
 
 ## 4.1 Universal Dashboard Behaviors
-- [ ] Each widget loads independently (failed widget doesn't block others)
-- [ ] Each widget clickable → opens detail view
-- [ ] Drag-to-rearrange widgets
-- [ ] Layout persists per user across devices (save option on customize dashboard dropdown)
-- [ ] Dismissed widgets restorable: My Profile → Preferences & customize dashboard dropdown
-- [ ] Loading skeletons (not blank states)
-- [ ] Empty states with helpful CTAs
-- [ ] Error states with retry option
+- [x] Each widget loads independently (failed widget doesn't block others)
+- [x] Each widget clickable → opens detail view
+- [x] Drag-to-rearrange widgets
+- [x] Layout persists per user across devices (save option on customize dashboard dropdown)
+- [x] Dismissed widgets restorable: My Profile → Preferences & customize dashboard dropdown
+- [x] Loading skeletons (not blank states)
+- [x] Empty states with helpful CTAs
+- [x] Error states with retry option
 
 ## 4.2 Employee Dashboard
 - [ ] Announcements widget (dismissible ✕)

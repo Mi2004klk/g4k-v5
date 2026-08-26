@@ -298,10 +298,15 @@ export function AnnouncementBoard() {
             ))}
           </div>
         ) : announcements.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50">
+          <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 h-full min-h-[150px]">
             <AppIcon name="announcement" size="lg" className="text-neutral-300 dark:text-neutral-700 mb-2" />
             <p className="text-xs font-bold text-neutral-500">No announcements yet</p>
-            <p className="text-[10px] text-neutral-400 mt-1">Check back later for updates</p>
+            <p className="text-[10px] text-neutral-400 mt-1 mb-3">Check back later for updates</p>
+            {canManage && (
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setInitialData(undefined); setEditingId(null); setShowCreate(true); }}>
+                Post Announcement
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

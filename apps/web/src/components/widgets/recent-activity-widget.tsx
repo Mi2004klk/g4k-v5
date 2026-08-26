@@ -4,7 +4,8 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { formatDistanceToNow } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
-import { Card } from "@g4k/ui/components";
+import { Card, Skeleton, Button } from "@g4k/ui/components";
+import Link from "next/link";
 import { STALE_TIME_METRICS } from "@/lib/query-keys";
 import { WidgetInfo } from "./widget-info";
 
@@ -49,11 +50,34 @@ export function RecentActivityWidget() {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto thin-scrollbar mt-2">
-        {activities.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        {isPending ? (
+          <div className="space-y-4 py-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center h-full p-4 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
+            <AppIcon name="warning" size="lg" className=" text-rose-400" />
+            <p className="text-[11px] font-medium text-rose-600">Failed to load activity</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+              Retry
+            </Button>
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center h-full min-h-[150px]">
             <AppIcon name="activity" size="xl" className=" text-neutral-300 dark:text-neutral-700 mb-2" />
             <h4 className="text-xs font-semibold text-neutral-900 dark:text-white">No recent activity</h4>
-            <p className="text-[11px] text-neutral-400 mt-1">Activity will appear here once actions are taken.</p>
+            <p className="text-[11px] text-neutral-400 mt-1 mb-4">Activity will appear here once actions are taken.</p>
+            <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+              <Link href="/dashboard/tasks">View Tasks</Link>
+            </Button>
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-800 -mx-4 px-4">

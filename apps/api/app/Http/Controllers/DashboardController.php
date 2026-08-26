@@ -37,33 +37,34 @@ class DashboardController extends Controller
             'preferences' => Cache::remember("user_prefs_{$user->id}", 3600, fn() => $safeCall(UserPreferenceController::class, 'show')),
             'pending_approvals' => Cache::remember("pending_approvals_v{$version}_{$user->id}_{$activeRole}", 3600, function() use ($activeRole, $user) {
                 $approvals = [];
-                // Leaves
-                $leavesQuery = DB::table('leave_requests')
-                    ->join('users', 'leave_requests.user_id', '=', 'users.id')
-                    ->join('approvals', function($join) {
-                        $join->on('approvals.approvable_id', '=', 'leave_requests.id')
-                             ->where('approvals.approvable_type', \App\Models\LeaveRequest::class)
-                             ->where('approvals.status', 'pending');
-                    })
-                    ->where('leave_requests.status', 'pending')
-                    ->select(
-                        'leave_requests.id as leave_request_id',
-                        'approvals.id as approval_id',
-                        'leave_requests.created_at',
-                        'users.name as user_name',
-                        'leave_requests.reason as title'
-                    );
+                try {
+                    // Leaves
+                    $leavesQuery = DB::table('leave_requests')
+                        ->join('users', 'leave_requests.user_id', '=', 'users.id')
+                        ->join('approvals', function($join) {
+                            $join->on('approvals.approvable_id', '=', 'leave_requests.id')
+                                 ->where('approvals.approvable_type', \App\Models\LeaveRequest::class)
+                                 ->where('approvals.status', 'pending');
+                        })
+                        ->where('leave_requests.status', 'pending')
+                        ->select(
+                            'leave_requests.id as leave_request_id',
+                            'approvals.id as approval_id',
+                            'leave_requests.created_at',
+                            'users.name as user_name',
+                            'leave_requests.reason as title'
+                        );
+                        
+                    if ($activeRole === 'employee') {
+                        $leavesQuery->where('leave_requests.user_id', $user->id);
+                    } elseif ($activeRole === 'hr') {
+                        \App\Support\HrScope::apply($leavesQuery, $user, 'leave_requests.user_id');
+                        $leavesQuery->where('leave_requests.user_id', '!=', $user->id);
+                    } elseif ($activeRole === 'super_admin') {
+                        $leavesQuery->where('leave_requests.user_id', '!=', $user->id);
+                    }
                     
-                if ($activeRole === 'employee') {
-                    $leavesQuery->where('leave_requests.user_id', $user->id);
-                } elseif ($activeRole === 'hr') {
-                    \App\Support\HrScope::apply($leavesQuery, $user, 'leave_requests.user_id');
-                    $leavesQuery->where('leave_requests.user_id', '!=', $user->id);
-                } elseif ($activeRole === 'super_admin') {
-                    $leavesQuery->where('leave_requests.user_id', '!=', $user->id);
-                }
-                
-                $leaves = $leavesQuery->get();
+                    $leaves = $leavesQuery->get();
 
                     foreach ($leaves as $l) {
                         $route = '/dashboard/attendance?tab=leave';
@@ -184,6 +185,10 @@ class DashboardController extends Controller
 
                     usort($approvals, fn($a, $b) => strtotime($b['created_at']) - strtotime($a['created_at']));
                     return array_slice($approvals, 0, 10); // Return top 10 recent approvals
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to load pending_approvals in init(): " . $e->getMessage());
+                    return [];
+                }
             }),
             'announcements' => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', []),
             'quick_notes' => Cache::remember("quick_notes_v{$version}_{$user->id}", 3600, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
