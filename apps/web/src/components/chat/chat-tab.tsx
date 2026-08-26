@@ -100,6 +100,7 @@ export function ChatTab() {
             });
           }
           queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+          queryClient.invalidateQueries({ queryKey: ["chat-unread-count"] });
         }
       };
       
@@ -370,6 +371,7 @@ export function ChatTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+      queryClient.invalidateQueries({ queryKey: ["chat-unread-count"] });
     },
   });
 

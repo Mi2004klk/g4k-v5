@@ -616,22 +616,22 @@
 - [x] No read receipts in group/project/global chats
 
 ## 8.6 Message Pinning (HR — Project Chats)
-- [ ] HR can pin messages in project group chats
-- [ ] Pinned messages appear in top bar for all members
-- [ ] Only HR can pin/unpin
-- [ ] Pinned bar shows message preview + author
+- [x] HR can pin messages in project group chats
+- [x] Pinned messages appear in top bar for all members
+- [x] Only HR can pin/unpin
+- [x] Pinned bar shows message preview + author
 
 ## 8.7 Unread Conversations
-- [ ] Unread convos: colored left border + count badge
-- [ ] Auto-marked read on open
-- [ ] Unread badge on Chat icon in nav
-- [ ] Realtime: new messages update unread state without refresh
+- [x] Unread convos: colored left border + count badge
+- [x] Auto-marked read on open
+- [x] Unread badge on Chat icon in nav
+- [x] Realtime: new messages update unread state without refresh
 
 ## 8.8 Pinned Conversations
-- [ ] Pin/unpin conversation to top
-- [ ] Pinned above unpinned
-- [ ] Max 100 pinned per user
-- [ ] Persists across devices
+- [x] Pin/unpin conversation to top
+- [x] Pinned above unpinned
+- [x] Max 100 pinned per user
+- [x] Persists across devices
 
 ## 8.9 Task Completion Alerts in Chat
 - [ ] Employee completes project task → auto-alert in project chat
