@@ -113,8 +113,19 @@ class DepartmentController extends Controller
     public function archive(Request $request, string $id)
     {
         $department = Department::withTrashed()->findOrFail($id);
+        
+        if ($department->users()->exists()) {
+            return response()->json([
+                'message' => 'Cannot archive department because it has assigned employees.'
+            ], 422);
+        }
+
         $before = $department->toArray();
 
+        $department->update([
+            'archived_at' => now(),
+            'is_active' => false
+        ]);
         $department->delete();
 
         AuditLogger::log($request, 'archive', 'department', $department->id, $before, $department->toArray());
@@ -128,7 +139,10 @@ class DepartmentController extends Controller
         $before = $department->toArray();
 
         $department->restore();
-        $department->update(['is_active' => true]);
+        $department->update([
+            'is_active' => true,
+            'archived_at' => null
+        ]);
 
         AuditLogger::log($request, 'restore', 'department', $department->id, $before, $department->toArray());
 
@@ -144,7 +158,7 @@ class DepartmentController extends Controller
         // In-use guard: block deletion/deactivation if employees exist
         if ($department->users()->exists()) {
             return response()->json([
-                'message' => 'Cannot archive department because it has assigned employees.'
+                'message' => 'Cannot delete department because it has assigned employees.'
             ], 422);
         }
 

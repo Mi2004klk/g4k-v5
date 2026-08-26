@@ -70,6 +70,7 @@ interface TeamRef {
 
 interface Department {
   id: number;
+  department_id?: string;
   name: string;
   description?: string;
   users_count?: number;
@@ -345,9 +346,16 @@ export function DepartmentsTab() {
                   {row.original.name}
                 </span>
               )}
-              {row.original.description && (
-                <span className="text-xs text-neutral-500">{row.original.description}</span>
-              )}
+              <div className="flex items-center gap-2 mt-0.5">
+                {row.original.department_id && (
+                  <span className="text-[10px] font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded shrink-0">
+                    {row.original.department_id}
+                  </span>
+                )}
+                {row.original.description && (
+                  <span className="text-xs text-neutral-500 truncate">{row.original.description}</span>
+                )}
+              </div>
             </div>
           </div>
         ),
@@ -445,12 +453,20 @@ export function DepartmentsTab() {
                       <AppIcon name="play" className=" mr-2 text-emerald-600" /> Reactivate
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "archive", payload: dept })}>
-                      <AppIcon name="archive" className=" mr-2 text-amber-600" /> Archive
+                    <DropdownMenuItem 
+                      onClick={() => setConfirmState({ isOpen: true, type: "archive", payload: dept })}
+                      disabled={(dept.users_count || 0) > 0}
+                    >
+                      <AppIcon name="archive" className={`mr-2 ${(dept.users_count || 0) > 0 ? "text-neutral-400" : "text-amber-600"}`} /> 
+                      Archive
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: dept })}>
-                    <AppIcon name="trash" className=" mr-2 text-rose-600" /> {dept.users_count && dept.users_count > 0 ? "Deactivate" : "Delete"}
+                  <DropdownMenuItem 
+                    onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: dept })}
+                    disabled={(dept.users_count || 0) > 0}
+                  >
+                    <AppIcon name="trash" className={`mr-2 ${(dept.users_count || 0) > 0 ? "text-neutral-400" : "text-rose-600"}`} /> 
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
