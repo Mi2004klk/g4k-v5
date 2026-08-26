@@ -178,20 +178,20 @@
 - [x] Limited reports (scoped to departments)
 
 ### Admin Permissions
-- [ ] Does NOT clock in/out, project timer, personal task area (UI hidden + server rejection)
-- [ ] Can view own attendance history (if applicable)
-- [ ] Full visibility: all departments, all employees
-- [ ] Approves HR leave requests
-- [ ] Creates HR + Admin + Employee accounts
-- [ ] Manages departments, designations
-- [ ] Full reports & exports
-- [ ] System settings access
-- [ ] Audit log access
-- [ ] Manages holidays and work schedules
+- [x] Does NOT clock in/out, project timer, personal task area (UI hidden + server rejection)
+- [x] Can view own attendance history (if applicable)
+- [x] Full visibility: all departments, all employees
+- [x] Approves HR leave requests
+- [x] Creates HR + Admin + Employee accounts
+- [x] Manages departments, designations
+- [x] Full reports & exports
+- [x] System settings access
+- [x] Audit log access
+- [x] Manages holidays and work schedules
 
 ## 3.2 Critical Scoping Rules
-- [ ] HR has zero visibility into non-assigned departments (queries scoped by join on `department_hr_assignments`)
-- [ ] Employees see only explicitly assigned projects/tasks
+- [x] HR has zero visibility into non-assigned departments (queries scoped by join on `department_hr_assignments`)
+- [x] Employees see only explicitly assigned projects/tasks
 - [ ] Nobody can approve own request (DB constraint + app logic)
 - [ ] HR leave → Admin approval routing (not another HR)
 - [ ] Employees only see group chats they're members of
