@@ -20,6 +20,7 @@ const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder")
 import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, Toolbar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent, FormDraftAlert } from "@g4k/ui/components";
 import { priority as priorityConfig, taskStatus } from "@g4k/ui/theme/semantic";
 import { FormError } from "@/components/forms/form-error";
+import { MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
@@ -1046,6 +1047,12 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             Retry
           </Button>
         </div>
+      ) : !isLoading && filteredTasks.length === 0 ? (
+        <MeaningfulEmpty
+          entityName="Task"
+          description={(data?.total === 0 || data?.meta?.total === 0 || data?.data?.length === 0) ? "There are no tasks available." : "No tasks match your current filters. Try adjusting them."}
+          icon="task"
+        />
       ) : (
         <>
           {(viewMode === "list" || viewMode === "kanban") && (

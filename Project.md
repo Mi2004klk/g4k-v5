@@ -1101,31 +1101,31 @@
 # SECTION 18 — DATA INTEGRITY & EDGE CASES
 
 ## 18.1 Data Validation
-- [ ] All inputs validated client + server
-- [ ] SQL injection prevented (parameterized queries / ORM)
-- [ ] XSS prevented (no dangerouslySetInnerHTML without sanitization)
-- [ ] CSRF protection on state-changing endpoints
-- [ ] File upload validation (type, size, content)
-- [ ] Date validation (no negative ranges, no backdated leave)
-- [ ] Email uniqueness
-- [ ] Employee ID uniqueness
+- [x] All inputs validated client + server
+- [x] SQL injection prevented (parameterized queries / ORM)
+- [x] XSS prevented (no dangerouslySetInnerHTML without sanitization)
+- [x] CSRF protection on state-changing endpoints
+- [x] File upload validation (type, size, content)
+- [x] Date validation (no negative ranges, no backdated leave)
+- [x] Email uniqueness
+- [x] Employee ID uniqueness
 
 ## 18.2 Edge Cases
-- [ ] User with no assigned projects (empty state)
-- [ ] User with no tasks (empty state)
-- [ ] User with no leave balance (blocked from submit)
-- [ ] Department with no HR assigned
-- [ ] Project with no team members
-- [ ] Task with circular dependency (rejected)
-- [ ] Concurrent task status updates (last-write-wins or optimistic conflict resolution)
-- [ ] Concurrent leave approval (only one approver wins)
-- [ ] Timezone crossing (employee in different TZ than company)
-- [ ] Daylight saving transitions
-- [ ] Leap year Feb 29 holidays
-- [ ] Employee deleted mid-task (task reassigned or archived)
-- [ ] HR removed from department (their scoped queries update)
-- [ ] Network drop mid-punch (offline queue)
-- [ ] Token refresh mid-action (retry without data loss)
+- [x] User with no assigned projects (empty state)
+- [x] User with no tasks (empty state)
+- [x] User with no leave balance (blocked from submit)
+- [x] Department with no HR assigned
+- [x] Project with no team members
+- [x] Task with circular dependency (rejected)
+- [x] Concurrent task status updates (last-write-wins or optimistic conflict resolution)
+- [x] Concurrent leave approval (only one approver wins)
+- [x] Timezone crossing (employee in different TZ than company)
+- [x] Daylight saving transitions
+- [x] Leap year Feb 29 holidays
+- [x] Employee deleted mid-task (task reassigned or archived)
+- [x] HR removed from department (their scoped queries update)
+- [x] Network drop mid-punch (offline queue)
+- [x] Token refresh mid-action (retry without data loss)
 
 ---
 
