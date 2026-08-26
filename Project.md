@@ -217,14 +217,14 @@
 - [x] Error states with retry option
 
 ## 4.2 Employee Dashboard
-- [ ] Announcements widget (dismissible ✕)
-- [ ] Active Projects widget (shows assigned projects)
-- [ ] Pending Tasks widget (assigned, not complete)
-- [ ] Task Approval Status widget (Pending/Approved/Redo)
-- [ ] Recent Task Progress widget (visual progress bar)
-- [ ] Upcoming Holidays widget
-- [ ] Quick Notes widget (private notepad, persisted)
-- [ ] Time Clock widget (clock in/out from dashboard)
+- [x] Announcements widget (dismissible ✕)
+- [x] Active Projects widget (shows assigned projects)
+- [x] Pending Tasks widget (assigned, not complete)
+- [x] Task Approval Status widget (Pending/Approved/Redo)
+- [x] Recent Task Progress widget (visual progress bar)
+- [x] Upcoming Holidays widget
+- [x] Quick Notes widget (private notepad, persisted)
+- [x] Time Clock widget (clock in/out from dashboard)
 
 ## 4.3 HR Dashboard
 - [ ] Team Attendance Today widget (present/absent/late/on-leave counts)

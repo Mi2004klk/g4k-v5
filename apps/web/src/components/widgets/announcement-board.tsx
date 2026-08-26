@@ -12,6 +12,7 @@ import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, Tooltip
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 import { hasCapability, useCapabilities } from "@/lib/capabilities";
+import { useUIStore } from "@/lib/ui-store";
 import { AnnouncementComposer } from "./announcement-composer";
 
 export interface Announcement {
@@ -28,6 +29,7 @@ export interface Announcement {
 export function AnnouncementBoard() {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
+  const dismissWidget = useUIStore((s) => s.dismissWidget);
   const caps = useCapabilities();
   const canManage = hasCapability(caps.data, "announcements.manage");
 
@@ -272,16 +274,27 @@ export function AnnouncementBoard() {
           </span>
           {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
         </div>
-        {canManage && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-[11px] px-2.5">
-              Refresh
-            </Button>
-            <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setInitialData(undefined); setShowCreate(true); }} className="h-7 text-[11px] px-2.5 shadow-sm">
-              <AppIcon name="plus" size="xs" className="mr-1" /> Post
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {canManage && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-[11px] px-2.5">
+                Refresh
+              </Button>
+              <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setInitialData(undefined); setShowCreate(true); }} className="h-7 text-[11px] px-2.5 shadow-sm">
+                <AppIcon name="plus" size="xs" className="mr-1" /> Post
+              </Button>
+            </>
+          )}
+          <button 
+            type="button"
+            aria-label="Dismiss widget"
+            onClick={() => dismissWidget("announcements")}
+            className="p-1 text-neutral-400 hover:text-rose-500 transition-colors ml-1" 
+            title="Remove widget"
+          >
+            <AppIcon name="x" size="sm" />
+          </button>
+        </div>
       </div>
       
       <AnnouncementComposer
