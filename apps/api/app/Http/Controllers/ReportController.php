@@ -93,6 +93,11 @@ class ReportController extends Controller
                         'assignedTasks as completed_tasks' => function($q) {
                             $q->where('status', 'done');
                         },
+                        'assignedTasks as redo_tasks' => function($q) {
+                            $q->whereHas('approval', function($aq) {
+                                $aq->where('decision', 'redo');
+                            });
+                        },
                         'assignedTasks as total_tasks'
                     ])->withSum('taskTimeLogs as total_minutes', 'minutes_logged');
                 }
@@ -111,6 +116,11 @@ class ReportController extends Controller
                         $loggedHours = ($u->total_minutes ?? 0) / 60;
                         $timeScore = min(100, ($loggedHours / 160) * 100);
                         $u->productivity_score = round(($taskCompletionRate * 0.8) + ($timeScore * 0.2), 1);
+                        
+                        $redoRate = $u->total_tasks > 0 ? (($u->redo_tasks / $u->total_tasks) * 100) : 0;
+                        $u->redo_rate = round($redoRate, 1);
+                        $u->avg_time_per_task = $u->total_tasks > 0 ? round(($u->total_minutes ?? 0) / $u->total_tasks) : 0;
+
                         return $u;
                     });
                 }

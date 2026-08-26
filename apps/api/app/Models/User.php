@@ -110,6 +110,11 @@ class User extends Authenticatable
         return $this->hasMany(TaskTimeLog::class);
     }
 
+    public function assignedTasks()
+    {
+        return $this->hasMany(Task::class, 'assignee_id');
+    }
+
     public function resolveActiveRole(): string
     {
         $roles = $this->getCachedRoles();

@@ -761,20 +761,20 @@
 - [x] Export
 
 ## 10.3 Saved Filter Views
-- [ ] Save filter combos as named views
-- [ ] One-click reapply
-- [ ] Per-user saved views
+- [x] Save filter combos as named views
+- [x] One-click reapply
+- [x] Per-user saved views
 
 ## 10.4 Custom Report Builder
-- [ ] Datasets: Tasks & Deliverables, Projects & Milestones, Employee Directory, Productivity
-- [ ] Productivity = 80% task completion + 20% time logged
-- [ ] Export any custom report
+- [x] Datasets: Tasks & Deliverables, Projects & Milestones, Employee Directory, Productivity
+- [x] Productivity = 80% task completion + 20% time logged
+- [x] Export any custom report
 
 ## 10.5 Admin-Only Reports
-- [ ] Attendance (date range, dept, individual)
-- [ ] Project Completion (who, when)
-- [ ] Task Statistics (completion rates, redo rates, time averages)
-- [ ] Productivity Summary (per employee)
+- [x] Attendance (date range, dept, individual)
+- [x] Project Completion (who, when)
+- [x] Task Statistics (completion rates, redo rates, time averages)
+- [x] Productivity Summary (per employee)
 
 ## 10.6 Export Background Process
 - [ ] Click Export → runs in background (no UI freeze)

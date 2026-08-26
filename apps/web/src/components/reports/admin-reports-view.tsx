@@ -118,6 +118,11 @@ export function AdminReportsView() {
     { accessorKey: "department.name", header: "Department", cell: ({ row }: any) => row.original.department?.name || "—" },
     { accessorKey: "total_tasks", header: "Total Tasks" },
     { accessorKey: "completed_tasks", header: "Completed Tasks" },
+    { accessorKey: "redo_rate", header: "Redo Rate", cell: ({ row }: any) => (row.original.redo_rate !== undefined ? row.original.redo_rate + "%" : "0%") },
+    { accessorKey: "avg_time_per_task", header: "Avg Time/Task", cell: ({ row }: any) => {
+        const mins = row.original.avg_time_per_task || 0;
+        return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+    }},
     { accessorKey: "total_minutes", header: "Total Hours", cell: ({ row }: any) => (row.original.total_minutes ? (row.original.total_minutes / 60).toFixed(1) + "h" : "0h") },
     { accessorKey: "productivity_score", header: "Productivity Score", cell: ({ row }: any) => (row.original.productivity_score ? row.original.productivity_score + "%" : "0%") },
   ];
