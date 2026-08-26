@@ -19,8 +19,8 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 export function ProjectsTab() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("created_at");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sort, setSort] = useUrlState("sort", "created_at");
+  const [sortDirection, setSortDirection] = useUrlState<"asc" | "desc">("direction", "desc");
   const [status, setStatus] = useState("all");
   const [priority, setPriority] = useState("all");
   const [viewMode, setViewMode] = useUrlState("view", "grid");

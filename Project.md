@@ -428,46 +428,46 @@
   - [x] Members immediately gain access to project tasks + chat
 
 ## 7.4 Project Sorting
-- [ ] Sort by Created Date (asc/desc)
-- [ ] Sort by Deadline (asc/desc)
-- [ ] Sort by Priority (asc/desc)
-- [ ] Sort persists across navigation
+- [x] Sort by Created Date (asc/desc)
+- [x] Sort by Deadline (asc/desc)
+- [x] Sort by Priority (asc/desc)
+- [x] Sort persists across navigation
 
 ## 7.5 Project History Log
-- [ ] Team members who participated
-- [ ] Total tasks completed
-- [ ] Total time spent
-- [ ] Completion date + final approval status
+- [x] Team members who participated
+- [x] Total tasks completed
+- [x] Total time spent
+- [x] Completion date + final approval status
 
 ## 7.6 Task Views (4 views)
 
 ### Kanban Board (Default)
-- [ ] Columns: To Do / In Progress / Review / Done
-- [ ] Cards draggable between columns
-- [ ] Drag updates status instantly (optimistic UI + server persist)
-- [ ] Right-click → quick-action menu
-- [ ] Card reorder within column (persisted)
-- [ ] Mobile: swipe between columns, long-press to drag
+- [x] Columns: To Do / In Progress / Review / Done
+- [x] Cards draggable between columns
+- [x] Drag updates status instantly (optimistic UI + server persist)
+- [x] Right-click → quick-action menu
+- [x] Card reorder within column (persisted)
+- [x] Mobile: swipe between columns, long-press to drag
 
 ### List View
-- [ ] Sortable, searchable data table
-- [ ] Filter bar: status, priority, date range, assignee
-- [ ] Search within tasks
-- [ ] Bulk actions
-- [ ] Pagination: 20/50/100 per page
+- [x] Sortable, searchable data table
+- [x] Filter bar: status, priority, date range, assignee
+- [x] Search within tasks
+- [x] Bulk actions
+- [x] Pagination: 20/50/100 per page
 
 ### Timeline (Gantt)
-- [ ] Horizontal bars per task (start → due)
-- [ ] Diamond markers for milestones
-- [ ] Dependency arrows
-- [ ] Project bars (start → deadline)
-- [ ] HR/Admin only
-- [ ] Pan/zoom usable
-- [ ] Responsive (collapses to vertical list on mobile if needed)
+- [x] Horizontal bars per task (start → due)
+- [x] Diamond markers for milestones
+- [x] Dependency arrows
+- [x] Project bars (start → deadline)
+- [x] HR/Admin only
+- [x] Pan/zoom usable
+- [x] Responsive (collapses to vertical list on mobile if needed)
 
 ### QA Form Builder (HR/Admin)
-- [ ] Field types: Text, Long Text, Checkboxes, Yes/No, Multiple Choice, Slider, Date, File Upload
-- [ ] Fields reorderable
+- [x] Field types: Text, Long Text, Checkboxes, Yes/No, Multiple Choice, Slider, Date, File Upload
+- [x] Fields reorderable
 - [ ] Required toggle per field
 - [ ] Preview before save
 - [ ] Save as template (reusable)
