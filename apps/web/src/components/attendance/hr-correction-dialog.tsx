@@ -150,7 +150,7 @@ export function HrCorrectionDialog({
 
     const payload: Record<string, unknown> = {
       action,
-      day_id: dayId,
+      attendance_day_id: dayId,
       user_id: userId,
       date,
       reason,

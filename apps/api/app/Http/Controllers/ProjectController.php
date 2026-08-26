@@ -326,6 +326,10 @@ class ProjectController extends Controller
             return response()->json(['message' => 'Project is already under review.'], 422);
         }
 
+        if (\App\Models\Task::where('project_id', $project->id)->where('status', '!=', 'done')->exists()) {
+            return response()->json(['message' => 'Cannot submit project for review. All tasks must be completed first.'], 422);
+        }
+
         $validated = $request->validate([
             'notes' => 'required|string',
             'qa_values' => 'nullable|array',
@@ -400,12 +404,15 @@ class ProjectController extends Controller
                 \App\Services\ApprovalService::approve($approval, $request->user()->id, $request->input('reason'));
                 // T-21.6: Only set completed once HR/Admin approves
                 $project->update(['status' => 'completed', 'completed_at' => now()]);
+                \App\Services\AuditLogger::log($request, 'approve', \App\Models\Project::class, $project->id, null, ['decision' => 'approved', 'reason' => $request->input('reason')]);
             } elseif ($request->input('decision') === 'redo') {
                 \App\Services\ApprovalService::redo($approval, $request->user()->id, $request->input('reason') ?? 'Redo requested');
                 $project->update(['status' => 'active']); // Revert to active if redo requested
+                \App\Services\AuditLogger::log($request, 'redo', \App\Models\Project::class, $project->id, null, ['decision' => 'redo', 'reason' => $request->input('reason')]);
             } else {
                 \App\Services\ApprovalService::reject($approval, $request->user()->id, $request->input('reason'));
                 $project->update(['status' => 'active']); // Revert to active if rejected
+                \App\Services\AuditLogger::log($request, 'reject', \App\Models\Project::class, $project->id, null, ['decision' => 'rejected', 'reason' => $request->input('reason')]);
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['message' => $e->getMessage(), 'errors' => $e->errors()], 422);

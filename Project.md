@@ -1002,22 +1002,22 @@
 7. [x] All transitions in Activity tab + audit trail
 
 ## 15.3 Project Approval Workflow
-1. [ ] All tasks in project complete
-2. [ ] Employee submits project for completion (report + project QA required)
-3. [ ] State → In Review, HR + Admin notified
-4. [ ] Manager reviews
-5. [ ] Approve: state → Complete with timestamp, team notified
-6. [ ] Request Redo: reason, state → active
-7. [ ] All transitions in audit trail
+1. [x] All tasks in project complete
+2. [x] Employee submits project for completion (report + project QA required)
+3. [x] State → In Review, HR + Admin notified
+4. [x] Manager reviews
+5. [x] Approve: state → Complete with timestamp, team notified
+6. [x] Request Redo: reason, state → active
+7. [x] All transitions in audit trail
 
 ## 15.4 Attendance Correction Workflow
-1. [ ] HR/Admin opens team attendance console
-2. [ ] Selects employee + day
-3. [ ] "Correct Attendance"
-4. [ ] Add/edit/remove punch events
-5. [ ] Preview corrected totals
-6. [ ] Enter reason (required)
-7. [ ] Save → employee notified, audit record (before/after), attributed to corrector
+1. [x] HR/Admin opens team attendance console
+2. [x] Selects employee + day
+3. [x] "Correct Attendance"
+4. [x] Add/edit/remove punch events
+5. [x] Preview corrected totals
+6. [x] Enter reason (required)
+7. [x] Save → employee notified, audit record (before/after), attributed to corrector
 
 ## 15.5 Account Creation Workflow
 1. [ ] HR/Admin clicks Add Employee
