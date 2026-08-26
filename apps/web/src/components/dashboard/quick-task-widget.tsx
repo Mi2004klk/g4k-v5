@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { Card, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@g4k/ui/components";
+import { Card, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ interface QuickTaskUser {
 export function QuickTaskWidget() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
   const [priority, setPriority] = useState("medium");
   const [startDate, setStartDate] = useState("");
@@ -42,6 +43,7 @@ export function QuickTaskWidget() {
     onSuccess: () => {
       toast.success("Task assigned successfully!");
       setTitle("");
+      setDescription("");
       setAssigneeId("");
       setStartDate("");
       setDueDate("");
@@ -65,6 +67,7 @@ export function QuickTaskWidget() {
     if (!assigneeId) return toast.error("Please select an assignee");
     
     const payload: any = { title, assignees: [assigneeId], priority, notify_global_chat: true };
+    if (description.trim()) payload.description = description;
     if (startDate) payload.start_date = startDate;
     if (dueDate) payload.due_date = dueDate;
     
@@ -96,6 +99,16 @@ export function QuickTaskWidget() {
               className={`h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.title ? "border-red-500" : ""}`}
             />
             <FormError errors={fieldErrors.title} />
+          </div>
+
+          <div>
+            <Textarea 
+              placeholder="Task description (optional)..." 
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)}
+              className="min-h-[60px] text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none resize-none"
+            />
+            <FormError errors={fieldErrors.description} />
           </div>
 
           <div>

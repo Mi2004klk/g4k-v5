@@ -134,6 +134,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     
     Route::middleware('capability:hr.view-team-attendance')->group(function () {
         Route::get('/attendance/team-today', [AttendanceController::class, 'teamToday']);
+        Route::get('/attendance/exceptions', [AttendanceController::class, 'exceptions']);
         Route::get('/attendance/hr/today', [AttendanceController::class, 'hrToday']);
         Route::get('/attendance/hr/day/{date}/{userId}', [AttendanceController::class, 'hrDay']);
         Route::get('/attendance/hr/history/{userId}', [AttendanceController::class, 'hrHistory']);

@@ -227,13 +227,13 @@
 - [x] Time Clock widget (clock in/out from dashboard)
 
 ## 4.3 HR Dashboard
-- [ ] Team Attendance Today widget (present/absent/late/on-leave counts)
-- [ ] Pending Approvals widget (leave + task submissions)
-- [ ] Team Activity widget (late arrivals, unclosed shifts)
-- [ ] Quick Task widget
-- [ ] Announcements widget
-- [ ] Upcoming Holidays widget
-- [ ] Personal Time Clock widget
+- [x] Team Attendance Today widget (present/absent/late/on-leave counts)
+- [x] Pending Approvals widget (leave + task submissions)
+- [x] Team Activity widget (late arrivals, unclosed shifts)
+- [x] Quick Task widget
+- [x] Announcements widget
+- [x] Upcoming Holidays widget
+- [x] Personal Time Clock widget
 
 ## 4.4 Admin Dashboard
 - [ ] Total Employees widget (active/inactive + dept breakdown)
@@ -244,8 +244,8 @@
 - [ ] Quick Task widget
 
 ## 4.5 Quick Task Widget
-- [ ] Search/select employee
-- [ ] Title, description, priority, due date inputs
+- [x] Search/select employee
+- [x] Title, description, priority, due date inputs
 - [ ] Create → task appears in employee's list
 - [ ] Employee receives instant notification
 - [ ] On employee completion → auto-post to Global Chat

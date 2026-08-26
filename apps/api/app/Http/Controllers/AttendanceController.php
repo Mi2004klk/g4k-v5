@@ -395,6 +395,87 @@ class AttendanceController extends Controller
         return response()->json($data);
     }
 
+    public function exceptions(Request $request)
+    {
+        $user = $request->user();
+        $activeRole = $user->resolveActiveRole();
+        $isAdmin = $activeRole === 'super_admin';
+        
+        $today = \Carbon\Carbon::today()->toDateString();
+        
+        $usersQuery = \App\Models\User::select('id', 'name as user_name', 'avatar_url', 'department_id')
+            ->where('status', 'active');
+            
+        if (!$isAdmin) {
+            \App\Support\HrScope::apply($usersQuery, $user, 'department_id');
+        }
+        $userIds = $usersQuery->pluck('id');
+        
+        // Unclosed shifts from past 7 days (not including today)
+        $pastWeek = \Carbon\Carbon::today()->subDays(7)->toDateString();
+        $unclosedShifts = DB::table('attendance_days')
+            ->whereIn('user_id', $userIds)
+            ->where('date', '>=', $pastWeek)
+            ->where('date', '<', $today)
+            ->where('has_open_shift', true)
+            ->orderBy('date', 'desc')
+            ->get();
+            
+        // Late arrivals today
+        $lateArrivals = DB::table('attendance_days')
+            ->whereIn('user_id', $userIds)
+            ->where('date', $today)
+            ->where('late_minutes', '>', 0)
+            ->orderBy('late_minutes', 'desc')
+            ->get();
+            
+        $usersMap = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
+        
+        $exceptions = [];
+        
+        foreach ($unclosedShifts as $shift) {
+            $u = $usersMap->get($shift->user_id);
+            if (!$u) continue;
+            
+            $exceptions[] = [
+                'id' => 'unclosed_' . $shift->id,
+                'type' => 'unclosed_shift',
+                'user_id' => $u->id,
+                'user_name' => $u->name,
+                'avatar_url' => $u->avatar_url,
+                'date' => $shift->date,
+                'clock_in' => $shift->first_event,
+                'message' => 'Forgot to clock out',
+                'created_at' => $shift->date . ' 23:59:59',
+            ];
+        }
+        
+        foreach ($lateArrivals as $shift) {
+            $u = $usersMap->get($shift->user_id);
+            if (!$u) continue;
+            
+            $exceptions[] = [
+                'id' => 'late_' . $shift->id,
+                'type' => 'late_arrival',
+                'user_id' => $u->id,
+                'user_name' => $u->name,
+                'avatar_url' => $u->avatar_url,
+                'date' => $shift->date,
+                'late_minutes' => $shift->late_minutes,
+                'clock_in' => $shift->first_event,
+                'message' => "Arrived {$shift->late_minutes} mins late",
+                'created_at' => $shift->first_event,
+            ];
+        }
+        
+        // Sort by created_at desc
+        usort($exceptions, function($a, $b) {
+            return strtotime($b['created_at']) - strtotime($a['created_at']);
+        });
+        
+        return response()->json(array_slice($exceptions, 0, 20));
+    }
+
     public function hrToday(Request $request)
     {
         return $this->overview($request);
