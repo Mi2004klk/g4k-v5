@@ -231,6 +231,9 @@ export default function DashboardLayout({
           <TooltipProvider>
         <HelpOverlay />
         <CommandPalette />
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground">
+          Skip to main content
+        </a>
         <div className={cn(
           "grid h-[100dvh] w-full bg-app overflow-hidden transition-[grid-template-columns] duration-300 ease-in-out",
           sidebarState === "expanded" ? "md:grid-cols-[240px_1fr]" : sidebarState === "collapsed" ? "md:grid-cols-[64px_1fr]" : "grid-cols-1"

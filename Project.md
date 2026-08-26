@@ -953,19 +953,19 @@
 - [x] Error boundary catches React crashes gracefully
 
 ## 14.3 Empty States
-- [ ] Every list/table has empty state
-- [ ] Empty states have helpful CTA (e.g., "Create your first task")
-- [ ] Illustrations or icons (not just text)
+- [x] Every list/table has empty state
+- [x] Empty states have helpful CTA (e.g., "Create your first task")
+- [x] Illustrations or icons (not just text)
 
 ## 14.4 Accessibility (a11y)
-- [ ] All interactive elements keyboard reachable
-- [ ] Visible focus states
-- [ ] ARIA labels on icon-only buttons
-- [ ] Color contrast ≥ 4.5:1 (WCAG AA)
-- [ ] Form fields have associated labels
-- [ ] Screen reader announces dynamic content
-- [ ] Skip-to-main-content link
-- [ ] prefers-reduced-motion respected
+- [x] All interactive elements keyboard reachable
+- [x] Visible focus states
+- [x] ARIA labels on icon-only buttons
+- [x] Color contrast ≥ 4.5:1 (WCAG AA)
+- [x] Form fields have associated labels
+- [x] Screen reader announces dynamic content
+- [x] Skip-to-main-content link
+- [x] prefers-reduced-motion respected
 
 ## 14.5 Dark Mode
 - [ ] All components support dark theme

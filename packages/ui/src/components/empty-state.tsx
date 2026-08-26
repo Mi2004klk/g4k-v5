@@ -21,6 +21,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
+      aria-live="polite"
       className={cn(
         "flex min-h-[160px] flex-col items-center justify-center rounded-xl border border-dashed p-6 text-center bg-card text-card-foreground shadow-none",
         className

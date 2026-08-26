@@ -144,10 +144,10 @@ const MemoizedCell = React.memo(
               onKeyDown={handleKeyDown}
               className="h-7 text-xs"
             />
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave}>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave} aria-label="Save changes">
               <AppIcon name="check" size="xs" className=" text-green-600" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel}>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel} aria-label="Cancel editing">
               <AppIcon name="close" size="xs" className=" text-destructive" />
             </Button>
           </div>
@@ -160,6 +160,7 @@ const MemoizedCell = React.memo(
                 size="icon"
                 className="h-6 w-6 opacity-0 group-hover/cell:opacity-100 transition-opacity"
                 onClick={handleEditStart}
+                aria-label="Edit cell"
               >
                 <AppIcon name="edit" size="xs" />
               </Button>

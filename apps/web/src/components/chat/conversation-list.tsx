@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useEffect } from "react";
 import { format } from "date-fns";
-import { Avatar, AvatarFallback, AvatarImage, AppIcon, EmptyState } from "@g4k/ui/components";
+import { Avatar, AvatarFallback, AvatarImage, AppIcon, EmptyState, Button } from "@g4k/ui/components";
 import { SwipeToReveal } from "./swipe-to-reveal";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { isChatPinned } from "@/lib/chat-utils";
@@ -83,6 +83,11 @@ export function ConversationList({
           title="No Conversations"
           description="You don't have any chats yet."
           icon={<AppIcon name="chat" size="2xl" />}
+          action={
+            <Button size="sm" className="gap-2 rounded-full font-semibold shadow-sm px-6" onClick={() => document.dispatchEvent(new CustomEvent("open-new-chat-dialog"))}>
+              <AppIcon name="plus" size="sm" /> Start New Chat
+            </Button>
+          }
           className="mt-10"
         />
       ) : (
