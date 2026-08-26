@@ -51,7 +51,7 @@ export interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 function StatusBadge({ className, status, colors: overrideColors, dot = false, children, ...props }: StatusBadgeProps) {
-  const colors = overrideColors || (status ? statusColorMap[status] : statusColorMap.neutral);
+  const colors = overrideColors || (status && statusColorMap[status] ? statusColorMap[status] : statusColorMap.neutral);
 
   return (
     <div

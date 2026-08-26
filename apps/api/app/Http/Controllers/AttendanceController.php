@@ -891,7 +891,7 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Target user not found or inactive.'], 404);
         }
 
-        if (!$isAdmin) {
+        if (!$isAdmin && $targetUser->id !== $actor->id) {
             if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $actor)->exists()) {
                 return response()->json(['message' => 'Forbidden. HR users can only correct attendance within their assigned department/team.'], 403);
             }

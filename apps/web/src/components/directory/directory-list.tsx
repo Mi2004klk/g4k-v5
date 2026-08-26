@@ -339,9 +339,9 @@ export function EmployeeManagementTab() {
       accessorKey: "roles",
       header: "Role",
       cell: ({ row }) => {
-        const rawRoles = row.original.role_assignments?.map((r) => r.role)
-          || (Array.isArray(row.original.roles) ? row.original.roles.map((r) => typeof r === 'string' ? r : r.role) : [])
-          || (row.original.active_role ? [row.original.active_role] : []);
+        const roleAssign = Array.isArray(row.original.role_assignments) && row.original.role_assignments.length > 0 ? row.original.role_assignments.map((r) => r.role) : null;
+        const roleArr = Array.isArray(row.original.roles) && row.original.roles.length > 0 ? row.original.roles.map((r) => typeof r === 'string' ? r : r.role) : null;
+        const rawRoles = roleAssign || roleArr || (row.original.active_role ? [row.original.active_role] : []);
         const activeRoles = Array.from(new Set(rawRoles.filter(Boolean))) as string[];
         return (
           <div className="flex flex-wrap gap-2">

@@ -185,7 +185,7 @@ export function ChatTab() {
   const conversationUserIds = new Set(
     allConversations
       .filter((c) => c.scope === "direct")
-      .flatMap((c) => c.users?.map((u: ChatUser) => u.id) || [])
+      .flatMap((c) => (Array.isArray(c.users) ? c.users : []).map((u: ChatUser) => u.id))
   );
   
   const searchUsersArray = searchUsersData || [];
@@ -334,7 +334,7 @@ export function ChatTab() {
               ...old,
               pages: old.pages.map((page: PaginatedResponse<ChatMessage>) => ({
                 ...page,
-                data: page.data.map((msg: ChatMessage) => {
+                data: (Array.isArray(page.data) ? page.data : []).map((msg: ChatMessage) => {
                   // Mark as read if the message was sent by someone other than the reader
                   if (msg.sender_id !== e.userId) {
                     const currentReads = msg.reads || [];
@@ -359,7 +359,7 @@ export function ChatTab() {
             ...old,
             pages: old.pages.map((page: PaginatedResponse<ChatMessage>) => ({
               ...page,
-              data: page.data.filter((msg: ChatMessage) => msg.id !== e.message_id)
+              data: (Array.isArray(page.data) ? page.data : []).filter((msg: ChatMessage) => msg.id !== e.message_id)
             }))
           };
         });

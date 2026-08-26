@@ -91,10 +91,10 @@ class ProjectController extends Controller
             $sort = $request->query('sort');
             $direction = $request->query('direction', 'desc');
             if (in_array($sort, ['created_at', 'deadline', 'name'])) {
-                $query->orderBy($sort, $direction);
+                $query->orderBy('projects.' . $sort, $direction);
             } elseif ($sort === 'priority') {
                 $query->orderByRaw("
-                    CASE priority
+                    CASE projects.priority
                         WHEN 'urgent' THEN 4
                         WHEN 'high' THEN 3
                         WHEN 'medium' THEN 2
@@ -103,10 +103,10 @@ class ProjectController extends Controller
                     END " . ($direction === 'desc' ? 'DESC' : 'ASC')
                 );
             } else {
-                $query->orderBy('updated_at', 'desc');
+                $query->orderBy('projects.updated_at', 'desc');
             }
         } else {
-            $query->orderBy('updated_at', 'desc');
+            $query->orderBy('projects.updated_at', 'desc');
         }
 
         $perPage = min((int) $request->query('per_page', 15), 100);

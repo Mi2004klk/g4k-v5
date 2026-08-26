@@ -10,6 +10,7 @@ import { useTimerStore, DEFAULT_STANDARD_SECONDS } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
 import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { deriveAttendanceState, formatHoursShort, resolveSemanticStatus } from "@/lib/attendance";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 function LiveBreakTicker({ start }: { start: Date }) {
   const [now, setNow] = useState(() => Date.now());
@@ -27,11 +28,14 @@ export function TodaySummaryCard() {
   const isActive = useTimerStore((s) => s.isActive);
   const isOnBreak = useTimerStore((s) => s.isOnBreak);
 
+  const { data: capabilities = [] } = useCapabilities();
+
   const { data, isPending } = useQuery({
     queryKey: queryKeys.attendanceToday,
     queryFn: () => apiFetch("/attendance/me/today"),
     staleTime: STALE_TIME_ATTENDANCE,
     placeholderData: keepPreviousData,
+    enabled: hasCapability(capabilities, "attendance.clock-self"),
   });
 
   const setStandardSeconds = useTimerStore((s) => s.setStandardSeconds);
