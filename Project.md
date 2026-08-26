@@ -984,22 +984,22 @@
 # SECTION 15 — APPROVAL WORKFLOWS (END-TO-END)
 
 ## 15.1 Leave Approval Workflow
-1. [ ] Employee submits → state: Pending
-2. [ ] HR (or Admin for HR leave) receives notification
-3. [ ] HR opens Team Leave Approvals
-4. [ ] HR reviews balance + reason
-5. [ ] Approve: state → Approved, attendance days marked "On Leave", balance deducted, employee notified
-6. [ ] Reject: requires reason, state → Rejected, employee notified with reason
-7. [ ] All transitions logged in audit trail
+1. [x] Employee submits → state: Pending
+2. [x] HR (or Admin for HR leave) receives notification
+3. [x] HR opens Team Leave Approvals
+4. [x] HR reviews balance + reason
+5. [x] Approve: state → Approved, attendance days marked "On Leave", balance deducted, employee notified
+6. [x] Reject: requires reason, state → Rejected, employee notified with reason
+7. [x] All transitions logged in audit trail
 
 ## 15.2 Task Approval Workflow
-1. [ ] Employee works task (In Progress)
-2. [ ] Employee submits for review (completion note + QA form required)
-3. [ ] State → Review, manager notified
-4. [ ] Manager opens task, reviews note + QA answers
-5. [ ] Approve: state → Done, employee notified, optional project chat message, recurring next instance created if configured
-6. [ ] Request Redo: reason required, state → In Progress, employee notified
-7. [ ] All transitions in Activity tab + audit trail
+1. [x] Employee works task (In Progress)
+2. [x] Employee submits for review (completion note + QA form required)
+3. [x] State → Review, manager notified
+4. [x] Manager opens task, reviews note + QA answers
+5. [x] Approve: state → Done, employee notified, optional project chat message, recurring next instance created if configured
+6. [x] Request Redo: reason required, state → In Progress, employee notified
+7. [x] All transitions in Activity tab + audit trail
 
 ## 15.3 Project Approval Workflow
 1. [ ] All tasks in project complete

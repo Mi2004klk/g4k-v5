@@ -100,6 +100,11 @@ class User extends Authenticatable
         return $this->hasMany(LeaveRequest::class);
     }
 
+    public function leaveBalances()
+    {
+        return $this->hasMany(LeaveBalance::class);
+    }
+
     public function taskReminders()
     {
         return $this->hasMany(TaskReminder::class);

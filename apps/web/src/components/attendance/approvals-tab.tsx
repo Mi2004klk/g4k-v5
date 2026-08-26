@@ -23,7 +23,7 @@ import { Row, ColumnDef } from "@tanstack/react-table";
 interface LeaveRecord {
   id: number;
   user_name?: string;
-  user?: { name: string; email?: string; avatar?: string };
+  user?: { name: string; email?: string; avatar?: string; leave_balances?: { leave_type: string; allowed: number; used: number }[] };
   type: string;
   start_date: string;
   end_date: string;
@@ -121,6 +121,23 @@ export function ApprovalsTab() {
             {row.original.reason}
           </div>
         ),
+      },
+      {
+        accessorKey: "balance",
+        header: "Balance",
+        cell: ({ row }: { row: Row<LeaveRecord> }) => {
+          const type = row.original.type.toLowerCase();
+          const balances = row.original.user?.leave_balances;
+          const balance = balances?.find((b) => b.leave_type === type);
+          if (balance) {
+            return (
+              <div className="text-sm">
+                {balance.allowed - balance.used} left (of {balance.allowed})
+              </div>
+            );
+          }
+          return <div className="text-sm text-neutral-400">N/A</div>;
+        },
       },
       {
         accessorKey: "status",

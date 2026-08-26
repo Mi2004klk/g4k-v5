@@ -779,6 +779,7 @@ class TaskController extends Controller
         ApprovalService::approve($approval, $request->user()->id);
 
         TaskService::updateStatus($task, 'done', $request->user()->id);
+        \App\Services\AuditLogger::log($request, 'approve', \App\Models\Task::class, $task->id, null, ['decision' => 'approved']);
 
         $newTask = \App\Services\RecurrenceService::handleCompletion($task);
         if ($newTask) {
@@ -866,6 +867,7 @@ class TaskController extends Controller
         ApprovalService::redo($approval, $request->user()->id, $validated['reason']);
 
         TaskService::updateStatus($task, 'in_progress', $request->user()->id);
+        \App\Services\AuditLogger::log($request, 'redo', \App\Models\Task::class, $task->id, null, ['decision' => 'redo', 'reason' => $validated['reason']]);
 
         TaskActivity::create([
             'task_id' => $task->id,

@@ -203,8 +203,10 @@ class LeaveRequestController extends Controller
         try {
             if ($validated['decision'] === 'approved') {
                 $approval = ApprovalService::approve($approval, $user->id, $validated['reason'] ?? null);
+                \App\Services\AuditLogger::log($request, 'approve', 'LeaveRequest', $leaveRequest->id, null, ['reason' => $validated['reason'] ?? null]);
             } else {
                 $approval = ApprovalService::reject($approval, $user->id, $validated['reason']);
+                \App\Services\AuditLogger::log($request, 'reject', 'LeaveRequest', $leaveRequest->id, null, ['reason' => $validated['reason']]);
             }
 
             DB::commit();
@@ -345,7 +347,7 @@ class LeaveRequestController extends Controller
         $user = $request->user();
         $activeRole = $user->resolveActiveRole();
 
-        $query = LeaveRequest::with(['approval.decider', 'user'])->where('status', 'pending');
+        $query = LeaveRequest::with(['approval.decider', 'user.leaveBalances'])->where('status', 'pending');
 
         if ($activeRole === 'super_admin') {
             // Can see all pending
