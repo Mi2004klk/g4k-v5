@@ -4,6 +4,13 @@ import { apiFetch } from "./api-client";
 interface PublicConfig {
   name: string;
   logo_url: string | null;
+  force_password_change_compulsive?: boolean;
+  password_policy?: {
+    min_length: number;
+    require_mixed: boolean;
+    require_number: boolean;
+    require_symbol: boolean;
+  };
 }
 
 export function usePublicConfig() {

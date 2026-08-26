@@ -90,20 +90,15 @@
 - [x] Real-time password strength feedback
 - [x] After change, user redirected to onboarding or dashboard
 
-## 2.5 First-Login Onboarding Walkthrough
-- [ ] 3-step onboarding: Profile → Password → Tour
-- [ ] Step 1: Phone number + emergency contact
-- [ ] Step 2: Optional password update (skippable)
-- [ ] Step 3: Guided platform tour
-- [ ] Onboarding pausable and resumable
-- [ ] Until complete, only accessible: logout, onboarding, role selection, sessions, password change
-- [ ] Onboarding state persisted (closing browser tab doesn't lose progress)
-- [ ] Onboarding completion flag stored in DB
+## 2.5 First-Login Onboarding 
+- [x] Skippable Password-change Screen
+- [x] Welcoming content Screen
+- [x] Onboarding completion flag stored in DB
 
 ## 2.6 Forgot Password — Email Configured
 - [ ] "Forgot Password" link on login page
 - [ ] Accepts email, employee ID, or username
-- [ ] Reset link emailed (60-minute validity)
+- [ ] Reset link emailed (60-minute validity) - (only if SMTP Settings Updated from admin settings area)
 - [ ] Link opens reset form, redirects to login after success
 - [ ] Used links invalidated (cannot be reused)
 - [ ] Rate limiting on reset requests
