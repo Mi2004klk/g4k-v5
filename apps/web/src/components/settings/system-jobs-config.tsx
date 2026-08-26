@@ -71,7 +71,7 @@ export function SystemJobsConfig() {
                     <span className="font-semibold text-rose-600 break-all pr-4">{job.queue}</span>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-neutral-500">{format(new Date(job.failed_at), "MMM d, yyyy HH:mm:ss")}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-500 hover:text-primary-600" onClick={() => retryMutation.mutate(job.id)}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-neutral-500 hover:text-primary-600" onClick={() => retryMutation.mutate(job.id)} aria-label="Retry job">
                         <AppIcon name="refresh" size="sm" />
                       </Button>
                     </div>

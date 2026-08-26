@@ -378,7 +378,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
             {field.field_type !== 'section' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-neutral-400">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-neutral-400" aria-label="Field options">
                     <AppIcon name="more" size="xs" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -654,7 +654,7 @@ export function QAFormBuilder() {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 shrink-0 shadow-none opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 shrink-0 shadow-none opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Form options">
                             <AppIcon name="moreH" size="xs" />
                           </Button>
                         </DropdownMenuTrigger>

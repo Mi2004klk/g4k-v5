@@ -219,8 +219,8 @@ export function AnnouncementComposer({
                     <AppIcon name="paperclip" size="xs" className="text-neutral-400 shrink-0" />
                     <span className="text-xs font-medium truncate">{attachment.name}</span>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setAttachment(null)} className="h-6 w-6 text-neutral-400 hover:text-rose-500">
-                    <AppIcon name="close" size="xs" />
+                  <Button variant="ghost" size="icon" onClick={() => setAttachment(null)} className="h-6 w-6 text-neutral-400 hover:text-rose-500" aria-label="Remove attachment">
+                    <AppIcon name="close" className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (

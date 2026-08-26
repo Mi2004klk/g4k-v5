@@ -662,7 +662,7 @@ export function ChatTab() {
                   {selectedConv?.scope !== 'global' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-600">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-600" aria-label="Chat options">
                           <AppIcon name="more" size="sm" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -693,7 +693,7 @@ export function ChatTab() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
-                  <Button variant="ghost" size="icon" className="hidden md:flex h-8 w-8 text-neutral-400 hover:text-neutral-600" onClick={() => setSelectedId(null)} title="Close Chat">
+                  <Button variant="ghost" size="icon" className="hidden md:flex h-8 w-8 text-neutral-400 hover:text-neutral-600" onClick={() => setSelectedId(null)} title="Close Chat" aria-label="Close Chat">
                     <AppIcon name="close" size="sm" />
                   </Button>
                 </div>

@@ -140,7 +140,7 @@ export function PhaseCard({
             {canManage && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Phase options">
                     <AppIcon name="moreH" className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -165,7 +165,7 @@ export function PhaseCard({
               </DropdownMenu>
             )}
 
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-neutral-400 hover:text-neutral-900" onClick={onToggleExpand}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-neutral-400 hover:text-neutral-900" onClick={onToggleExpand} aria-label={isExpanded ? "Collapse phase" : "Expand phase"}>
               <AppIcon name={isExpanded ? "chevronUp" : "chevronDown"} className="w-4 h-4" />
             </Button>
           </div>

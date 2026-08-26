@@ -1418,7 +1418,7 @@
 
 ## 24.2 Non-Functional Sign-off
 - [ ] Performance budgets met (Lighthouse > 90)
-- [ ] Accessibility WCAG AA passed
+- [x] Accessibility WCAG AA passed
 - [ ] Security scan clean (no high/critical vulns)
 - [ ] Cross-browser tested (Chrome, Firefox, Safari, Edge)
 - [ ] Mobile tested (iOS Safari, Android Chrome)

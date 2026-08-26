@@ -135,14 +135,15 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
                         onChange={(e) => updatePhase(phase.id, { name: e.target.value })}
                         className="text-lg font-black text-emerald-900 dark:text-emerald-100 bg-transparent border-transparent hover:border-emerald-200 focus:bg-white dark:focus:bg-neutral-900 h-auto py-1 px-2 -ml-2"
                         placeholder="Phase Name (e.g. Concept Create)"
+                        aria-label="Phase Name"
                       />
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => removePhase(phase.id)}>
+                      <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => removePhase(phase.id)} aria-label="Delete phase">
                         <AppIcon name="trash" className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => togglePhase(phase.id)} className="text-emerald-600">
+                      <Button variant="ghost" size="icon" onClick={() => togglePhase(phase.id)} className="text-emerald-600" aria-label={isExpanded ? "Collapse phase" : "Expand phase"}>
                         <AppIcon name={isExpanded ? "chevronUp" : "chevronDown"} className="w-5 h-5" />
                       </Button>
                     </div>
@@ -219,7 +220,7 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
                         {phase.tasks.map((task) => (
                         <div key={task.id} className="flex flex-col gap-3 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm relative group">
                           
-                          <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-500 transition-opacity" onClick={() => removeTask(phase.id, task.id)}>
+                          <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-500 transition-opacity" onClick={() => removeTask(phase.id, task.id)} aria-label="Remove task">
                             <AppIcon name="close" className="w-4 h-4" />
                           </Button>
 
@@ -228,6 +229,7 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
                             value={task.title}
                             onChange={(e) => updateTask(phase.id, task.id, { title: e.target.value })}
                             placeholder="Task Name (e.g. Project created)"
+                            aria-label="Task Name"
                             className="font-medium bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 rounded-lg h-10"
                           />
 

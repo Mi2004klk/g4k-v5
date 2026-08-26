@@ -330,7 +330,7 @@ export function CreateProjectDialog({
               }}
             />
             {coverImagePreview && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => { setCoverImagePath(null); setCoverImagePreview(null); }} className="h-11 w-11 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl">
+              <Button type="button" variant="ghost" size="icon" onClick={() => { setCoverImagePath(null); setCoverImagePreview(null); }} className="h-11 w-11 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl" aria-label="Remove cover image">
                 <AppIcon name="trash" className="w-4 h-4" />
               </Button>
             )}
