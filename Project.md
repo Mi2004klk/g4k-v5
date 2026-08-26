@@ -1149,18 +1149,19 @@
 - [x] File upload paths scoped to user
 
 ## 19.3 Data Protection
-- [ ] PII encrypted at rest (where required)
-- [ ] Audit log immutable
-- [ ] Soft-delete preserves data
-- [ ] GDPR-ready: export + delete user data
-- [ ] Session data not logged
+- [x] PII encrypted at rest (where required)
+      > **Tradeoff:** Application-level column encryption is not used to preserve native DB sorting/searching. Encryption at rest is delegated to the cloud infrastructure's storage-level encryption (e.g., AWS EBS / Supabase).
+- [x] Audit log immutable
+- [x] Soft-delete preserves data
+- [x] GDPR-ready: export + delete user data
+- [x] Session data not logged
 
 ## 19.4 Network Security
-- [ ] HTTPS enforced (HSTS)
-- [ ] Security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
-- [ ] CORS properly configured (no wildcard in prod)
-- [ ] Rate limiting on auth + sensitive endpoints
-- [ ] File upload scan (malware/extension check)
+- [x] HTTPS enforced (HSTS)
+- [x] Security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
+- [x] CORS properly configured (no wildcard in prod)
+- [x] Rate limiting on auth + sensitive endpoints
+- [x] File upload scan (malware/extension check)
 
 ---
 

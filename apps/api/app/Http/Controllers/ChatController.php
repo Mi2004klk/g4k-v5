@@ -135,7 +135,7 @@ class ChatController extends Controller
             'body' => 'required_without_all:attachment,attachment_url|nullable|string',
             'type' => 'nullable|in:text,image,file',
             'attachment_url' => 'nullable|url:http,https|max:2048',
-            'attachment' => 'nullable|file|max:10240',
+            'attachment' => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx,csv,txt,zip,rar|max:10240',
             'reply_to_id' => 'nullable|exists:messages,id',
             'mentions' => 'nullable|array',
             'mentions.*' => 'integer|exists:users,id',

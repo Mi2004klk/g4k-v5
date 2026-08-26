@@ -340,6 +340,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::get('/users/{id}/leave-history', [UserController::class, 'leaveHistory']);
         Route::get('/users/{id}/assignments', [UserController::class, 'assignments']);
         Route::post('/users/{id}/restore', [UserController::class, 'restore']);
+        Route::delete('/users/{id}/anonymize', [UserController::class, 'anonymize']);
         Route::apiResource('users', UserController::class)->except(['show']);
     });
     

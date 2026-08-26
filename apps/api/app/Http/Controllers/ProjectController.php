@@ -440,7 +440,7 @@ class ProjectController extends Controller
         }
 
         $request->validate([
-            'cover_image' => 'required|image|max:2048',
+            'cover_image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         try {

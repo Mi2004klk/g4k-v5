@@ -472,6 +472,59 @@ class UserController extends Controller
         return response()->json(null, 204);
     }
 
+    public function anonymize(Request $request, string $id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        
+        if ($request->user()->resolveActiveRole() !== 'super_admin') {
+            return response()->json(['message' => 'Unauthorized. Only Super Admins can anonymize users.'], 403);
+        }
+
+        $isSuperAdmin = RoleAssignment::where('user_id', $user->id)->where('role', 'super_admin')->exists();
+        if ($isSuperAdmin) {
+            $superAdminCount = RoleAssignment::where('role', 'super_admin')->count();
+            if ($superAdminCount <= 1) {
+                return response()->json(['message' => 'Cannot anonymize the last Super Admin.'], 422);
+            }
+        }
+
+        $before = $user->toArray();
+
+        if ($user->avatar_url) {
+            try {
+                $basename = basename(parse_url($user->avatar_url, PHP_URL_PATH));
+                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete('avatars/' . $basename);
+            } catch (\Exception $e) {
+                // Ignore missing file errors
+            }
+        }
+
+        $user->forceFill([
+            'name' => 'Anonymized User',
+            'email' => 'deleted_' . $user->id . '@anonymized.local',
+            'username' => null,
+            'employee_id' => 'DEL-' . $user->id,
+            'phone' => null,
+            'alternate_mobile' => null,
+            'emergency_contact' => null,
+            'avatar_url' => null,
+            'status' => 'inactive'
+        ])->save();
+
+        if (!$user->trashed()) {
+            $user->delete();
+        }
+
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}");
+        \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
+        $user->tokens()->delete();
+
+        AuditLogger::log($request, 'anonymize', 'user', $user->id, $before, $user->toArray());
+        
+        return response()->json(['message' => 'User anonymized successfully.', 'user' => $user]);
+    }
+
+
     public function activity(Request $request, string $id)
     {
         $userQuery = User::where('id', $id);
