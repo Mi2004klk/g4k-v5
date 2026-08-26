@@ -10,7 +10,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useBreakpoint } from "../hooks/use-breakpoint";
 
 export interface ListScaffoldProps<TData, TValue> {
-  title: React.ReactNode;
+  title?: React.ReactNode;
   description?: React.ReactNode;
   actions?: React.ReactNode;
   
