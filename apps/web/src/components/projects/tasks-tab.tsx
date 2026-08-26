@@ -637,12 +637,28 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             )}
             
             { (canManageTasks || hasCapability(caps, "tasks.create-own")) && (
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shadow-sm shrink-0">
-                  <AppIcon name="plus" size="sm" /> Create Task
-                </Button>
-              </DialogTrigger>
+              (() => {
+                const isProjectContext = projectId !== "none";
+                const currentProject = isProjectContext ? projectsList.find((p: TaskProject) => p.id === Number(projectId)) : null;
+                const canCreateInProjectContext = !isProjectContext || canManageTasks || (currentProject && currentProject.allow_employee_tasks);
+                
+                if (!canCreateInProjectContext) {
+                  return (
+                    <div title="This project does not allow employees to create tasks. Only HR or the Project Manager can add tasks here.">
+                      <Button disabled className="h-9 bg-neutral-300 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed font-semibold gap-1.5 shadow-sm shrink-0">
+                        <AppIcon name="plus" size="sm" /> Create Task
+                      </Button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shadow-sm shrink-0">
+                        <AppIcon name="plus" size="sm" /> Create Task
+                      </Button>
+                    </DialogTrigger>
 
               <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
                 <DialogHeader className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20">
@@ -899,6 +915,8 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 </div>
               </DialogContent>
             </Dialog>
+                  );
+                })()
             )}
 
             <Button size="sm" variant="outline" onClick={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">

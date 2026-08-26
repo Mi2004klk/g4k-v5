@@ -539,39 +539,39 @@
 - [x] Reminders fire even if app closed (server-side)
 
 ## 7.14 Project Work Timer
-- [ ] Start / Pause / Resume / End Session actions
-- [ ] Total time per project tracked + visible in reports
-- [ ] Separate from shift clock (both can run simultaneously)
-- [ ] Timer continues when navigating away
-- [ ] Timer state persisted server-side
+- [x] Start / Pause / Resume / End Session actions
+- [x] Total time per project tracked + visible in reports
+- [x] Separate from shift clock (both can run simultaneously)
+- [x] Timer continues when navigating away
+- [x] Timer state persisted server-side
 
 ## 7.15 Submit Task for Review (Employee)
-- [ ] Open task detail → "Submit for Review"
-- [ ] Completion note required
-- [ ] All required QA fields must be filled
-- [ ] Submit → manager notified
-- [ ] Task moves to "Review" on Kanban
-- [ ] Dashboard "Task Approval Status" widget updates
+- [x] Open task detail → "Submit for Review"
+- [x] Completion note required
+- [x] All required QA fields must be filled
+- [x] Submit → manager notified
+- [x] Task moves to "Review" on Kanban
+- [x] Dashboard "Task Approval Status" widget updates
 
 ## 7.16 Review & Decide (HR/Admin)
-- [ ] Notification received on submission
-- [ ] Open task → see completion note + QA answers
-- [ ] Approve → moves to Done, employee notified, optional msg to project chat, recurring next instance created
-- [ ] Request Redo → reason required, returns to In Progress, employee notified
+- [x] Notification received on submission
+- [x] Open task → see completion note + QA answers
+- [x] Approve → moves to Done, employee notified, optional msg to project chat, recurring next instance created
+- [x] Request Redo → reason required, returns to In Progress, employee notified
 
 ## 7.17 Submit Project for Completion
-- [ ] "Submit for Completion" on project page
-- [ ] Completion report required
-- [ ] Project-level QA form filled (if attached)
-- [ ] Submit → HR + Admin notified
-- [ ] Status → "In Review"
-- [ ] Approve → marked Complete with timestamp, team notified
-- [ ] Request Redo → reason, returns to active
+- [x] "Submit for Completion" on project page
+- [x] Completion report required
+- [x] Project-level QA form filled (if attached)
+- [x] Submit → HR + Admin notified
+- [x] Status → "In Review"
+- [x] Approve → marked Complete with timestamp, team notified
+- [x] Request Redo → reason, returns to active
 
 ## 7.18 Employee Task Creation in Projects
-- [ ] Employees can create tasks only if "Allow Employee Tasks" enabled for that project
-- [ ] Per-project toggle, controlled by HR/Admin
-- [ ] Employees without toggle see "New Task" disabled with explanation
+- [x] Employees can create tasks only if "Allow Employee Tasks" enabled for that project
+- [x] Per-project toggle, controlled by HR/Admin
+- [x] Employees without toggle see "New Task" disabled with explanation
 
 ---
 

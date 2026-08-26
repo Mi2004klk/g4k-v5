@@ -802,8 +802,6 @@ class TaskController extends Controller
             'metadata' => [],
         ]);
 
-        \App\Services\RecurrenceService::handleCompletion($task);
-
         if ($task->project_id) {
             $msg = "✅ **Task Approved & Completed**: \"{$task->title}\" was approved by " . $request->user()->name;
             if ($request->filled('optional_message')) {
