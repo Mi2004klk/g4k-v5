@@ -54,6 +54,15 @@ class AdminPasswordResetController extends Controller
             );
         }
 
+        \App\Services\AuditLogger::log(
+            $request,
+            'approve',
+            'password_reset_request',
+            $resetRequest->id,
+            ['status' => 'pending'],
+            ['status' => 'approved', 'admin_id' => $request->user()->id]
+        );
+
         return response()->json([
             'message' => 'Password reset request approved',
             'reset_link' => $resetLink ?? null
@@ -79,6 +88,15 @@ class AdminPasswordResetController extends Controller
             "Your password reset request was rejected by an administrator.",
             null,
             '/dashboard'
+        );
+
+        \App\Services\AuditLogger::log(
+            $request,
+            'reject',
+            'password_reset_request',
+            $resetRequest->id,
+            ['status' => 'pending'],
+            ['status' => 'rejected', 'admin_id' => $request->user()->id]
         );
 
         return response()->json(['message' => 'Password reset request rejected']);

@@ -833,17 +833,17 @@
 - [x] Missed clock-in alert (minutes after start) → HR
 
 ## 11.9 Security Requests
-- [ ] Pending reset requests listed
-- [ ] Approve → one-time secure link generated
-- [ ] Reject → request closed
-- [ ] All actions logged in audit trail
+- [x] Pending reset requests listed
+- [x] Approve → one-time secure link generated
+- [x] Reject → request closed
+- [x] All actions logged in audit trail
 
 ## 11.10 Audit Log
-- [ ] Immutable record (no update/delete API allowed)
-- [ ] Captures: who, what, when, before/after, IP
-- [ ] Filter by action type, user, date range
-- [ ] Export for compliance
-- [ ] Read-only enforced at DB level
+- [x] Immutable record (no update/delete API allowed)
+- [x] Captures: who, what, when, before/after, IP
+- [x] Filter by action type, user, date range
+- [x] Export for compliance
+- [x] Read-only enforced at DB level
 
 ## 11.11 Demo Data
 - [ ] Populate with sample data
