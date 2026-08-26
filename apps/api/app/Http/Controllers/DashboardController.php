@@ -58,6 +58,9 @@ class DashboardController extends Controller
                     $leavesQuery->where('leave_requests.user_id', $user->id);
                 } elseif ($activeRole === 'hr') {
                     \App\Support\HrScope::apply($leavesQuery, $user, 'leave_requests.user_id');
+                    $leavesQuery->where('leave_requests.user_id', '!=', $user->id);
+                } elseif ($activeRole === 'super_admin') {
+                    $leavesQuery->where('leave_requests.user_id', '!=', $user->id);
                 }
                 
                 $leaves = $leavesQuery->get();
@@ -108,7 +111,9 @@ class DashboardController extends Controller
                                        ->whereColumn('task_assignees.task_id', 'tasks.id');
                                     \App\Support\HrScope::apply($q2, $user, 'users.department_id');
                                 });
-                            });
+                            })->where('tasks.assignee_id', '!=', $user->id);
+                        } elseif ($activeRole === 'super_admin') {
+                            $tasksQuery->where('tasks.assignee_id', '!=', $user->id);
                         }
                         
                         $tasks = $tasksQuery->get();
@@ -158,6 +163,9 @@ class DashboardController extends Controller
                                     \App\Support\HrScope::apply($q2, $user, 'users.department_id');
                                 });
                             });
+                            $projectsQuery->where('projects.created_by', '!=', $user->id);
+                        } elseif ($activeRole === 'super_admin') {
+                            $projectsQuery->where('projects.created_by', '!=', $user->id);
                         }
                         
                         $projects = $projectsQuery->get();

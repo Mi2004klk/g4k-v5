@@ -192,15 +192,15 @@
 ## 3.2 Critical Scoping Rules
 - [x] HR has zero visibility into non-assigned departments (queries scoped by join on `department_hr_assignments`)
 - [x] Employees see only explicitly assigned projects/tasks
-- [ ] Nobody can approve own request (DB constraint + app logic)
-- [ ] HR leave → Admin approval routing (not another HR)
-- [ ] Employees only see group chats they're members of
+- [x] Nobody can approve own request (DB constraint + app logic)
+- [x] HR leave → Admin approval routing (not another HR)
+- [x] Employees only see group chats they're members of
 
 ## 3.3 Self-Approval Prevention
-- [ ] DB-level check prevents self-approval of leave
-- [ ] DB-level check prevents self-approval of tasks
-- [ ] DB-level check prevents self-approval of projects
-- [ ] UI hides approve button for own submissions
+- [x] DB-level check prevents self-approval of leave
+- [x] DB-level check prevents self-approval of tasks 
+- [x] DB-level check prevents self-approval of projects
+- [x] UI hides approve button for own submissions
 
 ---
 

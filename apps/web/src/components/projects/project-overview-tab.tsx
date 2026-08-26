@@ -14,6 +14,7 @@ import { Button, Textarea, Skeleton, Avatar, AvatarFallback } from "@g4k/ui/comp
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { resolveAvatarUrl } from "@/lib/utils";
+import { useAuthStore } from "@/lib/auth-store";
 
 interface ProjectOverviewTabProps {
   projectId: string;
@@ -21,6 +22,7 @@ interface ProjectOverviewTabProps {
 
 export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
   const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
   const { data: caps } = useCapabilities();
   const [submissionNote, setSubmissionNote] = useState("");
   const [qaValues, setQaValues] = useState<Record<string, unknown>>({});
@@ -264,7 +266,7 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
               </div>
             )}
 
-            {project?.status === "review" && hasCapability(caps, "projects.manage") && (
+            {project?.status === "review" && hasCapability(caps, "projects.manage") && project?.approval?.submitted_by !== currentUser?.id && project?.created_by !== currentUser?.id && (
               <div className="space-y-4 p-5 bg-white dark:bg-neutral-900 rounded-xl border border-amber-200 dark:border-amber-900/50 shadow-sm">
                 <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500 font-bold text-[14px]">
                   <AppIcon name="error" /> Pending HR Review

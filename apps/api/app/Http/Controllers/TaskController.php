@@ -738,8 +738,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'You do not have permission to review this task.'], 403);
         }
         
-        $hasAdmin = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin'])->isNotEmpty();
-        if (!$hasAdmin && ($task->assignee_id === $request->user()->id || $task->assignees->contains('id', $request->user()->id))) {
+        if ($task->assignee_id === $request->user()->id || $task->assignees->contains('id', $request->user()->id)) {
             return response()->json(['message' => 'You cannot review your own task.'], 403);
         }
         

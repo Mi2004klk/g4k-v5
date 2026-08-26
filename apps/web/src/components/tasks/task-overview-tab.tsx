@@ -10,6 +10,7 @@ import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, Selec
 import { queryKeys } from "@/lib/query-keys";
 import { QAFormViewer } from "@/components/projects/qa-form-viewer";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/auth-store";
 
 interface TaskOverviewTabProps {
   task: any;
@@ -37,6 +38,7 @@ export function TaskOverviewTab({
   progressMutation,
 }: TaskOverviewTabProps) {
   const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
   const [submissionNote, setSubmissionNote] = useState("");
   const [qaValues, setQaValues] = useState<Record<string, unknown>>({});
   const [redoReason, setRedoReason] = useState("");
@@ -406,7 +408,7 @@ export function TaskOverviewTab({
         );
       })()}
 
-      {effectiveStatus === "review" && canManage && (
+      {effectiveStatus === "review" && canManage && task.approval?.submitted_by !== currentUser?.id && (
         <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900 space-y-3 my-4">
           <div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-300 text-sm">
             <AppIcon name="error" />

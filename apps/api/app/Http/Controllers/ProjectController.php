@@ -380,6 +380,10 @@ class ProjectController extends Controller
             return response()->json(['message' => 'No pending approval found'], 404);
         }
 
+        if ($approval->submitted_by === $request->user()->id) {
+            return response()->json(['message' => 'You cannot review your own project.'], 403);
+        }
+
         $request->validate([
             'decision' => 'required|in:approved,rejected,redo',
             'reason' => 'nullable|string',

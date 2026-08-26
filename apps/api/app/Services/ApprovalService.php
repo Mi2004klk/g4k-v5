@@ -45,6 +45,10 @@ class ApprovalService
 
     private static function checkRoleGating(Approval $approval, int $decidedBy)
     {
+        if ($approval->submitted_by === $decidedBy) {
+            abort(403, "You cannot decide on your own submission.");
+        }
+
         $deciderActiveRole = User::findOrFail($decidedBy)->resolveActiveRole();
         
         // AUD-LEAVE-5: A super_admin can self-approve their own requests, as they are the highest escalation point.
@@ -85,16 +89,7 @@ class ApprovalService
         }
 
         if ($approval->submitted_by === $decidedBy) {
-            $deciderActiveRole = User::findOrFail($decidedBy)->resolveActiveRole();
-            if ($deciderActiveRole === 'super_admin') {
-                $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
-                if ($superAdminCount > 1) {
-                    abort(403, "You cannot approve your own request. Another Super Admin must approve it.");
-                }
-                // Allowed because they are the sole super_admin
-            } else {
-                abort(403, "You cannot approve your own request.");
-            }
+            abort(403, "You cannot approve your own request.");
         }
 
         self::checkRoleGating($approval, $decidedBy);
@@ -137,16 +132,7 @@ class ApprovalService
         }
 
         if ($approval->submitted_by === $decidedBy) {
-            $deciderActiveRole = User::findOrFail($decidedBy)->resolveActiveRole();
-            if ($deciderActiveRole === 'super_admin') {
-                $superAdminCount = \App\Models\RoleAssignment::where('role', 'super_admin')->count();
-                if ($superAdminCount > 1) {
-                    abort(403, "You cannot reject your own request. Another Super Admin must review it.");
-                }
-                // Allowed because they are the sole super_admin
-            } else {
-                abort(403, "You cannot reject your own request.");
-            }
+            abort(403, "You cannot reject your own request.");
         }
 
         self::checkRoleGating($approval, $decidedBy);
