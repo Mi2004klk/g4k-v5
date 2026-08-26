@@ -8,7 +8,7 @@ import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, ConfirmDialog } from "@g4k/ui/components";
 import { FormError } from "@/components/forms/form-error";
 
 const scheduleSchema = z.object({
@@ -178,7 +178,14 @@ export function WorkSchedulesConfig() {
                 )}
                 <Button variant="ghost" size="sm" onClick={() => handleEdit(schedule)}><AppIcon name="edit" size="xs" /></Button>
                 {!schedule.is_default && schedules.length > 1 && (
-                  <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate(schedule.id)} className="text-red-500 hover:text-red-600"><AppIcon name="trash" size="xs" /></Button>
+                  <ConfirmDialog
+                    title="Delete Work Schedule"
+                    description="Are you sure you want to delete this work schedule? This action cannot be undone."
+                    onConfirm={() => deleteMutation.mutate(schedule.id)}
+                    trigger={
+                      <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600"><AppIcon name="trash" size="xs" /></Button>
+                    }
+                  />
                 )}
               </div>
             </div>

@@ -10,11 +10,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "./alert-dialog"
 
 export interface ConfirmDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   title?: string
   description?: React.ReactNode
   children?: React.ReactNode
@@ -25,6 +26,7 @@ export interface ConfirmDialogProps {
   confirmDisabled?: boolean
   isDestructive?: boolean
   icon?: React.ReactNode
+  trigger?: React.ReactNode
 }
 
 export function ConfirmDialog({
@@ -40,15 +42,19 @@ export function ConfirmDialog({
   confirmDisabled = false,
   isDestructive = false,
   icon,
+  trigger,
 }: ConfirmDialogProps) {
   const handleConfirm = async (e: React.MouseEvent) => {
     e.preventDefault()
     await onConfirm()
-    onOpenChange(false)
+    if (onOpenChange) {
+      onOpenChange(false)
+    }
   }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
+      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
           {icon && <div className="mb-3 flex justify-center text-destructive">{icon}</div>}

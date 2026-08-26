@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Card, CardHeader, CardTitle, CardContent, Button, AppIcon, Skeleton, ErrorBoundary, MeaningfulEmpty, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, Button, AppIcon, Skeleton, ErrorBoundary, MeaningfulEmpty, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, ConfirmDialog } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
 import { safeFromNow } from "@/lib/format";
@@ -96,14 +96,20 @@ export function PersonalRemindersWidget() {
                       {format(new Date(reminder.remind_at), 'MMM d, h:mm a')} ({safeFromNow(reminder.remind_at)})
                     </p>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => deleteMutation.mutate(reminder.id)}
-                    className="h-7 w-7 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 shrink-0"
-                  >
-                    <AppIcon name="trash" size="xs" />
-                  </Button>
+                  <ConfirmDialog
+                    title="Delete Reminder"
+                    description="Are you sure you want to delete this reminder?"
+                    onConfirm={() => deleteMutation.mutate(reminder.id)}
+                    trigger={
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 w-7 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 shrink-0"
+                      >
+                        <AppIcon name="trash" size="xs" />
+                      </Button>
+                    }
+                  />
                 </div>
               ))}
             </div>

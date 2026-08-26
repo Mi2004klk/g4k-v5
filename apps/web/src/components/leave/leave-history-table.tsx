@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
 import { AppIcon } from "@g4k/ui/components";
-import { ListScaffold, EmptyState, StatusBadge } from "@g4k/ui/components";
+import { ListScaffold, EmptyState, StatusBadge, ConfirmDialog } from "@g4k/ui/components";
 import { getLeaveStatusColor } from "@g4k/ui/theme";
 
 interface LeaveRecord {
@@ -163,12 +163,18 @@ export function LeaveHistoryTable({
 
           return (
             <div className="flex justify-end">
-              <button 
-                onClick={() => onDeleteAction(row.original.id)}
-                className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline px-2 py-1 rounded transition-colors"
-              >
-                {btnText}
-              </button>
+              <ConfirmDialog
+                title={`Confirm ${btnText}`}
+                description={`Are you sure you want to ${btnText.toLowerCase()} this leave request?`}
+                onConfirm={() => onDeleteAction(row.original.id)}
+                trigger={
+                  <button 
+                    className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline px-2 py-1 rounded transition-colors"
+                  >
+                    {btnText}
+                  </button>
+                }
+              />
             </div>
           );
         },

@@ -20,13 +20,11 @@ export function VersionGuard() {
           } else if (currentBuildId !== data.buildId) {
             toast.info("A new version of Games4King Workplace OS is available!", {
               description: "Click reload to load the latest features.",
-              duration: Infinity,
               action: {
                 label: "Reload Now",
                 onClick: () => window.location.reload(),
               },
             });
-            clearInterval(intervalId);
           }
         }
       } catch {

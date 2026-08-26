@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent, Avatar, AvatarFallback, Slider } from "@g4k/ui/components";
+import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent, Avatar, AvatarFallback, Slider, ConfirmDialog } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { QAFormViewer } from "@/components/projects/qa-form-viewer";
 import { cn } from "@/lib/utils";
@@ -342,15 +342,21 @@ export function TaskOverviewTab({
                   </Button>
                 </div>
                 {task.personal_reminder && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full text-rose-500 text-xs h-8 hover:bg-rose-50 mt-2"
-                    onClick={() => deleteReminderMutation.mutate(task.personal_reminder.id)}
-                    disabled={deleteReminderMutation.isPending}
-                  >
-                    Clear Reminder
-                  </Button>
+                  <ConfirmDialog
+                    title="Clear Reminder"
+                    description="Are you sure you want to remove this personal reminder?"
+                    onConfirm={() => deleteReminderMutation.mutate(task.personal_reminder.id)}
+                    trigger={
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-rose-500 text-xs h-8 hover:bg-rose-50 mt-2"
+                        disabled={deleteReminderMutation.isPending}
+                      >
+                        Clear Reminder
+                      </Button>
+                    }
+                  />
                 )}
               </PopoverContent>
             </Popover>
