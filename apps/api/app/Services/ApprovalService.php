@@ -110,6 +110,7 @@ class ApprovalService
                     $days = $leave->getWorkingDays();
                     $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
                     $balance->increment('used', $days);
+                    \App\Services\AttendanceService::markLeaveDays($leave->user_id, $leave->start_date, $leave->end_date);
                 }
             }
         });

@@ -343,44 +343,44 @@
 # SECTION 6 — LEAVE MANAGEMENT
 
 ## 6.1 Submit Leave Request
-- [ ] Path: Attendance & Time → My Leave → New Request
-- [ ] Leave Type: Casual / Sick / Earned / Unpaid
-- [ ] Start Date: tomorrow or later (no same-day/backdated)
-- [ ] End Date: on or after start date
-- [ ] Reason: required, max 1000 chars
-- [ ] Auto-save draft every 30 seconds
-- [ ] Draft restored on accidental page close
-- [ ] Pre-submission validation:
-  - [ ] Date overlap with existing requests detected
-  - [ ] Leave balance check (sufficient remaining)
+- [x] Path: Attendance & Time → My Leave → New Request
+- [x] Leave Type: Casual / Sick / Earned / Unpaid
+- [x] Start Date: tomorrow or later (no same-day/backdated)
+- [x] End Date: on or after start date
+- [x] Reason: required, max 1000 chars
+- [x] Auto-save draft every 30 seconds
+- [x] Draft restored on accidental page close
+- [x] Pre-submission validation:
+  - [x] Date overlap with existing requests detected
+  - [x] Leave balance check (sufficient remaining)
 
 ## 6.2 Leave Balances
-- [ ] Casual: 12/yr default (configurable)
-- [ ] Sick: 12/yr default
-- [ ] Earned: 12/yr default
-- [ ] Unpaid: 12/yr default
-- [ ] Balance updates immediately on approval
-- [ ] Balance visible to employee (My Leave)
-- [ ] Balance visible to approver during review
+- [x] Casual: 12/yr default (configurable)
+- [x] Sick: 12/yr default
+- [x] Earned: 12/yr default
+- [x] Unpaid: 12/yr default
+- [x] Balance updates immediately on approval
+- [x] Balance visible to employee (My Leave)
+- [x] Balance visible to approver during review
 
 ## 6.3 Routing
-- [ ] Employee leave → assigned HR
-- [ ] HR leave → Admin
-- [ ] Approver gets instant in-app notification
-- [ ] Self-approval impossible
+- [x] Employee leave → assigned HR
+- [x] HR leave → Admin
+- [x] Approver gets instant in-app notification
+- [x] Self-approval impossible
 
 ## 6.4 Approval Process
-- [ ] Path: Attendance & Time → Team Leave Approvals
-- [ ] Pending list: HR scoped, Admin all
-- [ ] Search by employee name
-- [ ] Filter by status
-- [ ] Approve → status = Approved, attendance auto-updated
-- [ ] Reject → requires written reason (cannot reject without)
-- [ ] On approval:
-  - [ ] All leave days marked "On Leave" in attendance
-  - [ ] Balance deducted
-  - [ ] Employee notified (with reason if rejected)
-- [ ] On rejection: employee notified with reason
+- [x] Path: Attendance & Time → Team Leave Approvals
+- [x] Pending list: HR scoped, Admin all
+- [x] Search by employee name
+- [x] Filter by status
+- [x] Approve → status = Approved, attendance auto-updated
+- [x] Reject → requires written reason (cannot reject without)
+- [x] On approval:
+  - [x] All leave days marked "On Leave" in attendance
+  - [x] Balance deducted
+  - [x] Employee notified (with reason if rejected)
+- [x] On rejection: employee notified with reason
 
 ## 6.5 Leave History
 - [ ] All historical requests with dates, type, reason

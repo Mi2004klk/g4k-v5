@@ -12,7 +12,7 @@ import { Textarea } from "@g4k/ui/components";
 import { Label } from "@g4k/ui/components";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { Calendar } from "@g4k/ui/components";
-import { format, startOfDay, differenceInDays } from "date-fns";
+import { format, startOfDay, differenceInDays, addDays } from "date-fns";
 import { FormError } from "@/components/forms/form-error";
 import { queryKeys } from "@/lib/query-keys";
 import { LEAVE_TYPES } from "@/lib/constants";
@@ -112,8 +112,8 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
       return;
     }
 
-    if (draftData.start_date < todayDate) {
-      toast.error("Start date cannot be in the past.");
+    if (draftData.start_date <= todayDate) {
+      toast.error("Start date must be tomorrow or later.");
       return;
     }
 
@@ -219,7 +219,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
                       setDraftData({ ...draftData, start_date: date, end_date: undefined });
                     }
                   }}
-                  disabled={{ before: todayDate }}
+                  disabled={{ before: addDays(todayDate, 1) }}
                   initialFocus 
                 />
               </PopoverContent>

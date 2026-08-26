@@ -36,9 +36,9 @@ class LeaveBalance extends Model
         $defaults = [
             'casual' => 12,
             'sick' => 12,
-            'annual' => 15,
-            'earned' => 15,
-            'unpaid' => 30,
+            'annual' => 12,
+            'earned' => 12,
+            'unpaid' => 12,
         ];
 
         $allowed = $defaults[strtolower($type)] ?? 12;
