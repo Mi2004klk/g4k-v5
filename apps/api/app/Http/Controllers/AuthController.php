@@ -647,6 +647,40 @@ class AuthController extends Controller
         ])->withCookie($cookie);
     }
 
+    public function skipPasswordChange(Request $request)
+    {
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key')
+                ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
+        });
+
+        $isCompulsive = filter_var($settings['force_password_change'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        
+        if ($isCompulsive) {
+            return response()->json([
+                'message' => 'Password change is mandatory and cannot be skipped.'
+            ], 403);
+        }
+
+        $user = $request->user();
+        $user->must_change_password = false;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password change skipped.',
+            'user' => $user
+        ]);
+    }
+
     public function completeOnboarding(Request $request)
     {
         $request->validate([

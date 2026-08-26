@@ -67,6 +67,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/auth/skip-password-change', [AuthController::class, 'skipPasswordChange']);
     Route::post('/auth/onboarding/complete', [AuthController::class, 'completeOnboarding']);
     Route::post('/auth/role-select', [AuthController::class, 'roleSelect'])->middleware('throttle:10,1');
     Route::put('/auth/role', [AuthController::class, 'roleSelect'])->middleware('throttle:10,1');

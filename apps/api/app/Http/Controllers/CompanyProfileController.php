@@ -11,9 +11,31 @@ class CompanyProfileController extends Controller
     public function publicConfig()
     {
         $profile = CompanyProfile::first();
+        
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key')
+                ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
+        });
+
         return response()->json([
             'name' => $profile ? $profile->name : 'My Company',
             'logo_url' => $profile ? $profile->logo_url : null,
+            'force_password_change_compulsive' => filter_var($settings['force_password_change'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'password_policy' => [
+                'min_length' => (int)($settings['password.min_length'] ?? 8),
+                'require_mixed' => filter_var($settings['password.require_mixed'] ?? 'true', FILTER_VALIDATE_BOOLEAN),
+                'require_number' => filter_var($settings['password.require_number'] ?? 'true', FILTER_VALIDATE_BOOLEAN),
+                'require_symbol' => filter_var($settings['password.require_symbol'] ?? 'true', FILTER_VALIDATE_BOOLEAN),
+            ]
         ]);
     }
 

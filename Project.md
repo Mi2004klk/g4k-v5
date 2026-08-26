@@ -84,11 +84,11 @@
 - [x] Rate limiting on auth endpoint (server-side enforcement)
 
 ## 2.4 First-Login Forced Password Change
-- [ ] Forced password change screen blocks all other access
-- [ ] Cannot be skipped or bypassed
-- [ ] Password validation uses company-configured rules (length, complexity)
-- [ ] Real-time password strength feedback
-- [ ] After change, user redirected to onboarding or dashboard
+- [x] Forced password change screen blocks all other access
+- [x] Password-change enforcement configurable by Admin, we can change optional or mandatory through Admin Settings.
+- [x] Password validation uses company-configured rules (length, complexity)
+- [x] Real-time password strength feedback
+- [x] After change, user redirected to onboarding or dashboard
 
 ## 2.5 First-Login Onboarding Walkthrough
 - [ ] 3-step onboarding: Profile → Password → Tour
