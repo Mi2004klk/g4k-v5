@@ -468,24 +468,24 @@
 ### QA Form Builder (HR/Admin)
 - [x] Field types: Text, Long Text, Checkboxes, Yes/No, Multiple Choice, Slider, Date, File Upload
 - [x] Fields reorderable
-- [ ] Required toggle per field
-- [ ] Preview before save
-- [ ] Save as template (reusable)
+- [x] Required toggle per field
+- [x] Preview before save
+- [x] Save as template (reusable)
 
 ## 7.7 Task Detail Sheet (4 tabs)
 
 ### Overview Tab
-- [ ] Description, assignees, priority, due date
-- [ ] Progress slider (managers can set %)
-- [ ] Dependencies list
-- [ ] Recurrence settings
-- [ ] Scope: Global / Department / Role-Specific / Individual
+- [x] Description, assignees, priority, due date
+- [x] Progress slider (managers can set %)
+- [x] Dependencies list
+- [x] Recurrence settings
+- [x] Scope: Global / Department / Role-Specific / Individual
 
 ### Comments Tab
-- [ ] Threaded discussion specific to task
-- [ ] Enter to send, Shift+Enter for newline
-- [ ] Comments separate from main chat
-- [ ] Real-time updates
+- [x] Threaded discussion specific to task
+- [x] Enter to send, Shift+Enter for newline
+- [x] Comments separate from main chat
+- [x] Real-time updates
 
 ### Time Tab
 - [ ] Log time (min 1 min per entry)

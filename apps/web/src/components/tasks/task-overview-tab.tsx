@@ -178,6 +178,32 @@ export function TaskOverviewTab({
             )}
           </div>
         </div>
+        
+        {/* Priority */}
+        <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+            <AppIcon name="flag" size="xs" className="opacity-70" /> Priority
+          </div>
+          <div className="flex-1 px-3 py-2">
+            {canManage ? (
+              <Select value={task.priority || "normal"} onValueChange={(val) => {
+                inlineUpdateMutation.mutate({ priority: val });
+              }}>
+                 <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 w-auto hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2 -ml-2 rounded focus:ring-0 shadow-none font-semibold capitalize">
+                    <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                 </SelectContent>
+              </Select>
+            ) : (
+              <span className="text-xs font-semibold capitalize">{task.priority || "normal"}</span>
+            )}
+          </div>
+        </div>
 
         {/* Assignees */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
