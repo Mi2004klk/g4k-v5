@@ -35,9 +35,9 @@ const ReverbContext = createContext<ReverbContextType>({
  */
 function isPusherAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-  const isAvailable = !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
+  const isAvailable = !!(process.env.NEXT_PUBLIC_REVERB_APP_KEY || process.env.NEXT_PUBLIC_PUSHER_APP_KEY);
   if (!isAvailable && process.env.NODE_ENV !== 'test') {
-    console.warn("Realtime features are disabled: NEXT_PUBLIC_PUSHER_APP_KEY or NEXT_PUBLIC_PUSHER_APP_CLUSTER is missing from environment variables.");
+    console.warn("Realtime features are disabled: NEXT_PUBLIC_REVERB_APP_KEY or NEXT_PUBLIC_PUSHER_APP_KEY is missing from environment variables.");
   }
   return isAvailable;
 }
@@ -68,11 +68,12 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
 
     window.Pusher = Pusher;
 
+    const isReverb = !!process.env.NEXT_PUBLIC_REVERB_HOST || !!process.env.NEXT_PUBLIC_PUSHER_HOST || !!process.env.NEXT_PUBLIC_REVERB_APP_KEY;
+    const isWss = (process.env.NEXT_PUBLIC_REVERB_SCHEME || process.env.NEXT_PUBLIC_PUSHER_SCHEME || 'https') === 'https';
+
     const echoConfig: any = {
-      broadcaster: 'pusher',
-      key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
-      cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || '',
-      forceTLS: true,
+      broadcaster: isReverb ? 'reverb' : 'pusher',
+      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
       authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
       auth: {
         headers: {
@@ -81,6 +82,17 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
         },
       },
     };
+
+    if (isReverb) {
+      echoConfig.wsHost = process.env.NEXT_PUBLIC_REVERB_HOST || process.env.NEXT_PUBLIC_PUSHER_HOST;
+      echoConfig.wsPort = process.env.NEXT_PUBLIC_REVERB_PORT || process.env.NEXT_PUBLIC_PUSHER_PORT || 80;
+      echoConfig.wssPort = process.env.NEXT_PUBLIC_REVERB_PORT || process.env.NEXT_PUBLIC_PUSHER_PORT || 443;
+      echoConfig.forceTLS = isWss;
+      echoConfig.enabledTransports = ['ws', 'wss'];
+    } else {
+      echoConfig.cluster = process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || '';
+      echoConfig.forceTLS = true;
+    }
 
     const echo: any = new Echo(echoConfig);
 
