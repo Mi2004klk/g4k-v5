@@ -167,7 +167,11 @@ class ChatController extends Controller
 
         
         if (!empty($validated['mentions'])) {
-            $validMembers = $conversation->users()->pluck('users.id')->toArray();
+            if ($conversation->scope === 'global') {
+                $validMembers = \App\Models\User::where('status', 'active')->pluck('id')->toArray();
+            } else {
+                $validMembers = $conversation->users()->pluck('users.id')->toArray();
+            }
             $mentions = array_intersect($validated['mentions'], $validMembers);
             foreach ($mentions as $userId) {
                 if ($userId !== $request->user()->id) {

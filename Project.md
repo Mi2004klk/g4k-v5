@@ -578,42 +578,42 @@
 # SECTION 8 — COMMUNICATIONS
 
 ## 8.1 Chat Conversation Types
-- [ ] Global Chat (everyone, auto-created)
-- [ ] Project Chat (auto-created on project creation, members only)
-- [ ] Direct Message (anyone can initiate)
-- [ ] Custom Group Chat (HR/Admin only)
-- [ ] Employees see only: Global + their project chats + their DMs + groups they're members of
+- [x] Global Chat (everyone, auto-created)
+- [x] Project Chat (auto-created on project creation, members only)
+- [x] Direct Message (anyone can initiate)
+- [x] Custom Group Chat (HR/Admin only)
+- [x] Employees see only: Global + their project chats + their DMs + groups they're members of
 
 ## 8.2 Send Messages
-- [ ] Enter to send
-- [ ] Shift+Enter for newline
-- [ ] @mention opens dropdown
-- [ ] Attachment button (max 10 MB/file)
-- [ ] Validation: empty messages not sent
-- [ ] Optimistic UI (message appears immediately, syncs in background)
-- [ ] Failed sends show retry state
+- [x] Enter to send
+- [x] Shift+Enter for newline
+- [x] @mention opens dropdown
+- [x] Attachment button (max 10 MB/file)
+- [x] Validation: empty messages not sent
+- [x] Optimistic UI (message appears immediately, syncs in background)
+- [x] Failed sends show retry state
 
 ## 8.3 @Mentions
-- [ ] Type @ → dropdown of conversation members
-- [ ] Select name → mention inserted
-- [ ] Mentioned user receives notification with message snippet
-- [ ] Mention highlighted in chat thread
-- [ ] Works in all chat types (global, project, DM, group)
+- [x] Type @ → dropdown of conversation members
+- [x] Select name → mention inserted
+- [x] Mentioned user receives notification with message snippet
+- [x] Mention highlighted in chat thread
+- [x] Works in all chat types (global, project, DM, group)
 
 ## 8.4 File & Image Sharing
-- [ ] Files + images shareable in any chat
-- [ ] Max 10 MB/file enforced (client + server)
-- [ ] Images + PDFs show inline previews
-- [ ] Other files show download link
-- [ ] Popup explains supported formats + size limits on attach
-- [ ] Progress bar for uploads
-- [ ] Failed uploads retryable
+- [x] Files + images shareable in any chat
+- [x] Max 10 MB/file enforced (client + server)
+- [x] Images + PDFs show inline previews
+- [x] Other files show download link
+- [x] Popup explains supported formats + size limits on attach
+- [x] Progress bar for uploads
+- [x] Failed uploads retryable
 
 ## 8.5 Read Receipts (DMs Only)
-- [ ] ✓ = sent successfully
-- [ ] ✓✓ = read by recipient
-- [ ] Read receipts only in one-on-one DMs
-- [ ] No read receipts in group/project/global chats
+- [x] ✓ = sent successfully
+- [x] ✓✓ = read by recipient
+- [x] Read receipts only in one-on-one DMs
+- [x] No read receipts in group/project/global chats
 
 ## 8.6 Message Pinning (HR — Project Chats)
 - [ ] HR can pin messages in project group chats

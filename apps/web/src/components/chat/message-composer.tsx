@@ -3,6 +3,9 @@ import { AppIcon, Avatar, AvatarFallback, DropdownMenu, DropdownMenuContent, Dro
 import { cn } from "@/lib/utils";
 import { Button } from "@g4k/ui/components";
 import { FileUploadPopup } from "@g4k/ui/components";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { apiFetch, unwrapList } from "@/lib/api-client";
 
 interface ComposerUser {
   id: number;
@@ -53,7 +56,7 @@ export function MessageComposer({
   if (text !== prevText) {
     setPrevText(text);
     const match = text.match(/@(\w*)$/);
-    if (match && conversation?.scope !== 'global') {
+    if (match) {
       setMentionQuery(match[1]);
       setMentionIndex(text.lastIndexOf("@"));
       setShowMentions(true);
@@ -63,9 +66,17 @@ export function MessageComposer({
     }
   }
 
-  const filteredUsers = conversation?.users?.filter((u: ComposerUser) => 
-    (u.name || "").toLowerCase().includes(mentionQuery.toLowerCase())
-  ) || [];
+  const { data: globalUsers } = useQuery<ComposerUser[]>({
+    queryKey: queryKeys.chatUsers(mentionQuery),
+    queryFn: () => apiFetch(`/chat/users?search=${encodeURIComponent(mentionQuery)}`).then(unwrapList),
+    enabled: conversation?.scope === 'global' && showMentions,
+  });
+
+  const filteredUsers = conversation?.scope === 'global'
+    ? (globalUsers || [])
+    : (conversation?.users?.filter((u: ComposerUser) => 
+        (u.name || "").toLowerCase().includes(mentionQuery.toLowerCase())
+      ) || []);
 
   const handleMentionSelect = (user: ComposerUser) => {
     if (mentionIndex !== -1) {
