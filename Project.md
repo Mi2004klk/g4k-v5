@@ -749,16 +749,16 @@
 # SECTION 10 — REPORTS & EXPORTS
 
 ## 10.1 Attendance Summary Report
-- [ ] Filter by date range + department
-- [ ] KPIs: present rate, late rate, absence rate
-- [ ] Per-department + per-employee summaries
-- [ ] Export to Excel
+- [x] Filter by date range + department
+- [x] KPIs: present rate, late rate, absence rate
+- [x] Per-department + per-employee summaries
+- [x] Export to Excel
 
 ## 10.2 Leave Summary Report
-- [ ] Breakdown by leave type
-- [ ] Totals per employee + department
-- [ ] Filter by date range
-- [ ] Export
+- [x] Breakdown by leave type
+- [x] Totals per employee + department
+- [x] Filter by date range
+- [x] Export
 
 ## 10.3 Saved Filter Views
 - [ ] Save filter combos as named views

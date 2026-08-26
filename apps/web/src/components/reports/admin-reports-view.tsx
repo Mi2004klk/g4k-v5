@@ -27,6 +27,10 @@ export interface ReportEmployeeRow {
   approved_requests?: number;
   pending_requests?: number;
   rejected_requests?: number;
+  sick_requests?: number;
+  casual_requests?: number;
+  earned_requests?: number;
+  unpaid_requests?: number;
 }
 
 export function AdminReportsView() {
@@ -136,6 +140,10 @@ export function AdminReportsView() {
     { accessorKey: "approved_requests", header: "Approved" },
     { accessorKey: "pending_requests", header: "Pending" },
     { accessorKey: "rejected_requests", header: "Rejected" },
+    { accessorKey: "sick_requests", header: "Sick Leave" },
+    { accessorKey: "casual_requests", header: "Casual Leave" },
+    { accessorKey: "earned_requests", header: "Earned Leave" },
+    { accessorKey: "unpaid_requests", header: "Unpaid Leave" },
   ];
 
   return (

@@ -260,6 +260,10 @@ class ReportController extends Controller
                     'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
                     'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
                     'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                    'leaveRequests as sick_requests' => fn($q) => $q->where('type', 'sick')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                    'leaveRequests as casual_requests' => fn($q) => $q->where('type', 'casual')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                    'leaveRequests as earned_requests' => fn($q) => $q->where('type', 'earned')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                    'leaveRequests as unpaid_requests' => fn($q) => $q->where('type', 'unpaid')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
                 ]);
 
             if (!$hasManage) {
