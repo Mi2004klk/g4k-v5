@@ -46,6 +46,38 @@ class AuthController extends Controller
 
 
 
+    private function resolveLocation(string $ip): ?string
+    {
+        if (in_array($ip, ['127.0.0.1', '::1'])) return 'Localhost';
+        
+        return \Illuminate\Support\Facades\Cache::remember("ip_location_{$ip}", 86400, function () use ($ip) {
+            try {
+                $response = \Illuminate\Support\Facades\Http::timeout(2)->get("http://ip-api.com/json/{$ip}?fields=status,country,city");
+                if ($response->successful() && $response->json('status') === 'success') {
+                    return $response->json('city') . ', ' . $response->json('country');
+                }
+            } catch (\Exception $e) {
+                // Ignore API failures to not block login
+            }
+            return null;
+        });
+    }
+
+    private function isIpOrLocationMatched(string $ip, ?string $location, $settingsList): bool
+    {
+        if (empty($settingsList)) return false;
+        $items = array_map('trim', explode("\n", $settingsList));
+        foreach ($items as $item) {
+            if (empty($item)) continue;
+            if (str_contains($item, '*')) {
+                if (fnmatch($item, $ip) || fnmatch($item, (string)$location)) return true;
+            } else {
+                if ($ip === $item || stripos((string)$location, $item) !== false) return true;
+            }
+        }
+        return false;
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -64,6 +96,48 @@ class AuthController extends Controller
                 'message' => 'Account locked due to multiple failed login attempts. Try again in ' . ceil($seconds / 60) . ' minutes.',
                 'retry_after' => $seconds
             ], 423);
+        }
+
+        $ip = $request->ip();
+        $location = $this->resolveLocation($ip);
+
+        // Fetch Settings early for security checks
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key')
+                ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
+        });
+
+        // 1. Blacklist Check (Always Enforced)
+        $blacklistIps = $settings['suspicious_login.blacklist_ips'] ?? '';
+        $blacklistLocations = $settings['suspicious_login.blacklist_locations'] ?? '';
+        
+        if ($this->isIpOrLocationMatched($ip, $location, $blacklistIps) || $this->isIpOrLocationMatched($ip, $location, $blacklistLocations)) {
+            Log::warning("Blocked blacklisted login attempt from IP: {$ip} (Location: {$location}) for {$request->identifier}");
+            
+            defer(function () use ($request, $ip, $location) {
+                LoginAttempt::create([
+                    'identifier' => $request->identifier,
+                    'user_id' => null, // Or lookup user
+                    'ip_address' => $ip,
+                    'location' => $location,
+                    'user_agent' => $request->header('User-Agent'),
+                    'success' => false,
+                    'is_suspicious' => true,
+                ]);
+            });
+
+            throw ValidationException::withMessages([
+                'identifier' => ['Access denied from this network or location.'],
+            ]);
         }
 
         $user = User::where(function($query) use ($request) {
@@ -93,11 +167,12 @@ class AuthController extends Controller
                 }
             }
 
-            defer(function () use ($request, $user) {
+            defer(function () use ($request, $user, $ip, $location) {
                 LoginAttempt::create([
                     'identifier' => $request->identifier,
                     'user_id' => $user?->id,
-                    'ip_address' => $request->ip(),
+                    'ip_address' => $ip,
+                    'location' => $location,
                     'user_agent' => $request->header('User-Agent'),
                     'success' => false,
                     'is_suspicious' => false,
@@ -141,28 +216,37 @@ class AuthController extends Controller
             $user->update(['failed_attempts' => 0]);
         }
 
-        // Check suspicious login (new IP vs last successful IP)
-        $lastSuccessfulLogin = LoginAttempt::where('user_id', $user->id)
-            ->where('success', true)
-            ->latest()
-            ->first();
-
+        // 2. Suspicious Login Detection (Whitelist / History)
         $isSuspicious = false;
-        $lastIpBinary = $lastSuccessfulLogin ? inet_pton($lastSuccessfulLogin->ip_address) : false;
-        $currentIpBinary = inet_pton($request->ip());
-        
-        if ($lastSuccessfulLogin && $lastIpBinary !== false && $currentIpBinary !== false && $lastIpBinary !== $currentIpBinary) {
-            $isSuspicious = true;
+        $isFlaggingEnabled = ($settings['suspicious_login.enabled'] ?? 'false') === 'true';
+
+        if ($isFlaggingEnabled) {
+            $whitelistIps = $settings['suspicious_login.whitelist_ips'] ?? '';
+            $whitelistLocations = $settings['suspicious_login.whitelist_locations'] ?? '';
             
-            defer(function () use ($user, $request, $lastSuccessfulLogin) {
-                Log::warning("Suspicious login detected for User ID {$user->id} ({$user->email}) from IP {$request->ip()} (previous: {$lastSuccessfulLogin->ip_address})");
+            // If it's NOT in the whitelist, flag it.
+            $inWhitelist = $this->isIpOrLocationMatched($ip, $location, $whitelistIps) || $this->isIpOrLocationMatched($ip, $location, $whitelistLocations);
+            
+            if (!$inWhitelist) {
+                $isSuspicious = true;
+            }
+        } else {
+            // Fallback to legacy "new IP vs last successful IP" if flagging is disabled but we still want some protection,
+            // or just rely entirely on the new logic. The prompt says "disabled by default ... and every IP is Good for now".
+            // So if it's disabled, nothing is suspicious.
+            $isSuspicious = false;
+        }
+        
+        if ($isSuspicious) {
+            defer(function () use ($user, $request, $ip, $location) {
+                Log::warning("Suspicious login detected for User ID {$user->id} ({$user->email}) from IP {$ip} (Location: {$location})");
                 
                 $adminIds = RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
                 foreach ($adminIds as $adminId) {
                     \App\Models\Notification::create([
                         'user_id' => $adminId,
                         'title' => 'Suspicious Login Detected',
-                        'body' => "User {$user->name} ({$user->email}) logged in from a new IP: {$request->ip()} (User-Agent: {$request->header('User-Agent')}).",
+                        'body' => "User {$user->name} ({$user->email}) logged in from an unrecognized IP: {$ip} (" . ($location ?? 'Unknown Location') . ") (User-Agent: {$request->header('User-Agent')}).",
                         'type' => 'security',
                         'priority' => 'urgent'
                     ]);
@@ -171,7 +255,7 @@ class AuthController extends Controller
                 if (\App\Support\SmtpSettings::isConfigured() && $user->email) {
                     try {
                         \Illuminate\Support\Facades\Mail::to($user->email)->send(
-                            new \App\Mail\SuspiciousLoginEmail($request->ip(), $request->header('User-Agent') ?? 'Unknown Device')
+                            new \App\Mail\SuspiciousLoginEmail($ip, $request->header('User-Agent') ?? 'Unknown Device')
                         );
                     } catch (\Exception $e) {
                         Log::error("Failed to send suspicious login email to {$user->email}: " . $e->getMessage());
@@ -181,12 +265,13 @@ class AuthController extends Controller
         }
 
         // Defer non-critical DB inserts to after response
-        defer(function () use ($user, $request, $isSuspicious) {
+        defer(function () use ($user, $request, $isSuspicious, $ip, $location) {
             // Record successful login
             LoginAttempt::create([
                 'identifier' => $request->identifier,
                 'user_id' => $user->id,
-                'ip_address' => $request->ip(),
+                'ip_address' => $ip,
+                'location' => $location,
                 'user_agent' => $request->header('User-Agent'),
                 'success' => true,
                 'is_suspicious' => $isSuspicious,

@@ -323,6 +323,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     
     Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->middleware('capability:audit.view');
     Route::get('/audit-logs/export', [\App\Http\Controllers\AuditLogController::class, 'export'])->middleware('capability:audit.view');
+    Route::get('/auth/login-attempts', [\App\Http\Controllers\LoginAttemptController::class, 'index'])->middleware('capability:audit.view');
 
     // Admin & Master Data APIs
     Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage');

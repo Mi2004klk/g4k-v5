@@ -29,8 +29,17 @@ const sessionSchema = z.object({
   max_devices: z.coerce.number().min(1, "Minimum 1 device").max(10, "Maximum 10 devices"),
 });
 
+const suspiciousLoginSchema = z.object({
+  enabled: z.boolean(),
+  whitelist_ips: z.string().optional(),
+  whitelist_locations: z.string().optional(),
+  blacklist_ips: z.string().optional(),
+  blacklist_locations: z.string().optional(),
+});
+
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 type SessionFormValues = z.infer<typeof sessionSchema>;
+type SuspiciousLoginFormValues = z.infer<typeof suspiciousLoginSchema>;
 
 export function PoliciesConfig() {
   const queryClient = useQueryClient();
@@ -65,6 +74,18 @@ export function PoliciesConfig() {
     delayError: 400,
   });
 
+  const suspiciousLoginForm = useForm<SuspiciousLoginFormValues>({
+    resolver: zodResolver(suspiciousLoginSchema) as unknown as import('react-hook-form').Resolver<SuspiciousLoginFormValues>,
+    defaultValues: {
+      enabled: false,
+      whitelist_ips: "",
+      whitelist_locations: "",
+      blacklist_ips: "",
+      blacklist_locations: "",
+    },
+    mode: "onTouched",
+  });
+
   useEffect(() => {
     const groupedData = settingsGrouped as Record<string, SettingItem[]> | undefined;
     if (groupedData?.security) {
@@ -76,13 +97,21 @@ export function PoliciesConfig() {
         require_symbol: groupedData.security.find((s: SettingItem) => s.key === "password.require_symbol")?.value === "true",
         force_password_change: groupedData.security.find((s: SettingItem) => s.key === "force_password_change")?.value === "true",
       });
+      });
       sessionForm.reset({
         access_token_ttl: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.access_token_ttl")?.value || "15"),
         refresh_token_ttl: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.refresh_token_ttl")?.value || "7"),
         max_devices: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.max_devices")?.value || "3"),
       });
+      suspiciousLoginForm.reset({
+        enabled: groupedData.security.find((s: SettingItem) => s.key === "suspicious_login.enabled")?.value === "true",
+        whitelist_ips: groupedData.security.find((s: SettingItem) => s.key === "suspicious_login.whitelist_ips")?.value || "",
+        whitelist_locations: groupedData.security.find((s: SettingItem) => s.key === "suspicious_login.whitelist_locations")?.value || "",
+        blacklist_ips: groupedData.security.find((s: SettingItem) => s.key === "suspicious_login.blacklist_ips")?.value || "",
+        blacklist_locations: groupedData.security.find((s: SettingItem) => s.key === "suspicious_login.blacklist_locations")?.value || "",
+      });
     }
-  }, [settingsGrouped, passwordForm, sessionForm]);
+  }, [settingsGrouped, passwordForm, sessionForm, suspiciousLoginForm]);
 
   const updateMutation = useMutation({
     mutationFn: (updates: Omit<SettingItem, 'id'>[]) =>
@@ -113,6 +142,17 @@ export function PoliciesConfig() {
       { category: "security", key: "session.access_token_ttl", value: data.access_token_ttl.toString() },
       { category: "security", key: "session.refresh_token_ttl", value: data.refresh_token_ttl.toString() },
       { category: "security", key: "session.max_devices", value: data.max_devices.toString() },
+    ];
+    updateMutation.mutate(updates);
+  };
+
+  const handleSuspiciousLoginSubmit = (data: SuspiciousLoginFormValues) => {
+    const updates = [
+      { category: "security", key: "suspicious_login.enabled", value: data.enabled.toString() },
+      { category: "security", key: "suspicious_login.whitelist_ips", value: data.whitelist_ips || "" },
+      { category: "security", key: "suspicious_login.whitelist_locations", value: data.whitelist_locations || "" },
+      { category: "security", key: "suspicious_login.blacklist_ips", value: data.blacklist_ips || "" },
+      { category: "security", key: "suspicious_login.blacklist_locations", value: data.blacklist_locations || "" },
     ];
     updateMutation.mutate(updates);
   };
@@ -238,6 +278,65 @@ export function PoliciesConfig() {
             <Button type="submit" disabled={updateMutation.isPending || !sessionForm.formState.isValid} className="mt-4">
               {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
               {updateMutation.isPending ? "Saving..." : "Save Rules"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
+        <CardHeader>
+          <CardTitle className="text-base">Suspicious Login & Network Access</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={suspiciousLoginForm.handleSubmit(handleSuspiciousLoginSubmit as any)} className="space-y-4 max-w-xl">
+            <div className="flex items-center justify-between p-3 rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20">
+              <div>
+                <h4 className="text-sm font-medium">Enable Suspicious Login Flagging</h4>
+                <p className="text-xs text-neutral-500">Flags logins from unrecognized IPs or locations not in the whitelist.</p>
+              </div>
+              <input
+                type="checkbox"
+                {...suspiciousLoginForm.register("enabled")}
+                className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-medium">Whitelist IPs (One per line)</label>
+                <textarea
+                  {...suspiciousLoginForm.register("whitelist_ips")}
+                  className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1 min-h-[100px] resize-y"
+                  placeholder="e.g. 192.168.1.100&#10;10.0.0.*"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">Whitelist Locations (One per line)</label>
+                <textarea
+                  {...suspiciousLoginForm.register("whitelist_locations")}
+                  className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1 min-h-[100px] resize-y"
+                  placeholder="e.g. London&#10;United Kingdom"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-red-600">Blacklist IPs (Blocks login)</label>
+                <textarea
+                  {...suspiciousLoginForm.register("blacklist_ips")}
+                  className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1 min-h-[100px] resize-y"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-red-600">Blacklist Locations (Blocks login)</label>
+                <textarea
+                  {...suspiciousLoginForm.register("blacklist_locations")}
+                  className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1 min-h-[100px] resize-y"
+                />
+              </div>
+            </div>
+
+            <Button type="submit" disabled={updateMutation.isPending || !suspiciousLoginForm.formState.isValid} className="mt-4">
+              {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
+              {updateMutation.isPending ? "Saving..." : "Save Policy"}
             </Button>
           </form>
         </CardContent>

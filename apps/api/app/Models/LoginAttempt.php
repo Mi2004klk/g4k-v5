@@ -13,6 +13,7 @@ class LoginAttempt extends Model
     protected $fillable = ['identifier',
         'user_id',
         'ip_address',
+        'location',
         'user_agent',
         'success',
         'is_suspicious', 'demo_tag'];
