@@ -651,16 +651,16 @@
 
 ## 8.11 Notifications
 ### Bell Icon (Top Bar, every page)
-- [ ] Always visible
-- [ ] Count badge for high-priority unread
-- [ ] Click → preview recent, mark read, open Notification Center
-- [ ] Only high-priority + system-level (routine updates go to Chat → Notifications tab)
+- [x] Always visible
+- [x] Count badge for high-priority unread
+- [x] Click → preview recent, mark read, open Notification Center
+- [x] Only high-priority + system-level (routine updates go to Chat → Notifications tab)
 
 ### Notification Center (Chat → Notifications Tab)
-- [ ] Complete history
-- [ ] Filter by type (leave, task, mention, announcement, etc.)
-- [ ] Mark individual or all as read
-- [ ] Search full history
+- [x] Complete history
+- [x] Filter by type (leave, task, mention, announcement, etc.)
+- [x] Mark individual or all as read
+- [x] Search full history
 
 ### Notification Trigger Reference
 - [ ] Leave request submitted → assigned approver notified

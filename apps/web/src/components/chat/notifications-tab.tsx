@@ -37,6 +37,7 @@ interface NotificationItem {
 const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   chat: "Chat",
   system: "System",
+  leave: "Leave Request",
   approval_pending: "Approval Pending",
   approval_decided: "Approval Decided",
   info: "Information",
@@ -47,6 +48,7 @@ const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   task_reminder: "Task Reminders",
   project: "Project Updates",
   message: "Chat Messages",
+  mention: "Mentions",
   security: "Security Alerts",
   feedback: "Feedback & Complaints",
   holiday_reminder: "Holiday Reminders",
