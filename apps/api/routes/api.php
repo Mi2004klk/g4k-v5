@@ -297,6 +297,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::post('/reports/export', [\App\Http\Controllers\ReportController::class, 'export']);
         Route::get('/reports/exports', [\App\Http\Controllers\ReportController::class, 'exports']);
         Route::get('/reports/exports/{id}/download', [\App\Http\Controllers\ReportController::class, 'downloadExport']);
+        Route::post('/reports/exports/{id}/retry', [\App\Http\Controllers\ReportController::class, 'retryExport']);
         Route::get('/reports/attendance-summary', [\App\Http\Controllers\ReportController::class, 'attendanceSummary']);
         Route::get('/reports/leave-summary', [\App\Http\Controllers\ReportController::class, 'leaveSummary']);
     });

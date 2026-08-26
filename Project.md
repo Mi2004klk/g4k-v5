@@ -777,12 +777,12 @@
 - [x] Productivity Summary (per employee)
 
 ## 10.6 Export Background Process
-- [ ] Click Export → runs in background (no UI freeze)
-- [ ] Bell notification on completion
-- [ ] Reports → Export History to download
-- [ ] All exports in .xlsx
-- [ ] Failed exports show error + retry option
-- [ ] Export file retention policy (auto-cleanup after N days)
+- [x] Click Export → runs in background (no UI freeze)
+- [x] Bell notification on completion
+- [x] Reports → Export History to download
+- [x] All exports in .xlsx
+- [x] Failed exports show error + retry option
+- [x] Export file retention policy (auto-cleanup after N days)
 
 ---
 

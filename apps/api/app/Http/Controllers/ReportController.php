@@ -205,6 +205,25 @@ class ReportController extends Controller
         }
     }
 
+    public function retryExport(Request $request, $id)
+    {
+        $exportJob = ExportJob::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $exportJob->update([
+            'status' => 'pending',
+            'error_message' => null,
+            'file_path' => null,
+            'file_data' => null,
+            'file_size' => 0,
+        ]);
+
+        GenerateReportJob::dispatch($exportJob);
+
+        return response()->json($exportJob);
+    }
+
     public function attendanceSummary(Request $request)
     {
         $start = $request->query('start', now()->subDays(30)->toDateString());

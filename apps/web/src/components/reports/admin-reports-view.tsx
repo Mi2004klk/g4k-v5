@@ -153,24 +153,17 @@ export function AdminReportsView() {
 
   return (
     <div className="flex-1 max-w-7xl mx-auto w-full space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-        <div>
+        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Export HR Data</h2>
-          <p className="text-sm text-neutral-500">Generate, save, and export company reports.</p>
-        </div>
-        
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <Button variant="outline" size="sm" onClick={() => handleExport("csv")} className="gap-2 text-neutral-600 dark:text-neutral-300">
-            <AppIcon name="download" className="mr-1" /> CSV
-          </Button>
+          <p className="text-sm text-neutral-500">Generate, save, and export company reports in standard Excel format.</p>
+          </div>
+          <div className="flex gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={() => handleExport("xlsx")} className="gap-2 text-neutral-600 dark:text-neutral-300">
-            <AppIcon name="download" className="mr-1" /> Excel
+            <AppIcon name="spreadsheet" size="sm" className="text-emerald-600" /> Excel (.xlsx)
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport("pdf")} className="gap-2 text-neutral-600 dark:text-neutral-300">
-            <AppIcon name="download" className="mr-1" /> PDF
-          </Button>
+          </div>
         </div>
-      </div>
 
       <div className="mb-6 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between overflow-visible w-full">
         <div className="w-full xl:w-auto overflow-x-auto shrink-0 pb-1 xl:pb-0">

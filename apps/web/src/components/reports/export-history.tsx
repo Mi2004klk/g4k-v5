@@ -137,7 +137,26 @@ export function ExportHistory() {
                   </div>
                 </div>
 
-                {item.file_path && (
+                <div className="flex items-center gap-2">
+                  {item.status === "failed" && (
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await apiFetch(`/reports/exports/${item.id}/retry`, { method: "POST" });
+                          toast.success("Export retry queued.");
+                          queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
+                        } catch (e) {
+                          toast.error("Failed to retry export.");
+                        }
+                      }}
+                      className="h-8 text-xs shrink-0 bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 shadow-none border-none transition-colors"
+                    >
+                      <AppIcon name="refresh" size="xs" className="mr-1.5" /> 
+                      Retry
+                    </Button>
+                  )}
+                  {item.file_path && (
                   <Button
                     size="sm"
                     onClick={() => handleDownload(item)}
@@ -146,7 +165,8 @@ export function ExportHistory() {
                     <AppIcon name="download" size="xs" className="mr-1.5" /> 
                     Download
                   </Button>
-                )}
+                  )}
+                </div>
               </div>
             ))}
             

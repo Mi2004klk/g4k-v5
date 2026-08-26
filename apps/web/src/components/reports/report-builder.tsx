@@ -159,32 +159,14 @@ export function ReportBuilder() {
                     <AppIcon name="refresh" size="sm" className={isRefetching ? "animate-spin" : ""} />
                   </Button>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        className="h-9 gap-2 shrink-0 bg-primary-600 hover:bg-primary-700 text-white" 
-                        disabled={exportMutation.isPending || items.length === 0}
-                      >
-                        {exportMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : <AppIcon name="download" size="sm" />}
-                        Export Data
-                        <AppIcon name="chevronDown" size="xs" className="opacity-70 ml-1" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[180px]">
-                      <DropdownMenuItem onClick={() => exportMutation.mutate("xlsx")} className="gap-2 cursor-pointer">
-                        <AppIcon name="spreadsheet" size="sm" className="text-emerald-600" />
-                        Export to Excel (.xlsx)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => exportMutation.mutate("csv")} className="gap-2 cursor-pointer">
-                        <AppIcon name="fileText" size="sm" className="text-neutral-500" />
-                        Export to CSV (.csv)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => exportMutation.mutate("pdf")} className="gap-2 cursor-pointer">
-                        <AppIcon name="fileText" size="sm" className="text-rose-600" />
-                        Export to PDF (.pdf)
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Button 
+                    className="h-9 gap-2 shrink-0 bg-primary-600 hover:bg-primary-700 text-white" 
+                    disabled={exportMutation.isPending || items.length === 0}
+                    onClick={() => exportMutation.mutate("xlsx")}
+                  >
+                    {exportMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : <AppIcon name="download" size="sm" />}
+                    Export to Excel (.xlsx)
+                  </Button>
                 </>
               }
             />
