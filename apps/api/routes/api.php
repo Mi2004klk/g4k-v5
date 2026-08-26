@@ -111,6 +111,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     // Directory API
     Route::middleware('capability:directory.view')->group(function () {
         Route::get('/directory', [DirectoryController::class, 'index']);
+        Route::get('/directory/{id}', [DirectoryController::class, 'show']);
     });
     // Attendance API
     Route::middleware('capability:attendance.clock-self')->group(function () {

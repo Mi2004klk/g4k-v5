@@ -663,44 +663,44 @@
 - [x] Search full history
 
 ### Notification Trigger Reference
-- [ ] Leave request submitted → assigned approver notified
-- [ ] Leave approved/rejected → employee notified
-- [ ] New task assigned → employee notified
-- [ ] Task submitted for review → reviewing manager notified
-- [ ] Task approved/redo → submitting employee notified
-- [ ] Project submitted for completion → HR + Admin notified
-- [ ] Project approved/redo → submitting employee notified
-- [ ] @mention → mentioned person notified (with snippet)
-- [ ] High/urgent announcement → all relevant users
-- [ ] Suspicious login → all HR + Admin notified
-- [ ] Export ready → requesting user notified
-- [ ] Personal reminder → owner at set time
-- [ ] Shift reminder (15 min before) → employee
-- [ ] Missed clock-in (30 min after) → HR
-- [ ] Session revoked → affected user notified
-- [ ] Feedback/complaint received → receiving HR/Admin
-- [ ] Holiday in 10 days → HR + employees
+- [x] Leave request submitted → assigned approver notified
+- [x] Leave approved/rejected → employee notified
+- [x] New task assigned → employee notified
+- [x] Task submitted for review → reviewing manager notified
+- [x] Task approved/redo → submitting employee notified
+- [x] Project submitted for completion → HR + Admin notified
+- [x] Project approved/redo → submitting employee notified
+- [x] @mention → mentioned person notified (with snippet)
+- [x] High/urgent announcement → all relevant users
+- [x] Suspicious login → all HR + Admin notified
+- [x] Export ready → requesting user notified
+- [x] Personal reminder → owner at set time
+- [x] Shift reminder (15 min before) → employee
+- [x] Missed clock-in (30 min after) → HR
+- [x] Session revoked → affected user notified
+- [x] Feedback/complaint received → receiving HR/Admin
+- [x] Holiday in 10 days → HR + employees
 
 ## 8.12 HR Notification Center (Chat Tab)
-- [ ] Leave requests pending decision
-- [ ] Task submissions needing review
-- [ ] Project submissions needing approval
-- [ ] Company announcements
-- [ ] Holiday reminders
-- [ ] Employee feedback + complaints
+- [x] Leave requests pending decision
+- [x] Task submissions needing review
+- [x] Project submissions needing approval
+- [x] Company announcements
+- [x] Holiday reminders
+- [x] Employee feedback + complaints
 
 ---
 
 # SECTION 9 — DIRECTORY & PEOPLE MANAGEMENT
 
 ## 9.1 Corporate Directory
-- [ ] Search by name, department, designation
-- [ ] Filter by department, designation
-- [ ] Grid view + List view toggle
-- [ ] Employee card: photo, name, title, dept, contact (if public)
-- [ ] Click card → public profile
-- [ ] "Send Message" button → starts DM
-- [ ] Privacy: Public shows contact, Private shows name + role only
+- [x] Search by name, department, designation
+- [x] Filter by department, designation
+- [x] Grid view + List view toggle
+- [x] Employee card: photo, name, title, dept, contact (if public)
+- [x] Click card → public profile
+- [x] "Send Message" button → starts DM
+- [x] Privacy: Public shows contact, Private shows name + role only
 
 ## 9.2 Create Employee Account (HR/Admin)
 - [ ] "Add Employee" button

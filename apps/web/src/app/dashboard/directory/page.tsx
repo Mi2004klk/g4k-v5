@@ -6,30 +6,17 @@ import { PageContainer } from "@/components/layout/page-container";
 import { EmployeeManagementTab } from "@/components/directory/directory-list";
 import { DepartmentsTab } from "@/components/directory/departments-tab";
 import { DesignationsTab } from "@/components/directory/designations-tab";
+import { CorporateDirectoryTab } from "@/components/directory/corporate-directory-tab";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 export default function DirectoryModulePage() {
-  const [tab, setTab] = useUrlState("tab", "management");
+  const [tab, setTab] = useUrlState("tab", "directory");
   
   const { data: capabilities } = useCapabilities();
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
   const canViewDepartments = hasCapability(capabilities, "departments.manage");
   const canViewDesignations = hasCapability(capabilities, "designations.manage");
-  const hasAnyCapability = canManageUsers || canViewDepartments || canViewDesignations;
 
-  if (capabilities && !hasAnyCapability) {
-    return (
-      <PageContainer title="Team Directory & Org" description="Browse corporate team members, roles, contact info, and departments.">
-        <div className="flex-1 min-h-[60vh] w-full flex flex-col items-center justify-center p-8 text-center bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
-          <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
-             <AppIcon name="warning" className="text-neutral-500" size="lg" />
-          </div>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Permissions</h3>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">You don't have access to view the directory modules. Please contact your system administrator if you believe this is an error.</p>
-        </div>
-      </PageContainer>
-    );
-  }
   return (
     <PageContainer
       title="Team Directory & Org"
@@ -40,6 +27,12 @@ export default function DirectoryModulePage() {
           <Tabs value={tab} onValueChange={setTab} className="w-full h-full flex flex-col">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">
               <TabsList className="w-full md:w-auto justify-start overflow-x-auto flex-nowrap bg-transparent h-12 p-0 rounded-none">
+                <TabsTrigger 
+                  value="directory" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:text-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 sm:px-6 h-full font-medium"
+                >
+                  Corporate Directory
+                </TabsTrigger>
                 {canManageUsers && (
                   <TabsTrigger 
                     value="management" 
@@ -68,6 +61,10 @@ export default function DirectoryModulePage() {
             </div>
 
             <div className="flex-1 min-h-0 relative">
+              <TabsContent value="directory" className="mt-0 h-full absolute inset-0 overflow-y-auto outline-none">
+                <CorporateDirectoryTab />
+              </TabsContent>
+
               {canManageUsers && (
                 <TabsContent value="management" className="mt-0 h-full absolute inset-0 overflow-y-auto outline-none">
                   <EmployeeManagementTab />

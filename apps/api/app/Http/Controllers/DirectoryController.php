@@ -84,4 +84,13 @@ class DirectoryController extends Controller
 
         return response()->json($users);
     }
+
+    public function show($id)
+    {
+        $user = User::with(['department', 'designation'])
+            ->where('status', 'active')
+            ->findOrFail($id);
+
+        return response()->json($this->applyVisibilityRules($user));
+    }
 }
