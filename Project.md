@@ -1090,11 +1090,11 @@
 - [x] All buttons have type="button" (except submit)
 - [x] All inputs controlled
 - [x] All async actions show loading state
-- [ ] All mutations invalidate/refetch relevant queries
-- [ ] No stale closures in useEffect
-- [ ] No memory leaks (cleanup in useEffect returns)
-- [ ] Toast notifications auto-dismiss
-- [ ] Confirmation dialogs on destructive actions (delete, deactivate)
+- [x] All mutations invalidate/refetch relevant queries
+- [x] No stale closures in useEffect
+- [x] No memory leaks (cleanup in useEffect returns)
+- [x] Toast notifications auto-dismiss
+- [x] Confirmation dialogs on destructive actions (delete, deactivate)
 
 ---
 
