@@ -209,6 +209,57 @@ export function ProfileGeneralSection() {
                 </div>
               </div>
 
+              {/* Job Designation */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-neutral-900 dark:text-white flex justify-between">
+                  Job Designation <span className="text-[10px] font-normal text-neutral-400">(Admin Managed)</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                    <AppIcon name="briefcase" className="w-4 h-4" />
+                  </div>
+                  <Input 
+                    value={profile?.designation?.name || "Not Assigned"} 
+                    disabled 
+                    className="h-11 text-sm pl-9 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 cursor-not-allowed border-neutral-200 dark:border-neutral-800 rounded-xl" 
+                  />
+                </div>
+              </div>
+
+              {/* Department */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-neutral-900 dark:text-white flex justify-between">
+                  Department <span className="text-[10px] font-normal text-neutral-400">(Admin Managed)</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                    <AppIcon name="users" className="w-4 h-4" />
+                  </div>
+                  <Input 
+                    value={profile?.department?.name || "Not Assigned"} 
+                    disabled 
+                    className="h-11 text-sm pl-9 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 cursor-not-allowed border-neutral-200 dark:border-neutral-800 rounded-xl" 
+                  />
+                </div>
+              </div>
+
+              {/* Company */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-neutral-900 dark:text-white flex justify-between">
+                  Company <span className="text-[10px] font-normal text-neutral-400">(Admin Managed)</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                    <AppIcon name="home" className="w-4 h-4" />
+                  </div>
+                  <Input 
+                    value={profile?.company?.name || "Not Assigned"} 
+                    disabled 
+                    className="h-11 text-sm pl-9 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-500 cursor-not-allowed border-neutral-200 dark:border-neutral-800 rounded-xl" 
+                  />
+                </div>
+              </div>
+
               {/* Info Alert */}
               <div className="flex items-end">
                 <div className="w-full flex items-center gap-2 px-4 py-3 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 rounded-xl">

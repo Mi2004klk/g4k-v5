@@ -17,7 +17,7 @@ class ProfileController extends Controller
 
     public function show(Request $request)
     {
-        return response()->json($request->user()->load(['department', 'designation', 'roleAssignments']));
+        return response()->json($request->user()->load(['department', 'designation', 'roleAssignments', 'company']));
     }
 
     public function update(Request $request)
@@ -29,14 +29,22 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'preferences' => 'nullable|array',
+            'emergency_contact' => 'nullable|array',
+            'emergency_contact.name' => 'required_with:emergency_contact|string|max:255',
+            'emergency_contact.phone' => 'required_with:emergency_contact|string|max:20',
+            'emergency_contact.relation' => 'required_with:emergency_contact|string|max:50',
         ]);
+
+        if (array_key_exists('emergency_contact', $validated)) {
+            $validated['emergency_contact'] = $validated['emergency_contact'] ? json_encode($validated['emergency_contact']) : null;
+        }
 
         $user->update($validated);
         $after = $user->fresh()->toArray();
 
         AuditLogger::log($request, 'update', 'user', $user->id, $before, $after);
 
-        return response()->json($user->load(['department', 'designation', 'roleAssignments']));
+        return response()->json($user->load(['department', 'designation', 'roleAssignments', 'company']));
     }
 
     public function uploadAvatar(Request $request)

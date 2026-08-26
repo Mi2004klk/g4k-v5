@@ -866,16 +866,16 @@
 # SECTION 12 — MY PROFILE
 
 ## 12.1 Profile Header
-- [ ] Upload/drag-drop photo (max 2 MB)
-- [ ] Name, role(s), attendance stats summary
+- [x] Upload/drag-drop photo (max 2 MB)
+- [x] Name, role(s), attendance stats summary
 
 ## 12.2 General Info Tab
-- [ ] Full name (self-edit)
-- [ ] Phone (self-edit)
-- [ ] Emergency contact (self-edit)
-- [ ] Job designation (HR/Admin only — employees can't edit)
-- [ ] Department (read-only)
-- [ ] Company (read-only)
+- [x] Full name (self-edit)
+- [x] Phone (self-edit)
+- [x] Emergency contact (self-edit)
+- [x] Job designation (HR/Admin only — employees can't edit)
+- [x] Department (read-only)
+- [x] Company (read-only)
 
 ## 12.3 Security & Devices Tab
 - [ ] Change password form (current + new)
