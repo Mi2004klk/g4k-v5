@@ -634,20 +634,20 @@
 - [x] Persists across devices
 
 ## 8.9 Task Completion Alerts in Chat
-- [ ] Employee completes project task → auto-alert in project chat
-- [ ] Quick Task dashboard widget completion → Global Chat auto-post
+- [x] Employee completes project task → auto-alert in project chat
+- [x] Quick Task dashboard widget completion → Global Chat auto-post
 
 ## 8.10 Announcements
-- [ ] Priorities: Normal / High / Urgent
-- [ ] Normal → feed only
-- [ ] High → feed + notification to relevant users
-- [ ] Urgent → feed + urgent notification to all affected
-- [ ] Admin: company-wide
-- [ ] HR: team-level (scoped)
-- [ ] Emoji reactions (no comments)
-- [ ] Dismiss from dashboard (✕) — dismissal remembered
-- [ ] Pinned announcements stay at top of feed
-- [ ] Appear on every user's dashboard
+- [x] Priorities: Normal / High / Urgent
+- [x] Normal → feed only
+- [x] High → feed + notification to relevant users
+- [x] Urgent → feed + urgent notification to all affected
+- [x] Admin: company-wide
+- [x] HR: team-level (scoped)
+- [x] Emoji reactions (no comments)
+- [x] Dismiss from dashboard (✕) — dismissal remembered
+- [x] Pinned announcements stay at top of feed
+- [x] Appear on every user's dashboard
 
 ## 8.11 Notifications
 ### Bell Icon (Top Bar, every page)
