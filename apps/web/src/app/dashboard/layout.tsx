@@ -29,6 +29,7 @@ import { ProjectTimerWidget } from "@/components/app-shell/project-timer-widget"
 import { NavGroup } from "@/components/app-shell/nav-group";
 import { ShellPolish } from "@/components/app-shell/shell-polish";
 import { PinnedItems } from "@/components/layout/pinned-items";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { ReverbProvider } from "@/hooks/use-reverb";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { HelpOverlay, Avatar, AvatarFallback } from "@g4k/ui/components";
@@ -452,13 +453,15 @@ export default function DashboardLayout({
               </div>
             </header>
 
-            <main id="main-content" className="flex-1 overflow-y-auto relative z-10 bg-app p-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-6 md:p-6 lg:p-8">
-              <div key={pathname} className="mx-auto max-w-[1440px] animate-page-in">
-                <ErrorBoundary resetKeys={[pathname]}>
-                  <Breadcrumb />
-                  {children}
-                </ErrorBoundary>
-              </div>
+            <main id="main-content" className="flex-1 overflow-y-auto relative z-10 bg-app p-0 md:p-6 lg:p-8">
+              <PullToRefresh>
+                <div key={pathname} className="mx-auto max-w-[1440px] animate-page-in p-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:p-0">
+                  <ErrorBoundary resetKeys={[pathname]}>
+                    <Breadcrumb />
+                    {children}
+                  </ErrorBoundary>
+                </div>
+              </PullToRefresh>
             </main>
 
             {/* Mobile Bottom Navigation (Visible on <= 768px screens) */}

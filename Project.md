@@ -894,19 +894,19 @@
 # SECTION 13 — MOBILE EXPERIENCE & PWA
 
 ## 13.1 PWA Installation
-- [ ] Manifest.json valid (name, short_name, icons, theme, display: standalone)
-- [ ] Service worker registers + caches app shell
-- [ ] Installable from browser (Add to Home Screen)
-- [ ] Splash screen configured
-- [ ] App icons (192, 512, maskable)
+- [x] Manifest.json valid (name, short_name, icons, theme, display: standalone)
+- [x] Service worker registers + caches app shell
+- [x] Installable from browser (Add to Home Screen)
+- [x] Splash screen configured
+- [x] App icons (192, 512, maskable)
 
 ## 13.2 Mobile Layout
-- [ ] Bottom navigation bar (one-handed use)
-- [ ] Touch targets ≥ 44×44px
-- [ ] No horizontal scroll on any page
-- [ ] Forms usable without zooming
-- [ ] Keyboard doesn't cover inputs (viewport adjustments)
-- [ ] Pull-to-refresh where appropriate
+- [x] Bottom navigation bar (one-handed use)
+- [x] Touch targets ≥ 44×44px
+- [x] No horizontal scroll on any page
+- [x] Forms usable without zooming
+- [x] Keyboard doesn't cover inputs (viewport adjustments)
+- [x] Pull-to-refresh where appropriate
 
 ## 13.3 Mobile-Specific Behaviors
 - [ ] Kanban: swipe between columns, long-press to drag

@@ -28,10 +28,23 @@ export const metadata: Metadata = {
     icon: "/icon.png",
     apple: "/apple-icon.png",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Workplace OS",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#8A2BE2",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
