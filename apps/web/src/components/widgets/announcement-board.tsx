@@ -292,7 +292,7 @@ export function AnnouncementBoard() {
             className="p-1 text-neutral-400 hover:text-rose-500 transition-colors ml-1" 
             title="Remove widget"
           >
-            <AppIcon name="x" size="sm" />
+            <AppIcon name="close" size="sm" />
           </button>
         </div>
       </div>
