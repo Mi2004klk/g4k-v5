@@ -16,7 +16,13 @@ class Project extends Model
     protected $fillable = ['name', 'description', 'status', 'priority', 'start_date',
         'end_date', 'deadline', 'team_id', 'department_id', 'progress', 'created_by',
         'submission_note', 'completed_at', 'demo_tag', 'is_demo', 'qa_form_id', 
-        'allow_employee_tasks', 'cover_image'];
+        'allow_employee_tasks', 'cover_image'
+    ];
+
+    protected $appends = [
+        'progress',
+        'current_phase',
+    ];
 
     protected $casts = [
         'start_date' => 'date',
@@ -65,6 +71,11 @@ class Project extends Model
     public function phases(): HasMany
     {
         return $this->hasMany(ProjectPhase::class)->orderBy('sort_order', 'asc');
+    }
+
+    public function getCurrentPhaseAttribute()
+    {
+        return $this->phases()->where('status', '!=', 'completed')->orderBy('sort_order', 'asc')->first();
     }
 
     public function qaForm(): BelongsTo

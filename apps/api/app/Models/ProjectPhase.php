@@ -20,12 +20,16 @@ class ProjectPhase extends Model
         'start_date',
         'end_date',
         'completed_at',
+        'assignee_id',
+        'qa_form_id',
+        'workflow_settings',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'completed_at' => 'datetime',
+        'workflow_settings' => 'array',
     ];
 
     public function project(): BelongsTo
@@ -36,6 +40,16 @@ class ProjectPhase extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class, 'phase_id');
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    public function qaForm(): BelongsTo
+    {
+        return $this->belongsTo(QaForm::class, 'qa_form_id');
     }
 
     public function getTotalTimeSecondsAttribute()

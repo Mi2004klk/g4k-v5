@@ -88,6 +88,9 @@ class PhaseController extends Controller
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'assignee_id' => 'nullable|exists:users,id',
+            'qa_form_id' => 'nullable|exists:qa_forms,id',
+            'workflow_settings' => 'nullable|array',
         ]);
 
         $maxOrder = $project->phases()->max('sort_order') ?? 0;
@@ -95,6 +98,7 @@ class PhaseController extends Controller
         $phase = $project->phases()->create(array_merge($validated, [
             'status' => 'pending',
             'sort_order' => $maxOrder + 1,
+            'workflow_settings' => $validated['workflow_settings'] ?? null,
         ]));
 
         \App\Models\TaskActivity::create([

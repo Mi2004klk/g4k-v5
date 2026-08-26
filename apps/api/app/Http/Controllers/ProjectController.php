@@ -55,7 +55,7 @@ class ProjectController extends Controller
 
     public function index(Request $request)
     {
-        $query = Project::with(['team', 'department', 'creator', 'members']);
+        $query = Project::with(['team', 'department', 'creator', 'members', 'phases.assignee']);
 
         if (!$this->userHasManage($request)) {
             $userId = $request->user()->id;

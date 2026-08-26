@@ -83,7 +83,10 @@ export function CreateProjectDialog({
             body: JSON.stringify({
               name: phase.name,
               status: "pending",
-              sort_order: i + 1
+              sort_order: i + 1,
+              assignee_id: phase.assigneeId && phase.assigneeId !== "none" ? parseInt(phase.assigneeId) : null,
+              qa_form_id: phase.qaFormId && phase.qaFormId !== "none" ? parseInt(phase.qaFormId) : null,
+              workflow_settings: phase.workflowSettings || null
             })
           });
 
@@ -383,6 +386,7 @@ export function CreateProjectDialog({
         phases={draftData.phases} 
         onChange={(phases) => setDraftData({ ...draftData, phases })} 
         users={users} 
+        qaForms={qaFormsData?.data || []}
       />
     </div>
   );

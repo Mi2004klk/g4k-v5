@@ -17,6 +17,7 @@ interface Project {
   deadline?: string;
   cover_image?: string;
   members?: { id: number; name: string; avatar_url?: string }[];
+  current_phase?: { name: string; assignee?: { name: string; avatar_url?: string } };
 }
 
 export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName }: { project: Project; viewMode?: "grid" | "list"; onClick?: () => void; onUpdateName?: (name: string) => void }) {
@@ -83,6 +84,17 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
               <span className={project.progress === 100 ? "text-success-600 dark:text-success-500" : ""}>{project.progress}%</span>
             </div>
             <Progress value={project.progress} size="sm" isOverdue={isOverdue} indicatorColorClass={project.progress === 100 ? "bg-success-500" : undefined} />
+            
+            {project.current_phase && (
+              <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded">
+                <span className="font-semibold text-neutral-600 dark:text-neutral-300 truncate">{project.current_phase.name}</span>
+                {project.current_phase.assignee && (
+                  <span className="truncate border-l border-neutral-200 dark:border-neutral-700 pl-1.5 ml-0.5">
+                    {project.current_phase.assignee.name}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Members */}
@@ -177,6 +189,24 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
               </span>
             </div>
             <Progress value={project.progress} size="sm" isOverdue={isOverdue} indicatorColorClass={project.progress === 100 ? "bg-success-500" : undefined} />
+            
+            {project.current_phase && (
+              <div className="flex items-center gap-1.5 mt-1 text-[10px] text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 p-1.5 rounded-lg border border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center justify-center w-4 h-4 rounded bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                  <AppIcon name="clock" className="w-2.5 h-2.5 text-neutral-400" />
+                </div>
+                <span className="font-semibold text-neutral-700 dark:text-neutral-300 truncate max-w-[100px]">{project.current_phase.name}</span>
+                {project.current_phase.assignee && (
+                  <div className="flex items-center gap-1 ml-auto shrink-0 pl-2 border-l border-neutral-200 dark:border-neutral-700">
+                    <Avatar className="w-3.5 h-3.5">
+                      {project.current_phase.assignee.avatar_url && <AvatarImage src={project.current_phase.assignee.avatar_url} />}
+                      <AvatarFallback className="text-[7px]">{project.current_phase.assignee.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate max-w-[60px] text-[9px] font-medium">{project.current_phase.assignee.name}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Footer Metadata */}

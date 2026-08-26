@@ -404,27 +404,28 @@
 # SECTION 7 — PROJECTS & TASKS
 
 ## 7.1 Project Visibility by Role
-- [ ] Employee: only projects they're members of
-- [ ] HR: projects they created + dept projects + projects their employees are on
-- [ ] Admin: all projects company-wide, properly grouped by department
-- [ ] Server-side scoping (not just UI hiding)
+- [x] Employee: only projects they're members of
+- [x] HR: projects they created + dept projects + projects their employees are on
+- [x] Admin: all projects company-wide, properly grouped by department
+- [x] Server-side scoping (not just UI hiding)
 
 ## 7.2 Project Card Display
-- [ ] Name, description, priority
-- [ ] Deadline, status
-- [ ] Progress % (auto-calculated from task completions)
-- [ ] Team member avatars (profile photo loads)
-- [ ] Cover image (if uploaded)
-- [ ] Click → project detail page
+- [x] Name, description, priority
+- [x] Deadline, status
+- [x] Progress % (auto-calculated from task completions)
+- [x] current phase and current assignee (active)
+- [x] Team member avatars (profile photo loads if available)
+- [x] Cover image (if uploaded)
+- [x] Click → project detail page
 
 ## 7.3 Create Project (HR/Admin)
-- [ ] "New Project" button visible only to HR/Admin
-- [ ] Form fields: Name, Description, Priority (Low/Med/High/Urgent), Department, Team Members (multi-select), Start Date, End Date, Cover Image, QA Form (optional), Allow Employee Tasks toggle
-- [ ] End Date >= Start Date validation
-- [ ] On create:
-  - [ ] Dedicated group chat auto-created for members
-  - [ ] All members notified
-  - [ ] Members immediately gain access to project tasks + chat
+- [x] "New Project" button visible only to HR/Admin
+- [x] Form fields: Name, Description, Priority (Low/Med/High/Urgent), Department, Team Members (multi-select), Start Date, End Date, Cover Image, QA Form ( create new qa form, add from preset - optional), Allow Employee Tasks toggle, phase by phase task grouping, assign employee for each phase, all customization options (not a single form, one by one form that goes next and next for easy navigation/workflow), qa allocation for each phase, notification, approval and all workflow for each phase, project and overall workflow
+- [x] End Date >= Start Date validation
+- [x] On create:
+  - [x] Dedicated group chat auto-created for members
+  - [x] All members notified
+  - [x] Members immediately gain access to project tasks + chat
 
 ## 7.4 Project Sorting
 - [ ] Sort by Created Date (asc/desc)

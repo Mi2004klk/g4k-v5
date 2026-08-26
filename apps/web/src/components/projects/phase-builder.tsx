@@ -18,6 +18,12 @@ export interface BuilderTask {
 export interface BuilderPhase {
   id: string;
   name: string;
+  assigneeId?: string;
+  qaFormId?: string;
+  workflowSettings?: {
+    requiresApproval: boolean;
+    notifyOnComplete: boolean;
+  };
   tasks: BuilderTask[];
 }
 
@@ -25,9 +31,10 @@ export interface PhaseBuilderProps {
   phases: BuilderPhase[];
   onChange: (phases: BuilderPhase[]) => void;
   users: { id: number; name: string; avatar_url?: string }[];
+  qaForms?: { id: number; title: string; }[];
 }
 
-export function PhaseBuilder({ phases, onChange, users }: PhaseBuilderProps) {
+export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBuilderProps) {
   const [expandedPhases, setExpandedPhases] = useState<Record<string, boolean>>(
     phases.reduce((acc, p) => ({ ...acc, [p.id]: true }), {})
   );
@@ -80,6 +87,12 @@ export function PhaseBuilder({ phases, onChange, users }: PhaseBuilderProps) {
     const newPhase: BuilderPhase = {
       id: `phase-${Date.now()}`,
       name: `Phase ${phases.length + 1}`,
+      assigneeId: "none",
+      qaFormId: "none",
+      workflowSettings: {
+        requiresApproval: false,
+        notifyOnComplete: true,
+      },
       tasks: [],
     };
     onChange([...phases, newPhase]);
@@ -135,10 +148,75 @@ export function PhaseBuilder({ phases, onChange, users }: PhaseBuilderProps) {
                     </div>
                   </div>
 
-                  {/* Phase Content (Tasks) */}
+                  {/* Phase Content */}
                   {isExpanded && (
-                    <div className="flex flex-col p-4 gap-4 bg-emerald-50/10 dark:bg-emerald-950/10">
-                      {phase.tasks.map((task) => (
+                    <div className="flex flex-col p-4 gap-6 bg-emerald-50/10 dark:bg-emerald-950/10">
+                      
+                      {/* Phase Settings Block */}
+                      <div className="p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-neutral-900 shadow-sm space-y-4">
+                        <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide border-b border-emerald-100 dark:border-emerald-900/30 pb-2">Phase Settings</h4>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1.5 flex flex-col">
+                            <label className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Phase Assignee / Owner</label>
+                            <Select value={phase.assigneeId || "none"} onValueChange={(v) => updatePhase(phase.id, { assigneeId: v })}>
+                              <SelectTrigger className="w-full h-10 bg-neutral-50 dark:bg-neutral-950 text-sm rounded-lg border-emerald-100 dark:border-emerald-900/30">
+                                <SelectValue placeholder="Select Assignee" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Unassigned</SelectItem>
+                                {users.map(u => (
+                                  <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-1.5 flex flex-col">
+                            <label className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Required QA Form</label>
+                            <Select value={phase.qaFormId || "none"} onValueChange={(v) => updatePhase(phase.id, { qaFormId: v })}>
+                              <SelectTrigger className="w-full h-10 bg-neutral-50 dark:bg-neutral-950 text-sm rounded-lg border-emerald-100 dark:border-emerald-900/30">
+                                <SelectValue placeholder="No QA Form" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                {qaForms.map(qa => (
+                                  <SelectItem key={qa.id} value={qa.id.toString()}>{qa.title}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-6 pt-2">
+                          <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+                            <input 
+                              type="checkbox" 
+                              checked={phase.workflowSettings?.requiresApproval ?? false}
+                              onChange={(e) => updatePhase(phase.id, { 
+                                workflowSettings: { ...phase.workflowSettings!, requiresApproval: e.target.checked }
+                              })}
+                              className="rounded text-emerald-600 focus:ring-emerald-500"
+                            />
+                            Requires Approval to Complete
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+                            <input 
+                              type="checkbox" 
+                              checked={phase.workflowSettings?.notifyOnComplete ?? true}
+                              onChange={(e) => updatePhase(phase.id, { 
+                                workflowSettings: { ...phase.workflowSettings!, notifyOnComplete: e.target.checked }
+                              })}
+                              className="rounded text-emerald-600 focus:ring-emerald-500"
+                            />
+                            Notify on Completion
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide border-b border-emerald-100 dark:border-emerald-900/30 pb-2">Phase Tasks</h4>
+                        {phase.tasks.map((task) => (
                         <div key={task.id} className="flex flex-col gap-3 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm relative group">
                           
                           <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-500 transition-opacity" onClick={() => removeTask(phase.id, task.id)}>
