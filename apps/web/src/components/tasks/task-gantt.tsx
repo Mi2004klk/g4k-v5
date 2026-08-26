@@ -124,6 +124,17 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
           custom_popup_html: (task: any) => {
             const originalTask = tasks.find(t => String(t.id) === task.id);
             const statusLabel = originalTask?.status?.replace("_", " ") || "";
+            
+            // Priority badge
+            const p = originalTask?.priority || "low";
+            const priorityColors: Record<string, string> = {
+              urgent: "text-rose-700 bg-rose-100 border-rose-200",
+              high: "text-orange-700 bg-orange-100 border-orange-200",
+              medium: "text-amber-700 bg-amber-100 border-amber-200",
+              low: "text-neutral-600 bg-neutral-100 border-neutral-200"
+            };
+            const pClass = priorityColors[p] || priorityColors.low;
+            
             const assignees = originalTask?.assignees || (originalTask?.assignee ? [originalTask.assignee] : []);
             const avatarsHtml = assignees.slice(0, 3).map((a: any) => 
               `<div class="w-6 h-6 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center text-[9px] font-bold text-neutral-600 uppercase shrink-0" title="${a.name}">${a.name.substring(0, 2)}</div>`
@@ -134,7 +145,10 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
             return `
               <div class="flex flex-col gap-1 w-[220px]">
                 <div class="flex items-center justify-between mb-1">
-                  <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 border border-neutral-200">${statusLabel}</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 border border-neutral-200">${statusLabel}</span>
+                    <span class="text-[9px] font-bold uppercase tracking-wider px-1 py-0.5 rounded border ${pClass}">${p}</span>
+                  </div>
                   <span class="text-[10px] text-neutral-400">${task.progress}%</span>
                 </div>
                 <h5 class="text-sm font-bold text-neutral-800 line-clamp-2 leading-tight">${task.name}</h5>

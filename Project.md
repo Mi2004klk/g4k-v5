@@ -496,26 +496,26 @@
 - [ ] Chronological history (created, assigned, progress updates, submitted, approved)
 
 ## 7.8 Task Priority Levels
-- [ ] Low: Gray/Blue
-- [ ] Medium: Yellow
-- [ ] High: Orange
-- [ ] Urgent: Red
-- [ ] Color consistently applied across all views (Kanban, List, Timeline, Detail)
+- [x] Low: Gray/Blue
+- [x] Medium: Yellow
+- [x] High: Orange
+- [x] Urgent: Red
+- [x] Color consistently applied across all views (Kanban, List, Timeline, Detail)
 
 ## 7.9 Task Scope
-- [ ] Global → all employees
-- [ ] Department → all in dept
-- [ ] Role-Specific → all with designation
-- [ ] Individual → named employees
-- [ ] Scope changes retroactively assign/unassign correctly
+- [x] Global → all employees
+- [x] Department → all in dept
+- [x] Role-Specific → all with designation
+- [x] Individual → named employees
+- [x] Scope changes retroactively assign/unassign correctly
 
 ## 7.10 Task Dependencies
-- [ ] Tasks can be marked blocked by other tasks
-- [ ] Blocked tasks cannot submit for review until blockers complete
-- [ ] Blocked badge shown on affected tasks
-- [ ] Circular dependencies detected and rejected (A↔B)
-- [ ] Self-dependency rejected
-- [ ] Dependency arrows visible in Timeline view
+- [x] Tasks can be marked blocked by other tasks
+- [x] Blocked tasks cannot submit for review until blockers complete
+- [x] Blocked badge shown on affected tasks
+- [x] Circular dependencies detected and rejected (A↔B)
+- [x] Self-dependency rejected
+- [x] Dependency arrows visible in Timeline view
 
 ## 7.11 Recurring Tasks
 - [ ] Options: Daily / Weekly (specific days) / Monthly (specific date)

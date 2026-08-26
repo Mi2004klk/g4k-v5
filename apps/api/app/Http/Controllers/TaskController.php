@@ -328,6 +328,17 @@ class TaskController extends Controller
             }
         }
 
+        $scope = $validated['scope'] ?? 'global';
+        $scopeId = $validated['scope_id'] ?? null;
+        
+        if ($scope === 'global') {
+            $validated['assignees'] = \App\Models\User::where('active_role', '!=', 'super_admin')->pluck('id')->toArray();
+        } elseif ($scope === 'department' && $scopeId) {
+            $validated['assignees'] = \App\Models\User::where('department_id', $scopeId)->pluck('id')->toArray();
+        } elseif ($scope === 'role' && $scopeId) {
+            $validated['assignees'] = \App\Models\User::where('designation_id', $scopeId)->pluck('id')->toArray();
+        }
+
         $assigneeId = null;
         if (!empty($validated['assignees'])) {
             $assigneeId = $validated['assignees'][0];
@@ -493,6 +504,19 @@ class TaskController extends Controller
                         \Illuminate\Support\Facades\Log::warning("Failed to dispatch TaskCompleted event: " . $e->getMessage());
                     }
                 }
+            }
+        }
+
+        $scope = $validated['scope'] ?? $task->scope;
+        $scopeId = array_key_exists('scope_id', $validated) ? $validated['scope_id'] : $task->scope_id;
+        
+        if (array_key_exists('scope', $validated) || array_key_exists('scope_id', $validated)) {
+            if ($scope === 'global') {
+                $validated['assignees'] = \App\Models\User::where('active_role', '!=', 'super_admin')->pluck('id')->toArray();
+            } elseif ($scope === 'department' && $scopeId) {
+                $validated['assignees'] = \App\Models\User::where('department_id', $scopeId)->pluck('id')->toArray();
+            } elseif ($scope === 'role' && $scopeId) {
+                $validated['assignees'] = \App\Models\User::where('designation_id', $scopeId)->pluck('id')->toArray();
             }
         }
 

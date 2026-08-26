@@ -206,7 +206,7 @@ export default function ProjectDetailPage() {
               )}
               {project.submission_note && (
                 <div className="flex items-center gap-1.5 text-neutral-500 w-full mt-1.5 bg-neutral-50 dark:bg-neutral-900/40 p-2 rounded-md text-xs border border-neutral-100 dark:border-neutral-800">
-                  <AppIcon name="document" className="w-3.5 h-3.5 shrink-0" />
+                  <AppIcon name="info" className="w-3.5 h-3.5 shrink-0" />
                   <span className="italic">"{project.submission_note}"</span>
                 </div>
               )}
