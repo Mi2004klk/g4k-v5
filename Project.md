@@ -789,22 +789,22 @@
 # SECTION 11 — SYSTEM SETTINGS (Admin Only)
 
 ## 11.1 Company Profile
-- [ ] Company Name, Short Name
-- [ ] Timezone (default Asia/Kolkata) configurable
-- [ ] Company Logo upload (used on login + throughout)
+- [x] Company Name, Short Name
+- [x] Timezone (default Asia/Kolkata) configurable
+- [x] Company Logo upload (used on login + throughout)
 
 ## 11.2 Work Schedules
-- [ ] Create shift templates: Start, End, Break Duration, Grace Period, Working Days
-- [ ] Multiple schedules allowed
-- [ ] One default schedule designated (used for late detection + overtime platform-wide)
+- [x] Create shift templates: Start, End, Break Duration, Grace Period, Working Days
+- [x] Multiple schedules allowed
+- [x] One default schedule designated (used for late detection + overtime platform-wide)
 
 ## 11.3 Policies (Security)
-- [ ] Password min length
-- [ ] Password complexity (uppercase, numbers, special chars)
-- [ ] Access token duration (refresh interval)
-- [ ] Max active devices
-- [ ] Password expiry period
-- [ ] All settings enforced server-side
+- [x] Password min length
+- [x] Password complexity (uppercase, numbers, special chars)
+- [x] Access token duration (refresh interval)
+- [x] Max active devices
+- [x] Password expiry period
+- [x] All settings enforced server-side
 
 ## 11.4 Holidays
 - [ ] Add/edit/remove holidays
