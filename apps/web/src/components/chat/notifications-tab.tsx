@@ -87,7 +87,7 @@ export function NotificationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     }
   });
 
@@ -97,7 +97,7 @@ export function NotificationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     }
   });
 
@@ -107,7 +107,7 @@ export function NotificationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
       toast.success("All notifications marked as read");
     }
   });

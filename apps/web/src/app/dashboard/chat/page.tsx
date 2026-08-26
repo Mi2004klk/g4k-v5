@@ -8,12 +8,13 @@ import { NotificationsTab } from "@/components/chat/notifications-tab";
 import { AnnouncementBoard } from "@/components/widgets/announcement-board";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 export default function ChatModulePage() {
   const [tab, setTab] = useUrlState("tab", "chat");
 
   const { data: notificationsCountData } = useQuery({
-    queryKey: ["notifications-unread-count"],
+    queryKey: queryKeys.notificationsUnreadCount,
     queryFn: () => apiFetch("/notifications/unread-count"),
     refetchInterval: 30000,
   });

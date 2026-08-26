@@ -73,7 +73,8 @@ export const queryKeys = {
   announcements: ["announcements"] as const,
   quickNotes: ["quick-notes"] as const,
   // --- Entities & Global ---
-  unreadCount: ["unread-count"] as const,
+  chatUnreadCount: ["chat-unread-count"] as const,
+  notificationsUnreadCount: ["notifications-unread-count"] as const,
   notifications: (filter?: unknown, search?: string, cursor?: string | null) => ["notifications", filter, search ?? "", cursor ?? ""] as const,
   project: (id: string | number) => ["project", String(id)] as const,
   profile: ["profile"] as const,

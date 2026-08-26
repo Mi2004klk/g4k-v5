@@ -102,7 +102,7 @@ export default function DashboardLayout({
   }, []);
 
   const { data: chatUnreadData } = useQuery({
-    queryKey: ["chat-unread-count"],
+    queryKey: queryKeys.chatUnreadCount,
     queryFn: () => apiFetch("/chat/unread-count"),
     refetchInterval: 30000,
     enabled: !!authUser,

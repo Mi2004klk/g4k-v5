@@ -100,7 +100,7 @@ export function ChatTab() {
             });
           }
           queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-          queryClient.invalidateQueries({ queryKey: ["chat-unread-count"] });
+          queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
         }
       };
       
@@ -108,6 +108,7 @@ export function ChatTab() {
       
       const deleteHandler = (e: { message_id: number, conversation_id: number }) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+        queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
       };
       
       channel.listen(".message-deleted", deleteHandler);
@@ -307,6 +308,7 @@ export function ChatTab() {
             pages: [updatedFirstPage, ...old.pages.slice(1)],
           };
         });
+        queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
       };
 
       channel.listen(".message-sent", handler);
@@ -350,6 +352,7 @@ export function ChatTab() {
             }))
           };
         });
+        queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
       };
 
       channel.listen(".message-deleted", deleteHandler);
@@ -371,7 +374,7 @@ export function ChatTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
-      queryClient.invalidateQueries({ queryKey: ["chat-unread-count"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
     },
   });
 
@@ -499,6 +502,7 @@ export function ChatTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
       toast.success("Message deleted");
     }
   });
@@ -510,6 +514,7 @@ export function ChatTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
       toast.success("Chat cleared");
     }
   });

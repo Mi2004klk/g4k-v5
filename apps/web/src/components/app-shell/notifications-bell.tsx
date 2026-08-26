@@ -25,7 +25,7 @@ export function NotificationsBell() {
   const clearPopupNotifications = useUIStore((s) => s.clearPopupNotifications);
 
   const { data: countData } = useQuery({
-    queryKey: queryKeys.unreadCount,
+    queryKey: queryKeys.notificationsUnreadCount,
     queryFn: () => apiFetch("/notifications/unread-count"),
     enabled: !!user,
     refetchInterval: isConnected ? false : 30_000,
@@ -75,7 +75,7 @@ export function NotificationsBell() {
       queryClient.setQueryData(queryKeys.notifications(filter), context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     },
   });
 
@@ -108,7 +108,7 @@ export function NotificationsBell() {
       toast.error("Failed to mark notifications as read");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     },
   });
 
@@ -121,7 +121,7 @@ export function NotificationsBell() {
     
     const handleNotification = (e: any) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.unreadCount });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
       if (e.title) {
         toast.info(e.title, { description: e.body || "You have a new notification." });
       } else {
