@@ -819,18 +819,18 @@
 - [x] Triggers: welcome emails, password resets, weekly summary, suspicious login alerts
 
 ## 11.6 Notification Preferences
-- [ ] Per-event-type control: email vs in-app
-- [ ] Granular per event
+- [x] Per-event-type control: email vs in-app
+- [x] Granular per event
 
 ## 11.7 Auto-Numbering
-- [ ] Employee IDs format (prefix + starting number)
-- [ ] Department codes format
-- [ ] Preview before save
-- [ ] No collision after demo data removal / account deletion
+- [x] Employee IDs format (prefix + starting number)
+- [x] Department codes format
+- [x] Preview before save
+- [x] No collision after demo data removal / account deletion
 
 ## 11.8 Reminders
-- [ ] Shift start alert (minutes before) → employee
-- [ ] Missed clock-in alert (minutes after start) → HR
+- [x] Shift start alert (minutes before) → employee
+- [x] Missed clock-in alert (minutes after start) → HR
 
 ## 11.9 Security Requests
 - [ ] Pending reset requests listed
