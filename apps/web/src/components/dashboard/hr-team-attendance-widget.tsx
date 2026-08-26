@@ -13,22 +13,22 @@ import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 interface HrAttendanceRecord {
   user_id: number;
   user_name: string;
-  status: "present" | "late" | "absent" | string;
+  category: "present" | "late" | "absent" | "on_leave" | "leave_pending" | string;
 }
 
 export function HrTeamAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.hrAttendance(format(new Date(), "yyyy-MM-dd")),
-    queryFn: () => apiFetch(`/attendance/hr/today?date=${format(new Date(), "yyyy-MM-dd")}`),
+    queryKey: ["attendance", "team-today", format(new Date(), "yyyy-MM-dd")],
+    queryFn: () => apiFetch(`/attendance/team-today?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
     placeholderData: keepPreviousData,
     refetchInterval: 30000,
   });
 
-  const records = Array.isArray(data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data) ? (Array.isArray(data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data) ? (data && typeof data === 'object' && 'data' in data ? (data as { data: HrAttendanceRecord[] }).data : data as HrAttendanceRecord[]) : []) : [];
-  const presentCount = records.filter((r: HrAttendanceRecord) => r.status === "present" || r.status === "late").length;
-  const totalCount = records.length;
-  const topRecords = records.slice(0, 3);
+  const counts = data?.counts || {};
+  const presentCount = (counts.present || 0) + (counts.late || 0);
+  const totalCount = Object.values(counts).reduce((a: any, b: any) => a + b, 0) as number;
+  const topRecords = (data?.employees || []).slice(0, 3);
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 shadow-sm hover:shadow-md group overflow-hidden">
@@ -72,7 +72,7 @@ export function HrTeamAttendanceWidget() {
               Retry
             </Button>
           </div>
-        ) : records.length === 0 ? (
+        ) : totalCount === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <p className="text-sm font-medium text-muted-foreground">No team members scheduled</p>
           </div>
@@ -88,13 +88,13 @@ export function HrTeamAttendanceWidget() {
                 </div>
                 <StatusBadge 
                   status={
-                    r.status === "present" ? "success" :
-                    r.status === "late" ? "warning" :
-                    r.status === "leave" ? "info" : "danger"
+                    r.category === "present" ? "success" :
+                    r.category === "late" ? "warning" :
+                    r.category === "on_leave" || r.category === "leave_pending" ? "info" : "danger"
                   } 
                   className="uppercase text-[9px] font-bold tracking-widest px-2 py-0.5 rounded"
                 >
-                  {r.status}
+                  {r.category.replace('_', ' ')}
                 </StatusBadge>
               </div>
             ))}

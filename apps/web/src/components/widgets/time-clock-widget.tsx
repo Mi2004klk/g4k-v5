@@ -21,6 +21,7 @@ import {
 import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore, DEFAULT_STANDARD_SECONDS } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
+import { formatDuration } from "@/lib/attendance";
 
 export interface AttendanceToday {
   day: unknown;
@@ -112,7 +113,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
     }
 
     if (type === "clock_in") {
-      startTimer(timestamp, 0);
+      startTimer(timestamp, baseSeconds);
     } else if (type === "end_break") {
       // resume ticking
       endBreak(timestamp);
@@ -208,13 +209,6 @@ export function TimeClockWidget({ className }: { className?: string }) {
           render={(formattedTime, displaySeconds) => {
             const isOvertime = displaySeconds > standardSeconds;
 
-            const formatTimeDiff = (secs: number) => {
-              const h = Math.floor(secs / 3600);
-              const m = Math.floor((secs % 3600) / 60);
-              const s = secs % 60;
-              return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-            };
-
             return (
               <div className="flex flex-col items-center">
                 <div
@@ -227,7 +221,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
                 </div>
                 {isOvertime && (
                   <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mt-2 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded">
-                    Overtime (+{formatTimeDiff(displaySeconds - standardSeconds)})
+                    Overtime (+{formatDuration(displaySeconds - standardSeconds)})
                   </p>
                 )}
               </div>

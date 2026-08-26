@@ -21,6 +21,9 @@ class ProjectController extends Controller
         if ($request->user()->resolveActiveRole() === 'super_admin') return true;
         
         $deptIds = \App\Support\HrScope::managedDepartmentIds($request->user());
+        if (!$project->department_id) {
+            return $project->created_by === $request->user()->id || $project->members()->where('users.id', $request->user()->id)->exists();
+        }
         return in_array($project->department_id, $deptIds);
     }
 
@@ -84,7 +87,15 @@ class ProjectController extends Controller
             if (in_array($sort, ['created_at', 'deadline', 'name'])) {
                 $query->orderBy($sort, $direction);
             } elseif ($sort === 'priority') {
-                $query->orderByRaw("FIELD(priority, 'low', 'medium', 'high', 'urgent') " . ($direction === 'desc' ? 'DESC' : 'ASC'));
+                $query->orderByRaw("
+                    CASE priority
+                        WHEN 'urgent' THEN 4
+                        WHEN 'high' THEN 3
+                        WHEN 'medium' THEN 2
+                        WHEN 'low' THEN 1
+                        ELSE 0
+                    END " . ($direction === 'desc' ? 'DESC' : 'ASC')
+                );
             } else {
                 $query->orderBy('updated_at', 'desc');
             }
@@ -287,6 +298,8 @@ class ProjectController extends Controller
             $conversation->delete();
         }
 
+        $project->phases()->delete();
+        $project->qaSubmission()->delete();
         $project->delete(); // Soft delete
         
         return response()->json(['message' => 'Project deleted successfully']);
@@ -349,9 +362,13 @@ class ProjectController extends Controller
         
         // T-52: Clear pending approvals cache for HR/Admin
         $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
+        $today = \Carbon\Carbon::now()->toDateString();
         foreach ($adminIds as $adminId) {
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("projects_metrics_{$adminId}");
         }
 
         return response()->json($project->fresh()->load(['approval']));
@@ -396,9 +413,13 @@ class ProjectController extends Controller
 
         // T-52: Clear pending approvals cache for HR/Admin
         $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
+        $today = \Carbon\Carbon::now()->toDateString();
         foreach ($adminIds as $adminId) {
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("projects_metrics_{$adminId}");
         }
 
         return response()->json($project->fresh()->load(['approval']));

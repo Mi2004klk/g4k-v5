@@ -15,17 +15,16 @@ interface AttendanceRecord {
 
 export function AdminTodayAttendanceWidget() {
   const { data, isPending, isFetching, isError, refetch } = useQuery({
-    queryKey: queryKeys.adminAttendance(format(new Date(), "yyyy-MM-dd")),
-    queryFn: () => apiFetch(`/attendance/admin/overview?date=${format(new Date(), "yyyy-MM-dd")}`),
+    queryKey: ['attendance', 'team-today', 'admin', format(new Date(), "yyyy-MM-dd")],
+    queryFn: () => apiFetch(`/attendance/team-today?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
     placeholderData: keepPreviousData,
   });
 
-  const records = (Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
-  const presentCount = records.filter((r: AttendanceRecord) => r.status === "present").length;
-  const lateCount = records.filter((r: AttendanceRecord) => r.status === "late").length;
-  const absentCount = records.filter((r: AttendanceRecord) => r.status === "absent").length;
-  const totalCount = records.length;
+  const presentCount = data?.counts?.present || 0;
+  const lateCount = data?.counts?.late || 0;
+  const absentCount = data?.counts?.absent || 0;
+  const totalCount = Object.values(data?.counts || {}).reduce((a: any, b: any) => a + b, 0) as number;
 
   return (
     <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 overflow-hidden relative transition-shadow duration-150 shadow-sm hover:shadow-md group">
@@ -70,7 +69,7 @@ export function AdminTodayAttendanceWidget() {
               Retry
             </Button>
           </div>
-        ) : records.length === 0 ? (
+        ) : totalCount === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <p className="text-sm font-medium text-neutral-400">No scheduled members</p>
           </div>

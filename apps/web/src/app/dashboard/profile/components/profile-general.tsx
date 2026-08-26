@@ -7,6 +7,7 @@ import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore, UserProfile } from "@/lib/auth-store";
+import { useAvatarUpload } from "@/hooks/use-avatar-upload";
 import { queryKeys } from "@/lib/query-keys";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useForm, Controller } from "react-hook-form";
@@ -45,7 +46,7 @@ export function ProfileGeneralSection() {
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [showUploadPopup, setShowUploadPopup] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  // isUploading state removed in favor of avatarUploadMutation.isPending
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -63,31 +64,14 @@ export function ProfileGeneralSection() {
     },
   });
 
+  const avatarUploadMutation = useAvatarUpload({
+    userId: authUser?.id,
+    onSuccessCallback: () => setShowUploadPopup(false)
+  });
+
   const handleAvatarUpload = async (file: File) => {
     if (!authUser?.id) return;
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("avatar", file);
-
-    try {
-      const response = await apiFetch(`/users/${authUser.id}/avatar`, {
-        method: "POST",
-        body: formData,
-      });
-      if (response && response.avatar_url) {
-        toast.success("Profile photo updated successfully");
-        queryClient.invalidateQueries({ queryKey: queryKeys.profile });
-        
-        const authStore = useAuthStore.getState();
-        authStore.updateUser({ avatar_url: response.avatar_url });
-        
-        setShowUploadPopup(false);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to upload photo");
-    } finally {
-      setIsUploading(false);
-    }
+    avatarUploadMutation.mutate(file);
   };
 
   useEffect(() => {
@@ -153,7 +137,7 @@ export function ProfileGeneralSection() {
                 <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <AppIcon name="upload" className="w-6 h-6 text-white" />
                 </div>
-                {isUploading && (
+                {avatarUploadMutation.isPending && (
                   <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
                     <AppIcon name="loading" className="w-6 h-6 text-white animate-spin" />
                   </div>
@@ -169,7 +153,7 @@ export function ProfileGeneralSection() {
                 acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
                 maxSizeMB={2}
                 onUpload={handleAvatarUpload}
-                isLoading={isUploading}
+                isLoading={avatarUploadMutation.isPending}
               />
             </div>
 

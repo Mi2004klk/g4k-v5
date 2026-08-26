@@ -209,18 +209,6 @@ class AttendanceService
             }
 
             $existingDay = AttendanceDay::where('user_id', $userId)->where('date', $date)->first();
-            
-            if (!$forceRecompute && $existingDay && $existingDay->source === 'manual') {
-                $existingDay->update([
-                    'first_event' => $firstEvent ?? $existingDay->first_event,
-                    'last_event' => $lastEvent ?? $existingDay->last_event,
-                    'clock_out' => $lastClockOut ?? $existingDay->clock_out,
-                    'has_open_shift' => $hasOpenShift,
-                    'updated_at' => now(),
-                ]);
-                return $existingDay->toArray();
-            }
-
             $overtimeSeconds = max(0, $totalSeconds - $standardSeconds);
             $lateMinutes = 0;
             
@@ -236,7 +224,7 @@ class AttendanceService
             }
 
             $monthDay = Carbon::parse($date)->format('m-d');
-            $allHolidays = \Illuminate\Support\Facades\Cache::remember('all_holidays_array_v2', 86400, function () {
+            $allHolidays = \Illuminate\Support\Facades\Cache::remember('all_holidays_array', 86400, function () {
                 return DB::table('holidays')->get()->map(function($h) { return (array)$h; })->toArray();
             });
             $isHoliday = collect($allHolidays)->contains(function ($h) use ($date, $monthDay) {
@@ -291,6 +279,124 @@ class AttendanceService
                 ['is_flagged' => true]
             );
             return $dayRecord->toArray();
+        }
+    }
+
+    /**
+     * Mark days as on_leave based on an approved leave request.
+     * Respects user work schedules, holidays, and actual punches.
+     */
+    public static function markLeaveDays(int $userId, string $startDate, string $endDate): void
+    {
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+
+        $user = \App\Models\User::find($userId);
+        if (!$user) return;
+
+        // Determine schedule
+        $schedule = null;
+        if ($user->work_schedule_id) {
+            $schedule = \App\Models\WorkSchedule::find($user->work_schedule_id);
+        }
+        if (!$schedule) {
+            $schedule = \App\Models\WorkSchedule::where('is_default', true)->first();
+        }
+
+        $workingDays = [1, 2, 3, 4, 5, 6];
+        if ($schedule && !empty($schedule->working_days)) {
+            $decoded = is_string($schedule->working_days) ? json_decode($schedule->working_days, true) : $schedule->working_days;
+            if (is_array($decoded)) {
+                $workingDays = array_map('intval', $decoded);
+            }
+        }
+
+        
+        $activeRole = $user->resolveActiveRole();
+        $invalidatedDates = [];
+
+        DB::transaction(function () use ($start, $end, $user, $userId, &$invalidatedDates) {
+            $currentDate = $start->copy();
+            
+            while ($currentDate->lte($end)) {
+                $dateStr = $currentDate->toDateString();
+
+                // Call the WorkingDayCalculator to determine if this single day is a working day
+                $result = \App\Support\WorkingDayCalculator::calculate($user, $dateStr, $dateStr);
+                $isWorkingDay = $result === 1;
+                $isHoliday = $result === 0 && \App\Support\WorkingDayCalculator::isHoliday($dateStr);
+
+                if ($isWorkingDay) {
+                    $existing = AttendanceDay::where('user_id', $userId)
+                        ->where('date', $dateStr)
+                        ->first();
+
+                    if ($existing) {
+                        if ($existing->source === 'manual') {
+                            \Illuminate\Support\Facades\Log::info("Leave approval skipping manually corrected attendance day for user {$userId} on {$dateStr}.");
+                        } elseif (in_array($existing->status, ['present', 'late'])) {
+                            \Illuminate\Support\Facades\Log::info("Leave approval skipping active attendance day for user {$userId} on {$dateStr} because they actually worked.");
+                        } else {
+                            $existing->update([
+                                'status' => 'on_leave',
+                                'source' => 'server',
+                                'updated_at' => now(),
+                                'version' => DB::raw('version + 1')
+                            ]);
+                            $invalidatedDates[] = $dateStr;
+                        }
+                    } else {
+                        AttendanceDay::create([
+                            'user_id' => $userId,
+                            'date' => $dateStr,
+                            'status' => 'on_leave',
+                            'source' => 'server',
+                            'version' => 1
+                        ]);
+                        $invalidatedDates[] = $dateStr;
+                    }
+                } elseif ($isHoliday) {
+                    $existing = AttendanceDay::where('user_id', $userId)
+                        ->where('date', $dateStr)
+                        ->first();
+
+                    if ($existing) {
+                        if ($existing->source === 'manual') {
+                            \Illuminate\Support\Facades\Log::info("Leave approval skipping manually corrected attendance day for user {$userId} on {$dateStr} (holiday).");
+                        } elseif (in_array($existing->status, ['present', 'late'])) {
+                            \Illuminate\Support\Facades\Log::info("Leave approval skipping active attendance day for user {$userId} on {$dateStr} (holiday).");
+                        } elseif ($existing->status !== 'holiday') {
+                            $existing->update([
+                                'status' => 'holiday',
+                                'source' => 'server',
+                                'updated_at' => now(),
+                                'version' => DB::raw('version + 1')
+                            ]);
+                            $invalidatedDates[] = $dateStr;
+                        }
+                    } else {
+                        AttendanceDay::create([
+                            'user_id' => $userId,
+                            'date' => $dateStr,
+                            'status' => 'holiday',
+                            'source' => 'server',
+                            'version' => 1
+                        ]);
+                        $invalidatedDates[] = $dateStr;
+                    }
+                }
+
+                $currentDate->addDay();
+            }
+        });
+
+        // Caches are cleared by AttendanceDayObserver
+
+        $today = now()->toDateString();
+        if (in_array($today, $invalidatedDates)) {
+            try {
+                broadcast(new \App\Events\AttendanceUpdated($userId, 'leave_approved'));
+            } catch (\Throwable $e) {}
         }
     }
 }

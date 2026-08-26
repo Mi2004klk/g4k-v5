@@ -51,7 +51,7 @@ export function MetricWidget({
 
   let dynamicInfo = info;
   if (breakdown && metricKey === "total_employees") {
-    dynamicInfo = `${presentCount} currently active · ${departmentsCount} departments`;
+    dynamicInfo = `${activeCount} active accounts · ${departmentsCount} departments`;
   }
 
   // Update value instantly
@@ -140,7 +140,7 @@ export function MetricWidget({
           </div>
           {breakdown && metricKey === "total_employees" ? (
             <p className="text-[11px] text-neutral-400 mt-1 font-medium">
-              <span className="text-emerald-600 dark:text-emerald-400">{presentCount} present today</span> <span className="mx-1 opacity-50">·</span> <span className="text-neutral-500">{(data?.total_employees ?? 0) - presentCount} absent/unclocked</span>
+              <span className="text-emerald-600 dark:text-emerald-400">{presentCount} present</span> <span className="mx-1 opacity-50">·</span> <span className="text-neutral-500">{data?.absent_today ?? 0} absent</span> <span className="mx-1 opacity-50">·</span> <span className="text-blue-500">{data?.leave_today ?? 0} on leave</span>
             </p>
           ) : subtitle ? (
             <p className="text-[11px] text-neutral-400 mt-1">{subtitle}</p>

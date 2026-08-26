@@ -669,7 +669,9 @@ class UserController extends Controller
             $q->where('user_id', $id);
         })->get();
 
-        $tasks = \App\Models\Task::where('assignee_id', $id)
+        $tasks = \App\Models\Task::whereHas('assignees', function($q) use ($id) {
+            $q->where('users.id', $id);
+        })
             ->with('project')
             ->orderBy('status')
             ->get();

@@ -35,7 +35,7 @@ export function NotificationsConfig() {
       body: JSON.stringify({ preferences: newPrefs }),
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.userPreferences });
       toast.success("Notification preferences updated");
     },
     onError: (e: Error) => toast.error(e.message || "Update failed"),

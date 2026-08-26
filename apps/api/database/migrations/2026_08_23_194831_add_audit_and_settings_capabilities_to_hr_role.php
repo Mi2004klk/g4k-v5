@@ -10,6 +10,10 @@ return new class extends Migration
     {
         $capabilities = ['audit.view', 'settings.manage'];
         foreach ($capabilities as $cap) {
+            \Illuminate\Support\Facades\DB::table('capabilities')->updateOrInsert(
+                ['key' => $cap],
+                ['description' => $cap, 'group' => 'general', 'created_at' => now(), 'updated_at' => now()]
+            );
             \Illuminate\Support\Facades\DB::table('role_capabilities')
                 ->updateOrInsert(['role' => 'hr', 'capability_key' => $cap], ['created_at' => now(), 'updated_at' => now()]);
         }

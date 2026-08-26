@@ -184,27 +184,31 @@ export default function DashboardLayout({
   if (isErrorCapabilities) {
     if (!showError) {
       return (
-        <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
-          <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-600 rounded-full animate-spin"></div>
-          <div className="text-center space-y-1">
-            <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Verifying session...</h2>
+        <AuthGuard>
+          <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
+            <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-600 rounded-full animate-spin"></div>
+            <div className="text-center space-y-1">
+              <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Verifying session...</h2>
+            </div>
           </div>
-        </div>
+        </AuthGuard>
       );
     }
 
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
-        <AppIcon name="audit" size="hero" className=" text-rose-500" />
-        <div className="text-center space-y-1">
-          <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Session could not load</h2>
-          <p className="text-sm text-neutral-500">We couldn&apos;t verify your permissions.</p>
+      <AuthGuard>
+        <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
+          <AppIcon name="audit" size="hero" className=" text-rose-500" />
+          <div className="text-center space-y-1">
+            <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Session could not load</h2>
+            <p className="text-sm text-neutral-500">We couldn&apos;t verify your permissions.</p>
+          </div>
+          <div className="flex items-center gap-3 mt-2">
+            <Button variant="outline" onClick={() => refetchCapabilities()}>Retry</Button>
+            <Button variant="ghost" onClick={handleLogout}>Log out</Button>
+          </div>
         </div>
-        <div className="flex items-center gap-3 mt-2">
-          <Button variant="outline" onClick={() => refetchCapabilities()}>Retry</Button>
-          <Button variant="ghost" onClick={handleLogout}>Log out</Button>
-        </div>
-      </div>
+      </AuthGuard>
     );
   }
 

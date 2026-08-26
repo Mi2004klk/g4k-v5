@@ -25,7 +25,15 @@ class CacheInvalidationObserver
                 foreach ($roles as $role) {
                     Cache::forget("dashboard_metrics_{$userId}_{$role}_{$today}");
                     Cache::forget("user_metrics_{$userId}_{$role}");
+                    Cache::forget("pending_approvals_{$userId}_{$role}");
                 }
+            }
+
+            // Always clear admin pending_approvals since Tasks/Projects affect organization-wide pending reviews
+            $adminIds = \App\Models\RoleAssignment::whereIn('role', ['hr', 'super_admin'])->pluck('user_id')->unique();
+            foreach ($adminIds as $adminId) {
+                Cache::forget("pending_approvals_{$adminId}_hr");
+                Cache::forget("pending_approvals_{$adminId}_super_admin");
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to clear dashboard caches: ' . $e->getMessage());

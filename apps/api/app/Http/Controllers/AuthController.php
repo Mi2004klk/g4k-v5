@@ -312,7 +312,7 @@ class AuthController extends Controller
                 $primaryRole = substr($ability, 5);
             }
         }
-        if (!$primaryRole) {
+        if (!$primaryRole || !in_array($primaryRole, $user->roles)) {
             $primaryRole = $user->resolveActiveRole();
         }
 

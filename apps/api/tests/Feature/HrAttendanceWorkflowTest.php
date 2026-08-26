@@ -28,6 +28,7 @@ class HrAttendanceWorkflowTest extends TestCase
             'user_id' => $this->hrManager->id,
             'role' => 'hr'
         ]);
+        $this->hrManager->managedDepartments()->attach($this->hrDept->id);
 
         $this->hrEmployee = User::factory()->create([
             'department_id' => $this->hrDept->id,

@@ -58,7 +58,7 @@ export function TaskOverviewTab({
     },
     onSuccess: () => {
       toast.success("Reminder set");
-      queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
       setCustomReminderDate("");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to set reminder"),
@@ -70,7 +70,7 @@ export function TaskOverviewTab({
     },
     onSuccess: () => {
       toast.success("Reminder removed");
-      queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
     },
     onError: (err: Error) => toast.error(err.message || "Failed to remove reminder"),
   });
@@ -94,9 +94,11 @@ export function TaskOverviewTab({
     },
     onSuccess: () => {
       toast.success("Task submitted for review");
-      queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
-      queryClient.invalidateQueries({ queryKey: ["project-tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projectTasks(task.project_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingApprovals });
     },
     onError: (err: Error) => toast.error(err.message || "Failed to submit"),
   });
@@ -110,8 +112,10 @@ export function TaskOverviewTab({
     },
     onSuccess: () => {
       toast.success("Task approved");
-      toast.success("Task approved");
-      queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingApprovals });
       setApproveMessage("");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to approve"),
@@ -126,7 +130,10 @@ export function TaskOverviewTab({
     },
     onSuccess: () => {
       toast.success("Task sent back for redo");
-      queryClient.invalidateQueries({ queryKey: ["task-detail", task.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      queryClient.invalidateQueries({ queryKey: queryKeys.pendingApprovals });
       setRedoReason("");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to request redo"),

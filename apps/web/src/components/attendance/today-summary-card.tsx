@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, StatusBadge } from "@g4k/ui/components";
@@ -9,6 +9,19 @@ import { Skeleton } from "@g4k/ui/components";
 import { useTimerStore, DEFAULT_STANDARD_SECONDS } from "@/stores/timer-store";
 import { LiveTimer } from "@/components/attendance/live-timer";
 import { queryKeys, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
+import { deriveAttendanceState, formatHoursShort, resolveSemanticStatus } from "@/lib/attendance";
+
+function LiveBreakTicker({ start }: { start: Date }) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const elapsed = Math.floor((now - start.getTime()) / 1000);
+  return <span className="font-mono">{Math.floor(elapsed / 60)}m</span>;
+}
 
 export function TodaySummaryCard() {
   const isActive = useTimerStore((s) => s.isActive);
@@ -47,19 +60,17 @@ export function TodaySummaryCard() {
   const day = data?.day;
   const standardSeconds = data?.standard_seconds || DEFAULT_STANDARD_SECONDS;
 
-  const formatTime = (secs: number) => {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    return `${h}h ${m}m`;
-  };
+  const formatTime = formatHoursShort;
 
   const getStatusBadge = () => {
-    if (day?.status === "absent" && !isActive) return <StatusBadge status="danger" dot className="uppercase">ABSENT</StatusBadge>;
-    if (isOnBreak) return <StatusBadge status="warning" dot className="uppercase">ON BREAK</StatusBadge>;
-    if (isActive) return <StatusBadge status="success" dot className="uppercase">ACTIVE SHIFT</StatusBadge>;
-    if (day?.status === "present") return <StatusBadge status="info" dot className="uppercase">COMPLETED</StatusBadge>;
-    if (day?.status === "late") return <StatusBadge status="warning" dot className="uppercase">LATE</StatusBadge>;
-    return <StatusBadge status="neutral" dot className="uppercase">OFF</StatusBadge>;
+    const state = deriveAttendanceState(day, data?.events || []);
+    if (state === "on_break") return <StatusBadge status="warning" dot className="uppercase">ON BREAK</StatusBadge>;
+    if (state === "active") return <StatusBadge status="success" dot className="uppercase">ACTIVE SHIFT</StatusBadge>;
+    if (state === "completed") return <StatusBadge status="info" dot className="uppercase">COMPLETED</StatusBadge>;
+
+    const semantic = resolveSemanticStatus(day, false);
+    if (semantic.key === "nodata") return <StatusBadge status="neutral" dot className="uppercase">OFF</StatusBadge>;
+    return <StatusBadge status={semantic.color as any} dot className="uppercase">{semantic.label}</StatusBadge>;
   };
 
   const isLate = day?.status === "late";
@@ -141,7 +152,11 @@ export function TodaySummaryCard() {
                     <span>
                       {b.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {b.isOngoing ? "Now" : b.end?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    <span className="font-mono">{Math.floor(b.duration / 60)}m</span>
+                    {b.isOngoing ? (
+                      <LiveBreakTicker start={b.start} />
+                    ) : (
+                      <span className="font-mono">{Math.floor(b.duration / 60)}m</span>
+                    )}
                   </div>
                 ))}
               </div>

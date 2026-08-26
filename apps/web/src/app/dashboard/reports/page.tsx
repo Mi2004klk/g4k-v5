@@ -26,10 +26,10 @@ export default function ReportsPage() {
         </TabsContent>
         <TabsContent value="general" className="mt-0 outline-none">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 min-w-0 h-[calc(100vh-250px)] min-h-[500px]">
+            <div className="lg:col-span-2 min-w-0 flex-1 min-h-[60vh]">
               <ReportBuilder />
             </div>
-            <div className="min-w-0 h-[calc(100vh-250px)] min-h-[500px]">
+            <div className="min-w-0 flex-1 min-h-[60vh]">
               <ExportHistory />
             </div>
           </div>

@@ -101,10 +101,16 @@ class OfflineEngine {
     if (!this.dbPromise) return "no-db";
     const db = await this.dbPromise;
 
-    // dedupe: if a pending punch of the same type exists for today, reuse its client_id
+    // dedupe: match using local date strings to prevent UTC boundary false-negatives
+    const d = new Date(timestamp);
+    const todayLocal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const pending = await db.getAllFromIndex('punches', 'by-status', 'pending');
-    const today = timestamp.split('T')[0];
-    const existing = pending.find(p => p.type === type && p.timestamp.startsWith(today));
+    
+    const existing = pending.find(p => {
+      const pd = new Date(p.timestamp);
+      const pdLocal = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}-${String(pd.getDate()).padStart(2, '0')}`;
+      return p.type === type && pdLocal === todayLocal;
+    });
     
     if (existing) {
       if (navigator.onLine) this.syncAll();

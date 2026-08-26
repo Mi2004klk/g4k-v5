@@ -59,10 +59,22 @@ export const useTimerStore = create<TimerState>()(
   },
 
   stopTimer: () => {
+    if (get().isProjectTimerRunning) {
+      get().stopProjectTimer();
+    }
+    const { lastActiveTimestamp, baseSeconds } = get();
+    let updatedBaseSeconds = baseSeconds;
+    if (lastActiveTimestamp) {
+      const elapsed = Math.floor((new Date().getTime() - new Date(lastActiveTimestamp).getTime()) / 1000);
+      updatedBaseSeconds += Math.max(0, elapsed);
+    }
     set({
       isActive: false,
       isOnBreak: false,
       lastActiveTimestamp: null,
+      clockInTimestamp: null,
+      currentBreakStart: null,
+      baseSeconds: updatedBaseSeconds,
     });
   },
 
@@ -244,6 +256,7 @@ export const useTimerStore = create<TimerState>()(
     if (typeof window !== 'undefined') {
       const channel = new BroadcastChannel('g4k_timer_sync');
       channel.postMessage({ type: 'SYNC_STATE', state: get() });
+      channel.close();
     }
   },
 }), {  

@@ -53,7 +53,7 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
-    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'http://localhost:3000')),
+    'frontend_url' => env('FRONTEND_URL', env('APP_URL', 'https://g4k-v5.vercel.app')),
 
     /*
     |--------------------------------------------------------------------------

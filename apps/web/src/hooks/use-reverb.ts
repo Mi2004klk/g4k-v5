@@ -35,7 +35,11 @@ const ReverbContext = createContext<ReverbContextType>({
  */
 function isPusherAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
+  const isAvailable = !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY && !!process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER;
+  if (!isAvailable && process.env.NODE_ENV !== 'test') {
+    console.warn("Realtime features are disabled: NEXT_PUBLIC_PUSHER_APP_KEY or NEXT_PUBLIC_PUSHER_APP_CLUSTER is missing from environment variables.");
+  }
+  return isAvailable;
 }
 
 export function ReverbProvider({ children }: { children: ReactNode }) {
@@ -117,26 +121,35 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
       echo.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, token]); // Reconnect if user changes
+  }, [user?.id]); // Note: Excluded 'token' to prevent full Echo reconnects every 15 minutes
 
   const subscribe = useCallback((channelName: string, isPrivate: boolean = false) => {
     if (!echoInstance) return null;
     
-    const count = subscriptions.get(channelName) || 0;
-    subscriptions.set(channelName, count + 1);
+    // Auto-detect and standardize private channels
+    const isActuallyPrivate = isPrivate || channelName.startsWith("private-");
+    const cleanChannelName = channelName.replace(/^private-/, "");
     
-    return isPrivate ? (echoInstance as Echo<'pusher'>).private(channelName) : (echoInstance as Echo<'pusher'>).channel(channelName);
+    // Use the clean channel name for tracking to avoid dupes between "private-foo" and "foo"
+    const count = subscriptions.get(cleanChannelName) || 0;
+    subscriptions.set(cleanChannelName, count + 1);
+    
+    return isActuallyPrivate 
+      ? (echoInstance as Echo<'pusher'>).private(cleanChannelName) 
+      : (echoInstance as Echo<'pusher'>).channel(cleanChannelName);
   }, [echoInstance, subscriptions]);
 
   const leaveChannel = useCallback((channelName: string) => {
     if (!echoInstance) return;
     
-    const count = (subscriptions.get(channelName) || 0) - 1;
+    const cleanChannelName = channelName.replace(/^private-/, "");
+    
+    const count = (subscriptions.get(cleanChannelName) || 0) - 1;
     if (count <= 0) {
-      subscriptions.delete(channelName);
-      (echoInstance as Echo<'pusher'>).leave(channelName);
+      subscriptions.delete(cleanChannelName);
+      (echoInstance as Echo<'pusher'>).leave(cleanChannelName);
     } else {
-      subscriptions.set(channelName, count);
+      subscriptions.set(cleanChannelName, count);
     }
   }, [echoInstance, subscriptions]);
 

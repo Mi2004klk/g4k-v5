@@ -106,25 +106,48 @@ export async function apiFetch<T = any>(
           // Mutex prevents concurrent 401 requests from making redundant refresh calls.
           try {
             if (!refreshPromise) {
-              refreshPromise = (async () => {
-                const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
-                const refreshRes = await fetch(refreshUrl, {
-                  method: "POST",
-                  headers: {
-                    "Accept": "application/json",
-                    "X-Refresh-Token": useAuthStore.getState().refreshToken || "",
-                  },
-                  credentials: "include",
-                });
+              refreshPromise = new Promise<string>(async (resolve, reject) => {
+                const performRefresh = async () => {
+                  const refreshUrl = `${API_BASE_URL.replace(/\/$/, "")}/auth/refresh`;
+                  const refreshRes = await fetch(refreshUrl, {
+                    method: "POST",
+                    headers: {
+                      "Accept": "application/json",
+                      "X-Refresh-Token": useAuthStore.getState().refreshToken || "",
+                    },
+                    credentials: "include",
+                  });
 
-                if (!refreshRes.ok) {
-                  throw new Error("Refresh failed");
+                  if (!refreshRes.ok) {
+                    throw new Error("Refresh failed");
+                  }
+
+                  const data = await refreshRes.json();
+                  useAuthStore.getState().setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
+                  return data.token as string;
+                };
+
+                try {
+                  if (typeof navigator !== 'undefined' && navigator.locks) {
+                    await navigator.locks.request("g4k_token_refresh", async () => {
+                      // Check if another tab already refreshed while we were waiting for the lock
+                      const currentToken = getAuthToken();
+                      if (currentToken && currentToken !== token) {
+                        resolve(currentToken);
+                        return;
+                      }
+                      
+                      const newToken = await performRefresh();
+                      resolve(newToken);
+                    });
+                  } else {
+                    const newToken = await performRefresh();
+                    resolve(newToken);
+                  }
+                } catch (e) {
+                  reject(e);
                 }
-
-                const data = await refreshRes.json();
-                useAuthStore.getState().setAuth(data.token, data.user, data.active_role, data.refresh_token, data.capabilities);
-                return data.token as string;
-              })().finally(() => {
+              }).finally(() => {
                 refreshPromise = null;
               });
             }

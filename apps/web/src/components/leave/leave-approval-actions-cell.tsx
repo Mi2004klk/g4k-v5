@@ -80,6 +80,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.orgLeaveRequests });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      queryClient.invalidateQueries({ queryKey: ["admin_leave_history"] });
     },
   });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useUrlState } from "@/hooks/use-url-state";
-import { Tabs, TabsList, TabsTrigger, TabsContent, ErrorBoundary } from "@g4k/ui/components";
+import { Tabs, TabsList, TabsTrigger, TabsContent, ErrorBoundary, AppIcon } from "@g4k/ui/components";
 import { PageContainer } from "@/components/layout/page-container";
 import { EmployeeManagementTab } from "@/components/directory/directory-list";
 import { DepartmentsTab } from "@/components/directory/departments-tab";
@@ -15,13 +15,27 @@ export default function DirectoryModulePage() {
   const canManageUsers = hasCapability(capabilities, "users.hr.manage") || hasCapability(capabilities, "users.employee.manage");
   const canViewDepartments = hasCapability(capabilities, "departments.manage");
   const canViewDesignations = hasCapability(capabilities, "designations.manage");
+  const hasAnyCapability = canManageUsers || canViewDepartments || canViewDesignations;
 
+  if (capabilities && !hasAnyCapability) {
+    return (
+      <PageContainer title="Team Directory & Org" description="Browse corporate team members, roles, contact info, and departments.">
+        <div className="flex-1 min-h-[60vh] w-full flex flex-col items-center justify-center p-8 text-center bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
+             <AppIcon name="lock" className="text-neutral-500" size="lg" />
+          </div>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Permissions</h3>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">You don't have access to view the directory modules. Please contact your system administrator if you believe this is an error.</p>
+        </div>
+      </PageContainer>
+    );
+  }
   return (
     <PageContainer
       title="Team Directory & Org"
       description="Browse corporate team members, roles, contact info, and departments."
     >
-      <div className="h-[calc(100vh-180px)] min-h-[500px] w-full flex flex-col">
+      <div className="flex-1 min-h-[60vh] w-full flex flex-col">
         <ErrorBoundary resetKeys={[tab]}>
           <Tabs value={tab} onValueChange={setTab} className="w-full h-full flex flex-col">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-neutral-200 dark:border-neutral-800">

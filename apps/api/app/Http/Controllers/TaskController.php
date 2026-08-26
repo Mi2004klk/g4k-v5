@@ -129,12 +129,25 @@ class TaskController extends Controller
                 $task->delete();
                 $updatedCount++;
             } elseif ($validated['action'] === 'complete') {
+                if ($task->qa_form_id) {
+                    return response()->json(['message' => 'Cannot bulk complete tasks that require QA/submission. Please use the individual submission workflow.'], 422);
+                }
                 $hasAdmin = $request->user()->roleAssignments->pluck('role')->intersect(['super_admin'])->isNotEmpty();
                 if (!$hasAdmin && ($task->assignee_id === $userId || $task->assignees->contains('id', $userId))) {
                     continue; // Skip their own tasks
                 }
-                $task->update(['status' => 'done']);
+                \App\Services\TaskService::updateStatus($task, 'done', $userId);
+                \App\Services\RecurrenceService::handleCompletion($task);
                 $updatedCount++;
+            }
+        }
+
+        if ($validated['action'] === 'complete' && $updatedCount > 0) {
+            $today = \Carbon\Carbon::now()->toDateString();
+            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+            foreach ($admins as $adminId) {
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
             }
         }
 
@@ -230,6 +243,11 @@ class TaskController extends Controller
             $query->whereDate('due_date', '<=', $request->query('date_to'));
         }
 
+        if ($request->filled('overdue') && $request->query('overdue') === 'true') {
+            $query->whereDate('due_date', '<', now()->toDateString())
+                  ->where('status', '!=', 'done');
+        }
+
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->query('search') . '%');
         }
@@ -323,6 +341,8 @@ class TaskController extends Controller
         if (!empty($validated['assignees'])) {
             $task->assignees()->sync($validated['assignees']);
         }
+
+        \App\Services\AuditLogger::log($request, 'create', \App\Models\Task::class, $task->id, null, $task->toArray());
 
         TaskActivity::create([
             'task_id' => $task->id,
@@ -440,7 +460,9 @@ class TaskController extends Controller
             }
 
             if (in_array($validated['status'], ['review', 'done']) && !$request->has('submission_note')) {
-                return response()->json(['message' => "A submission note is required to move the task to {$validated['status']}. Please use the submit for review option."], 422);
+                if (!$isManage || $task->qa_form_id) {
+                    return response()->json(['message' => "A submission note is required to move the task to {$validated['status']}. Please use the submit for review option."], 422);
+                }
             }
             if ($validated['status'] === 'done' && $task->qa_form_id) {
                 return response()->json(['message' => 'This task requires QA. Please use the submit for review option.'], 422);
@@ -494,7 +516,9 @@ class TaskController extends Controller
             }
         }
 
+        $before = $task->toArray();
         $task->update($validated);
+        \App\Services\AuditLogger::log($request, 'update', \App\Models\Task::class, $task->id, $before, $task->fresh()->toArray());
 
         return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']));
     }
@@ -518,6 +542,11 @@ class TaskController extends Controller
                     continue;
                 }
                 if ($task->status !== $taskData['status']) {
+                    if (in_array($taskData['status'], ['review', 'done'])) {
+                        if (!$isManage || $task->qa_form_id) {
+                            return response()->json(['message' => "Cannot move task to {$taskData['status']} directly. Please use the proper submission/approval workflow."], 422);
+                        }
+                    }
                     try {
                         TaskService::updateStatus($task, $taskData['status'], $request->user()->id);
                     } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
@@ -636,6 +665,17 @@ class TaskController extends Controller
             $this->notifyProjectConversation($task, "📝 **Task Submitted for Review**: \"{$task->title}\" by " . $request->user()->name);
         }
 
+        // T-52: Clear pending approvals cache for HR/Admin
+        $adminIds = \App\Models\User::whereHas('roleAssignments', function($q) { $q->whereIn('role', ['hr', 'super_admin']); })->pluck('id');
+        $today = \Carbon\Carbon::now()->toDateString();
+        foreach ($adminIds as $adminId) {
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("tasks_metrics_{$adminId}");
+        }
+
         return response()->json($task->load(['approval', 'qaSubmission']));
     }
 
@@ -687,7 +727,9 @@ class TaskController extends Controller
             'metadata' => ['description' => 'Task was deleted.']
         ]);
 
+        $before = $task->toArray();
         $task->delete();
+        \App\Services\AuditLogger::log($request, 'delete', \App\Models\Task::class, $task->id, $before, null);
         return response()->json(['message' => 'Task deleted successfully']);
     }
 
@@ -742,6 +784,8 @@ class TaskController extends Controller
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
             \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
             \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
         }
         if ($task->assignee_id) {
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$task->assignee_id}_employee");

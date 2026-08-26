@@ -61,6 +61,13 @@ export function AdminAttendanceTable() {
   
   // Dialog & selection state
   const [correctionData, setCorrectionData] = useState<{ dayId: number, userId: number, date: string, action: string, type: string } | null>(null);
+  
+  const [correction] = useUrlState("correction", "");
+  useEffect(() => {
+    if (correction === "true") {
+      toast.info("Select a user row to correct their attendance.", { id: "correction-toast" });
+    }
+  }, [correction]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -86,12 +93,10 @@ export function AdminAttendanceTable() {
   }, []);
 
   useEffect(() => {
-    const channel = subscribe("presence-org");
-    if (channel) {
-      channel.listen(".attendance.updated", () => {
-        queryClient.invalidateQueries({ queryKey: ['attendance', 'admin-list'] });
-      });
-    }
+    const channel = subscribe("private-company.global");
+    channel.bind(".attendance-updated", () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'admin-list'] });
+    });
   }, [subscribe, dateFrom, deptFilter, queryClient]);
 
   const { data: departments = [] } = useQuery({

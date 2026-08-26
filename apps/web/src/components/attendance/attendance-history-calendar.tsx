@@ -35,6 +35,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { safeFormat } from "@/lib/format";
 import { apiFetch } from "@/lib/api-client";
+import { resolveSemanticStatus } from "@/lib/attendance";
 import { queryKeys } from "@/lib/query-keys";
 import { useIsMobile } from "@g4k/ui/hooks";
 import { useTimerStore } from "@/stores/timer-store";
@@ -87,16 +88,7 @@ function formatSecs(secs: number): string {
 function getStatus(days: AttendanceDay[], holidays: HolidayRecord[], dateStr: string): DayStatus {
   const day = days.find((d) => d.date === dateStr);
   const isHoliday = holidays.find((h) => h.date === dateStr);
-  
-  if (day && day.status === "on_leave") return "on_leave";
-  if (day && day.status === "late") return "late";
-  if (day && day.status === "present" && day.overtime_seconds > 0) return "overtime";
-  if (day && day.status === "present") return "present";
-  
-  if (isHoliday) return "holiday";
-  
-  if (!day) return "nodata";
-  return "absent";
+  return resolveSemanticStatus(day, !!isHoliday).key as DayStatus;
 }
 
 function getDayRecord(days: AttendanceDay[], dateStr: string): AttendanceDay | undefined {

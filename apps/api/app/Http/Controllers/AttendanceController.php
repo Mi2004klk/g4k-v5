@@ -77,21 +77,14 @@ class AttendanceController extends Controller
             'device_meta' => $validated['meta'] ?? null
         ]);
 
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $start = \Carbon\Carbon::parse($timestamp)->setTimezone($tz)->startOfDay()->utc();
+        $end = \Carbon\Carbon::parse($timestamp)->setTimezone($tz)->endOfDay()->utc();
+
         $events = AttendanceEvent::where('user_id', $user->id)
-            ->whereDate('timestamp', Carbon::parse($timestamp)->toDateString())
+            ->whereBetween('timestamp', [$start, $end])
             ->orderBy('timestamp', 'asc')
             ->get();
-
-        $activeRole = $user->resolveActiveRole();
-        $today = Carbon::now()->toDateString();
-        \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
-        \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$user->id}_{$activeRole}_{$today}");
-        \Illuminate\Support\Facades\Cache::forget("user_metrics_{$user->id}_{$activeRole}");
-        \Illuminate\Support\Facades\Cache::forget("dashboard_global");
-        \Illuminate\Support\Facades\Cache::forget("attendanceSummary_{$user->id}");
-        \Illuminate\Support\Facades\Cache::forget("attendance_day_{$user->id}_{$today}");
-        \Illuminate\Support\Facades\Cache::forget("team_today_{$activeRole}_{$user->department_id}_{$today}");
-        \Illuminate\Support\Facades\Cache::forget("team_today_{$activeRole}_all_{$today}");
 
         try {
             broadcast(new \App\Events\AttendanceUpdated($user->id, $type));
@@ -209,8 +202,12 @@ class AttendanceController extends Controller
             ->where('date', $date)
             ->first();
 
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $start = \Carbon\Carbon::parse($date)->setTimezone($tz)->startOfDay()->utc();
+        $end = \Carbon\Carbon::parse($date)->setTimezone($tz)->endOfDay()->utc();
+
         $events = AttendanceEvent::where('user_id', $user->id)
-            ->whereDate('timestamp', $date)
+            ->whereBetween('timestamp', [$start, $end])
             ->orderBy('timestamp', 'asc')
             ->get();
             
@@ -269,8 +266,8 @@ class AttendanceController extends Controller
         $activeRole = $user->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
         
-        $cacheKey = "team_today_{$activeRole}_{$user->department_id}_{$date}";
-        $data = (function () use ($date, $isAdmin, $user) {
+        $cacheKey = "team_today_u{$user->id}_{$date}";
+        $data = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($date, $isAdmin, $user) {
             $usersQuery = \App\Models\User::select('users.id', 'users.name as user_name', 'users.avatar_url', 'departments.name as department_name')
                 ->leftJoin('departments', 'users.department_id', '=', 'departments.id')
                 ->where('users.status', 'active');
@@ -342,7 +339,7 @@ class AttendanceController extends Controller
                     return $order[$emp['category']] ?? 99;
                 })->values()->all(),
             ];
-        })();
+        });
         $sortBy = $request->query('sort_by');
         $sortDir = strtolower($request->query('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
@@ -436,8 +433,11 @@ class AttendanceController extends Controller
             $latestEvents = \Illuminate\Support\Facades\DB::table('attendance_events')
                 ->whereIn('user_id', $userIds)
                 ->where(function($q) use ($dates) {
+                    $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
                     foreach($dates as $date) {
-                        $q->orWhereDate('timestamp', $date);
+                        $start = \Carbon\Carbon::parse($date)->setTimezone($tz)->startOfDay()->utc();
+                        $end = \Carbon\Carbon::parse($date)->setTimezone($tz)->endOfDay()->utc();
+                        $q->orWhereBetween('timestamp', [$start, $end]);
                     }
                 })
                 ->orderBy('timestamp', 'desc')
@@ -586,8 +586,12 @@ class AttendanceController extends Controller
             ->where('date', $date)
             ->first();
 
-        $events = AttendanceEvent::where('user_id', $userId)
-            ->whereDate('timestamp', $date)
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $start = \Carbon\Carbon::parse($date)->setTimezone($tz)->startOfDay()->utc();
+        $end = \Carbon\Carbon::parse($date)->setTimezone($tz)->endOfDay()->utc();
+
+        $events = AttendanceEvent::where('user_id', $targetUser->id)
+            ->whereBetween('timestamp', [$start, $end])
             ->orderBy('timestamp', 'asc')
             ->get();
             
@@ -778,15 +782,6 @@ class AttendanceController extends Controller
         $updatedDay = AttendanceDay::where('id', $day->id)->first();
         AuditLogger::log($request, 'correct_event', 'attendance_day', $day->id, ['action' => $action, 'old' => $oldValue], $updatedDay->toArray());
 
-        $today = \Carbon\Carbon::now()->toDateString();
-        foreach (['employee', 'hr', 'super_admin'] as $r) {
-            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$targetUser->id}_{$r}_{$today}");
-            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$targetUser->id}_{$r}_{$today}");
-        }
-        \Illuminate\Support\Facades\Cache::forget("dashboard_global");
-        \Illuminate\Support\Facades\Cache::forget("attendanceSummary_{$targetUser->id}");
-        \Illuminate\Support\Facades\Cache::forget("attendance_day_{$targetUser->id}_{$day->date}");
-
         // Notify affected employee
         if ($day->user_id !== $actor->id) {
             \App\Models\Notification::create([
@@ -797,10 +792,14 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $start = \Carbon\Carbon::parse($day->date)->setTimezone($tz)->startOfDay()->utc();
+        $end = \Carbon\Carbon::parse($day->date)->setTimezone($tz)->endOfDay()->utc();
+
         return response()->json([
             'message' => 'Attendance event corrected successfully.',
             'day' => $updatedDay,
-            'events' => AttendanceEvent::where('user_id', $day->user_id)->whereDate('timestamp', $day->date)->orderBy('timestamp')->get(),
+            'events' => AttendanceEvent::where('user_id', $day->user_id)->whereBetween('timestamp', [$start, $end])->orderBy('timestamp')->get(),
         ]);
     }
 
@@ -852,7 +851,7 @@ class AttendanceController extends Controller
         ]);
 
         $days = AttendanceDay::whereIn('id', $validated['ids'])->with('user.department')->get();
-        $hrUsers = User::with('roleAssignments')->whereHas('roleAssignments', function($q) {
+        $hrUsers = User::whereHas('roles', function($q) {
             $q->whereIn('role', ['hr', 'super_admin']);
         })->get();
 
@@ -861,7 +860,7 @@ class AttendanceController extends Controller
         foreach ($days as $day) {
             foreach ($hrUsers as $hr) {
                 // simple scoping: HR sees their own dept unless they are super admin
-                $isSuper = $hr->roleAssignments->pluck('role')->contains('super_admin');
+                $isSuper = in_array('super_admin', $hr->getCachedRoles());
                 if ($isSuper || \App\Support\HrScope::apply(\App\Models\User::where('id', $day->user->id), $hr)->exists()) {
                     $notifications[] = [
                         'user_id' => $hr->id,
@@ -880,12 +879,11 @@ class AttendanceController extends Controller
         foreach ($notifications as $n) {
             \App\Services\NotificationService::send(
                 $n['user_id'],
-                $n['type'] ?? 'warning',
+                $n['type'],
                 $n['title'],
                 $n['body'],
                 $n['data'] ?? null,
-                $n['link'] ?? null,
-                $n['priority'] ?? 'normal'
+                $n['link'] ?? null
             );
         }
         \App\Services\AuditLogger::log(
@@ -903,7 +901,7 @@ class AttendanceController extends Controller
     private function userHasManage(Request $request): bool
     {
         $user = $request->user();
-        return $user->hasRole(['super_admin', 'hr']);
+        return count(array_intersect(['super_admin', 'hr'], $user->getCachedRoles())) > 0;
     }
 
     public function graph(Request $request)
@@ -944,26 +942,44 @@ class AttendanceController extends Controller
             $query->join('users', 'attendance_days.user_id', '=', 'users.id')
                 ->select(
                     'users.name',
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "present" THEN 1 ELSE 0 END) as present'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "absent" THEN 1 ELSE 0 END) as absent'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "late" THEN 1 ELSE 0 END) as late'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "on_leave" THEN 1 ELSE 0 END) as on_leave'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN attendance_days.status = "holiday" THEN 1 ELSE 0 END) as holiday')
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'present' THEN 1 ELSE 0 END) as present"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'absent' THEN 1 ELSE 0 END) as absent"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'late' THEN 1 ELSE 0 END) as late"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'on_leave' THEN 1 ELSE 0 END) as on_leave"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'holiday' THEN 1 ELSE 0 END) as holiday"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(attendance_days.total_seconds) as total_seconds"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(attendance_days.overtime_seconds) as overtime_seconds")
                 )
                 ->groupBy('users.id', 'users.name');
+        } elseif ($groupBy === 'department') {
+            $query->join('users', 'attendance_days.user_id', '=', 'users.id')
+                ->join('departments', 'users.department_id', '=', 'departments.id')
+                ->select(
+                    'departments.name',
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'present' THEN 1 ELSE 0 END) as present"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'absent' THEN 1 ELSE 0 END) as absent"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'late' THEN 1 ELSE 0 END) as late"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'on_leave' THEN 1 ELSE 0 END) as on_leave"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN attendance_days.status = 'holiday' THEN 1 ELSE 0 END) as holiday"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(attendance_days.total_seconds) as total_seconds"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(attendance_days.overtime_seconds) as overtime_seconds")
+                )
+                ->groupBy('departments.id', 'departments.name');
         } else {
             $query->select(
                     'date',
                     \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "present" THEN 1 ELSE 0 END) as present'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "late" THEN 1 ELSE 0 END) as late'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "on_leave" THEN 1 ELSE 0 END) as on_leave'),
-                    \Illuminate\Support\Facades\DB::raw('SUM(CASE WHEN status = "holiday" THEN 1 ELSE 0 END) as holiday')
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN status = 'absent' THEN 1 ELSE 0 END) as absent"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN status = 'late' THEN 1 ELSE 0 END) as late"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN status = 'on_leave' THEN 1 ELSE 0 END) as on_leave"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(CASE WHEN status = 'holiday' THEN 1 ELSE 0 END) as holiday"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(total_seconds) as total_seconds"),
+                    \Illuminate\Support\Facades\DB::raw("SUM(overtime_seconds) as overtime_seconds")
                 )
                 ->groupBy('date');
         }
 
-        return response()->json($query->get());
+        return response()->json(['stats' => $query->get()]);
     }
 }

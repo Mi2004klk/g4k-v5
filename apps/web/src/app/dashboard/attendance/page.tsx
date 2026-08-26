@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { LeaveTab } from "@/components/attendance/leave-tab";
+import { dayStatusColor, formatDuration } from "@/lib/attendance";
 
 interface AttendanceDay {
   date: string;
@@ -67,12 +68,7 @@ export default function PersonalAttendancePage() {
   const sortedHistory = [...historyList].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const recentHistory = sortedHistory.slice(0, 7);
 
-  function formatSecs(secs: number): string {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    if (h === 0 && m === 0) return "-";
-    return `${h}h ${m}m`;
-  }
+  const formatSecs = formatDuration;
 
   return (
     <PageContainer
@@ -165,13 +161,13 @@ export default function PersonalAttendancePage() {
                           <DialogTrigger asChild>
                             <div className="flex items-center justify-between p-3 rounded-[var(--radius)] hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800 cursor-pointer">
                               <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full shrink-0 ${day.status === 'present' || day.status === 'overtime' ? 'bg-emerald-500' : day.status === 'late' ? 'bg-amber-500' : day.status === 'on_leave' ? 'bg-primary-500' : 'bg-neutral-300'}`} />
+                                <div className={`w-2 h-2 rounded-full shrink-0 bg-${dayStatusColor(day.status, day.overtime_seconds)}-500`} />
                                 <div>
                                   <p className="text-sm font-semibold text-neutral-900 dark:text-white">
                                     {format(new Date(day.date), "EEE, MMM d")}
                                   </p>
                                   <p className="text-xs text-neutral-500 capitalize">
-                                    {day.status}
+                                    {day.overtime_seconds && day.overtime_seconds > 0 ? "overtime" : day.status}
                                   </p>
                                 </div>
                               </div>

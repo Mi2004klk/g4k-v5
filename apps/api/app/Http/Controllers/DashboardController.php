@@ -35,35 +35,35 @@ class DashboardController extends Controller
 
         $cacheKey = "dashboard_init_{$user->id}_{$activeRole}_{$today}";
         
-        $data = Cache::remember($cacheKey, 120, function() use ($user, $activeRole, $safeCall) {
-            return [
-                'metrics' => Cache::remember("user_metrics_{$user->id}_{$activeRole}", 30, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
-                'preferences' => Cache::remember("user_prefs_{$user->id}", 300, fn() => $safeCall(UserPreferenceController::class, 'show')),
-                'pending_approvals' => Cache::remember("pending_approvals_{$user->id}_{$activeRole}", 60, function() use ($activeRole, $user) {
-                    $approvals = [];
-                    // Leaves
-                    $leavesQuery = DB::table('leave_requests')
-                        ->join('users', 'leave_requests.user_id', '=', 'users.id')
-                        ->leftJoin('approvals', function($join) {
-                            $join->on('approvals.approvable_id', '=', 'leave_requests.id')
-                                 ->where('approvals.approvable_type', '=', 'App\\Models\\LeaveRequest');
-                        })
-                        ->where('leave_requests.status', 'pending')
-                        ->select(
-                            'leave_requests.id as leave_request_id',
-                            'approvals.id as approval_id',
-                            'leave_requests.created_at',
-                            'users.name as user_name',
-                            'leave_requests.reason as title'
-                        );
-                        
-                    if ($activeRole === 'employee') {
-                        $leavesQuery->where('leave_requests.user_id', $user->id);
-                    } elseif ($activeRole === 'hr') {
-                        \App\Support\HrScope::apply($leavesQuery, $user, 'leave_requests.user_id');
-                    }
+        $data = [
+            'metrics' => Cache::remember("user_metrics_{$user->id}_{$activeRole}", 30, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
+            'preferences' => Cache::remember("user_prefs_{$user->id}", 300, fn() => $safeCall(UserPreferenceController::class, 'show')),
+            'pending_approvals' => Cache::remember("pending_approvals_{$user->id}_{$activeRole}", 60, function() use ($activeRole, $user) {
+                $approvals = [];
+                // Leaves
+                $leavesQuery = DB::table('leave_requests')
+                    ->join('users', 'leave_requests.user_id', '=', 'users.id')
+                    ->join('approvals', function($join) {
+                        $join->on('approvals.approvable_id', '=', 'leave_requests.id')
+                             ->where('approvals.approvable_type', \App\Models\LeaveRequest::class)
+                             ->where('approvals.status', 'pending');
+                    })
+                    ->where('leave_requests.status', 'pending')
+                    ->select(
+                        'leave_requests.id as leave_request_id',
+                        'approvals.id as approval_id',
+                        'leave_requests.created_at',
+                        'users.name as user_name',
+                        'leave_requests.reason as title'
+                    );
                     
-                    $leaves = $leavesQuery->get();
+                if ($activeRole === 'employee') {
+                    $leavesQuery->where('leave_requests.user_id', $user->id);
+                } elseif ($activeRole === 'hr') {
+                    \App\Support\HrScope::apply($leavesQuery, $user, 'leave_requests.user_id');
+                }
+                
+                $leaves = $leavesQuery->get();
 
                     foreach ($leaves as $l) {
                         $route = '/dashboard/attendance?tab=leave';
@@ -74,7 +74,6 @@ class DashboardController extends Controller
                         $approvals[] = [
                             'id' => $l->approval_id ?? $l->leave_request_id,
                             'leave_request_id' => $l->leave_request_id,
-                            'approval_id' => $l->approval_id,
                             'type' => 'on_leave',
                             'title' => $l->title ?? 'Leave Request',
                             'user_name' => $l->user_name,
@@ -180,12 +179,11 @@ class DashboardController extends Controller
 
                     usort($approvals, fn($a, $b) => strtotime($b['created_at']) - strtotime($a['created_at']));
                     return array_slice($approvals, 0, 10); // Return top 10 recent approvals
-                }),
-                'announcements' => Cache::remember("announcements_{$user->id}_{$activeRole}", 120, fn() => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', [])),
-                'quick_notes' => Cache::remember("quick_notes_{$user->id}", 120, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
-                'role' => $activeRole
-            ];
-        });
+            }),
+            'announcements' => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', []),
+            'quick_notes' => Cache::remember("quick_notes_{$user->id}", 120, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
+            'role' => $activeRole
+        ];
 
         // Exclude attendance_today from the outer cache due to volatility
         $data['attendance_today'] = $safeCall(AttendanceController::class, 'meToday');
@@ -209,7 +207,7 @@ class DashboardController extends Controller
         $today = Carbon::now()->toDateString();
         $cacheKey = "dashboard_metrics_{$user->id}_{$activeRole}_{$today}";
 
-        $metrics = Cache::remember($cacheKey, 300, function () use ($user, $activeRole, $today) {
+        $metrics = Cache::remember($cacheKey, 30, function () use ($user, $activeRole, $today) {
             $data = [];
 
             // Modules are confirmed to exist in production
@@ -240,20 +238,34 @@ class DashboardController extends Controller
                     ->where('date', $today)
                     ->selectRaw('
                         SUM(CASE WHEN status = \'present\' THEN 1 ELSE 0 END) as present,
-                        SUM(CASE WHEN status = \'absent\' THEN 1 ELSE 0 END) as absent,
                         SUM(CASE WHEN status = \'late\' THEN 1 ELSE 0 END) as late,
-                        SUM(CASE WHEN status = \'on_leave\' THEN 1 ELSE 0 END) as on_leave
+                        SUM(CASE WHEN status = \'on_leave\' THEN 1 ELSE 0 END) as on_leave,
+                        SUM(CASE WHEN status = \'half_day\' THEN 1 ELSE 0 END) as half_day,
+                        SUM(CASE WHEN status = \'holiday\' THEN 1 ELSE 0 END) as holiday
                     ')
                     ->first();
                     
                 $data['present_today'] = (int) ($attendance->present ?? 0);
-                $data['absent_today'] = (int) ($attendance->absent ?? 0);
                 $data['late_today'] = (int) ($attendance->late ?? 0);
                 $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
+                $data['half_day_today'] = (int) ($attendance->half_day ?? 0);
+                $data['holiday_today'] = (int) ($attendance->holiday ?? 0);
+                $data['absent_today'] = max(0, $data['total_employees'] - $data['present_today'] - $data['late_today'] - $data['leave_today'] - $data['half_day_today'] - $data['holiday_today']);
                 
-                $leaveCount = $hasLeaveRequests ? DB::table('leave_requests')->where('status', 'pending')->count() : 0;
+                $leaveCount = 0;
+                if ($hasLeaveRequests) {
+                    $leaveCount = DB::table('leave_requests')
+                        ->join('approvals', function($join) {
+                            $join->on('approvals.approvable_id', '=', 'leave_requests.id')
+                                 ->where('approvals.approvable_type', \App\Models\LeaveRequest::class)
+                                 ->where('approvals.status', 'pending');
+                        })
+                        ->where('leave_requests.status', 'pending')
+                        ->count();
+                }
                 $projectReviewCount = DB::table('projects')->where('status', 'review')->count();
-                $data['pending_approvals'] = $leaveCount + $projectReviewCount;
+                $taskReviewCount = $hasTasks ? DB::table('tasks')->where('status', 'review')->count() : 0;
+                $data['pending_approvals'] = $leaveCount + $projectReviewCount + $taskReviewCount;
                 
                 // Shared admin recent activity cache
                 $data['recent_activity'] = Cache::remember('dashboard_recent_activity', 300, function () {
@@ -262,7 +274,6 @@ class DashboardController extends Controller
                         ->select('audit_logs.id', 'audit_logs.action', 'audit_logs.subject_type',
                                  'audit_logs.subject_id', 'audit_logs.at', 'audit_logs.ip', 'users.name as user_name', 'audit_logs.after')
                         ->whereNotIn('audit_logs.action', ['login', 'logout', 'viewed'])
-                        ->where('audit_logs.action', 'not like', 'attendance.%')
                         ->where('audit_logs.action', '!=', 'correct_event')
                         ->orderBy('audit_logs.at', 'desc')
                         ->limit(15)
@@ -295,21 +306,33 @@ class DashboardController extends Controller
                     ->where('date', $today)
                     ->selectRaw('
                         SUM(CASE WHEN status = \'present\' THEN 1 ELSE 0 END) as present,
-                        SUM(CASE WHEN status = \'absent\' THEN 1 ELSE 0 END) as absent,
                         SUM(CASE WHEN status = \'late\' THEN 1 ELSE 0 END) as late,
-                        SUM(CASE WHEN status = \'on_leave\' THEN 1 ELSE 0 END) as on_leave
+                        SUM(CASE WHEN status = \'on_leave\' THEN 1 ELSE 0 END) as on_leave,
+                        SUM(CASE WHEN status = \'half_day\' THEN 1 ELSE 0 END) as half_day,
+                        SUM(CASE WHEN status = \'holiday\' THEN 1 ELSE 0 END) as holiday
                     ');
                 \App\Support\HrScope::apply($attendanceQuery, $user, 'user_id');
                 $attendance = $attendanceQuery->first();
                     
                 $data['present_today'] = (int) ($attendance->present ?? 0);
-                $data['absent_today'] = (int) ($attendance->absent ?? 0);
                 $data['late_today'] = (int) ($attendance->late ?? 0);
                 $data['leave_today'] = (int) ($attendance->on_leave ?? 0);
+                $data['half_day_today'] = (int) ($attendance->half_day ?? 0);
+                $data['holiday_today'] = (int) ($attendance->holiday ?? 0);
+                $data['absent_today'] = max(0, $data['total_employees'] - $data['present_today'] - $data['late_today'] - $data['leave_today'] - $data['half_day_today'] - $data['holiday_today']);
                 
-                $leaveQuery = DB::table('leave_requests')->where('status', 'pending');
-                \App\Support\HrScope::apply($leaveQuery, $user, 'user_id');
-                $leaveCount = $hasLeaveRequests ? $leaveQuery->count() : 0;
+                $leaveCount = 0;
+                if ($hasLeaveRequests) {
+                    $leaveQuery = DB::table('leave_requests')
+                        ->join('approvals', function($join) {
+                            $join->on('approvals.approvable_id', '=', 'leave_requests.id')
+                                 ->where('approvals.approvable_type', \App\Models\LeaveRequest::class)
+                                 ->where('approvals.status', 'pending');
+                        })
+                        ->where('leave_requests.status', 'pending');
+                    \App\Support\HrScope::apply($leaveQuery, $user, 'leave_requests.user_id');
+                    $leaveCount = $leaveQuery->count();
+                }
                 
                 $projectReviewQuery = DB::table('projects')->where('status', 'review');
                 if ($activeRole === 'hr') {
@@ -328,7 +351,6 @@ class DashboardController extends Controller
                     });
                 }
                 $projectReviewCount = $projectReviewQuery->count();
-                $data['pending_approvals'] = $leaveCount + $projectReviewCount;
                 
                 $data['pending_submissions'] = $hasTasks 
                     ? DB::table('tasks')
@@ -347,6 +369,35 @@ class DashboardController extends Controller
                              });
                         })->count() 
                     : 0;
+
+                $data['pending_approvals'] = $leaveCount + $projectReviewCount + $data['pending_submissions'];
+
+                $data['recent_activity'] = Cache::remember("dashboard_recent_activity_{$user->id}_hr", 300, function () use ($user) {
+                    $query = DB::table('audit_logs')
+                        ->leftJoin('users', 'audit_logs.user_id', '=', 'users.id')
+                        ->select('audit_logs.id', 'audit_logs.action', 'audit_logs.subject_type',
+                                 'audit_logs.subject_id', 'audit_logs.at', 'audit_logs.ip', 'users.name as user_name', 'audit_logs.after')
+                        ->whereNotIn('audit_logs.action', ['login', 'logout', 'viewed'])
+                        ->where('audit_logs.action', '!=', 'correct_event');
+
+                    \App\Support\HrScope::apply($query, $user, 'audit_logs.user_id');
+
+                    $raw = $query->orderBy('audit_logs.at', 'desc')
+                        ->limit(15)
+                        ->get();
+
+                    return $raw->map(function ($log) {
+                        return [
+                            'id' => $log->id,
+                            'action' => $log->action,
+                            'subject_type' => class_basename($log->subject_type ?? ''),
+                            'subject_id' => $log->subject_id,
+                            'at' => $log->at,
+                            'user_name' => $log->user_name,
+                            'after' => $log->after
+                        ];
+                    });
+                });
             }
 
             if ($activeRole === 'super_admin' || $activeRole === 'hr') {

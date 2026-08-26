@@ -18,6 +18,7 @@ class AttendanceDay extends Model
         'is_flagged',
         'total_seconds',
         'break_seconds',
+        'unapproved_break_seconds',
         'late_minutes',
         'overtime_seconds',
         'source',

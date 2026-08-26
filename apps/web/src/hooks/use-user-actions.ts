@@ -16,7 +16,7 @@ export function useUserActions() {
       toast.success("User updated successfully!");
       setIsEditOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
-      queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to update user."),
@@ -28,7 +28,7 @@ export function useUserActions() {
       toast.success("User status updated.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
-      queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to update status."),
@@ -40,7 +40,7 @@ export function useUserActions() {
       toast.success("User deleted.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
-      queryClient.invalidateQueries({ queryKey: ["user", variables] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(variables) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to delete user."),
@@ -52,7 +52,7 @@ export function useUserActions() {
       toast.success("User restored successfully.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
-      queryClient.invalidateQueries({ queryKey: ["user", variables] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user(variables) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
     onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to restore user."),

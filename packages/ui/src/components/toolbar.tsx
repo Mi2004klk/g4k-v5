@@ -226,12 +226,12 @@ export function Toolbar({
   const [isSearchExpanded, setIsSearchExpanded] = useState(!!searchQuery)
 
   return (
-    <div className="flex flex-col w-full gap-3 bg-white dark:bg-neutral-900/50 p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
-      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 w-full">
+    <div className="flex flex-col w-full gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 w-full">
         {/* Left Side: Search */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-1 min-w-[200px]">
           {!hideSearch && (
-            <div className={cn("transition-all duration-300 ease-in-out relative shrink-0", isSearchExpanded ? "w-[260px] md:w-[300px]" : "w-9")}>
+            <div className={cn("transition-all duration-300 ease-in-out relative shrink-0", isSearchExpanded ? "w-full max-w-[260px] md:max-w-[300px]" : "w-9")}>
               {isSearchExpanded ? (
                 <>
                   <AppIcon name="search" className="absolute left-2.5 top-2.5 text-muted-foreground" size="sm" />

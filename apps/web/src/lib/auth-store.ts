@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
           if (capabilities && Array.isArray(capabilities)) {
             try {
               const encoded = encodeURIComponent(JSON.stringify(capabilities));
-              document.cookie = `g4k_capabilities=${encoded}; path=/; max-age=604800; SameSite=Lax`;
+              document.cookie = `g4k_capabilities_${user.id}=${encoded}; path=/; max-age=604800; SameSite=Lax`;
             } catch {}
           }
           if (broadcast && authChannel) {
@@ -75,14 +75,18 @@ export const useAuthStore = create<AuthState>()(
       setDensity: (density) => set({ density }),
       updateUser: (partial) => set((state) => ({ user: state.user ? { ...state.user, ...partial } : null })),
       clearAuth: (broadcast = true) => {
-        if (typeof window !== "undefined") {
-          document.cookie = `g4k_token=; path=/; max-age=0; SameSite=Lax`;
-          document.cookie = `g4k_capabilities=; path=/; max-age=0; SameSite=Lax`;
-          if (broadcast && authChannel) {
-            authChannel.postMessage({ type: "LOGOUT" });
+        return set((state) => {
+          if (typeof window !== "undefined") {
+            document.cookie = `g4k_token=; path=/; max-age=0; SameSite=Lax`;
+            if (state.user?.id) {
+              document.cookie = `g4k_capabilities_${state.user.id}=; path=/; max-age=0; SameSite=Lax`;
+            }
+            if (broadcast && authChannel) {
+              authChannel.postMessage({ type: "LOGOUT" });
+            }
           }
-        }
-        return set({ token: null, refreshToken: null, user: null, activeRole: null });
+          return { token: null, refreshToken: null, user: null, activeRole: null };
+        });
       },
     }),
     {

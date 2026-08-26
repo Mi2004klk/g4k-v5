@@ -14,17 +14,21 @@ class HrScopeTest extends TestCase
 
     public function test_hr_can_only_see_users_in_managed_departments()
     {
-        $deptA = Department::factory()->create(['name' => 'Dept A']);
-        $deptB = Department::factory()->create(['name' => 'Dept B']);
+        $deptAId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'Dept A', 'created_at' => now(), 'updated_at' => now()]);
+        $deptBId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'Dept B', 'created_at' => now(), 'updated_at' => now()]);
 
         // Users
-        $userA = User::factory()->create(['department_id' => $deptA->id]);
-        $userB = User::factory()->create(['department_id' => $deptB->id]);
+        $userA = User::factory()->create(['department_id' => $deptAId]);
+        $userB = User::factory()->create(['department_id' => $deptBId]);
 
         // HR user managing Dept A only
         $hr = User::factory()->create();
         $hr->roleAssignments()->create(['role' => 'hr']);
-        $deptA->hrs()->attach($hr->id);
+        
+        \Illuminate\Support\Facades\DB::table('department_hr')->insert([
+            'department_id' => $deptAId,
+            'user_id' => $hr->id,
+        ]);
 
         Sanctum::actingAs($hr, ['role:hr']);
 
@@ -39,11 +43,11 @@ class HrScopeTest extends TestCase
 
     public function test_super_admin_can_see_all_users()
     {
-        $deptA = Department::factory()->create(['name' => 'Dept A']);
-        $deptB = Department::factory()->create(['name' => 'Dept B']);
+        $deptAId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'Dept A', 'created_at' => now(), 'updated_at' => now()]);
+        $deptBId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'Dept B', 'created_at' => now(), 'updated_at' => now()]);
 
-        $userA = User::factory()->create(['department_id' => $deptA->id]);
-        $userB = User::factory()->create(['department_id' => $deptB->id]);
+        $userA = User::factory()->create(['department_id' => $deptAId]);
+        $userB = User::factory()->create(['department_id' => $deptBId]);
 
         $superAdmin = User::factory()->create();
         $superAdmin->roleAssignments()->create(['role' => 'super_admin']);

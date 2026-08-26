@@ -184,7 +184,7 @@ export function CommandPalette() {
 
         {isHrOrAdmin && (
           <CommandGroup heading="Admin Actions">
-            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/attendance?tab=all"))}>
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/org/attendance?tab=today"))}>
               <AppIcon name="directory" className=" mr-2 text-emerald-500" />
               <span>View Company Attendance</span>
             </CommandItem>

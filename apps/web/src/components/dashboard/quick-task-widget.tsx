@@ -21,17 +21,20 @@ export function QuickTaskWidget() {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [startDate, setStartDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: queryKeys.usersSelectList,
-    queryFn: () => apiFetch("/directory?per_page=100"),
+    queryFn: () => apiFetch("/directory?per_page=1000"),
   });
 
   const users = Array.isArray(usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData) ? (usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData as QuickTaskUser[]) : [];
 
   const createTaskMutation = useMutation({
-    mutationFn: (payload: { title: string; assignees: string[]; notify_global_chat: boolean }) =>
+    mutationFn: (payload: { title: string; assignees: string[]; priority: string; start_date?: string; due_date?: string; notify_global_chat: boolean }) =>
       apiFetch("/tasks", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -40,8 +43,12 @@ export function QuickTaskWidget() {
       toast.success("Task assigned successfully!");
       setTitle("");
       setAssigneeId("");
+      setStartDate("");
+      setDueDate("");
+      setPriority("medium");
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
     },
     onError: (err: Error & { errors?: Record<string, string[]> }) => {
       toast.error(err.message || "Failed to create task");
@@ -56,7 +63,12 @@ export function QuickTaskWidget() {
     setFieldErrors({});
     if (!title.trim()) return toast.error("Please enter a task title");
     if (!assigneeId) return toast.error("Please select an assignee");
-    createTaskMutation.mutate({ title, assignees: [assigneeId], notify_global_chat: true });
+    
+    const payload: any = { title, assignees: [assigneeId], priority, notify_global_chat: true };
+    if (startDate) payload.start_date = startDate;
+    if (dueDate) payload.due_date = dueDate;
+    
+    createTaskMutation.mutate(payload);
   };
 
   return (
@@ -100,6 +112,40 @@ export function QuickTaskWidget() {
               </SelectContent>
             </Select>
             <FormError errors={fieldErrors.assignees} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger className="h-10 text-[13px] w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none">
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormError errors={fieldErrors.priority} />
+            </div>
+            
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                title="Start Date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className={`h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none px-2 ${fieldErrors.start_date ? "border-red-500" : ""}`}
+              />
+              <Input
+                type="date"
+                title="Due Date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className={`h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none px-2 ${fieldErrors.due_date ? "border-red-500" : ""}`}
+              />
+            </div>
           </div>
 
           <Button 

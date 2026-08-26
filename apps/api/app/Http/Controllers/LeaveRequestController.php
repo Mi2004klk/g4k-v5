@@ -93,36 +93,6 @@ class LeaveRequestController extends Controller
         return response()->json($query->paginate($perPage));
     }
 
-    private function calculateWorkingDays($user, $startDate, $endDate)
-    {
-        $days = 0;
-        $current = $startDate->copy();
-        
-        $workSchedule = null;
-        if ($user->work_schedule_id) {
-            $workSchedule = \App\Models\WorkSchedule::find($user->work_schedule_id);
-        }
-        if (!$workSchedule) {
-            $workSchedule = \App\Models\WorkSchedule::where('is_default', true)->first();
-        }
-        
-        $workingDays = $workSchedule ? $workSchedule->working_days : [1, 2, 3, 4, 5]; // Default Mon-Fri
-        if (!is_array($workingDays)) $workingDays = [1, 2, 3, 4, 5];
-        
-        $holidays = \App\Models\Holiday::whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])->pluck('date')->toArray();
-
-        while ($current <= $endDate) {
-            $isWorkingDay = in_array($current->isoWeekday(), $workingDays);
-            $isHoliday = in_array($current->format('Y-m-d'), $holidays);
-            
-            if ($isWorkingDay && !$isHoliday) {
-                $days++;
-            }
-            $current->addDay();
-        }
-        
-        return $days;
-    }
 
     public function store(StoreLeaveRequestRequest $request)
     {
@@ -150,7 +120,7 @@ class LeaveRequestController extends Controller
         // Leave Balance check
         $startDate = \Carbon\Carbon::parse($validated['start_date']);
         $endDate = \Carbon\Carbon::parse($validated['end_date']);
-        $requestedDays = $this->calculateWorkingDays($request->user(), $startDate, $endDate);
+        $requestedDays = \App\Models\LeaveRequest::calculateWorkingDays($request->user(), $startDate, $endDate);
         
         if ($requestedDays === 0) {
             return response()->json(['message' => 'Requested date range does not contain any working days.'], 422);
@@ -205,6 +175,7 @@ class LeaveRequestController extends Controller
             ->where(function ($query) use ($id) {
                 $query->where('id', $id)->orWhere('approvable_id', $id);
             })
+            ->orderBy('id', 'desc')
             ->firstOrFail();
 
         $user = $request->user();
@@ -253,9 +224,12 @@ class LeaveRequestController extends Controller
                 \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
                 \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
                 \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
             }
             \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leaveRequest->user_id}_employee");
             \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leaveRequest->user_id}_employee_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$leaveRequest->user_id}_employee_{$today}");
         }
 
         return response()->json($approval);
@@ -271,6 +245,15 @@ class LeaveRequestController extends Controller
 
         if ($leave->user_id !== $user->id && !$isHrOrAdmin) {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($activeRole !== 'super_admin' && $leave->user_id !== $user->id) {
+            $targetUser = \App\Models\User::find($leave->user_id);
+            if ($targetUser) {
+                if (!\App\Support\HrScope::apply(\App\Models\User::where('id', $targetUser->id), $user)->exists()) {
+                    return response()->json(['message' => 'Unauthorized: Employee is not in your managed departments'], 403);
+                }
+            }
         }
 
         return response()->json($leave);
@@ -297,9 +280,7 @@ class LeaveRequestController extends Controller
 
         if ($request->filled('status')) {
             $status = $request->query('status');
-            $query->whereHas('approval', function($q) use ($status) {
-                $q->where('status', $status);
-            });
+            $query->where('status', $status);
         }
         
         if ($request->filled('type')) {
@@ -442,6 +423,10 @@ class LeaveRequestController extends Controller
             $leave->status = 'cancelled';
             $leave->save();
             
+            \App\Models\Approval::where('approvable_type', get_class($leave))
+                ->where('approvable_id', $leave->id)
+                ->update(['status' => 'resolved', 'decision' => 'cancelled']);
+            
             if ($wasApproved) {
                 $days = $leave->getWorkingDays();
                 $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
@@ -457,9 +442,23 @@ class LeaveRequestController extends Controller
             }
 
             // Notify the manager/approver if the leave had an approver
-            if ($leave->approver_id) {
+            $approval = $leave->approval;
+            $approverIds = [];
+            if ($approval && $approval->decided_by) {
+                $approverIds[] = $approval->decided_by;
+            } else {
+                $targetUser = \App\Models\User::find($leave->user_id);
+                if ($targetUser && $targetUser->department_id) {
+                    $hrUsers = \App\Models\User::whereHas('roleAssignments', function($q) {
+                        $q->where('role', 'hr');
+                    })->where('department_id', $targetUser->department_id)->pluck('id')->toArray();
+                    $approverIds = $hrUsers;
+                }
+            }
+
+            foreach ($approverIds as $approverId) {
                 \App\Services\NotificationService::send(
-                    $leave->approver_id,
+                    $approverId,
                     'info',
                     'Leave Cancelled',
                     "{$user->name} has cancelled their leave request for {$leave->start_date}.",
@@ -468,6 +467,20 @@ class LeaveRequestController extends Controller
                     'normal'
                 );
             }
+
+            $today = \Carbon\Carbon::now()->toDateString();
+            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+            foreach ($admins as $adminId) {
+                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
+            }
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leave->user_id}_employee");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leave->user_id}_employee_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$leave->user_id}_employee_{$today}");
 
             return response()->json(['message' => 'Leave request cancelled successfully.']);
         } else if ($isHrOrAdmin) {
@@ -482,6 +495,10 @@ class LeaveRequestController extends Controller
             $wasApproved = $leave->status === 'approved';
             $leave->status = 'cancelled';
             $leave->save();
+            
+            \App\Models\Approval::where('approvable_type', get_class($leave))
+                ->where('approvable_id', $leave->id)
+                ->update(['status' => 'resolved', 'decision' => 'cancelled']);
             
             if ($wasApproved) {
                 $days = $leave->getWorkingDays();
@@ -508,6 +525,20 @@ class LeaveRequestController extends Controller
                 '/dashboard/leave',
                 'normal'
             );
+
+            $today = \Carbon\Carbon::now()->toDateString();
+            $admins = \App\Models\RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
+            foreach ($admins as $adminId) {
+                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_hr");
+                \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$adminId}_super_admin");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_hr_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$adminId}_super_admin_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_hr_{$today}");
+                \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$adminId}_super_admin_{$today}");
+            }
+            \Illuminate\Support\Facades\Cache::forget("pending_approvals_{$leave->user_id}_employee");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$leave->user_id}_employee_{$today}");
+            \Illuminate\Support\Facades\Cache::forget("dashboard_metrics_{$leave->user_id}_employee_{$today}");
 
             return response()->json(['message' => 'Leave request cancelled successfully.']);
         }

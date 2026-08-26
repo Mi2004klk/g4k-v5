@@ -129,14 +129,15 @@ class GenerateReportJob implements ShouldQueue
 
         switch ($key) {
             case 'tasks':
-                $query = Task::with(['project', 'assignee']);
+                $query = Task::with(['project', 'assignees', 'reporter']);
                 if ($search) {
                     $query->whereRaw('LOWER(title) LIKE LOWER(?)', ['%' . $search . '%']);
                 }
                 if (!$hasManage) {
                     $query->where(function ($q) use ($userId) {
-                        $q->where('assignee_id', $userId)
-                          ->orWhere('reporter_id', $userId);
+                        $q->whereHas('assignees', function($aq) use ($userId) {
+                            $aq->where('users.id', $userId);
+                        })->orWhere('reporter_id', $userId);
                     });
                 } else {
                     $jobUser = \App\Models\User::find($userId);
@@ -155,7 +156,9 @@ class GenerateReportJob implements ShouldQueue
                                   ->orWhereHas('reporter', function($rq) use ($deptIds) {
                                       $rq->whereIn('users.department_id', $deptIds);
                                   })
-                                  ->orWhere('assignee_id', $userId)
+                                  ->orWhereHas('assignees', function($aq) use ($userId) {
+                                      $aq->where('users.id', $userId);
+                                  })
                                   ->orWhere('reporter_id', $userId);
                             });
                         }
@@ -166,7 +169,7 @@ class GenerateReportJob implements ShouldQueue
                         'ID' => $t->id,
                         'Title' => $t->title,
                         'Project' => $t->project?->name ?? 'N/A',
-                        'Assignee' => $t->assignee?->name ?? 'Unassigned',
+                        'Assignees' => $t->assignees->pluck('name')->join(', ') ?: 'Unassigned',
                         'Status' => $t->status,
                         'Priority' => $t->priority,
                         'Due Date' => $t->due_date ? $t->due_date->format('Y-m-d') : 'None',
@@ -320,9 +323,7 @@ class GenerateReportJob implements ShouldQueue
 
                 if (!empty($filters['status'])) {
                     $status = $filters['status'];
-                    $query->whereHas('approval', function($q) use ($status) {
-                        $q->where('status', $status);
-                    });
+                    $query->where('status', $status);
                 }
                 
                 if (!empty($filters['type'])) {
@@ -340,7 +341,7 @@ class GenerateReportJob implements ShouldQueue
                         'Start Date' => $leave->start_date,
                         'End Date' => $leave->end_date,
                         'Reason' => $leave->reason,
-                        'Status' => ucfirst($leave->approval->status ?? 'pending'),
+                        'Status' => ucfirst($leave->status ?? 'pending'),
                         'Submitted At' => $leave->created_at->format('Y-m-d H:i:s'),
                     ])->toArray());
                 });
@@ -349,29 +350,33 @@ class GenerateReportJob implements ShouldQueue
                 $start = $filters['start'] ?? now()->subDays(30)->toDateString();
                 $end = $filters['end'] ?? now()->toDateString();
                 $dept = $filters['dept'] ?? null;
+                $workingDays = \App\Support\WorkingDayCalculator::calculate(null, $start, $end);
 
                 $query = User::with('department')
                     ->withCount([
-                        'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
+                        'attendanceDays as present_days' => fn($q) => $q->whereIn('status', ['present', 'late'])->whereBetween('date', [$start, $end]),
                         'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
-                        'attendanceDays as absent_days' => fn($q) => $q->where('status', 'absent')->whereBetween('date', [$start, $end]),
                         'attendanceDays as leave_days' => fn($q) => $q->where('status', 'on_leave')->whereBetween('date', [$start, $end]),
                     ])
                     ->withSum(['attendanceDays as total_seconds' => fn($q) => $q->whereBetween('date', [$start, $end])], 'total_seconds');
 
                 if (!$hasManage) {
                     $query->where('id', $userId);
-                } elseif ($dept && $dept !== 'all') {
-                    $query->where('department_id', $dept);
+                } else {
+                    $jobUser = \App\Models\User::find($userId);
+                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'users.department_id');
+                    if ($dept && $dept !== 'all') {
+                        $query->where('users.department_id', $dept);
+                    }
                 }
 
-                $query->chunk(1000, function($chunk) use ($chunkCallback) {
+                $query->chunk(1000, function($chunk) use ($chunkCallback, $workingDays) {
                     $chunkCallback($chunk->map(fn($u) => [
                         'Name' => $u->name,
                         'Department' => $u->department?->name ?? 'N/A',
                         'Present Days' => $u->present_days,
                         'Late Days' => $u->late_days,
-                        'Absent Days' => $u->absent_days,
+                        'Absent Days' => max(0, $workingDays - ($u->present_days + $u->leave_days)),
                         'Leave Days' => $u->leave_days,
                         'Total Hours' => round(($u->total_seconds ?? 0) / 3600, 2),
                     ])->toArray());
@@ -393,8 +398,12 @@ class GenerateReportJob implements ShouldQueue
 
                 if (!$hasManage) {
                     $query->where('id', $userId);
-                } elseif ($dept && $dept !== 'all') {
-                    $query->where('department_id', $dept);
+                } else {
+                    $jobUser = \App\Models\User::find($userId);
+                    if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'users.department_id');
+                    if ($dept && $dept !== 'all') {
+                        $query->where('users.department_id', $dept);
+                    }
                 }
 
                 $query->chunk(1000, function($chunk) use ($chunkCallback) {

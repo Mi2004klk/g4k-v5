@@ -13,7 +13,7 @@ export default function TaskPage() {
   const taskId = params.id as string;
 
   const { data: taskResponse, isLoading } = useQuery({
-    queryKey: ["tasks", taskId],
+    queryKey: queryKeys.taskDetail(taskId),
     queryFn: () => apiFetch(`/tasks/${taskId}`),
     enabled: !!taskId,
   });

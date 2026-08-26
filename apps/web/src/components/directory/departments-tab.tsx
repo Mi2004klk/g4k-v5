@@ -131,7 +131,7 @@ export function DepartmentsTab() {
 
   const { data: allUsersRes } = useQuery({
     queryKey: ["all-users"],
-    queryFn: () => apiFetch(`/users`),
+    queryFn: () => apiFetch(`/users?per_page=1000`),
   });
   const allUsers = allUsersRes?.data || [];
 

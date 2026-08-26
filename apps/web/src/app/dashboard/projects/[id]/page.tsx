@@ -60,7 +60,7 @@ export default function ProjectDetailPage() {
   });
   const { data: usersData } = useQuery({ 
     queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch("/directory"),
+    queryFn: () => apiFetch("/directory?per_page=1000"),
     enabled: hasCapability(caps, "directory.view") || canManageProjects
   });
 

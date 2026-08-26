@@ -248,7 +248,7 @@ export function SettingsTabs() {
           </TabsContent>
 
           <TabsContent value="holidays">
-            <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 h-[calc(100dvh-200px)]">
+            <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex-1 min-h-[60vh]">
               <HolidayCalendar />
             </div>
           </TabsContent>

@@ -6,6 +6,7 @@ import { Card, Skeleton, StatusBadge, Button } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
 import { safeFromNow } from "@/lib/format";
+import { queryKeys } from "@/lib/query-keys";
 
 interface ApprovalTask {
   id: number;
@@ -17,7 +18,7 @@ interface ApprovalTask {
 
 export function EmployeeApprovalStatusWidget() {
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["tasks-submitted"],
+    queryKey: queryKeys.tasksSubmitted,
     queryFn: () => apiFetch("/tasks/submitted"),
     staleTime: 60_000,
     placeholderData: keepPreviousData,

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -12,7 +13,7 @@ export function DemoDataConfig() {
   const [confirmText, setConfirmText] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["demo-data-status"],
+    queryKey: queryKeys.demoDataStatus,
     queryFn: async () => {
       const res = await apiFetch("/demo-data");
       return res.data;
@@ -26,7 +27,7 @@ export function DemoDataConfig() {
     onSuccess: () => {
       toast.success("Demo purge job dispatched. Data will be removed shortly.");
       setConfirmText("");
-      setTimeout(() => queryClient.invalidateQueries({ queryKey: ["demo-data-status"] }), 3000);
+      setTimeout(() => queryClient.invalidateQueries({ queryKey: queryKeys.demoDataStatus }), 3000);
     },
     onError: (e: Error) => {
       toast.error(e.message || "Failed to purge demo data");
@@ -39,7 +40,7 @@ export function DemoDataConfig() {
     },
     onSuccess: () => {
       toast.success("Demo seed job dispatched. Data will be seeded shortly.");
-      setTimeout(() => queryClient.invalidateQueries({ queryKey: ["demo-data-status"] }), 3000);
+      setTimeout(() => queryClient.invalidateQueries({ queryKey: queryKeys.demoDataStatus }), 3000);
     },
     onError: (e: Error) => {
       toast.error(e.message || "Failed to seed demo data");

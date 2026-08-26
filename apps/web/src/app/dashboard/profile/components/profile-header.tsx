@@ -6,7 +6,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
-import { getAuthToken, useAuthStore } from "@/lib/auth-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { useAvatarUpload } from "@/hooks/use-avatar-upload";
 import { queryKeys } from "@/lib/query-keys";
 
 import { Card, Avatar, AvatarFallback, Button, Badge } from "@g4k/ui/components";
@@ -44,30 +45,8 @@ export function ProfileHeader() {
     }
   };
 
-  const uploadAvatarMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("avatar", file);
-
-      return apiFetch("/profile/avatar", {
-        method: "POST",
-        body: formData,
-      });
-    },
-    onSuccess: (data) => {
-      toast.success("Avatar updated!");
-      handleOpenChange(false);
-      
-      // Attempt to update the user in the auth store with the new avatar_url if the API returned it
-      if (data?.avatar_url) {
-        useAuthStore.getState().updateUser({ avatar_url: data.avatar_url });
-      }
-
-      queryClient.invalidateQueries({ queryKey: queryKeys.profile });
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to upload avatar.");
-    },
+  const uploadAvatarMutation = useAvatarUpload({
+    onSuccessCallback: () => handleOpenChange(false)
   });
 
   const handleFile = (file: File | undefined) => {

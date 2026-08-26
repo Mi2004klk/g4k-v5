@@ -69,7 +69,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         }
         // If uncollapsed, restore original height if currently stuck at h: 1
         const defaultWidget = Array.isArray(availableWidgets) ? availableWidgets.find((w) => w.id === item.i) : undefined;
-        const normalHeight = (defaultWidget?.defaultLayout as any)?.h || (defaultWidget?.defaultLayout as any)?.lg?.h || 6;
+        const normalHeight = widgetStates[item.i]?.previousHeight || (defaultWidget?.defaultLayout as any)?.h || (defaultWidget?.defaultLayout as any)?.lg?.h || 6;
         const currentH = item.h === 1 ? normalHeight : item.h;
         return { ...item, h: currentH, minH: 3, maxH: undefined, isResizable: true };
       });
@@ -176,12 +176,27 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
   }, [dismissedWidgets, widgetStates]);
 
   const handleLayoutChange = (_currentLayout: unknown, allLayouts: Record<string, unknown[]>) => {
-    const isDifferent = JSON.stringify(layouts) !== JSON.stringify(allLayouts);
+    // Restore the 'h' for any collapsed widget before saving so we don't overwrite its custom height
+    const modifiedLayouts = { ...allLayouts };
+    Object.keys(modifiedLayouts).forEach((bp) => {
+      modifiedLayouts[bp] = modifiedLayouts[bp].map((item: any) => {
+        const isCollapsed = widgetStates[item.i]?.collapsed ?? false;
+        if (isCollapsed) {
+          const orig = layouts[bp]?.find((o: any) => o.i === item.i) as any;
+          if (orig) {
+            return { ...item, h: orig.h };
+          }
+        }
+        return item;
+      });
+    });
+
+    const isDifferent = JSON.stringify(layouts) !== JSON.stringify(modifiedLayouts);
     if (!isDifferent) return; // Prevent unnecessary re-renders (Fix for #2)
 
     isDirtyRef.current = true;
-    setLayouts((prev) => (JSON.stringify(prev) === JSON.stringify(allLayouts) ? prev : allLayouts));
-    savePreferences(allLayouts, dismissedWidgets, widgetStates);
+    setLayouts((prev) => (JSON.stringify(prev) === JSON.stringify(modifiedLayouts) ? prev : modifiedLayouts));
+    savePreferences(modifiedLayouts, dismissedWidgets, widgetStates);
   };
 
   const handleResetLayout = async () => {

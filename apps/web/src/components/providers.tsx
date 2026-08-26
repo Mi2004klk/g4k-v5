@@ -139,6 +139,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
+    
+    // Check for missing Pusher configuration to prevent silent realtime failures
+    if (!process.env.NEXT_PUBLIC_PUSHER_APP_KEY) {
+      console.warn("⚠️ REALTIME DISABLED: NEXT_PUBLIC_PUSHER_APP_KEY is missing from the environment.");
+    }
+
     const handleApiError = (event: Event) => {
       const customEvent = event as CustomEvent;
       import("sonner").then(({ toast }) => {

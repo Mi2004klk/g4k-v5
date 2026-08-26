@@ -49,69 +49,7 @@ Route::get('/health', function () {
     ]);
 });
 
-Route::get('/auth/reset-demo-passwords', function () {
-    $employees = [
-        ['username' => 'karthik', 'password' => 'Admin@123'],
-        ['username' => 'aravind', 'password' => 'Hr@123'],
-        ['username' => 'praveen', 'password' => 'Dev@123'],
-        ['username' => 'rahul', 'password' => 'Dev@123'],
-        ['username' => 'santhosh', 'password' => 'Design@123'],
-        ['username' => 'harish', 'password' => 'Director@123'],
-        ['username' => 'dinesh', 'password' => 'Edit@123'],
-        ['username' => 'ajith', 'password' => 'Edit@123'],
-        ['username' => 'lokesh', 'password' => 'Camera@123'],
-        ['username' => 'akash', 'password' => 'Actor@123'],
-        ['username' => 'nivetha', 'password' => 'Actress@123'],
-        ['username' => 'vignesh', 'password' => 'Design@123'],
-        ['username' => 'newjoin', 'password' => 'NewJoin@123'],
-    ];
-    $updated = [];
-    foreach ($employees as $emp) {
-        $user = \App\Models\User::where('username', $emp['username'])->first();
-        if ($user) {
-            $user->password = \Illuminate\Support\Facades\Hash::make($emp['password']);
-            $user->status = 'active';
-            $user->failed_attempts = 0;
-            $user->lockout_until = null;
-            $user->must_change_password = false;
-            $user->password_changed_at = now();
-            $user->save();
-            // Clear rate limiter for this user
-            \Illuminate\Support\Facades\RateLimiter::clear(\Illuminate\Support\Str::lower($emp['username']) . '|' . request()->ip());
-            $updated[] = $emp['username'];
-        }
-    }
-    
-    // Clear password expiry days setting
-    \Illuminate\Support\Facades\DB::table('settings')->where('key', 'password.expiry_days')->update(['value' => null]);
 
-    // Also clear any rate limiter by email
-    \Illuminate\Support\Facades\RateLimiter::clear(\Illuminate\Support\Str::lower('g4kkarthik@gmail.com') . '|' . request()->ip());
-    \Illuminate\Support\Facades\RateLimiter::clear(\Illuminate\Support\Str::lower('g4kkarthik@gmail.com') . '|0.0.0.0');
-    \Illuminate\Support\Facades\Cache::flush();
-    return response()->json(['status' => 'ok', 'updated' => $updated, 'cache_flushed' => true]);
-});
-
-Route::get('/auth/debug-token', function () {
-    $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
-        return \Illuminate\Support\Facades\DB::table('settings')
-            ->where('category', 'security')
-            ->pluck('value', 'key')
-            ->toArray();
-    });
-    $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
-    $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);
-
-    return response()->json([
-        'settings' => $settings,
-        'accessTtl' => $accessTtl,
-        'refreshTtl' => $refreshTtl,
-        'now' => now()->toIso8601String(),
-        'expires_at' => now()->addMinutes($accessTtl)->toIso8601String(),
-        'timezone' => config('app.timezone'),
-        'db_time' => \Illuminate\Support\Facades\DB::select('SELECT NOW() as db_time')[0]->db_time
-    ]);
-});
 
 Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
 

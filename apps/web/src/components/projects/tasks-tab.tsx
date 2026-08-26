@@ -114,12 +114,12 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   
   const { data: usersData } = useQuery({ 
     queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch<{ data: TaskUser[] }>("/users"),
+    queryFn: () => apiFetch<{ data: TaskUser[] }>("/users?per_page=1000"),
     enabled: canViewUsers
   });
   const { data: projectsData } = useQuery({ 
     queryKey: queryKeys.projects(), 
-    queryFn: () => apiFetch<{ data: TaskProject[] }>("/projects") 
+    queryFn: () => apiFetch<{ data: TaskProject[] }>("/projects?per_page=1000") 
   });
   const { data: qaFormsData } = useQuery({ 
     queryKey: queryKeys.qaForms, 
@@ -392,14 +392,23 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     }
   });
 
-  const handleTaskMove = useCallback((taskId: number, status: string) => {
-    moveTaskMutation.mutate({ taskId, status });
-  }, [moveTaskMutation]);
-
   const handleTaskSelect = useCallback((task: Task) => {
     setSelectedTask(task);
     setSheetOpen(true);
   }, []);
+
+  const handleTaskMove = useCallback((taskId: number, status: string) => {
+    if (status === "review" || status === "done") {
+      toast.info(`Please use the 'Submit for Review' workflow to move a task to ${status}.`);
+      const arr = Array.isArray(data?.data) ? data.data : (Array.isArray(data?.data?.data) ? data.data.data : []);
+      const taskObj = arr.find((t: Task) => t.id === taskId);
+      if (taskObj) {
+        handleTaskSelect(taskObj);
+      }
+      return;
+    }
+    moveTaskMutation.mutate({ taskId, status });
+  }, [moveTaskMutation, data, handleTaskSelect]);
 
   const handleDeleteTask = useCallback((taskId: number) => {
     deleteTaskMutation.mutate(taskId);
@@ -595,7 +604,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   const selectedTaskIds = Object.keys(rowSelection).filter(k => (rowSelection as Record<string, boolean>)[k]).map(k => filteredTasks[Number(k)]?.id).filter(Boolean);
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-140px)] min-h-[500px] mt-2">
+    <div className="flex flex-col flex-1 w-full min-h-[500px] mt-2">
       {/* Unified Toolbar */}
       <div className="flex flex-col gap-3 mb-3 shrink-0">
         {/* Row 1: Views and Actions */}
@@ -955,7 +964,6 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                     { label: "In Progress", value: "in_progress" },
                     { label: "In Review", value: "review" },
                     { label: "Done", value: "done" },
-                    { label: "Redo", value: "redo" },
                   ]
                 },
                 {
@@ -1063,7 +1071,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               )}
 
               {viewMode === "kanban" && (
-                <div className="flex-1 flex flex-col min-h-0 -mx-4 sm:-mx-6 lg:mx-0 lg:bg-neutral-50/50 lg:dark:bg-neutral-950/50 lg:border lg:border-neutral-200 lg:dark:border-neutral-800 lg:rounded-lg overflow-hidden">
+                <div className="flex-1 flex flex-col min-h-0 lg:bg-neutral-50/50 lg:dark:bg-neutral-950/50 lg:border lg:border-neutral-200 lg:dark:border-neutral-800 lg:rounded-lg overflow-hidden">
                   <TaskKanbanBoard
                     tasks={filteredTasks as any}
                     onTaskMove={handleTaskMove}

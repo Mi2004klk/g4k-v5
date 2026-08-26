@@ -3,9 +3,9 @@ import { apiFetch } from "./api-client";
 import { useAuthStore } from "./auth-store";
 import { queryKeys } from "./query-keys";
 
-const getCapabilitiesFromCookie = (): string[] | undefined => {
-  if (typeof window === "undefined") return undefined;
-  const match = document.cookie.match(/(?:^|; )g4k_capabilities=([^;]*)/);
+const getCapabilitiesFromCookie = (userId?: string | number | null): string[] | undefined => {
+  if (typeof window === "undefined" || !userId) return undefined;
+  const match = document.cookie.match(new RegExp(`(?:^|; )g4k_capabilities_${userId}=([^;]*)`));
   if (match) {
     try {
       return JSON.parse(decodeURIComponent(match[1]));
@@ -18,6 +18,7 @@ const getCapabilitiesFromCookie = (): string[] | undefined => {
 
 export function useCapabilities() {
   const token = useAuthStore((state) => state.token);
+  const userId = useAuthStore((state) => state.user?.id);
 
   return useQuery({
     queryKey: queryKeys.capabilities(),
@@ -28,8 +29,8 @@ export function useCapabilities() {
         if (!res.capabilities) {
           return [];
         }
-        if (typeof window !== "undefined") {
-          document.cookie = `g4k_capabilities=${encodeURIComponent(JSON.stringify(res.capabilities))}; path=/; max-age=604800; SameSite=Lax`;
+        if (typeof window !== "undefined" && userId) {
+          document.cookie = `g4k_capabilities_${userId}=${encodeURIComponent(JSON.stringify(res.capabilities))}; path=/; max-age=604800; SameSite=Lax`;
         }
         return res.capabilities;
       } catch (err) {
@@ -38,7 +39,7 @@ export function useCapabilities() {
     },
     enabled: !!token,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    initialData: getCapabilitiesFromCookie(),
+    initialData: getCapabilitiesFromCookie(userId),
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
   });

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent, Button, AppIcon } from "@g4k/ui/components";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { format } from "date-fns";
@@ -19,7 +20,7 @@ export function SystemJobsConfig() {
     mutationFn: (id: string = "all") => apiFetch("/admin/jobs/retry", { method: "POST", body: JSON.stringify({ id }) }),
     onSuccess: (_, id) => {
       toast.success(id === "all" ? "All failed jobs queued for retry." : `Job ${id} queued for retry.`);
-      queryClient.invalidateQueries({ queryKey: ["admin_jobs"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminJobs });
     },
     onError: () => toast.error("Failed to retry jobs."),
   });

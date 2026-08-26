@@ -54,13 +54,13 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
 
   const { data: usersData } = useQuery({ 
     queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch<{ data?: { id: number, name: string, avatar_url?: string }[] }>("/directory?per_page=100"),
+    queryFn: () => apiFetch<{ data?: { id: number, name: string, avatar_url?: string }[] }>("/directory?per_page=1000"),
     enabled: open && canManageTasks
   });
   
   const { data: projectsData } = useQuery({ 
     queryKey: queryKeys.projects(), 
-    queryFn: () => apiFetch(`/projects`),
+    queryFn: () => apiFetch(`/projects?per_page=1000`),
     enabled: open && projectId === "none"
   });
 

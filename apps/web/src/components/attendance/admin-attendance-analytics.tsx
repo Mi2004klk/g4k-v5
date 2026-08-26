@@ -8,6 +8,7 @@ import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useMemo, useEffect } from "react";
 import { useReverb } from "@/hooks/use-reverb";
+import { resolveSemanticStatus } from "@/lib/attendance";
 
 export function AdminAttendanceAnalytics() {
   const [selectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
@@ -60,11 +61,11 @@ export function AdminAttendanceAnalytics() {
     let clockInCount = 0;
 
     records.forEach((record: any) => {
-      const status = record.status;
-      if (status === "present") present++;
-      else if (status === "absent") absent++;
-      else if (status === "late") late++;
-      else if (status === "leave") leave++;
+      const semanticStatus = resolveSemanticStatus(record).key;
+      if (semanticStatus === "present" || semanticStatus === "overtime") present++;
+      else if (semanticStatus === "absent") absent++;
+      else if (semanticStatus === "late") late++;
+      else if (semanticStatus === "on_leave") leave++;
 
       if (record.overtime_seconds > 0) {
         totalOvertimeSecs += record.overtime_seconds;

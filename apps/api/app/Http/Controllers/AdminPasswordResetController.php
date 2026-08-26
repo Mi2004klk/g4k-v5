@@ -40,7 +40,7 @@ class AdminPasswordResetController extends Controller
                 ['token' => Hash::make($token), 'created_at' => now()]
             );
 
-            $frontendUrl = config('app.frontend_url', 'http://localhost:3000');
+            $frontendUrl = config('app.frontend_url');
             $resetLink = rtrim($frontendUrl, '/') . "/reset-password?token={$token}&email=" . urlencode($user->email);
 
             Notification::create([

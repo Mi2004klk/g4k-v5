@@ -36,9 +36,9 @@ export function HrAttendanceAnalytics() {
   });
 
   useEffect(() => {
-    const channel = subscribe("presence-org");
+    const channel = subscribe("private-company.global");
     if (channel) {
-      channel.listen(".attendance.updated", () => {
+      channel.bind(".attendance-updated", () => {
         queryClient.invalidateQueries({ queryKey: ['attendance-analytics-hr', selectedDate, deptFilter] });
       });
     }

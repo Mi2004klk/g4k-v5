@@ -84,10 +84,13 @@ export default function OnboardingPage() {
   async function handlePasswordSubmit(data: PasswordFormValues) {
     setIsLoading(true);
     try {
-      await apiFetch("/auth/change-password", {
+      const res = await apiFetch("/auth/change-password", {
         method: "POST",
         body: JSON.stringify(data),
       });
+      if (res.token && res.user) {
+        setAuth(res.token, res.user, res.active_role, res.refresh_token, res.capabilities);
+      }
       toast.success("Password updated successfully!");
       setStep("tour");
     } catch (error) {
@@ -112,13 +115,7 @@ export default function OnboardingPage() {
 
       if (user && token) {
         const updatedUser = res.user || { ...user, onboarded_at: new Date().toISOString() };
-        // Refetch /auth/refresh so any token changes from change-password get synced if we missed it
-        const refreshRes = await apiFetch("/auth/refresh", { method: "POST" }).catch(() => null);
-        if (refreshRes) {
-            setAuth(refreshRes.token, refreshRes.user, refreshRes.active_role, refreshRes.refresh_token);
-        } else {
-            setAuth(token, updatedUser, user.active_role || user.roles?.[0] || 'employee');
-        }
+        setAuth(token, updatedUser, user.active_role || user.roles?.[0] || 'employee');
       }
 
       toast.success("Welcome aboard!");

@@ -245,7 +245,7 @@ export function ApprovalsTab() {
         </TabsContent>
         
         <TabsContent value="history" className="mt-0">
-          <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col h-[calc(100dvh-250px)]">
+          <Card className="border-none shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex flex-col flex-1 min-h-[60vh]">
             <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
               <Toolbar
                 searchQuery={search || ""}

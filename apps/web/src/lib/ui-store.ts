@@ -9,17 +9,17 @@ interface UIState {
   isInitialized: boolean;
   dismissedNotificationIds: number[];
   dismissedWidgets: string[];
-  widgetStates: Record<string, { collapsed?: boolean }>;
+  widgetStates: Record<string, { collapsed?: boolean, previousHeight?: number }>;
   setSidebarState: (state: SidebarState) => void;
   setSidebarStateSilent: (state: SidebarState) => void;
   cycleSidebarState: () => void;
   dismissNotification: (id: number) => void;
   clearPopupNotifications: (ids: number[]) => void;
-  toggleWidgetCollapse: (widgetId: string) => void;
+  toggleWidgetCollapse: (widgetId: string, currentHeight?: number) => void;
   dismissWidget: (widgetId: string) => void;
   toggleWidgetVisibility: (widgetId: string) => void;
   restoreWidgets: () => void;
-  hydrateFromServer: (dismissed: string[], states: Record<string, { collapsed?: boolean }>) => void;
+  hydrateFromServer: (dismissed: string[], states: Record<string, { collapsed?: boolean, previousHeight?: number }>) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -66,13 +66,17 @@ export const useUIStore = create<UIState>()(
         }));
       },
 
-      toggleWidgetCollapse: (widgetId: string) => {
+      toggleWidgetCollapse: (widgetId: string, currentHeight?: number) => {
         set((state) => {
           const current = state.widgetStates[widgetId]?.collapsed ?? false;
           return {
             widgetStates: {
               ...state.widgetStates,
-              [widgetId]: { ...state.widgetStates[widgetId], collapsed: !current },
+              [widgetId]: { 
+                ...state.widgetStates[widgetId], 
+                collapsed: !current,
+                previousHeight: currentHeight !== undefined ? currentHeight : state.widgetStates[widgetId]?.previousHeight
+              },
             },
           };
         });

@@ -533,12 +533,12 @@ export function ChatTab() {
 
   return (
     <>
-      <div className="mt-4 flex flex-col h-[calc(100dvh-180px)] min-h-[500px] max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
-      {/* Main Chat Interface */}
-      <div
-        className="flex-1 bg-card dark:bg-neutral-900 md:rounded-xl md:border md:border-neutral-200 dark:md:border-neutral-800 flex overflow-hidden"
-        style={keyboardHeight > 0 ? { height: `calc(100dvh - ${window.innerWidth < 768 ? '0px' : '200px'} - ${keyboardHeight}px)`, minHeight: 0 } : undefined}
-      >
+      <div className="mt-4 flex flex-col flex-1 min-h-[500px] max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
+        {/* We keep dynamic height on mobile keyboard opening, but use flex-1 on desktop */}
+        <div 
+          className="flex flex-1 overflow-hidden relative shadow-e2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl max-md:rounded-none transition-all duration-300"
+          style={keyboardHeight > 0 ? { height: `calc(100dvh - ${window.innerWidth < 768 ? '0px' : '200px'} - ${keyboardHeight}px)`, minHeight: 0 } : undefined}
+        >
         {/* Conversation sidebar */}
         <div className={`w-full md:w-72 lg:w-80 shrink-0 border-r border-neutral-200 dark:border-neutral-800 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
           {/* Sidebar header */}

@@ -97,7 +97,7 @@ export function ProjectsTab() {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <div className="flex-1 min-w-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1 flex items-center overflow-x-auto overflow-y-hidden scrollbar-hide shadow-sm">
+          <div className="w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-2 shadow-sm">
             <Toolbar
               searchQuery={search}
               onSearchChange={setSearch}

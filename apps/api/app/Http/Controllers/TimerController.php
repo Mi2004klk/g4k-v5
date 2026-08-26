@@ -56,11 +56,6 @@ class TimerController extends Controller
             'log_date' => $validated['log_date'] ?? now()->toDateString(),
         ]));
 
-        Cache::forget("user_active_task_{$request->user()->id}");
-        try {
-            broadcast(new ActiveTaskUpdated($request->user()->id));
-        } catch (\Throwable $e) {}
-
         return response()->json($log->load(['task', 'project', 'user']));
     }
 

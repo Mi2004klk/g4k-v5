@@ -18,11 +18,16 @@ class TaskRbacTest extends TestCase
         $employee = User::factory()->create();
         $employee->roleAssignments()->create(['role' => 'employee']);
 
-        $task = Task::factory()->create(['status' => 'review']);
+        $taskId = \Illuminate\Support\Facades\DB::table('tasks')->insertGetId([
+            'title' => 'Test Task',
+            'status' => 'review',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         Sanctum::actingAs($employee, ['role:employee']);
 
-        $response = $this->postJson("/api/tasks/{$task->id}/approve");
+        $response = $this->postJson("/api/tasks/{$taskId}/approve");
         $response->assertStatus(403);
     }
 
@@ -30,12 +35,23 @@ class TaskRbacTest extends TestCase
     {
         $hr = User::factory()->create();
         $hr->roleAssignments()->create(['role' => 'hr']);
+        \Illuminate\Support\Facades\DB::table('capabilities')->insertOrIgnore([
+            ['key' => 'tasks.approve', 'group' => 'Tasks', 'description' => 'Approve Tasks']
+        ]);
+        \Illuminate\Support\Facades\DB::table('role_capabilities')->insertOrIgnore([
+            ['role' => 'hr', 'capability_key' => 'tasks.approve']
+        ]);
 
-        $task = Task::factory()->create(['status' => 'review']);
+        $taskId = \Illuminate\Support\Facades\DB::table('tasks')->insertGetId([
+            'title' => 'Test Task',
+            'status' => 'review',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         Sanctum::actingAs($hr, ['role:hr']);
 
-        $response = $this->postJson("/api/tasks/{$task->id}/approve");
+        $response = $this->postJson("/api/tasks/{$taskId}/approve");
         $response->assertStatus(200);
     }
 
@@ -44,13 +60,24 @@ class TaskRbacTest extends TestCase
         $employee = User::factory()->create();
         $employee->roleAssignments()->create(['role' => 'employee']);
 
-        $project = Project::factory()->create();
-        $task = Task::factory()->create(['project_id' => $project->id]);
+        $projectId = \Illuminate\Support\Facades\DB::table('projects')->insertGetId([
+            'name' => 'Test Project',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        $taskId = \Illuminate\Support\Facades\DB::table('tasks')->insertGetId([
+            'project_id' => $projectId,
+            'title' => 'Test Task',
+            'status' => 'todo',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         Sanctum::actingAs($employee, ['role:employee']);
 
         $response = $this->postJson("/api/timer/log", [
-            'task_id' => $task->id,
+            'task_id' => $taskId,
             'minutes_logged' => 30
         ]);
         
@@ -62,13 +89,29 @@ class TaskRbacTest extends TestCase
         $employee = User::factory()->create();
         $employee->roleAssignments()->create(['role' => 'employee']);
 
-        $project = Project::factory()->create();
-        $task = Task::factory()->create(['project_id' => $project->id, 'assignee_id' => $employee->id]);
+        $projectId = \Illuminate\Support\Facades\DB::table('projects')->insertGetId([
+            'name' => 'Test Project',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        $taskId = \Illuminate\Support\Facades\DB::table('tasks')->insertGetId([
+            'project_id' => $projectId,
+            'title' => 'Test Task',
+            'status' => 'todo',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('task_assignees')->insert([
+            'task_id' => $taskId,
+            'user_id' => $employee->id,
+        ]);
 
         Sanctum::actingAs($employee, ['role:employee']);
 
         $response = $this->postJson("/api/timer/log", [
-            'task_id' => $task->id,
+            'task_id' => $taskId,
             'minutes_logged' => 30
         ]);
         

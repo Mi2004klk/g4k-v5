@@ -93,6 +93,7 @@ class ChatController extends Controller
                       $q->where('user_id', $user->id);
                   });
         }])
+        ->orderByDesc('updated_at')
         ->cursorPaginate(50);
 
         return response()->json($conversations);
@@ -180,6 +181,19 @@ class ChatController extends Controller
                         'normal'
                     );
                 }
+            }
+        } elseif ($conversation->scope === 'direct') {
+            $otherUserId = $conversation->users()->where('users.id', '!=', $request->user()->id)->value('users.id');
+            if ($otherUserId) {
+                NotificationService::send(
+                    $otherUserId,
+                    'chat',
+                    'New message from ' . $request->user()->name,
+                    \Illuminate\Support\Str::limit($validated['body'] ?? 'Sent an attachment', 50),
+                    ['conversation_id' => $conversation->id, 'message_id' => $message->id],
+                    '/dashboard/chat?conversation=' . $conversation->id,
+                    'normal'
+                );
             }
         }
 
