@@ -141,7 +141,7 @@ export default function DashboardLayout({
   });
   const preferencesData = useMemo(() => initData?.preferences ? { preferences: initData.preferences } : null, [initData]);
 
-  const caps = user?.capabilities || [];
+  const caps = authUser?.capabilities || [];
   const canClockSelf = caps.includes("attendance.clock-self") || caps.includes("super_admin");
   const { data: attendanceData } = useAttendanceToday({ enabled: canClockSelf });
 
