@@ -209,11 +209,9 @@
 ## 4.1 Universal Dashboard Behaviors
 - [ ] Each widget loads independently (failed widget doesn't block others)
 - [ ] Each widget clickable → opens detail view
-- [ ] Hover reveals refresh icon per widget
-- [ ] Dismiss/collapse widget works
 - [ ] Drag-to-rearrange widgets
-- [ ] Layout persists per user across devices
-- [ ] Dismissed widgets restorable: My Profile → Preferences
+- [ ] Layout persists per user across devices (save option on customize dashboard dropdown)
+- [ ] Dismissed widgets restorable: My Profile → Preferences & customize dashboard dropdown
 - [ ] Loading skeletons (not blank states)
 - [ ] Empty states with helpful CTAs
 - [ ] Error states with retry option

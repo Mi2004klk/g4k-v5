@@ -973,7 +973,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                   value: assigneeFilter,
                   onChange: setAssigneeFilter,
                   options: [
-                    { label: "My Tasks", value: "me" },
+                    ...(hasCapability(caps, "tasks.create-own") ? [{ label: "My Tasks", value: "me" }] : []),
                     ...(canManageTasks && usersList.length ? usersList.map((u: TaskUser) => ({ label: u.name, value: u.id.toString() })) : [])
                   ]
                 },

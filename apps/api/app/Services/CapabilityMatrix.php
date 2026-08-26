@@ -12,6 +12,9 @@ class CapabilityMatrix
      */
     protected const SELF_SERVICE_EXCLUDED = [
         'attendance.clock-self',
+        'leave.request-self',
+        'timer.track',
+        'tasks.create-own',
     ];
 
     /**
@@ -20,10 +23,10 @@ class CapabilityMatrix
     protected static array $defaultMatrix = [
         'super_admin' => ['*'],
         'hr' => [
-            'attendance.clock-self', 'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
+            'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
             'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access', 'chat.manage',
-            'profile.edit', 'leave.request-self', 'timer.track',
-            'reports.view', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'projects.view', 'projects.manage', 'qa.view', 'qa.manage',
+            'profile.edit',
+            'reports.view', 'tasks.view', 'tasks.manage', 'projects.view', 'projects.manage', 'qa.view', 'qa.manage',
             'announcements.manage'
         ],
         'employee' => [

@@ -45,7 +45,7 @@ export function useCapabilities() {
   });
 }
 
-const SELF_SERVICE_EXCLUDED = ["attendance.clock-self"] as const;
+const SELF_SERVICE_EXCLUDED = ["attendance.clock-self", "leave.request-self", "timer.track", "tasks.create-own"] as const;
 
 export function hasCapability(capabilities: string[] = [], requiredCapability: string): boolean {
   if (SELF_SERVICE_EXCLUDED.includes(requiredCapability as typeof SELF_SERVICE_EXCLUDED[number])) {

@@ -21,8 +21,12 @@ class TimerController extends Controller
             'description' => 'nullable|string',
             'log_date' => 'nullable|date',
         ]);
-
         $userId = $request->user()->id;
+        $activeRole = $request->user()->resolveActiveRole();
+
+        if (!CapabilityMatrix::hasCapability($activeRole, 'timer.track')) {
+            return response()->json(['message' => 'Your role is restricted from tracking time.'], 403);
+        }
 
         if (isset($validated['task_id'])) {
             $task = \App\Models\Task::with(['assignees', 'project.members'])->find($validated['task_id']);
@@ -88,8 +92,12 @@ class TimerController extends Controller
             'project_id' => 'required|exists:projects,id',
             'task_title' => 'nullable|string'
         ]);
-
         $userId = $request->user()->id;
+        $activeRole = $request->user()->resolveActiveRole();
+
+        if (!CapabilityMatrix::hasCapability($activeRole, 'timer.track')) {
+            return response()->json(['message' => 'Your role is restricted from tracking time.'], 403);
+        }
 
         if (!empty($validated['task_id'])) {
             $task = \App\Models\Task::with(['assignees', 'project.members'])->find($validated['task_id']);

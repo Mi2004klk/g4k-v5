@@ -7,9 +7,12 @@ import { ProjectsTab } from "@/components/projects/projects-tab";
 import { TasksTab } from "@/components/projects/tasks-tab";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { useCapabilities, hasCapability } from "@/lib/capabilities";
 
 export default function ProjectsModulePage() {
   const [tab, setTab] = useUrlState("tab", "projects");
+  const { data: caps } = useCapabilities();
+  const hasMyTasks = hasCapability(caps, "tasks.create-own");
 
   const { data: projectsData } = useQuery({
     queryKey: ["projects", "count"],
@@ -45,7 +48,7 @@ export default function ProjectsModulePage() {
             </TabsTrigger>
             <TabsTrigger value="tasks" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
               <AppIcon name="tasks" size="xs" /> 
-              My Tasks & Board
+              {hasMyTasks ? "My Tasks & Board" : "Tasks & Board"}
               <span className="flex items-center justify-center bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">{tasksCount}</span>
             </TabsTrigger>
           </TabsList>

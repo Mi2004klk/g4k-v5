@@ -289,6 +289,11 @@ class TaskController extends Controller
         // Task-creation policy (T-22.2 / T-52.6): managers create anything.
         // Employees may always create their own personal (My Tasks) entry, and
         // project tasks only when the project opts in via allow_employee_tasks.
+        $isPersonalForSelf = empty($validated['project_id']) && in_array($user->id, $validated['assignees'] ?? []);
+        if ($isPersonalForSelf && !CapabilityMatrix::hasCapability($activeRole, 'tasks.create-own')) {
+            return response()->json(['message' => 'Your role is restricted from having personal tasks.'], 403);
+        }
+
         if (!$this->userHasManage($request)) {
             if (!empty($validated['project_id'])) {
                 $project = \App\Models\Project::find($validated['project_id']);
