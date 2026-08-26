@@ -876,25 +876,18 @@
 - [x] Job designation (HR/Admin only — employees can't edit)
 - [x] Department (read-only)
 - [x] Company (read-only)
-
-## 12.3 Security & Devices Tab
-- [x] Change password form (current + new)
-- [x] New password meets policy
-- [x] Validation feedback as user types
-- [x] Active sessions: device, IP, last active
-- [x] Revoke session (current = immediate logout)
-
+ 
 ## 12.4 Preferences & Support Tab
-- [ ] Directory visibility (Public/Private)
-- [ ] Theme (Light/Dark/System)
-- [ ] Display density (Comfortable/Compact)
-- [ ] Hidden widgets restore list
-- [ ] Feedback & Complaint channel:
-  - [ ] Category: Suggestion/Complaint
-  - [ ] Subject + message
-  - [ ] Submit → DM to managing HR/Admin
-  - [ ] High-priority notification flag
-  - [ ] Private (other employees can't see)
+- [x] Directory visibility (Public/Private)
+- [x] Theme (Light/Dark/System)
+- [x] Display density (Comfortable/Compact)
+- [x] Hidden widgets restore list
+- [x] Feedback & Complaint channel:
+  - [x] Category: Suggestion/Complaint
+  - [x] Subject + message
+  - [x] Submit → DM to managing HR/Admin
+  - [x] High-priority notification flag
+  - [x] Private (other employees can't see)
 
 ---
 
