@@ -939,18 +939,18 @@
 # SECTION 14 — UX PATTERNS & GLOBAL BEHAVIORS
 
 ## 14.1 Loading States
-- [ ] Skeleton screens (not spinners everywhere)
-- [ ] Inline loading for buttons (disable + spinner)
-- [ ] Optimistic updates where safe (chat send, status change)
-- [ ] Page transitions don't flash white
+- [x] Skeleton screens (not spinners everywhere)
+- [x] Inline loading for buttons (disable + spinner)
+- [x] Optimistic updates where safe (chat send, status change)
+- [x] Page transitions don't flash white
 
 ## 14.2 Error Handling
-- [ ] Network errors show retry CTA
-- [ ] 404 page friendly + back to dashboard
-- [ ] 500 page doesn't expose stack traces
-- [ ] Form validation inline + on submit
-- [ ] Toast notifications for success/error
-- [ ] Error boundary catches React crashes gracefully
+- [x] Network errors show retry CTA
+- [x] 404 page friendly + back to dashboard
+- [x] 500 page doesn't expose stack traces
+- [x] Form validation inline + on submit
+- [x] Toast notifications for success/error
+- [x] Error boundary catches React crashes gracefully
 
 ## 14.3 Empty States
 - [ ] Every list/table has empty state
