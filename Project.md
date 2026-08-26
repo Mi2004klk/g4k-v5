@@ -518,25 +518,25 @@
 - [x] Dependency arrows visible in Timeline view
 
 ## 7.11 Recurring Tasks
-- [ ] Options: Daily / Weekly (specific days) / Monthly (specific date)
-- [ ] Recurrence UI inside collapsible "Advanced" section
-- [ ] Next occurrence auto-created when current approved
-- [ ] HR notified each time recurring task approved
-- [ ] HR can disable recurrence (stops after current instance)
-- [ ] Recurrence only fires on approval (not on submission)
+- [x] Options: Daily / Weekly (specific days) / Monthly (specific date)
+- [x] Recurrence UI inside collapsible "Advanced" section
+- [x] Next occurrence auto-created when current approved
+- [x] HR notified each time recurring task approved
+- [x] HR can disable recurrence (stops after current instance)
+- [x] Recurrence only fires on approval (not on submission)
 
 ## 7.12 Personal Task List (My Tasks)
-- [ ] Private list per user, not tied to any project
-- [ ] HR/Admin can assign directly to employee's personal list
-- [ ] Employees create own personal to-dos
-- [ ] Same priority/due/reminder/comment features
-- [ ] Only owner + their HR/Admin can see
+- [x] Private list per user, not tied to any project
+- [x] HR/Admin can assign directly to employee's personal list
+- [x] Employees create own personal to-dos
+- [x] Same priority/due/reminder/comment features
+- [x] Only owner + their HR/Admin can see
 
 ## 7.13 Personal Task Reminders
-- [ ] Employee sets reminder on own task
-- [ ] Notification sent at set time
-- [ ] Only visible to task owner
-- [ ] Reminders fire even if app closed (server-side)
+- [x] Employee sets reminder on own task
+- [x] Notification sent at set time
+- [x] Only visible to task owner
+- [x] Reminders fire even if app closed (server-side)
 
 ## 7.14 Project Work Timer
 - [ ] Start / Pause / Resume / End Session actions

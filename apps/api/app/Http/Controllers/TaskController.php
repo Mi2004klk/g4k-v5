@@ -780,6 +780,21 @@ class TaskController extends Controller
 
         TaskService::updateStatus($task, 'done', $request->user()->id);
 
+        $newTask = \App\Services\RecurrenceService::handleCompletion($task);
+        if ($newTask) {
+            $hrUsers = \App\Models\User::whereHas('roleAssignments', fn($q) => $q->whereIn('role', ['hr', 'super_admin']))->get();
+            foreach ($hrUsers as $hr) {
+                \App\Services\NotificationService::send(
+                    $hr->id,
+                    'task_recurrence',
+                    'Recurring Task Approved',
+                    "The recurring task '{$task->title}' was approved and its next occurrence has been auto-created.",
+                    ['task_id' => $newTask->id],
+                    $newTask->project_id ? "/dashboard/projects/{$newTask->project_id}?tab=tasks&task={$newTask->id}" : "/dashboard/tasks"
+                );
+            }
+        }
+
         TaskActivity::create([
             'task_id' => $task->id,
             'user_id' => $request->user()->id,

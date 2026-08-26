@@ -71,6 +71,10 @@ class RecurrenceService
             'recurrence' => $task->recurrence,
         ]);
 
+        if ($task->assignees()->exists()) {
+            $newTask->assignees()->sync($task->assignees()->pluck('users.id'));
+        }
+
         return $newTask;
     }
 }
