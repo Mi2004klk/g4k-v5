@@ -27,11 +27,41 @@ class NotifyApprovalSubmitted
 
         // If the approver role is HR, notify the HR managers in the submitter's department.
         // If it's admin/super_admin, notify them.
-        if ($approval->approvable_type === \App\Models\Project::class || $approval->approvable_type === \App\Models\Task::class) {
+        if ($approval->approvable_type === \App\Models\Project::class) {
             $targetRoles = ['hr', 'super_admin'];
             $targetUsers = User::whereHas('roles', function ($q) use ($targetRoles) {
                 $q->whereIn('role', $targetRoles);
             })->get();
+        } elseif ($approval->approvable_type === \App\Models\Task::class) {
+            $task = \App\Models\Task::find($approval->approvable_id);
+            $targetUsers = collect();
+            if ($task) {
+                if ($task->reporter_id && $task->reporter_id !== $submitter->id) {
+                    $reporter = User::find($task->reporter_id);
+                    if ($reporter) $targetUsers->push($reporter);
+                } elseif ($task->project_id) {
+                    $project = \App\Models\Project::find($task->project_id);
+                    if ($project && $project->created_by !== $submitter->id) {
+                        $manager = User::find($project->created_by);
+                        if ($manager) $targetUsers->push($manager);
+                    }
+                }
+                
+                if ($targetUsers->isEmpty()) {
+                    if ($submitter->manager_id) {
+                        $manager = User::find($submitter->manager_id);
+                        if ($manager) $targetUsers->push($manager);
+                    } else {
+                        $targetUsers = User::where('department_id', $submitter->department_id)
+                            ->whereHas('roles', fn($q) => $q->where('role', 'hr'))
+                            ->get();
+                        
+                        if ($targetUsers->isEmpty()) {
+                            $targetUsers = User::whereHas('roles', fn($q) => $q->whereIn('role', ['hr', 'super_admin']))->get();
+                        }
+                    }
+                }
+            }
         } else {
             $targetRole = $approval->current_approver_role;
             $targetUsers = collect();

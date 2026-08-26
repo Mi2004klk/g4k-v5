@@ -790,7 +790,7 @@
 
 ## 11.1 Company Profile
 - [ ] Company Name, Short Name
-- [ ] Timezone (default Asia/Kolkata)
+- [ ] Timezone (default Asia/Kolkata) configurable
 - [ ] Company Logo upload (used on login + throughout)
 
 ## 11.2 Work Schedules
