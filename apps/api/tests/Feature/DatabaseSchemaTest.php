@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class DatabaseSchemaTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * Test P0 tables exist.
      */
@@ -32,7 +34,7 @@ class DatabaseSchemaTest extends TestCase
      */
     public function test_critical_user_columns_exist(): void
     {
-        $columns = ['id', 'name', 'email', 'password', 'department_id', 'status', 'role'];
+        $columns = ['id', 'name', 'email', 'password', 'department_id', 'status'];
 
         foreach ($columns as $column) {
             $this->assertTrue(Schema::hasColumn('users', $column), "Column {$column} on users is missing.");

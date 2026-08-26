@@ -719,6 +719,14 @@ class AuthController extends Controller
     public function capabilities(Request $request)
     {
         $activeRole = $request->user()->resolveActiveRole();
+        
+        $token = $request->user()->currentAccessToken();
+        if ($token) {
+            if ($token->can('role:super_admin')) $activeRole = 'super_admin';
+            elseif ($token->can('role:hr')) $activeRole = 'hr';
+            elseif ($token->can('role:employee')) $activeRole = 'employee';
+        }
+
         $capabilities = \App\Services\CapabilityMatrix::getCapabilitiesForRole($activeRole);
         return response()->json(['capabilities' => $capabilities]);
     }

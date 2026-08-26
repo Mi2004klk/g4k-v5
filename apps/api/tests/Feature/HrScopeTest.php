@@ -18,8 +18,8 @@ class HrScopeTest extends TestCase
         $deptBId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'Dept B', 'created_at' => now(), 'updated_at' => now()]);
 
         // Users
-        $userA = User::factory()->create(['department_id' => $deptAId]);
-        $userB = User::factory()->create(['department_id' => $deptBId]);
+        $userA = User::factory()->create(['department_id' => $deptAId, 'status' => 'active']);
+        $userB = User::factory()->create(['department_id' => $deptBId, 'status' => 'active']);
 
         // HR user managing Dept A only
         $hr = User::factory()->create();
@@ -32,13 +32,13 @@ class HrScopeTest extends TestCase
 
         Sanctum::actingAs($hr, ['role:hr']);
 
-        $response = $this->getJson('/api/directory');
+        $response = $this->getJson('/api/users');
         $response->assertStatus(200);
         
-        $data = collect($response->json('data.data'));
+        $data = collect($response->json('data'));
         
-        $this->assertTrue($data->contains('id', $userA->id));
-        $this->assertFalse($data->contains('id', $userB->id));
+        $this->assertTrue($data->contains('id', $userA->id), "Expected userA {$userA->id} to be in data: " . $data->toJson());
+        $this->assertFalse($data->contains('id', $userB->id), "Expected userB {$userB->id} NOT to be in data: " . $data->toJson());
     }
 
     public function test_super_admin_can_see_all_users()
@@ -46,18 +46,17 @@ class HrScopeTest extends TestCase
         $deptAId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'Dept A', 'created_at' => now(), 'updated_at' => now()]);
         $deptBId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'Dept B', 'created_at' => now(), 'updated_at' => now()]);
 
-        $userA = User::factory()->create(['department_id' => $deptAId]);
-        $userB = User::factory()->create(['department_id' => $deptBId]);
+        $userA = User::factory()->create(['department_id' => $deptAId, 'status' => 'active']);
+        $userB = User::factory()->create(['department_id' => $deptBId, 'status' => 'active']);
 
         $superAdmin = User::factory()->create();
         $superAdmin->roleAssignments()->create(['role' => 'super_admin']);
-
         Sanctum::actingAs($superAdmin, ['role:super_admin']);
 
-        $response = $this->getJson('/api/directory');
+        $response = $this->getJson('/api/users');
         $response->assertStatus(200);
         
-        $data = collect($response->json('data.data'));
+        $data = collect($response->json('data'));
         
         $this->assertTrue($data->contains('id', $userA->id));
         $this->assertTrue($data->contains('id', $userB->id));

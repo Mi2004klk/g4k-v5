@@ -32,6 +32,7 @@ class RoleAssignment extends Model
     {
         \Illuminate\Support\Facades\Cache::forget("user_{$userId}");
         \Illuminate\Support\Facades\Cache::forget("user_{$userId}_roles");
+        \Illuminate\Support\Facades\Cache::forget("user.{$userId}.roles");
         \Illuminate\Support\Facades\Cache::forget("user_roles_{$userId}");
     }
 }

@@ -36,15 +36,33 @@ class TaskRbacTest extends TestCase
         $hr = User::factory()->create();
         $hr->roleAssignments()->create(['role' => 'hr']);
         \Illuminate\Support\Facades\DB::table('capabilities')->insertOrIgnore([
-            ['key' => 'tasks.approve', 'group' => 'Tasks', 'description' => 'Approve Tasks']
+            ['key' => 'tasks.manage', 'group' => 'Tasks', 'description' => 'Manage Tasks']
         ]);
         \Illuminate\Support\Facades\DB::table('role_capabilities')->insertOrIgnore([
-            ['role' => 'hr', 'capability_key' => 'tasks.approve']
+            ['role' => 'hr', 'capability_key' => 'tasks.manage']
         ]);
+        \App\Services\CapabilityMatrix::clearCache();
+
+        $deptId = \Illuminate\Support\Facades\DB::table('departments')->insertGetId(['name' => 'IT']);
+        \Illuminate\Support\Facades\DB::table('department_hr')->insert(['user_id' => $hr->id, 'department_id' => $deptId]);
+        
+        $reporter = User::factory()->create(['department_id' => $deptId]);
 
         $taskId = \Illuminate\Support\Facades\DB::table('tasks')->insertGetId([
             'title' => 'Test Task',
             'status' => 'review',
+            'reporter_id' => $reporter->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        // Add pending approval
+        \Illuminate\Support\Facades\DB::table('approvals')->insert([
+            'approvable_type' => \App\Models\Task::class,
+            'approvable_id' => $taskId,
+            'status' => 'pending',
+            'submitted_by' => $reporter->id,
+            'current_approver_role' => 'hr',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

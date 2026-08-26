@@ -54,13 +54,14 @@ class UserControllerTest extends TestCase
 
     public function test_index_filters_and_pagination()
     {
-        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now()]);
-        $token = $admin->createToken('test', ['role:super_admin', '*'])->plainTextToken;
+        $admin = User::factory()->create(['must_change_password' => false, 'onboarded_at' => now(), 'active_role' => 'super_admin']);
+        $admin->roleAssignments()->create(['role' => 'super_admin']);
+        \Laravel\Sanctum\Sanctum::actingAs($admin, ['role:super_admin', '*']);
 
         $dept = Department::create(['name' => 'IT']);
         User::factory()->count(15)->create(['must_change_password' => false, 'onboarded_at' => now()]);
         
-        $res = $this->withHeaders(['Authorization' => 'Bearer ' . $token])->getJson('/api/users');
+        $res = $this->getJson('/api/users');
         if ($res->status() !== 200) {
             dump($res->json());
         }

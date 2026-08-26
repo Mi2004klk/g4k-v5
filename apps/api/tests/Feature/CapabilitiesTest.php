@@ -14,12 +14,12 @@ class CapabilitiesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \Illuminate\Support\Facades\DB::table('capabilities')->insert([
+        \Illuminate\Support\Facades\DB::table('capabilities')->insertOrIgnore([
             ['key' => 'audit.view', 'description' => 'View Audit Logs', 'group' => 'System'],
             ['key' => '*', 'description' => 'All Capabilities', 'group' => 'System'],
             ['key' => 'users.hr.manage', 'description' => 'Manage Users', 'group' => 'HR'],
         ]);
-        \Illuminate\Support\Facades\DB::table('role_capabilities')->insert([
+        \Illuminate\Support\Facades\DB::table('role_capabilities')->insertOrIgnore([
             ['role' => 'super_admin', 'capability_key' => 'audit.view'],
             ['role' => 'super_admin', 'capability_key' => '*'],
             ['role' => 'hr', 'capability_key' => 'users.hr.manage'],

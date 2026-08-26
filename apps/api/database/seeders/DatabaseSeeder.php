@@ -65,7 +65,7 @@ class DatabaseSeeder extends Seeder
             ],
             'employee' => [
                 'attendance.clock-self', 'leave.request-self', 'profile.edit',
-                'chat.access', 'tasks.view', 'tasks.create-own', 'projects.view', 'timer.track'
+                'chat.access', 'tasks.view', 'tasks.create-own', 'projects.view', 'timer.track', 'directory.view'
             ]
         ];
 

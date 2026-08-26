@@ -22,7 +22,7 @@ export default function DirectoryModulePage() {
       <PageContainer title="Team Directory & Org" description="Browse corporate team members, roles, contact info, and departments.">
         <div className="flex-1 min-h-[60vh] w-full flex flex-col items-center justify-center p-8 text-center bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
           <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
-             <AppIcon name="lock" className="text-neutral-500" size="lg" />
+             <AppIcon name="warning" className="text-neutral-500" size="lg" />
           </div>
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">Insufficient Permissions</h3>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm">You don't have access to view the directory modules. Please contact your system administrator if you believe this is an error.</p>

@@ -23,6 +23,13 @@ class RequireCapability
         }
 
         $activeRole = $user->resolveActiveRole();
+        
+        $token = $user->currentAccessToken();
+        if ($token) {
+            if ($token->can('role:super_admin')) $activeRole = 'super_admin';
+            elseif ($token->can('role:hr')) $activeRole = 'hr';
+            elseif ($token->can('role:employee')) $activeRole = 'employee';
+        }
 
         $allCaps = [];
         foreach ($capabilities as $c) {

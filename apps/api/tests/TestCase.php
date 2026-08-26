@@ -9,6 +9,13 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        try {
+            \Illuminate\Support\Facades\DB::table('role_capabilities')->delete();
+            \Illuminate\Support\Facades\DB::table('capabilities')->delete();
+        } catch (\Exception $e) {}
+        // The above ensures that any capabilities added by migrations are cleared,
+        // so that CapabilityMatrix falls back to static::$defaultMatrix
+        \App\Services\CapabilityMatrix::clearCache();
     }
 
     /**

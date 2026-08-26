@@ -26,12 +26,15 @@ class SmokeTest extends TestCase
             $this->assertNotNull($user, "Demo user $email should exist.");
 
             $response = $this->actingAs($user)->getJson('/api/dashboard/init');
+            if ($response->status() !== 200) file_put_contents(__DIR__.'/smoke-error.txt', "init: " . $response->getContent());
             $response->assertStatus(200);
 
             $response = $this->actingAs($user)->getJson('/api/notifications');
+            if ($response->status() !== 200) file_put_contents(__DIR__.'/smoke-error.txt', "notif: " . $response->getContent());
             $response->assertStatus(200);
 
             $response = $this->actingAs($user)->getJson('/api/directory');
+            if ($response->status() !== 200) file_put_contents(__DIR__.'/smoke-error.txt', "dir: " . $response->getContent());
             $response->assertStatus(200);
         }
     }

@@ -115,7 +115,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
               className={`h-8 w-8 text-neutral-400 hover:text-neutral-700 hidden md:flex ${isPinned ? "text-amber-500" : ""}`}
               onClick={handlePinClick}
             >
-              <AppIcon name={isPinned ? "star" : "star-outline"} size="sm" />
+              <AppIcon name={isPinned ? "star" : "starOutline"} size="sm" />
             </Button>
           </div>
         </div>

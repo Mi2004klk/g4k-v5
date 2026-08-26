@@ -119,7 +119,7 @@ class RoleMatrixTest extends TestCase
 
     private function checkEndpointAccess(User $user, string $role, string $method, string $uri, array $requiredCapabilities)
     {
-        \Laravel\Sanctum\Sanctum::actingAs($user, ['*']);
+        \Laravel\Sanctum\Sanctum::actingAs($user, ['role:' . $role]);
         try {
             $response = $this->json($method, $uri);
             $statusCode = $response->getStatusCode();
@@ -145,7 +145,7 @@ class RoleMatrixTest extends TestCase
             // NOT a capability middleware 403.
             if ($statusCode === 403) {
                 $this->assertStringNotContainsString(
-                    'Missing capability',
+                    'Unauthorized action.',
                     $content,
                     "Role {$role} was denied by Capability middleware for {$method} /{$uri} despite having capability"
                 );
@@ -160,7 +160,7 @@ class RoleMatrixTest extends TestCase
             // Should be exactly 403 Forbidden from the capability middleware
             $this->assertEquals(403, $statusCode, "Expected 403 for unauthorized {$method} /{$uri}");
             $this->assertStringContainsString(
-                'Missing capability',
+                'Unauthorized action.',
                 $content,
                 "Role {$role} SHOULD be denied by Capability middleware for {$method} /{$uri} but got something else"
             );
