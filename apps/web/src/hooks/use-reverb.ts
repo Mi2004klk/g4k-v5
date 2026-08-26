@@ -67,6 +67,10 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     }
 
     window.Pusher = Pusher;
+    
+    if (process.env.NODE_ENV !== 'production') {
+      window.Pusher.logToConsole = true;
+    }
 
     const isReverb = !!process.env.NEXT_PUBLIC_REVERB_HOST || !!process.env.NEXT_PUBLIC_PUSHER_HOST || !!process.env.NEXT_PUBLIC_REVERB_APP_KEY;
     const isWss = (process.env.NEXT_PUBLIC_REVERB_SCHEME || process.env.NEXT_PUBLIC_PUSHER_SCHEME || 'https') === 'https';
@@ -103,6 +107,9 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     const pusherInstance = ((echo.connector as unknown) as { pusher: { connection: Pusher['connection'], connect: () => void } })?.pusher;
     const connection = pusherInstance?.connection;
     let handleStateChange: (states: any) => void;
+    let handleConnected: () => void;
+    let handleDisconnected: () => void;
+    
     if (connection) {
       // Seed from the current state in case the socket already settled
       setSocketConnected(connection.state === 'connected');
@@ -111,7 +118,14 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
         setSocketConnected(states.current === 'connected');
       };
       
+      handleConnected = () => setSocketConnected(true);
+      handleDisconnected = () => setSocketConnected(false);
+      
       connection.bind('state_change', handleStateChange);
+      connection.bind('connected', handleConnected);
+      connection.bind('disconnected', handleDisconnected);
+      connection.bind('unavailable', handleDisconnected);
+      connection.bind('failed', handleDisconnected);
     }
 
     const handleVisibilityOrOnline = () => {
@@ -126,8 +140,14 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('visibilitychange', handleVisibilityOrOnline);
       window.removeEventListener('online', handleVisibilityOrOnline);
-      if (connection && handleStateChange) {
-        connection.unbind('state_change', handleStateChange);
+      if (connection) {
+        if (handleStateChange) connection.unbind('state_change', handleStateChange);
+        if (handleConnected) connection.unbind('connected', handleConnected);
+        if (handleDisconnected) {
+          connection.unbind('disconnected', handleDisconnected);
+          connection.unbind('unavailable', handleDisconnected);
+          connection.unbind('failed', handleDisconnected);
+        }
       }
       setSocketConnected(false);
       echo.disconnect();
