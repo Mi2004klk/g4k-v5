@@ -355,7 +355,7 @@ export function CreateProjectDialog({
               </div>
             ) : (
               <div className="h-24 w-40 shrink-0 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-400">
-                <AppIcon name="image" className="w-6 h-6 opacity-50" />
+                <AppIcon name="file" className="w-6 h-6 opacity-50" />
               </div>
             )}
             <div className="flex flex-col gap-2">
