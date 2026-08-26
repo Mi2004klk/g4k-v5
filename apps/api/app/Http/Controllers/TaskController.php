@@ -391,6 +391,12 @@ class TaskController extends Controller
             }
         }
 
+        if ($task->project_id) {
+            try {
+                broadcast(new \App\Events\TaskCreated($task))->toOthers();
+            } catch (\Throwable $e) {}
+        }
+
         return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']), 201);
     }
 
@@ -548,6 +554,12 @@ class TaskController extends Controller
         $before = $task->toArray();
         $task->update($validated);
         \App\Services\AuditLogger::log($request, 'update', \App\Models\Task::class, $task->id, $before, $task->fresh()->toArray());
+
+        if ($task->project_id) {
+            try {
+                broadcast(new \App\Events\TaskUpdated($task))->toOthers();
+            } catch (\Throwable $e) {}
+        }
 
         return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']));
     }

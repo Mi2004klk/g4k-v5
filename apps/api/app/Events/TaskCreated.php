@@ -3,36 +3,23 @@
 namespace App\Events;
 
 use App\Models\Task;
-use App\Models\User;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TaskCompleted implements \Illuminate\Contracts\Broadcasting\ShouldBroadcastNow
+class TaskCreated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $task;
-    public $user;
 
-    /**
-     * Create a new event instance.
-     */
-    public function __construct(Task $task, User $user)
+    public function __construct(Task $task)
     {
         $this->task = $task;
-        $this->user = $user;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): array
     {
         return [
@@ -42,6 +29,6 @@ class TaskCompleted implements \Illuminate\Contracts\Broadcasting\ShouldBroadcas
     
     public function broadcastAs(): string
     {
-        return 'task-completed';
+        return 'task-created';
     }
 }

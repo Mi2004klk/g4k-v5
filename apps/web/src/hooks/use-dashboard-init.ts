@@ -5,14 +5,26 @@ import { useReverb } from "@/hooks/use-reverb";
 import { useEffect } from "react";
 
 import { useCapabilities } from "@/lib/capabilities";
+import { useAuth } from "@/lib/auth-store";
 
 export function useDashboardInit<TData = any>(options?: Omit<UseQueryOptions<any, Error, TData>, "queryKey" | "queryFn">) {
   const queryClient = useQueryClient();
   const { subscribe } = useReverb();
   const { data: caps } = useCapabilities();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const channel = subscribe("private-company.global");
+    let channelName = "private-company.global";
+    
+    // For regular users, subscribe to their department channel for scoped updates
+    if (user && user.department_id && caps) {
+        const isHR = caps['departments.manage']; // simplified check for HR/Admin
+        if (!isHR) {
+            channelName = `private-department.${user.department_id}`;
+        }
+    }
+
+    const channel = subscribe(channelName);
     if (!channel) return;
 
     let debounceTimer: NodeJS.Timeout;
@@ -25,12 +37,14 @@ export function useDashboardInit<TData = any>(options?: Omit<UseQueryOptions<any
     };
 
     channel.listen(".attendance-updated", listener);
+    channel.listen(".active-task-updated", listener); // Also listen for active task updates on this channel
 
     return () => {
       channel.stopListening(".attendance-updated", listener);
+      channel.stopListening(".active-task-updated", listener);
       clearTimeout(debounceTimer);
     };
-  }, [subscribe, queryClient, caps]);
+  }, [subscribe, queryClient, caps, user]);
 
   return useQuery({
     queryKey: queryKeys.dashboardInit,

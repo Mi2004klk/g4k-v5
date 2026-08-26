@@ -1020,32 +1020,32 @@
 7. [x] Save → employee notified, audit record (before/after), attributed to corrector
 
 ## 15.5 Account Creation Workflow
-1. [ ] HR/Admin clicks Add Employee
-2. [ ] Fills form
-3. [ ] Submit → temp password generated, welcome email (or shown to HR)
-4. [ ] Employee first login → forced password change
-5. [ ] Onboarding 3-step walkthrough
-6. [ ] Role selection (if multi-role)
-7. [ ] Dashboard
+1. [x] HR/Admin clicks Add Employee
+2. [x] Fills form
+3. [x] Submit → temp password generated, welcome email (or shown to HR)
+4. [x] Employee first login → forced password change
+5. [x] Onboarding 3-step walkthrough
+6. [x] Role selection (if multi-role)
+7. [x] Dashboard
 
 ## 15.6 Password Reset Workflow (No Email)
-1. [ ] Employee requests reset in-app
-2. [ ] Request appears in Settings → Security Requests
-3. [ ] Admin approves → one-time secure link generated
-4. [ ] Admin shares link manually
-5. [ ] Employee opens link → sets new password
-6. [ ] Link invalidated after use
+1. [x] Employee requests reset in-app
+2. [x] Request appears in Settings → Security Requests
+3. [x] Admin approves → one-time secure link generated
+4. [x] Admin shares link manually
+5. [x] Employee opens link → sets new password
+6. [x] Link invalidated after use
 
 ---
 
 # SECTION 16 — REAL-TIME SYNC & CONNECTIVITY
 
 ## 16.1 Realtime Channels
-- [ ] User-specific channel (notifications, sessions)
-- [ ] Chat channel per conversation
-- [ ] Project channel (task updates, member changes)
-- [ ] Attendance channel (team status updates)
-- [ ] Department channel (HR scoping)
+- [x] User-specific channel (notifications, sessions)
+- [x] Chat channel per conversation
+- [x] Project channel (task updates, member changes)
+- [x] Attendance channel (team status updates)
+- [x] Department channel (HR scoping)
 
 ## 16.2 Sync Behaviors
 - [ ] Multi-device: action on one device reflects on others within 2s

@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AppIcon, Badge, Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox, Avatar, AvatarFallback, FileUploadPopup, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, ConfirmDialog, Sheet, SheetContent, SheetHeader, SheetTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
@@ -17,6 +17,7 @@ import { ProjectSummaryBar } from "@/components/projects/project-summary-bar";
 import { PhaseTimeline } from "@/components/projects/phase-timeline";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
+import { useReverb } from "@/hooks/use-reverb";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -52,6 +53,33 @@ export default function ProjectDetailPage() {
     queryKey: [...queryKeys.project(projectId), "history"],
     queryFn: () => apiFetch(`/projects/${projectId}/history`),
   });
+
+  const { subscribe } = useReverb();
+  useEffect(() => {
+    const channel = subscribe(`private-project.${projectId}`);
+    if (!channel) return;
+
+    let debounceTimer: NodeJS.Timeout;
+    const listener = (event: any) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
+      }, 500);
+    };
+
+    channel.listen(".task-created", listener);
+    channel.listen(".task-updated", listener);
+    channel.listen(".task-completed", listener);
+    channel.listen(".member-updated", listener);
+
+    return () => {
+      channel.stopListening(".task-created", listener);
+      channel.stopListening(".task-updated", listener);
+      channel.stopListening(".task-completed", listener);
+      channel.stopListening(".member-updated", listener);
+      clearTimeout(debounceTimer);
+    };
+  }, [projectId, subscribe, queryClient]);
 
   const { data: deptsData } = useQuery({ 
     queryKey: ["departments"], 

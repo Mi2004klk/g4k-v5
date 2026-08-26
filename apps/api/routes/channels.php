@@ -45,3 +45,39 @@ Broadcast::channel('approvals.{role}', function ($user, $role) {
     $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
     return in_array($role, $roles) || in_array('super_admin', $roles);
 });
+
+Broadcast::channel('project.{id}', function ($user, $id) {
+    $project = \App\Models\Project::find($id);
+    if (!$project) return false;
+    
+    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
+    if (in_array('hr', $roles)) {
+        $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
+        return in_array($project->department_id, $deptIds);
+    }
+    
+    return $project->created_by === $user->id || $project->members()->where('users.id', $user->id)->exists();
+});
+
+Broadcast::channel('department.{id}', function ($user, $id) {
+    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
+    if (in_array('hr', $roles)) {
+        $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
+        return in_array($id, $deptIds);
+    }
+    
+    return (int) $user->department_id === (int) $id;
+});
+
+Broadcast::channel('attendance.{id}', function ($user, $id) {
+    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
+    if (in_array('hr', $roles)) {
+        $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
+        return in_array($id, $deptIds);
+    }
+    
+    return (int) $user->department_id === (int) $id;
+});

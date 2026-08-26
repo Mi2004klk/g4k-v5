@@ -167,6 +167,10 @@ class ProjectController extends Controller
                         );
                     }
                 }
+                
+                try {
+                    broadcast(new \App\Events\ProjectMemberUpdated($project->id))->toOthers();
+                } catch (\Throwable $e) {}
             }
 
             // T-21.3: Auto-create a project chat conversation with creator + all members
@@ -268,6 +272,10 @@ class ProjectController extends Controller
 
         if (isset($validated['member_ids'])) {
             $project->members()->sync($validated['member_ids']);
+            
+            try {
+                broadcast(new \App\Events\ProjectMemberUpdated($project->id))->toOthers();
+            } catch (\Throwable $e) {}
             
             // Sync project conversation members as well (T-21.3)
             $conversation = \App\Models\Conversation::where('project_id', $project->id)->first();

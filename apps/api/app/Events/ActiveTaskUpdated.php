@@ -26,16 +26,19 @@ class ActiveTaskUpdated implements ShouldBroadcastNow
         $this->projectId = $projectId;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('company.global'),
         ];
+        
+        $user = \App\Models\User::find($this->userId);
+        if ($user && $user->department_id) {
+            $channels[] = new PrivateChannel('department.' . $user->department_id);
+            $channels[] = new PrivateChannel('attendance.' . $user->department_id);
+        }
+        
+        return $channels;
     }
 
     /**

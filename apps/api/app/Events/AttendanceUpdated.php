@@ -24,17 +24,21 @@ class AttendanceUpdated implements ShouldBroadcastNow
         $this->action = $action;
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
     public function broadcastOn(): array
     {
-        // Broadcast to a global company channel for HR/Admins to receive real-time updates
-        return [
+        $channels = [
             new PrivateChannel('company.global'),
         ];
+        
+        if ($this->userId) {
+            $user = \App\Models\User::find($this->userId);
+            if ($user && $user->department_id) {
+                $channels[] = new PrivateChannel('department.' . $user->department_id);
+                $channels[] = new PrivateChannel('attendance.' . $user->department_id);
+            }
+        }
+        
+        return $channels;
     }
 
     /**
