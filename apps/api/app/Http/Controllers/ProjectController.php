@@ -302,14 +302,8 @@ class ProjectController extends Controller
             return response()->json(['message' => 'Unauthorized to delete this project.'], 403);
         }
         
-        // Cascade soft delete to tasks and log activity
-        $project->tasks()->get()->each(function($task) use ($request) {
-            \App\Models\TaskActivity::create([
-                'task_id' => $task->id,
-                'user_id' => $request->user()->id,
-                'event' => 'deleted',
-                'metadata' => ['description' => 'Task was deleted along with its project.']
-            ]);
+        // Cascade soft delete to tasks
+        $project->tasks()->get()->each(function($task) {
             $task->delete();
         });
 

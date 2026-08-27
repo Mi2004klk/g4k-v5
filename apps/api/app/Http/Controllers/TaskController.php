@@ -753,12 +753,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'You can only delete tasks you created.'], 403);
         }
 
-        \App\Models\TaskActivity::create([
-            'task_id' => $task->id,
-            'user_id' => $request->user()->id,
-            'event' => 'deleted',
-            'metadata' => ['description' => 'Task was deleted.']
-        ]);
+
 
         $before = $task->toArray();
         $task->delete();
