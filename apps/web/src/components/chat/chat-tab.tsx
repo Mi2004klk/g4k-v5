@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 interface ChatUser { id: number; name?: string; pivot?: { last_read_at?: string } }
 interface ChatMessage { id: number; sender_id: number; created_at: string; reads?: {user_id: number}[]; conversation_id?: number; sender?: ChatUser; pending?: boolean; body?: string; }
-interface ChatConversation { id: number | string; unread_count?: number; latestMessage?: ChatMessage; users?: ChatUser[]; scope?: string; name?: string; is_divider?: boolean; title?: string; }
+interface ChatConversation { id: number | string; unread_count?: number; latest_message?: ChatMessage; users?: ChatUser[]; scope?: string; name?: string; is_divider?: boolean; title?: string; }
 interface PaginatedResponse<T> { next_cursor?: string; data: T[] }
 interface InfiniteQueryData<T> { pages: PaginatedResponse<T>[] }
 
@@ -203,7 +203,7 @@ export function ChatTab() {
       is_user: true,
       name: u.name,
       scope: "direct",
-      latestMessage: { id: 0, conversation_id: 0, sender_id: 0, body: "Click to start chatting", created_at: new Date().toISOString() },
+      latest_message: { id: 0, conversation_id: 0, sender_id: 0, body: "Click to start chatting", created_at: new Date().toISOString() },
       users: [u],
       original_user_id: u.id,
     }));
@@ -215,16 +215,16 @@ export function ChatTab() {
     const aCurrentUserData = a.users?.find((u: ChatUser) => u.id === user?.id);
     const aLastReadAt = aCurrentUserData?.pivot?.last_read_at;
     const aIsPinned = isChatPinned(a, user?.id);
-    const aIsUnread = (a.unread_count && a.unread_count > 0) || (a.latestMessage &&
-      a.latestMessage.sender_id !== 0 && a.latestMessage.sender_id !== user?.id &&
-      (!aLastReadAt || new Date(a.latestMessage.created_at) > new Date(aLastReadAt)));
+    const aIsUnread = (a.unread_count && a.unread_count > 0) || (a.latest_message &&
+      a.latest_message.sender_id !== 0 && a.latest_message.sender_id !== user?.id &&
+      (!aLastReadAt || new Date(a.latest_message.created_at) > new Date(aLastReadAt)));
 
     const bCurrentUserData = b.users?.find((u: ChatUser) => u.id === user?.id);
     const bLastReadAt = bCurrentUserData?.pivot?.last_read_at;
     const bIsPinned = isChatPinned(b, user?.id);
-    const bIsUnread = (b.unread_count && b.unread_count > 0) || (b.latestMessage &&
-      b.latestMessage.sender_id !== 0 && b.latestMessage.sender_id !== user?.id &&
-      (!bLastReadAt || new Date(b.latestMessage.created_at) > new Date(bLastReadAt)));
+    const bIsUnread = (b.unread_count && b.unread_count > 0) || (b.latest_message &&
+      b.latest_message.sender_id !== 0 && b.latest_message.sender_id !== user?.id &&
+      (!bLastReadAt || new Date(b.latest_message.created_at) > new Date(bLastReadAt)));
 
     if (aIsPinned && !bIsPinned) return -1;
     if (!aIsPinned && bIsPinned) return 1;
@@ -232,8 +232,8 @@ export function ChatTab() {
     if (aIsUnread && !bIsUnread) return -1;
     if (!aIsUnread && bIsUnread) return 1;
 
-    const aTime = a.latestMessage ? new Date(a.latestMessage.created_at).getTime() : 0;
-    const bTime = b.latestMessage ? new Date(b.latestMessage.created_at).getTime() : 0;
+    const aTime = a.latest_message ? new Date(a.latest_message.created_at).getTime() : 0;
+    const bTime = b.latest_message ? new Date(b.latest_message.created_at).getTime() : 0;
     return bTime - aTime;
   });
 
@@ -246,11 +246,11 @@ export function ChatTab() {
     return allConversations.reduce((count: number, c: ChatConversation) => {
       const uc = c.unread_count || 0;
       if (uc > 0) return count + uc;
-      // Fallback: check latestMessage vs last_read_at
+      // Fallback: check latest_message vs last_read_at
       const uData = c.users?.find((u: ChatUser) => u.id === user?.id);
       const lastRead = uData?.pivot?.last_read_at;
-      if (c.latestMessage && c.latestMessage.sender_id !== user?.id &&
-        (!lastRead || new Date(c.latestMessage.created_at) > new Date(lastRead))) {
+      if (c.latest_message && c.latest_message.sender_id !== user?.id &&
+        (!lastRead || new Date(c.latest_message.created_at) > new Date(lastRead))) {
         return count + 1;
       }
       return count;
@@ -558,7 +558,7 @@ export function ChatTab() {
 
   return (
     <>
-      <div className="mt-4 flex flex-col flex-1 min-h-[500px] max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
+      <div className="mt-4 flex flex-col flex-1 min-h-[500px] max-md:min-h-0 max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
         {/* We keep dynamic height on mobile keyboard opening, but use flex-1 on desktop */}
         <div 
           className="flex flex-1 overflow-hidden relative shadow-e2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl max-md:rounded-none transition-all duration-300"
@@ -636,7 +636,7 @@ export function ChatTab() {
         </div>
 
         {/* Active Chat Area */}
-        <div className={`flex-1 flex flex-col bg-white dark:bg-neutral-950 ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`flex-1 flex flex-col bg-white dark:bg-neutral-950 min-h-0 min-w-0 overflow-hidden ${!selectedId ? 'hidden md:flex' : 'flex'}`}>
           {selectedId ? (
             <>
               {/* Chat header */}

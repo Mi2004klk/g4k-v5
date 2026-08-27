@@ -12,7 +12,7 @@ export interface ChatMessage { id: number; sender_id: number; created_at: string
 export interface ChatConversation {
   id: number | string;
   unread_count?: number;
-  latestMessage?: ChatMessage;
+  latest_message?: ChatMessage;
   users?: ChatUser[];
   name?: string;
   scope?: string;
@@ -92,7 +92,7 @@ export function ConversationList({
         />
       ) : (
       <div
-        className="w-full relative divide-y divide-neutral-100 dark:divide-neutral-800"
+        className="w-full relative"
         style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
       >
         {virtualItems.map((virtualRow) => {
@@ -134,9 +134,9 @@ export function ConversationList({
           const currentUserData = conv.users?.find((u: ChatUser) => u.id === currentUserId);
           const lastReadAt = currentUserData?.pivot?.last_read_at;
 
-          const isUnread = (conv.unread_count && conv.unread_count > 0) || (conv.latestMessage &&
-            conv.latestMessage.sender_id !== currentUserId &&
-            (!lastReadAt || new Date(conv.latestMessage.created_at) > new Date(lastReadAt)));
+          const isUnread = (conv.unread_count && conv.unread_count > 0) || (conv.latest_message &&
+            conv.latest_message.sender_id !== currentUserId &&
+            (!lastReadAt || new Date(conv.latest_message.created_at) > new Date(lastReadAt)));
           
           const unreadCount = conv.unread_count || (isUnread ? 1 : 0);
           const isPinned = isChatPinned(conv as any, currentUserId);
@@ -170,7 +170,7 @@ export function ConversationList({
               >
                 <div
                   onClick={() => onSelect(conv.id)}
-                  className={`w-full px-3 py-2.5 flex items-center gap-2.5 cursor-pointer transition-all ${
+                  className={`w-full px-3 py-2.5 flex items-center gap-2.5 cursor-pointer border-b border-neutral-100 dark:border-neutral-800 transition-all ${
                     isSelected
                       ? "bg-primary-50/60 dark:bg-primary-950/30 border-l-2 border-l-primary-600"
                       : isUnread 
@@ -194,7 +194,7 @@ export function ConversationList({
                         </h4>
                         {isPinned && <AppIcon name="pin" size="xs" className="text-primary-500 shrink-0" />}
                       </div>
-                      {conv.latestMessage && (
+                      {conv.latest_message && (
                         <div className="flex items-center gap-1.5 shrink-0 pl-2">
                           {isUnread && (
                             <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[16px] px-1 rounded-full shadow-sm shadow-primary-500/30">
@@ -202,13 +202,13 @@ export function ConversationList({
                             </span>
                           )}
                           <span className={`text-[9px] tabular-nums ${isUnread ? "text-primary-600 dark:text-primary-400 font-bold" : "text-neutral-400 font-medium"}`}>
-                            {format(new Date(conv.latestMessage.created_at), "h:mm a")}
+                            {format(new Date(conv.latest_message.created_at), "h:mm a")}
                           </span>
                         </div>
                       )}
                     </div>
                     <p className={`text-[10px] truncate mt-0.5 ${isUnread ? "font-medium text-neutral-700 dark:text-neutral-300" : "text-neutral-500"}`}>
-                      {conv.latestMessage ? conv.latestMessage.body : "No messages yet"}
+                      {conv.latest_message ? conv.latest_message.body : "No messages yet"}
                     </p>
                   </div>
                 </div>

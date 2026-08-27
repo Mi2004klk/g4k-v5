@@ -294,15 +294,18 @@ export function MessageList({
         // We're loading older messages; save scroll height
         previousScrollHeight.current = scrollRef.current.scrollHeight;
       } else {
-        const currentScrollHeight = scrollRef.current.scrollHeight;
-        if (previousScrollHeight.current > 0 && currentScrollHeight > previousScrollHeight.current) {
-          // Older messages just loaded, restore scroll position to avoid jump
-          scrollRef.current.scrollTop += (currentScrollHeight - previousScrollHeight.current);
-          previousScrollHeight.current = 0;
-        } else if (isScrolledToBottom.current) {
-          // New message came in and we were already at bottom, scroll to bottom
-          scrollRef.current.scrollTop = currentScrollHeight;
-        }
+        requestAnimationFrame(() => {
+          if (!scrollRef.current) return;
+          const currentScrollHeight = scrollRef.current.scrollHeight;
+          if (previousScrollHeight.current > 0 && currentScrollHeight > previousScrollHeight.current) {
+            // Older messages just loaded, restore scroll position to avoid jump
+            scrollRef.current.scrollTop += (currentScrollHeight - previousScrollHeight.current);
+            previousScrollHeight.current = 0;
+          } else if (isScrolledToBottom.current) {
+            // New message came in and we were already at bottom, scroll to bottom
+            scrollRef.current.scrollTop = currentScrollHeight;
+          }
+        });
       }
     }
   }, [messages.length, isFetchingNextPage]);
@@ -364,7 +367,7 @@ export function MessageList({
       <div 
         ref={scrollRef} 
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 space-y-3 relative"
+        className="flex-1 overflow-y-auto p-4 relative"
       >
         {isFetchingNextPage && (
           <div className="text-center text-xs text-neutral-400 py-1">Loading older messages...</div>
