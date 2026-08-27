@@ -32,9 +32,11 @@ export const projectStatus = {
 } as const;
 
 export const leaveStatus = {
-  pending:  { dot: 'bg-amber-500',   status: 'warning' as StatusType, label: 'Pending' },
-  approved: { dot: 'bg-emerald-500', status: 'success' as StatusType, label: 'Approved' },
-  rejected: { dot: 'bg-rose-500',    status: 'danger'  as StatusType, label: 'Rejected' },
+  pending:   { dot: 'bg-amber-500',   status: 'warning' as StatusType, label: 'Pending' },
+  approved:  { dot: 'bg-emerald-500', status: 'success' as StatusType, label: 'Approved' },
+  rejected:  { dot: 'bg-rose-500',    status: 'danger'  as StatusType, label: 'Rejected' },
+  cancelled: { dot: 'bg-neutral-500', status: 'neutral' as StatusType, label: 'Cancelled' },
+  resolved:  { dot: 'bg-neutral-500', status: 'neutral' as StatusType, label: 'Resolved' },
 } as const;
 
 export const userStatus = {
