@@ -217,54 +217,8 @@ class AuthController extends Controller
         }
 
         // 2. Suspicious Login Detection (Whitelist / History)
+        // Suspicious-login detection is currently inactive to avoid aggressive flagging of normal logins.
         $isSuspicious = false;
-        $isFlaggingEnabled = ($settings['suspicious_login.enabled'] ?? 'false') === 'true';
-
-        if ($isFlaggingEnabled) {
-            $whitelistIps = $settings['suspicious_login.whitelist_ips'] ?? '';
-            $whitelistLocations = $settings['suspicious_login.whitelist_locations'] ?? '';
-            
-            // If it's NOT in the whitelist, flag it.
-            $inWhitelist = $this->isIpOrLocationMatched($ip, $location, $whitelistIps) || $this->isIpOrLocationMatched($ip, $location, $whitelistLocations);
-            
-            if (!$inWhitelist) {
-                $isSuspicious = true;
-            }
-        } else {
-            // Fallback to legacy "new IP vs last successful IP" if flagging is disabled but we still want some protection,
-            // or just rely entirely on the new logic. The prompt says "disabled by default ... and every IP is Good for now".
-            // So if it's disabled, nothing is suspicious.
-            $isSuspicious = false;
-        }
-        
-        if ($isSuspicious) {
-            defer(function () use ($user, $request, $ip, $location) {
-                Log::warning("Suspicious login detected for User ID {$user->id} ({$user->email}) from IP {$ip} (Location: {$location})");
-                
-                $adminIds = RoleAssignment::whereIn('role', ['super_admin', 'hr'])->pluck('user_id')->unique();
-                foreach ($adminIds as $adminId) {
-                    \App\Services\NotificationService::send(
-                        $adminId,
-                        'security',
-                        'Suspicious Login Detected',
-                        "User {$user->name} ({$user->email}) logged in from an unrecognized IP: {$ip} (" . ($location ?? 'Unknown Location') . ") (User-Agent: {$request->header('User-Agent')}).",
-                        null,
-                        '/dashboard/settings',
-                        'urgent'
-                    );
-                }
-                
-                if (\App\Support\SmtpSettings::isConfigured() && $user->email) {
-                    try {
-                        \Illuminate\Support\Facades\Mail::to($user->email)->send(
-                            new \App\Mail\SuspiciousLoginEmail($ip, $request->header('User-Agent') ?? 'Unknown Device')
-                        );
-                    } catch (\Exception $e) {
-                        Log::error("Failed to send suspicious login email to {$user->email}: " . $e->getMessage());
-                    }
-                }
-            });
-        }
 
         // Defer non-critical DB inserts to after response
         defer(function () use ($user, $request, $isSuspicious, $ip, $location) {
