@@ -44,7 +44,8 @@ export function middleware(req: NextRequest) {
   const required = Object.entries(PROTECTED).find(([r]) => pathname.startsWith(r))?.[1];
   
   if (required) {
-    const raw = req.cookies.get("g4k_capabilities")?.value;
+    const capCookie = req.cookies.getAll().find(c => c.name.startsWith("g4k_capabilities_"));
+    const raw = capCookie?.value;
     let caps: string[] = [];
     try { 
       caps = raw ? JSON.parse(decodeURIComponent(raw)) : []; 
