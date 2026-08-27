@@ -11,6 +11,21 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
+  - name: 'ubuntu'
+    id: SecurityAudit
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        if grep -rq "test-projects" apps/api/routes; then
+          echo "ERROR: Found test-projects in routes! Aborting build."
+          exit 1
+        fi
+        if [ -f "fix_test_route.php" ]; then
+          echo "ERROR: fix_test_route.php still exists! Aborting build."
+          exit 1
+        fi
+
   - name: gcr.io/cloud-builders/docker
     id: Build
     args: ["build", "-f", "Dockerfile", "-t", "asia-south1-docker.pkg.dev/${PROJECT_ID}/g4k/${_SERVICE}:latest", "."]

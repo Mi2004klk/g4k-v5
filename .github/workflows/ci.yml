@@ -69,6 +69,12 @@ jobs:
       DB_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
+      - name: Enforce Security - No Backdoor Routes
+        run: |
+          if grep -r "test-projects" apps/api/routes; then
+            echo "ERROR: Found test-projects in routes!"
+            exit 1
+          fi
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"

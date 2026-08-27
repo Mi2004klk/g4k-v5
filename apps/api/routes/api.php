@@ -398,4 +398,3 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
 
 
 
-Route::get('/test-projects', function (\Illuminate\Http\Request $request) { $user = App\Models\User::where('email', 'praveen@games4king.in')->first(); auth()->setUser($user); $request->setUserResolver(function() use ($user) { return $user; }); return app(\App\Http\Controllers\ProjectController::class)->index($request); });
