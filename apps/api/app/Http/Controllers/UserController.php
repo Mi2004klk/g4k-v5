@@ -78,7 +78,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'per_page' => 'nullable|integer|in:20,50,100'
+            'per_page' => 'nullable|integer|in:20,50,100,1000'
         ]);
 
         $query = $this->buildIndexQuery($request);

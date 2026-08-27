@@ -36,7 +36,7 @@ class LoginAttemptController extends Controller
             ]);
         }
 
-        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100,1000']);
         $perPage = $request->input('per_page', 50);
         $attempts = $query->paginate($perPage);
         

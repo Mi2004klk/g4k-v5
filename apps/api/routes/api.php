@@ -146,11 +146,16 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     Route::get('/attendance/export', [AttendanceController::class, 'export'])->middleware(['capability:admin.view-all-attendance|hr.view-team-attendance']);
 
     // Phase 6 API
-    Route::middleware('capability:leave.request-self')->group(function () {
+    Route::middleware('capability:leave.request-self|leave.approve-employee')->group(function () {
         Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
         Route::get('/leave-requests/balance', [LeaveRequestController::class, 'balance']);
         Route::get('/leave-requests/history', [LeaveRequestController::class, 'history']);
+        Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
+    });
+    
+    Route::middleware('capability:leave.request-self')->group(function () {
         Route::post('/leave-requests', [LeaveRequestController::class, 'store']);
+        Route::delete('/leave-requests/{id}', [LeaveRequestController::class, 'destroy']);
     });
     
     Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware(['capability:leave.approve-employee', 'throttle:15,1']);
@@ -159,10 +164,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     Route::get('/leave-requests/admin/history', [LeaveRequestController::class, 'adminHistory'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/export', [LeaveRequestController::class, 'export'])->middleware('capability:leave.approve-employee|settings.manage');
 
-    Route::middleware('capability:leave.request-self')->group(function () {
-        Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
-        Route::delete('/leave-requests/{id}', [LeaveRequestController::class, 'destroy']);
-    });
+
     
     Route::get('/holidays', [HolidayController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag');
     Route::get('/notifications', [NotificationController::class, 'index']);

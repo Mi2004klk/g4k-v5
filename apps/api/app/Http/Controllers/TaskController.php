@@ -257,7 +257,7 @@ class TaskController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $request->validate(['per_page' => 'nullable|integer|min:1|max:100']);
+        $request->validate(['per_page' => 'nullable|integer|min:1|max:1000']);
         $perPage = $request->input('per_page', 20);
         return response()->json($query->paginate($perPage));
     }

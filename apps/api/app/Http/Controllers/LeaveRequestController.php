@@ -88,7 +88,7 @@ class LeaveRequestController extends Controller
 
         $query->orderBy('created_at', 'desc');
 
-        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100,1000']);
         $perPage = $request->input('per_page', 20);
         return response()->json($query->paginate($perPage));
     }
@@ -289,7 +289,7 @@ class LeaveRequestController extends Controller
 
         $query->orderBy('start_date', 'desc');
 
-        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100,1000']);
         $perPage = $request->input('per_page', 20);
         return response()->json($query->paginate($perPage));
     }
@@ -337,7 +337,7 @@ class LeaveRequestController extends Controller
 
         $query->orderBy('start_date', 'desc');
 
-        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100,1000']);
         $perPage = $request->input('per_page', 20);
         return response()->json($query->paginate($perPage));
     }
@@ -361,7 +361,7 @@ class LeaveRequestController extends Controller
 
         $query->orderBy('created_at', 'asc');
 
-        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100,1000']);
         $perPage = $request->input('per_page', 20);
         return response()->json($query->paginate($perPage));
     }

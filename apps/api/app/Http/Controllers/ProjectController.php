@@ -109,7 +109,7 @@ class ProjectController extends Controller
             $query->orderBy('projects.updated_at', 'desc');
         }
 
-        $perPage = min((int) $request->query('per_page', 15), 100);
+        $perPage = min((int) $request->query('per_page', 15), 1000);
         $perPage = max($perPage, 1);
         return response()->json($query->paginate($perPage));
     }

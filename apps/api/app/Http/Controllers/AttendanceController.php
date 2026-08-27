@@ -541,7 +541,7 @@ class AttendanceController extends Controller
         }
 
         $request->validate([
-            'per_page' => 'nullable|integer|in:20,50,100'
+            'per_page' => 'nullable|integer|in:20,50,100,1000'
         ]);
         $perPage = $request->input('per_page', 20);
         $results = $query->paginate($perPage);
@@ -568,7 +568,7 @@ class AttendanceController extends Controller
         $query = $this->buildOverviewQuery($request);
         
         $request->validate([
-            'per_page' => 'nullable|integer|in:20,50,100'
+            'per_page' => 'nullable|integer|in:20,50,100,1000'
         ]);
         $perPage = $request->input('per_page', 20);
         $results = $query->paginate($perPage);

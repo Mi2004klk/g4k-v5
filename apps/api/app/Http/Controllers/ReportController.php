@@ -57,7 +57,7 @@ class ReportController extends Controller
                     $search = $request->search;
                     $query->whereRaw('LOWER(title) LIKE LOWER(?)', ["%{$search}%"]);
                 }
-                $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+                $perPage = max(min((int) $request->query('per_page', 25), 1000), 1);
                 $data = $query->latest()->paginate($perPage);
                 break;
             case 'projects':
@@ -74,7 +74,7 @@ class ReportController extends Controller
                     $search = $request->search;
                     $query->whereRaw('LOWER(name) LIKE LOWER(?)', ["%{$search}%"]);
                 }
-                $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+                $perPage = max(min((int) $request->query('per_page', 25), 1000), 1);
                 $data = $query->latest()->paginate($perPage);
                 break;
             case 'users':
@@ -107,7 +107,7 @@ class ReportController extends Controller
                     $query->whereRaw('LOWER(name) LIKE LOWER(?)', ["%{$search}%"]);
                 }
                 
-                $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+                $perPage = max(min((int) $request->query('per_page', 25), 1000), 1);
                 $data = $query->latest()->paginate($perPage);
 
                 if ($key === 'productivity') {
@@ -236,7 +236,7 @@ class ReportController extends Controller
 
         // Also we need to include hasManage and user ID in the cache key so HR and Admin don't share the same cache!
         $cacheRole = $hasManage ? "admin_{$user->id}" : "u_{$user->id}";
-        $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+        $perPage = max(min((int) $request->query('per_page', 25), 1000), 1);
         $cacheKey = "report_attendance_summary_{$start}_{$end}_{$dept}_{$page}_{$perPage}_{$cacheRole}";
 
         $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user, $perPage) {
@@ -278,7 +278,7 @@ class ReportController extends Controller
         $user = $request->user();
 
         $cacheRole = $hasManage ? "admin_{$user->id}" : "u_{$user->id}";
-        $perPage = max(min((int) $request->query('per_page', 25), 100), 1);
+        $perPage = max(min((int) $request->query('per_page', 25), 1000), 1);
         $cacheKey = "report_leave_summary_{$start}_{$end}_{$dept}_{$page}_{$perPage}_{$cacheRole}";
 
         $results = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($start, $end, $dept, $hasManage, $user, $perPage) {

@@ -33,7 +33,7 @@ class DesignationController extends Controller
     public function index(Request $request)
     {
         $query = $this->buildIndexQuery($request);
-        $request->validate(['per_page' => 'nullable|integer|in:20,50,100']);
+        $request->validate(['per_page' => 'nullable|integer|in:20,50,100,1000']);
         $perPage = $request->input('per_page', 20);
         $designations = $query->orderBy('id', 'desc')->paginate($perPage);
         return response()->json($designations);
