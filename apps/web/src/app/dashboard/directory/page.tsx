@@ -60,25 +60,25 @@ export default function DirectoryModulePage() {
               </TabsList>
             </div>
 
-            <div className="flex-1 min-h-0 relative">
-              <TabsContent value="directory" className="mt-0 h-full absolute inset-0 overflow-y-auto outline-none">
+            <div className="flex-1 min-h-0 flex flex-col">
+              <TabsContent value="directory" className="mt-0 flex-1 min-h-0 data-[state=active]:flex flex-col outline-none">
                 <CorporateDirectoryTab />
               </TabsContent>
 
               {canManageUsers && (
-                <TabsContent value="management" className="mt-0 h-full absolute inset-0 overflow-y-auto outline-none">
+                <TabsContent value="management" className="mt-0 flex-1 min-h-0 data-[state=active]:flex flex-col outline-none">
                   <EmployeeManagementTab />
                 </TabsContent>
               )}
 
               {canViewDepartments && (
-                <TabsContent value="departments" className="mt-0 h-full absolute inset-0 overflow-y-auto outline-none">
+                <TabsContent value="departments" className="mt-0 flex-1 min-h-0 data-[state=active]:flex flex-col outline-none">
                   <DepartmentsTab />
                 </TabsContent>
               )}
 
               {canViewDesignations && (
-                <TabsContent value="designations" className="mt-0 h-full absolute inset-0 overflow-y-auto outline-none">
+                <TabsContent value="designations" className="mt-0 flex-1 min-h-0 data-[state=active]:flex flex-col outline-none">
                   <DesignationsTab />
                 </TabsContent>
               )}
