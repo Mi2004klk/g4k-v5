@@ -12,6 +12,7 @@ use Spatie\SimpleExcel\SimpleExcelWriter;
 use App\Services\CapabilityMatrix;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Presenters\UserPresenter;
 
 class UserController extends Controller
 {
@@ -85,9 +86,7 @@ class UserController extends Controller
         $perPage = $request->input('per_page', 20);
         $users = $query->orderBy('id', 'desc')->paginate($perPage);
         
-        $users->getCollection()->transform(function ($user) {
-            return $user->makeHidden(['blood_group', 'emergency_contact', 'alternate_mobile', 'preferences']);
-        });
+        UserPresenter::applyPrivacyFilter($users, $request);
 
         return response()->json($users);
     }
@@ -176,6 +175,8 @@ class UserController extends Controller
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'create', 'user', $user->id, null, $user->toArray());
+        
+        UserPresenter::applyPrivacyFilter($user, $request);
 
         $emailSent = false;
         if (\App\Support\SmtpSettings::isConfigured()) {
@@ -278,6 +279,8 @@ class UserController extends Controller
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'update', 'user', $user->id, $before, $user->toArray());
+        
+        UserPresenter::applyPrivacyFilter($user, $request);
 
         return response()->json($user);
     }
@@ -350,6 +353,8 @@ class UserController extends Controller
         if (!$isSelf && !$canViewAny && !$canViewEmployee) {
             return response()->json(['message' => 'Unauthorized to view this user profile.'], 403);
         }
+
+        UserPresenter::applyPrivacyFilter($user, $request);
 
         return response()->json($user);
     }
@@ -552,6 +557,31 @@ class UserController extends Controller
             ->where('user_id', $user->id)
             ->orderBy('at', 'desc')
             ->cursorPaginate(30);
+
+        if (!$isSelf) {
+            $logs->getCollection()->transform(function ($log) {
+                $hideSensitiveJson = function($payload) {
+                    if (!$payload) return $payload;
+                    $data = is_string($payload) ? json_decode($payload, true) : $payload;
+                    if (is_array($data)) {
+                        unset(
+                            $data['blood_group'],
+                            $data['emergency_contact'],
+                            $data['alternate_mobile'],
+                            $data['preferences'],
+                            $data['emergency_contact_name'],
+                            $data['emergency_contact_phone'],
+                            $data['emergency_contact_relation']
+                        );
+                        return json_encode($data);
+                    }
+                    return $payload;
+                };
+                $log->before = $hideSensitiveJson($log->before);
+                $log->after = $hideSensitiveJson($log->after);
+                return $log;
+            });
+        }
 
         return response()->json($logs);
     }

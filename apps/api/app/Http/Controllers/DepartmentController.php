@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Team;
 use App\Services\AuditLogger;
 use Spatie\SimpleExcel\SimpleExcelWriter;
+use App\Presenters\UserPresenter;
 
 class DepartmentController extends Controller
 {
@@ -86,9 +87,13 @@ class DepartmentController extends Controller
         return response()->json($department, 201);
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         $department = Department::withTrashed()->with(['teams', 'users', 'users.designation', 'hrs'])->findOrFail($id);
+        
+        UserPresenter::applyPrivacyFilter($department->users, $request);
+        UserPresenter::applyPrivacyFilter($department->hrs, $request);
+
         return response()->json($department);
     }
 

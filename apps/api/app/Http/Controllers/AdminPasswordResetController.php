@@ -32,27 +32,27 @@ class AdminPasswordResetController extends Controller
         $resetRequest->admin_id = $request->user()->id;
         $resetRequest->save();
 
-        $user = User::find($resetRequest->user_id);
-        if ($user) {
-            $token = Str::random(60);
-            DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $user->email],
-                ['token' => Hash::make($token), 'created_at' => now()]
-            );
+        $user = User::findOrFail($resetRequest->user_id);
+        
+        $token = Str::random(60);
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            ['token' => Hash::make($token), 'created_at' => now()]
+        );
 
-            $frontendUrl = config('app.frontend_url');
-            $resetLink = rtrim($frontendUrl, '/') . "/reset-password?token={$token}&email=" . urlencode($user->email);
-
-            \App\Services\NotificationService::send(
-                $user->id,
-                'security',
-                'Password Reset Approved',
-                "Your password reset request was approved. You can reset it here: {$resetLink}",
-                null,
-                $resetLink,
-                'urgent'
-            );
+        if (\App\Support\SmtpSettings::isConfigured()) {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($token, $user->email));
         }
+
+        \App\Services\NotificationService::send(
+            $user->id,
+            'security',
+            'Password Reset Approved',
+            "Your password reset request was approved. Please check your email for the reset link.",
+            null,
+            '/dashboard',
+            'urgent'
+        );
 
         \App\Services\AuditLogger::log(
             $request,
@@ -64,8 +64,7 @@ class AdminPasswordResetController extends Controller
         );
 
         return response()->json([
-            'message' => 'Password reset request approved',
-            'reset_link' => $resetLink ?? null
+            'message' => 'Password reset request approved'
         ]);
     }
 

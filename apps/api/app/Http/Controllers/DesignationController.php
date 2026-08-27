@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Designation;
 use App\Services\AuditLogger;
 use Spatie\SimpleExcel\SimpleExcelWriter;
+use App\Presenters\UserPresenter;
 
 class DesignationController extends Controller
 {
@@ -74,9 +75,12 @@ class DesignationController extends Controller
         return response()->json($designation, 201);
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         $designation = Designation::with('users')->findOrFail($id);
+        
+        UserPresenter::applyPrivacyFilter($designation->users, $request);
+
         return response()->json($designation);
     }
 
