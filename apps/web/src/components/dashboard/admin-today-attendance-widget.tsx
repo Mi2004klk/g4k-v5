@@ -14,7 +14,7 @@ interface AttendanceRecord {
 }
 
 export function AdminTodayAttendanceWidget() {
-  const { data, isPending, isFetching, isError, refetch } = useQuery({
+  const { data, isPending, isFetching, isError, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['attendance', 'team-today', 'admin', format(new Date(), "yyyy-MM-dd")],
     queryFn: () => apiFetch(`/attendance/team-today?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
@@ -39,6 +39,11 @@ export function AdminTodayAttendanceWidget() {
           </div>
           <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
             Today&apos;s Attendance
+            {dataUpdatedAt ? (
+              <span className="text-[10px] font-medium text-neutral-400 normal-case tracking-normal hidden sm:inline-block">
+                (Updated {format(dataUpdatedAt, "h:mm a")})
+              </span>
+            ) : null}
             <WidgetInfo summary={`${presentCount + lateCount} clocked in out of ${totalCount}`} />
           </span>
           {isFetching && !isPending && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}

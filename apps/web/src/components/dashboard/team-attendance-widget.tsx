@@ -22,7 +22,7 @@ interface TeamAttendanceRecord {
 export function TeamAttendanceWidget() {
   const date = format(new Date(), "yyyy-MM-dd");
   
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, dataUpdatedAt } = useQuery({
     queryKey: ["attendance", "team-today", date],
     queryFn: () => apiFetch(`/attendance/team-today?date=${date}`),
     staleTime: 60000,
@@ -66,6 +66,11 @@ export function TeamAttendanceWidget() {
           <CardTitle className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
             <AppIcon name="directory" size="sm" className="text-primary-600" />
             Today&apos;s Team Attendance
+            {dataUpdatedAt ? (
+              <span className="text-[10px] font-medium text-neutral-400 normal-case tracking-normal hidden sm:inline-block">
+                (Updated {format(dataUpdatedAt, "h:mm a")})
+              </span>
+            ) : null}
           </CardTitle>
           {isLoading ? (
             <Skeleton className="h-6 w-48" />

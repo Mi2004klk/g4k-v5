@@ -692,17 +692,14 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        $canViewAny = $this->hasCapability($request, 'users.hr.manage');
-        $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
+        $isSelf = (int) $request->user()->id === (int) $user->id;
+        $canManage = $this->hasCapability($request, 'users.employee.manage');
         
-        if (!$canViewAny && !$canViewEmployee) {
+        if (!$isSelf && !$canManage) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
         
-        $isHR = $this->hasCapability($request, 'users.hr.manage');
-        $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
-        
-        if ($isHR && !$isSuperAdmin && !\App\Support\HrScope::apply(User::where('id', $user->id), $request->user())->exists()) {
+        if (!$isSelf && !$this->checkHrScope($request, $user)) {
             return response()->json(['message' => 'Unauthorized to view this user.'], 403);
         }
 
@@ -718,17 +715,14 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        $canViewAny = $this->hasCapability($request, 'users.hr.manage');
-        $canViewEmployee = $this->hasCapability($request, 'users.employee.manage');
+        $isSelf = (int) $request->user()->id === (int) $user->id;
+        $canManage = $this->hasCapability($request, 'users.employee.manage');
         
-        if (!$canViewAny && !$canViewEmployee) {
+        if (!$isSelf && !$canManage) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
         
-        $isHR = $this->hasCapability($request, 'users.hr.manage');
-        $isSuperAdmin = $request->user()->roleAssignments->pluck('role')->contains('super_admin');
-        
-        if ($isHR && !$isSuperAdmin && !\App\Support\HrScope::apply(User::where('id', $user->id), $request->user())->exists()) {
+        if (!$isSelf && !$this->checkHrScope($request, $user)) {
             return response()->json(['message' => 'Unauthorized to view this user.'], 403);
         }
 

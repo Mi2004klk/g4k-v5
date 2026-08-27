@@ -366,7 +366,14 @@ Timing-safe login + 5-strike lockout + rotating refresh; row-locked punch state 
 ### F-013 · Realtime broadcasting dead in production + permanent false "Offline" pill
 **Category:** State-sync/Infra · **Sources:** report H-1; FINAL-AUDIT H-1; frontend 1.18; manual §29 FAQ (documents the badge as if by-design) · **Module:** broadcasting config + `use-reverb.ts` + `connection-status.tsx` · **Role:** All · **Workflow:** realtime UX.
 **Current:** `config/broadcasting.php:19-21` silently falls back to `log` when `BROADCAST_CONNECTION=pusher` with no `PUSHER_APP_KEY`; `cloudbuild.yaml` injects `BROADCAST_CONNECTION=pusher` + only `PUSHER_APP_CLUSTER=ap2` (no key/secret/id; manifest-verified this pass; `.env*` dockerignored). `.env.production` sets `BROADCAST_CONNECTION=reverb`, but **no `reverb` connection exists in config and laravel/reverb is not installed**. Every `broadcast()` call site is wrapped in swallowing try/catch. Frontend: `use-reverb.ts` disables Echo without `NEXT_PUBLIC_REVERB_APP_KEY`/`NEXT_PUBLIC_PUSHER_APP_KEY`; `ConnectionStatus` then shows a permanent amber **"Offline"** pill while the app is actually online (polling works). **Expected:** working push transport in production; status indicator reflects connectivity, not feature config.
-**Impact:** all "live" updates silently degrade to polling (15–30s); users see a false Offline badge that generates IT tickets; env files contradict each other. **Fix:** provision Pusher (or install Reverb both sides), inject keys in Cloud Run + Vercel, make the fallback loud, ConnectionStatus 3-state ("no realtime configured" ≠ "network down"). **Scope:** Backend-dependent + UI · **Status:** OPEN · **Priority:** P1.
+**Impact:** all "live" updates silently degrade to polling (15–30s); users see a false Offline badge that generates IT tickets; env files contradict each other. **Fix:** provision Pusher (or install Reverb both sides), inject keys in Cloud Run + Vercel, make the fallback loud, ConnectionStatus 3-state ("no realtime configured" ≠ "network down"). **Scope:** Backend-dependent + UI · **Status:** OPEN · **Priority:** P1. 
+
+app_id = "2187569"
+key = "e381a9c6a50fe719f8af"
+secret = "2b950af84ca913960c99"
+cluster = "ap2"
+
+all updated on google cloud env and secrets, you can verify from deployment if anything i want ot change there. we use pusher for all, no reverb
 
 ### F-014 · HR "Today's Status" board stale up to 1 hour
 **Category:** Data-sync · **Sources:** report H-6; FINAL-AUDIT H-6; frontend B-6/1.8 · **Component:** `teamToday` cache · **Role:** H/SA · **Workflow:** team monitoring.

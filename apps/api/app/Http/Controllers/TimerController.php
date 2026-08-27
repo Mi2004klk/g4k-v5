@@ -10,6 +10,26 @@ use App\Events\ActiveTaskUpdated;
 
 class TimerController extends Controller
 {
+    private function hasManageAccess($request, $task, $project)
+    {
+        $activeRole = $request->user()->resolveActiveRole();
+        if ($activeRole === 'super_admin') {
+            return true;
+        }
+        if ($activeRole === 'hr') {
+            $managedDepts = \App\Support\HrScope::managedDepartmentIds($request->user());
+            if ($task) {
+                $targetUserIds = array_filter([$task->assignee_id, $task->reporter_id]);
+                if (!empty($targetUserIds)) {
+                    return \App\Models\User::whereIn('id', $targetUserIds)->whereIn('department_id', $managedDepts)->exists();
+                }
+            } elseif ($project) {
+                return \App\Models\User::where('id', $project->created_by)->whereIn('department_id', $managedDepts)->exists();
+            }
+        }
+        return false;
+    }
+
     public function logTime(Request $request)
     {
         $validated = $request->validate([
@@ -38,7 +58,7 @@ class TimerController extends Controller
                                      $task->project->created_by === $userId || 
                                      $task->project->members->contains('id', $userId)
                                  ));
-                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+                $hasManage = $this->hasManageAccess($request, $task, null);
 
                 if (!$isParticipant && !$hasManage) {
                     return response()->json(['message' => 'You are not authorized to log time on this task.'], 403);
@@ -48,7 +68,7 @@ class TimerController extends Controller
             $project = \App\Models\Project::with('members')->find($validated['project_id']);
             if ($project) {
                 $isParticipant = $project->created_by === $userId || $project->members->contains('id', $userId);
-                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+                $hasManage = $this->hasManageAccess($request, null, $project);
                 if (!$isParticipant && !$hasManage) {
                     return response()->json(['message' => 'You are not authorized to log time on this project.'], 403);
                 }
@@ -68,12 +88,15 @@ class TimerController extends Controller
         $query = TaskTimeLog::with(['task', 'project', 'user']);
 
         $role = $request->user()->resolveActiveRole();
-        $canViewAll = CapabilityMatrix::hasCapability($role, 'hr.view-team-attendance') || CapabilityMatrix::hasCapability($role, 'admin.view-all-attendance');
+        $canViewAll = CapabilityMatrix::hasCapability($role, 'users.employee.manage');
 
         if (!$canViewAll) {
             $query->where('user_id', $request->user()->id);
-        } elseif ($request->filled('user_id')) {
-            $query->where('user_id', $request->query('user_id'));
+        } else {
+            \App\Support\HrScope::apply($query, $request->user(), 'task_time_logs.user_id');
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->query('user_id'));
+            }
         }
 
         if ($request->filled('project_id')) {
@@ -109,7 +132,7 @@ class TimerController extends Controller
                                      $task->project->created_by === $userId || 
                                      $task->project->members->contains('id', $userId)
                                  ));
-                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+                $hasManage = $this->hasManageAccess($request, $task, null);
 
                 if (!$isParticipant && !$hasManage) {
                     return response()->json(['message' => 'You are not authorized to start a timer on this task.'], 403);
@@ -119,7 +142,7 @@ class TimerController extends Controller
             $project = \App\Models\Project::with('members')->find($validated['project_id']);
             if ($project) {
                 $isParticipant = $project->created_by === $userId || $project->members->contains('id', $userId);
-                $hasManage = in_array($request->user()->resolveActiveRole(), ['super_admin', 'hr']);
+                $hasManage = $this->hasManageAccess($request, null, $project);
                 if (!$isParticipant && !$hasManage) {
                     return response()->json(['message' => 'You are not authorized to start a timer on this project.'], 403);
                 }

@@ -17,7 +17,7 @@ interface HrAttendanceRecord {
 }
 
 export function HrTeamAttendanceWidget() {
-  const { data, isPending, isFetching, isError, refetch } = useQuery({
+  const { data, isPending, isFetching, isError, refetch, dataUpdatedAt } = useQuery({
     queryKey: ["attendance", "team-today", format(new Date(), "yyyy-MM-dd")],
     queryFn: () => apiFetch(`/attendance/team-today?date=${format(new Date(), "yyyy-MM-dd")}`),
     staleTime: STALE_TIME_ATTENDANCE,
@@ -43,12 +43,19 @@ export function HrTeamAttendanceWidget() {
           {isFetching && !isPending && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
         </div>
         
-        {totalCount > 0 && (
-          <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded font-bold">
-            <span className="text-[12px] text-emerald-700 dark:text-emerald-400">{presentCount}</span>
-            <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {dataUpdatedAt ? (
+            <span className="text-[10px] font-medium text-neutral-400 hidden sm:inline-block">
+              Updated {format(dataUpdatedAt, "h:mm a")}
+            </span>
+          ) : null}
+          {totalCount > 0 && (
+            <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded font-bold">
+              <span className="text-[12px] text-emerald-700 dark:text-emerald-400">{presentCount}</span>
+              <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-y-auto min-h-0 thin-scrollbar pr-1">

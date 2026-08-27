@@ -43,7 +43,8 @@ class AttendanceEventObserver
             $manager = \App\Models\User::find($managerId);
             if ($manager) {
                 if (in_array('super_admin', $manager->getCachedRoles()) || $manager->department_id === $user->department_id) {
-                    Cache::forget("team_today_u{$managerId}_{$date}");
+                    $version = \App\Services\DashboardCacheService::getVersion();
+                    Cache::forget("team_today_v{$version}_u{$managerId}_{$date}");
                 }
             }
         }
