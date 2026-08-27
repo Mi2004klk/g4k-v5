@@ -101,13 +101,8 @@ class PhaseController extends Controller
             'workflow_settings' => $validated['workflow_settings'] ?? null,
         ]));
 
-        \App\Models\TaskActivity::create([
-            'project_id' => $project->id, // Wait, TaskActivity belongs to task... Let's use Project History here if exists, else TaskActivity needs to allow project_id. 
-            // In ProjectController, they use TaskActivity by faking it if it's task related. We'll skip for now, but we should log it somehow.
-        ]);
-        
-        // T-21.2: Actually, looking at ProjectController, project activity relies on TaskActivity linked to a task in the project.
-        // We'll just create a dummy task activity or skip it. Let's just create the phase.
+        // T-21.2: Project activity relies on TaskActivity linked to a task in the project.
+        // We skip creating a dummy task activity to avoid DB constraint errors.
 
         return response()->json($phase, 201);
     }
