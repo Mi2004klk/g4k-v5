@@ -99,8 +99,12 @@ export function ChatTab() {
               icon: '💬',
             });
           }
-          queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-          queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
+        }
+        
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+        queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
+        if (e.message.conversation_id) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.messages(Number(e.message.conversation_id)) });
         }
       };
       
@@ -109,6 +113,9 @@ export function ChatTab() {
       const deleteHandler = (e: { message_id: number, conversation_id: number }) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
         queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
+        if (e.conversation_id) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.messages(Number(e.conversation_id)) });
+        }
       };
       
       channel.listen(".message-deleted", deleteHandler);
