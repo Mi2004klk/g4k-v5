@@ -17,7 +17,7 @@ import { ProjectSummaryBar } from "@/components/projects/project-summary-bar";
 import { PhaseTimeline } from "@/components/projects/phase-timeline";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -54,7 +54,7 @@ export default function ProjectDetailPage() {
     queryFn: () => apiFetch(`/projects/${projectId}/history`),
   });
 
-  const { subscribe } = useReverb();
+  const { subscribe } = usePusher();
   useEffect(() => {
     const channel = subscribe(`private-project.${projectId}`);
     if (!channel) return;

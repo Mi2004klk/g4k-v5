@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, differenceInSeconds } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 
 import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
@@ -69,7 +69,7 @@ export function AdminOpenShiftsTable() {
   const [rowSelection, setRowSelection] = useState({});
 
   const queryClient = useQueryClient();
-  const { subscribe } = useReverb();
+  const { subscribe } = usePusher();
 
   useEffect(() => {
     const channel = subscribe("private-company.global");

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { AppIcon } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
@@ -45,7 +45,7 @@ export function AnnouncementBoard() {
     placeholderData: keepPreviousData,
   });
 
-  const { subscribe, leaveChannel } = useReverb();
+  const { subscribe, leaveChannel } = usePusher();
 
   // Reverb real-time subscription
   useEffect(() => {

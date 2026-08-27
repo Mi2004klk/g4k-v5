@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { apiFetch } from "@/lib/api-client";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -89,7 +89,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [shouldRedirect, targetRoute, router]);
 
   // Listen for SessionRevoked real-time event and new conversations
-  const { subscribe, leaveChannel } = useReverb();
+  const { subscribe, leaveChannel } = usePusher();
   const queryClient = useQueryClient();
   
   useEffect(() => {

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { useUIStore } from "@/lib/ui-store";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { safeFromNow } from "@/lib/format";
 import { Button, ErrorBoundary, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Dialog, DialogContent, DialogTitle } from "@g4k/ui/components";
 import { useShallow } from "zustand/react/shallow";
@@ -16,7 +16,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 export function NotificationsBell() {
   const user = useAuthStore((s) => s.user);
-  const { subscribe, leaveChannel, isConnected } = useReverb();
+  const { subscribe, leaveChannel, isConnected } = usePusher();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<"recent" | "unread">("recent");

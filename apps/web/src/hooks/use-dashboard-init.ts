@@ -1,7 +1,7 @@
 import { useQuery, UseQueryOptions, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { useEffect } from "react";
 
 import { useCapabilities } from "@/lib/capabilities";
@@ -9,7 +9,7 @@ import { useAuthStore } from "@/lib/auth-store";
 
 export function useDashboardInit<TData = any>(options?: Omit<UseQueryOptions<any, Error, TData>, "queryKey" | "queryFn">) {
   const queryClient = useQueryClient();
-  const { subscribe } = useReverb();
+  const { subscribe } = usePusher();
   const { data: caps } = useCapabilities();
   const user = useAuthStore(s => s.user);
 

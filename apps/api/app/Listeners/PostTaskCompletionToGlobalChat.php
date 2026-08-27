@@ -42,7 +42,7 @@ class PostTaskCompletionToGlobalChat implements ShouldQueue
                 broadcast(new MessageSent($msg))->toOthers();
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Failed to post task completion to global chat: " . $e->getMessage());
+            report();
         }
     }
 }

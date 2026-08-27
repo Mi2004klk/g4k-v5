@@ -31,7 +31,7 @@ import { ShellPolish } from "@/components/app-shell/shell-polish";
 import { ConnectionStatus } from "@/components/app-shell/connection-status";
 import { PinnedItems } from "@/components/layout/pinned-items";
 import { PullToRefresh } from "@/components/pull-to-refresh";
-import { ReverbProvider } from "@/hooks/use-reverb";
+import { PusherProvider } from "@/hooks/use-pusher";
 import { ErrorBoundary } from "@g4k/ui/components";
 import { HelpOverlay, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { resolveAvatarUrl } from "@/lib/utils";
@@ -229,7 +229,7 @@ export default function DashboardLayout({
   }
 
   return (
-      <ReverbProvider>
+      <PusherProvider>
         <AuthGuard>
           <ShellPolish />
           <TooltipProvider>
@@ -547,6 +547,6 @@ export default function DashboardLayout({
         </div>
       </TooltipProvider>
       </AuthGuard>
-    </ReverbProvider>
+    </PusherProvider>
   );
 }

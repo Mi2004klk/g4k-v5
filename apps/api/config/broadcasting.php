@@ -15,9 +15,7 @@ return [
     |
     */
 
-    'default' => (env('BROADCAST_CONNECTION') === 'pusher' && empty(env('PUSHER_APP_KEY')))
-                 ? 'log' 
-                 : env('BROADCAST_CONNECTION', 'null'),
+    'default' => env('BROADCAST_CONNECTION', 'null'),
 
     /*
     |--------------------------------------------------------------------------

@@ -40,11 +40,13 @@ class TaskController extends Controller
                     ]);
                     try {
                         broadcast(new MessageSent($msg))->toOthers();
-                    } catch (\Throwable $e) {}
+                    } catch (\Throwable $e) {
+            report($e);
+        }
                 }
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning("Failed to notify project chat: " . $e->getMessage());
+            report();
         }
     }
     private function userHasManage(Request $request): bool
@@ -391,14 +393,18 @@ class TaskController extends Controller
                 ]);
                 try {
                     broadcast(new \App\Events\MessageSent($msg))->toOthers();
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+            report($e);
+        }
             }
         }
 
         if ($task->project_id) {
             try {
                 broadcast(new \App\Events\TaskCreated($task))->toOthers();
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            report($e);
+        }
         }
 
         return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']), 201);
@@ -511,7 +517,7 @@ class TaskController extends Controller
                     try {
                         event(new \App\Events\TaskCompleted($task, $user));
                     } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::warning("Failed to dispatch TaskCompleted event: " . $e->getMessage());
+                        report();
                     }
                 }
             }
@@ -567,7 +573,9 @@ class TaskController extends Controller
         if ($task->project_id) {
             try {
                 broadcast(new \App\Events\TaskUpdated($task))->toOthers();
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            report($e);
+        }
         }
 
         return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']));
@@ -831,7 +839,7 @@ class TaskController extends Controller
             try {
                 event(new \App\Events\TaskCompleted($task, $request->user()));
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning("Failed to dispatch TaskCompleted event: " . $e->getMessage());
+                report();
             }
         }
 

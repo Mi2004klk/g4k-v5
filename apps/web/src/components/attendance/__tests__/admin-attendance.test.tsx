@@ -40,8 +40,8 @@ vi.mock("@/lib/api-client", () => ({
   apiFetch: vi.fn()
 }));
 
-vi.mock("@/hooks/use-reverb", () => ({
-  useReverb: vi.fn(() => ({
+vi.mock("@/hooks/use-pusher", () => ({
+  usePusher: vi.fn(() => ({
     subscribe: vi.fn(() => ({
       bind: vi.fn(),
       unbind: vi.fn(),

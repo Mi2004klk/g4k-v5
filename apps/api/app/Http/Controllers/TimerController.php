@@ -135,7 +135,9 @@ class TimerController extends Controller
 
         try {
             broadcast(new ActiveTaskUpdated($request->user()->id, $validated['task_id'], $validated['project_id']));
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json(['message' => 'Active task synced']);
     }
@@ -145,7 +147,9 @@ class TimerController extends Controller
         Cache::forget("user_active_task_{$request->user()->id}");
         try {
             broadcast(new ActiveTaskUpdated($request->user()->id));
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json(['message' => 'Active task cleared']);
     }

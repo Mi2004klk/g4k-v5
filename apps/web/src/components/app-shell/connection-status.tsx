@@ -1,10 +1,30 @@
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 
 export function ConnectionStatus() {
-  const { isConnected } = useReverb();
+  const { isConnected, isConfigured } = usePusher();
 
   if (isConnected) return null;
+
+  if (!isConfigured) {
+    return (
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-medium cursor-default shrink-0 transition-all shadow-sm"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+              <span className="max-w-[100px] truncate">Polling</span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            Real-time features are not configured (polling active)
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider delayDuration={150}>

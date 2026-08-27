@@ -12,7 +12,7 @@ import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { useSearchParams } from "next/navigation";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
@@ -56,7 +56,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   const searchParams = useSearchParams();
   const isMe = searchParams.get("me") === "1";
   const isReview = searchParams.get("review") === "1";
-  const { subscribe, leaveChannel } = useReverb();
+  const { subscribe, leaveChannel } = usePusher();
   const authUser = useAuthStore(s => s.user);
   
   const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa" | "list">("kanban");

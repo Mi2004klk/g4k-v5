@@ -13,42 +13,45 @@ declare global {
   }
 }
 
-interface ReverbContextType {
+interface PusherContextType {
   subscribe: (channelName: string, isPrivate?: boolean) => any | null;
   leaveChannel: (channelName: string) => void;
   isConnected: boolean;
+  isConfigured: boolean;
   echo: any | null;
 }
 
-const ReverbContext = createContext<ReverbContextType>({
+const PusherContext = createContext<PusherContextType>({
   subscribe: () => null,
   leaveChannel: () => {},
   isConnected: false,
+  isConfigured: false,
   echo: null,
 });
 
 /**
  * Determines whether the Pusher WebSocket server is reachable.
  * Returns false on Vercel preview/production domains when no explicit
- * NEXT_PUBLIC_PUSHER_HOST has been set – this prevents hundreds of
+ * NEXT_PUBLIC_PUSHER_APP_KEY has been set – this prevents hundreds of
  * failed WebSocket connection attempts that flood the console.
  */
 function isPusherAvailable(): boolean {
   if (typeof window === 'undefined') return false;
-  const isAvailable = !!(process.env.NEXT_PUBLIC_REVERB_APP_KEY || process.env.NEXT_PUBLIC_PUSHER_APP_KEY);
+  const isAvailable = !!process.env.NEXT_PUBLIC_PUSHER_APP_KEY;
   if (!isAvailable && process.env.NODE_ENV !== 'test') {
-    console.warn("Realtime features are disabled: NEXT_PUBLIC_REVERB_APP_KEY or NEXT_PUBLIC_PUSHER_APP_KEY is missing from environment variables.");
+    console.warn("Realtime features are disabled: NEXT_PUBLIC_PUSHER_APP_KEY is missing from environment variables.");
   }
   return isAvailable;
 }
 
-export function ReverbProvider({ children }: { children: ReactNode }) {
+export function PusherProvider({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const [echoInstance, setEchoInstance] = useState<any | null>(null);
   // Real pusher socket state — NOT mere Echo-instance existence. Drives the
   // polling fallbacks in consumers (chat/notifications) when the socket drops.
   const [socketConnected, setSocketConnected] = useState(false);
+  const isConfigured = isPusherAvailable();
 
   // Track subscription counts to prevent one component from leaving a channel used by another
   const [subscriptions] = useState<Map<string, number>>(() => new Map());
@@ -72,12 +75,11 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
       window.Pusher.logToConsole = true;
     }
 
-    const isReverb = !!process.env.NEXT_PUBLIC_REVERB_HOST || !!process.env.NEXT_PUBLIC_PUSHER_HOST || !!process.env.NEXT_PUBLIC_REVERB_APP_KEY;
-    const isWss = (process.env.NEXT_PUBLIC_REVERB_SCHEME || process.env.NEXT_PUBLIC_PUSHER_SCHEME || 'https') === 'https';
-
     const echoConfig: any = {
-      broadcaster: isReverb ? 'reverb' : 'pusher',
-      key: process.env.NEXT_PUBLIC_REVERB_APP_KEY || process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
+      broadcaster: 'pusher',
+      key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
+      cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || '',
+      forceTLS: true,
       authEndpoint: `${process.env.NEXT_PUBLIC_API_URL || '/api'}/broadcasting/auth`,
       auth: {
         headers: {
@@ -86,17 +88,6 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
         },
       },
     };
-
-    if (isReverb) {
-      echoConfig.wsHost = process.env.NEXT_PUBLIC_REVERB_HOST || process.env.NEXT_PUBLIC_PUSHER_HOST;
-      echoConfig.wsPort = process.env.NEXT_PUBLIC_REVERB_PORT || process.env.NEXT_PUBLIC_PUSHER_PORT || 80;
-      echoConfig.wssPort = process.env.NEXT_PUBLIC_REVERB_PORT || process.env.NEXT_PUBLIC_PUSHER_PORT || 443;
-      echoConfig.forceTLS = isWss;
-      echoConfig.enabledTransports = ['ws', 'wss'];
-    } else {
-      echoConfig.cluster = process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || '';
-      echoConfig.forceTLS = true;
-    }
 
     const echo: any = new Echo(echoConfig);
 
@@ -186,12 +177,12 @@ export function ReverbProvider({ children }: { children: ReactNode }) {
   }, [echoInstance, subscriptions]);
 
   return createElement(
-    ReverbContext.Provider,
-    { value: { subscribe, leaveChannel, isConnected: !!echoInstance && socketConnected, echo: echoInstance } },
+    PusherContext.Provider,
+    { value: { subscribe, leaveChannel, isConnected: !!echoInstance && socketConnected, isConfigured, echo: echoInstance } },
     children
   );
 }
 
-export function useReverb() {
-  return useContext(ReverbContext);
+export function usePusher() {
+  return useContext(PusherContext);
 }

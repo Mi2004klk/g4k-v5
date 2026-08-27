@@ -408,7 +408,9 @@ class AttendanceService
         if (in_array($today, $invalidatedDates)) {
             try {
                 broadcast(new \App\Events\AttendanceUpdated($userId, 'leave_approved'));
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            report($e);
+        }
         }
     }
 }

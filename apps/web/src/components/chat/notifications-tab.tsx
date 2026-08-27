@@ -16,7 +16,7 @@ import { Toolbar } from "@g4k/ui/components";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys, STALE_TIME_NOTIFICATIONS } from "@/lib/query-keys";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 
 interface NotificationItem {
   id: string;
@@ -72,7 +72,7 @@ export function NotificationsTab() {
     type: "all"
   });
 
-  const { isConnected } = useReverb();
+  const { isConnected } = usePusher();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [...queryKeys.notifications(filter, search), page, perPage],

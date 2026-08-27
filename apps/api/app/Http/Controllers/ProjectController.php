@@ -170,7 +170,9 @@ class ProjectController extends Controller
                 
                 try {
                     broadcast(new \App\Events\ProjectMemberUpdated($project->id))->toOthers();
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+            report($e);
+        }
             }
 
             // T-21.3: Auto-create a project chat conversation with creator + all members
@@ -189,7 +191,9 @@ class ProjectController extends Controller
 
         try {
             broadcast(new \App\Events\ProjectCreated($project))->toOthers();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json($project, 201);
     }
@@ -281,7 +285,9 @@ class ProjectController extends Controller
             
             try {
                 broadcast(new \App\Events\ProjectMemberUpdated($project->id))->toOthers();
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            report($e);
+        }
             
             // Sync project conversation members as well (T-21.3)
             $conversation = \App\Models\Conversation::where('project_id', $project->id)->first();

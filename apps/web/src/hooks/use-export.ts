@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
-import { useReverb } from "./use-reverb";
+import { usePusher } from "./use-pusher";
 import { useAuthStore } from "@/lib/auth-store";
 
 export function useExport() {
@@ -18,7 +18,7 @@ export function useExport() {
     };
   }, [downloadUrls]);
 
-  const { subscribe } = useReverb();
+  const { subscribe } = usePusher();
   const user = useAuthStore(s => s.user);
 
   useEffect(() => {

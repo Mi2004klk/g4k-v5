@@ -7,7 +7,7 @@ import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useMemo, useEffect } from "react";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 
 
 interface AttendanceRecord {
@@ -20,7 +20,7 @@ export function HrAttendanceAnalytics() {
   const [selectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [deptFilter] = useUrlState("dept", "all");
   const queryClient = useQueryClient();
-  const { subscribe } = useReverb();
+  const { subscribe } = usePusher();
 
   const { data, isLoading } = useQuery({
     queryKey: ['attendance-analytics-hr', selectedDate, deptFilter],

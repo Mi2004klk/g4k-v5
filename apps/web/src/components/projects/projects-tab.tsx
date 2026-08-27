@@ -15,7 +15,7 @@ import { Button, Toolbar } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { useAuthStore } from "@/lib/auth-store";
 
 export function ProjectsTab() {
@@ -33,7 +33,7 @@ export function ProjectsTab() {
   const canManageProjects = hasCapability(caps, "projects.manage");
   const queryClient = useQueryClient();
   const { triggerExport } = useExport();
-  const { subscribe, leaveChannel } = useReverb();
+  const { subscribe, leaveChannel } = usePusher();
   const user = useAuthStore(s => s.user);
 
   useEffect(() => {

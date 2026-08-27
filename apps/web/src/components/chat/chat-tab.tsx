@@ -9,7 +9,7 @@ import { apiFetch, unwrapList, isQueued } from "@/lib/api-client";
 import { asArray } from "@/lib/utils";
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Avatar, AvatarFallback, MeaningfulEmpty } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { ConversationList } from "@/components/chat/conversation-list";
 import { MessageList } from "@/components/chat/message-list";
 import { MessageComposer } from "@/components/chat/message-composer";
@@ -28,7 +28,7 @@ export function ChatTab() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const user = useAuthStore((s) => s.user);
-  const { subscribe, leaveChannel, isConnected } = useReverb();
+  const { subscribe, leaveChannel, isConnected } = usePusher();
   const { data: caps = [] } = useCapabilities();
   const canManageChat = hasCapability(caps, "chat.manage");
 

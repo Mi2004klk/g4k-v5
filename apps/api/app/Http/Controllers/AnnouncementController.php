@@ -113,10 +113,10 @@ class AnnouncementController extends Controller
             try {
                 broadcast(new AnnouncementCreated($announcement))->toOthers();
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error("Inner broadcast error: " . $e->getMessage());
-            }
+            report($e);
+        }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("Failed to broadcast AnnouncementCreated event: " . $e->getMessage());
+            report($e);
         }
 
         if (in_array($announcement->priority, ['high', 'urgent'])) {
@@ -302,7 +302,9 @@ class AnnouncementController extends Controller
         \Illuminate\Support\Facades\Cache::forget("announcements_{$request->user()->id}_{$activeRole}");
         try {
             broadcast(new \App\Events\AnnouncementCreated($announcement));
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json(['data' => $announcement->load(['creator', 'team'])]);
     }

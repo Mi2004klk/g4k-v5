@@ -88,7 +88,9 @@ class AttendanceController extends Controller
 
         try {
             broadcast(new \App\Events\AttendanceUpdated($user->id, $type));
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'day' => $dayRecord,

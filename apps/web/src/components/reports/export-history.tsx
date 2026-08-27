@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { useAuthStore } from "@/lib/auth-store";
 import { Card, CardHeader, CardTitle, CardContent, EmptyState, Badge, Button } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
@@ -24,7 +24,7 @@ export function ExportHistory() {
   const [showAll, setShowAll] = useState(false);
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  const { subscribe, leaveChannel } = useReverb();
+  const { subscribe, leaveChannel } = usePusher();
   
   useEffect(() => {
     if (!user?.id) return;

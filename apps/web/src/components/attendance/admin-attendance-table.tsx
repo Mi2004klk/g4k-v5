@@ -13,7 +13,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 import { usePaginatedList } from "@/lib/pagination";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { useExport } from "@/hooks/use-export";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Button, Checkbox, DataTable, StatusBadge, Toolbar, ListScaffold } from "@g4k/ui/components";
@@ -41,7 +41,7 @@ interface AttendanceRecord {
 
 export function AdminAttendanceTable() {
   const queryClient = useQueryClient();
-  const { subscribe, isConnected } = useReverb();
+  const { subscribe, isConnected } = usePusher();
   const [dateFrom, setDateFrom] = useUrlState("from", format(new Date(), "yyyy-MM-dd"));
   const [dateTo, setDateTo] = useUrlState("to", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");

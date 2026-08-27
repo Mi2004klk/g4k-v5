@@ -12,7 +12,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 
 import { apiFetch } from "@/lib/api-client";
 import { STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
-import { useReverb } from "@/hooks/use-reverb";
+import { usePusher } from "@/hooks/use-pusher";
 import { useExport } from "@/hooks/use-export";
 import { Button, Checkbox, StatusBadge, ListScaffold } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
@@ -40,7 +40,7 @@ export interface HrAttendanceRecord {
 
 export function HrAttendanceTable() {
   const queryClient = useQueryClient();
-  const { subscribe, isConnected } = useReverb();
+  const { subscribe, isConnected } = usePusher();
   const [selectedDate, setSelectedDate] = useUrlState("date", format(new Date(), "yyyy-MM-dd"));
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("dept", "all");

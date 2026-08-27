@@ -204,7 +204,7 @@ class ChatController extends Controller
         try {
             broadcast(new MessageSent($message))->toOthers();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessageSent event: ' . $e->getMessage());
+            report($e);
         }
 
         return response()->json($message->load(['sender', 'replyTo']));
@@ -250,8 +250,8 @@ class ChatController extends Controller
             try {
                 broadcast(new MessageRead($conversation->id, $request->user()->id))->toOthers();
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessageRead event: ' . $e->getMessage());
-            }
+            report($e);
+        }
         }
 
         return response()->json(['success' => true]);
@@ -292,7 +292,7 @@ class ChatController extends Controller
         try {
             broadcast(new \App\Events\ConversationCreated($conversation))->toOthers();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to broadcast ConversationCreated event: ' . $e->getMessage());
+            report($e);
         }
 
         return response()->json($conversation);
@@ -346,7 +346,7 @@ class ChatController extends Controller
         try {
             broadcast(new \App\Events\MessagePinned($conversationId, $message->id))->toOthers();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessagePinned event: ' . $e->getMessage());
+            report($e);
         }
 
         return response()->json($message);
@@ -376,7 +376,7 @@ class ChatController extends Controller
         try {
             broadcast(new \App\Events\MessageUnpinned($conversationId, $message->id))->toOthers();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessageUnpinned event: ' . $e->getMessage());
+            report($e);
         }
 
         return response()->json($message);
@@ -453,7 +453,7 @@ class ChatController extends Controller
         try {
             broadcast(new \App\Events\MessageDeleted($conversation->id, $msgIdForBroadcast))->toOthers();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessageDeleted event: ' . $e->getMessage());
+            report($e);
         }
 
         return response()->json(['success' => true]);
