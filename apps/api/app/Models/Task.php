@@ -15,7 +15,7 @@ class Task extends Model
     use \App\Traits\HasDemoTag;
     use SoftDeletes;
     protected $fillable = ['project_id', 'phase_id', 'title', 'description', 'status', 'priority',
-        'scope', 'assignee_id', 'reporter_id', 'start_date', 'due_date', 'progress',
+        'scope', 'scope_id', 'order', 'assignee_id', 'reporter_id', 'start_date', 'due_date', 'progress',
         'parent_id', 'blocked_by', 'qa_form_id', 'recurrence',
         'submitted_at', 'submission_note', 'demo_tag'];
 

@@ -135,4 +135,26 @@ class TaskRbacTest extends TestCase
         
         $response->assertStatus(200);
     }
+
+    public function test_employee_task_creation_forces_individual_scope_and_self_assignment()
+    {
+        $employee = User::factory()->create();
+        $employee->roleAssignments()->create(['role' => 'employee']);
+
+        Sanctum::actingAs($employee, ['role:employee']);
+
+        $response = $this->postJson("/api/tasks", [
+            'title' => 'Malicious Task',
+            'scope' => 'global', // Trying to escalate scope
+        ]);
+        
+        $response->assertStatus(201);
+        $task = \App\Models\Task::find($response->json('id'));
+        
+        $this->assertEquals('individual', $task->scope);
+        $this->assertNull($task->scope_id);
+        
+        $assignees = $task->assignees()->pluck('users.id')->toArray();
+        $this->assertEquals([$employee->id], $assignees);
+    }
 }
