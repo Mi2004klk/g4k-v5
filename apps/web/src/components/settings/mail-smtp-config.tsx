@@ -132,24 +132,24 @@ export function MailSmtpConfig() {
             <div>
               <label className="text-xs font-medium mb-1 block">From Name</label>
               <Input type="text" {...form.register("from_name")} className="h-9 text-xs" />
-              {form.formState.errors.from_name && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.from_name.message}</p>}
+              {form.formState.errors.from_name && <p className="text-xs text-red-500 mt-1">{form.formState.errors.from_name.message}</p>}
             </div>
             <div>
               <label className="text-xs font-medium mb-1 block">From Address</label>
               <Input type="email" {...form.register("from_address")} className="h-9 text-xs" />
-              {form.formState.errors.from_address && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.from_address.message}</p>}
+              {form.formState.errors.from_address && <p className="text-xs text-red-500 mt-1">{form.formState.errors.from_address.message}</p>}
             </div>
           </div>
           <div>
             <label className="text-xs font-medium mb-1 block">Host</label>
             <Input type="text" {...form.register("host")} className="h-9 text-xs" />
-            {form.formState.errors.host && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.host.message}</p>}
+            {form.formState.errors.host && <p className="text-xs text-red-500 mt-1">{form.formState.errors.host.message}</p>}
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-medium mb-1 block">Port</label>
               <Input type="number" {...form.register("port")} className="h-9 text-xs" />
-              {form.formState.errors.port && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.port.message}</p>}
+              {form.formState.errors.port && <p className="text-xs text-red-500 mt-1">{form.formState.errors.port.message}</p>}
             </div>
             <div>
               <label className="text-xs font-medium mb-1 block">Encryption</label>
@@ -179,7 +179,7 @@ export function MailSmtpConfig() {
             <div>
               <label className="text-xs font-medium mb-1 block">Username</label>
               <Input type="text" {...form.register("username")} className="h-9 text-xs" />
-              {form.formState.errors.username && <p className="text-[10px] text-red-500 mt-1">{form.formState.errors.username.message}</p>}
+              {form.formState.errors.username && <p className="text-xs text-red-500 mt-1">{form.formState.errors.username.message}</p>}
             </div>
             <div>
               <label className="text-xs font-medium mb-1 block">Password</label>

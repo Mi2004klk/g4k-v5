@@ -42,7 +42,7 @@ export function RecentActivityWidget() {
           <div className="w-6 h-6 rounded bg-primary-100 dark:bg-primary-950/60 flex items-center justify-center">
             <AppIcon name="activity" size="sm" className="text-primary-600 dark:text-primary-400" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
             Recent Activity Feed
             <WidgetInfo summary="Relevant user activity across the system" />
           </span>
@@ -65,8 +65,8 @@ export function RecentActivityWidget() {
         ) : isError ? (
           <div className="flex flex-col items-center justify-center h-full p-4 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
             <AppIcon name="warning" size="lg" className=" text-rose-400" />
-            <p className="text-[11px] font-medium text-rose-600">Failed to load activity</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            <p className="text-xs font-medium text-rose-600">Failed to load activity</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-xs px-2">
               Retry
             </Button>
           </div>
@@ -74,7 +74,7 @@ export function RecentActivityWidget() {
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center h-full min-h-[150px]">
             <AppIcon name="activity" size="xl" className=" text-neutral-300 dark:text-neutral-700 mb-2" />
             <h4 className="text-xs font-semibold text-neutral-900 dark:text-white">No recent activity</h4>
-            <p className="text-[11px] text-neutral-400 mt-1 mb-4">Activity will appear here once actions are taken.</p>
+            <p className="text-xs text-neutral-400 mt-1 mb-4">Activity will appear here once actions are taken.</p>
             <Button asChild variant="outline" size="sm" className="h-7 text-xs">
               <Link href="/dashboard/tasks">View Tasks</Link>
             </Button>
@@ -116,7 +116,7 @@ export function RecentActivityWidget() {
               return (
                 <div key={activity.id} className="py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
                   <div className="flex justify-between items-start gap-2">
-                    <p className="text-[11px] text-neutral-700 dark:text-neutral-300 leading-snug">
+                    <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-snug">
                       <span className="font-semibold text-neutral-900 dark:text-white">
                         {activity.user_name || 'System'}
                       </span>{" "}
@@ -124,12 +124,12 @@ export function RecentActivityWidget() {
                         {actionText}
                       </span>
                       {!!detailText && (
-                        <span className="block mt-0.5 text-[10px] font-medium text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded px-1.5 py-0.5 w-fit">
+                        <span className="block mt-0.5 text-xs font-medium text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded px-1.5 py-0.5 w-fit">
                           {detailText}
                         </span>
                       )}
                     </p>
-                    <span className="text-[10px] text-neutral-400 whitespace-nowrap mt-0.5 shrink-0">
+                    <span className="text-xs text-neutral-400 whitespace-nowrap mt-0.5 shrink-0">
                       {safeFormatDistance(activity.at)}
                     </span>
                   </div>

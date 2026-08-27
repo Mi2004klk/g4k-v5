@@ -167,7 +167,7 @@ export function AdminOpenShiftsTable() {
         return (
           <div className="flex flex-col text-left">
             <span className="font-semibold text-foreground">{row.original.user_name || "Employee"}</span>
-            <span className="text-[11px] text-muted-foreground font-normal">{row.original.user_email}</span>
+            <span className="text-xs text-muted-foreground font-normal">{row.original.user_email}</span>
           </div>
         );
       },
@@ -240,7 +240,7 @@ export function AdminOpenShiftsTable() {
               <span className="truncate">{activity}</span>
             </StatusBadge>
             {startedAt && (
-              <span className="text-[10px] text-muted-foreground/80 pl-1">
+              <span className="text-xs text-muted-foreground/80 pl-1">
                 Started {format(new Date(startedAt), "h:mm a")}
               </span>
             )}

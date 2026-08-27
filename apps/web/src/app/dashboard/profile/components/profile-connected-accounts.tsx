@@ -26,7 +26,7 @@ export function ProfileConnectedAccountsSection() {
               <div>
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                   YouTube Team
-                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md">
+                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 px-2 py-0.5 text-xs font-bold uppercase tracking-wider rounded-md">
                     Connected
                   </Badge>
                 </h3>

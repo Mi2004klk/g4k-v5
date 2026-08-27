@@ -107,20 +107,20 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
             <div className="flex flex-col gap-6 h-full">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-neutral-50/80 dark:bg-neutral-950/40 p-4 rounded-xl border border-neutral-200/60 dark:border-neutral-800/60">
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">Time Spent</span>
+                  <span className="text-xs uppercase font-bold tracking-wider text-neutral-500">Time Spent</span>
                   <span className="text-xl font-bold text-neutral-900 dark:text-white tabular-nums">
                     {project?.total_time_hours || 0} <span className="text-xs font-semibold text-neutral-500">hrs</span>
                   </span>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">Tasks Done</span>
+                  <span className="text-xs uppercase font-bold tracking-wider text-neutral-500">Tasks Done</span>
                   <span className="text-xl font-bold text-neutral-900 dark:text-white tabular-nums">
                     {project ? `${project.completed_tasks_count || 0}` : <Skeleton className="h-6 w-8" />}
                     <span className="text-xs font-semibold text-neutral-500 ml-1">/ {project?.total_tasks_count || 0}</span>
                   </span>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">Team</span>
+                  <span className="text-xs uppercase font-bold tracking-wider text-neutral-500">Team</span>
                   <span className="text-xl font-bold text-neutral-900 dark:text-white tabular-nums">
                     {project?.members?.length || 0} <span className="text-xs font-semibold text-neutral-500">members</span>
                   </span>
@@ -152,14 +152,14 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
                           >
                             <Avatar className="w-8 h-8 shrink-0 border border-neutral-200/50 dark:border-neutral-800/50">
                               {h.user?.avatar_url && <img src={resolveAvatarUrl(h.user.avatar_url)} alt={h.user?.name} />}
-                              <AvatarFallback name={h.user?.name || "?"} className="text-[10px]" />
+                              <AvatarFallback name={h.user?.name || "?"} className="text-xs" />
                             </Avatar>
                             <div className="flex flex-col gap-0.5 mt-0.5">
                               <span className="text-[13px] text-neutral-700 dark:text-neutral-300 leading-tight">
                                 <span className="font-bold text-neutral-900 dark:text-white mr-1">{h.user?.name}</span> 
                                 {h.event}
                               </span>
-                              <span className="text-neutral-400 font-medium text-[11px] flex items-center gap-1">
+                              <span className="text-neutral-400 font-medium text-xs flex items-center gap-1">
                                 <AppIcon name="clock" className="w-3 h-3" />
                                 {format(new Date(h.created_at), "MMM d, yyyy h:mm a")}
                               </span>
@@ -189,7 +189,7 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
                 <AppIcon name="users" className="text-blue-500" size="sm" />
                 Team Members
               </div>
-              <Badge variant="secondary" className="px-2 py-0.5 text-[10px] rounded-full">
+              <Badge variant="secondary" className="px-2 py-0.5 text-xs rounded-full">
                 {project?.members?.length || 0}
               </Badge>
             </CardTitle>
@@ -201,11 +201,11 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
                   <div key={member.id} className="flex items-center gap-3 p-3 px-5 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
                     <Avatar className="w-9 h-9 border border-neutral-200/50 dark:border-neutral-800 shadow-sm">
                       {member.avatar_url && <img src={resolveAvatarUrl(member.avatar_url)} alt={member.name} />}
-                      <AvatarFallback name={member.name} className="text-[11px] font-bold" />
+                      <AvatarFallback name={member.name} className="text-xs font-bold" />
                     </Avatar>
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className="text-[13px] font-bold text-neutral-900 dark:text-white leading-tight truncate">{member.name}</span>
-                      <span className="text-[11px] text-neutral-500 font-medium capitalize mt-0.5 truncate">{member.active_role?.replace("_", " ") || "Employee"}</span>
+                      <span className="text-xs text-neutral-500 font-medium capitalize mt-0.5 truncate">{member.active_role?.replace("_", " ") || "Employee"}</span>
                     </div>
                   </div>
                 ))
@@ -231,9 +231,9 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
               <div className="space-y-5">
                 {project?.qa_form && (
                   <div className="space-y-2">
-                    <h4 className="font-bold text-[11px] text-neutral-700 dark:text-neutral-300 uppercase tracking-wider flex items-center justify-between">
+                    <h4 className="font-bold text-xs text-neutral-700 dark:text-neutral-300 uppercase tracking-wider flex items-center justify-between">
                       <span>QA Checklist: <span className="text-primary-600 dark:text-primary-400">{project.qa_form.title}</span></span>
-                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-primary-200 text-primary-600 bg-white">Required</Badge>
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 border-primary-200 text-primary-600 bg-white">Required</Badge>
                     </h4>
                     <div className="p-4 bg-white dark:bg-neutral-900 rounded-xl border border-primary-100 dark:border-primary-800/50 shadow-sm">
                       <QAFormViewer
@@ -246,7 +246,7 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
                 )}
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide">Completion Note</label>
+                  <label className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide">Completion Note</label>
                   <Textarea
                     value={submissionNote}
                     onChange={(e) => setSubmissionNote(e.target.value)}
@@ -277,13 +277,13 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
                 
                 {project.qa_submission?.values && project.qa_form && (
                   <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
-                    <h4 className="text-[11px] uppercase tracking-wider font-bold text-neutral-500">
+                    <h4 className="text-xs uppercase tracking-wider font-bold text-neutral-500">
                       QA Form Answers
                     </h4>
                     <div className="space-y-3">
                       {project.qa_form.fields?.map((field: any) => (
                         <div key={field.id} className="flex flex-col gap-1">
-                          <dt className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">{field.label}</dt>
+                          <dt className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">{field.label}</dt>
                           <dd className="text-[13px] font-medium text-neutral-900 dark:text-neutral-100 bg-neutral-50 dark:bg-neutral-800/50 p-2 rounded-md border border-neutral-100 dark:border-neutral-800">
                             {(project.qa_submission?.values as any)?.[field.id] || "—"}
                           </dd>

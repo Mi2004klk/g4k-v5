@@ -39,7 +39,7 @@ export default function ChatModulePage() {
               <AppIcon name="bell" size="xs" />
               Notifications
               {unreadNotifications > 0 && (
-                <span className="flex items-center justify-center bg-rose-500 text-white text-[9px] font-bold h-4 w-4 rounded-full ml-0.5">{unreadNotifications > 99 ? '99+' : unreadNotifications}</span>
+                <span className="flex items-center justify-center bg-rose-500 text-white text-xs font-bold h-4 w-4 rounded-full ml-0.5">{unreadNotifications > 99 ? '99+' : unreadNotifications}</span>
               )}
             </TabsTrigger>
           </TabsList>

@@ -14,7 +14,7 @@ export function ProfileWorkAddressSection() {
               <AppIcon name="building" className="text-fuchsia-500 w-5 h-5" />
               Work Address
             </h2>
-            <Badge variant="secondary" className="bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/30 dark:text-fuchsia-400 border border-fuchsia-100 dark:border-fuchsia-900/30 px-3 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wider">
+            <Badge variant="secondary" className="bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/30 dark:text-fuchsia-400 border border-fuchsia-100 dark:border-fuchsia-900/30 px-3 py-1 text-xs font-bold rounded-lg uppercase tracking-wider">
               Not Verified
             </Badge>
           </div>

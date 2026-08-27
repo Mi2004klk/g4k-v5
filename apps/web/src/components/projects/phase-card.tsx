@@ -101,7 +101,7 @@ export function PhaseCard({
             
             <div className="flex flex-col gap-1.5 flex-1 min-w-0" onClick={onToggleExpand}>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
+                <span className="text-xs font-black text-neutral-400 uppercase tracking-widest bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
                   PHASE {String(index + 1).padStart(2, '0')}
                 </span>
                 <h3 className="text-base font-bold text-neutral-900 dark:text-white cursor-pointer hover:text-primary-600 transition-colors">

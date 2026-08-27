@@ -37,7 +37,7 @@ export function AdminTodayAttendanceWidget() {
           <div className="w-6 h-6 rounded bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center">
             <AppIcon name="directory" size="sm" className="text-emerald-600 dark:text-emerald-400" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
             Today&apos;s Attendance
             <WidgetInfo summary={`${presentCount + lateCount} clocked in out of ${totalCount}`} />
           </span>
@@ -65,7 +65,7 @@ export function AdminTodayAttendanceWidget() {
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
             <AppIcon name="error" size="lg" className=" text-rose-400" />
             <p className="text-xs font-medium text-rose-600">Failed to load attendance</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-xs px-2">
               Retry
             </Button>
           </div>
@@ -79,7 +79,7 @@ export function AdminTodayAttendanceWidget() {
               <span className="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-none">
                 {presentCount + lateCount}
               </span>
-              <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wide">
+              <span className="text-xs font-bold text-neutral-500 uppercase tracking-wide">
                 / {totalCount} Clocked In
               </span>
             </div>
@@ -93,19 +93,19 @@ export function AdminTodayAttendanceWidget() {
             
             <div className="grid grid-cols-3 gap-2">
               <div className="flex flex-col justify-center p-2.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-lg border border-neutral-100 dark:border-neutral-800/60">
-                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" /> On Time
                 </span>
                 <span className="text-sm font-bold text-neutral-900 dark:text-white leading-none">{presentCount}</span>
               </div>
               <div className="flex flex-col justify-center p-2.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-lg border border-neutral-100 dark:border-neutral-800/60">
-                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" /> Late
                 </span>
                 <span className="text-sm font-bold text-neutral-900 dark:text-white leading-none">{lateCount}</span>
               </div>
               <div className="flex flex-col justify-center p-2.5 bg-neutral-50 dark:bg-neutral-900/40 rounded-lg border border-neutral-100 dark:border-neutral-800/60">
-                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" /> Absent
                 </span>
                 <span className="text-sm font-bold text-neutral-900 dark:text-white leading-none">{absentCount}</span>

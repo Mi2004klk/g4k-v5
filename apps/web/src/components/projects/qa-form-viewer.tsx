@@ -86,7 +86,7 @@ export function QAFormViewer({
         </h4>
         {activeSection.fields.map((field) => (
           <div key={field.id} className="space-y-1">
-            <label className="text-[11px] font-medium text-neutral-600 dark:text-neutral-300 flex items-center justify-between">
+            <label className="text-xs font-medium text-neutral-600 dark:text-neutral-300 flex items-center justify-between">
               <span>{field.label} {field.required && <span className="text-rose-500">*</span>}</span>
             </label>
             <QAFieldRenderer

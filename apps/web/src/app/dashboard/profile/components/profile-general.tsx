@@ -212,7 +212,7 @@ export function ProfileGeneralSection() {
               {/* Job Designation */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-neutral-900 dark:text-white flex justify-between">
-                  Job Designation <span className="text-[10px] font-normal text-neutral-400">(Admin Managed)</span>
+                  Job Designation <span className="text-xs font-normal text-neutral-400">(Admin Managed)</span>
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
@@ -229,7 +229,7 @@ export function ProfileGeneralSection() {
               {/* Department */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-neutral-900 dark:text-white flex justify-between">
-                  Department <span className="text-[10px] font-normal text-neutral-400">(Admin Managed)</span>
+                  Department <span className="text-xs font-normal text-neutral-400">(Admin Managed)</span>
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
@@ -246,7 +246,7 @@ export function ProfileGeneralSection() {
               {/* Company */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-neutral-900 dark:text-white flex justify-between">
-                  Company <span className="text-[10px] font-normal text-neutral-400">(Admin Managed)</span>
+                  Company <span className="text-xs font-normal text-neutral-400">(Admin Managed)</span>
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">

@@ -79,7 +79,7 @@ export function TaskCard({
           </div>
           
           <div className="flex items-center gap-1 shrink-0">
-            <StatusBadge status={getPriorityColor(task.priority).status} className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider h-[22px] flex items-center">
+            <StatusBadge status={getPriorityColor(task.priority).status} className="px-1.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider h-[22px] flex items-center">
               <AppIcon name={getPriorityColor(task.priority).icon as any} size="xs" className="mr-1 h-3 w-3" />
               {getPriorityColor(task.priority).label}
             </StatusBadge>
@@ -105,13 +105,13 @@ export function TaskCard({
                 style={{ width: `${task.progress}%` }} 
               />
             </div>
-            <span className="text-[9px] font-bold text-neutral-400 group-hover/progress:text-neutral-600 dark:group-hover/progress:text-neutral-300 transition-colors">
+            <span className="text-xs font-bold text-neutral-400 group-hover/progress:text-neutral-600 dark:group-hover/progress:text-neutral-300 transition-colors">
               {task.progress}%
             </span>
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2.5 text-[10px] text-neutral-400 border-t border-neutral-100 dark:border-neutral-800/80">
+        <div className="flex items-center justify-between pt-2.5 text-xs text-neutral-400 border-t border-neutral-100 dark:border-neutral-800/80">
           <div className="flex items-center gap-3">
             {task.due_date && (
               <div className={cn(
@@ -135,12 +135,12 @@ export function TaskCard({
             {task.assignees && task.assignees.length > 0 ? (
               task.assignees.slice(0, 3).map((a: { id: number, name: string }, i) => (
                 <Avatar key={a.id} className="w-[22px] h-[22px] border-2 border-card relative shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800" style={{ zIndex: 10 - i }}>
-                  <AvatarFallback name={a.name} className="text-[9px] font-bold" />
+                  <AvatarFallback name={a.name} className="text-xs font-bold" />
                 </Avatar>
               ))
             ) : task.assignee ? (
               <Avatar className="w-[22px] h-[22px] border-2 border-card relative shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800">
-                <AvatarFallback name={task.assignee.name} className="text-[9px] font-bold" />
+                <AvatarFallback name={task.assignee.name} className="text-xs font-bold" />
               </Avatar>
             ) : (
               <div className="w-[22px] h-[22px] rounded-full border-2 border-dashed border-neutral-300 dark:border-neutral-700 flex items-center justify-center bg-neutral-50 dark:bg-neutral-900" title="Unassigned">
@@ -148,7 +148,7 @@ export function TaskCard({
               </div>
             )}
             {task.assignees && task.assignees.length > 3 && (
-              <div className="w-[22px] h-[22px] rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-card flex items-center justify-center text-[9px] font-bold text-neutral-600 dark:text-neutral-400 z-0 shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800">
+              <div className="w-[22px] h-[22px] rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-card flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400 z-0 shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800">
                 +{task.assignees.length - 3}
               </div>
             )}

@@ -228,11 +228,11 @@ export function DesignationsTab() {
                 {users.length > 0 ? users.slice(0, 3).map((u: UserRef, i: number) => (
                   <Avatar key={i} className="w-5 h-5 border-[1.5px] border-background">
                     <AvatarImage src={resolveAvatarUrl(u.avatar_url) || ""} />
-                    <AvatarFallback name={u.name} className="text-[8px] font-bold" />
+                    <AvatarFallback name={u.name} className="text-xs font-bold" />
                   </Avatar>
                 )) : [...Array(Math.min(count, 3))].map((_, i) => (
                   <Avatar key={i} className="w-5 h-5 border-[1.5px] border-background">
-                    <AvatarFallback className="text-[8px] bg-neutral-200 text-neutral-600">U</AvatarFallback>
+                    <AvatarFallback className="text-xs bg-neutral-200 text-neutral-600">U</AvatarFallback>
                   </Avatar>
                 ))}
               </div>
@@ -247,7 +247,7 @@ export function DesignationsTab() {
         cell: ({ row }) => {
           const isActive = row.original.is_active;
           return (
-            <StatusBadge status={isActive ? "success" : "danger"} dot className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0">
+            <StatusBadge status={isActive ? "success" : "danger"} dot className="capitalize text-xs px-2 py-0.5 font-medium border-none bg-transparent pl-0">
               {isActive ? "Active" : "Inactive"}
             </StatusBadge>
           );

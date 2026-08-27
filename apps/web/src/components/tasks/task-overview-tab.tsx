@@ -154,7 +154,7 @@ export function TaskOverviewTab({
         
         {/* Status */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
             <AppIcon name="kanban" size="xs" className="opacity-70" /> Status
           </div>
           <div className="flex-1 px-3 py-2">
@@ -181,7 +181,7 @@ export function TaskOverviewTab({
         
         {/* Priority */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
             <AppIcon name="flag" size="xs" className="opacity-70" /> Priority
           </div>
           <div className="flex-1 px-3 py-2">
@@ -207,7 +207,7 @@ export function TaskOverviewTab({
 
         {/* Assignees */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
             <AppIcon name="users" size="xs" className="opacity-70" /> Assignees
           </div>
           <div className="flex-1 px-3 py-2 flex items-center gap-2">
@@ -215,7 +215,7 @@ export function TaskOverviewTab({
               <div className="flex -space-x-2">
                 {task.assignees.map((a: { id: number; name: string }) => (
                   <Avatar key={a.id} className="h-6 w-6 border-2 border-background">
-                    <AvatarFallback className="text-[9px] bg-primary-100 text-primary-700">
+                    <AvatarFallback className="text-xs bg-primary-100 text-primary-700">
                       {a.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -223,7 +223,7 @@ export function TaskOverviewTab({
               </div>
             ) : task.assignee ? (
               <Avatar className="h-6 w-6 border-2 border-background">
-                <AvatarFallback className="text-[9px] bg-primary-100 text-primary-700">
+                <AvatarFallback className="text-xs bg-primary-100 text-primary-700">
                   {task.assignee.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -235,11 +235,11 @@ export function TaskOverviewTab({
 
         {/* Scope */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
             <AppIcon name="shield" size="xs" className="opacity-70" /> Scope
           </div>
           <div className="flex-1 px-3 py-2 flex items-center gap-2">
-            <span className="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-medium text-neutral-800 dark:text-neutral-200 capitalize">
+            <span className="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-xs font-medium text-neutral-800 dark:text-neutral-200 capitalize">
               {task.scope || "global"}
               {task.scope_id ? ` #${task.scope_id}` : ""}
             </span>
@@ -248,7 +248,7 @@ export function TaskOverviewTab({
 
         {/* Due Date */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
             <AppIcon name="calendar" size="xs" className="opacity-70" /> Due Date
           </div>
           <div className="flex-1 px-3 py-2">
@@ -270,7 +270,7 @@ export function TaskOverviewTab({
 
         {/* Progress */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
             <AppIcon name="trendingUp" size="xs" className="opacity-70" /> Progress
           </div>
           <div className="flex-1 px-3 py-2 flex items-center gap-3">
@@ -289,13 +289,13 @@ export function TaskOverviewTab({
                 <div className={cn("h-full transition-all duration-300", progress === 100 ? "bg-success" : "bg-primary-500")} style={{ width: `${progress}%` }} />
               </div>
             )}
-            <span className="text-[10px] font-bold text-neutral-500 w-8">{progress}%</span>
+            <span className="text-xs font-bold text-neutral-500 w-8">{progress}%</span>
           </div>
         </div>
 
         {/* Reminder */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+          <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
             <AppIcon name="bell" size="xs" className="opacity-70" /> Reminder
           </div>
           <div className="flex-1 px-3 py-2">
@@ -366,7 +366,7 @@ export function TaskOverviewTab({
         {/* Recurrence */}
         {task.recurrence && (
           <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
-            <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-[11px] font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
+            <div className="w-[130px] shrink-0 bg-neutral-50/50 dark:bg-neutral-900/50 px-3 py-2 text-xs font-semibold text-neutral-500 border-r border-neutral-100 dark:border-neutral-800 h-full flex items-center gap-2">
               <AppIcon name="refresh" size="xs" className="opacity-70" /> Recurrence
             </div>
             <div className="flex-1 px-3 py-2 flex items-center justify-between">
@@ -377,7 +377,7 @@ export function TaskOverviewTab({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-7 text-[10px] text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                  className="h-7 text-xs text-rose-500 hover:bg-rose-50 hover:text-rose-600"
                   onClick={() => inlineUpdateMutation.mutate({ recurrence: null })}
                   disabled={inlineUpdateMutation.isPending}
                 >
@@ -392,7 +392,7 @@ export function TaskOverviewTab({
         {/* Blocked By */}
         {task.blocker && (
           <div className="flex items-center min-h-[40px] bg-rose-50/50 dark:bg-rose-950/20">
-            <div className="w-[130px] shrink-0 px-3 py-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 border-r border-rose-100 dark:border-rose-900 h-full flex items-center gap-2">
+            <div className="w-[130px] shrink-0 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 border-r border-rose-100 dark:border-rose-900 h-full flex items-center gap-2">
               <AppIcon name="error" size="xs" /> Blocked By
             </div>
             <div className="flex-1 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400">
@@ -421,7 +421,7 @@ export function TaskOverviewTab({
                 <span className="font-bold text-primary-700 dark:text-primary-300">QA Form Required: {qaForm.title}</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-[10px] font-bold text-primary-600 bg-primary-100 px-2 py-0.5 rounded-full">
+                <div className="text-xs font-bold text-primary-600 bg-primary-100 px-2 py-0.5 rounded-full">
                   {completedFields} / {totalFields} Completed
                 </div>
                 <AppIcon name={isQAFormOpen ? "chevronDown" : "chevronRight"} size="sm" className="text-primary-500" />
@@ -493,7 +493,7 @@ export function TaskOverviewTab({
             <AppIcon name="check" size="sm" className="text-emerald-500" /> Ready for Review?
           </h4>
           {progress < 100 && (
-            <p className="text-[11px] text-amber-600 font-semibold bg-amber-50 p-2 rounded">
+            <p className="text-xs text-amber-600 font-semibold bg-amber-50 p-2 rounded">
               ⚠️ Progress is not at 100% yet.
             </p>
           )}

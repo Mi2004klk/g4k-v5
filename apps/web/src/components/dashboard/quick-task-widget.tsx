@@ -82,7 +82,7 @@ export function QuickTaskWidget() {
             <div className="w-7 h-7 rounded bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center">
               <AppIcon name="success" size="sm" className="text-emerald-600 dark:text-emerald-400" />
             </div>
-            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
               Quick Task
               <WidgetInfo summary="Instantly dispatch a work item to any employee" />
             </span>

@@ -60,7 +60,7 @@ export function TaskActivityTab({ activities = [], comments = [], timeLogs = [] 
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Avatar className="h-4 w-4 border border-neutral-200 dark:border-neutral-700">
-                        <AvatarFallback className="text-[7px] bg-primary-100 text-primary-700 font-bold">
+                        <AvatarFallback className="text-xs bg-primary-100 text-primary-700 font-bold">
                           {item.user?.name?.substring(0, 2).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -73,7 +73,7 @@ export function TaskActivityTab({ activities = [], comments = [], timeLogs = [] 
                     </div>
                     {content}
                     <span 
-                      className="text-[10px] text-neutral-400 mt-0.5"
+                      className="text-xs text-neutral-400 mt-0.5"
                       title={format(item.date, "MMM d, yyyy h:mm a")}
                     >
                       {formatDistanceToNow(item.date, { addSuffix: true })}

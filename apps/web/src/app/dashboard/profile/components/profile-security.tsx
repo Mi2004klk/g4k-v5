@@ -269,9 +269,9 @@ export function ProfileSecuritySection() {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-neutral-900 dark:text-white">Two-Factor Authentication</label>
-                <p className="text-[11px] text-neutral-500">Add an extra layer of security to your account.</p>
+                <p className="text-xs text-neutral-500">Add an extra layer of security to your account.</p>
               </div>
-              <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 px-3 py-1 text-[10px] font-bold rounded-lg shrink-0 ml-2">
+              <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 px-3 py-1 text-xs font-bold rounded-lg shrink-0 ml-2">
                 Enabled
               </Badge>
             </div>
@@ -282,7 +282,7 @@ export function ProfileSecuritySection() {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-neutral-900 dark:text-white">Active Sessions</label>
-                <p className="text-[11px] text-neutral-500">
+                <p className="text-xs text-neutral-500">
                   {sessionsLoading ? "Loading devices..." : `You are logged in on ${uniqueSessions.length} device${uniqueSessions.length === 1 ? '' : 's'}.`}
                 </p>
               </div>
@@ -325,7 +325,7 @@ export function ProfileSecuritySection() {
                                   {getOsName(session.user_agent)} • {getBrowserName(session.user_agent)}
                                 </span>
                                 {session.is_current && (
-                                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 px-2 py-0.5 text-[10px] rounded-md shrink-0">
+                                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 px-2 py-0.5 text-xs rounded-md shrink-0">
                                     Current
                                   </Badge>
                                 )}
@@ -335,7 +335,7 @@ export function ProfileSecuritySection() {
                                 <span>•</span>
                                 <span>{session.last_used_at ? `Active ${formatDistanceToNow(new Date(session.last_used_at), { addSuffix: true })}` : "Unknown Activity"}</span>
                               </div>
-                              <div className="text-[10px] text-neutral-400 mt-1 line-clamp-1 max-w-[300px]" title={session.user_agent}>
+                              <div className="text-xs text-neutral-400 mt-1 line-clamp-1 max-w-[300px]" title={session.user_agent}>
                                 {session.user_agent}
                               </div>
                             </div>

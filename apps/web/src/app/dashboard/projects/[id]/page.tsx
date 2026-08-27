@@ -191,7 +191,7 @@ export default function ProjectDetailPage() {
                   </h1>
                   {project && (
                     <Badge variant={project.status === 'completed' || project.status === 'active' ? 'default' : 'secondary'} 
-                      className={`uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-sm ${
+                      className={`uppercase text-xs tracking-wider px-2 py-0.5 rounded-sm ${
                         project.status === 'completed' ? 'bg-emerald-500' :
                         project.status === 'active' ? 'bg-primary-500' : ''
                       }`}>
@@ -328,11 +328,11 @@ export default function ProjectDetailPage() {
                     <div key={m.id} className="flex items-center gap-3 p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-lg transition-colors">
                       <Avatar className="w-8 h-8 shrink-0">
                         {m.avatar_url && <img src={resolveAvatarUrl(m.avatar_url)} alt={m.name} />}
-                        <AvatarFallback name={m.name} className="text-[10px]" />
+                        <AvatarFallback name={m.name} className="text-xs" />
                       </Avatar>
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-medium text-neutral-900 dark:text-white truncate">{m.name}</span>
-                        <span className="text-[11px] text-neutral-500">{m.active_role || 'Member'}</span>
+                        <span className="text-xs text-neutral-500">{m.active_role || 'Member'}</span>
                       </div>
                     </div>
                   ))}
@@ -356,10 +356,10 @@ export default function ProjectDetailPage() {
                             style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualItem.start}px)` }}
                             className="flex gap-3 p-3 border-b border-neutral-100 dark:border-neutral-800/50"
                           >
-                            <Avatar className="w-6 h-6 shrink-0 mt-0.5"><AvatarFallback name={h.user?.name || "?"} className="text-[8px]" /></Avatar>
+                            <Avatar className="w-6 h-6 shrink-0 mt-0.5"><AvatarFallback name={h.user?.name || "?"} className="text-xs" /></Avatar>
                             <div className="flex flex-col gap-0.5">
                               <span className="text-xs text-neutral-700 dark:text-neutral-300"><span className="font-bold text-neutral-900 dark:text-white mr-1">{h.user?.name}</span>{h.event}</span>
-                              <span className="text-[10px] text-neutral-400">{format(new Date(h.created_at), "MMM d, h:mm a")}</span>
+                              <span className="text-xs text-neutral-400">{format(new Date(h.created_at), "MMM d, h:mm a")}</span>
                             </div>
                           </div>
                         );

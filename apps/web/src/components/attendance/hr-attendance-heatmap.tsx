@@ -115,7 +115,7 @@ export function HrAttendanceHeatmap() {
             </div>
             
             <div className="flex gap-1">
-              <div className="flex flex-col gap-1 pr-2 text-[10px] text-neutral-400 dark:text-neutral-500 justify-between py-1">
+              <div className="flex flex-col gap-1 pr-2 text-xs text-neutral-400 dark:text-neutral-500 justify-between py-1">
                 <span>Sun</span>
                 <span>Mon</span>
                 <span>Tue</span>
@@ -138,7 +138,7 @@ export function HrAttendanceHeatmap() {
               ))}
             </div>
             
-            <div className="flex items-center justify-end gap-2 mt-4 text-[10px] text-neutral-500">
+            <div className="flex items-center justify-end gap-2 mt-4 text-xs text-neutral-500">
               <span>Less</span>
               <div className="flex gap-1">
                 <div className="w-3 h-3 rounded-sm bg-neutral-100 dark:bg-neutral-800/50" />

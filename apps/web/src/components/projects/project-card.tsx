@@ -72,21 +72,21 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
               </h3>
               {isPinned && <AppIcon name="star" size="xs" className="text-amber-500 shrink-0" />}
             </div>
-            <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+            <p className="text-xs text-neutral-500 truncate mt-0.5">
               {project.description || "No description provided."}
             </p>
           </div>
 
           {/* Progress */}
           <div className="col-span-1 md:col-span-3 hidden md:flex flex-col gap-1.5 justify-center w-full max-w-[160px]">
-            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+            <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-neutral-500">
               <span>Progress</span>
               <span className={project.progress === 100 ? "text-success-600 dark:text-success-500" : ""}>{project.progress}%</span>
             </div>
             <Progress value={project.progress} size="sm" isOverdue={isOverdue} indicatorColorClass={project.progress === 100 ? "bg-success-500" : undefined} />
             
             {project.current_phase && (
-              <div className="flex items-center gap-1.5 mt-0.5 text-[9px] text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded">
+              <div className="flex items-center gap-1.5 mt-0.5 text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded">
                 <span className="font-semibold text-neutral-600 dark:text-neutral-300 truncate">{project.current_phase.name}</span>
                 {project.current_phase.assignee && (
                   <span className="truncate border-l border-neutral-200 dark:border-neutral-700 pl-1.5 ml-0.5">
@@ -104,22 +104,22 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
                 project.members.slice(0, 3).map((m) => (
                   <Avatar key={m.id} className="inline-block h-6 w-6 rounded-full ring-2 ring-card" title={m.name}>
                     {m.avatar_url && <AvatarImage src={m.avatar_url} alt={m.name} />}
-                    <AvatarFallback name={m.name} className="text-[9px]" />
+                    <AvatarFallback name={m.name} className="text-xs" />
                   </Avatar>
                 ))
               ) : (
-                <span className="text-[11px] text-neutral-400 font-medium">Unassigned</span>
+                <span className="text-xs text-neutral-400 font-medium">Unassigned</span>
               )}
             </div>
           </div>
 
           {/* Deadline & Status */}
           <div className="col-span-1 md:col-span-3 flex items-center justify-end gap-3 shrink-0">
-            <div className={`hidden lg:flex items-center gap-1.5 text-[11px] font-bold ${isOverdue ? 'text-rose-600 dark:text-rose-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
+            <div className={`hidden lg:flex items-center gap-1.5 text-xs font-bold ${isOverdue ? 'text-rose-600 dark:text-rose-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
               <AppIcon name="calendar" size="xs" />
               <span>{project.deadline ? format(new Date(project.deadline), "MMM d, yyyy") : "No due date"}</span>
             </div>
-            <StatusBadge status={getPriorityColor(project.priority).status} className="uppercase text-[9px] tracking-wider font-bold h-6">
+            <StatusBadge status={getPriorityColor(project.priority).status} className="uppercase text-xs tracking-wider font-bold h-6">
               {project.priority}
             </StatusBadge>
             <Button
@@ -159,12 +159,12 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
                 project.name
               )}
             </h3>
-            <p className="text-[11px] text-neutral-500 line-clamp-2 mt-1 min-h-[32px] leading-relaxed">
+            <p className="text-xs text-neutral-500 line-clamp-2 mt-1 min-h-[32px] leading-relaxed">
               {project.description || "No description provided."}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <StatusBadge status={getPriorityColor(project.priority).status} className="uppercase text-[9px] tracking-wider font-bold">
+            <StatusBadge status={getPriorityColor(project.priority).status} className="uppercase text-xs tracking-wider font-bold">
               {project.priority}
             </StatusBadge>
             <Button
@@ -182,7 +182,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
         <div className="mt-auto pt-4 flex flex-col gap-4">
           {/* Progress Section */}
           <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+            <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
               <span className="text-neutral-500 dark:text-neutral-400">Progress</span>
               <span className={project.progress === 100 ? "text-success-600 dark:text-success-500" : "text-neutral-700 dark:text-neutral-300"}>
                 {project.progress}%
@@ -191,7 +191,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
             <Progress value={project.progress} size="sm" isOverdue={isOverdue} indicatorColorClass={project.progress === 100 ? "bg-success-500" : undefined} />
             
             {project.current_phase && (
-              <div className="flex items-center gap-1.5 mt-1 text-[10px] text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 p-1.5 rounded-lg border border-neutral-100 dark:border-neutral-800">
+              <div className="flex items-center gap-1.5 mt-1 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 p-1.5 rounded-lg border border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center justify-center w-4 h-4 rounded bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-sm">
                   <AppIcon name="clock" className="w-2.5 h-2.5 text-neutral-400" />
                 </div>
@@ -200,9 +200,9 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
                   <div className="flex items-center gap-1 ml-auto shrink-0 pl-2 border-l border-neutral-200 dark:border-neutral-700">
                     <Avatar className="w-3.5 h-3.5">
                       {project.current_phase.assignee.avatar_url && <AvatarImage src={project.current_phase.assignee.avatar_url} />}
-                      <AvatarFallback className="text-[7px]">{project.current_phase.assignee.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="text-xs">{project.current_phase.assignee.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <span className="truncate max-w-[60px] text-[9px] font-medium">{project.current_phase.assignee.name}</span>
+                    <span className="truncate max-w-[60px] text-xs font-medium">{project.current_phase.assignee.name}</span>
                   </div>
                 )}
               </div>
@@ -211,7 +211,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
 
           {/* Footer Metadata */}
           <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800">
-            <div className={`flex items-center gap-1.5 text-[11px] font-bold ${isOverdue ? 'text-rose-600 dark:text-rose-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
+            <div className={`flex items-center gap-1.5 text-xs font-bold ${isOverdue ? 'text-rose-600 dark:text-rose-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
               <AppIcon name="calendar" size="xs" />
               <span>{project.deadline ? format(new Date(project.deadline), "MMM d") : "No due date"}</span>
             </div>
@@ -225,14 +225,14 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
                     title={m.name}
                   >
                     {m.avatar_url && <AvatarImage src={m.avatar_url} alt={m.name} />}
-                    <AvatarFallback name={m.name} className="text-[9px]" />
+                    <AvatarFallback name={m.name} className="text-xs" />
                   </Avatar>
                 ))
               ) : (
-                <span className="text-[10px] font-medium text-neutral-400">Unassigned</span>
+                <span className="text-xs font-medium text-neutral-400">Unassigned</span>
               )}
               {project.members && project.members.length > 4 && (
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 ring-2 ring-card text-[9px] font-bold text-neutral-600 dark:text-neutral-300">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 ring-2 ring-card text-xs font-bold text-neutral-600 dark:text-neutral-300">
                   +{project.members.length - 4}
                 </div>
               )}

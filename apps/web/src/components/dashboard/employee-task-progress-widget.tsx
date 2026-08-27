@@ -48,8 +48,8 @@ export function EmployeeTaskProgressWidget() {
         </div>
         <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded-[var(--radius)] p-4 mt-4">
           <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
-          <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load tasks</span>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+          <span className="text-xs text-rose-600 font-medium mb-2">Failed to load tasks</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-xs px-2">
             Retry
           </Button>
         </div>
@@ -67,7 +67,7 @@ export function EmployeeTaskProgressWidget() {
             <div className="w-6 h-6 rounded bg-purple-100 dark:bg-purple-950/60 flex items-center justify-center">
               <AppIcon name="success" size="sm" className="text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
               Recent Task Progress
             </span>
           </div>
@@ -92,7 +92,7 @@ export function EmployeeTaskProgressWidget() {
                       {task.title}
                     </p>
                   </div>
-                  <span className="text-[10px] font-medium text-neutral-500 shrink-0">
+                  <span className="text-xs font-medium text-neutral-500 shrink-0">
                     {task.progress}%
                   </span>
                 </div>
@@ -104,7 +104,7 @@ export function EmployeeTaskProgressWidget() {
                   />
                 </div>
                 
-                <p className="text-[10px] text-neutral-400 flex items-center gap-1">
+                <p className="text-xs text-neutral-400 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-600 inline-block"></span>
                   Updated {safeFromNow(task.updated_at) || 'recently'}
                 </p>

@@ -174,18 +174,18 @@ export function TimeClockWidget({ className }: { className?: string }) {
           <div className="w-6 h-6 rounded-[4px] bg-orange-100 dark:bg-orange-950/50 flex items-center justify-center">
             <AppIcon name="clock" className="text-orange-600 dark:text-orange-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
             Time Clock
           </span>
           {isFetching && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
           {isOffline ? (
-            <span className="flex items-center gap-1 text-[9px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
+            <span className="flex items-center gap-1 text-xs font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
               <AppIcon name="error" size="xs" /> Offline
             </span>
           ) : isError && !todayData ? (
-            <span className="flex items-center gap-1 text-[9px] font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
+            <span className="flex items-center gap-1 text-xs font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
               <AppIcon name="error" size="xs" /> Error
-              <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-[9px] font-bold text-rose-600 hover:text-rose-700 ml-1">
+              <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-xs font-bold text-rose-600 hover:text-rose-700 ml-1">
                 Retry
               </Button>
             </span>
@@ -197,7 +197,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
               activeState === "on_break" ? "warning" :
                 activeState === "completed" ? "info" : "neutral"
           }
-          className="uppercase tracking-widest px-2 py-0.5 text-[9px] font-bold rounded"
+          className="uppercase tracking-widest px-2 py-0.5 text-xs font-bold rounded"
         >
           {activeState.replace("_", " ")}
         </StatusBadge>
@@ -219,7 +219,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
                   {formattedTime}
                 </div>
                 {isOvertime && (
-                  <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider mt-2 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded">
+                  <p className="text-xs text-amber-500 font-bold uppercase tracking-wider mt-2 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded">
                     Overtime (+{formatDuration(displaySeconds - standardSeconds)})
                   </p>
                 )}

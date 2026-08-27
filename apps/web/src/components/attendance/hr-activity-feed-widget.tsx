@@ -34,11 +34,11 @@ export function HrActivityFeedWidget() {
           <div className="w-6 h-6 rounded-[4px] bg-rose-100 dark:bg-rose-950/50 flex items-center justify-center">
             <AppIcon name="warning" className="text-rose-600 dark:text-rose-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1.5">
             Team Exceptions
           </span>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-[11px] px-2.5">
+        <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-xs px-2.5">
           Refresh
         </Button>
       </div>
@@ -68,7 +68,7 @@ export function HrActivityFeedWidget() {
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center h-full min-h-[150px]">
             <AppIcon name="success" size="xl" className="text-emerald-400 mb-2" />
             <h4 className="text-xs font-semibold text-neutral-900 dark:text-white">No exceptions!</h4>
-            <p className="text-[11px] text-neutral-400 mt-1 mb-4">No late arrivals or unclosed shifts.</p>
+            <p className="text-xs text-neutral-400 mt-1 mb-4">No late arrivals or unclosed shifts.</p>
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
@@ -83,15 +83,15 @@ export function HrActivityFeedWidget() {
                     <p className="text-[13px] text-neutral-900 dark:text-neutral-100 leading-tight">
                       <span className="font-semibold">{ex.user_name}</span> {ex.type === 'late_arrival' ? 'arrived late' : 'left a shift open'}
                     </p>
-                    <span className="text-[10px] text-neutral-400 shrink-0 ml-2 mt-0.5">
+                    <span className="text-xs text-neutral-400 shrink-0 ml-2 mt-0.5">
                       {safeFromNow(ex.created_at)}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-1.5 py-0.5 rounded">
+                    <span className="text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-1.5 py-0.5 rounded">
                       {ex.message}
                     </span>
-                    <span className="text-[10px] text-neutral-500">
+                    <span className="text-xs text-neutral-500">
                       {ex.date}
                     </span>
                   </div>

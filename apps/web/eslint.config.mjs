@@ -12,6 +12,14 @@ const eslintConfig = defineConfig([
         {
           "selector": "CallExpression[callee.object.name='URL'][callee.property.name='createObjectURL']",
           "message": "Direct use of URL.createObjectURL is restricted. Please use the useExport hook instead."
+        },
+        {
+          "selector": "Literal[value=/text-\\[\\d+px\\]/]",
+          "message": "Arbitrary pixel sizes for text (e.g. text-[10px]) are forbidden. Please use standard token scales like text-xs or text-2xs."
+        },
+        {
+          "selector": "TemplateElement[value.raw=/text-\\[\\d+px\\]/]",
+          "message": "Arbitrary pixel sizes for text (e.g. text-[10px]) are forbidden. Please use standard token scales like text-xs or text-2xs."
         }
       ]
     }

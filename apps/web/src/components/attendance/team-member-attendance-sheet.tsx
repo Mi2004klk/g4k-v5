@@ -152,7 +152,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                             <span>
                               {b.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {b.isOngoing ? "Now" : b.end?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            <StatusBadge status={b.isApproved ? "success" : "warning"} dot className="text-[10px] py-0 px-1.5 h-4">
+                            <StatusBadge status={b.isApproved ? "success" : "warning"} dot className="text-xs py-0 px-1.5 h-4">
                               {b.isApproved ? "Approved" : "Unapproved"}
                             </StatusBadge>
                           </div>
@@ -212,7 +212,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                               </div>
                               
                               {event.device_meta && (
-                                <div className="flex items-center gap-1.5 mt-2 text-[10px] text-neutral-400 font-medium bg-neutral-50 dark:bg-neutral-950 px-2 py-1 rounded-[var(--radius)] w-fit">
+                                <div className="flex items-center gap-1.5 mt-2 text-xs text-neutral-400 font-medium bg-neutral-50 dark:bg-neutral-950 px-2 py-1 rounded-[var(--radius)] w-fit">
                                   <AppIcon name="devices" size="xs" />
                                   {event.device_meta.platform} • {event.device_meta.ip}
                                 </div>

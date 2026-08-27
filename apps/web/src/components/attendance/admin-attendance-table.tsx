@@ -210,7 +210,7 @@ export function AdminAttendanceTable() {
               className="flex flex-col text-left hover:opacity-80 transition-opacity"
             >
               <span className="font-semibold text-neutral-900 dark:text-white underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
-              <span className="text-[11px] text-neutral-400 font-normal">{row.original.user_email}</span>
+              <span className="text-xs text-neutral-400 font-normal">{row.original.user_email}</span>
             </button>
             <button
               onClick={() => {
@@ -243,7 +243,7 @@ export function AdminAttendanceTable() {
                     type: "clock_out"
                   });
                 }}
-                className="cursor-pointer hover:bg-warning/20 transition-colors gap-1 text-[10px] uppercase h-6 px-1.5 font-bold"
+                className="cursor-pointer hover:bg-warning/20 transition-colors gap-1 text-xs uppercase h-6 px-1.5 font-bold"
                 title="Open shift - missing clock out"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
@@ -314,12 +314,12 @@ export function AdminAttendanceTable() {
             <StatusBadge 
               colors={config}
               dot 
-              className="uppercase text-[10px] font-bold h-6 px-2"
+              className="uppercase text-xs font-bold h-6 px-2"
             >
               {config.label}
             </StatusBadge>
             {late > 0 && status !== "absent" && status !== "leave" && (
-              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
+              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
                 (+{late}m)
               </span>
             )}

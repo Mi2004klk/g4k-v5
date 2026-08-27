@@ -41,7 +41,7 @@ export function ProfileStats() {
             <AppIcon name="calendar" className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Leaves</h3>
+            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Leaves</h3>
             <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5 flex items-end gap-1.5">
               {leaveData.length} <span className="text-xs font-medium text-neutral-500 mb-1">Total</span>
             </p>
@@ -57,7 +57,7 @@ export function ProfileStats() {
             <AppIcon name="calendar" className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Attendance</h3>
+            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Attendance</h3>
             <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5 flex items-end gap-1.5">
               {presentCount} <span className="text-xs font-medium text-neutral-500 mb-1">Present</span>
             </p>
@@ -73,7 +73,7 @@ export function ProfileStats() {
             <AppIcon name="tasks" className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Tasks</h3>
+            <h3 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Tasks</h3>
             <p className="text-xl font-bold text-neutral-900 dark:text-white mt-0.5 flex items-end gap-1.5">
               {pendingTasks} <span className="text-xs font-medium text-neutral-500 mb-1">Active</span>
             </p>

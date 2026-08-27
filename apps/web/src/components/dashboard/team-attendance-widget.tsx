@@ -34,13 +34,13 @@ export function TeamAttendanceWidget() {
         <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
           <div className="flex items-center gap-2">
             <AppIcon name="directory" size="sm" className=" text-primary-600" />
-            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">Team Attendance</span>
+            <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">Team Attendance</span>
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center bg-rose-50/50 dark:bg-rose-950/10 rounded p-4 mt-2">
           <AppIcon name="warning" size="xl" className=" text-rose-400 mb-2" />
-          <span className="text-[11px] text-rose-600 font-medium mb-2">Failed to load attendance</span>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+          <span className="text-xs text-rose-600 font-medium mb-2">Failed to load attendance</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-xs px-2">
             Retry
           </Button>
         </div>
@@ -54,7 +54,7 @@ export function TeamAttendanceWidget() {
   if (!isLoading && employees.length === 0) {
     return (
       <Card className="h-full flex flex-col items-center justify-center border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card shadow-sm p-6 text-center">
-        <div className="text-[11px] font-semibold text-neutral-500">No team members scheduled today</div>
+        <div className="text-xs font-semibold text-neutral-500">No team members scheduled today</div>
       </Card>
     );
   }
@@ -63,7 +63,7 @@ export function TeamAttendanceWidget() {
     <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-150">
       <CardHeader className="p-3 border-b border-neutral-100 dark:border-neutral-800/50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <CardTitle className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+          <CardTitle className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
             <AppIcon name="directory" size="sm" className="text-primary-600" />
             Today&apos;s Team Attendance
           </CardTitle>
@@ -102,7 +102,7 @@ export function TeamAttendanceWidget() {
                   <div className="relative">
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={resolveAvatarUrl(emp.avatar_url) || ''} />
-                      <AvatarFallback name={emp.user_name} className="text-[10px]" />
+                      <AvatarFallback name={emp.user_name} className="text-xs" />
                     </Avatar>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-neutral-900 ${statusColor}`} />
                   </div>
@@ -110,7 +110,7 @@ export function TeamAttendanceWidget() {
                     <p className="text-sm font-semibold truncate text-foreground">
                       {emp.user_name}
                     </p>
-                    <p className="text-[10px] text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {emp.department_name || 'No Department'}
                     </p>
                   </div>
@@ -121,17 +121,17 @@ export function TeamAttendanceWidget() {
                       </p>
                     )}
                     {(emp.late_minutes || 0) > 0 && (
-                      <p className="text-[10px] text-amber-600 font-bold">
+                      <p className="text-xs text-amber-600 font-bold">
                         {emp.late_minutes}m late
                       </p>
                     )}
                     {emp.category === 'leave' || emp.category === 'leave_pending' ? (
-                      <p className="text-[10px] text-blue-600 uppercase tracking-wider">
+                      <p className="text-xs text-blue-600 uppercase tracking-wider">
                         {emp.leave_type ? emp.leave_type.replace('_', ' ') : 'Leave'}
                       </p>
                     ) : null}
                     {emp.category === 'absent' && (
-                      <p className="text-[10px] text-red-600 uppercase tracking-wider">
+                      <p className="text-xs text-red-600 uppercase tracking-wider">
                         Absent
                       </p>
                     )}

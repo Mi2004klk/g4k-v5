@@ -400,7 +400,7 @@ export default function DashboardLayout({
                     <DropdownMenuSeparator className="bg-neutral-100 dark:bg-neutral-800/60 m-0" />
                     
                     <div className="p-1.5">
-                      <div className="px-3 py-1.5 text-[10px] font-bold text-neutral-400 tracking-widest uppercase">Theme</div>
+                      <div className="px-3 py-1.5 text-xs font-bold text-neutral-400 tracking-widest uppercase">Theme</div>
                       <DropdownMenuItem onClick={() => setTheme("light")} className="h-9 px-3 gap-3 rounded-lg cursor-pointer relative">
                         <AppIcon name="sun" className="text-neutral-500" size="sm" />
                         <span className="text-neutral-700 dark:text-neutral-300">Light</span>
@@ -421,7 +421,7 @@ export default function DashboardLayout({
                     <DropdownMenuSeparator className="bg-neutral-100 dark:bg-neutral-800/60 m-0" />
 
                     <div className="p-1.5">
-                      <div className="px-3 py-1.5 text-[10px] font-bold text-neutral-400 tracking-widest uppercase">Density</div>
+                      <div className="px-3 py-1.5 text-xs font-bold text-neutral-400 tracking-widest uppercase">Density</div>
                       <DropdownMenuItem onClick={() => setDensity("comfortable")} className="h-9 px-3 gap-3 rounded-lg cursor-pointer relative">
                         <AppIcon name="list" className="text-neutral-500" size="sm" />
                         <span className="text-neutral-700 dark:text-neutral-300">Comfortable</span>
@@ -479,7 +479,7 @@ export default function DashboardLayout({
                 href="/dashboard"
                 prefetch={false}
                 className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-xs font-medium transition-colors",
                   pathname === "/dashboard" ? "text-blue-600 dark:text-blue-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
@@ -492,7 +492,7 @@ export default function DashboardLayout({
                   href="/dashboard/projects"
                   prefetch={false}
                   className={cn(
-                    "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                    "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-xs font-medium transition-colors",
                     pathname.startsWith("/dashboard/projects") ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                   )}
                 >
@@ -517,14 +517,14 @@ export default function DashboardLayout({
                   href="/dashboard/chat"
                   prefetch={false}
                   className={cn(
-                    "relative flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                    "relative flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-xs font-medium transition-colors",
                     pathname.startsWith("/dashboard/chat") ? "text-pink-600 dark:text-pink-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                   )}
                 >
                   <AppIcon name="chat" size="lg" className=" shrink-0" />
                   <span>Chat</span>
                   {chatUnreadCount > 0 && (
-                    <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-sm ring-1 ring-white dark:ring-neutral-900">
+                    <span className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm ring-1 ring-white dark:ring-neutral-900">
                       {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
                     </span>
                   )}
@@ -535,7 +535,7 @@ export default function DashboardLayout({
                 href="/dashboard/profile"
                 prefetch={false}
                 className={cn(
-                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center justify-center w-12 h-12 gap-0.5 text-xs font-medium transition-colors",
                   pathname === "/dashboard/profile" ? "text-cyan-600 dark:text-cyan-400 font-bold" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >

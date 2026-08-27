@@ -133,15 +133,15 @@ export function ProfileEmergencyContactSection() {
           {!isEditing && profile?.emergency_contact_name ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-5 bg-neutral-50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700 rounded-xl">
               <div>
-                <p className="text-[10px] uppercase font-bold tracking-wider text-neutral-500 mb-1">Name</p>
+                <p className="text-xs uppercase font-bold tracking-wider text-neutral-500 mb-1">Name</p>
                 <p className="text-sm font-bold text-neutral-900 dark:text-white">{profile.emergency_contact_name}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-bold tracking-wider text-neutral-500 mb-1">Relation</p>
+                <p className="text-xs uppercase font-bold tracking-wider text-neutral-500 mb-1">Relation</p>
                 <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{profile.emergency_contact_relation}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-bold tracking-wider text-neutral-500 mb-1">Phone Number</p>
+                <p className="text-xs uppercase font-bold tracking-wider text-neutral-500 mb-1">Phone Number</p>
                 <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{profile.emergency_contact_phone}</p>
               </div>
             </div>

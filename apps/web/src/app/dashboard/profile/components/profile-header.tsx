@@ -107,11 +107,11 @@ export function ProfileHeader() {
               {isLoading && !profile ? <Skeleton className="h-7 w-40 mx-auto sm:mx-0" /> : (profile?.name || "Karthik R")}
             </h1>
             <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-              <Badge variant="secondary" className="bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400 border border-orange-100 dark:border-orange-900/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md">
+              <Badge variant="secondary" className="bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400 border border-orange-100 dark:border-orange-900/30 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider rounded-md">
                 <AppIcon name="hash" className="w-3 h-3 mr-1 opacity-70" />
                 {isLoading && !profile ? "..." : (profile?.employee_id || "G4K001")}
               </Badge>
-              <Badge variant="secondary" className="bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30 px-2.5 py-0.5 text-[10px] font-bold rounded-md">
+              <Badge variant="secondary" className="bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30 px-2.5 py-0.5 text-xs font-bold rounded-md">
                 {isLoading && !profile ? "..." : (profile?.designation?.name || "Senior Head")}
               </Badge>
             </div>

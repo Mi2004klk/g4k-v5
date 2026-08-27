@@ -220,7 +220,7 @@ export function HolidayCalendar() {
                       <span className={`w-1 h-1 rounded-full mt-1 bg-primary-500`} />
                     )}
                     {!holiday && isWeekend && isCurrentMonth && (
-                      <span className="text-[9px] text-neutral-400 mt-0.5">Off</span>
+                      <span className="text-xs text-neutral-400 mt-0.5">Off</span>
                     )}
                   </div>
                 );
@@ -234,7 +234,7 @@ export function HolidayCalendar() {
                       <PopoverContent className="w-64 p-3 z-50">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">Holiday</span>
+                            <span className="text-xs uppercase font-bold tracking-wider text-neutral-500">Holiday</span>
                           </div>
                           <h4 className="font-semibold text-sm">{holiday.name}</h4>
                           {holiday.description && (
@@ -242,7 +242,7 @@ export function HolidayCalendar() {
                           )}
                           <div className="flex gap-2 mt-2 items-center justify-between">
                             {holiday.recurring ? (
-                              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                              <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
                                 Recurring
                               </span>
                             ) : <span></span>}

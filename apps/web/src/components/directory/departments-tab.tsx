@@ -348,7 +348,7 @@ export function DepartmentsTab() {
               )}
               <div className="flex items-center gap-2 mt-0.5">
                 {row.original.department_id && (
-                  <span className="text-[10px] font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded shrink-0">
+                  <span className="text-xs font-mono bg-neutral-100 dark:bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded shrink-0">
                     {row.original.department_id}
                   </span>
                 )}
@@ -371,7 +371,7 @@ export function DepartmentsTab() {
                 {(row.original.users || []).slice(0, 3).map((u: UserRef, i: number) => (
                   <Avatar key={i} className="w-5 h-5 border-[1.5px] border-background">
                     <AvatarImage src={resolveAvatarUrl(u.avatar_url) || ""} />
-                    <AvatarFallback name={u.name} className="text-[8px] font-bold" />
+                    <AvatarFallback name={u.name} className="text-xs font-bold" />
                   </Avatar>
                 ))}
               </div>
@@ -402,7 +402,7 @@ export function DepartmentsTab() {
           }
 
           return (
-            <StatusBadge status={isArchived ? "neutral" : (isActive ? "success" : "danger")} dot className="capitalize text-[11px] px-2 py-0.5 font-medium border-none bg-transparent pl-0">
+            <StatusBadge status={isArchived ? "neutral" : (isActive ? "success" : "danger")} dot className="capitalize text-xs px-2 py-0.5 font-medium border-none bg-transparent pl-0">
               {isArchived ? "Archived" : (isActive ? "Active" : "Inactive")}
             </StatusBadge>
           );
@@ -542,7 +542,7 @@ export function DepartmentsTab() {
                 <h3 className="font-semibold text-sm">{dept.name}</h3>
                 {dept.description && <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{dept.description}</p>}
               </div>
-              <StatusBadge status={dept.archived_at ? "neutral" : (dept.is_active ? "success" : "danger")} dot className="capitalize text-[10px]">
+              <StatusBadge status={dept.archived_at ? "neutral" : (dept.is_active ? "success" : "danger")} dot className="capitalize text-xs">
                 {dept.archived_at ? "Archived" : (dept.is_active ? "Active" : "Inactive")}
               </StatusBadge>
             </div>

@@ -173,7 +173,7 @@ export function TaskTimeTab({ task, timeLogs }: TaskTimeTabProps) {
       </div>
 
       <div className="space-y-3 mt-6">
-        <h4 className="font-semibold text-neutral-500 uppercase tracking-wider text-[10px]">Time Logs</h4>
+        <h4 className="font-semibold text-neutral-500 uppercase tracking-wider text-xs">Time Logs</h4>
         {timeLogs.length === 0 ? (
           <p className="text-neutral-400 italic text-center py-4">No time logged yet.</p>
         ) : (
@@ -183,14 +183,14 @@ export function TaskTimeTab({ task, timeLogs }: TaskTimeTabProps) {
                 <div className="flex gap-3">
                   <Avatar className="h-6 w-6 mt-0.5">
                     {log.user?.avatar_url && <img src={resolveAvatarUrl(log.user.avatar_url)} alt={log.user?.name} />}
-                    <AvatarFallback className="text-[9px]">{log.user?.name?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
+                    <AvatarFallback className="text-xs">{log.user?.name?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium text-neutral-800 dark:text-neutral-200 text-[11px] mb-0.5">
+                    <div className="font-medium text-neutral-800 dark:text-neutral-200 text-xs mb-0.5">
                       {log.user?.name || 'Unknown'}
                     </div>
                     {log.description && <div className="text-neutral-500 mb-1 leading-relaxed">{log.description}</div>}
-                    <div className="text-neutral-400 text-[10px] flex items-center gap-1">
+                    <div className="text-neutral-400 text-xs flex items-center gap-1">
                       <AppIcon name="clock" className="w-3 h-3" />
                       {format(new Date(log.created_at), "MMM d, yyyy h:mm a")}
                     </div>

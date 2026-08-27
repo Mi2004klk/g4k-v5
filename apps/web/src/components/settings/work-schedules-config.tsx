@@ -164,7 +164,7 @@ export function WorkSchedulesConfig() {
               <div>
                 <h4 className="font-semibold text-sm flex items-center gap-2">
                   {schedule.name}
-                  {schedule.is_default && <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-[10px] px-2 py-0.5 rounded-full">Default</span>}
+                  {schedule.is_default && <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs px-2 py-0.5 rounded-full">Default</span>}
                 </h4>
                 <p className="text-xs text-neutral-500 mt-1">
                   {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)} | Break: {schedule.break_minutes}m

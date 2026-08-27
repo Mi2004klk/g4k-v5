@@ -186,7 +186,7 @@ export function MetricWidget({
                 {leavePct > 0 && <div style={{ width: `${leavePct}%` }} className="bg-blue-500 dark:bg-blue-400 transition-all duration-1000 ease-out" />}
                 {absentPct > 0 && <div style={{ width: `${absentPct}%` }} className="bg-neutral-400 dark:bg-neutral-600 transition-all duration-1000 ease-out" />}
               </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2.5 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
                 <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span className="text-emerald-700 dark:text-emerald-400">{presentCount}</span> present</div>
                 <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span><span className="text-blue-700 dark:text-blue-400">{leaveCount}</span> leave</div>
                 <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-600"></span><span className="text-neutral-700 dark:text-neutral-400">{absentCount}</span> absent</div>

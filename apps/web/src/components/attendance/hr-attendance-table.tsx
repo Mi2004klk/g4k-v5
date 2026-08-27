@@ -206,7 +206,7 @@ export function HrAttendanceTable() {
                 className="flex flex-col text-left hover:opacity-80 transition-opacity"
               >
                 <span className="font-semibold text-foreground underline decoration-dashed decoration-neutral-300 dark:decoration-neutral-600 underline-offset-4">{row.original.user_name || "Employee"}</span>
-                <span className="text-[11px] text-muted-foreground font-normal">{row.original.user_email}</span>
+                <span className="text-xs text-muted-foreground font-normal">{row.original.user_email}</span>
               </button>
               {isLive && (
                 <div className="flex items-center justify-center w-5 h-5 ml-2" title="Active right now">

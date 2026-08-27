@@ -585,7 +585,7 @@ export function ChatTab() {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-xs text-neutral-800 dark:text-neutral-200">Chats</span>
                 {totalUnreadCount > 0 && (
-                  <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[16px] px-1.5 rounded-full shadow-sm">
+                  <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-xs h-4 min-w-[16px] px-1.5 rounded-full shadow-sm">
                     {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
                   </span>
                 )}
@@ -612,7 +612,7 @@ export function ChatTab() {
                 placeholder="Search chats..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-7 pl-7 pr-3 text-[11px] bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-primary-500 rounded-md outline-none transition-colors"
+                className="w-full h-7 pl-7 pr-3 text-xs bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-primary-500 rounded-md outline-none transition-colors"
               />
             </div>
 
@@ -622,7 +622,7 @@ export function ChatTab() {
                 <button
                   key={f.key}
                   onClick={() => setScopeFilter(f.key)}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
+                  className={`px-2 py-0.5 rounded-md text-xs font-semibold transition-colors ${
                     scopeFilter === f.key
                       ? 'bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300'
                       : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-300'
@@ -661,7 +661,7 @@ export function ChatTab() {
                 {/* Avatar for the chat partner / group */}
                 {selectedConv?.scope === 'direct' ? (
                   <Avatar className="h-8 w-8 shrink-0">
-                    <AvatarFallback name={chatHeaderName || 'U'} className="text-[10px]" />
+                    <AvatarFallback name={chatHeaderName || 'U'} className="text-xs" />
                   </Avatar>
                 ) : (
                   <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center shrink-0">
@@ -674,7 +674,7 @@ export function ChatTab() {
                     {chatHeaderName}
                   </h3>
                   {chatHeaderSubtitle && (
-                    <p className="text-[10px] text-neutral-500 truncate">{chatHeaderSubtitle}</p>
+                    <p className="text-xs text-neutral-500 truncate">{chatHeaderSubtitle}</p>
                   )}
                 </div>
 

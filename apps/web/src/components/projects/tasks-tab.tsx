@@ -524,7 +524,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   const columns: ColumnDef<Task>[] = [
     {
       accessorKey: "title",
-      header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Title</span>,
+      header: () => <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Title</span>,
       cell: ({ row }) => {
         const p = row.getValue("priority") as keyof typeof priorityConfig;
         const pConfig = priorityConfig[p] || priorityConfig.low;
@@ -537,7 +537,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               </div>
             </div>
             {row.original.description && (
-              <span className="text-[11px] text-neutral-500 truncate ml-3.5">{row.original.description}</span>
+              <span className="text-xs text-neutral-500 truncate ml-3.5">{row.original.description}</span>
             )}
           </div>
         );
@@ -545,7 +545,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     },
     {
       accessorKey: "status",
-      header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Status</span>,
+      header: () => <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Status</span>,
       cell: ({ row }) => {
         const s = row.getValue("status") as keyof typeof taskStatus;
         const task = row.original;
@@ -554,16 +554,16 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`capitalize text-[10px] px-2 py-0.5 rounded-sm font-bold tracking-wide shadow-sm ${sConfig.bg} ${sConfig.text}`}>
+            <span className={`capitalize text-xs px-2 py-0.5 rounded-sm font-bold tracking-wide shadow-sm ${sConfig.bg} ${sConfig.text}`}>
               {sConfig.label}
             </span>
             {task.scope && (
-              <span className="capitalize text-[10px] font-medium text-neutral-500 border border-neutral-200 dark:border-neutral-800 px-1.5 py-0.5 rounded-sm">
+              <span className="capitalize text-xs font-medium text-neutral-500 border border-neutral-200 dark:border-neutral-800 px-1.5 py-0.5 rounded-sm">
                 {task.scope}
               </span>
             )}
             {task.blocked_by && (
-              <span className="flex items-center text-[10px] font-medium bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-1.5 py-0.5 rounded-sm border border-rose-100 dark:border-rose-900/50">
+              <span className="flex items-center text-xs font-medium bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 px-1.5 py-0.5 rounded-sm border border-rose-100 dark:border-rose-900/50">
                 <AppIcon name="error" size="xs" className="mr-1 h-3 w-3" /> Blocked
               </span>
             )}
@@ -573,7 +573,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     },
     {
       id: "assignees",
-      header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Assignees</span>,
+      header: () => <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Assignees</span>,
       cell: ({ row }) => {
         const assignees = row.original.assignees || [];
         if (assignees.length === 0) return <span className="text-neutral-300 dark:text-neutral-700">-</span>;
@@ -583,7 +583,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             {assignees.slice(0, 3).map((u, i) => (
               <div 
                 key={u.id} 
-                className="h-6 w-6 rounded-full bg-primary-100 dark:bg-primary-900/50 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-[9px] font-bold text-primary-700 dark:text-primary-300 shadow-sm" 
+                className="h-6 w-6 rounded-full bg-primary-100 dark:bg-primary-900/50 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-xs font-bold text-primary-700 dark:text-primary-300 shadow-sm" 
                 style={{ zIndex: 10 - i }} 
                 title={u.name}
               >
@@ -591,7 +591,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               </div>
             ))}
             {assignees.length > 3 && (
-              <div className="h-6 w-6 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-[9px] font-bold text-neutral-600 dark:text-neutral-400 z-0 shadow-sm">
+              <div className="h-6 w-6 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400 z-0 shadow-sm">
                 +{assignees.length - 3}
               </div>
             )}
@@ -601,14 +601,14 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     },
     {
       accessorKey: "priority",
-      header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Priority</span>,
+      header: () => <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Priority</span>,
       cell: ({ row }) => {
         const p = row.getValue("priority") as keyof typeof priorityConfig;
         const pConfig = priorityConfig[p] || priorityConfig.low;
         // Text color for label: extract from bar class if possible, or fallback
         const colorClass = pConfig.bar.replace('bg-', 'text-').replace('-500', '-600');
         return (
-          <span className={`flex items-center capitalize text-[11px] font-bold ${colorClass}`}>
+          <span className={`flex items-center capitalize text-xs font-bold ${colorClass}`}>
             {pConfig.icon && <AppIcon name={pConfig.icon as any} size="xs" className="mr-1.5" />}
             {pConfig.label}
           </span>
@@ -617,14 +617,14 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     },
     {
       accessorKey: "due_date",
-      header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Due Date</span>,
+      header: () => <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Due Date</span>,
       cell: ({ row }) => {
         const val = row.getValue("due_date") as string;
         if (!val) return <span className="text-neutral-300 dark:text-neutral-700">-</span>;
         
         const isOverdue = new Date(val) < new Date() && row.getValue("status") !== "done";
         return (
-          <span className={`text-[11px] font-medium flex items-center ${isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-neutral-600 dark:text-neutral-400"}`}>
+          <span className={`text-xs font-medium flex items-center ${isOverdue ? "text-rose-600 dark:text-rose-400 font-bold" : "text-neutral-600 dark:text-neutral-400"}`}>
             {isOverdue && <AppIcon name="warning" size="xs" className="mr-1.5" />}
             {format(new Date(val), "MMM d, yyyy")}
           </span>
@@ -633,7 +633,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     },
     {
       id: "actions",
-      header: () => <span className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold"></span>,
+      header: () => <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold"></span>,
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
@@ -668,7 +668,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 key={mode}
                 onClick={() => setViewMode(mode)}
                 className={cn(
-                  "flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-md transition-all whitespace-nowrap",
+                  "flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap",
                   viewMode === mode 
                     ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800"
                     : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -683,7 +683,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {viewMode !== "qa" && (
               <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
-                <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
+                <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400">
                   {filteredTasks.length} task{filteredTasks.length === 1 ? '' : 's'}
                 </span>
               </div>
@@ -733,7 +733,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                   {/* Core Details */}
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Task Title <span className="text-red-500">*</span></label>
+                      <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Task Title <span className="text-red-500">*</span></label>
                       <Input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -745,7 +745,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                     </div>
                     
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Description</label>
+                      <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Description</label>
                       <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -757,7 +757,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5 flex flex-col">
-                        <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Due Date</label>
+                        <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Due Date</label>
                         <DatePicker
                           value={dueDate ? new Date(dueDate) : undefined}
                           onChange={(date) => setDueDate(date ? format(date, "yyyy-MM-dd") : "")}
@@ -765,7 +765,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Priority</label>
+                        <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Priority</label>
                         <Select value={priority} onValueChange={setPriority}>
                           <SelectTrigger className="w-full h-9 text-sm">
                             <SelectValue placeholder="Priority" />
@@ -782,7 +782,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Project</label>
+                        <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Project</label>
                         <Select value={projectId} onValueChange={setProjectId}>
                           <SelectTrigger className="w-full h-9 text-sm">
                             <SelectValue placeholder="No Project" />
@@ -797,7 +797,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                       </div>
                       {canManageTasks ? (
                         <div className="space-y-1.5">
-                          <label className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Assignees</label>
+                          <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Assignees</label>
                           <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-1.5 space-y-0.5 bg-background shadow-inner">
                             {availableUsers?.map((u: TaskUser) => (
                               <label key={u.id} className="flex items-center gap-2.5 cursor-pointer px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded text-sm transition-colors">
@@ -819,7 +819,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                       ) : (
                         <div className="space-y-1.5 flex flex-col justify-end">
                           <div className="h-9 flex items-center px-3 bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800/50 rounded-md">
-                            <span className="text-[11px] font-medium text-primary-700 dark:text-primary-400 flex items-center gap-1.5">
+                            <span className="text-xs font-medium text-primary-700 dark:text-primary-400 flex items-center gap-1.5">
                               <AppIcon name="info" size="xs" />
                               Assigned to you automatically
                             </span>
@@ -832,7 +832,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                   <Collapsible>
                     <CollapsibleTrigger asChild>
                       <Button variant="outline" size="sm" className="w-full justify-between h-9 shadow-sm">
-                        <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">Advanced Options</span>
+                        <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">Advanced Options</span>
                         <AppIcon name="chevronDown" size="xs" />
                       </Button>
                     </CollapsibleTrigger>
@@ -840,7 +840,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {canManageTasks && (
                           <div className="space-y-1.5">
-                            <label className="text-[10px] font-semibold text-neutral-500 uppercase">Scope</label>
+                            <label className="text-xs font-semibold text-neutral-500 uppercase">Scope</label>
                             <Select value={scope} onValueChange={setScope}>
                               <SelectTrigger className="w-full h-8 text-xs">
                                 <SelectValue placeholder="Global" />
@@ -854,7 +854,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                           </div>
                         )}
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-semibold text-neutral-500 uppercase">QA Form</label>
+                          <label className="text-xs font-semibold text-neutral-500 uppercase">QA Form</label>
                           <Select value={qaFormId} onValueChange={setQaFormId}>
                             <SelectTrigger className="w-full h-8 text-xs">
                               <SelectValue placeholder="None" />
@@ -868,7 +868,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[10px] font-semibold text-neutral-500 uppercase">Blocked By</label>
+                          <label className="text-xs font-semibold text-neutral-500 uppercase">Blocked By</label>
                           <Select value={blockedBy} onValueChange={setBlockedBy}>
                             <SelectTrigger className="w-full h-8 text-xs">
                               <SelectValue placeholder="None" />
@@ -893,7 +893,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                         {isRecurring && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 pt-3 border-t border-neutral-200/50 dark:border-neutral-700/50">
                             <div className="space-y-1.5">
-                              <label className="text-[10px] font-semibold text-neutral-500 uppercase">Pattern</label>
+                              <label className="text-xs font-semibold text-neutral-500 uppercase">Pattern</label>
                               <Select value={recurrencePattern} onValueChange={setRecurrencePattern}>
                                 <SelectTrigger className="w-full h-8 text-xs">
                                   <SelectValue placeholder="Daily" />
@@ -907,7 +907,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                             </div>
                             {recurrencePattern === "weekly" && (
                               <div className="space-y-1.5 col-span-1 sm:col-span-2">
-                                <label className="text-[10px] font-semibold text-neutral-500 uppercase">Days of Week</label>
+                                <label className="text-xs font-semibold text-neutral-500 uppercase">Days of Week</label>
                                 <div className="flex flex-wrap gap-2">
                                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, idx) => (
                                     <label key={day} className={`flex items-center justify-center gap-1.5 h-8 min-w-[44px] px-2 rounded border cursor-pointer transition-colors ${recurrenceDays.includes(idx) ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-400 text-primary-700 dark:text-primary-300' : 'border-neutral-200 dark:border-neutral-700 bg-background hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}>
@@ -923,7 +923,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                                           }
                                         }}
                                       />
-                                      <span className="text-[11px] font-medium">{day}</span>
+                                      <span className="text-xs font-medium">{day}</span>
                                     </label>
                                   ))}
                                 </div>
@@ -931,7 +931,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                             )}
                             {recurrencePattern === "monthly" && (
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold text-neutral-500 uppercase">Day of Month</label>
+                                <label className="text-xs font-semibold text-neutral-500 uppercase">Day of Month</label>
                                 <Select value={dayOfMonth.toString()} onValueChange={(val) => setDayOfMonth(parseInt(val))}>
                                   <SelectTrigger className="w-full h-8 text-xs">
                                     <SelectValue placeholder="Day" />
@@ -986,7 +986,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             prependFilters={
               <div className="flex items-center gap-2 pr-2 border-r border-neutral-200 dark:border-neutral-800 shrink-0">
                 <Select value={filterPreset} onValueChange={setFilterPreset}>
-                  <SelectTrigger className="w-[140px] h-8 text-[11px] font-bold bg-neutral-50 dark:bg-neutral-800 border-none shadow-none text-primary-600 dark:text-primary-400">
+                  <SelectTrigger className="w-[140px] h-8 text-xs font-bold bg-neutral-50 dark:bg-neutral-800 border-none shadow-none text-primary-600 dark:text-primary-400">
                     <SelectValue placeholder="Saved Filters" />
                   </SelectTrigger>
                   <SelectContent>
@@ -999,7 +999,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 
                 {viewMode === "kanban" && (
                   <Select value={groupBy} onValueChange={(v) => setGroupBy(v as any)}>
-                    <SelectTrigger className="w-[120px] h-8 text-[11px] font-bold border-none shadow-none">
+                    <SelectTrigger className="w-[120px] h-8 text-xs font-bold border-none shadow-none">
                       <AppIcon name="list" size="xs" className="mr-1.5 text-neutral-400" />
                       <SelectValue placeholder="Group By" />
                     </SelectTrigger>
@@ -1144,7 +1144,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               )}
 
               {viewMode !== "list" && (data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-[11px] font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
+                <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-xs font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
                   Showing first 100 tasks. Use List view for full pagination.
                 </div>
               )}
@@ -1156,7 +1156,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                     onTaskMove={handleTaskMove}
                     onTaskSelect={handleTaskSelect as any}
                     onDeleteTask={handleDeleteTask}
-                    onTaskReorder={(tasks) => reorderTaskMutation.mutate(tasks as any)}
+                    onTaskReorder={(tasks) => reorderTaskMutation.mutateAsync(tasks as any)}
                     isLoading={isLoading}
                     statusFilter={statusFilter}
                     hasManageCap={canManageTasks}
@@ -1169,7 +1169,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
           {viewMode === "gantt" && (
             <div className="flex-1 flex flex-col min-h-0">
               {(data?.total || data?.meta?.total || data?.data?.total || filteredTasks.length) > 100 && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-[11px] font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
+                <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 p-2 text-xs font-semibold rounded-lg mb-3 text-center border border-amber-200 dark:border-amber-800/50 shrink-0">
                   Showing first 100 tasks. Use List view for full pagination.
                 </div>
               )}
@@ -1207,18 +1207,18 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
       {selectedTaskIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 animate-in slide-in-from-bottom-5">
           <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 border-r border-neutral-200 dark:border-neutral-800">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 text-[10px] font-bold">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 text-xs font-bold">
               {selectedTaskIds.length}
             </div>
-            <span className="text-[10px] sm:text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">
+            <span className="text-xs sm:text-xs font-semibold text-neutral-600 dark:text-neutral-400">
               selected
             </span>
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5 pr-1">
-            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-[10px] sm:text-[11px] px-2 sm:px-3 shadow-sm rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
+            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-xs sm:text-xs px-2 sm:px-3 shadow-sm rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
               <AppIcon name="success" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Mark Done</span>
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-[10px] sm:text-[11px] px-2 sm:px-3 shadow-sm rounded-full">
+            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-xs sm:text-xs px-2 sm:px-3 shadow-sm rounded-full">
               <AppIcon name="trash" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Delete</span>
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setRowSelection({})} className="h-7 w-7 p-0 rounded-full text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 ml-1 shrink-0">

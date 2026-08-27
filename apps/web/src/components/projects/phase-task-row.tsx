@@ -36,7 +36,7 @@ export function PhaseTaskRow({ task, onClick }: PhaseTaskRowProps) {
     const overdue = isPast(d) && !isToday(d) && status !== 'done';
     
     return (
-      <div className={`flex items-center gap-1 text-[11px] font-medium ${overdue ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-neutral-500 dark:text-neutral-400'}`}>
+      <div className={`flex items-center gap-1 text-xs font-medium ${overdue ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-neutral-500 dark:text-neutral-400'}`}>
         <AppIcon name="calendar" className="w-3 h-3" />
         {format(d, "MMM d")}
       </div>
@@ -56,10 +56,10 @@ export function PhaseTaskRow({ task, onClick }: PhaseTaskRowProps) {
         <div className="relative">
           <Avatar className="w-7 h-7 border border-neutral-200 dark:border-neutral-700">
             {mainAssignee?.avatar_url && <img src={resolveAvatarUrl(mainAssignee.avatar_url)} alt={mainAssignee.name} />}
-            <AvatarFallback name={mainAssignee?.name || "?"} className="text-[9px]" />
+            <AvatarFallback name={mainAssignee?.name || "?"} className="text-xs" />
           </Avatar>
           {assignees.length > 1 && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-neutral-900 text-white text-[8px] flex items-center justify-center font-bold border border-white dark:border-neutral-900">
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-neutral-900 text-white text-xs flex items-center justify-center font-bold border border-white dark:border-neutral-900">
               +{assignees.length - 1}
             </div>
           )}
@@ -73,7 +73,7 @@ export function PhaseTaskRow({ task, onClick }: PhaseTaskRowProps) {
             <AppIcon name="flag" className={`w-3 h-3 shrink-0 ${getPriorityIconColor(task.priority)}`} />
           </div>
           <div className="flex items-center gap-3 mt-0.5">
-            <Badge className={`px-1.5 py-0 text-[9px] rounded-sm font-bold uppercase tracking-wider ${getStatusColor(task.status)} border-0`}>
+            <Badge className={`px-1.5 py-0 text-xs rounded-sm font-bold uppercase tracking-wider ${getStatusColor(task.status)} border-0`}>
               {task.status.replace("_", " ")}
             </Badge>
             {getDueDateDisplay(task.due_date, task.status)}

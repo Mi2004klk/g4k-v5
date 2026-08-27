@@ -138,19 +138,19 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
             
             const assignees = originalTask?.assignees || (originalTask?.assignee ? [originalTask.assignee] : []);
             const avatarsHtml = assignees.slice(0, 3).map((a: any) => 
-              `<div class="w-6 h-6 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center text-[9px] font-bold text-neutral-600 uppercase shrink-0" title="${a.name}">${a.name.substring(0, 2)}</div>`
+              `<div class="w-6 h-6 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center text-xs font-bold text-neutral-600 uppercase shrink-0" title="${a.name}">${a.name.substring(0, 2)}</div>`
             ).join('');
-            const moreHtml = assignees.length > 3 ? `<div class="w-6 h-6 rounded-full bg-neutral-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-neutral-600 shrink-0">+${assignees.length - 3}</div>` : '';
+            const moreHtml = assignees.length > 3 ? `<div class="w-6 h-6 rounded-full bg-neutral-100 border-2 border-white flex items-center justify-center text-xs font-bold text-neutral-600 shrink-0">+${assignees.length - 3}</div>` : '';
             const allAvatars = assignees.length > 0 ? `<div class="flex -space-x-2 mt-2">${avatarsHtml}${moreHtml}</div>` : `<div class="mt-2 text-xs text-neutral-400">Unassigned</div>`;
             
             return `
               <div class="flex flex-col gap-1 w-[220px]">
                 <div class="flex items-center justify-between mb-1">
                   <div class="flex items-center gap-1.5">
-                    <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 border border-neutral-200">${statusLabel}</span>
-                    <span class="text-[9px] font-bold uppercase tracking-wider px-1 py-0.5 rounded border ${pClass}">${p}</span>
+                    <span class="text-xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 border border-neutral-200">${statusLabel}</span>
+                    <span class="text-xs font-bold uppercase tracking-wider px-1 py-0.5 rounded border ${pClass}">${p}</span>
                   </div>
-                  <span class="text-[10px] text-neutral-400">${task.progress}%</span>
+                  <span class="text-xs text-neutral-400">${task.progress}%</span>
                 </div>
                 <h5 class="text-sm font-bold text-neutral-800 line-clamp-2 leading-tight">${task.name}</h5>
                 <p class="text-xs text-neutral-500 flex items-center gap-1 mt-1">
@@ -158,7 +158,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
                   ${format(new Date(task.start), "MMM d")} - ${format(new Date(task.end), "MMM d")}
                 </p>
                 ${allAvatars}
-                <div class="mt-3 text-[10px] text-primary-500 font-semibold flex items-center gap-1 opacity-80">
+                <div class="mt-3 text-xs text-primary-500 font-semibold flex items-center gap-1 opacity-80">
                   Click to view full details
                 </div>
               </div>
@@ -313,21 +313,21 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
                 container.scrollTo({ left: Math.max(0, x - (container.clientWidth / 2)), behavior: 'smooth' });
               }
             }}
-            className="ml-2 px-2 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded text-[10px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"
+            className="ml-2 px-2 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"
           >
             Today
           </button>
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="sm:hidden flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200 text-[10px] font-bold">
+          <div className="sm:hidden flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200 text-xs font-bold">
             <AppIcon name="loading" size="xs" className="animate-spin" /> Rotate to landscape
           </div>
           <Tabs value={ganttViewMode} onValueChange={(v) => setGanttViewMode(v as any)}>
             <TabsList className="h-8">
-              <TabsTrigger value="Day" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Day</TabsTrigger>
-              <TabsTrigger value="Week" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Week</TabsTrigger>
-              <TabsTrigger value="Month" className="text-[10px] px-3 font-semibold uppercase tracking-wider">Month</TabsTrigger>
+              <TabsTrigger value="Day" className="text-xs px-3 font-semibold uppercase tracking-wider">Day</TabsTrigger>
+              <TabsTrigger value="Week" className="text-xs px-3 font-semibold uppercase tracking-wider">Week</TabsTrigger>
+              <TabsTrigger value="Month" className="text-xs px-3 font-semibold uppercase tracking-wider">Month</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

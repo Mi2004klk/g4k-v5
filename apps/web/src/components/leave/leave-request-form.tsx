@@ -196,7 +196,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
       <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Start Date *</label>
+            <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Start Date *</label>
             <Popover>
               <PopoverTrigger asChild>
                 <button type="button"
@@ -227,7 +227,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
             <FormError errors={fieldErrors.start_date} />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">End Date *</label>
+            <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">End Date *</label>
             <Popover>
               <PopoverTrigger asChild>
                 <button type="button"
@@ -254,7 +254,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
         </div>
         
         <div className="space-y-1.5 flex-1 flex flex-col">
-          <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Type *</label>
+          <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Type *</label>
           <RadioGroup value={draftData.type} onValueChange={(val) => setDraftData({ ...draftData, type: val })} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {LEAVE_TYPES.map((item) => {
               const bal = balanceData ? balanceData[item.value] : null;
@@ -269,7 +269,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
                 />
                 <Label
                   htmlFor={`type-${formId}-${item.value}`}
-                  className={cn("flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-[11px] font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none", isExhausted ? "opacity-60 grayscale" : "")}
+                  className={cn("flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-xs font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none", isExhausted ? "opacity-60 grayscale" : "")}
                 >
                   <AppIcon 
                     name={getLeaveIcon(item.value) as any} 
@@ -278,7 +278,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
                   />
                   <span>{item.label}</span>
                   {bal && (
-                    <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", isExhausted ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" : "bg-neutral-200/70 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400")}>
+                    <span className={cn("text-xs font-bold px-1.5 py-0.5 rounded-full", isExhausted ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" : "bg-neutral-200/70 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400")}>
                       {bal.available} left
                     </span>
                   )}
@@ -290,7 +290,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
         </div>
 
         <div className="space-y-1.5 flex-1 flex flex-col">
-          <label className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Reason *</label>
+          <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Reason *</label>
           <Textarea
             required
             id={`reason-${formId}`}

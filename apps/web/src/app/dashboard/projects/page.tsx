@@ -42,12 +42,12 @@ export default function ProjectsModulePage() {
             <TabsTrigger value="projects" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
               <AppIcon name="projects" size="xs" /> 
               All Projects
-              <span className="flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">{projectsCount}</span>
+              <span className="flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-bold px-1.5 py-0.5 rounded-full ml-1">{projectsCount}</span>
             </TabsTrigger>
             <TabsTrigger value="tasks" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
               <AppIcon name="tasks" size="xs" /> 
               {hasMyTasks ? "My Tasks & Board" : "Tasks & Board"}
-              <span className="flex items-center justify-center bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-1">{tasksCount}</span>
+              <span className="flex items-center justify-center bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-bold px-1.5 py-0.5 rounded-full ml-1">{tasksCount}</span>
             </TabsTrigger>
           </TabsList>
 

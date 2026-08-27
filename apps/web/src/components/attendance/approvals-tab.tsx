@@ -97,7 +97,7 @@ export function ApprovalsTab() {
               <div className="font-semibold text-neutral-900 dark:text-white">
                 {row.original.user?.name || "Employee"}
               </div>
-              <div className="text-[11px] text-neutral-400 font-normal">
+              <div className="text-xs text-neutral-400 font-normal">
                 {format(startDate, "MMM d")} - {format(endDate, "MMM d, yyyy")}
               </div>
             </div>

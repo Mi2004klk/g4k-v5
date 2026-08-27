@@ -109,7 +109,7 @@ export function ExportHistory() {
                     <span className="text-sm font-semibold truncate text-neutral-900 dark:text-white">
                       {item.report_key.replace(/_/g, " ").toUpperCase()}
                     </span>
-                    <Badge variant="outline" className="text-[10px] py-0 h-5 font-mono uppercase bg-neutral-50 dark:bg-neutral-900">
+                    <Badge variant="outline" className="text-xs py-0 h-5 font-mono uppercase bg-neutral-50 dark:bg-neutral-900">
                       {item.format}
                     </Badge>
                   </div>

@@ -124,19 +124,19 @@ export function ProjectsTab() {
                 <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-md shrink-0 mr-2">
                   <button 
                     onClick={() => setStatus("all")} 
-                    className={`px-3 py-1 h-7 text-[11px] font-bold rounded-md transition-all ${status === "all" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "all" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
                   >
                     All Projects
                   </button>
                   <button 
                     onClick={() => setStatus("active")} 
-                    className={`px-3 py-1 h-7 text-[11px] font-bold rounded-md transition-all ${status === "active" ? "bg-white dark:bg-neutral-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "active" ? "bg-white dark:bg-neutral-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
                   >
                     Active
                   </button>
                   <button 
                     onClick={() => setStatus("completed")} 
-                    className={`px-3 py-1 h-7 text-[11px] font-bold rounded-md transition-all ${status === "completed" ? "bg-white dark:bg-neutral-700 shadow-sm text-success-600 dark:text-success-500" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "completed" ? "bg-white dark:bg-neutral-700 shadow-sm text-success-600 dark:text-success-500" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
                   >
                     Completed
                   </button>

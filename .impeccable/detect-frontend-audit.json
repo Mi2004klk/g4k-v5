@@ -1,0 +1,277 @@
+[
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\change-password\\page.tsx",
+    "line": 256,
+    "snippet": "animate-bounce (Tailwind)"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\forgot-password\\page.tsx",
+    "line": 147,
+    "snippet": "animate-bounce (Tailwind)",
+    "importedBy": [
+      "auth.test.tsx"
+    ]
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\login\\page.tsx",
+    "line": 196,
+    "snippet": "animate-bounce (Tailwind)",
+    "importedBy": [
+      "auth.test.tsx"
+    ]
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\onboarding\\page.tsx",
+    "line": 57,
+    "snippet": "animate-bounce (Tailwind)"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\onboarding\\page.tsx",
+    "line": 124,
+    "snippet": "animate-bounce (Tailwind)"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\reset-password\\page.tsx",
+    "line": 263,
+    "snippet": "animate-bounce (Tailwind)"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\role-select\\page.tsx",
+    "line": 80,
+    "snippet": "animate-bounce (Tailwind)"
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\(auth)\\role-select\\page.tsx",
+    "line": 154,
+    "snippet": "animate-bounce (Tailwind)"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\dashboard\\layout.tsx",
+    "line": 294,
+    "snippet": "text-neutral-600 on bg-rose-50"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\dashboard\\layout.tsx",
+    "line": 294,
+    "snippet": "text-neutral-400 on bg-rose-50"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\dashboard\\layout.tsx",
+    "line": 343,
+    "snippet": "text-neutral-600 on bg-rose-50"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\dashboard\\layout.tsx",
+    "line": 343,
+    "snippet": "text-neutral-400 on bg-rose-50"
+  },
+  {
+    "antipattern": "ai-color-palette",
+    "name": "AI color palette",
+    "description": "Purple/violet gradients and cyan-on-dark are the most recognizable tells of AI-generated UIs. Choose a distinctive, intentional palette.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\dashboard\\profile\\components\\profile-workspace-section.tsx",
+    "line": 103,
+    "snippet": "text-violet-900 on heading",
+    "importedBy": [
+      "page.tsx"
+    ]
+  },
+  {
+    "antipattern": "ai-color-palette",
+    "name": "AI color palette",
+    "description": "Purple/violet gradients and cyan-on-dark are the most recognizable tells of AI-generated UIs. Choose a distinctive, intentional palette.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\dashboard\\profile\\components\\profile-workspace-section.tsx",
+    "line": 103,
+    "snippet": "text-violet-100 on heading",
+    "importedBy": [
+      "page.tsx"
+    ]
+  },
+  {
+    "antipattern": "bounce-easing",
+    "name": "Bounce or elastic easing",
+    "description": "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\app\\dashboard\\profile\\components\\profile-workspace-section.tsx",
+    "line": 113,
+    "snippet": "animate-bounce (Tailwind)",
+    "importedBy": [
+      "page.tsx"
+    ]
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\app-shell\\notifications-bell.tsx",
+    "line": 242,
+    "snippet": "text-neutral-500 on bg-emerald-500"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\app-shell\\notifications-bell.tsx",
+    "line": 250,
+    "snippet": "text-neutral-500 on bg-rose-500"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\leave\\leave-request-form.tsx",
+    "line": 281,
+    "snippet": "text-neutral-600 on bg-rose-100"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\leave\\leave-request-form.tsx",
+    "line": 281,
+    "snippet": "text-neutral-400 on bg-rose-100"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\tasks\\create-task-dialog.tsx",
+    "line": 187,
+    "snippet": "text-neutral-500 on bg-emerald-100"
+  },
+  {
+    "antipattern": "side-tab",
+    "name": "Side-tab accent border",
+    "description": "Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\tasks\\task-overview-tab.tsx",
+    "line": 450,
+    "snippet": "border-l-2"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\widgets\\announcement-board.tsx",
+    "line": 215,
+    "snippet": "text-neutral-400 on bg-rose-50"
+  },
+  {
+    "antipattern": "gray-on-color",
+    "name": "Gray text on colored background",
+    "description": "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\components\\widgets\\quick-notes.tsx",
+    "line": 159,
+    "snippet": "text-neutral-400 on bg-amber-100"
+  },
+  {
+    "antipattern": "overused-font",
+    "name": "Overused font",
+    "description": "Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives your interface personality.",
+    "severity": "warning",
+    "category": "slop",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\frappe-gantt.css",
+    "line": 1,
+    "snippet": "font-family:Helvetica"
+  },
+  {
+    "antipattern": "layout-transition",
+    "name": "Layout property animation",
+    "description": "Animating width, height, padding, or margin causes layout thrash and janky performance. Use transform and opacity instead, or grid-template-rows for height animations.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\frappe-gantt.css",
+    "line": 1,
+    "snippet": "transition: width"
+  },
+  {
+    "antipattern": "broken-image",
+    "name": "Broken or placeholder image",
+    "description": "<img> tags with empty src, missing src, or placeholder values ship as broken-image boxes. Use real images, generated assets, or remove the tag.",
+    "severity": "warning",
+    "category": "quality",
+    "file": "C:\\Users\\Founder Desk\\3D Objects\\Games4Kings-New\\apps\\web\\src\\__tests__\\auth.test.tsx",
+    "line": 27,
+    "snippet": "<img alt={props.alt || ''} {...props} />"
+  }
+]

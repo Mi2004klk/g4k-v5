@@ -239,8 +239,8 @@ export function QuickNotes() {
                 ) : isError ? (
                   <div className="flex flex-col items-center justify-center p-4 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30">
                     <AppIcon name="warning" size="lg" className=" text-rose-400" />
-                    <p className="text-[10px] font-medium text-rose-600">Failed to load notes</p>
-                    <Button variant="outline" size="sm" onClick={() => refetch()} className="h-5 text-[10px] px-2">
+                    <p className="text-xs font-medium text-rose-600">Failed to load notes</p>
+                    <Button variant="outline" size="sm" onClick={() => refetch()} className="h-5 text-xs px-2">
                       Retry
                     </Button>
                   </div>

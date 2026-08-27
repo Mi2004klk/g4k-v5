@@ -220,7 +220,7 @@ export function TaskDetailSheet({
               {/* Row 1: Badges & Actions */}
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
-                  <StatusBadge colors={getTaskStatusColor(effectiveStatus)} dot className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase shrink-0 tracking-wider">
+                  <StatusBadge colors={getTaskStatusColor(effectiveStatus)} dot className="px-2 py-0.5 rounded-[4px] text-xs font-bold uppercase shrink-0 tracking-wider">
                     {getTaskStatusColor(effectiveStatus).label}
                   </StatusBadge>
                   <span className="text-xs font-semibold text-neutral-400">Task #{task.id}</span>
@@ -259,7 +259,7 @@ export function TaskDetailSheet({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-7 text-[11px] px-2"
+                    className="h-7 text-xs px-2"
                     onClick={() => {
                       setEditForm({
                         title: task.title || "",

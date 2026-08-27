@@ -73,7 +73,7 @@ export function RemindersConfig() {
               value={formData["reminders.shift_offset"] || "15"}
               onChange={(e) => setFormData({ ...formData, "reminders.shift_offset": e.target.value })}
             />
-            <p className="text-[10px] text-neutral-500 mt-1">When to remind users before their shift starts.</p>
+            <p className="text-xs text-neutral-500 mt-1">When to remind users before their shift starts.</p>
           </div>
           
           <div>
@@ -85,7 +85,7 @@ export function RemindersConfig() {
               value={formData["reminders.missed_clock_in_offset"] || "30"}
               onChange={(e) => setFormData({ ...formData, "reminders.missed_clock_in_offset": e.target.value })}
             />
-            <p className="text-[10px] text-neutral-500 mt-1">When to notify managers/HR if a user misses clock-in.</p>
+            <p className="text-xs text-neutral-500 mt-1">When to notify managers/HR if a user misses clock-in.</p>
           </div>
 
           <div>
@@ -96,7 +96,7 @@ export function RemindersConfig() {
               value={formData["reminders.open_shift_flag_time"] || "20:00"}
               onChange={(e) => setFormData({ ...formData, "reminders.open_shift_flag_time": e.target.value })}
             />
-            <p className="text-[10px] text-neutral-500 mt-1">Time of day to flag shifts as abandoned if no clock-out.</p>
+            <p className="text-xs text-neutral-500 mt-1">Time of day to flag shifts as abandoned if no clock-out.</p>
           </div>
 
           <Button type="submit" disabled={updateMutation.isPending} className="mt-4">

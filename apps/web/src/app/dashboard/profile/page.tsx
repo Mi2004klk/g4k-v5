@@ -124,7 +124,7 @@ export default function ProfilePage() {
         
         {/* Left Sidebar (Sticky) */}
         <nav className="flex flex-col w-full md:w-[240px] shrink-0 bg-transparent h-auto p-0 space-y-1 sticky top-0 md:top-6">
-          <div className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-2 px-3">
+          <div className="text-xs font-bold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-2 px-3">
             Profile Settings
           </div>
           

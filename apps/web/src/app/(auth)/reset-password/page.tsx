@@ -221,7 +221,7 @@ function ResetPasswordForm() {
                             />
                           ))}
                         </div>
-                        <div className="text-[10px] text-neutral-500 flex justify-between font-medium">
+                        <div className="text-xs text-neutral-500 flex justify-between font-medium">
                           <span>
                             {strengthScore === 0 ? "Very Weak" : 
                              strengthScore === 1 ? "Weak" : 

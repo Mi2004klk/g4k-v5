@@ -91,7 +91,7 @@ export function AuditLogTable() {
       accessorKey: "action",
       header: "Action",
       cell: ({ row }: { row: { original: AuditLogRow } }) => (
-        <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-[10px] font-mono">
+        <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-xs font-mono">
           {row.original.action}
         </span>
       )
@@ -121,7 +121,7 @@ export function AuditLogTable() {
       accessorKey: "ip",
       header: "IP Address",
       cell: ({ row }: { row: { original: AuditLogRow } }) => (
-        <span className="text-neutral-400 font-mono text-[10px]">
+        <span className="text-neutral-400 font-mono text-xs">
           {row.original.ip || "—"}
         </span>
       )
@@ -190,16 +190,16 @@ export function AuditLogTable() {
           <div className="flex flex-col gap-2">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-[10px] font-mono">
+                <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded text-xs font-mono">
                   {log.action}
                 </span>
                 <span className="text-sm font-medium">{log.user ? log.user.name : "System"}</span>
               </div>
-              <span className="text-[10px] text-neutral-500">{format(new Date(log.at), "MMM d, HH:mm")}</span>
+              <span className="text-xs text-neutral-500">{format(new Date(log.at), "MMM d, HH:mm")}</span>
             </div>
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-800 text-xs">
               <span className="text-neutral-500">{log.subject_type ? `${log.subject_type.split('\\').pop()} #${log.subject_id}` : "-"}</span>
-              <span className="text-neutral-400 font-mono text-[10px]">{log.ip || "—"}</span>
+              <span className="text-neutral-400 font-mono text-xs">{log.ip || "—"}</span>
             </div>
           </div>
         )}

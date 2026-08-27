@@ -146,7 +146,7 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
         <div className="flex items-center gap-3">
           <AppIcon name="eye" className="text-primary-600" />
           <h2 className="font-bold text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-xs">{title || "Untitled Form"}</h2>
-          <span className="ml-2 text-[10px] font-bold px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded uppercase tracking-wider border border-neutral-200 dark:border-neutral-700">Preview Mode</span>
+          <span className="ml-2 text-xs font-bold px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded uppercase tracking-wider border border-neutral-200 dark:border-neutral-700">Preview Mode</span>
         </div>
         {onClose && (
           <Button variant="ghost" size="sm" onClick={onClose} className="h-8 text-xs font-semibold">

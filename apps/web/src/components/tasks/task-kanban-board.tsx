@@ -152,12 +152,12 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
         "flex flex-col items-center py-4 w-12 md:min-w-[48px] md:max-w-[48px] flex-shrink-0 snap-center transition-all bg-neutral-50/50 dark:bg-neutral-900/30 border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 border-t-[3px] shadow-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-t-md",
         col.border
       )} onClick={() => setIsCollapsed(false)}>
-        <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center mb-4">
+        <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center mb-4">
           {tasks.length}
         </span>
         <div className="writing-vertical-rl rotate-180 flex items-center gap-2 whitespace-nowrap">
           <div className={cn("w-2 h-2 rounded-full shrink-0", col.color)} />
-          <h3 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider">{col.title}</h3>
+          <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider">{col.title}</h3>
         </div>
       </div>
     );
@@ -178,10 +178,10 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
       )}>
         <div className="flex items-center gap-2">
           <div className={cn("w-2 h-2 rounded-full shrink-0", col.color)} />
-          <h3 className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider truncate">{col.title}</h3>
+          <h3 className="text-xs font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider truncate">{col.title}</h3>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center shrink-0">
+          <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center shrink-0">
             {tasks.length}
           </span>
           <button 
@@ -241,7 +241,7 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
   onTaskMove?: (taskId: number, newStatus: string) => void;
   onTaskSelect: (task: KanbanTask) => void;
   onDeleteTask: (taskId: number) => void;
-  onTaskReorder?: (tasks: { id: number; status: string; order: number }[]) => void;
+  onTaskReorder?: (tasks: { id: number; status: string; order: number }[]) => void | Promise<void>;
   isLoading?: boolean;
   statusFilter?: string;
   hasManageCap?: boolean;
@@ -342,13 +342,20 @@ export const TaskKanbanBoard = memo(function TaskKanbanBoard({
              newColTasks.forEach((t, i) => { t.order = i; });
              const otherTasks = localTasks.filter(t => t.status !== finalTask.status);
              const reorderedTasks = [...otherTasks, ...newColTasks];
-             onTaskReorder(
+             const reorderPromise = onTaskReorder(
                reorderedTasks.map(t => ({ 
                  id: Number(t.id), 
                  status: t.status as string, 
                  order: t.order || 0 
                }))
              );
+             if (reorderPromise) {
+               toast.promise(reorderPromise, {
+                 loading: 'Saving new order...',
+                 success: 'Tasks reordered successfully',
+                 error: 'Failed to save new order',
+               });
+             }
              setLocalTasks(reorderedTasks);
           }
        }

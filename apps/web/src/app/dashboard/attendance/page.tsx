@@ -175,7 +175,7 @@ export default function PersonalAttendancePage() {
                                 <p className="text-sm font-mono font-medium text-neutral-900 dark:text-white">
                                   {formatSecs(day.total_seconds)}
                                 </p>
-                                <p className="text-[10px] text-neutral-500 uppercase tracking-wider">
+                                <p className="text-xs text-neutral-500 uppercase tracking-wider">
                                   Worked
                                 </p>
                               </div>

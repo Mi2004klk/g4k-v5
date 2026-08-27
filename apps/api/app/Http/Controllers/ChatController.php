@@ -343,6 +343,12 @@ class ChatController extends Controller
             'pinned' => true
         ]);
 
+        try {
+            broadcast(new \App\Events\MessagePinned($conversationId, $message->id))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessagePinned event: ' . $e->getMessage());
+        }
+
         return response()->json($message);
     }
 
@@ -366,6 +372,12 @@ class ChatController extends Controller
         $message->update([
             'pinned' => false
         ]);
+
+        try {
+            broadcast(new \App\Events\MessageUnpinned($conversationId, $message->id))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to broadcast MessageUnpinned event: ' . $e->getMessage());
+        }
 
         return response()->json($message);
     }

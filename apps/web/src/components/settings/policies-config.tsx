@@ -175,7 +175,7 @@ export function PoliciesConfig() {
               {...passwordForm.register("min_length")}
               className={`w-full text-sm rounded-[var(--radius)] border ${passwordForm.formState.errors.min_length ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
             />
-            {passwordForm.formState.errors.min_length && <p className="text-[10px] text-red-500 mt-1">{passwordForm.formState.errors.min_length.message}</p>}
+            {passwordForm.formState.errors.min_length && <p className="text-xs text-red-500 mt-1">{passwordForm.formState.errors.min_length.message}</p>}
           </div>
           <div>
             <label className="text-xs font-medium">Password Expiry (Days) <span className="text-red-500">*</span></label>
@@ -185,7 +185,7 @@ export function PoliciesConfig() {
               {...passwordForm.register("expiry_days")}
               className={`w-full text-sm rounded-[var(--radius)] border ${passwordForm.formState.errors.expiry_days ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
             />
-            {passwordForm.formState.errors.expiry_days && <p className="text-[10px] text-red-500 mt-1">{passwordForm.formState.errors.expiry_days.message}</p>}
+            {passwordForm.formState.errors.expiry_days && <p className="text-xs text-red-500 mt-1">{passwordForm.formState.errors.expiry_days.message}</p>}
           </div>
           
           <div className="flex items-center gap-2">
@@ -248,8 +248,8 @@ export function PoliciesConfig() {
                 {...sessionForm.register("access_token_ttl")}
                 className={`w-full text-sm rounded-[var(--radius)] border ${sessionForm.formState.errors.access_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
               />
-              {sessionForm.formState.errors.access_token_ttl && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.access_token_ttl.message}</p>}
-              {!sessionForm.formState.errors.access_token_ttl && <p className="text-[10px] text-neutral-500 mt-1">Short-lived token for API access.</p>}
+              {sessionForm.formState.errors.access_token_ttl && <p className="text-xs text-red-500 mt-1">{sessionForm.formState.errors.access_token_ttl.message}</p>}
+              {!sessionForm.formState.errors.access_token_ttl && <p className="text-xs text-neutral-500 mt-1">Short-lived token for API access.</p>}
             </div>
             
             <div>
@@ -259,8 +259,8 @@ export function PoliciesConfig() {
                 {...sessionForm.register("refresh_token_ttl")}
                 className={`w-full text-sm rounded-[var(--radius)] border ${sessionForm.formState.errors.refresh_token_ttl ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
               />
-              {sessionForm.formState.errors.refresh_token_ttl && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.refresh_token_ttl.message}</p>}
-              {!sessionForm.formState.errors.refresh_token_ttl && <p className="text-[10px] text-neutral-500 mt-1">Long-lived token used to obtain new access tokens.</p>}
+              {sessionForm.formState.errors.refresh_token_ttl && <p className="text-xs text-red-500 mt-1">{sessionForm.formState.errors.refresh_token_ttl.message}</p>}
+              {!sessionForm.formState.errors.refresh_token_ttl && <p className="text-xs text-neutral-500 mt-1">Long-lived token used to obtain new access tokens.</p>}
             </div>
 
             <div>
@@ -270,8 +270,8 @@ export function PoliciesConfig() {
                 {...sessionForm.register("max_devices")}
                 className={`w-full text-sm rounded-[var(--radius)] border ${sessionForm.formState.errors.max_devices ? 'border-red-500' : 'border-neutral-200 dark:border-neutral-700'} bg-transparent px-3 py-2 mt-1`}
               />
-              {sessionForm.formState.errors.max_devices && <p className="text-[10px] text-red-500 mt-1">{sessionForm.formState.errors.max_devices.message}</p>}
-              {!sessionForm.formState.errors.max_devices && <p className="text-[10px] text-neutral-500 mt-1">Maximum number of active sessions/devices allowed per user. Oldest will be revoked when exceeded.</p>}
+              {sessionForm.formState.errors.max_devices && <p className="text-xs text-red-500 mt-1">{sessionForm.formState.errors.max_devices.message}</p>}
+              {!sessionForm.formState.errors.max_devices && <p className="text-xs text-neutral-500 mt-1">Maximum number of active sessions/devices allowed per user. Oldest will be revoked when exceeded.</p>}
             </div>
 
             <Button type="submit" disabled={updateMutation.isPending || !sessionForm.formState.isValid} className="mt-4">

@@ -129,7 +129,7 @@ export function AdminAttendanceAnalytics() {
         {cards.map((card, i) => (
           <div key={i} className="p-4 relative overflow-hidden group transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">{card.title}</h4>
+              <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">{card.title}</h4>
               <div className={`p-1.5 rounded-md text-neutral-500 group-hover:${card.color} group-hover:${card.bg} transition-colors`}>
                 <AppIcon name={card.icon as IconName} className="w-4 h-4" />
               </div>
@@ -139,7 +139,7 @@ export function AdminAttendanceAnalytics() {
                 {card.value}
               </span>
               {card.total !== undefined && card.total > 0 && (
-                <span className="text-[11px] text-neutral-400 font-semibold font-mono">
+                <span className="text-xs text-neutral-400 font-semibold font-mono">
                   / {card.total}
                 </span>
               )}

@@ -56,12 +56,12 @@ export function PendingApprovalsWidget() {
           <div className="w-6 h-6 rounded-[4px] bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center">
             <AppIcon name="clipboard" className="text-amber-600 dark:text-amber-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1.5">
             Pending Approvals
             <WidgetInfo summary="Leaves, Tasks, and Projects awaiting your review" />
           </span>
         </div>
-        <span className="text-[9px] px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold">
+        <span className="text-xs px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-bold">
           {requests.length}
         </span>
       </div>
@@ -86,7 +86,7 @@ export function PendingApprovalsWidget() {
           <div className="flex flex-col items-center justify-center p-6 text-center space-y-2 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-900/30 min-h-[150px]">
             <AppIcon name="warning" size="xl" className=" text-rose-400" />
             <p className="text-xs font-medium text-rose-600">Failed to load requests</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-xs px-2">
               Retry
             </Button>
           </div>
@@ -107,14 +107,14 @@ export function PendingApprovalsWidget() {
               >
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                    <span className="text-xs uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
                       {item.type}
                     </span>
                     <span className="text-[13px] font-bold text-neutral-900 dark:text-white">
                       {item.user_name || "Unknown"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-[11px] text-neutral-500 dark:text-neutral-400 font-medium mt-0.5">
+                  <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 font-medium mt-0.5">
                     <Truncate text={item.title} className="max-w-[150px]" />
                     <span className="opacity-50">·</span>
                     <span>{item.created_at ? format(new Date(item.created_at), "MMM d") : ""}</span>
@@ -156,7 +156,7 @@ export function PendingApprovalsWidget() {
                         </TooltipProvider>
                       </>
                   ) : (
-                    <Button variant="outline" size="sm" asChild className="h-7 text-[10px] px-2 font-medium" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="outline" size="sm" asChild className="h-7 text-xs px-2 font-medium" onClick={(e) => e.stopPropagation()}>
                       <Link href={item.route || item.action_url || "#"}>{(item.route?.includes('tab=leave') || item.type === 'task') ? 'View' : 'Review'}</Link>
                     </Button>
                   )}

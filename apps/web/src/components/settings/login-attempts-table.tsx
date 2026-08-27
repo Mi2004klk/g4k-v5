@@ -76,8 +76,8 @@ export function LoginAttemptsTable() {
       header: "Network",
       cell: ({ row }: { row: { original: LoginAttemptRow } }) => (
         <div className="flex flex-col">
-          <span className="text-neutral-600 dark:text-neutral-300 font-mono text-[11px]">{row.original.ip_address}</span>
-          {row.original.location && <span className="text-neutral-500 text-[10px] truncate max-w-[150px]">{row.original.location}</span>}
+          <span className="text-neutral-600 dark:text-neutral-300 font-mono text-xs">{row.original.ip_address}</span>
+          {row.original.location && <span className="text-neutral-500 text-xs truncate max-w-[150px]">{row.original.location}</span>}
         </div>
       )
     },
@@ -96,20 +96,20 @@ export function LoginAttemptsTable() {
       cell: ({ row }: { row: { original: LoginAttemptRow } }) => {
         if (row.original.is_suspicious) {
           return (
-            <span className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/30 px-2 py-0.5 rounded text-[11px] font-medium inline-flex items-center gap-1">
+            <span className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/30 px-2 py-0.5 rounded text-xs font-medium inline-flex items-center gap-1">
               <AppIcon name="warning" size="sm" /> Suspicious
             </span>
           );
         }
         if (row.original.success) {
           return (
-            <span className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/30 px-2 py-0.5 rounded text-[11px] font-medium">
+            <span className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/30 px-2 py-0.5 rounded text-xs font-medium">
               Success
             </span>
           );
         }
         return (
-          <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded text-[11px] font-medium">
+          <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded text-xs font-medium">
             Failed
           </span>
         );
@@ -164,25 +164,25 @@ export function LoginAttemptsTable() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 {attempt.is_suspicious ? (
-                  <span className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-[10px] font-medium">
+                  <span className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-xs font-medium">
                     Suspicious
                   </span>
                 ) : attempt.success ? (
-                  <span className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-[10px] font-medium">
+                  <span className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-xs font-medium">
                     Success
                   </span>
                 ) : (
-                  <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded text-[10px] font-medium">
+                  <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded text-xs font-medium">
                     Failed
                   </span>
                 )}
                 <span className="text-sm font-medium">{attempt.user ? attempt.user.name : attempt.identifier}</span>
               </div>
-              <span className="text-[10px] text-neutral-500">{format(new Date(attempt.created_at), "MMM d, HH:mm")}</span>
+              <span className="text-xs text-neutral-500">{format(new Date(attempt.created_at), "MMM d, HH:mm")}</span>
             </div>
             <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-800 text-xs">
-              <span className="text-neutral-400 font-mono text-[10px]">{attempt.ip_address}</span>
-              <span className="text-neutral-500 text-[10px]">{attempt.location || "-"}</span>
+              <span className="text-neutral-400 font-mono text-xs">{attempt.ip_address}</span>
+              <span className="text-neutral-500 text-xs">{attempt.location || "-"}</span>
             </div>
           </div>
         )}

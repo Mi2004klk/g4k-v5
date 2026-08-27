@@ -71,7 +71,7 @@ const MessageItem = memo(function MessageItem({
       {/* Avatar column */}
       {!isConsecutive ? (
         <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-          <AvatarFallback name={isMe ? "You" : msg.sender?.name || 'U'} className="text-[9px]" />
+          <AvatarFallback name={isMe ? "You" : msg.sender?.name || 'U'} className="text-xs" />
         </Avatar>
       ) : (
         <div className="w-7 shrink-0" />
@@ -79,7 +79,7 @@ const MessageItem = memo(function MessageItem({
 
       <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} flex-1 min-w-0`}>
         {!isConsecutive && (
-          <div className="flex items-center gap-1.5 mb-1 text-[9px] text-neutral-400 font-medium">
+          <div className="flex items-center gap-1.5 mb-1 text-xs text-neutral-400 font-medium">
             <span className="font-semibold text-neutral-700 dark:text-neutral-300">
               {isMe ? "You" : msg.sender?.name}
             </span>
@@ -89,14 +89,14 @@ const MessageItem = memo(function MessageItem({
         )}
 
       <div
-        className={`max-w-[85%] px-3 py-2 rounded-lg text-[11px] space-y-1 shadow-sm ${
+        className={`max-w-[85%] px-3 py-2 rounded-lg text-xs space-y-1 shadow-sm ${
           isMe
             ? "bg-primary-600 text-white rounded-tr-none"
             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none"
         }`}
       >
         {(msg as any).replyTo && (
-          <div className={`p-1.5 rounded text-[10px] mb-1 opacity-80 ${isMe ? "bg-primary-700" : "bg-neutral-200 dark:bg-neutral-700"}`}>
+          <div className={`p-1.5 rounded text-xs mb-1 opacity-80 ${isMe ? "bg-primary-700" : "bg-neutral-200 dark:bg-neutral-700"}`}>
             <span className="font-bold block">{(msg as any).replyTo.sender?.name}</span>
             <span className="truncate block">{(msg as any).replyTo.body}</span>
           </div>
@@ -123,7 +123,7 @@ const MessageItem = memo(function MessageItem({
                         <AppIcon name="fileText" className="w-8 h-8 text-rose-500" />
                         <div className="flex flex-col truncate">
                           <span className="text-xs font-semibold truncate">View PDF Document</span>
-                          <span className="text-[10px] text-neutral-500 uppercase">PDF File</span>
+                          <span className="text-xs text-neutral-500 uppercase">PDF File</span>
                         </div>
                       </div>
                     ) : (
@@ -141,7 +141,7 @@ const MessageItem = memo(function MessageItem({
                           <AppIcon name="fileText" className="w-8 h-8 text-neutral-400" />
                           <div className="flex flex-col truncate text-left">
                             <span className="text-xs font-semibold truncate">Open Attachment</span>
-                            <span className="text-[10px] text-neutral-500 uppercase">File</span>
+                            <span className="text-xs text-neutral-500 uppercase">File</span>
                           </div>
                         </div>
                       </>
@@ -183,7 +183,7 @@ const MessageItem = memo(function MessageItem({
                 target="_blank"
                 rel="noreferrer"
                 download
-                className={`flex items-center gap-1.5 underline text-[10px] ${isMe ? "text-primary-200" : "text-primary-600"}`}
+                className={`flex items-center gap-1.5 underline text-xs ${isMe ? "text-primary-200" : "text-primary-600"}`}
               >
                 <AppIcon name="paperclip" size="xs" /> Download File
               </a>
@@ -195,14 +195,14 @@ const MessageItem = memo(function MessageItem({
       <div className="flex items-center justify-between mt-0.5">
         <div className="flex gap-1">
           {(msg as any).pinned && (
-            <span className="text-[10px] text-amber-500 flex items-center gap-1 font-medium bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-amber-500 flex items-center gap-1 font-medium bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded">
               <AppIcon name="pin" size="xs" /> Pinned
             </span>
           )}
         </div>
         
         {isMe && conversationType === 'direct' && (
-          <div className="text-[10px] text-neutral-400 mr-1 flex items-center justify-end gap-1">
+          <div className="text-xs text-neutral-400 mr-1 flex items-center justify-end gap-1">
             {msg.reads && msg.reads.length > 0 ? (
               <AppIcon name="read" size="xs" className=" text-primary-500" />
             ) : (
@@ -345,7 +345,7 @@ export function MessageList({
               <span>{pinnedMessages.length} Pinned</span>
             </div>
             {!pinnedExpanded && pinnedMessages.length > 0 && (
-              <span className="text-[10px] text-amber-600 dark:text-amber-500 truncate max-w-[200px] ml-3">
+              <span className="text-xs text-amber-600 dark:text-amber-500 truncate max-w-[200px] ml-3">
                 {pinnedMessages[pinnedMessages.length - 1]?.body}
               </span>
             )}
@@ -355,8 +355,8 @@ export function MessageList({
             <div className="px-3 pb-2 flex flex-col gap-1.5">
               {pinnedMessages.map(pm => (
                 <div key={pm.id} className="bg-white dark:bg-neutral-900 border border-amber-200 dark:border-amber-800 rounded px-2.5 py-1.5 flex items-center gap-2">
-                  <span className="font-bold text-[9px] text-amber-600 dark:text-amber-500 shrink-0">{pm.sender?.name}:</span>
-                  <span className="truncate text-[10px] text-neutral-700 dark:text-neutral-300">{pm.body}</span>
+                  <span className="font-bold text-xs text-amber-600 dark:text-amber-500 shrink-0">{pm.sender?.name}:</span>
+                  <span className="truncate text-xs text-neutral-700 dark:text-neutral-300">{pm.body}</span>
                 </div>
               ))}
             </div>
@@ -402,7 +402,7 @@ export function MessageList({
             >
               {isNewDay && (
                 <div className="flex justify-center my-4">
-                  <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-500 text-[10px] font-bold px-2 py-1 rounded-full">
+                  <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-500 text-xs font-bold px-2 py-1 rounded-full">
                     {format(msgDate, "MMMM d, yyyy")}
                   </span>
                 </div>

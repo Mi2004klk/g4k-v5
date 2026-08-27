@@ -102,7 +102,7 @@ export function CorporateDirectoryTab() {
               <div className="font-semibold text-[13px] text-neutral-900 dark:text-white">
                 {user.name}
               </div>
-              <div className="text-neutral-400 text-[11px] flex items-center gap-2 mt-0.5">
+              <div className="text-neutral-400 text-xs flex items-center gap-2 mt-0.5">
                 <span>{user.email || 'Contact hidden'}</span>
               </div>
             </div>
@@ -124,7 +124,7 @@ export function CorporateDirectoryTab() {
                 {dept.name}
               </span>
             ) : <span className="text-neutral-400 text-[12px]">—</span>}
-            {desig && <span className="text-[11px] text-neutral-500">{desig.name}</span>}
+            {desig && <span className="text-xs text-neutral-500">{desig.name}</span>}
           </div>
         );
       }
@@ -231,7 +231,7 @@ export function CorporateDirectoryTab() {
               
               <div className="mt-auto pt-3 flex flex-col w-full items-center gap-2">
                 {user.department && (
-                  <span className="inline-flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-[11px] font-medium px-2 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-medium px-2 py-0.5 rounded-full">
                     <AppIcon name="building" size="xs" className=" text-neutral-400" />
                     {user.department.name}
                   </span>
@@ -242,7 +242,7 @@ export function CorporateDirectoryTab() {
                         <AppIcon name="chat" size="xs" className="mr-1" /> Message
                       </Button>
                    </div>
-                   <div className="text-[10px] text-neutral-400 max-w-[50%] truncate">
+                   <div className="text-xs text-neutral-400 max-w-[50%] truncate">
                       {user.email || 'Contact hidden'}
                    </div>
                 </div>

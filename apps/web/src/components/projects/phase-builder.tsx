@@ -118,7 +118,7 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
                 
                 {/* Timeline node */}
                 <div className="flex flex-col items-center shrink-0 w-12 pt-2">
-                  <div className="w-12 h-6 rounded-full bg-white dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-[10px] font-bold text-emerald-700 dark:text-emerald-500 shadow-sm z-10">
+                  <div className="w-12 h-6 rounded-full bg-white dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs font-bold text-emerald-700 dark:text-emerald-500 shadow-sm z-10">
                     {String(index + 1).padStart(2, '0')}
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
                                   <SelectItem key={u.id} value={u.id.toString()}>
                                     <div className="flex items-center gap-2">
                                       <Avatar className="w-4 h-4">
-                                        <AvatarFallback className="text-[8px]">{u.name.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback className="text-xs">{u.name.charAt(0)}</AvatarFallback>
                                       </Avatar>
                                       <span className="truncate">{u.name}</span>
                                     </div>

@@ -144,7 +144,7 @@ export function MessageComposer({
       {showMentions && filteredUsers.length > 0 && (
         <div className="absolute bottom-full left-12 mb-2 w-64 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[var(--radius)] shadow-lg z-50 overflow-hidden">
           <div className="px-3 py-2 bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-700">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Mentions</span>
+            <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Mentions</span>
           </div>
           <div className="max-h-[200px] overflow-y-auto thin-scrollbar">
             {filteredUsers.map((u: ComposerUser, idx: number) => (
@@ -155,7 +155,7 @@ export function MessageComposer({
                 className={`w-full text-left px-3 py-2 flex items-center gap-2.5 transition-colors ${mentionNavIndex === idx ? "bg-neutral-100 dark:bg-neutral-700" : "hover:bg-neutral-50 dark:hover:bg-neutral-700/50"}`}
               >
                 <Avatar className="h-6 w-6 shrink-0">
-                  <AvatarFallback name={u.name || 'U'} className="text-[9px]" />
+                  <AvatarFallback name={u.name || 'U'} className="text-xs" />
                 </Avatar>
                 <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100 truncate">{u.name}</span>
               </button>
@@ -183,7 +183,7 @@ export function MessageComposer({
       <div className="flex flex-col flex-1 min-w-0 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-e1 focus-within:shadow-e2 focus-within:ring-1 focus-within:ring-primary-500 transition-all">
         {replyTo && (
           <div className="px-3 py-1.5 border-b border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900 rounded-t-xl flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] min-w-0">
+            <div className="flex items-center gap-2 text-xs min-w-0">
               <AppIcon name="arrowLeft" size="xs" className="text-primary-500" />
               <span className="font-bold text-neutral-700 dark:text-neutral-300 shrink-0">Replying to {replyTo.sender?.name}:</span>
               <span className="text-neutral-500 truncate">{replyTo.body}</span>
@@ -208,7 +208,7 @@ export function MessageComposer({
           className={`w-full text-xs bg-transparent p-2.5 resize-none focus:outline-none max-h-[120px] thin-scrollbar ${replyTo ? 'rounded-b-xl' : 'rounded-xl'}`}
           rows={1}
         />
-        <div className="px-2.5 pb-1.5 flex justify-between items-center text-[9px] text-neutral-400">
+        <div className="px-2.5 pb-1.5 flex justify-between items-center text-xs text-neutral-400">
           <span>{text.length > 0 ? `${text.length}/2000` : ''}</span>
         </div>
       </div>

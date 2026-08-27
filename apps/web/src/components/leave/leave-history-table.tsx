@@ -105,7 +105,7 @@ export function LeaveHistoryTable({
           const status = row.original.approval?.status || "pending";
           const config = getLeaveStatusColor(status);
           return (
-            <StatusBadge status={config.status} dot className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase shrink-0 tracking-wider">
+            <StatusBadge status={config.status} dot className="px-2 py-0.5 rounded-[4px] text-xs font-bold uppercase shrink-0 tracking-wider">
               {config.label}
             </StatusBadge>
           );
@@ -216,7 +216,7 @@ export function LeaveHistoryTable({
                   {format(new Date(row.start_date), "MMM d")} - {format(new Date(row.end_date), "MMM d, yyyy")}
                 </p>
               </div>
-              <StatusBadge status={config.status} dot className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase shrink-0 tracking-wider">
+              <StatusBadge status={config.status} dot className="px-2 py-0.5 rounded-[4px] text-xs font-bold uppercase shrink-0 tracking-wider">
                 {config.label}
               </StatusBadge>
             </div>

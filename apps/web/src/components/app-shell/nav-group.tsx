@@ -103,7 +103,7 @@ export const NavItem = memo(function NavItem({
         )}
         {item.badge !== undefined && item.badge > 0 && (
           <span className={cn(
-            "absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center bg-rose-500 text-white text-[9px] font-bold h-4 min-w-[16px] px-1 rounded-full",
+            "absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center bg-rose-500 text-white text-xs font-bold h-4 min-w-[16px] px-1 rounded-full",
             currentlyCollapsed ? "right-1 top-1 translate-y-0" : ""
           )}>
             {item.badge > 99 ? '99+' : item.badge}
@@ -143,7 +143,7 @@ export const NavGroup = memo(function NavGroup({
   return (
     <div className="mb-2">
       {(!isCollapsed || isSheet) ? (
-        <div className="text-[10px] font-bold tracking-wider text-neutral-400 dark:text-neutral-500 uppercase px-3 mb-1 mt-4 transition-opacity duration-[120ms]">
+        <div className="text-xs font-bold tracking-wider text-neutral-400 dark:text-neutral-500 uppercase px-3 mb-1 mt-4 transition-opacity duration-[120ms]">
           {group.label}
         </div>
       ) : (

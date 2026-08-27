@@ -121,7 +121,7 @@ function CalendarLegend({ compact = false }: { compact?: boolean }) {
               className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} rounded-sm ${color.bg}`}
               aria-hidden
             />
-            <span className={`${compact ? "text-[9px]" : "text-[10px]"} text-neutral-500 dark:text-neutral-400`}>
+            <span className={`${compact ? "text-xs" : "text-xs"} text-neutral-500 dark:text-neutral-400`}>
               {color.label}
             </span>
           </div>
@@ -140,11 +140,11 @@ function DayTooltipContent({ date, record, holiday }: { date: Date; record?: Att
     <div className="space-y-1 text-left min-w-[120px]">
       <p className="font-semibold text-xs">{format(date, "EEEE, MMM d")}</p>
       {holiday && (
-        <p className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+        <p className="text-xs font-bold text-blue-600 dark:text-blue-400">
           {holiday.name} {holiday.type === 'event' ? '(Event)' : ''}
         </p>
       )}
-      <p className="text-[11px] capitalize">
+      <p className="text-xs capitalize">
         <span
           className={`inline-block w-2 h-2 rounded-sm mr-1 ${getAttendanceStatusColor(status).bg}`}
           aria-hidden
@@ -152,19 +152,19 @@ function DayTooltipContent({ date, record, holiday }: { date: Date; record?: Att
         {getAttendanceStatusColor(status).label}
       </p>
       {record && record.total_seconds > 0 && (
-        <p className="text-[11px] text-neutral-400">
+        <p className="text-xs text-neutral-400">
           Worked: <span className="font-mono font-medium text-neutral-200">{formatSecs(record.total_seconds)}</span>
         </p>
       )}
       {record && record.overtime_seconds > 0 && (
-        <p className="text-[11px] text-amber-400 font-mono">
+        <p className="text-xs text-amber-400 font-mono">
           +{formatSecs(record.overtime_seconds)} OT
         </p>
       )}
       {record && record.status === "late" && record.late_minutes > 0 && (
-        <p className="text-[11px] text-amber-400">{record.late_minutes}m late</p>
+        <p className="text-xs text-amber-400">{record.late_minutes}m late</p>
       )}
-      <p className="text-[10px] text-neutral-500 mt-0.5">Click to view timeline</p>
+      <p className="text-xs text-neutral-500 mt-0.5">Click to view timeline</p>
     </div>
   );
 }
@@ -243,7 +243,7 @@ function MonthCalendarGrid({
                       </div>
                     )}
                     {holiday && (
-                      <div className="w-full mt-auto truncate text-[9px] text-blue-600 dark:text-blue-400 font-semibold hidden md:block">
+                      <div className="w-full mt-auto truncate text-xs text-blue-600 dark:text-blue-400 font-semibold hidden md:block">
                         {holiday.name}
                       </div>
                     )}
@@ -353,7 +353,7 @@ export function AttendanceHistoryCalendar({
           <h3 className="font-semibold text-base text-neutral-900 dark:text-white leading-tight">
             {format(currentDate, "MMMM yyyy")}
           </h3>
-          <p className="text-[10px] text-neutral-400 mt-0.5">
+          <p className="text-xs text-neutral-400 mt-0.5">
             {recordsThisMonth} record{recordsThisMonth !== 1 ? "s" : ""} this month
           </p>
         </div>
@@ -426,7 +426,7 @@ export function AttendanceHistoryCalendar({
                 {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Day Details"}
               </span>
               {selectedDay?.has_open_shift && (
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase">
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase">
                   Open Shift
                 </span>
               )}
@@ -488,7 +488,7 @@ function DayDetailContent({
       {/* Summary bar */}
       <div className="flex justify-between items-start bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800">
         <div className="space-y-1">
-          <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Status</p>
+          <p className="text-xs text-neutral-500 font-bold uppercase tracking-wider">Status</p>
           <p className="capitalize font-medium flex items-center gap-2">
             {day.status}
             {day.status === "late" && (
@@ -497,12 +497,12 @@ function DayDetailContent({
           </p>
         </div>
         <div className="space-y-1 text-right">
-          <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
+          <p className="text-xs text-neutral-500 font-bold uppercase tracking-wider">
             Total Worked
           </p>
           <p className="font-mono font-bold text-primary-600">{formatSecs(day.total_seconds)}</p>
           {day.overtime_seconds > 0 && (
-            <p className="text-[10px] font-bold text-indigo-600 font-mono">
+            <p className="text-xs font-bold text-indigo-600 font-mono">
               +{formatSecs(day.overtime_seconds)} OT
             </p>
           )}
@@ -532,7 +532,7 @@ function DayDetailContent({
               >
                 <div className="w-2 h-2 rounded-full bg-primary-400 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-bold uppercase text-neutral-500 tracking-wider">
+                  <span className="text-xs font-bold uppercase text-neutral-500 tracking-wider">
                     {evt.type.replace(/_/g, " ")}
                   </span>
                   <div className="font-mono text-sm font-semibold mt-0.5">
@@ -540,7 +540,7 @@ function DayDetailContent({
                   </div>
                 </div>
                 {!!(evt.device_meta as any)?.platform && (
-                  <span className="text-[9px] text-neutral-400 shrink-0 hidden sm:block">
+                  <span className="text-xs text-neutral-400 shrink-0 hidden sm:block">
                     {evt.device_meta.platform as string}
                   </span>
                 )}
@@ -558,11 +558,11 @@ function DayDetailContent({
             {data.projects.map((p: { name: string; duration_minutes: number }, i: number) => (
               <span
                 key={i}
-                className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full flex items-center gap-1.5"
+                className="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full flex items-center gap-1.5"
               >
                 <span>{p.name}</span>
                 {p.duration_minutes > 0 && (
-                  <span className="text-neutral-400 font-mono text-[9px] font-medium border-l border-neutral-300 dark:border-neutral-700 pl-1.5">
+                  <span className="text-neutral-400 font-mono text-xs font-medium border-l border-neutral-300 dark:border-neutral-700 pl-1.5">
                     {Math.floor(p.duration_minutes / 60)}h {p.duration_minutes % 60}m
                   </span>
                 )}
@@ -580,11 +580,11 @@ function DayDetailContent({
             {data.tasks.map((t: { name: string; duration_minutes: number }, i: number) => (
               <span
                 key={i}
-                className="text-[10px] bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 px-2 py-1 rounded-full flex items-center gap-1.5"
+                className="text-xs bg-primary-50 dark:bg-primary-950/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800 px-2 py-1 rounded-full flex items-center gap-1.5"
               >
                 <span>{t.name}</span>
                 {t.duration_minutes > 0 && (
-                  <span className="opacity-60 font-mono text-[9px] font-medium border-l border-primary-200 dark:border-primary-800 pl-1.5">
+                  <span className="opacity-60 font-mono text-xs font-medium border-l border-primary-200 dark:border-primary-800 pl-1.5">
                     {Math.floor(t.duration_minutes / 60)}h {t.duration_minutes % 60}m
                   </span>
                 )}

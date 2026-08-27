@@ -52,10 +52,10 @@ export function AdminAttendanceCalendar() {
         
         <div className="flex items-center gap-6">
           <div className="hidden sm:flex items-center gap-4 border-r border-neutral-200 dark:border-neutral-800 pr-6">
-            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.high.bg}`} /><span className="text-[11px] font-medium text-neutral-500">&ge; 90%</span></div>
-            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.medium.bg}`} /><span className="text-[11px] font-medium text-neutral-500">70-89%</span></div>
-            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.low.bg}`} /><span className="text-[11px] font-medium text-neutral-500">50-69%</span></div>
-            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.critical.bg}`} /><span className="text-[11px] font-medium text-neutral-500">&lt; 50%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.high.bg}`} /><span className="text-xs font-medium text-neutral-500">&ge; 90%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.medium.bg}`} /><span className="text-xs font-medium text-neutral-500">70-89%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.low.bg}`} /><span className="text-xs font-medium text-neutral-500">50-69%</span></div>
+            <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.critical.bg}`} /><span className="text-xs font-medium text-neutral-500">&lt; 50%</span></div>
           </div>
           <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded-lg border border-neutral-100 dark:border-neutral-800">
             <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm" aria-label="Previous month">
@@ -112,7 +112,7 @@ export function AdminAttendanceCalendar() {
                           isTodayFlag ? "ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-neutral-900 font-bold" : ""
                         ].join(" ")}
                       >
-                        <span className={`text-[11px] sm:text-xs font-semibold ${textColor}`}>
+                        <span className={`text-xs sm:text-xs font-semibold ${textColor}`}>
                           {format(date, "d")}
                         </span>
                       </button>
@@ -120,7 +120,7 @@ export function AdminAttendanceCalendar() {
                     {stat && stat.total > 0 && isCurrentMonth && (
                       <TooltipContent side="top" className="flex flex-col gap-1 p-2 bg-neutral-900 border-neutral-800 text-white rounded-lg shadow-xl">
                         <p className="font-semibold text-xs border-b border-neutral-800 pb-1 mb-1">{format(date, "EEEE, MMMM d")}</p>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px] mt-1">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs mt-1">
                           <span className="text-neutral-400">Total</span>
                           <span className="font-medium text-right">{stat.total}</span>
                           <span className="text-emerald-400">Present</span>

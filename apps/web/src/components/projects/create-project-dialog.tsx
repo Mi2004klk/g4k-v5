@@ -325,7 +325,7 @@ export function CreateProjectDialog({
                 {u.avatar_url ? (
                   <img src={u.avatar_url} alt={u.name} className="w-6 h-6 rounded-full object-cover border border-neutral-200 dark:border-neutral-700" />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-neutral-500">
+                  <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-500">
                     {u.name.substring(0, 2).toUpperCase()}
                   </div>
                 )}

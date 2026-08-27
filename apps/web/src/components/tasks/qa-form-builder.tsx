@@ -124,7 +124,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 <SelectValue placeholder="Type..." />
               </SelectTrigger>
               <SelectContent className="max-h-80">
-                <div className="px-2 py-1.5 text-[10px] font-bold text-neutral-500 uppercase">Text</div>
+                <div className="px-2 py-1.5 text-xs font-bold text-neutral-500 uppercase">Text</div>
                 <SelectItem value="text"><div className="flex items-center gap-2"><AppIcon name="minus" size="xs" className="w-4" /> Short Text</div></SelectItem>
                 <SelectItem value="textarea"><div className="flex items-center gap-2"><AppIcon name="menu" size="xs" className="w-4" /> Paragraph</div></SelectItem>
                 <SelectItem value="number"><div className="flex items-center gap-2"><span className="w-4 font-bold text-center">123</span> Number</div></SelectItem>
@@ -132,18 +132,18 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 <SelectItem value="phone"><div className="flex items-center gap-2"><AppIcon name="phone" size="xs" className="w-4" /> Phone</div></SelectItem>
                 <SelectItem value="url"><div className="flex items-center gap-2"><AppIcon name="globe" size="xs" className="w-4" /> URL</div></SelectItem>
                 
-                <div className="px-2 py-1.5 text-[10px] font-bold text-neutral-500 uppercase mt-2">Choices</div>
+                <div className="px-2 py-1.5 text-xs font-bold text-neutral-500 uppercase mt-2">Choices</div>
                 <SelectItem value="multiple_choice"><div className="flex items-center gap-2"><AppIcon name="circle" size="xs" className="w-4" /> Multiple Choice</div></SelectItem>
                 <SelectItem value="checkbox"><div className="flex items-center gap-2"><AppIcon name="check" size="xs" className="w-4" /> Checkboxes</div></SelectItem>
                 <SelectItem value="dropdown"><div className="flex items-center gap-2"><AppIcon name="chevronDown" size="xs" className="w-4" /> Dropdown</div></SelectItem>
                 <SelectItem value="boolean"><div className="flex items-center gap-2"><AppIcon name="arrowRight" size="xs" className="w-4" /> Yes/No</div></SelectItem>
 
-                <div className="px-2 py-1.5 text-[10px] font-bold text-neutral-500 uppercase mt-2">Scales & Rating</div>
+                <div className="px-2 py-1.5 text-xs font-bold text-neutral-500 uppercase mt-2">Scales & Rating</div>
                 <SelectItem value="linear_scale"><div className="flex items-center gap-2"><AppIcon name="moreH" size="xs" className="w-4" /> Linear Scale</div></SelectItem>
                 <SelectItem value="rating"><div className="flex items-center gap-2"><AppIcon name="star" size="xs" className="w-4" /> Rating</div></SelectItem>
                 <SelectItem value="slider"><div className="flex items-center gap-2"><AppIcon name="sliders" size="xs" className="w-4" /> Slider</div></SelectItem>
 
-                <div className="px-2 py-1.5 text-[10px] font-bold text-neutral-500 uppercase mt-2">Advanced</div>
+                <div className="px-2 py-1.5 text-xs font-bold text-neutral-500 uppercase mt-2">Advanced</div>
                 <SelectItem value="file_upload"><div className="flex items-center gap-2"><AppIcon name="upload" size="xs" className="w-4" /> File Upload</div></SelectItem>
                 <SelectItem value="date"><div className="flex items-center gap-2"><AppIcon name="calendar" size="xs" className="w-4" /> Date</div></SelectItem>
                 <SelectItem value="time"><div className="flex items-center gap-2"><AppIcon name="clock" size="xs" className="w-4" /> Time</div></SelectItem>
@@ -210,7 +210,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
         {/* Configuration for Scale/Rating */}
         {isActive && !isSection && ["linear_scale", "slider", "rating"].includes(field.field_type) && (
           <div className="flex flex-col gap-3 mt-2 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-100 dark:border-neutral-800">
-            <h5 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Configuration</h5>
+            <h5 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Configuration</h5>
             <div className="flex items-center gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-neutral-600">Min Value</label>
@@ -259,7 +259,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
         {/* Validation / Advanced Rules */}
         {isActive && !isSection && ["text", "textarea", "number", "email", "url"].includes(field.field_type) && (
           <div className="flex flex-col gap-3 mt-2 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-100 dark:border-neutral-800">
-            <h5 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Validation Rules (Optional)</h5>
+            <h5 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Validation Rules (Optional)</h5>
             <div className="flex items-center gap-4">
               <div className="flex flex-col gap-1.5 flex-1">
                 <label className="text-xs text-neutral-600">{field.field_type === 'number' ? 'Min Value' : 'Min Length'}</label>
@@ -297,7 +297,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
         {/* File Upload Configuration */}
         {isActive && !isSection && field.field_type === "file_upload" && (
            <div className="flex flex-col gap-3 mt-2 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-lg border border-neutral-100 dark:border-neutral-800">
-            <h5 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">File Upload Rules</h5>
+            <h5 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">File Upload Rules</h5>
             <div className="flex items-center gap-4">
               <div className="flex flex-col gap-1.5 flex-1">
                 <label className="text-xs text-neutral-600">Max File Size (MB)</label>
@@ -325,7 +325,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
         {/* Branching Logic (for multiple_choice or boolean) */}
         {isActive && (field.field_type === "multiple_choice" || field.field_type === "boolean" || field.field_type === "dropdown") && sectionFields.length > 0 && (
           <div className="bg-primary-50/50 dark:bg-primary-900/10 p-3 rounded-md border border-primary-100 dark:border-primary-800/50 flex flex-col gap-2 mt-2">
-            <h5 className="text-[10px] uppercase font-bold text-primary-600 flex items-center gap-1"><AppIcon name="menu" size="xs" /> Branching Logic</h5>
+            <h5 className="text-xs uppercase font-bold text-primary-600 flex items-center gap-1"><AppIcon name="menu" size="xs" /> Branching Logic</h5>
             <div className="flex items-center gap-2">
               <span className="text-xs text-neutral-600">If answer matches</span>
               <Input 
@@ -605,7 +605,7 @@ export function QAFormBuilder() {
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <AppIcon name="archive" className="text-primary-500" /> Form Library
               </CardTitle>
-              <Badge variant="secondary" className="text-[10px] bg-white dark:bg-neutral-950 shadow-sm border border-neutral-200 dark:border-neutral-800">
+              <Badge variant="secondary" className="text-xs bg-white dark:bg-neutral-950 shadow-sm border border-neutral-200 dark:border-neutral-800">
                 {forms.length} templates
               </Badge>
             </div>
@@ -648,7 +648,7 @@ export function QAFormBuilder() {
                     <div key={form.id} className={cn("p-4 rounded-xl flex items-start justify-between gap-3 border transition-all cursor-pointer group", editingId === form.id ? "bg-primary-50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-800/50 shadow-sm" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-sm")} onClick={() => handleEdit(form)}>
                       <div className="flex-1 min-w-0">
                         <h4 className={cn("text-sm font-semibold truncate", editingId === form.id ? "text-primary-700 dark:text-primary-400" : "text-neutral-800 dark:text-neutral-200")}>{form.title || "Untitled Form"}</h4>
-                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-neutral-500">
+                        <div className="flex items-center gap-2 mt-1.5 text-xs text-neutral-500">
                           <span className="flex items-center gap-1"><AppIcon name="list" size="xs" className="w-3" /> {fieldCount} fields</span>
                         </div>
                       </div>
@@ -683,7 +683,7 @@ export function QAFormBuilder() {
             <div className="flex flex-wrap items-center gap-3">
               <AppIcon name="tasks" className="text-primary-600 shrink-0" />
               <h2 className="font-bold text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-[200px] sm:max-w-xs">{title || "Untitled Form"}</h2>
-              {editingId && <Badge className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 border-none ml-2 text-[10px]">Editing Template</Badge>}
+              {editingId && <Badge className="bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 border-none ml-2 text-xs">Editing Template</Badge>}
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(true)} className="h-8 text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-400">

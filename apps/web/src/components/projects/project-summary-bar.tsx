@@ -48,7 +48,7 @@ export function ProjectSummaryBar({ project, phases }: ProjectSummaryBarProps) {
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-[11px] font-bold text-neutral-900 dark:text-white">{progressPercent}%</span>
+            <span className="text-xs font-bold text-neutral-900 dark:text-white">{progressPercent}%</span>
           </div>
         </div>
         <div className="flex flex-col">
@@ -70,7 +70,7 @@ export function ProjectSummaryBar({ project, phases }: ProjectSummaryBarProps) {
             {completedPhases} / {totalPhases} completed
           </span>
           {activePhase && (
-            <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400 truncate max-w-[150px]">
+            <span className="text-xs font-medium text-blue-600 dark:text-blue-400 truncate max-w-[150px]">
               Active: {activePhase.name}
             </span>
           )}

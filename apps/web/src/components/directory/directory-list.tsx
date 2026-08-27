@@ -300,7 +300,7 @@ export function EmployeeManagementTab() {
               <div className="font-semibold text-[13px] text-neutral-900 dark:text-white">
                 {user.name}
               </div>
-              <div className="text-neutral-400 text-[11px] flex items-center gap-2 mt-0.5">
+              <div className="text-neutral-400 text-xs flex items-center gap-2 mt-0.5">
                 <span>{user.email}</span>
               </div>
             </div>
@@ -330,7 +330,7 @@ export function EmployeeManagementTab() {
                 {dept.name}
               </span>
             ) : <span className="text-neutral-400 text-[12px]">—</span>}
-            {desig && <span className="text-[11px] text-neutral-500">{desig.name}</span>}
+            {desig && <span className="text-xs text-neutral-500">{desig.name}</span>}
           </div>
         );
       }
@@ -353,13 +353,13 @@ export function EmployeeManagementTab() {
                   : 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
                   
                 return (
-                  <span key={r} className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold capitalize tracking-wide ${colorClasses}`}>
+                  <span key={r} className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize tracking-wide ${colorClasses}`}>
                     {r.replace("_", " ")}
                   </span>
                 )
               })
             ) : (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">Employee</span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">Employee</span>
             )}
           </div>
         );

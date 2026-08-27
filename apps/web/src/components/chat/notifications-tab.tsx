@@ -297,7 +297,7 @@ export function NotificationsTab() {
                               </span>
                             )}
                             {item.priority === 'urgent' && (
-                                <StatusBadge status={getPriorityColor(item.priority).status} dot className="uppercase text-[9px] font-bold tracking-wider px-1.5 py-0.5">
+                                <StatusBadge status={getPriorityColor(item.priority).status} dot className="uppercase text-xs font-bold tracking-wider px-1.5 py-0.5">
                                   {getPriorityColor(item.priority).label}
                                 </StatusBadge>
                             )}
@@ -307,7 +307,7 @@ export function NotificationsTab() {
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-2 shrink-0">
-                          <span className="text-[10px] text-neutral-400 font-medium">{safeFromNow(item.created_at)}</span>
+                          <span className="text-xs text-neutral-400 font-medium">{safeFromNow(item.created_at)}</span>
                           
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                             {!item.read_at ? (
@@ -316,7 +316,7 @@ export function NotificationsTab() {
                                 size="sm"
                                 onClick={() => markReadMutation.mutate((item as any).id)}
                                 disabled={markReadMutation.isPending}
-                                className="h-7 px-2 text-[10px] bg-white dark:bg-neutral-800 hover:bg-neutral-100 shadow-sm border border-neutral-200 dark:border-neutral-700"
+                                className="h-7 px-2 text-xs bg-white dark:bg-neutral-800 hover:bg-neutral-100 shadow-sm border border-neutral-200 dark:border-neutral-700"
                               >
                                 <AppIcon name="check" size="xs" className="mr-1.5 text-emerald-500" />
                                 Mark Read
@@ -327,7 +327,7 @@ export function NotificationsTab() {
                                 size="sm"
                                 onClick={() => markUnreadMutation.mutate((item as any).id)}
                                 disabled={markUnreadMutation.isPending}
-                                className="h-7 px-2 text-[10px] text-neutral-500 hover:text-neutral-800"
+                                className="h-7 px-2 text-xs text-neutral-500 hover:text-neutral-800"
                               >
                                 <AppIcon name="mail" size="xs" className="mr-1.5" />
                                 Mark Unread

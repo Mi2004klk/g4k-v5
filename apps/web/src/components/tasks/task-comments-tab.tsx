@@ -73,13 +73,13 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
               <div key={c.id} className={`flex gap-3 group relative ${isReply ? 'ml-11 mt-3' : 'mt-4'}`}>
                 <Avatar className="w-8 h-8 shrink-0 mt-0.5 border border-neutral-200/50 dark:border-neutral-800/50">
                   {c.user?.avatar_url && <img src={resolveAvatarUrl(c.user.avatar_url)} alt={c.user?.name} />}
-                  <AvatarFallback name={c.user?.name} className="text-[10px]" />
+                  <AvatarFallback name={c.user?.name} className="text-xs" />
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl rounded-tl-none p-3 border border-neutral-100 dark:border-neutral-800">
                     <div className="flex justify-between items-start mb-1">
                       <span className="font-bold text-[13px] text-neutral-900 dark:text-neutral-100">{c.user?.name}</span>
-                      <span className="text-[11px] font-medium text-neutral-400">
+                      <span className="text-xs font-medium text-neutral-400">
                         {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
                       </span>
                     </div>
@@ -93,7 +93,7 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
                           setReplyTo(c.id);
                           commentInputRef.current?.focus();
                         }}
-                        className="text-[11px] font-semibold text-neutral-500 hover:text-primary-600 transition-colors"
+                        className="text-xs font-semibold text-neutral-500 hover:text-primary-600 transition-colors"
                       >
                         Reply
                       </button>
@@ -128,7 +128,7 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
       <div className="flex flex-col gap-2 pt-2 border-t border-neutral-100 dark:border-neutral-800/50">
         {replyTo && (
           <div className="flex items-center justify-between bg-primary-50 dark:bg-primary-950/30 px-3 py-1.5 rounded-md">
-            <span className="text-[11px] font-medium text-primary-700 dark:text-primary-300">
+            <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
               Replying to comment...
             </span>
             <button 

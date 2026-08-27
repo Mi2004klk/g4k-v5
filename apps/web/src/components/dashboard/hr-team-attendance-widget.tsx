@@ -37,7 +37,7 @@ export function HrTeamAttendanceWidget() {
           <div className="w-6 h-6 rounded-[4px] bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center">
             <AppIcon name="directory" className="text-emerald-600 dark:text-emerald-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
             Team Attendance
           </span>
           {isFetching && !isPending && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
@@ -46,7 +46,7 @@ export function HrTeamAttendanceWidget() {
         {totalCount > 0 && (
           <div className="flex items-baseline gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded font-bold">
             <span className="text-[12px] text-emerald-700 dark:text-emerald-400">{presentCount}</span>
-            <span className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
+            <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70">/ {totalCount}</span>
           </div>
         )}
       </div>
@@ -68,7 +68,7 @@ export function HrTeamAttendanceWidget() {
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
             <AppIcon name="error" size="lg" className=" text-rose-400" />
             <p className="text-xs font-medium text-rose-600">Failed to load team</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-[10px] px-2">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="h-6 text-xs px-2">
               Retry
             </Button>
           </div>
@@ -82,7 +82,7 @@ export function HrTeamAttendanceWidget() {
               <div key={r.user_id} className="flex items-center justify-between p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-lg transition-colors">
                 <div className="flex items-center gap-2">
                   <Avatar className="w-7 h-7 border border-neutral-200 dark:border-neutral-800">
-                    <AvatarFallback name={r.user_name} className="text-[11px] font-bold" />
+                    <AvatarFallback name={r.user_name} className="text-xs font-bold" />
                   </Avatar>
                   <span className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100">{r.user_name}</span>
                 </div>
@@ -92,7 +92,7 @@ export function HrTeamAttendanceWidget() {
                     r.category === "late" ? "warning" :
                     r.category === "on_leave" || r.category === "leave_pending" ? "info" : "danger"
                   } 
-                  className="uppercase text-[9px] font-bold tracking-widest px-2 py-0.5 rounded"
+                  className="uppercase text-xs font-bold tracking-widest px-2 py-0.5 rounded"
                 >
                   {r.category.replace('_', ' ')}
                 </StatusBadge>
@@ -105,7 +105,7 @@ export function HrTeamAttendanceWidget() {
       <div className="pt-3 mt-auto shrink-0 border-t border-neutral-100 dark:border-neutral-800/50">
         <Link 
           href="/dashboard/org/attendance"
-          className="flex items-center justify-between w-full text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group transition-colors"
+          className="flex items-center justify-between w-full text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 group transition-colors"
         >
           View Full Report
           <AppIcon name="arrowRight" size="xs" className="group-hover:translate-x-1 transition-transform" />

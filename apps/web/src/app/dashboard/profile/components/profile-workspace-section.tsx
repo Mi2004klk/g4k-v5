@@ -116,7 +116,7 @@ export function ProfileWorkspaceSection() {
                   </div>
                 ) : isActive ? (
                   <div className="absolute right-4 flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">Active</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400">Active</span>
                     <AppIcon name="check" size="sm" className="text-violet-600 dark:text-violet-400" />
                   </div>
                 ) : null}

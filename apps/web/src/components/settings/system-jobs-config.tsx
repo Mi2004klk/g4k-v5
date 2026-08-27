@@ -76,7 +76,7 @@ export function SystemJobsConfig() {
                       </Button>
                     </div>
                   </div>
-                  <div className="text-neutral-600 dark:text-neutral-400 font-mono text-[10px] break-all">
+                  <div className="text-neutral-600 dark:text-neutral-400 font-mono text-xs break-all">
                     {(() => {
                       try {
                         return job.payload ? JSON.parse(job.payload).displayName : "Unknown payload";

@@ -83,7 +83,7 @@ export function CommandPalette() {
                       {item.subtitle && <span className="text-xs text-muted-foreground">{item.subtitle}</span>}
                     </div>
                   </div>
-                  <span className="text-[10px] text-muted-foreground">{safeFromNow(item.timestamp)}</span>
+                  <span className="text-xs text-muted-foreground">{safeFromNow(item.timestamp)}</span>
                 </div>
               </CommandItem>
             ))}

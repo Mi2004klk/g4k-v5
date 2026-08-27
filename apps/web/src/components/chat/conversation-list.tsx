@@ -124,7 +124,7 @@ export function ConversationList({
                 className="absolute top-0 left-0 w-full px-3 py-1.5 bg-neutral-50/80 dark:bg-neutral-900/80 border-b border-neutral-100 dark:border-neutral-800"
                 style={{ transform: `translateY(${virtualRow.start}px)` }}
               >
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">{conv.title}</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-neutral-500">{conv.title}</span>
               </div>
             );
           }
@@ -159,11 +159,11 @@ export function ConversationList({
                   <div className="flex items-center h-full">
                     <button type="button" className="h-full px-4 bg-primary-500 text-white flex flex-col items-center justify-center gap-1 active:bg-primary-600 transition-colors">
                       <AppIcon name={isPinned ? "close" : "pin"} size="sm" />
-                      <span className="text-[10px] font-semibold">{isPinned ? "Unpin" : "Pin"}</span>
+                      <span className="text-xs font-semibold">{isPinned ? "Unpin" : "Pin"}</span>
                     </button>
                     <button type="button" className="h-full px-4 bg-neutral-500 text-white flex flex-col items-center justify-center gap-1 active:bg-neutral-600 transition-colors">
                       <AppIcon name="archive" size="sm" />
-                      <span className="text-[10px] font-semibold">Archive</span>
+                      <span className="text-xs font-semibold">Archive</span>
                     </button>
                   </div>
                 }
@@ -181,7 +181,7 @@ export function ConversationList({
                   {/* Avatar: initials for DMs, icon for channels */}
                   {conv.scope === 'direct' ? (
                     <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarFallback name={title} className="text-[10px]" />
+                      <AvatarFallback name={title} className="text-xs" />
                     </Avatar>
                   ) : (
                     getIcon(conv.scope)
@@ -197,17 +197,17 @@ export function ConversationList({
                       {conv.latest_message && (
                         <div className="flex items-center gap-1.5 shrink-0 pl-2">
                           {isUnread && (
-                            <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-[9px] h-4 min-w-[16px] px-1 rounded-full shadow-sm shadow-primary-500/30">
+                            <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-xs h-4 min-w-[16px] px-1 rounded-full shadow-sm shadow-primary-500/30">
                               {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                           )}
-                          <span className={`text-[9px] tabular-nums ${isUnread ? "text-primary-600 dark:text-primary-400 font-bold" : "text-neutral-400 font-medium"}`}>
+                          <span className={`text-xs tabular-nums ${isUnread ? "text-primary-600 dark:text-primary-400 font-bold" : "text-neutral-400 font-medium"}`}>
                             {format(new Date(conv.latest_message.created_at), "h:mm a")}
                           </span>
                         </div>
                       )}
                     </div>
-                    <p className={`text-[10px] truncate mt-0.5 ${isUnread ? "font-medium text-neutral-700 dark:text-neutral-300" : "text-neutral-500"}`}>
+                    <p className={`text-xs truncate mt-0.5 ${isUnread ? "font-medium text-neutral-700 dark:text-neutral-300" : "text-neutral-500"}`}>
                       {conv.latest_message ? conv.latest_message.body : "No messages yet"}
                     </p>
                   </div>

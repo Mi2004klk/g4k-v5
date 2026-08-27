@@ -208,7 +208,7 @@ export function NotificationsBell() {
               {/* T-47.6: bell badge shows high-priority unread only; the full
                   unread count remains visible in the panel header and tooltip. */}
               {highPriorityCount > 0 ? (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-surface bg-rose-500">
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-white text-xs font-bold rounded-full flex items-center justify-center ring-2 ring-surface bg-rose-500">
                   {highPriorityCount > 99 ? "99+" : highPriorityCount}
                 </span>
               ) : null}
@@ -227,7 +227,7 @@ export function NotificationsBell() {
             <div className="flex items-center gap-2">
               <DialogTitle className="font-bold text-sm text-primary">Notifications</DialogTitle>
               {unreadCount > 0 && (
-                <span className="text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/20">
+                <span className="text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/20">
                   {unreadCount} new
                 </span>
               )}
@@ -331,10 +331,10 @@ export function NotificationsBell() {
                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" title="Urgent" />
                       )}
                     </p>
-                    <p className="text-[11px] text-neutral-500 line-clamp-2 mt-0.5">
+                    <p className="text-xs text-neutral-500 line-clamp-2 mt-0.5">
                       {n.body || ""}
                     </p>
-                    <p className="text-[10px] text-neutral-400 mt-1">
+                    <p className="text-xs text-neutral-400 mt-1">
                       {safeFromNow(n.created_at)}
                     </p>
                   </div>

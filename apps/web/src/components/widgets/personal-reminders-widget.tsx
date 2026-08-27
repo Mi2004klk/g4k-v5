@@ -91,7 +91,7 @@ export function PersonalRemindersWidget() {
                     {reminder.body && (
                       <p className="text-xs text-neutral-500 line-clamp-1 mt-0.5">{reminder.body}</p>
                     )}
-                    <p className="text-[10px] font-medium text-primary-600 dark:text-primary-400 mt-1.5 flex items-center gap-1">
+                    <p className="text-xs font-medium text-primary-600 dark:text-primary-400 mt-1.5 flex items-center gap-1">
                       <AppIcon name="clock" size="xs" className="opacity-70" />
                       {format(new Date(reminder.remind_at), 'MMM d, h:mm a')} ({safeFromNow(reminder.remind_at)})
                     </p>
