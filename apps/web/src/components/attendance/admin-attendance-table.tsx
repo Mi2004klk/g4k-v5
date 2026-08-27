@@ -112,7 +112,7 @@ export function AdminAttendanceTable() {
     queryFn: () => apiFetch(deptFilter && deptFilter !== "all" ? `/users?department_id=${deptFilter}` : "/users"),
     staleTime: 60000,
   });
-  const users = Array.isArray(usersData) ? usersData : usersData?.data || [];
+  const users = Array.isArray(usersData) ? usersData : (Array.isArray(usersData?.data) ? usersData.data : []);
   const userOptions = [
     ...users.map((u: { id: number; name: string }) => ({ label: u.name, value: u.id.toString() }))
   ];

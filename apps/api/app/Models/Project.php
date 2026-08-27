@@ -99,6 +99,10 @@ class Project extends Model
             return $value;
         }
 
-        return \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($value);
+        try {
+            return \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($value);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

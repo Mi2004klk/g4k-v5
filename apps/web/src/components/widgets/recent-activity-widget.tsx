@@ -81,7 +81,7 @@ export function RecentActivityWidget() {
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-800 -mx-4 px-4">
-            {activities.map((activity: Activity) => {
+            {(Array.isArray(activities) ? activities : []).map((activity: Activity) => {
               // Parse the payload securely
               let payload: any = activity.after;
               if (typeof payload === 'string') {

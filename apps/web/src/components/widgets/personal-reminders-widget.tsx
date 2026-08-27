@@ -80,8 +80,8 @@ export function PersonalRemindersWidget() {
               />
             </div>
           ) : (
-            <div className="space-y-3 pt-2">
-              {reminders?.map((reminder: any) => (
+            <div className="space-y-1">
+              {(Array.isArray(reminders) ? reminders : []).map((reminder: any) => (
                 <div key={reminder.id} className="group flex items-start gap-3 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-surface-2/30 hover:bg-surface-2 transition-colors">
                   <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-950 flex items-center justify-center shrink-0 mt-0.5">
                     <AppIcon name="clock" size="xs" className="text-primary-600 dark:text-primary-400" />

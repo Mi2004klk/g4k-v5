@@ -95,7 +95,7 @@ export function PendingApprovalsWidget() {
             <p className="text-xs font-medium text-neutral-400">No pending approvals</p>
           </div>
         ) : (
-          requests.map((item: PendingRequest) => {
+          (Array.isArray(requests) ? requests : []).map((item: PendingRequest) => {
             return (
               <div
                 key={`${item.type}-${item.id}`}
