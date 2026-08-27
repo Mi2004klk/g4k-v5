@@ -190,7 +190,7 @@ class ProjectController extends Controller
 
     public function show(Request $request, $id)
     {
-        $project = Project::with(['team', 'department', 'creator', 'members', 'phases', 'tasks.assignee', 'tasks.phase', 'timeLogs', 'qaForm', 'qaSubmission'])->findOrFail($id);
+        $project = Project::with(['team', 'department', 'creator', 'members', 'phases', 'tasks.assignee', 'tasks.phase', 'timeLogs', 'qaForm'])->findOrFail($id);
 
         if (!$this->canManageProject($request, $project)) {
             $userId = $request->user()->id;
