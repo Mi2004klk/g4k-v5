@@ -186,7 +186,7 @@ export function CorporateDirectoryTab() {
                 <div className="px-2 py-1.5 text-xs font-semibold text-neutral-500 uppercase tracking-wider">Department</div>
                 <div className="max-h-40 overflow-y-auto mb-2 space-y-0.5">
                   <Button variant={deptFilter === "all" ? "secondary" : "ghost"} size="sm" onClick={() => setDeptFilter("all")} className="w-full justify-start h-8">All</Button>
-                  {(departments as any[]).map(d => (
+                  {((departments || []) as any[]).map(d => (
                     <Button key={d.id} variant={deptFilter === d.id.toString() ? "secondary" : "ghost"} size="sm" onClick={() => setDeptFilter(d.id.toString())} className="w-full justify-start h-8 truncate">{d.name}</Button>
                   ))}
                 </div>
@@ -194,7 +194,7 @@ export function CorporateDirectoryTab() {
                 <div className="px-2 py-1.5 text-xs font-semibold text-neutral-500 uppercase tracking-wider border-t pt-2">Designation</div>
                 <div className="max-h-40 overflow-y-auto mb-2 space-y-0.5">
                   <Button variant={designationFilter === "all" ? "secondary" : "ghost"} size="sm" onClick={() => setDesignationFilter("all")} className="w-full justify-start h-8">All</Button>
-                  {(designations as any[]).map(d => (
+                  {((designations || []) as any[]).map(d => (
                     <Button key={d.id} variant={designationFilter === d.id.toString() ? "secondary" : "ghost"} size="sm" onClick={() => setDesignationFilter(d.id.toString())} className="w-full justify-start h-8 truncate">{d.name}</Button>
                   ))}
                 </div>

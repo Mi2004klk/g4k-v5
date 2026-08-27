@@ -27,7 +27,7 @@ class Phase42DemoSeeder extends Seeder
 
     public function run(): void
     {
-        $this->command->info("Starting Phase 42 Demo Seeder...");
+        $this->command->info("Starting Comprehensive Phase 42 Demo Seeder...");
 
         $users = User::all();
         if ($users->isEmpty()) {
@@ -48,7 +48,7 @@ class Phase42DemoSeeder extends Seeder
 
     private function seedAvatars($users)
     {
-        return; // Avatars removed to prevent 404s (DM-3)
+        return; 
     }
 
     private function seedWorkSchedules()
@@ -74,173 +74,133 @@ class Phase42DemoSeeder extends Seeder
 
     private function seedAttendance($users)
     {
-        $this->command->info("Seeding Attendance (7 days)...");
+        $this->command->info("Seeding Attendance (30 days up to yesterday)...");
         $service = app(\App\Services\AttendanceService::class);
         $today = Carbon::today();
         
         $cachedSchedule = \App\Models\WorkSchedule::where('is_default', true)->first();
 
-        // 7 days ending today
+        $events = [];
+        $days = [];
+
+        // 30 days up to yesterday
         foreach ($users as $user) {
             if ($user->username === 'newjoin') continue;
 
-            for ($i = 7; $i >= 0; $i--) {
+            $daysToSeed = in_array($user->username, ['karthik', 'aravind', 'praveen']) ? 30 : 7;
+
+            for ($i = $daysToSeed; $i >= 1; $i--) {
                 $date = $today->copy()->subDays($i);
                 if ($date->isSunday()) continue;
 
-                // Scenarios
-                if ($user->username === 'praveen' && $i === 2) {
-                    $this->seedMultiSegmentDay($user, $date, $service, $cachedSchedule);
-                } elseif ($user->username === 'dinesh' && $i === 3) {
-                    $this->seedMidnightCrossingDay($user, $date, $service, $cachedSchedule);
-                } elseif ($user->username === 'rahul' && $i === 4) {
-                    $this->seedHalfDay($user, $date, $service, $cachedSchedule);
-                } elseif ($user->username === 'ajith' && $i === 1) {
-                    $this->seedOvertimeDay($user, $date, $service, $cachedSchedule);
-                } elseif ($user->username === 'harish' && $i === 5) {
+                // Make specific days late/overtime based on modulus for variety
+                if ($user->username === 'praveen' && $i % 7 === 2) {
+                    $this->seedMultiSegmentDay($user, $date, $events, $days);
+                } elseif ($user->username === 'dinesh' && $i % 9 === 0) {
+                    $this->seedMidnightCrossingDay($user, $date, $events, $days);
+                } elseif ($user->username === 'rahul' && $i % 8 === 0) {
+                    $this->seedHalfDay($user, $date, $events, $days);
+                } elseif ($user->username === 'ajith' && $i % 6 === 0) {
+                    $this->seedOvertimeDay($user, $date, $events, $days);
+                } elseif ($user->username === 'harish' && in_array($i, [5, 6, 7])) {
                     // Absent (on leave)
                     continue;
                 } else {
-                    $this->seedNormalDay($user, $date, $service, $cachedSchedule, $i);
+                    $this->seedNormalDay($user, $date, $i, $events, $days);
                 }
             }
         }
+        
+        foreach ($events as $e) {
+            DB::table('attendance_events')->insertOrIgnore($e);
+        }
+        foreach ($days as $d) {
+            DB::table('attendance_days')->insertOrIgnore($d);
+        }
     }
 
-    private function seedNormalDay($user, $date, $service, $cachedSchedule, $dayIndex) {
-        // Late arrivals for specific users
+    private function seedNormalDay($user, $date, $dayIndex, &$events, &$days) {
         $lateMinutes = 0;
         $earlyLeave = 0;
         
-        if ($user->username === 'aravind' && $dayIndex === 2) $lateMinutes = 25;
-        if ($user->username === 'praveen' && in_array($dayIndex, [1, 4])) $lateMinutes = 40;
-        if ($user->username === 'nivetha' && $dayIndex === 3) $lateMinutes = 15;
-        if ($user->username === 'lokesh' && $dayIndex === 5) $earlyLeave = 90;
+        if ($user->username === 'aravind' && $dayIndex % 11 === 0) $lateMinutes = 25;
+        if ($user->username === 'praveen' && in_array($dayIndex, [12, 24])) $lateMinutes = 40;
+        if ($user->username === 'nivetha' && $dayIndex % 14 === 0) $lateMinutes = 15;
+        if ($user->username === 'lokesh' && $dayIndex % 13 === 0) $earlyLeave = 90;
 
         $cIn = $date->copy()->setHour(9)->setMinute(0)->addMinutes($lateMinutes);
         $cOut = $date->copy()->setHour(18)->setMinute(30)->subMinutes($earlyLeave);
-
-        if ($cIn->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        if ($cOut->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
         
-        if ($cIn->isPast() || $cOut->isPast()) {
-            $service->reconcileDay($user->id, $date->toDateString(), false, $user, $cachedSchedule);
-        }
+        $totalSeconds = $cOut->diffInSeconds($cIn) - 3600; // 1 hour break
+
+        $events[] = ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag];
+        $events[] = ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag];
+        $days[] = ['user_id' => $user->id, 'date' => $date->toDateString(), 'status' => 'present', 'total_seconds' => $totalSeconds, 'break_seconds' => 3600, 'overtime_seconds' => max(0, $totalSeconds - 28800), 'late_minutes' => $lateMinutes, 'clock_in' => clone $cIn, 'clock_out' => clone $cOut, 'first_event' => clone $cIn, 'last_event' => clone $cOut, 'created_at' => now(), 'updated_at' => now(), 'demo_tag' => $this->tag];
     }
 
-    private function seedHalfDay($user, $date, $service, $cachedSchedule) {
+    private function seedHalfDay($user, $date, &$events, &$days) {
         $cIn = $date->copy()->setHour(9)->setMinute(0);
         $cOut = $date->copy()->setHour(13)->setMinute(0);
+        $totalSeconds = $cOut->diffInSeconds($cIn);
 
-        if ($cIn->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        if ($cOut->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        $service->reconcileDay($user->id, $date->toDateString(), false, $user, $cachedSchedule);
+        $events[] = ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag];
+        $events[] = ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag];
+        $days[] = ['user_id' => $user->id, 'date' => $date->toDateString(), 'status' => 'half_day', 'total_seconds' => $totalSeconds, 'break_seconds' => 0, 'overtime_seconds' => 0, 'late_minutes' => 0, 'clock_in' => clone $cIn, 'clock_out' => clone $cOut, 'first_event' => clone $cIn, 'last_event' => clone $cOut, 'created_at' => now(), 'updated_at' => now(), 'demo_tag' => $this->tag];
     }
 
-    private function seedOvertimeDay($user, $date, $service, $cachedSchedule) {
+    private function seedOvertimeDay($user, $date, &$events, &$days) {
         $cIn = $date->copy()->setHour(9)->setMinute(0);
         $cOut = $date->copy()->setHour(20)->setMinute(30);
+        $totalSeconds = $cOut->diffInSeconds($cIn) - 3600;
 
-        if ($cIn->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        if ($cOut->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        $service->reconcileDay($user->id, $date->toDateString(), false, $user, $cachedSchedule);
+        $events[] = ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag];
+        $events[] = ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag];
+        $days[] = ['user_id' => $user->id, 'date' => $date->toDateString(), 'status' => 'present', 'total_seconds' => $totalSeconds, 'break_seconds' => 3600, 'overtime_seconds' => max(0, $totalSeconds - 28800), 'late_minutes' => 0, 'clock_in' => clone $cIn, 'clock_out' => clone $cOut, 'first_event' => clone $cIn, 'last_event' => clone $cOut, 'created_at' => now(), 'updated_at' => now(), 'demo_tag' => $this->tag];
     }
 
-    private function seedMultiSegmentDay($user, $date, $service, $cachedSchedule) {
+    private function seedMultiSegmentDay($user, $date, &$events, &$days) {
         $cIn1 = $date->copy()->setHour(9)->setMinute(0);
         $cOut1 = $date->copy()->setHour(12)->setMinute(0);
         $cIn2 = $date->copy()->setHour(13)->setMinute(0);
         $cOut2 = $date->copy()->setHour(18)->setMinute(30);
+        $totalSeconds = $cOut1->diffInSeconds($cIn1) + $cOut2->diffInSeconds($cIn2);
 
-        if ($cIn1->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_in1_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn1, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_out1_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut1, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        if ($cIn2->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_in2_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn2, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        if ($cOut2->isPast()) {
-             DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_out2_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut2, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        $service->reconcileDay($user->id, $date->toDateString(), false, $user, $cachedSchedule);
+        $events[] = ['client_id' => 's_in1_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn1, 'source' => 'server', 'demo_tag' => $this->tag];
+        $events[] = ['client_id' => 's_out1_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut1, 'source' => 'server', 'demo_tag' => $this->tag];
+        $events[] = ['client_id' => 's_in2_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn2, 'source' => 'server', 'demo_tag' => $this->tag];
+        $events[] = ['client_id' => 's_out2_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut2, 'source' => 'server', 'demo_tag' => $this->tag];
+        $days[] = ['user_id' => $user->id, 'date' => $date->toDateString(), 'status' => 'present', 'total_seconds' => $totalSeconds, 'break_seconds' => 3600, 'overtime_seconds' => max(0, $totalSeconds - 28800), 'late_minutes' => 0, 'clock_in' => clone $cIn1, 'clock_out' => clone $cOut2, 'first_event' => clone $cIn1, 'last_event' => clone $cOut2, 'created_at' => now(), 'updated_at' => now(), 'demo_tag' => $this->tag];
     }
 
-    private function seedMidnightCrossingDay($user, $date, $service, $cachedSchedule) {
+    private function seedMidnightCrossingDay($user, $date, &$events, &$days) {
         $cIn = $date->copy()->setHour(22)->setMinute(0);
         $cOut = $date->copy()->addDay()->setHour(6)->setMinute(0);
+        $totalSeconds = $cOut->diffInSeconds($cIn);
 
-        if ($cIn->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        if ($cOut->isPast()) {
-            DB::table('attendance_events')->updateOrInsert(
-                ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString()],
-                ['user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag]
-            );
-        }
-        $service->reconcileDay($user->id, $date->toDateString(), false, $user, $cachedSchedule);
+        $events[] = ['client_id' => 's_in_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_in', 'timestamp' => $cIn, 'source' => 'server', 'demo_tag' => $this->tag];
+        $events[] = ['client_id' => 's_out_'.$user->id.'_'.$date->toDateString(), 'user_id' => $user->id, 'type' => 'clock_out', 'timestamp' => $cOut, 'source' => 'server', 'demo_tag' => $this->tag];
+        $days[] = ['user_id' => $user->id, 'date' => $date->toDateString(), 'status' => 'present', 'total_seconds' => $totalSeconds, 'break_seconds' => 3600, 'overtime_seconds' => max(0, $totalSeconds - 28800), 'late_minutes' => 0, 'clock_in' => clone $cIn, 'clock_out' => clone $cOut, 'first_event' => clone $cIn, 'last_event' => clone $cOut, 'created_at' => now(), 'updated_at' => now(), 'demo_tag' => $this->tag];
     }
 
     private function seedLeaves($users)
     {
         $this->command->info("Seeding Leaves & Balances...");
         $hr = User::where('username', 'aravind')->first();
+        $admin = User::where('username', 'karthik')->first();
 
-        // 8 leave requests covering different status and types
+        // Expansive leave requests covering multiple past months
         $scenarios = [
-            ['u' => 'praveen', 'status' => 'approved', 'days' => 2, 'type' => 'casual', 'offset' => 3], // Future
-            ['u' => 'rahul', 'status' => 'pending', 'days' => 1, 'type' => 'sick', 'offset' => 5], // Future
-            ['u' => 'santhosh', 'status' => 'rejected', 'days' => 1, 'type' => 'casual', 'offset' => -3], // Past
-            ['u' => 'harish', 'status' => 'approved', 'days' => 1, 'type' => 'earned', 'offset' => -5], // Past, absent during 7 days
-            ['u' => 'dinesh', 'status' => 'pending', 'days' => 2, 'type' => 'casual', 'offset' => 10], // Future
-            ['u' => 'lokesh', 'status' => 'approved', 'days' => 1, 'type' => 'unpaid', 'offset' => -10], // Past
-            ['u' => 'akash', 'status' => 'rejected', 'days' => 2, 'type' => 'sick', 'offset' => -12], // Past
-            ['u' => 'nivetha', 'status' => 'approved', 'days' => 1, 'type' => 'casual', 'offset' => 2], // Future
+            ['u' => 'praveen', 'status' => 'approved', 'days' => 2, 'type' => 'casual', 'offset' => 3], 
+            ['u' => 'rahul', 'status' => 'pending', 'days' => 1, 'type' => 'sick', 'offset' => 5], 
+            ['u' => 'santhosh', 'status' => 'rejected', 'days' => 1, 'type' => 'casual', 'offset' => -3], 
+            ['u' => 'harish', 'status' => 'approved', 'days' => 3, 'type' => 'earned', 'offset' => -7], 
+            ['u' => 'dinesh', 'status' => 'pending', 'days' => 2, 'type' => 'casual', 'offset' => 10], 
+            ['u' => 'lokesh', 'status' => 'approved', 'days' => 1, 'type' => 'unpaid', 'offset' => -10], 
+            ['u' => 'akash', 'status' => 'rejected', 'days' => 2, 'type' => 'sick', 'offset' => -12], 
+            ['u' => 'nivetha', 'status' => 'approved', 'days' => 1, 'type' => 'casual', 'offset' => 2], 
+            ['u' => 'praveen', 'status' => 'approved', 'days' => 1, 'type' => 'sick', 'offset' => -20], 
+            ['u' => 'karthik', 'status' => 'approved', 'days' => 1, 'type' => 'casual', 'offset' => -15], 
+            ['u' => 'aravind', 'status' => 'approved', 'days' => 2, 'type' => 'earned', 'offset' => -25], 
         ];
 
         foreach ($scenarios as $s) {
@@ -263,19 +223,19 @@ class Phase42DemoSeeder extends Seeder
 
             $approvalData = [
                 'submitted_by' => $u->id,
-                'submitted_at' => now()->subDays(15),
+                'submitted_at' => $start->copy()->subDays(2),
                 'status' => $s['status'],
                 'current_approver_role' => 'hr',
                 'demo_tag' => $this->tag,
-                'created_at' => now()->subDays(15),
-                'updated_at' => now()->subDays(14)
+                'created_at' => clone $start->copy()->subDays(2),
+                'updated_at' => clone $start->copy()->subDays(1)
             ];
 
             if ($s['status'] === 'approved' || $s['status'] === 'rejected') {
-                $approvalData['decided_by'] = $hr->id;
+                $approvalData['decided_by'] = $u->username === 'aravind' ? $admin->id : $hr->id;
                 $approvalData['decision'] = $s['status'];
                 $approvalData['decision_reason'] = $s['status'] === 'approved' ? 'Approved, have fun' : 'Too many people on leave';
-                $approvalData['decided_at'] = now()->subDays(14);
+                $approvalData['decided_at'] = $start->copy()->subDays(1);
             }
 
             DB::table('approvals')->updateOrInsert(
@@ -290,7 +250,7 @@ class Phase42DemoSeeder extends Seeder
             foreach ($types as $type => $allowed) {
                 DB::table('leave_balances')->updateOrInsert(
                     ['user_id' => $u->id, 'leave_type' => $type, 'year' => date('Y')],
-                    ['allowed' => $allowed, 'used' => rand(0, 5), 'demo_tag' => $this->tag, 'created_at' => now(), 'updated_at' => now()]
+                    ['allowed' => $allowed, 'used' => rand(0, 8), 'demo_tag' => $this->tag, 'created_at' => now(), 'updated_at' => now()]
                 );
             }
         }
@@ -298,7 +258,7 @@ class Phase42DemoSeeder extends Seeder
 
     private function seedProjectsAndTasks($users)
     {
-        $this->command->info("Seeding Projects, Tasks, QA, and Timers...");
+        $this->command->info("Seeding Extensive Projects, Tasks, QA, Timers and Activities...");
 
         $karthik = $users->where('username', 'karthik')->first();
         $aravind = $users->where('username', 'aravind')->first();
@@ -313,7 +273,7 @@ class Phase42DemoSeeder extends Seeder
         $akash = $users->where('username', 'akash')->first();
         $nivetha = $users->where('username', 'nivetha')->first();
 
-        // 1. Escape Room 3D (Active, Game Dev)
+        // 1. Escape Room 3D
         $p1 = Project::firstOrCreate(
             ['name' => 'Escape Room 3D'],
             [
@@ -340,6 +300,8 @@ class Phase42DemoSeeder extends Seeder
             $phaseId = $i <= 3 ? $phase1_1->id : ($i <= 9 ? $phase1_2->id : $phase1_3->id);
             $status = $i <= 3 ? 'done' : ($i <= 6 ? 'review' : ($i <= 9 ? 'in_progress' : 'todo'));
             $assignee = $i % 3 === 0 ? $santhosh->id : ($i % 2 === 0 ? $rahul->id : $praveen->id);
+            
+            $createdAt = Carbon::now()->subDays(30)->addDays($i);
 
             $t = Task::firstOrCreate(
                 ['project_id' => $p1->id, 'title' => "Level $i Implementation"],
@@ -352,55 +314,71 @@ class Phase42DemoSeeder extends Seeder
                     'due_date' => Carbon::now()->subDays(10)->addDays($i * 4),
                     'reporter_id' => $praveen->id,
                     'progress' => $status === 'done' ? 100 : ($status === 'review' ? 95 : ($status === 'in_progress' ? 50 : 0)),
+                    'created_at' => $createdAt,
                     'demo_tag' => $this->tag
                 ]
             );
 
             DB::table('task_assignees')->updateOrInsert(
                 ['task_id' => $t->id, 'user_id' => $assignee],
-                ['created_at' => now(), 'updated_at' => now()]
+                ['created_at' => $createdAt, 'updated_at' => $createdAt]
+            );
+            
+            DB::table('task_activity')->updateOrInsert(
+                ['task_id' => $t->id, 'event' => 'created'],
+                ['user_id' => $praveen->id, 'created_at' => $createdAt, 'demo_tag' => $this->tag]
             );
 
             // Comments
-            if (in_array($status, ['in_progress', 'review'])) {
+            if (in_array($status, ['in_progress', 'review', 'done'])) {
                 DB::table('task_comments')->updateOrInsert(
-                    ['task_id' => $t->id, 'user_id' => $praveen->id],
-                    ['body' => 'Making good progress on this.', 'demo_tag' => $this->tag, 'created_at' => now()->subDays(2), 'updated_at' => now()->subDays(2)]
+                    ['task_id' => $t->id, 'user_id' => $assignee],
+                    ['body' => 'Making good progress on this. Checking the models.', 'demo_tag' => $this->tag, 'created_at' => $createdAt->copy()->addDays(1), 'updated_at' => clone $createdAt->copy()->addDays(1)]
+                );
+                
+                DB::table('task_activity')->updateOrInsert(
+                    ['task_id' => $t->id, 'event' => 'progress', 'metadata' => json_encode(['from' => 'todo', 'to' => 'in_progress'])],
+                    ['user_id' => $assignee, 'created_at' => $createdAt->copy()->addDays(1), 'demo_tag' => $this->tag]
                 );
             }
 
-            // Timers (Last 7 days)
+            // Timers (Multiple logs over the month up to yesterday)
             if (in_array($status, ['in_progress', 'done', 'review'])) {
-                DB::table('task_time_logs')->updateOrInsert(
-                    ['task_id' => $t->id, 'user_id' => $assignee, 'log_date' => now()->subDays(rand(1, 6))->toDateString()],
-                    [
-                        'project_id' => $p1->id,
-                        'started_at' => now()->subDays(2)->setHour(10),
-                        'ended_at' => now()->subDays(2)->setHour(14),
-                        'minutes_logged' => rand(120, 240),
-                        'description' => 'Worked on implementation details',
-                        'demo_tag' => $this->tag,
-                        'created_at' => now()->subDays(2),
-                        'updated_at' => now()->subDays(2)
-                    ]
-                );
+                for ($day = 1; $day <= 5; $day++) {
+                    $logDate = Carbon::yesterday()->subDays($day * 2);
+                    if ($logDate->isBefore($createdAt)) break;
+                    
+                    DB::table('task_time_logs')->updateOrInsert(
+                        ['task_id' => $t->id, 'user_id' => $assignee, 'log_date' => $logDate->toDateString()],
+                        [
+                            'project_id' => $p1->id,
+                            'started_at' => clone $logDate->copy()->setHour(10),
+                            'ended_at' => clone $logDate->copy()->setHour(14),
+                            'minutes_logged' => rand(120, 240),
+                            'description' => "Worked on implementation details day $day",
+                            'demo_tag' => $this->tag,
+                            'created_at' => clone $logDate,
+                            'updated_at' => clone $logDate
+                        ]
+                    );
+                }
             }
 
             // Submissions & QA
             if ($status === 'review') {
                 $approval = \App\Models\Approval::firstOrCreate(
                     ['approvable_type' => Task::class, 'approvable_id' => $t->id],
-                    ['submitted_by' => $assignee, 'current_approver_role' => 'hr', 'status' => 'pending', 'payload' => [], 'demo_tag' => $this->tag]
+                    ['submitted_by' => $assignee, 'current_approver_role' => 'hr', 'status' => 'pending', 'payload' => [], 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday(), 'updated_at' => Carbon::yesterday()]
                 );
                 
                 DB::table('task_activity')->updateOrInsert(
                     ['task_id' => $t->id, 'event' => 'submitted'],
-                    ['user_id' => $assignee, 'demo_tag' => $this->tag, 'created_at' => now()->subHours(5)]
+                    ['user_id' => $assignee, 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()]
                 );
             }
         }
 
-        // 2. Summer Camp Vlog (Active, YouTube)
+        // 2. Summer Camp Vlog
         $p2 = Project::firstOrCreate(
             ['name' => 'Summer Camp Vlog'],
             [
@@ -437,6 +415,7 @@ class Phase42DemoSeeder extends Seeder
                     'priority' => 'medium',
                     'due_date' => Carbon::now()->addDays($i * 2),
                     'reporter_id' => $dinesh->id,
+                    'created_at' => Carbon::now()->subDays(10),
                     'demo_tag' => $this->tag
                 ]
             );
@@ -446,24 +425,24 @@ class Phase42DemoSeeder extends Seeder
                 ['created_at' => now(), 'updated_at' => now()]
             );
 
-            if ($status === 'in_progress') {
+            if (in_array($status, ['in_progress', 'review', 'done'])) {
                 DB::table('task_time_logs')->updateOrInsert(
-                    ['task_id' => $t->id, 'user_id' => $assignee, 'log_date' => now()->toDateString()],
+                    ['task_id' => $t->id, 'user_id' => $assignee, 'log_date' => Carbon::yesterday()->toDateString()],
                     [
                         'project_id' => $p2->id,
-                        'started_at' => now()->subHours(4),
-                        'ended_at' => now()->subHours(1),
+                        'started_at' => Carbon::yesterday()->setHour(9),
+                        'ended_at' => Carbon::yesterday()->setHour(12),
                         'minutes_logged' => 180,
                         'description' => 'Filming on location',
                         'demo_tag' => $this->tag,
-                        'created_at' => now(),
-                        'updated_at' => now()
+                        'created_at' => Carbon::yesterday(),
+                        'updated_at' => Carbon::yesterday()
                     ]
                 );
             }
         }
 
-        // 3. Brand Refresh (Completed, Marketing)
+        // 3. Brand Refresh 2026 (Completed)
         $p3 = Project::firstOrCreate(
             ['name' => 'Brand Refresh 2026'],
             [
@@ -482,7 +461,6 @@ class Phase42DemoSeeder extends Seeder
         $p3->members()->syncWithoutDetaching([$vignesh->id, $akash->id, $nivetha->id]);
         $phase3_1 = \App\Models\ProjectPhase::firstOrCreate(['project_id' => $p3->id, 'name' => 'Execution'], ['status' => 'completed', 'sort_order' => 1, 'completed_at' => Carbon::now()->subDays(5)]);
 
-        // Brand Tasks (5 tasks)
         for ($i = 1; $i <= 5; $i++) {
             $t = Task::firstOrCreate(
                 ['project_id' => $p3->id, 'title' => "Brand Asset $i"],
@@ -501,21 +479,7 @@ class Phase42DemoSeeder extends Seeder
             DB::table('task_assignees')->updateOrInsert(['task_id' => $t->id, 'user_id' => $vignesh->id], ['created_at' => now(), 'updated_at' => now()]);
         }
 
-        // 4. Standalone tasks
-        Task::firstOrCreate(
-            ['title' => 'Monthly Payroll Processing'],
-            ['description' => 'Process salary for all employees.', 'assignee_id' => $aravind->id, 'status' => 'in_progress', 'priority' => 'high', 'due_date' => Carbon::now()->addDays(2), 'demo_tag' => $this->tag]
-        );
-        Task::firstOrCreate(
-            ['title' => 'Server Maintenance'],
-            ['description' => 'Database indexing and backup verification.', 'assignee_id' => $karthik->id, 'status' => 'todo', 'priority' => 'urgent', 'due_date' => Carbon::now()->addDays(1), 'demo_tag' => $this->tag]
-        );
-        Task::firstOrCreate(
-            ['title' => 'Update Personal Profile'],
-            ['description' => 'Upload new headshot.', 'assignee_id' => $praveen->id, 'status' => 'todo', 'priority' => 'low', 'due_date' => Carbon::now()->addDays(5), 'demo_tag' => $this->tag]
-        );
-
-        // 5. QA Forms & Submissions
+        // QA Forms & Submissions
         $qaForm = QaForm::firstOrCreate(
             ['title' => 'Game Release Checklist'],
             ['description' => 'Standard QA for new games.', 'created_by' => $dinesh->id, 'is_demo' => true, 'demo_tag' => $this->tag]
@@ -539,7 +503,8 @@ class Phase42DemoSeeder extends Seeder
                     'user_id' => $santhosh->id,
                     'values' => [$field->id => true, $field2->id => '60fps'],
                     'note' => 'QA passed smoothly on test devices.',
-                    'demo_tag' => $this->tag
+                    'demo_tag' => $this->tag,
+                    'created_at' => Carbon::yesterday()->subDays(2)
                 ]
             );
         }
@@ -547,7 +512,7 @@ class Phase42DemoSeeder extends Seeder
 
     private function seedCommsAndNotifications($users)
     {
-        $this->command->info("Seeding Chat & Comms...");
+        $this->command->info("Seeding Chat, Project Chat, & Comms (30 days of history)...");
         $karthik = $users->where('username', 'karthik')->first();
         $aravind = $users->where('username', 'aravind')->first();
         $praveen = $users->where('username', 'praveen')->first();
@@ -557,32 +522,25 @@ class Phase42DemoSeeder extends Seeder
         // 1. Announcements
         $ann = Announcement::firstOrCreate(
             ['title' => 'Independence Day Holiday'],
-            ['body' => 'Friendly reminder that tomorrow is a public holiday.', 'created_by' => $karthik->id, 'pinned_at' => now()->subDays(5), 'is_demo' => true, 'demo_tag' => $this->tag]
+            ['body' => 'Friendly reminder that tomorrow is a public holiday.', 'created_by' => $karthik->id, 'pinned_at' => Carbon::yesterday()->subDays(10), 'is_demo' => true, 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subDays(10)]
         );
         DB::table('reactions')->updateOrInsert(
             ['reactable_type' => Announcement::class, 'reactable_id' => $ann->id, 'user_id' => $praveen->id],
-            ['emoji' => '🎉', 'demo_tag' => $this->tag, 'created_at' => now()]
+            ['emoji' => '🎉', 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subDays(9)]
         );
         
         Announcement::firstOrCreate(
             ['title' => 'New Project Kickoff: Brand Refresh'],
-            ['body' => 'The brand refresh is officially kicking off. Great job marketing team!', 'created_by' => $vignesh->id, 'is_demo' => true, 'demo_tag' => $this->tag]
+            ['body' => 'The brand refresh is officially kicking off. Great job marketing team!', 'created_by' => $vignesh->id, 'is_demo' => true, 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subDays(20)]
         );
 
-        Announcement::firstOrCreate(
-            ['title' => 'Reminder: Submit Timesheets'],
-            ['body' => 'Please ensure all your tasks have time logged by EOD Friday.', 'created_by' => $aravind->id, 'is_demo' => true, 'demo_tag' => $this->tag]
-        );
-
-        // 2. Global Chat
+        // 2. Global Chat (30 days history)
         $global = Conversation::firstOrCreate(['scope' => 'global', 'name' => 'Company Wide'], ['is_demo' => true, 'demo_tag' => $this->tag]);
         $global->users()->syncWithoutDetaching($users->pluck('id')->toArray());
 
-        if (Message::where('conversation_id', $global->id)->count() < 8) {
-            $messages = ["Good morning team!", "Morning!", "Happy Monday everyone.", "Is the staging server down?", "It's back up now.", "Thanks!", "Who left their mug in the meeting room?", "That was me, sorry!"];
-            foreach ($messages as $i => $body) {
-                Message::create(['conversation_id' => $global->id, 'sender_id' => $users->random()->id, 'body' => $body, 'demo_tag' => $this->tag, 'created_at' => now()->subDays(2)->addHours($i)]);
-            }
+        $messages = ["Good morning team!", "Morning!", "Happy Monday everyone.", "Is the staging server down?", "It's back up now.", "Thanks!", "Who left their mug in the meeting room?", "That was me, sorry!"];
+        for ($i = 30; $i >= 1; $i--) {
+            Message::create(['conversation_id' => $global->id, 'sender_id' => $users->random()->id, 'body' => $messages[array_rand($messages)], 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subDays($i)->addHours(rand(8, 18))]);
         }
 
         // 3. Project Chats
@@ -590,40 +548,45 @@ class Phase42DemoSeeder extends Seeder
         if ($p1) {
             $p1Conv = Conversation::firstOrCreate(['scope' => 'project', 'project_id' => $p1->id], ['name' => $p1->name, 'is_demo' => true, 'demo_tag' => $this->tag]);
             $p1Conv->users()->syncWithoutDetaching($p1->members()->pluck('users.id')->toArray());
-            if (Message::where('conversation_id', $p1Conv->id)->count() < 6) {
-                $msgs = ["I've pushed the level 4 assets.", "Checking them now.", "Looks good, the textures are much better.", "I'll start integrating them into Unity today.", "Let me know if you need any changes.", "Will do."];
-                foreach ($msgs as $i => $body) {
-                    Message::create(['conversation_id' => $p1Conv->id, 'sender_id' => $p1->members->random()->id, 'body' => $body, 'demo_tag' => $this->tag, 'created_at' => now()->subDays(1)->addHours($i)]);
-                }
+            
+            $msgs = ["I've pushed the level assets.", "Checking them now.", "Looks good, the textures are much better.", "I'll start integrating them into Unity today.", "Let me know if you need any changes.", "Will do."];
+            for ($i = 25; $i >= 1; $i--) {
+                Message::create(['conversation_id' => $p1Conv->id, 'sender_id' => $p1->members->random()->id, 'body' => $msgs[array_rand($msgs)], 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subDays($i)->addHours(rand(9, 17))]);
+            }
+        }
+
+        $p2 = Project::where('name', 'Summer Camp Vlog')->first();
+        if ($p2) {
+            $p2Conv = Conversation::firstOrCreate(['scope' => 'project', 'project_id' => $p2->id], ['name' => $p2->name, 'is_demo' => true, 'demo_tag' => $this->tag]);
+            $p2Conv->users()->syncWithoutDetaching($p2->members()->pluck('users.id')->toArray());
+            
+            $msgs = ["Did we get the B-roll?", "Yes, uploading now.", "Audio seems a bit clipped on take 2.", "We will fix it in post.", "Thanks."];
+            for ($i = 10; $i >= 1; $i--) {
+                Message::create(['conversation_id' => $p2Conv->id, 'sender_id' => $p2->members->random()->id, 'body' => $msgs[array_rand($msgs)], 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subDays($i)->addHours(rand(9, 17))]);
             }
         }
 
         // 4. DMs
         $dm = Conversation::firstOrCreate(['scope' => 'direct', 'name' => null, 'is_demo' => true, 'demo_tag' => $this->tag]);
-        $dm->users()->syncWithoutDetaching([$praveen->id, $dinesh->id]);
-        if (Message::where('conversation_id', $dm->id)->count() < 4) {
-            Message::create(['conversation_id' => $dm->id, 'body' => 'Hey Dinesh, when is the vlog releasing?', 'sender_id' => $praveen->id, 'demo_tag' => $this->tag, 'created_at' => now()->subHours(5)]);
-            Message::create(['conversation_id' => $dm->id, 'body' => 'We are aiming for next Friday.', 'sender_id' => $dinesh->id, 'demo_tag' => $this->tag, 'created_at' => now()->subHours(4)]);
-            Message::create(['conversation_id' => $dm->id, 'body' => 'Awesome, I will get the promo banners ready.', 'sender_id' => $praveen->id, 'demo_tag' => $this->tag, 'created_at' => now()->subHours(3)]);
-            Message::create(['conversation_id' => $dm->id, 'body' => 'Perfect.', 'sender_id' => $dinesh->id, 'demo_tag' => $this->tag, 'created_at' => now()->subHours(2)]);
+        $dm->users()->syncWithoutDetaching([$praveen->id, $aravind->id]);
+        
+        $dmMsgs = ["Hey Aravind, I need to take leave next week.", "Sure, please submit the request.", "Done.", "Approved."];
+        foreach ($dmMsgs as $idx => $msgBody) {
+             Message::create(['conversation_id' => $dm->id, 'body' => $msgBody, 'sender_id' => $idx % 2 === 0 ? $praveen->id : $aravind->id, 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subDays(5)->addHours($idx)]);
         }
 
         // 5. Notifications
         Notification::firstOrCreate(
             ['user_id' => $praveen->id, 'title' => 'New Task Assigned'],
-            ['body' => 'You have been assigned to Level 10 Implementation.', 'type' => 'task', 'read_at' => null, 'demo_tag' => $this->tag]
+            ['body' => 'You have been assigned to Level 10 Implementation.', 'type' => 'task', 'read_at' => null, 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()]
         );
         Notification::firstOrCreate(
             ['user_id' => $praveen->id, 'title' => 'Leave Approved'],
-            ['body' => 'Your casual leave request has been approved.', 'type' => 'leave', 'read_at' => now(), 'demo_tag' => $this->tag]
+            ['body' => 'Your casual leave request has been approved.', 'type' => 'leave', 'read_at' => Carbon::yesterday(), 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()]
         );
         Notification::firstOrCreate(
             ['user_id' => $aravind->id, 'title' => 'Leave Request Pending'],
-            ['body' => 'Rahul has requested sick leave.', 'type' => 'leave', 'read_at' => null, 'demo_tag' => $this->tag]
-        );
-        Notification::firstOrCreate(
-            ['user_id' => $karthik->id, 'title' => 'Project Completed'],
-            ['body' => 'Brand Refresh 2026 has been marked as completed.', 'type' => 'project', 'read_at' => null, 'demo_tag' => $this->tag]
+            ['body' => 'Rahul has requested sick leave.', 'type' => 'leave', 'read_at' => null, 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()]
         );
     }
 
@@ -634,21 +597,19 @@ class Phase42DemoSeeder extends Seeder
         $praveen = $users->where('username', 'praveen')->first();
         $aravind = $users->where('username', 'aravind')->first();
 
-        // Security / Meta
         DB::table('login_attempts')->updateOrInsert(
             ['identifier' => 'karthik', 'ip_address' => '127.0.0.1'],
-            ['success' => false, 'demo_tag' => $this->tag, 'created_at' => now()->subHours(2)]
+            ['success' => false, 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()->subHours(2)]
         );
         DB::table('password_reset_requests')->updateOrInsert(
             ['user_id' => $karthik->id],
-            ['status' => 'pending', 'demo_tag' => $this->tag, 'created_at' => now()]
+            ['status' => 'pending', 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()]
         );
         DB::table('feedback')->updateOrInsert(
             ['user_id' => $praveen->id],
-            ['body' => 'The task board is slightly laggy on Firefox.', 'demo_tag' => $this->tag, 'created_at' => now()]
+            ['body' => 'The task board is slightly laggy on Firefox.', 'demo_tag' => $this->tag, 'created_at' => Carbon::yesterday()]
         );
 
-        // Notes & Views
         DB::table('quick_notes')->updateOrInsert(['user_id' => $karthik->id, 'body' => 'Review marketing budget next Tuesday.'], ['demo_tag' => $this->tag]);
         DB::table('quick_notes')->updateOrInsert(['user_id' => $praveen->id, 'body' => 'Remember to check Unity lighting plugin.'], ['demo_tag' => $this->tag]);
         DB::table('saved_views')->updateOrInsert(
@@ -660,25 +621,23 @@ class Phase42DemoSeeder extends Seeder
             ['entity' => 'leave', 'config' => json_encode(['status' => 'pending']), 'demo_tag' => $this->tag, 'created_at' => now()]
         );
 
-        // Audit Logs (20+)
-        if (AuditLog::where('user_id', $karthik->id)->where('action', 'updated_setting')->count() < 15) {
-            for ($i = 0; $i < 25; $i++) {
-                $user = $i % 3 === 0 ? $aravind : ($i % 2 === 0 ? $praveen : $karthik);
-                $action = $i % 3 === 0 ? 'leave_approved' : ($i % 2 === 0 ? 'task_completed' : 'updated_setting');
-                
-                AuditLog::create([
-                    'user_id' => $user->id,
-                    'action' => $action,
-                    'subject_type' => $action === 'updated_setting' ? 'Setting' : ($action === 'task_completed' ? 'Task' : 'LeaveRequest'),
-                    'subject_id' => '1',
-                    'before' => [],
-                    'after' => ['status' => 'updated'],
-                    'ip' => '127.0.0.1',
-                    'meta' => ['user_agent' => 'Mozilla/5.0'],
-                    'at' => now()->subHours($i * 5),
-                    'demo_tag' => $this->tag
-                ]);
-            }
+        // Audit Logs (30 days history)
+        for ($i = 0; $i < 40; $i++) {
+            $user = $i % 3 === 0 ? $aravind : ($i % 2 === 0 ? $praveen : $karthik);
+            $action = $i % 3 === 0 ? 'leave_approved' : ($i % 2 === 0 ? 'task_completed' : 'updated_setting');
+            
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => $action,
+                'subject_type' => $action === 'updated_setting' ? 'Setting' : ($action === 'task_completed' ? 'Task' : 'LeaveRequest'),
+                'subject_id' => '1',
+                'before' => [],
+                'after' => ['status' => 'updated'],
+                'ip' => '127.0.0.1',
+                'meta' => ['user_agent' => 'Mozilla/5.0'],
+                'at' => Carbon::yesterday()->subDays(rand(1, 30))->addHours(rand(1,23)),
+                'demo_tag' => $this->tag
+            ]);
         }
     }
 }

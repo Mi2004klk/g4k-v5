@@ -67,9 +67,13 @@ class DemoPurgeCommand extends Command
             DB::table('conversation_message_reads')->whereNotNull('demo_tag')->delete();
             DB::table('audit_logs')->whereNotNull('demo_tag')->delete();
 
-            // 4. Delete demo users
-            $userCount = DB::table('users')->where('is_demo', true)->delete();
-            if ($userCount > 0) $report['users'] = $userCount;
+            // 4. Delete demo users and their remaining audit logs to prevent trigger errors
+            $demoUserIds = DB::table('users')->where('is_demo', true)->pluck('id');
+            if ($demoUserIds->isNotEmpty()) {
+                DB::table('audit_logs')->whereIn('user_id', $demoUserIds)->delete();
+                $userCount = DB::table('users')->whereIn('id', $demoUserIds)->delete();
+                if ($userCount > 0) $report['users'] = $userCount;
+            }
 
             // 5. Delete specific system settings set by demo seeder
             DB::table('settings')->where('key', 'demo_dataset_version')->delete();
