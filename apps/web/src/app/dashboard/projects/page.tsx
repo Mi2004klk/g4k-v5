@@ -17,21 +17,19 @@ export default function ProjectsModulePage() {
   const { data: projectsData } = useQuery({
     queryKey: ["projects", "count"],
     queryFn: async () => {
-      const res = await apiFetch("/projects?per_page=1");
-      return res.data;
+      return apiFetch("/projects?per_page=1");
     }
   });
 
   const { data: tasksData } = useQuery({
     queryKey: ["tasks", "count"],
     queryFn: async () => {
-      const res = await apiFetch("/tasks?per_page=1");
-      return res.data;
+      return apiFetch("/tasks?per_page=1");
     }
   });
 
-  const projectsCount = projectsData?.total || 0;
-  const tasksCount = tasksData?.total || 0;
+  const projectsCount = projectsData?.total || projectsData?.meta?.total || 0;
+  const tasksCount = tasksData?.total || tasksData?.meta?.total || 0;
 
   return (
     <PageContainer

@@ -134,7 +134,33 @@ export default function ProjectDetailPage() {
     },
   });
 
-  if (!isLoading && !project) return <div className="flex h-[200px] items-center justify-center text-neutral-500">Project not found</div>;
+  if (isLoading) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0 bg-neutral-50/50 dark:bg-background p-8 space-y-8 animate-pulse">
+        <div className="flex items-start gap-4">
+          <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+          <div className="space-y-3">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-96" />
+            <div className="flex gap-4 pt-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-6">
+          <div className="flex-1 space-y-6">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-96 w-full rounded-xl" />
+          </div>
+          <Skeleton className="w-80 h-[500px] rounded-xl hidden lg:block shrink-0" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) return <div className="flex h-[200px] items-center justify-center text-neutral-500">Project not found</div>;
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-neutral-50/50 dark:bg-background">

@@ -771,8 +771,8 @@ export function QAFormBuilder() {
               )}
             </div>
 
-            {/* Floating Action Palette (Google Forms Style) */}
-            <div className="fixed right-8 md:right-12 xl:right-1/4 xl:-mr-20 top-40 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl rounded-xl p-2 flex flex-col gap-1 z-30 transition-all hover:shadow-2xl">
+            {/* Desktop Floating Action Palette (Sticky) */}
+            <div className="hidden md:flex flex-col gap-1 sticky top-4 ml-6 h-fit bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl p-2 z-30 transition-all hover:shadow-md shrink-0">
               <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg" onClick={() => insertField("text")} title="Add text field">
                 <AppIcon name="plus" size="sm" />
               </Button>
@@ -788,6 +788,27 @@ export function QAFormBuilder() {
               </Button>
               <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1 mx-1" />
               <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 rounded-lg" onClick={() => insertField("section")} title="Add section">
+                <AppIcon name="minus" size="sm" className="rotate-90 scale-y-150" />
+              </Button>
+            </div>
+
+            {/* Mobile Floating Action Palette (Bottom Fixed) */}
+            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl rounded-full px-4 py-2 z-50">
+              <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-full" onClick={() => insertField("text")} title="Add text field">
+                <AppIcon name="plus" size="sm" />
+              </Button>
+              <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1" />
+              <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 rounded-full" onClick={() => insertField("multiple_choice")} title="Add multiple choice">
+                <AppIcon name="circle" size="sm" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 rounded-full" onClick={() => insertField("textarea")} title="Add paragraph">
+                <AppIcon name="menu" size="sm" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 rounded-full" onClick={() => insertField("date")} title="Add date">
+                <AppIcon name="calendar" size="sm" />
+              </Button>
+              <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-800 mx-1" />
+              <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 rounded-full" onClick={() => insertField("section")} title="Add section">
                 <AppIcon name="minus" size="sm" className="rotate-90 scale-y-150" />
               </Button>
             </div>
