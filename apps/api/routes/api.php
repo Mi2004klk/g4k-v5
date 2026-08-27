@@ -150,7 +150,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
         Route::get('/leave-requests/balance', [LeaveRequestController::class, 'balance']);
         Route::get('/leave-requests/history', [LeaveRequestController::class, 'history']);
-        Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show']);
+        Route::get('/leave-requests/{id}', [LeaveRequestController::class, 'show'])->where('id', '[0-9]+');
     });
     
     Route::middleware('capability:leave.request-self')->group(function () {
@@ -219,7 +219,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::delete('/tasks/comments/{id}', [TaskController::class, 'deleteComment']);
         Route::post('/tasks/{id}/reminders', [TaskReminderController::class, 'store']);
         Route::delete('/tasks/reminders/{id}', [TaskReminderController::class, 'destroy']);
-        Route::post('/tasks/{id}/move-phase', [TaskController::class, 'movePhase']);
+
     });
 
     Route::middleware('capability:tasks.manage')->group(function () {
