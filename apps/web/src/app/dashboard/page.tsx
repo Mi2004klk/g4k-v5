@@ -276,22 +276,19 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-2 mb-2">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-0.5">
-            {greetingData.salutation}
-          </p>
-          <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white leading-tight">
-            {greetingData.title}, {firstName}
-          </h1>
-          <p className="text-xs text-neutral-500 mt-0.5">
-            {greetingData.subtitle}
-          </p>
-        </div>
-      </div>
-
-
-      <WidgetEngine availableWidgets={availableWidgets} />
+      <WidgetEngine 
+        availableWidgets={availableWidgets} 
+        headerContent={
+          <div>
+            <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white leading-tight">
+              {greetingData.title}, {firstName}
+            </h1>
+            <p className="text-sm text-neutral-500 mt-1">
+              {greetingData.subtitle}
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 }

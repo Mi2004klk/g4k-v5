@@ -18,6 +18,7 @@ const ResponsiveGridWithWidth = WidthProvider(ResponsiveGridLayout);
 const GridLayout = dynamic(() => Promise.resolve({ default: ResponsiveGridWithWidth }), { ssr: false }) as React.ElementType;
 
 interface WidgetEngineProps {
+  headerContent?: React.ReactNode;
   availableWidgets: Array<{
     id: string;
     component: React.ReactNode;
@@ -25,7 +26,7 @@ interface WidgetEngineProps {
   }>;
 }
 
-export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
+export function WidgetEngine({ headerContent, availableWidgets }: WidgetEngineProps) {
   const queryClient = useQueryClient();
   const [layouts, setLayouts] = useState<Record<string, unknown[]>>(() => ({
     lg: availableWidgets.map((w: any) => ({ ...(w.defaultLayout?.lg || w.defaultLayout), i: w.id })),
@@ -267,8 +268,12 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
         }
       }}
     >
-      <div className="flex justify-end gap-2 mb-4 px-2">
-        <Button 
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-2 mb-6">
+        <div className="flex-1">
+          {headerContent}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button 
           variant="outline" 
           size="sm" 
           className="h-8 shadow-sm text-neutral-600 hover:text-neutral-900"
@@ -307,6 +312,7 @@ export function WidgetEngine({ availableWidgets }: WidgetEngineProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
 
       <style>{`

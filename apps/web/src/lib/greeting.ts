@@ -8,25 +8,25 @@ export function getTimeTier(d = new Date()): TimeTier {
   return "night";
 }
 
-const GREETINGS: Record<TimeTier, { salutation: string; titles: string[]; subtitles: string[] }> = {
-  morning:   { salutation: "Good morning",
-    titles:     ["Rise & grind", "Let's cook today", "Morning, legend", "Early bird mode: on"],
-    subtitles:  ["Fresh slate, full tank — let's make it count.", "Coffee in hand, goals locked in.", "New day, same mission: ship it.", "Ready to tackle the day's challenges."] },
-  afternoon: { salutation: "Good afternoon",
-    titles:     ["Keep the streak alive", "Midday momentum", "You're locked in", "Halfway to the finish"],
-    subtitles:  ["Momentum looks good on you.", "Stay sharp — momentum compounds.", "Small wins stacking up nicely.", "Power through the afternoon slump."] },
-  evening:   { salutation: "Good evening",
-    titles:     ["Wrapping up strong", "Finishing finesse", "Closing-time energy", "One last push"],
-    subtitles:  ["Tie up the loose ends with style.", "Good day? Make the last hour count.", "Wind down smart, not hard.", "Almost there, finish strong."] },
-  night:     { salutation: "Good night",
-    titles:     ["Burning the midnight oil", "Night owl active", "Late grind", "Still going strong"],
-    subtitles:  ["Quiet hours, deep work — pace yourself.", "Owl hours: ship quietly.", "Don't forget to rest after this.", "Take it easy and wrap up soon."] },
+const GREETINGS: Record<TimeTier, { titles: string[]; subtitles: string[] }> = {
+  morning:   { 
+    titles:     ["Good morning"],
+    subtitles:  ["Wishing you a productive and successful day ahead.", "Ready to accomplish great things today.", "Let's make today a great day."] },
+  afternoon: { 
+    titles:     ["Good afternoon"],
+    subtitles:  ["Hope your day is going well.", "Keep up the great work this afternoon.", "Wishing you continued focus and energy."] },
+  evening:   { 
+    titles:     ["Good evening"],
+    subtitles:  ["Wrapping up the day's work.", "Hope you had a productive day.", "Time to wind down and review."] },
+  night:     { 
+    titles:     ["Good night"],
+    subtitles:  ["It's getting late, don't forget to rest.", "Taking care of a few last things.", "Rest up for tomorrow."] },
 };
 
 export function getGreeting(d = new Date(), seed = 0) {
   const t = getTimeTier(d);
   const g = GREETINGS[t];
   const dayOfYear = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-  const i = (seed + dayOfYear) % g.titles.length;
-  return { tier: t, salutation: g.salutation, title: g.titles[i], subtitle: g.subtitles[i] };
+  const i = (seed + dayOfYear) % g.subtitles.length;
+  return { tier: t, title: g.titles[0], subtitle: g.subtitles[i] };
 }
