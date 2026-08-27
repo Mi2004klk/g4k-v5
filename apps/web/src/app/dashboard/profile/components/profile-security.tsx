@@ -187,12 +187,14 @@ export function ProfileSecuritySection() {
             <div className="space-y-2">
               <label className="text-xs font-bold text-neutral-900 dark:text-white">Password</label>
               <div className="relative">
-                <Input 
-                  type="password"
-                  value="••••••••••••"
-                  readOnly
-                  className="h-11 text-sm pl-4 pr-10 bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-800 rounded-xl font-mono text-xl pointer-events-none" 
-                />
+                <form onSubmit={e => e.preventDefault()}>
+                  <Input 
+                    type="password"
+                    value="••••••••••••"
+                    readOnly
+                    className="h-11 text-sm pl-4 pr-10 bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-800 rounded-xl font-mono text-xl pointer-events-none" 
+                  />
+                </form>
               </div>
             </div>
             

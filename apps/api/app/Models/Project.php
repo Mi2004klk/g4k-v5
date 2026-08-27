@@ -20,7 +20,6 @@ class Project extends Model
     ];
 
     protected $appends = [
-        'progress',
         'current_phase',
     ];
 

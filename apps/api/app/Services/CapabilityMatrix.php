@@ -83,10 +83,6 @@ class CapabilityMatrix
      */
     public static function hasCapability(string $role, string $capability): bool
     {
-        if ($role === 'super_admin' && in_array($capability, self::SELF_SERVICE_EXCLUDED, true)) {
-            return false;
-        }
-
         $roleCapabilities = static::getCapabilitiesForRole($role);
 
         if (in_array('*', $roleCapabilities)) {

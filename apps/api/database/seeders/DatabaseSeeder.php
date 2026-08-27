@@ -344,5 +344,8 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        $this->call([
+            Phase43ComprehensiveSeeder::class,
+        ]);
     }
 }
