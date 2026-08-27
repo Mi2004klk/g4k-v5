@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,8 @@ import { Button, Toolbar } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { useReverb } from "@/hooks/use-reverb";
+import { useAuthStore } from "@/lib/auth-store";
 
 export function ProjectsTab() {
   const router = useRouter();
@@ -31,6 +33,46 @@ export function ProjectsTab() {
   const canManageProjects = hasCapability(caps, "projects.manage");
   const queryClient = useQueryClient();
   const { triggerExport } = useExport();
+  const { subscribe, leaveChannel } = useReverb();
+  const user = useAuthStore(s => s.user);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const globalChannel = subscribe("private-company.global");
+    
+    let deptChannel: any = null;
+    const deptId = (user as any)?.department_id || (user?.department as any)?.id;
+    if (deptId) {
+      deptChannel = subscribe(`private-department.${deptId}`);
+    }
+
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
+    };
+
+    if (globalChannel) {
+      globalChannel.listen(".project-created", handler);
+      globalChannel.listen(".project-updated", handler);
+    }
+    
+    if (deptChannel) {
+      deptChannel.listen(".project-created", handler);
+      deptChannel.listen(".project-updated", handler);
+    }
+
+    return () => {
+      if (globalChannel) {
+        globalChannel.stopListening(".project-created");
+        globalChannel.stopListening(".project-updated");
+      }
+      if (deptChannel) {
+        deptChannel.stopListening(".project-created");
+        deptChannel.stopListening(".project-updated");
+      }
+      leaveChannel("private-company.global");
+      if (deptId) leaveChannel(`private-department.${deptId}`);
+    };
+  }, [user?.id, subscribe, leaveChannel, queryClient]);
 
   const handleExport = async () => {
     try {

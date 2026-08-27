@@ -12,6 +12,7 @@ import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { useSearchParams } from "next/navigation";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
+import { useReverb } from "@/hooks/use-reverb";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
@@ -55,9 +56,60 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   const searchParams = useSearchParams();
   const isMe = searchParams.get("me") === "1";
   const isReview = searchParams.get("review") === "1";
+  const { subscribe, leaveChannel } = useReverb();
+  const authUser = useAuthStore(s => s.user);
   
   const [viewMode, setViewMode] = useState<"kanban" | "gantt" | "qa" | "list">("kanban");
   const [groupBy, setGroupBy] = useState<"status" | "priority" | "assignee">("status");
+
+  useEffect(() => {
+    if (!authUser?.id) return;
+    const globalChannel = subscribe("private-company.global");
+    const userChannel = subscribe(`private-user.${authUser.id}`);
+    
+    let deptChannel: any = null;
+    const deptId = (authUser as any)?.department_id || (authUser?.department as any)?.id;
+    if (deptId) {
+      deptChannel = subscribe(`private-department.${deptId}`);
+    }
+
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
+    };
+
+    if (globalChannel) {
+      globalChannel.listen(".task-created", handler);
+      globalChannel.listen(".task-updated", handler);
+    }
+    
+    if (userChannel) {
+      userChannel.listen(".task-created", handler);
+      userChannel.listen(".task-updated", handler);
+    }
+
+    if (deptChannel) {
+      deptChannel.listen(".task-created", handler);
+      deptChannel.listen(".task-updated", handler);
+    }
+
+    return () => {
+      if (globalChannel) {
+        globalChannel.stopListening(".task-created");
+        globalChannel.stopListening(".task-updated");
+      }
+      if (userChannel) {
+        userChannel.stopListening(".task-created");
+        userChannel.stopListening(".task-updated");
+      }
+      if (deptChannel) {
+        deptChannel.stopListening(".task-created");
+        deptChannel.stopListening(".task-updated");
+      }
+      leaveChannel("private-company.global");
+      leaveChannel(`private-user.${authUser.id}`);
+      if (deptId) leaveChannel(`private-department.${deptId}`);
+    };
+  }, [authUser?.id, subscribe, leaveChannel, queryClient]);
   const [filterPreset, setFilterPreset] = useState("custom");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);

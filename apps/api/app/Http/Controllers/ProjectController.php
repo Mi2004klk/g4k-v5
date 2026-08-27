@@ -185,7 +185,13 @@ class ProjectController extends Controller
             return $project;
         });
 
-        return response()->json($project->load(['team', 'department', 'creator', 'members']), 201);
+        $project->load(['team', 'department', 'creator', 'members']);
+
+        try {
+            broadcast(new \App\Events\ProjectCreated($project))->toOthers();
+        } catch (\Throwable $e) {}
+
+        return response()->json($project, 201);
     }
 
     public function show(Request $request, $id)

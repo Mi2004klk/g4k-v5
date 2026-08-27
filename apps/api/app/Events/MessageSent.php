@@ -35,6 +35,8 @@ class MessageSent implements ShouldBroadcastNow
                     $channels[] = new PrivateChannel('user.' . $user->id);
                 }
             }
+        } elseif ($conversation && $conversation->scope === 'global') {
+            $channels[] = new PrivateChannel('company.global');
         }
 
         return $channels;

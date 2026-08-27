@@ -22,9 +22,23 @@ class TaskUpdated implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('project.' . $this->task->project_id),
-        ];
+        $channels = [];
+        if ($this->task->project_id) {
+            $channels[] = new PrivateChannel('project.' . $this->task->project_id);
+        }
+
+        $this->task->loadMissing('assignees');
+        
+        $usersToNotify = $this->task->assignees->pluck('id')->toArray();
+        if ($this->task->created_by) {
+            $usersToNotify[] = $this->task->created_by;
+        }
+
+        foreach (array_unique($usersToNotify) as $userId) {
+            $channels[] = new PrivateChannel('user.' . $userId);
+        }
+
+        return $channels;
     }
     
     public function broadcastAs(): string

@@ -90,42 +90,55 @@ export function ChatTab() {
     
     const userChannelName = `user.${user.id}`;
     const channel = subscribe(userChannelName, true);
+    const globalChannel = subscribe('private-company.global');
+
+    const handler = (e: { message: ChatMessage }) => {
+      if (e.message.sender_id !== user.id) {
+        // Play a sound if you have one, or just show toast
+        if (selectedId !== e.message.conversation_id) {
+          toast(`New message from ${e.message.sender?.name || 'Someone'}`, {
+            icon: '💬',
+          });
+        }
+      }
+      
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
+      if (e.message.conversation_id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.messages(Number(e.message.conversation_id)) });
+      }
+    };
+    
+    const deleteHandler = (e: { message_id: number, conversation_id: number }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
+      if (e.conversation_id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.messages(Number(e.conversation_id)) });
+      }
+    };
+
     if (channel) {
-      const handler = (e: { message: ChatMessage }) => {
-        if (e.message.sender_id !== user.id) {
-          // Play a sound if you have one, or just show toast
-          if (selectedId !== e.message.conversation_id) {
-            toast(`New message from ${e.message.sender?.name || 'Someone'}`, {
-              icon: '💬',
-            });
-          }
-        }
-        
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-        queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
-        if (e.message.conversation_id) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.messages(Number(e.message.conversation_id)) });
-        }
-      };
-      
       channel.listen(".message-sent", handler);
-      
-      const deleteHandler = (e: { message_id: number, conversation_id: number }) => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
-        queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
-        if (e.conversation_id) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.messages(Number(e.conversation_id)) });
-        }
-      };
-      
       channel.listen(".message-deleted", deleteHandler);
-      
-      return () => {
+    }
+    
+    if (globalChannel) {
+      globalChannel.listen(".message-sent", handler);
+      globalChannel.listen(".message-deleted", deleteHandler);
+    }
+    
+    return () => {
+      if (channel) {
         channel.stopListening(".message-sent");
         channel.stopListening(".message-deleted");
-        leaveChannel(userChannelName);
-      };
-    }
+      }
+      if (globalChannel) {
+        globalChannel.stopListening(".message-sent");
+        globalChannel.stopListening(".message-deleted");
+      }
+      leaveChannel(userChannelName);
+      leaveChannel('private-company.global');
+    };
   }, [user?.id, subscribe, leaveChannel, queryClient, selectedId]);
 
   const [searchQuery, setSearchQuery] = useState("");
