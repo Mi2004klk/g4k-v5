@@ -73,7 +73,7 @@ export function ProjectsTab() {
   const projects = data?.data || [];
 
   return (
-    <div className="space-y-6 mt-4">
+    <div className="space-y-6 h-full flex flex-col">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-2 mb-4 w-full justify-between">
         <div className="flex items-center gap-2 w-full flex-1">
           <div className="w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm">
