@@ -58,6 +58,8 @@ class WorkScheduleController extends Controller
         \Illuminate\Support\Facades\Cache::forget('default_work_schedule');
         \Illuminate\Support\Facades\Cache::forget("work_schedule_{$id}");
 
+        \App\Services\AuditLogger::log($request, 'update', 'work_schedule', $id, (array)$schedule, $updateData);
+
         return response()->json(['message' => 'Work schedule updated successfully']);
     }
 
@@ -100,6 +102,8 @@ class WorkScheduleController extends Controller
             \Illuminate\Support\Facades\Cache::forget('default_work_schedule');
         }
 
+        \App\Services\AuditLogger::log($request, 'create', 'work_schedule', $id, null, $validated);
+
         return response()->json(['message' => 'Work schedule created successfully', 'id' => $id], 201);
     }
 
@@ -123,6 +127,8 @@ class WorkScheduleController extends Controller
         \Illuminate\Support\Facades\Cache::forget('default_work_schedule');
         \Illuminate\Support\Facades\Cache::forget("work_schedule_{$id}");
 
+        \App\Services\AuditLogger::log($request, 'set_default', 'work_schedule', $id, null, null);
+
         return response()->json(['message' => 'Default work schedule updated']);
     }
 
@@ -143,6 +149,8 @@ class WorkScheduleController extends Controller
 
         DB::table('work_schedules')->where('id', $id)->delete();
         \Illuminate\Support\Facades\Cache::forget("work_schedule_{$id}");
+
+        \App\Services\AuditLogger::log($request, 'delete', 'work_schedule', $id, (array)$schedule, null);
 
         return response()->json(['message' => 'Work schedule deleted']);
     }

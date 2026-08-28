@@ -25,6 +25,15 @@ class SettingsController extends Controller
         $bustSmtp = false;
         $updatedCategories = [];
 
+        $keysToUpdate = collect($validated['settings'])->pluck('key')->toArray();
+        $categoriesToUpdate = collect($validated['settings'])->pluck('category')->toArray();
+        $beforeSettings = Setting::whereIn('key', $keysToUpdate)
+            ->whereIn('category', $categoriesToUpdate)
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->category . '.' . $item->key => $item->value];
+            })->toArray();
+
         foreach ($validated['settings'] as $settingData) {
             if ($settingData['category'] === 'mail' && $settingData['key'] === 'password') {
                 if (empty($settingData['value']) || $settingData['value'] === '••••••') {
@@ -49,6 +58,15 @@ class SettingsController extends Controller
             );
             $updatedCategories[] = $settingData['category'];
         }
+
+        $afterSettings = Setting::whereIn('key', $keysToUpdate)
+            ->whereIn('category', $categoriesToUpdate)
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->category . '.' . $item->key => $item->value];
+            })->toArray();
+
+        \App\Services\AuditLogger::log($request, 'bulk_update', 'settings', 0, $beforeSettings, $afterSettings);
 
         if ($bustSmtp) {
             \App\Support\SmtpSettings::bust();

@@ -69,17 +69,17 @@ class DatabaseSeeder extends Seeder
             ]
         ];
 
-        // Clear existing capability assignments first so we don't have orphan old capabilities assigned to roles
-        DB::table('role_capabilities')->truncate();
-        DB::table('capabilities')->whereNotIn('key', $capabilities)->delete();
+        if (DB::table('role_capabilities')->count() === 0) {
+            DB::table('capabilities')->whereNotIn('key', $capabilities)->delete();
 
-        foreach ($roleCaps as $role => $caps) {
-            foreach ($caps as $cap) {
-                DB::table('role_capabilities')->updateOrInsert(['role' => $role, 'capability_key' => $cap], ['created_at' => now(), 'updated_at' => now()]);
+            foreach ($roleCaps as $role => $caps) {
+                foreach ($caps as $cap) {
+                    DB::table('role_capabilities')->updateOrInsert(['role' => $role, 'capability_key' => $cap], ['created_at' => now(), 'updated_at' => now()]);
+                }
             }
-        }
 
-        \App\Services\CapabilityMatrix::clearCache();
+            \App\Services\CapabilityMatrix::clearCache();
+        }
 
         // 1. AutoNumbering Configuration
         AutoNumbering::firstOrCreate(

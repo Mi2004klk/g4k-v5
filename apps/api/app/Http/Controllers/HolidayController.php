@@ -58,6 +58,8 @@ class HolidayController extends Controller
         $holiday = Holiday::create($validated);
         $this->clearHolidayCache($holiday->date);
 
+        \App\Services\AuditLogger::log($request, 'create', 'holiday', $holiday->id, null, $holiday->toArray());
+
         return response()->json($holiday, 201);
     }
 
@@ -72,11 +74,14 @@ class HolidayController extends Controller
 
         $holiday = Holiday::findOrFail($id);
         $oldDate = $holiday->date;
+        $before = $holiday->toArray();
         $holiday->update($validated);
         $this->clearHolidayCache($holiday->date);
         if ($oldDate !== $holiday->date) {
             $this->clearHolidayCache($oldDate);
         }
+
+        \App\Services\AuditLogger::log($request, 'update', 'holiday', $holiday->id, $before, $holiday->toArray());
 
         return response()->json($holiday);
     }
@@ -85,8 +90,11 @@ class HolidayController extends Controller
     {
         $holiday = Holiday::findOrFail($id);
         $date = $holiday->date;
+        $before = $holiday->toArray();
         $holiday->delete();
         $this->clearHolidayCache($date);
+
+        \App\Services\AuditLogger::log($request, 'delete', 'holiday', $id, $before, null);
 
         return response()->json(['message' => 'Deleted successfully']);
     }

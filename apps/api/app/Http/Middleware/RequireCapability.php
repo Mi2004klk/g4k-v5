@@ -22,15 +22,6 @@ class RequireCapability
             abort(401, 'Unauthenticated');
         }
 
-        $activeRole = $user->resolveActiveRole();
-        
-        $token = $user->currentAccessToken();
-        if ($token) {
-            if ($token->can('role:super_admin')) $activeRole = 'super_admin';
-            elseif ($token->can('role:hr')) $activeRole = 'hr';
-            elseif ($token->can('role:employee')) $activeRole = 'employee';
-        }
-
         $allCaps = [];
         foreach ($capabilities as $c) {
             if (is_string($c)) {
@@ -46,7 +37,7 @@ class RequireCapability
 
         $hasAny = false;
         foreach ($allCaps as $cap) {
-            if (CapabilityMatrix::hasCapability($activeRole, $cap)) {
+            if ($user->hasCapability($cap)) {
                 $hasAny = true;
                 break;
             }

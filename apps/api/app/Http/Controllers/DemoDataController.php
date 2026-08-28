@@ -59,6 +59,8 @@ class DemoDataController extends Controller
 
         \App\Jobs\PurgeDemoDataJob::dispatch($request->user()->id);
 
+        \App\Services\AuditLogger::log($request, 'purge_demo_data', 'system', 0, null, null);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Demo purge queued successfully. It may take a few minutes to complete.'
@@ -69,6 +71,8 @@ class DemoDataController extends Controller
     {
         \App\Jobs\SeedDemoDataJob::dispatch($request->user()->id);
         
+        \App\Services\AuditLogger::log($request, 'seed_demo_data', 'system', 0, null, ['version' => 'v2.0.0']);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Demo seed queued successfully. It may take a few minutes to complete.',

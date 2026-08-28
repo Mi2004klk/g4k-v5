@@ -33,12 +33,14 @@ class AuditLogController extends Controller
 
     public function export(Request $request)
     {
+        $filters = $request->only(['user_id', 'action', 'start_date', 'end_date']);
+
         $exportJob = ExportJob::create([
             'user_id' => $request->user()->id,
             'report_key' => 'audit_logs',
             'format' => $request->input('format', 'xlsx'),
             'status' => 'pending',
-            'filters' => $request->all(),
+            'filters' => $filters,
         ]);
 
         ExportAuditLogsJob::dispatch($exportJob, $request->all());

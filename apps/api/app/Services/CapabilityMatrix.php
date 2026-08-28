@@ -8,26 +8,15 @@ use Illuminate\Support\Facades\Cache;
 class CapabilityMatrix
 {
     /**
-     * Capabilities that are SELF-SERVICE and excluded for super_admin.
-     */
-    protected const SELF_SERVICE_EXCLUDED = [
-        'attendance.clock-self',
-        'leave.request-self',
-        'timer.track',
-        'tasks.create-own',
-    ];
-
-    /**
      * Default role capability matrix fallback for unseeded or fresh environments.
      */
     protected static array $defaultMatrix = [
         'super_admin' => ['*'],
         'hr' => [
+            'attendance.clock-self',
             'hr.view-team-attendance', 'attendance.correct-team', 'leave.approve-employee',
-            'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access', 'chat.manage',
-            'profile.edit',
-            'reports.view', 'tasks.view', 'tasks.manage', 'projects.view', 'projects.manage', 'qa.view', 'qa.manage',
-            'announcements.manage'
+            'users.employee.manage', 'directory.view', 'directory.send-message', 'chat.access',
+            'profile.edit', 'leave.request-self', 'timer.track', 'announcements.manage', 'tasks.view', 'tasks.manage', 'tasks.create-own', 'chat.manage', 'projects.view', 'reports.view', 'projects.manage', 'qa.view', 'qa.manage', 'departments.manage', 'designations.manage'
         ],
         'employee' => [
             'attendance.clock-self', 'leave.request-self', 'profile.edit',

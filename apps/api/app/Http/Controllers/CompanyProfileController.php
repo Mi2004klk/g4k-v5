@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompanyProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Services\AuditLogger;
 
 class CompanyProfileController extends Controller
 {
@@ -72,8 +73,11 @@ class CompanyProfileController extends Controller
         }
 
         $profile->fill($validated);
+        $before = $profile->getOriginal();
         $profile->updated_by = $request->user()->id;
         $profile->save();
+
+        AuditLogger::log($request, 'update', 'company_profile', $profile->id, $before, $profile->toArray());
 
         return response()->json($profile);
     }
@@ -104,8 +108,11 @@ class CompanyProfileController extends Controller
                 $profile->timezone = 'Asia/Kolkata';
             }
             $profile->logo_url = $logoUrl;
+            $before = $profile->getOriginal();
             $profile->updated_by = $request->user()->id;
             $profile->save();
+            
+            AuditLogger::log($request, 'upload_logo', 'company_profile', $profile->id, $before, $profile->toArray());
 
             if ($oldLogoUrl) {
                 try {

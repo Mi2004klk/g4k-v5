@@ -36,7 +36,7 @@ class BulkUpdateSettingsRequest extends FormRequest
                         'company' => ['name', 'timezone', 'logo_url'],
                         'auto_numbering' => ['format', 'next_number'],
                         'policies' => ['leave_policy', 'attendance_policy'],
-                        'reminders' => ['daily_reminder_time', 'weekly_report_day'],
+                        'reminders' => ['daily_reminder_time', 'weekly_report_day', 'reminders.shift_offset', 'reminders.missed_clock_in_offset', 'reminders.holiday_offset', 'reminders.open_shift_flag_time'],
                         'security' => ['password.min_length', 'password.expiry_days', 'password.require_mixed', 'password.require_number', 'password.require_symbol', 'password.return_temp', 'session.max_devices', 'session.max_concurrent', 'session.access_token_ttl', 'session.refresh_token_ttl', 'password_history_limit', 'force_password_change', 'suspicious_login.enabled', 'suspicious_login.whitelist_ips', 'suspicious_login.whitelist_locations', 'suspicious_login.blacklist_ips', 'suspicious_login.blacklist_locations'],
                         'mail' => ['host', 'port', 'username', 'password', 'encryption', 'from_address', 'from_name'],
                         'notifications' => ['leave_request.channels', 'attendance_reminder.channels', 'weekly_summary.channels']

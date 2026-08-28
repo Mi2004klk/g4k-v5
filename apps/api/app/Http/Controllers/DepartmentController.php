@@ -238,7 +238,8 @@ class DepartmentController extends Controller
         }
 
         $department->hrs()->sync($validated['user_ids']);
-        AuditLogger::log($request, 'update', 'department_hrs', $department->id, null, ['user_ids' => $validated['user_ids']]);
+        $users = \App\Models\User::whereIn('id', $validated['user_ids'])->select('id', 'name')->get()->toArray();
+        AuditLogger::log($request, 'update', 'department_hrs', $department->id, null, ['users' => $users]);
         
         return response()->json(['message' => 'HR roster updated successfully.']);
     }
@@ -253,15 +254,16 @@ class DepartmentController extends Controller
         }
 
         $department->hrs()->syncWithoutDetaching([$userId]);
-        AuditLogger::log($request, 'create', 'department_hr', $department->id, null, ['user_id' => $userId]);
+        AuditLogger::log($request, 'create', 'department_hr', $department->id, null, ['user' => $user->only(['id', 'name'])]);
         return response()->json(['message' => 'HR added successfully.']);
     }
 
     public function removeHr(Request $request, string $id, string $userId)
     {
         $department = Department::withTrashed()->findOrFail($id);
+        $user = \App\Models\User::findOrFail($userId);
         $department->hrs()->detach($userId);
-        AuditLogger::log($request, 'delete', 'department_hr', $department->id, ['user_id' => $userId], null);
+        AuditLogger::log($request, 'delete', 'department_hr', $department->id, ['user' => $user->only(['id', 'name'])], null);
         return response()->json(['message' => 'HR removed successfully.']);
     }
 
@@ -274,7 +276,8 @@ class DepartmentController extends Controller
         ]);
 
         \App\Models\User::whereIn('id', $validated['user_ids'])->update(['department_id' => $department->id]);
-        AuditLogger::log($request, 'update', 'department_employees', $department->id, null, ['user_ids' => $validated['user_ids']]);
+        $users = \App\Models\User::whereIn('id', $validated['user_ids'])->select('id', 'name')->get()->toArray();
+        AuditLogger::log($request, 'update', 'department_employees', $department->id, null, ['users' => $users]);
 
         return response()->json(['message' => 'Employees assigned successfully.']);
     }
@@ -285,7 +288,7 @@ class DepartmentController extends Controller
         $user = \App\Models\User::where('department_id', $department->id)->findOrFail($userId);
         $user->update(['department_id' => null]);
         
-        AuditLogger::log($request, 'delete', 'department_employee', $department->id, ['user_id' => $userId], null);
+        AuditLogger::log($request, 'delete', 'department_employee', $department->id, ['user' => $user->only(['id', 'name'])], null);
         
         return response()->json(['message' => 'Employee removed from department successfully.']);
     }

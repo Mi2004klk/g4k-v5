@@ -18,8 +18,7 @@ class UserController extends Controller
 {
     private function hasCapability(Request $request, string $capability): bool
     {
-        $activeRole = $request->user()->resolveActiveRole();
-        return CapabilityMatrix::hasCapability($activeRole, $capability);
+        return $request->user()->hasCapability($capability);
     }
 
     private function checkHrScope(Request $request, User $targetUser): bool

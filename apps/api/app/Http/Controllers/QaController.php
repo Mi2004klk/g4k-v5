@@ -53,6 +53,8 @@ class QaController extends Controller
             ]);
         }
 
+        \App\Services\AuditLogger::log($request, 'create', 'qa_form', $qaForm->id, null, $qaForm->toArray());
+
         return response()->json(['data' => $qaForm->load('fields')]);
     }
 
@@ -64,6 +66,7 @@ class QaController extends Controller
     public function update(Request $request, $id)
     {
         $qaForm = QaForm::findOrFail($id);
+        $before = $qaForm->toArray();
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -105,6 +108,8 @@ class QaController extends Controller
             });
         }
 
+        \App\Services\AuditLogger::log($request, 'update', 'qa_form', $qaForm->id, $before, $qaForm->toArray());
+
         return response()->json(['data' => $qaForm->load('fields')]);
     }
 
@@ -124,8 +129,12 @@ class QaController extends Controller
             return response()->json(['message' => 'Cannot delete QA Form because it has historical submissions.'], 409);
         }
 
+        $before = $qaForm->toArray();
+
         QaFormField::where('qa_form_id', $qaForm->id)->delete();
         $qaForm->delete();
+
+        \App\Services\AuditLogger::log($request, 'delete', 'qa_form', $id, $before, null);
 
         return response()->json(['message' => 'QA Form deleted successfully']);
     }

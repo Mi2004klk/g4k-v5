@@ -130,8 +130,27 @@ class User extends Authenticatable
 
         if (in_array('super_admin', $roles)) return 'super_admin';
         if (in_array('hr', $roles)) return 'hr';
+        if (in_array('employee', $roles)) return 'employee';
 
-        return 'employee';
+        return '';
+    }
+
+    public function hasCapability(string $capability): bool
+    {
+        $activeRole = $this->resolveActiveRole();
+        
+        $token = $this->currentAccessToken();
+        if ($token) {
+            if ($token->can('role:super_admin')) $activeRole = 'super_admin';
+            elseif ($token->can('role:hr')) $activeRole = 'hr';
+            elseif ($token->can('role:employee')) $activeRole = 'employee';
+        }
+
+        if (empty($activeRole)) {
+            return false;
+        }
+
+        return \App\Services\CapabilityMatrix::hasCapability($activeRole, $capability);
     }
 
     public function getEmergencyContactNameAttribute()
