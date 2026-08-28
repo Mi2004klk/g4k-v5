@@ -15,7 +15,7 @@ export function AppUserPicker(props: AppUserPickerProps) {
 
   const { data: usersData, isLoading } = useQuery({
     queryKey: ["users-search", debouncedSearch],
-    queryFn: () => apiFetch(`/chat/users?search=${encodeURIComponent(debouncedSearch)}`),
+    queryFn: () => apiFetch(`/users/lookup?search=${encodeURIComponent(debouncedSearch)}`),
   });
 
   const users: UserPickerUser[] = useMemo(() => {

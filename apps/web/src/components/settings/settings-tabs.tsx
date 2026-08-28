@@ -24,6 +24,7 @@ import { RemindersConfig } from "./reminders-config";
 import { SecurityRequestsConfig } from "./security-requests-config";
 import { DemoDataConfig } from "./demo-data-config";
 import { SystemJobsConfig } from "./system-jobs-config";
+import { QaFormsManagement } from "./qa-forms-management";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/state-helpers";
@@ -141,6 +142,7 @@ export function SettingsTabs() {
             <TabsTrigger value="autonumber">Auto-Numbering</TabsTrigger>
             <TabsTrigger value="reminders">Reminders</TabsTrigger>
             <TabsTrigger value="security">Security Requests</TabsTrigger>
+            <TabsTrigger value="qa-forms">QA Forms</TabsTrigger>
 
             <TabsTrigger value="demo">Demo Data</TabsTrigger>
             <TabsTrigger value="jobs">System Jobs</TabsTrigger>
@@ -256,34 +258,37 @@ export function SettingsTabs() {
               <HolidayCalendar />
             </div>
           </TabsContent>
-      <TabsContent value="mail">
-        <MailSmtpConfig />
-      </TabsContent>
+          <TabsContent value="mail">
+            <MailSmtpConfig />
+          </TabsContent>
 
-      <TabsContent value="notifications">
-        <NotificationsConfig />
-      </TabsContent>
+          <TabsContent value="notifications">
+            <NotificationsConfig />
+          </TabsContent>
 
-      <TabsContent value="autonumber">
-        <AutoNumberingConfig />
-      </TabsContent>
+          <TabsContent value="autonumber">
+            <AutoNumberingConfig />
+          </TabsContent>
 
-      <TabsContent value="reminders">
-        <RemindersConfig />
-      </TabsContent>
+          <TabsContent value="reminders">
+            <RemindersConfig />
+          </TabsContent>
 
-      <TabsContent value="security">
-        <SecurityRequestsConfig />
-      </TabsContent>
+          <TabsContent value="security">
+            <SecurityRequestsConfig />
+          </TabsContent>
 
+          <TabsContent value="qa-forms">
+            <QaFormsManagement />
+          </TabsContent>
 
-      <TabsContent value="demo">
-        <DemoDataConfig />
-      </TabsContent>
+          <TabsContent value="demo">
+            <DemoDataConfig />
+          </TabsContent>
 
-      <TabsContent value="jobs">
-        <SystemJobsConfig />
-      </TabsContent>
+          <TabsContent value="jobs">
+            <SystemJobsConfig />
+          </TabsContent>
         </>
       )}
     </Tabs>

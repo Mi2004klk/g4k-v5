@@ -50,6 +50,27 @@ class SavedViewController extends Controller
         ]);
     }
 
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $view = SavedView::where('user_id', $request->user()->id)->findOrFail($id);
+        $view->update([
+            'name' => $validated['name'],
+        ]);
+
+        return response()->json([
+            'data' => [
+                'id' => $view->id,
+                'name' => $view->name,
+                'module' => $view->entity,
+                'filters' => $view->config,
+            ]
+        ]);
+    }
+
     public function destroy(Request $request, $id)
     {
         $view = SavedView::where('user_id', $request->user()->id)->findOrFail($id);

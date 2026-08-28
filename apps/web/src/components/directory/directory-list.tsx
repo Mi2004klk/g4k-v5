@@ -54,7 +54,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
+import { EraseUserDialog } from "@/components/users/erase-user-dialog";
 import { UserForm, UserFormValues } from "@/components/users/user-form";
+import { EmployeeImportDialog } from "./employee-import-dialog";
 
 import { DataTable } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
@@ -104,6 +106,8 @@ export function EmployeeManagementTab() {
   const [roleFilter, setRoleFilter] = useUrlState("role", "all");
   const [statusFilter, setStatusFilter] = useUrlState("status", "all");
   const [deptFilter, setDeptFilter] = useUrlState("department_id", "all");
+  const [erasingUser, setErasingUser] = useState<any>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Pagination State
   const [page, setPage] = useState(1);
@@ -424,9 +428,15 @@ export function EmployeeManagementTab() {
               </TooltipProvider>
               <DropdownMenuContent align="end" className="w-56 font-sans">
                 {user.deleted_at ? (
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setConfirmState({ isOpen: true, type: "restore", payload: user }); }} className="gap-2 text-emerald-600 font-medium">
-                    <AppIcon name="history" /> Restore User
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setConfirmState({ isOpen: true, type: "restore", payload: user }); }} className="gap-2 text-emerald-600 font-medium">
+                      <AppIcon name="history" /> Restore User
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setErasingUser(user); }} className="gap-2 text-rose-600 font-medium">
+                      <AppIcon name="trash" /> Erase Data
+                    </DropdownMenuItem>
+                  </>
                 ) : (
                   <>
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setConfirmState({ isOpen: true, type: "reset-password", payload: user }); }} className="gap-2 text-amber-600">
@@ -458,7 +468,7 @@ export function EmployeeManagementTab() {
         );
       }
     }
-  ], [canManageUsers, router, setConfirmState, setEditingUser, setIsEditOpen, statusMutation]);
+  ], [canManageUsers, router, setConfirmState, setEditingUser, setIsEditOpen, statusMutation, setErasingUser]);
   const deptOptions = (Array.isArray(departments) ? departments : []).map((d: Department) => ({ label: d.name, value: d.id.toString() }));
 
   return (
@@ -552,10 +562,16 @@ export function EmployeeManagementTab() {
 
             {/* Add Employee */}
             {canManageUsers && (
-              <Button onClick={() => setIsCreateOpen(true)} className="h-10 gap-2 shadow-sm font-medium px-4 bg-blue-600 hover:bg-blue-700 text-white border-0">
-                <AppIcon name="plus" size="sm" />
-                Add Employee
-              </Button>
+              <>
+                <Button onClick={() => setIsImportOpen(true)} variant="outline" className="h-10 gap-2 shadow-sm font-medium px-4 text-neutral-700 dark:text-neutral-300">
+                  <AppIcon name="upload" size="sm" />
+                  Import CSV
+                </Button>
+                <Button onClick={() => setIsCreateOpen(true)} className="h-10 gap-2 shadow-sm font-medium px-4 bg-blue-600 hover:bg-blue-700 text-white border-0">
+                  <AppIcon name="plus" size="sm" />
+                  Add Employee
+                </Button>
+              </>
             )}
           </div>
         }
@@ -665,6 +681,22 @@ export function EmployeeManagementTab() {
         />
       )}
 
+      {erasingUser && (
+        <EraseUserDialog
+          open={!!erasingUser}
+          onOpenChange={(open) => !open && setErasingUser(null)}
+          user={erasingUser}
+          onSuccess={() => { setErasingUser(null); refetch(); }}
+        />
+      )}
+
+      {isImportOpen && (
+        <EmployeeImportDialog
+          open={isImportOpen}
+          onOpenChange={setIsImportOpen}
+          onSuccess={() => { setIsImportOpen(false); refetch(); }}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmState.isOpen}

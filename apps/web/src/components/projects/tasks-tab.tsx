@@ -12,6 +12,7 @@ import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { useSearchParams } from "next/navigation";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
+import { SavedReportViews } from "@/components/reports/saved-report-views";
 import { usePusher } from "@/hooks/use-pusher";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { AppUserPicker } from "@/components/app-user-picker";
@@ -972,6 +973,31 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
           <Toolbar
             prependFilters={
               <div className="flex items-center gap-2 pr-2 border-r border-neutral-200 dark:border-neutral-800 shrink-0">
+                <SavedReportViews 
+                  module="tasks"
+                  currentFilters={{
+                    status: statusFilter,
+                    scope: scopeFilter,
+                    search: searchQuery,
+                    assignee: assigneeFilter,
+                    date_from: fromDate,
+                    date_to: toDate,
+                    sort_by: sortBy,
+                    sort_order: sortOrder,
+                  }}
+                  onApplyFilters={(f: any) => {
+                    if (f.status) setStatusFilter(f.status);
+                    if (f.scope) setScopeFilter(f.scope);
+                    if (f.search !== undefined) setSearchQuery(f.search);
+                    if (f.assignee) setAssigneeFilter(f.assignee);
+                    if (f.date_from !== undefined) setFromDate(f.date_from);
+                    if (f.date_to !== undefined) setToDate(f.date_to);
+                    if (f.sort_by) setSortBy(f.sort_by);
+                    if (f.sort_order) setSortOrder(f.sort_order);
+                    setFilterPreset("custom");
+                  }}
+                />
+                
                 <Select value={filterPreset} onValueChange={setFilterPreset}>
                   <SelectTrigger className="w-[140px] h-8 text-xs font-bold bg-neutral-50 dark:bg-neutral-800 border-none shadow-none text-primary-600 dark:text-primary-400">
                     <SelectValue placeholder="Saved Filters" />

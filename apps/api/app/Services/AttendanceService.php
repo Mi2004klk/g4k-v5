@@ -310,22 +310,7 @@ class AttendanceService
         $user = \App\Models\User::find($userId);
         if (!$user) return;
 
-        // Determine schedule
-        $schedule = null;
-        if ($user->work_schedule_id) {
-            $schedule = \App\Models\WorkSchedule::find($user->work_schedule_id);
-        }
-        if (!$schedule) {
-            $schedule = \App\Models\WorkSchedule::where('is_default', true)->first();
-        }
 
-        $workingDays = [1, 2, 3, 4, 5, 6];
-        if ($schedule && !empty($schedule->working_days)) {
-            $decoded = is_string($schedule->working_days) ? json_decode($schedule->working_days, true) : $schedule->working_days;
-            if (is_array($decoded)) {
-                $workingDays = array_map('intval', $decoded);
-            }
-        }
 
         
         $activeRole = $user->resolveActiveRole();

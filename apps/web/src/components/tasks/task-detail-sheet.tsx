@@ -186,8 +186,12 @@ export function TaskDetailSheet({
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: () => {
-      toast.success("Task updated.");
+    onSuccess: (data: any) => {
+      if (data?.next_task_created) {
+        toast.success("Task updated. Next occurrence created automatically.");
+      } else {
+        toast.success("Task updated.");
+      }
       setIsEditing(false);
       invalidateTasks();
     },
@@ -204,8 +208,12 @@ export function TaskDetailSheet({
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: () => {
-      toast.success("Task updated.");
+    onSuccess: (data: any) => {
+      if (data?.next_task_created) {
+        toast.success("Task updated. Next occurrence created automatically.");
+      } else {
+        toast.success("Task updated.");
+      }
       invalidateTasks();
     },
     onError: (err: Error) => toast.error(err.message || "Failed to update task."),

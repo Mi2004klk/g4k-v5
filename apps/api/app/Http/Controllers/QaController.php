@@ -117,7 +117,7 @@ class QaController extends Controller
         return response()->json(['data' => $qaForm->load('fields')]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $qaForm = QaForm::findOrFail($id);
 
@@ -141,5 +141,36 @@ class QaController extends Controller
         \App\Services\AuditLogger::log($request, 'delete', 'qa_form', $id, $before, null);
 
         return response()->json(['message' => 'QA Form deleted successfully']);
+    }
+
+    public function duplicate(Request $request, $id)
+    {
+        $original = QaForm::with('fields')->findOrFail($id);
+
+        $qaForm = QaForm::create([
+            'title' => $original->title . ' (Copy)',
+            'description' => $original->description,
+            'is_template' => $original->is_template,
+            'created_by' => $request->user()->id,
+        ]);
+
+        foreach ($original->fields as $field) {
+            QaFormField::create([
+                'qa_form_id' => $qaForm->id,
+                'label' => $field->label,
+                'field_type' => $field->field_type,
+                'required' => $field->required,
+                'options' => $field->options,
+                'section_id' => $field->section_id,
+                'branching_logic' => $field->branching_logic,
+                'config' => $field->config,
+                'validation' => $field->validation,
+                'order' => $field->order,
+            ]);
+        }
+
+        \App\Services\AuditLogger::log($request, 'duplicate', 'qa_form', $qaForm->id, null, $qaForm->toArray());
+
+        return response()->json(['data' => $qaForm->load('fields')]);
     }
 }

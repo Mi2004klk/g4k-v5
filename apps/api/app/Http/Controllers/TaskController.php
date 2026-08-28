@@ -507,7 +507,7 @@ class TaskController extends Controller
 
             TaskService::updateStatus($task, $validated['status'], $user->id);
             if ($validated['status'] === 'done') {
-                RecurrenceService::handleCompletion($task);
+                $newTask = RecurrenceService::handleCompletion($task);
 
                 // Notify project chat
                 if ($task->project_id) {
@@ -584,7 +584,11 @@ class TaskController extends Controller
         }
         }
 
-        return response()->json($task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']));
+        $responseTask = $task->load(['project', 'assignees', 'assignee', 'reporter', 'blocker', 'qaForm']);
+        if (isset($newTask) && $newTask) {
+            $responseTask->next_task_created = true;
+        }
+        return response()->json($responseTask);
     }
 
     public function reorder(Request $request)
@@ -866,7 +870,11 @@ class TaskController extends Controller
 
         \App\Services\DashboardCacheService::invalidateGlobal();
 
-        return response()->json($task->fresh(['approval']));
+        $responseTask = $task->fresh(['approval']);
+        if (isset($newTask) && $newTask) {
+            $responseTask->next_task_created = true;
+        }
+        return response()->json($responseTask);
     }
 
     public function redo(Request $request, $id)

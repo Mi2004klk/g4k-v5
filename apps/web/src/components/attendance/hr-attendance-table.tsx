@@ -17,6 +17,7 @@ import { useExport } from "@/hooks/use-export";
 import { Button, Checkbox, StatusBadge, ListScaffold } from "@g4k/ui/components";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
+import { SavedReportViews } from "@/components/reports/saved-report-views";
 
 export interface HrAttendanceRecord {
   id: number;
@@ -379,6 +380,21 @@ export function HrAttendanceTable() {
         }}
         actions={
           <>
+            <SavedReportViews 
+              module="attendance"
+              currentFilters={{
+                date: selectedDate,
+                status: statusFilter,
+                department_id: deptFilter,
+                search: search,
+              }}
+              onApplyFilters={(f: any) => {
+                if (f.date) setSelectedDate(f.date);
+                if (f.status) setStatusFilter(f.status);
+                if (f.department_id) setDeptFilter(f.department_id);
+                if (f.search !== undefined) setSearch(f.search);
+              }}
+            />
             <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
               <AppIcon name="download" className="mr-1" />
               {isExporting ? "Exporting..." : "Export Selected"}

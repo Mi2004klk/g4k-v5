@@ -9,11 +9,8 @@ use Illuminate\Validation\Rules\Password;
 use App\Services\AuditLogger;
 
 
-use App\Traits\ValidatesPasswordPolicy;
-
 class ProfileController extends Controller
 {
-    use ValidatesPasswordPolicy;
 
     public function show(Request $request)
     {

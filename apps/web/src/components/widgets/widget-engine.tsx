@@ -387,6 +387,21 @@ export function WidgetEngine({ headerContent, availableWidgets }: WidgetEnginePr
           </div>
         ))}
       </GridLayout>
+
+      {availableWidgets.filter(w => !dismissedWidgets.includes(w.id)).length === 0 && (
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/50 mx-2 mt-4 px-4">
+          <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4">
+            <AppIcon name="dashboard" size="xl" className="text-neutral-400" />
+          </div>
+          <h3 className="text-xl font-bold text-neutral-800 dark:text-neutral-200">Your dashboard is empty</h3>
+          <p className="text-sm text-neutral-500 max-w-sm mt-2 mb-6">
+            You've cleared all your widgets. Add some back to keep track of your tasks, attendance, and team activities.
+          </p>
+          <Button onClick={restoreWidgets} variant="primary" className="shadow-e1">
+            <AppIcon name="plus" className="mr-2" /> Add Widgets
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -118,7 +118,11 @@ export function TaskOverviewTab({
     },
     onSuccess: (data: any) => {
       if (isQueued(data)) return;
-      toast.success("Task approved");
+      if (data?.next_task_created) {
+        toast.success("Task approved. Next occurrence created automatically.");
+      } else {
+        toast.success("Task approved");
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });

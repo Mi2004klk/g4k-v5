@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api-client";
@@ -15,6 +17,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { useUserActions } from "@/hooks/use-user-actions";
 import { UserEditDialog } from "@/components/users/user-edit-dialog";
+import { EraseUserDialog } from "@/components/users/erase-user-dialog";
 import { STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
 
 export default function Employee360Page() {
@@ -31,8 +34,9 @@ export default function Employee360Page() {
   const endpoint = canViewFull ? `/users/${id}` : `/directory/${id}`;
 
   const sendMessageMutation = useChatWithUser();
+  const [erasingUser, setErasingUser] = useState<any>(null);
 
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading, refetch } = useQuery({
     queryKey: queryKeys.user(Number(id)),
     queryFn: () => apiFetch(endpoint),
     enabled: !!id,
@@ -172,6 +176,10 @@ export default function Employee360Page() {
                       <DropdownMenuItem onClick={() => { setEditingUser(user); setIsEditOpen(true); }} className="gap-2">
                         <AppIcon name="edit" /> Edit
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setErasingUser(user)} className="gap-2 text-rose-600 font-medium">
+                        <AppIcon name="trash" /> Erase Data
+                      </DropdownMenuItem>
                     </>
                   )}
                 </DropdownMenuContent>
@@ -275,6 +283,19 @@ export default function Employee360Page() {
           work_schedules={work_schedules as any}
           onSubmit={(data) => updateMutation.mutate({ id: (editingUser as any).id, payload: data })}
           isPending={updateMutation.isPending}
+        />
+      )}
+
+      {erasingUser && (
+        <EraseUserDialog
+          open={!!erasingUser}
+          onOpenChange={(open) => !open && setErasingUser(null)}
+          userId={erasingUser.id}
+          userName={erasingUser.name}
+          onSuccess={() => {
+            refetch();
+            router.push("/dashboard/directory");
+          }}
         />
       )}
 

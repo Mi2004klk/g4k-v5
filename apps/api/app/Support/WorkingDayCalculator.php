@@ -59,14 +59,13 @@ class WorkingDayCalculator
                 $hDateStr = Carbon::parse($h->date)->toDateString();
                 $hMonthDay = Carbon::parse($h->date)->format('m-d');
                 
+                if (!empty($h->recurring) && $hMonthDay === '02-29' && $monthDay === '02-28' && !$current->isLeapYear()) {
+                    $isHoliday = true;
+                    break;
+                }
                 if ($dateStr === $hDateStr || (!empty($h->recurring) && $monthDay === $hMonthDay)) {
-                    if ($monthDay === '02-28' && $hMonthDay === '02-29' && !$current->isLeapYear()) {
-                        $isHoliday = true;
-                        break;
-                    } elseif ($monthDay === $hMonthDay) {
-                        $isHoliday = true;
-                        break;
-                    }
+                    $isHoliday = true;
+                    break;
                 }
             }
 
@@ -104,12 +103,11 @@ class WorkingDayCalculator
             $hDateStr = Carbon::parse($h->date)->toDateString();
             $hMonthDay = Carbon::parse($h->date)->format('m-d');
             
+            if (!empty($h->recurring) && $hMonthDay === '02-29' && $monthDay === '02-28' && !$current->isLeapYear()) {
+                return true;
+            }
             if ($dateStr === $hDateStr || (!empty($h->recurring) && $monthDay === $hMonthDay)) {
-                if ($monthDay === '02-28' && $hMonthDay === '02-29' && !$current->isLeapYear()) {
-                    return true;
-                } elseif ($monthDay === $hMonthDay) {
-                    return true;
-                }
+                return true;
             }
         }
         return false;

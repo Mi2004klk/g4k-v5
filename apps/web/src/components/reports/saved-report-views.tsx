@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, Spinner,
-} from "@g4k/ui/components";
+import { AppIcon, Spinner } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button, Input, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useIsMobile } from "@g4k/ui/hooks";
 import { queryKeys } from "@/lib/query-keys";
@@ -27,6 +27,8 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
   const queryClient = useQueryClient();
   const [saveName, setSaveName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [renamingView, setRenamingView] = useState<SavedReportView | null>(null);
+  const [renameName, setRenameName] = useState("");
   const isMobile = useIsMobile();
 
   const { data: views = [] } = useQuery({
@@ -56,6 +58,20 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
       if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
       toast.success("View deleted successfully");
+    }
+  });
+
+  const renameMutation = useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) => apiFetch(`/saved-views/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ name })
+    }),
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
+      queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
+      toast.success("View renamed successfully");
+      setRenamingView(null);
+      setRenameName("");
     }
   });
 
@@ -94,6 +110,19 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="h-8 w-8 text-neutral-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setRenamingView(v);
+                      setRenameName(v.name);
+                    }}
+                  >
+                    <AppIcon name="edit" className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className="h-8 w-8 text-neutral-400 hover:text-red-500 opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 mr-1"
                     onClick={(e) => {
                       e.preventDefault();
@@ -110,6 +139,32 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Dialog open={!!renamingView} onOpenChange={(open) => !open && setRenamingView(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Rename View</DialogTitle>
+              <DialogDescription>Enter a new name for this saved view.</DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-2">
+              <Input
+                value={renameName}
+                onChange={(e) => setRenameName(e.target.value)}
+                autoFocus
+              />
+              <Button
+                onClick={() => {
+                  if (renameName.trim() && renamingView) {
+                    renameMutation.mutate({ id: renamingView.id, name: renameName.trim() });
+                  }
+                }}
+                disabled={renameMutation.isPending || !renameName.trim()}
+              >
+                {renameMutation.isPending ? <Spinner /> : "Save"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {isMobile ? (
           <Sheet open={isSaving} onOpenChange={setIsSaving}>
@@ -133,8 +188,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                 />
                 <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
                   {saveMutation.isPending ? <Spinner /> : "Save"}
-                </Button>
-              </div>
+ কঠ              </div>
             </SheetContent>
           </Sheet>
         ) : (

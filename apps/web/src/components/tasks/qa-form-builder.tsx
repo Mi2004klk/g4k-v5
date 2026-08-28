@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch, isQueued } from "@/lib/api-client";
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Input, Card, CardHeader, CardTitle, CardContent, AppIcon, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Checkbox, Switch, Badge, Alert, AlertTitle, AlertDescription, Spinner,
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Input, Card, CardHeader, CardTitle, CardContent, AppIcon, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, Checkbox, Switch, Badge, Alert, AlertTitle, AlertDescription, Spinner,
   IconButton,
 } from "@g4k/ui/components";
 import { Dialog, DialogContent, ConfirmDialog } from "@g4k/ui/components";
@@ -411,6 +411,18 @@ export function QAFormBuilder() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  const duplicateFormMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiFetch(`/qa-forms/${id}/duplicate`, { method: "POST" });
+    },
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
+      toast.success("QA Form duplicated successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.qaForms });
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to duplicate form."),
+  });
+
   const { data: qaFormsData, isLoading: isLoadingForms } = useQuery({ 
     queryKey: queryKeys.qaForms, 
     queryFn: () => apiFetch("/qa-forms") 
@@ -663,6 +675,10 @@ export function QAFormBuilder() {
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(form); }}>
                             <AppIcon name="edit" size="xs" className="mr-2" /> Edit Template
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); duplicateFormMutation.mutate(form.id); }} disabled={duplicateFormMutation.isPending}>
+                            <AppIcon name="copy" size="xs" className="mr-2" /> Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" onClick={(e) => { e.stopPropagation(); setDeletingId(form.id); setIsDeleteOpen(true); }}>
                             <AppIcon name="trash" size="xs" className="mr-2" /> Delete
                           </DropdownMenuItem>

@@ -171,11 +171,97 @@ class LeaveRequestController extends Controller
         return response()->json($leave->load('approval'), 201);
     }
 
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'nullable|string',
+            'type' => 'required|in:casual,sick,earned,unpaid',
+        ]);
+
+        $leave = LeaveRequest::findOrFail($id);
+
+        $user = $request->user();
+        $activeRole = $user->resolveActiveRole();
+        $isHrOrAdmin = in_array($activeRole, ['hr', 'super_admin']);
+
+        // Only HR or super_admin can edit leaves
+        if (!$isHrOrAdmin) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Only pending leaves can be edited
+        if ($leave->status !== 'pending') {
+            return response()->json(['message' => 'Only pending leaves can be edited.'], 422);
+        }
+
+        $userId = $leave->user_id;
+
+        // Check Working Days
+        $targetUser = \App\Models\User::find($userId);
+        $startDate = Carbon::parse($validated['start_date']);
+        $endDate = Carbon::parse($validated['end_date']);
+        
+        $requestedDays = \App\Support\WorkingDayCalculator::calculate($targetUser, $startDate->toDateString(), $endDate->toDateString());
+        if ($requestedDays === 0) {
+            return response()->json(['message' => 'Requested date range does not contain any working days.'], 422);
+        }
+
+        $balance = \App\Models\LeaveBalance::getOrCreate($userId, $validated['type'], (int) $startDate->format('Y'));
+        
+        if ($validated['type'] !== 'unpaid' && ($balance->allowed - $balance->used) < $requestedDays) {
+            $available = max(0, $balance->allowed - $balance->used);
+            return response()->json([
+                'message' => "Insufficient leave balance for requested {$validated['type']} leave. Available: {$available} day(s), Requested: {$requestedDays} day(s)."
+            ], 422);
+        }
+
+        try {
+            DB::transaction(function() use ($userId, $validated, $leave) {
+                \App\Models\User::where('id', $userId)->lockForUpdate()->first();
+
+                $overlap = LeaveRequest::where('user_id', $userId)
+                    ->where('id', '!=', $leave->id)
+                    ->where(function ($q) use ($validated) {
+                        $q->whereBetween('start_date', [$validated['start_date'], $validated['end_date']])
+                          ->orWhereBetween('end_date', [$validated['start_date'], $validated['end_date']])
+                          ->orWhere(function ($q2) use ($validated) {
+                              $q2->where('start_date', '<=', $validated['start_date'])
+                                 ->where('end_date', '>=', $validated['end_date']);
+                          });
+                    })
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->exists();
+        
+                if ($overlap) {
+                    throw new \Exception('OVERLAP_ERROR');
+                }
+
+                $leave->update([
+                    'start_date' => $validated['start_date'],
+                    'end_date' => $validated['end_date'],
+                    'reason' => $validated['reason'],
+                    'type' => $validated['type'],
+                ]);
+            });
+        } catch (\Exception $e) {
+            if ($e->getMessage() === 'OVERLAP_ERROR' || (isset($e->errorInfo) && in_array($e->getCode(), ['23505', '23000', '1062']))) {
+                return response()->json(['message' => 'User already has a pending or approved leave request overlapping these dates.'], 422);
+            }
+            throw $e;
+        }
+
+        \App\Services\AuditLogger::log($request, 'leave.update', 'LeaveRequest', $leave->id, null, $validated);
+
+        return response()->json($leave->load('approval'));
+    }
+
     public function decision(Request $request, $id)
     {
         $validated = $request->validate([
             'decision' => 'required|in:approved,rejected',
-            'reason' => 'required_if:decision,rejected|string|nullable',
+            'reason' => 'required_if:decision,rejected|string|max:1000',
         ]);
 
         $leaveRequest = LeaveRequest::with('approval')->findOrFail($id);

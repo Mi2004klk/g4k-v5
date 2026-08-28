@@ -156,6 +156,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::delete('/leave-requests/{id}', [LeaveRequestController::class, 'destroy']);
     });
     
+    Route::put('/leave-requests/{id}', [LeaveRequestController::class, 'update'])->middleware('capability:leave.approve-employee')->where('id', '[0-9]+');
     Route::post('/leave-requests/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware(['capability:leave.approve-employee', 'throttle:15,1']);
     Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
@@ -233,6 +234,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::post('/qa-forms', [QaController::class, 'store']);
         Route::put('/qa-forms/{id}', [QaController::class, 'update']);
         Route::delete('/qa-forms/{id}', [QaController::class, 'destroy']);
+        Route::post('/qa-forms/{id}/duplicate', [QaController::class, 'duplicate']);
     });
 
     Route::middleware('capability:timer.track')->group(function () {
@@ -246,6 +248,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     Route::middleware('capability:reports.view')->group(function () {
         Route::get('/saved-views', [SavedViewController::class, 'index']);
         Route::post('/saved-views', [SavedViewController::class, 'store']);
+        Route::put('/saved-views/{id}', [SavedViewController::class, 'update']);
         Route::delete('/saved-views/{id}', [SavedViewController::class, 'destroy']);
     });
 
@@ -333,6 +336,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     // Admin & Master Data APIs
     Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage|users.employee.manage');
     Route::middleware('capability:users.hr.manage|users.employee.manage')->group(function () {
+        Route::post('/users/import', [UserController::class, 'import']);
         Route::post('/users/{id}/avatar', [UserController::class, 'uploadAvatar']);
         Route::post('/users/bulk', [UserController::class, 'bulk']);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
@@ -345,6 +349,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     });
     
     // Explicitly place show and activity outside so the controller can handle $isSelf bypasses
+    Route::get('/users/lookup', [UserController::class, 'lookup']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::get('/users/{id}/activity', [UserController::class, 'activity']);
     Route::apiResource('auto-numberings', AutoNumberingController::class)->only(['index', 'update'])->middleware('capability:settings.manage');

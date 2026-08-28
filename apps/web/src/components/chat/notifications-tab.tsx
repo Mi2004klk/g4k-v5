@@ -367,6 +367,13 @@ export function NotificationsTab() {
               </Button>
             </div>
           )}
+
+          <div className="mt-8 pt-4 border-t border-neutral-100 dark:border-neutral-800/50 text-center">
+            <p className="text-xs text-neutral-400 font-medium flex items-center justify-center gap-1.5">
+              <AppIcon name="info" size="xs" />
+              Notifications are automatically purged after 30 days.
+            </p>
+          </div>
         </div>
       )}
     </div>

@@ -150,6 +150,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
         confirmText="Confirm Rejection"
         isDestructive={true}
         isLoading={decisionMutation.isPending}
+        confirmDisabled={!rejectReason.trim()}
       >
         <div className="py-2">
           <Input

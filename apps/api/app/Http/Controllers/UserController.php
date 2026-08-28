@@ -90,6 +90,28 @@ class UserController extends Controller
         return response()->json($users);
     }
 
+    public function lookup(Request $request)
+    {
+        $search = $request->input('search');
+        $users = User::where('status', 'active')
+            ->when($search, function ($q) use ($search) {
+                $q->where(function($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%")
+                          ->orWhere('employee_id', 'like', "%{$search}%")
+                          ->orWhereHas('department', function($q2) use ($search) {
+                              $q2->where('name', 'like', "%{$search}%");
+                          });
+                });
+            })
+            ->with('department:id,name')
+            ->select('id', 'name', 'avatar_url', 'department_id', 'email', 'employee_id')
+            ->limit(50)
+            ->get();
+            
+        return response()->json($users);
+    }
+
     public function export(Request $request)
     {
         $job = \App\Models\ExportJob::create([
@@ -780,5 +802,89 @@ class UserController extends Controller
             'tasks' => $tasks,
         ]);
     }
-}
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:10240',
+        ]);
 
+        $file = $request->file('file');
+        
+        // This handles a simple CSV parsing and bulk creation.
+        // In a real app we might use Laravel Excel or similar, but since we are doing simple parsing:
+        $handle = fopen($file->getRealPath(), "r");
+        $header = fgetcsv($handle, 1000, ",");
+        
+        if (!$header) {
+            return response()->json(['message' => 'Invalid CSV format'], 422);
+        }
+        
+        $header = array_map('strtolower', $header);
+        $header = array_map('trim', $header);
+
+        $requiredCols = ['name', 'email'];
+        foreach ($requiredCols as $col) {
+            if (!in_array($col, $header)) {
+                return response()->json(['message' => "Missing required column: {$col}"], 422);
+            }
+        }
+
+        $records = [];
+        while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
+            if (count($header) !== count($row)) continue;
+            $data = array_combine($header, $row);
+            $records[] = $data;
+        }
+        fclose($handle);
+
+        $success = 0;
+        $failed = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($records as $index => $data) {
+                if (empty($data['email']) || empty($data['name'])) {
+                    $failed++;
+                    $errors[] = "Row " . ($index + 2) . ": Missing name or email.";
+                    continue;
+                }
+
+                if (User::where('email', $data['email'])->exists()) {
+                    $failed++;
+                    $errors[] = "Row " . ($index + 2) . ": Email already exists.";
+                    continue;
+                }
+
+                $user = User::create([
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'password' => \Illuminate\Support\Facades\Hash::make('password123'), // Default password
+                    'phone' => $data['phone'] ?? null,
+                    'designation_id' => null, // Can be mapped if ID is provided
+                    'department_id' => null,
+                    'join_date' => $data['join_date'] ?? date('Y-m-d'),
+                    'manager_id' => null,
+                ]);
+                
+                \App\Models\RoleAssignment::create([
+                    'user_id' => $user->id,
+                    'role' => 'employee'
+                ]);
+
+                $success++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Error importing users: ' . $e->getMessage()], 500);
+        }
+
+        \App\Services\AuditLogger::log($request, 'import', User::class, null, null, ['success' => $success, 'failed' => $failed]);
+
+        return response()->json([
+            'message' => "Import complete. {$success} imported, {$failed} failed.",
+            'errors' => array_slice($errors, 0, 10) // Limit errors returned
+        ]);
+    }
+}

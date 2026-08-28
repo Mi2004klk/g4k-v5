@@ -34,6 +34,7 @@ interface LeaveHistoryTableProps {
   emptyTitle?: string;
   emptyDescription?: string;
   onDeleteAction?: (id: number) => void;
+  onEditAction?: (leave: LeaveRecord) => void;
 }
 
 export function LeaveHistoryTable({ 
@@ -47,7 +48,8 @@ export function LeaveHistoryTable({
   onPerPageChange,
   emptyTitle = "No leave requests found.",
   emptyDescription = "No leave records match your current filters.",
-  onDeleteAction
+  onDeleteAction,
+  onEditAction
 }: LeaveHistoryTableProps) {
   const columns = useMemo<ColumnDef<LeaveRecord>[]>(() => {
     const cols: ColumnDef<LeaveRecord>[] = [];
@@ -145,7 +147,7 @@ export function LeaveHistoryTable({
         id: "actions",
         header: "",
         cell: ({ row }) => {
-          if (!onDeleteAction) return null;
+          if (!onDeleteAction && !onEditAction) return null;
           
           const status = row.original.approval?.status || "pending";
           const isPending = status === "pending";
@@ -154,7 +156,7 @@ export function LeaveHistoryTable({
           const isFutureApproved = status === "approved" && new Date(startDateStr).setHours(0,0,0,0) > new Date().setHours(0,0,0,0);
           const canDelete = isPending || showEmployee || isFutureApproved; // If showing employee, probably admin view
           
-          if (!canDelete) return null;
+          if (!canDelete && !isPending) return null;
 
           let btnText = "Delete";
           if (!showEmployee) {
@@ -162,25 +164,35 @@ export function LeaveHistoryTable({
           }
 
           return (
-            <div className="flex justify-end">
-              <ConfirmDialog
-                title={`Confirm ${btnText}`}
-                description={`Are you sure you want to ${btnText.toLowerCase()} this leave request?`}
-                onConfirm={() => onDeleteAction(row.original.id)}
-                trigger={
-                  <button 
-                    className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline px-2 py-1 rounded transition-colors"
-                  >
-                    {btnText}
-                  </button>
-                }
-              />
+            <div className="flex justify-end gap-2 items-center">
+              {onEditAction && isPending && (
+                <button
+                  onClick={() => onEditAction(row.original)}
+                  className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline px-2 py-1 rounded transition-colors"
+                >
+                  Edit
+                </button>
+              )}
+              {onDeleteAction && canDelete && (
+                <ConfirmDialog
+                  title={`Confirm ${btnText}`}
+                  description={`Are you sure you want to ${btnText.toLowerCase()} this leave request?`}
+                  onConfirm={() => onDeleteAction(row.original.id)}
+                  trigger={
+                    <button 
+                      className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline px-2 py-1 rounded transition-colors"
+                    >
+                      {btnText}
+                    </button>
+                  }
+                />
+              )}
             </div>
           );
         },
       },
     ];
-  }, [showEmployee, onDeleteAction]);
+  }, [showEmployee, onDeleteAction, onEditAction]);
 
   return (
     <ListScaffold

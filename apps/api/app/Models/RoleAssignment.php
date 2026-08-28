@@ -10,12 +10,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 class RoleAssignment extends Model
 {
     use \App\Traits\HasDemoTag;
-    public static function getRolesForUser(int $userId): array
-    {
-        return \Illuminate\Support\Facades\Cache::remember("user_roles_{$userId}", 60, function () use ($userId) {
-            return static::where('user_id', $userId)->pluck('role')->toArray();
-        });
-    }
 
     protected static function booted()
     {
