@@ -107,7 +107,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={decisionMutation.isPending}>
               <span className="sr-only">Open menu</span>
-              {decisionMutation.isPending ? <Spinner size="sm" /> : <AppIcon name="moreVertical" size="sm" className="text-neutral-500" />}
+              {decisionMutation.isPending ? <Spinner size="sm" /> : <AppIcon name="more" size="sm" className="text-neutral-500" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

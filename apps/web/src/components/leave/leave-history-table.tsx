@@ -169,7 +169,7 @@ export function LeaveHistoryTable({
                 <DropdownMenuTrigger asChild>
                   <button className="h-8 w-8 p-0 flex items-center justify-center text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors">
                     <span className="sr-only">Open menu</span>
-                    <AppIcon name="moreVertical" size="sm" />
+                    <AppIcon name="more" size="sm" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

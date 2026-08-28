@@ -347,7 +347,7 @@ export function AdminAttendanceTable() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <span className="sr-only">Open menu</span>
-                  <AppIcon name="moreVertical" size="sm" className="text-neutral-500" />
+                  <AppIcon name="more" size="sm" className="text-neutral-500" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -370,6 +370,7 @@ export function AdminAttendanceTable() {
                       userId: row.original.user_id,
                       date: row.original.date,
                       action: "edit_event",
+                      type: "clock_in",
                     });
                   }}
                   className="text-primary-700 focus:text-primary-700"

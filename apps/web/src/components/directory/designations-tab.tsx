@@ -274,7 +274,7 @@ export function DesignationsTab() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
                     <span className="sr-only">Open menu</span>
-                    <AppIcon name="moreVertical" size="sm" className="text-neutral-500" />
+                    <AppIcon name="more" size="sm" className="text-neutral-500" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
