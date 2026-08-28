@@ -227,6 +227,12 @@ class UserController extends Controller
             if ($isSuperAdmin && $request->user()->resolveActiveRole() !== 'super_admin') {
                 return response()->json(['message' => 'Unauthorized to assign Super Admin role. Only a Super Admin can do this.'], 403);
             }
+            if ($isTargetSuperAdmin && !$isSuperAdmin) {
+                $superAdminCount = RoleAssignment::where('role', 'super_admin')->count();
+                if ($superAdminCount <= 1) {
+                    return response()->json(['message' => 'Cannot demote the last Super Admin.'], 422);
+                }
+            }
             if ($isHR && !$this->hasCapability($request, 'users.hr.manage')) {
                 return response()->json(['message' => 'Unauthorized to assign HR role.'], 403);
             }
@@ -270,12 +276,6 @@ class UserController extends Controller
                 \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
             }
         });
-        
-        if (isset($validated['roles']) && count($validated['roles']) > 0) {
-            $user->forceFill(['active_role' => null])->save();
-            $user->tokens()->delete();
-            \Illuminate\Support\Facades\Cache::forget("user_{$user->id}_roles");
-        }
 
         $user->load(['department', 'team', 'designation', 'roleAssignments']);
         AuditLogger::log($request, 'update', 'user', $user->id, $before, $user->toArray());
@@ -315,7 +315,7 @@ class UserController extends Controller
             if ($oldAvatarUrl) {
                 try {
                     $oldBasename = basename(parse_url($oldAvatarUrl, PHP_URL_PATH));
-                    \Illuminate\Support\Facades\Storage::disk($disk)->delete('avatars/' . $oldBasename);
+                    \Illuminate\Support\Facades\Storage::disk($disk)->delete("avatars/{$user->id}/" . $oldBasename);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::warning('Failed to delete old avatar: ' . $e->getMessage());
                 }
@@ -462,7 +462,7 @@ class UserController extends Controller
         if ($avatarUrl) {
             try {
                 $basename = basename(parse_url($avatarUrl, PHP_URL_PATH));
-                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete('avatars/' . $basename);
+                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete("avatars/{$user->id}/" . $basename);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning('Failed to delete user avatar on destroy: ' . $e->getMessage());
             }

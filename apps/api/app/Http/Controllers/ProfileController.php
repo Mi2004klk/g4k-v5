@@ -75,7 +75,7 @@ class ProfileController extends Controller
             if ($oldAvatarUrl) {
                 try {
                     $oldBasename = basename(parse_url($oldAvatarUrl, PHP_URL_PATH));
-                    Storage::disk($disk)->delete('avatars/' . $oldBasename);
+                    Storage::disk($disk)->delete("avatars/{$user->id}/" . $oldBasename);
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::warning('Failed to delete old avatar: ' . $e->getMessage());
                 }
