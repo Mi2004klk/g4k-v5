@@ -89,6 +89,10 @@ class QaController extends Controller
         $qaForm->save();
 
         if (!empty($validated['fields'])) {
+            if (\App\Models\QaSubmission::where('qa_form_id', $qaForm->id)->exists()) {
+                return response()->json(['message' => 'Cannot modify fields of a QA Form that has historical submissions. Please create a new form instead.'], 409);
+            }
+
             DB::transaction(function () use ($qaForm, $validated) {
                 QaFormField::where('qa_form_id', $qaForm->id)->delete();
                 foreach ($validated['fields'] as $index => $field) {

@@ -66,7 +66,7 @@ class SettingsController extends Controller
                 return [$item->category . '.' . $item->key => $item->value];
             })->toArray();
 
-        \App\Services\AuditLogger::log($request, 'bulk_update', 'settings', 0, $beforeSettings, $afterSettings);
+        \App\Services\AuditLogger::log($request, 'bulk_update', 'settings', 'system', $beforeSettings, $afterSettings);
 
         if ($bustSmtp) {
             \App\Support\SmtpSettings::bust();

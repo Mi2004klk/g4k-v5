@@ -122,6 +122,13 @@ class User extends Authenticatable
 
     public function resolveActiveRole(): string
     {
+        $token = $this->currentAccessToken();
+        if ($token) {
+            if ($token->can('role:super_admin')) return 'super_admin';
+            if ($token->can('role:hr')) return 'hr';
+            if ($token->can('role:employee')) return 'employee';
+        }
+
         $roles = $this->getCachedRoles();
 
         if ($this->active_role && in_array($this->active_role, $roles)) {
@@ -138,13 +145,6 @@ class User extends Authenticatable
     public function hasCapability(string $capability): bool
     {
         $activeRole = $this->resolveActiveRole();
-        
-        $token = $this->currentAccessToken();
-        if ($token) {
-            if ($token->can('role:super_admin')) $activeRole = 'super_admin';
-            elseif ($token->can('role:hr')) $activeRole = 'hr';
-            elseif ($token->can('role:employee')) $activeRole = 'employee';
-        }
 
         if (empty($activeRole)) {
             return false;

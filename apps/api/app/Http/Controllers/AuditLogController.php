@@ -33,17 +33,30 @@ class AuditLogController extends Controller
 
     public function export(Request $request)
     {
-        $filters = $request->only(['user_id', 'action', 'start_date', 'end_date']);
+        $validated = $request->validate([
+            'user_id' => 'nullable|exists:users,id',
+            'action' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'format' => 'nullable|in:csv,xlsx'
+        ]);
+
+        $filters = [
+            'user_id' => $validated['user_id'] ?? null,
+            'action' => $validated['action'] ?? null,
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+        ];
 
         $exportJob = ExportJob::create([
             'user_id' => $request->user()->id,
             'report_key' => 'audit_logs',
-            'format' => $request->input('format', 'xlsx'),
+            'format' => $validated['format'] ?? 'xlsx',
             'status' => 'pending',
             'filters' => $filters,
         ]);
 
-        ExportAuditLogsJob::dispatch($exportJob, $request->all());
+        ExportAuditLogsJob::dispatch($exportJob, $filters);
 
         return response()->json($exportJob, 202);
     }

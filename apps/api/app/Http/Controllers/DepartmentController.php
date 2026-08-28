@@ -237,9 +237,10 @@ class DepartmentController extends Controller
             return response()->json(['message' => 'One or more users do not have HR/Admin roles.'], 422);
         }
 
+        $beforeUsers = $department->hrs()->select('users.id', 'users.name')->get()->toArray();
         $department->hrs()->sync($validated['user_ids']);
         $users = \App\Models\User::whereIn('id', $validated['user_ids'])->select('id', 'name')->get()->toArray();
-        AuditLogger::log($request, 'update', 'department_hrs', $department->id, null, ['users' => $users]);
+        AuditLogger::log($request, 'update', 'department_hrs', $department->id, ['users' => $beforeUsers], ['users' => $users]);
         
         return response()->json(['message' => 'HR roster updated successfully.']);
     }
@@ -275,9 +276,10 @@ class DepartmentController extends Controller
             'user_ids.*' => 'exists:users,id',
         ]);
 
+        $beforeUsers = \App\Models\User::where('department_id', $department->id)->select('id', 'name')->get()->toArray();
         \App\Models\User::whereIn('id', $validated['user_ids'])->update(['department_id' => $department->id]);
-        $users = \App\Models\User::whereIn('id', $validated['user_ids'])->select('id', 'name')->get()->toArray();
-        AuditLogger::log($request, 'update', 'department_employees', $department->id, null, ['users' => $users]);
+        $users = \App\Models\User::where('department_id', $department->id)->select('id', 'name')->get()->toArray();
+        AuditLogger::log($request, 'update', 'department_employees', $department->id, ['users' => $beforeUsers], ['users' => $users]);
 
         return response()->json(['message' => 'Employees assigned successfully.']);
     }
