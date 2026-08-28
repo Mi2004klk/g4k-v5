@@ -2,12 +2,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PROTECTED: Record<string, string> = {
-  "/dashboard/admin/attendance": "admin.view-all-attendance",
-  "/dashboard/admin/reports": "reports.manage",
   "/dashboard/settings": "settings.manage",
   "/dashboard/audit": "audit.view",
   "/dashboard/reports": "reports.view",
-  "/dashboard/admin": "settings.manage",
 };
 
 export function middleware(req: NextRequest) {
