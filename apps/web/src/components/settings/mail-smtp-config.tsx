@@ -130,7 +130,7 @@ export function MailSmtpConfig() {
           <DisabledWhileSubmitting isSubmitting={updateMutation.isPending}>
           <div className="space-y-4">
           <ValidationSummary errors={form.formState.errors} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium mb-1 block">From Name</label>
               <Input type="text" {...form.register("from_name")} className="h-9 text-xs" />
@@ -147,11 +147,11 @@ export function MailSmtpConfig() {
             <Input type="text" {...form.register("host")} className="h-9 text-xs" />
             {form.formState.errors.host && <p className="text-xs text-red-500 mt-1">{form.formState.errors.host.message}</p>}
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-medium block">Port</label>
               <p className="text-[10px] text-neutral-500 mb-1 leading-tight">Usually 587 or 465</p>
-              <Input type="number" {...form.register("port")} className="h-9 text-xs" />
+              <Input type="number" {...form.register("port")} inputSize="xs" className="h-9 text-xs" />
               {form.formState.errors.port && <p className="text-xs text-red-500 mt-1">{form.formState.errors.port.message}</p>}
             </div>
             <div>
@@ -176,10 +176,10 @@ export function MailSmtpConfig() {
             </div>
             <div>
               <label className="text-xs font-medium mb-1 block">Timeout (sec)</label>
-              <Input type="number" {...form.register("timeout")} className="h-9 text-xs" />
+              <Input type="number" {...form.register("timeout")} inputSize="xs" className="h-9 text-xs" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium mb-1 block">Username</label>
               <Input type="text" {...form.register("username")} className="h-9 text-xs" />

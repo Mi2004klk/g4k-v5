@@ -38,12 +38,12 @@ export function HrAttendanceView() {
           )}
         </TabsList>
         
-        <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0 space-y-6">
+        <TabsContent value="today" className="outline-none m-0 space-y-6">
           <HrAttendanceAnalytics />
           <HrAttendanceTable />
         </TabsContent>
         
-        <TabsContent value="graph" className="outline-none m-0 focus-visible:ring-0">
+        <TabsContent value="graph" className="outline-none m-0">
           <AttendanceGraph
             endpoint="/attendance/hr/graph"
             queryKeyBase={['hr-attendance-graph']}
@@ -57,7 +57,7 @@ export function HrAttendanceView() {
         </TabsContent>
 
         {canApprove && (
-          <TabsContent value="leave" className="outline-none m-0 focus-visible:ring-0">
+          <TabsContent value="leave" className="outline-none m-0">
             <ApprovalsTab />
           </TabsContent>
         )}

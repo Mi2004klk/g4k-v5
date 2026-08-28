@@ -209,7 +209,7 @@ export function AttendanceGraph({ endpoint, queryKeyBase, groupByOptions = [], d
         </div>
       </div>
 
-      <div className="w-full bg-card rounded-xl p-6 border border-border relative min-h-[450px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
+      <div className="w-full h-full min-h-[400px] bg-card rounded-xl p-6 border border-border relative shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-surface/50 rounded-lg z-10">
             <Spinner size="xl" className="text-emerald-500" />
@@ -226,8 +226,9 @@ export function AttendanceGraph({ endpoint, queryKeyBase, groupByOptions = [], d
         
         <ReactECharts
           option={option}
-          style={{ height: '400px', width: '100%' }}
+          style={{ height: '100%', width: '100%' }}
           notMerge={true}
+          lazyUpdate={true}
         />
       </div>
     </div>

@@ -41,19 +41,19 @@ export function AdminAttendanceView() {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="calendar" className="outline-none m-0 focus-visible:ring-0">
+        <TabsContent value="calendar" className="outline-none m-0">
           <AdminAttendanceCalendar />
         </TabsContent>
 
-        <TabsContent value="today" className="outline-none m-0 focus-visible:ring-0">
+        <TabsContent value="today" className="outline-none m-0">
           <AdminAttendanceTable />
         </TabsContent>
 
-        <TabsContent value="shifts" className="outline-none m-0 focus-visible:ring-0">
+        <TabsContent value="shifts" className="outline-none m-0">
           <AdminOpenShiftsTable />
         </TabsContent>
         
-        <TabsContent value="analytics" className="outline-none m-0 focus-visible:ring-0 space-y-6">
+        <TabsContent value="analytics" className="outline-none m-0 space-y-6">
           <AdminAttendanceAnalytics />
           <AttendanceGraph
             endpoint="/attendance/admin/graph"
@@ -66,7 +66,7 @@ export function AdminAttendanceView() {
           />
         </TabsContent>
 
-        <TabsContent value="leave" className="outline-none m-0 focus-visible:ring-0">
+        <TabsContent value="leave" className="outline-none m-0">
           <AdminLeaveHolidaysView />
         </TabsContent>
       </Tabs>

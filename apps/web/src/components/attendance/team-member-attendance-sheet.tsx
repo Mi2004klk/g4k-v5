@@ -121,7 +121,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
               />
             ) : (
               <div className="space-y-8">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-100 dark:border-neutral-800">
                     <div className="text-xs text-neutral-500 mb-1 font-semibold uppercase tracking-wider">Productive Hours</div>
                     <div className="text-2xl font-mono font-bold text-neutral-900 dark:text-white">

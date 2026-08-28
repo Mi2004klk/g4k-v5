@@ -102,7 +102,8 @@ export function QuickTaskWidget() {
               placeholder="Task description (optional)..." 
               value={description} 
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[60px] text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none resize-none"
+              rows={2}
+              className="text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none resize-none"
             />
             <FormError errors={fieldErrors.description} />
           </div>

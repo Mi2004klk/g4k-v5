@@ -282,7 +282,7 @@ export function TaskDetailSheet({
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium">Description</label>
-              <Textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} />
+              <Textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={4} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">

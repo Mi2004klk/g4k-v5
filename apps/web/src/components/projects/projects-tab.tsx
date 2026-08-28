@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AppIcon, ExportButton,
-} from "@g4k/ui/components";
-import { useRouter } from "next/navigation";
-import { apiFetch, isQueued } from "@/lib/api-client";
-} from "@g4k/ui/components";
+import { AppIcon, ExportButton, Button, Toolbar, Pagination } from "@g4k/ui/components";
 import { useRouter } from "next/navigation";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_PROJECTS } from "@/lib/query-keys";
@@ -15,7 +11,6 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
 import { ProjectCard } from "@/components/projects/project-card";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
-import { Button, Toolbar, Pagination } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";

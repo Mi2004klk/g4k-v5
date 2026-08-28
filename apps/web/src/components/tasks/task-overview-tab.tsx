@@ -169,7 +169,7 @@ export function TaskOverviewTab({
                 setOptimisticStatus(val);
                 inlineUpdateMutation.mutate({ status: val });
               }}>
-                 <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 w-auto hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2 -ml-2 rounded focus:ring-0 shadow-none font-semibold">
+                 <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 w-auto hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2 -ml-2 rounded shadow-none font-semibold">
                     <SelectValue />
                  </SelectTrigger>
                  <SelectContent>
@@ -195,7 +195,7 @@ export function TaskOverviewTab({
               <Select value={task.priority || "normal"} onValueChange={(val) => {
                 inlineUpdateMutation.mutate({ priority: val });
               }}>
-                 <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 w-auto hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2 -ml-2 rounded focus:ring-0 shadow-none font-semibold capitalize">
+                 <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0 w-auto hover:bg-neutral-100 dark:hover:bg-neutral-800 px-2 -ml-2 rounded shadow-none font-semibold capitalize">
                     <SelectValue />
                  </SelectTrigger>
                  <SelectContent>

@@ -186,23 +186,15 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full h-10 mt-2 bg-neutral-900 hover:bg-neutral-800 text-white font-medium shadow-e1 transition-all duration-300 active:scale-[0.98] relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed border-none"
+                variant="primary"
+                size="lg"
+                className="w-full mt-2"
+                isLoading={isLoading}
                 disabled={isLoading || lockoutSeconds > 0}
               >
-                {/* Rainbow Hover Border Effect */}
-<span className="relative z-10 flex items-center justify-center">
-                  {isLoading ? (
-                    <div className="flex space-x-1.5 items-center justify-center h-full">
-                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  ) : lockoutSeconds > 0 ? (
-                    `Try again in ${Math.floor(lockoutSeconds / 60)}m ${String(lockoutSeconds % 60).padStart(2, '0')}s`
-                  ) : (
-                    "Sign In"
-                  )}
-                </span>
+                {lockoutSeconds > 0
+                  ? `Try again in ${Math.floor(lockoutSeconds / 60)}m ${String(lockoutSeconds % 60).padStart(2, '0')}s`
+                  : "Sign In"}
               </Button>
               <div className="text-center mt-4">
                 <Link

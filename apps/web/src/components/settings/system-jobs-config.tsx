@@ -48,7 +48,7 @@ export function SystemJobsConfig() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded-[var(--radius)] flex flex-col">
             <span className="text-xs text-neutral-500 font-semibold uppercase tracking-wider mb-1">Pending Jobs</span>
             <span className="text-2xl font-bold">{pending_count}</span>

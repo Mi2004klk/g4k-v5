@@ -36,7 +36,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     }, [value]);
 
     return (
-      <div className="relative w-full">
+      <div className="relative w-full md:w-64">
         <AppIcon 
           name="search" 
           className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground opacity-70" 

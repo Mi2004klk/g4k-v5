@@ -146,7 +146,7 @@ export function ProjectTimerWidget() {
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-slate-500 dark:text-slate-400">Project</label>
               <Select value={projectId} onValueChange={setProjectId} disabled={isActive}>
-                <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 focus:ring-0 focus:ring-offset-0 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
+                <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
                   <SelectValue placeholder="Select Project" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800 shadow-xl">
@@ -161,7 +161,7 @@ export function ProjectTimerWidget() {
               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
                 <label className="text-[13px] font-medium text-slate-500 dark:text-slate-400">Task (Optional)</label>
                 <Select value={taskId} onValueChange={setTaskId} disabled={isActive}>
-                  <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 focus:ring-0 focus:ring-offset-0 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
+                  <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
                     <SelectValue placeholder="No specific task" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800 shadow-xl">

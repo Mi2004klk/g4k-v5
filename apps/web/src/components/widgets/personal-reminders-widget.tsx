@@ -145,7 +145,7 @@ export function PersonalRemindersWidget() {
                 onChange={(e) => setBody(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5 block">Date *</label>
                 <DatePicker

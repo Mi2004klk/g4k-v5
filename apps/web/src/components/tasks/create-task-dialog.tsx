@@ -164,7 +164,7 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
         <p className="text-sm text-neutral-500">Choose between creating a single task or adding multiple tasks phase-by-phase.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto w-full">
         <div 
           onClick={() => setMode("single")}
           className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 cursor-pointer transition-all ${
@@ -247,6 +247,7 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
             onChange={e => setDescription(e.target.value)} 
             placeholder="Add details, requirements..." 
             className="rounded-xl min-h-[100px] bg-white dark:bg-neutral-900 border-blue-200 dark:border-blue-800"
+            rows={4}
           />
         </div>
       </div>

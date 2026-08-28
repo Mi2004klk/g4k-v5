@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils/cn";
 
 const textareaVariants = cva(
-  "flex min-h-[80px] w-full rounded-[var(--radius)] border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+  "flex min-h-0 w-full rounded-[var(--radius)] border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -25,12 +25,13 @@ export interface TextareaProps
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, variant, error, ...props }, ref) => {
+  ({ className, variant, error, rows = 3, ...props }, ref) => {
     return (
       <div className="w-full">
         <textarea
           className={cn(textareaVariants({ variant: error ? "error" : variant, className }))}
           ref={ref}
+          rows={rows}
           {...props}
         />
         {error && (

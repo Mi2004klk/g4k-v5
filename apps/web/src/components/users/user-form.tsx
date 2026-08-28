@@ -167,7 +167,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="user-name" className="block mb-1 font-semibold">Name <span className="text-red-500">*</span></label>
             <Input id="user-name" {...register("name")} placeholder="Jane Doe" className={errors.name ? "border-red-500" : ""} aria-describedby={errors.name ? "name-error" : undefined} />
@@ -178,7 +178,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
             <Input id="user-username" {...register("username")} placeholder="janedoe" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="user-email" className="block mb-1 font-semibold">Email <span className="text-red-500">*</span></label>
             <Input id="user-email" type="email" {...register("email")} placeholder="jane@example.com" className={errors.email ? "border-red-500" : ""} aria-describedby={errors.email ? "email-error" : undefined} />
@@ -189,7 +189,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
             <Input id="user-phone" {...register("phone")} placeholder="+91 98765 43210" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="user-employee-id" className="block mb-1 font-semibold">Employee ID</label>
             <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Unique identifier for payroll and records</p>
@@ -211,7 +211,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1 font-semibold">Team</label>
             <Controller
@@ -244,7 +244,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1 font-semibold">Work Schedule</label>
             <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Determines clock-in/out expectations and leave calculations</p>

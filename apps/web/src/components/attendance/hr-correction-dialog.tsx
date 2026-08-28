@@ -245,7 +245,7 @@ export function HrCorrectionDialog({
               )}
 
               {(action === "add_event" || action === "edit_event") && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <label className="text-sm font-medium">Event Type</label>
                     <Select value={type} onValueChange={(val: string) => setType(val as "clock_in" | "clock_out" | "break_start" | "break_end")}>
