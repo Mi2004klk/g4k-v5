@@ -48,7 +48,8 @@ Route::get('/health', function () {
         'timestamp' => now()->toIso8601String(),
     ]);
 });
-
+Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig'])->middleware('cache.headers:private;max_age=3600');
+Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index'])->middleware('cache.headers:private;max_age=3600');
 
 
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
@@ -60,8 +61,6 @@ Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController:
     ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class]);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class, 'throttle:api', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
-    Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
-    Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
     Route::get('/me/capabilities', [AuthController::class, 'capabilities']);
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -165,7 +164,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
 
 
     
-    Route::get('/holidays', [HolidayController::class, 'index'])->middleware('cache.headers:public;max_age=3600;etag');
+    Route::get('/holidays', [HolidayController::class, 'index'])->middleware('cache.headers:private;max_age=3600;etag');
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);

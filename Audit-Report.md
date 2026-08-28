@@ -481,7 +481,7 @@ all updated on google cloud env and secrets, you can verify from deployment if a
 
 ### F-040 · Public `/api/version` + `/system/public-config` disclosure
 **Category:** Security · **Sources:** report M-6, **M-7**; FINAL-AUDIT H-17 (+ H-18 = the holidays cache half) · **Routes:** `GET /api/version` (`routes/api.php:56` — re-verified public, registered before the auth group), `GET /api/system/public-config` · **Role:** Anyone.
-**Current:** `/api/version` leaks the commit sha plus the **full `migrate:status` table** (schema shape) (`VersionController.php:12-27`); cached 1h. `public-config` discloses the password policy and force-change flag (fingerprinting aid). Related: holidays route uses `cache.headers:public;max_age=3600` on an authenticated route (`api.php:169` — re-verified) — responses marked publicly cacheable by intermediaries. **Fix:** restrict/authenticate both; `private` cache headers. **Scope:** Backend · **Status:** OPEN · **Priority:** P1.
+**Current:** `/api/version` leaks the commit sha plus the **full `migrate:status` table** (schema shape) (`VersionController.php:12-27`); cached 1h. `public-config` discloses the password policy and force-change flag (fingerprinting aid). Related: holidays route uses `cache.headers:public;max_age=3600` on an authenticated route (`api.php:169` — re-verified) — responses marked publicly cacheable by intermediaries. **Fix:** restrict/authenticate both; `private` cache headers. **Scope:** Backend · **Status:** FIXED · **Priority:** P1.
 
 ### F-041 · ip-api egress + `trustProxies '*'`
 **Category:** Security/Privacy · **Sources:** report M-8; FINAL-AUDIT H-19 · **Module:** `AuthController` login path · **Role:** All · **Workflow:** login.
