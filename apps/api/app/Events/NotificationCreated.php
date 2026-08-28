@@ -40,15 +40,6 @@ class NotificationCreated implements ShouldBroadcast
 
     public function broadcastWhen(): bool
     {
-        $user = \App\Models\User::find($this->notification->user_id);
-        
-        if (!$user) {
-            return false;
-        }
-
-        // Ideally we would also check presence channel online status here to prevent duplicate Firebase/Pusher
-        // if they are actively using the app.
-
-        return true;
+        return !empty($this->notification->user_id);
     }
 }

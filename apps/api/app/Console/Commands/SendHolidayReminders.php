@@ -63,7 +63,7 @@ class SendHolidayReminders extends Command
             $lockKey = "holiday_reminder_{$holiday->id}_{$year}";
             
             $alreadySent = DB::table('notifications')
-                ->whereIn('type', ['system', 'App\Notifications\SystemNotification'])
+                ->whereIn('type', ['holiday_reminder', 'system', 'App\Notifications\SystemNotification'])
                 ->whereJsonContains('data->lock_key', $lockKey)
                 ->exists();
                 

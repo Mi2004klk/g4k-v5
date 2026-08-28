@@ -9,7 +9,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class AnnouncementCreated implements ShouldBroadcastNow
+class AnnouncementReactionChanged implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -17,7 +17,7 @@ class AnnouncementCreated implements ShouldBroadcastNow
 
     public function __construct(Announcement $announcement)
     {
-        $this->announcement = $announcement->load('creator');
+        $this->announcement = $announcement->load('creator', 'team');
     }
 
     public function broadcastOn(): array
@@ -35,6 +35,6 @@ class AnnouncementCreated implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'AnnouncementPosted';
+        return 'AnnouncementReactionChanged';
     }
 }

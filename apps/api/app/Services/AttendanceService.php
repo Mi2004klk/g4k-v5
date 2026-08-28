@@ -216,7 +216,7 @@ class AttendanceService
 
             $hasOpenShift = false;
             $lastEventType = $lastEvent ? $events[count($events) - 1]->type : null;
-            if ($lastEventType === 'clock_in' || $lastEventType === 'break_end') {
+            if (in_array($lastEventType, ['clock_in', 'break_end', 'break_start'])) {
                 $hasOpenShift = true;
             }
 
@@ -251,7 +251,11 @@ class AttendanceService
 
             $status = 'absent';
             if ($firstClockIn !== null) {
-                $status = ($lateMinutes > 0) ? 'late' : 'present';
+                if ($totalSeconds > 0 && $totalSeconds < ($standardSeconds / 2)) {
+                    $status = 'half_day';
+                } else {
+                    $status = ($lateMinutes > 0) ? 'late' : 'present';
+                }
             } elseif ($isHoliday) {
                 $status = 'holiday';
                 $lateMinutes = 0;

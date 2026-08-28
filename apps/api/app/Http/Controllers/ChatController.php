@@ -16,17 +16,34 @@ class ChatController extends Controller
     {
         $user = $request->user();
         
-        $count = Message::where('sender_id', '!=', $user->id)
-            ->whereDoesntHave('reads', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+        $count = Message::select('messages.id')
+            ->leftJoin('conversation_user', function($join) use ($user) {
+                $join->on('messages.conversation_id', '=', 'conversation_user.conversation_id')
+                     ->where('conversation_user.user_id', '=', $user->id);
             })
-            ->whereHas('conversation', function ($q) use ($user) {
-                $q->where('scope', 'global')
-                  ->orWhereHas('users', function ($q2) use ($user) {
-                      $q2->where('users.id', $user->id);
-                  });
+            ->join('conversations', 'messages.conversation_id', '=', 'conversations.id')
+            ->where('messages.sender_id', '!=', $user->id)
+            ->where(function($q) use ($user) {
+                $q->where(function($q2) {
+                    $q2->where('conversations.scope', '!=', 'global')
+                       ->whereNotNull('conversation_user.conversation_id')
+                       ->where(function($q3) {
+                           $q3->whereNull('conversation_user.last_read_at')
+                              ->orWhereColumn('messages.created_at', '>', 'conversation_user.last_read_at');
+                       })
+                       ->where(function($q3) {
+                           $q3->whereNull('conversation_user.cleared_at')
+                              ->orWhereColumn('messages.created_at', '>', 'conversation_user.cleared_at');
+                       });
+                })
+                ->orWhere(function($q2) use ($user) {
+                    $q2->where('conversations.scope', 'global')
+                       ->where('messages.created_at', '>=', $user->created_at)
+                       ->whereDoesntHave('reads', function ($r) use ($user) {
+                           $r->where('user_id', $user->id);
+                       });
+                });
             })
-            ->whereRaw("CASE WHEN (SELECT scope FROM conversations WHERE conversations.id = messages.conversation_id LIMIT 1) = 'global' THEN messages.created_at >= ? ELSE true END", [$user->created_at])
             ->count();
 
         return response()->json(['count' => $count]);
@@ -87,10 +104,30 @@ class ChatController extends Controller
         })
         ->with(['users', 'latestMessage.sender', 'project'])
         ->withCount(['messages as unread_count' => function ($query) use ($user) {
-            $query->where('sender_id', '!=', $user->id)
-                  ->whereRaw("CASE WHEN conversations.scope = 'global' THEN messages.created_at >= ? ELSE true END", [$user->created_at])
-                  ->whereDoesntHave('reads', function ($q) use ($user) {
-                      $q->where('user_id', $user->id);
+            $query->where('messages.sender_id', '!=', $user->id)
+                  ->leftJoin('conversation_user', function($join) use ($user) {
+                      $join->on('messages.conversation_id', '=', 'conversation_user.conversation_id')
+                           ->where('conversation_user.user_id', '=', $user->id);
+                  })
+                  ->where(function($q) use ($user) {
+                      $q->where(function($q2) {
+                          $q2->where('conversations.scope', '!=', 'global')
+                             ->where(function($q3) {
+                                 $q3->whereNull('conversation_user.last_read_at')
+                                    ->orWhereColumn('messages.created_at', '>', 'conversation_user.last_read_at');
+                             })
+                             ->where(function($q3) {
+                                 $q3->whereNull('conversation_user.cleared_at')
+                                    ->orWhereColumn('messages.created_at', '>', 'conversation_user.cleared_at');
+                             });
+                      })
+                      ->orWhere(function($q2) use ($user) {
+                          $q2->where('conversations.scope', 'global')
+                             ->where('messages.created_at', '>=', $user->created_at)
+                             ->whereDoesntHave('reads', function ($r) use ($user) {
+                                 $r->where('user_id', $user->id);
+                             });
+                      });
                   });
         }])
         ->orderByDesc('updated_at')

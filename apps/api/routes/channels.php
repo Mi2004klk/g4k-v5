@@ -81,3 +81,16 @@ Broadcast::channel('attendance.{id}', function ($user, $id) {
     
     return (int) $user->department_id === (int) $id;
 });
+
+Broadcast::channel('team.{id}', function ($user, $id) {
+    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
+    if (in_array('hr', $roles)) {
+        $team = \App\Models\Team::find($id);
+        if ($team) {
+            $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
+            return in_array($team->department_id, $deptIds);
+        }
+    }
+    return (int) $user->team_id === (int) $id;
+});

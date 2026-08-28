@@ -301,7 +301,7 @@ class AnnouncementController extends Controller
 
         \Illuminate\Support\Facades\Cache::forget("announcements_{$request->user()->id}_{$activeRole}");
         try {
-            broadcast(new \App\Events\AnnouncementCreated($announcement));
+            broadcast(new \App\Events\AnnouncementReactionChanged($announcement))->toOthers();
         } catch (\Throwable $e) {
             report($e);
         }
