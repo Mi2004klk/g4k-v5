@@ -51,9 +51,6 @@ Route::get('/health', function () {
 
 
 
-Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
-
-Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:6,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,15');
@@ -63,6 +60,8 @@ Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController:
     ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class]);
 
 Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class, 'throttle:api', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
+    Route::get('/system/public-config', [CompanyProfileController::class, 'publicConfig']);
+    Route::get('/version', [\App\Http\Controllers\VersionController::class, 'index']);
     Route::get('/me/capabilities', [AuthController::class, 'capabilities']);
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);

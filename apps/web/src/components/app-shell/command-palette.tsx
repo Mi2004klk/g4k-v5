@@ -227,7 +227,7 @@ export function CommandPalette() {
             <AppIcon name="profile" className=" mr-2" />
             <span>My Profile</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/profile?tab=settings"))}>
+          <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/settings"))}>
             <AppIcon name="settings" className=" mr-2" />
             <span>Admin Settings</span>
           </CommandItem>

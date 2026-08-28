@@ -30,7 +30,9 @@ export function useCapabilities() {
           return [];
         }
         if (typeof window !== "undefined" && userId) {
-          document.cookie = `g4k_capabilities_${userId}=${encodeURIComponent(JSON.stringify(res.capabilities))}; path=/; max-age=604800; SameSite=Lax`;
+          const remember = useAuthStore.getState().remember;
+          const capPrefix = `g4k_capabilities_${userId}=${encodeURIComponent(JSON.stringify(res.capabilities))}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+          document.cookie = remember ? `${capPrefix}; max-age=604800` : capPrefix;
         }
         return res.capabilities;
       } catch (err) {

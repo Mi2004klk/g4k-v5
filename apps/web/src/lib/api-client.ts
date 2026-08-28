@@ -212,7 +212,9 @@ export async function apiFetch<T = any>(
       }
 
       if (typeof window !== "undefined" && token && !isAuthEndpoint) {
-        document.cookie = `g4k_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+        const remember = useAuthStore.getState().remember;
+        const cookiePrefix = `g4k_token=${token}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+        document.cookie = remember ? `${cookiePrefix}; max-age=604800` : cookiePrefix;
       }
 
       const contentType = response.headers.get("content-type");

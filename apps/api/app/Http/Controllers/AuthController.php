@@ -48,19 +48,8 @@ class AuthController extends Controller
 
     private function resolveLocation(string $ip): ?string
     {
-        if (in_array($ip, ['127.0.0.1', '::1'])) return 'Localhost';
-        
-        return \Illuminate\Support\Facades\Cache::remember("ip_location_{$ip}", 86400, function () use ($ip) {
-            try {
-                $response = \Illuminate\Support\Facades\Http::timeout(2)->get("http://ip-api.com/json/{$ip}?fields=status,country,city");
-                if ($response->successful() && $response->json('status') === 'success') {
-                    return $response->json('city') . ', ' . $response->json('country');
-                }
-            } catch (\Exception $e) {
-                // Ignore API failures to not block login
-            }
-            return null;
-        });
+        // IP-based location resolution disabled to prevent third-party egress during login
+        return null;
     }
 
     private function isIpOrLocationMatched(string $ip, ?string $location, $settingsList): bool

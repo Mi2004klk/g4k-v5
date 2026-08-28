@@ -129,7 +129,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       if (document.visibilityState === "visible") {
         const token = useAuthStore.getState().token;
         if (token) {
-          document.cookie = `g4k_token=${token}; path=/; max-age=604800; SameSite=Lax`;
+          const remember = useAuthStore.getState().remember;
+          const cookiePrefix = `g4k_token=${token}; path=/; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+          document.cookie = remember ? `${cookiePrefix}; max-age=604800` : cookiePrefix;
         }
       }
     };
