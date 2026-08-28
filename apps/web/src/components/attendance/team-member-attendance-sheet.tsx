@@ -10,6 +10,12 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+} from "@g4k/ui/components";
+import Link from "next/link";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@g4k/ui/components";
@@ -18,6 +24,7 @@ import { EmptyState } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { apiFetch } from "@/lib/api-client";
 import { AttendanceHistoryCalendar } from "./attendance-history-calendar";
+import { HrCorrectionDialog } from "./hr-correction-dialog";
 import dynamic from 'next/dynamic';
 const AttendanceGraph = dynamic(() => import('@/components/attendance/attendance-graph').then(mod => mod.AttendanceGraph), { ssr: false, loading: () => <div className="h-64 flex items-center justify-center border rounded-xl animate-pulse bg-neutral-50 dark:bg-neutral-900" /> });
 
@@ -40,6 +47,7 @@ interface BreakRecord {
 export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", onClose }: TeamMemberAttendanceSheetProps) {
   const [tab, setTab] = useState(initialTab);
   const [prevUserId, setPrevUserId] = useState(userId);
+  const [correctionData, setCorrectionData] = useState<{ action: string, type: string, eventId?: string } | null>(null);
 
   if (userId !== prevUserId) {
     setPrevUserId(userId);
@@ -212,12 +220,28 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
                                 </time>
                               </div>
                               
-                              {event.device_meta && (
-                                <div className="flex items-center gap-1.5 mt-2 text-xs text-neutral-400 font-medium bg-neutral-50 dark:bg-neutral-950 px-2 py-1 rounded-[var(--radius)] w-fit">
-                                  <AppIcon name="devices" size="xs" />
-                                  {event.device_meta.platform} • {event.device_meta.ip}
-                                </div>
-                              )}
+                              <div className="flex items-center justify-between mt-2">
+                                {event.device_meta ? (
+                                  <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-medium bg-neutral-50 dark:bg-neutral-950 px-2 py-1 rounded-[var(--radius)] w-fit">
+                                    <AppIcon name="devices" size="xs" />
+                                    {event.device_meta.platform} • {event.device_meta.ip}
+                                  </div>
+                                ) : <div />}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCorrectionData({
+                                      action: "edit_event",
+                                      type: event.type,
+                                      eventId: event.id.toString(),
+                                    });
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-neutral-400 hover:text-primary-600"
+                                  title="Edit Event"
+                                >
+                                  <AppIcon name="edit" size="xs" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -252,6 +276,17 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
             </TabsContent>
         </Tabs>
       </SheetContent>
+
+      <HrCorrectionDialog
+        isOpen={!!correctionData}
+        onOpenChange={(open) => !open && setCorrectionData(null)}
+        dayId={day?.id || 0}
+        userId={userId || 0}
+        date={date}
+        defaultAction={correctionData?.action as any}
+        defaultType={correctionData?.type as any}
+        defaultEventId={correctionData?.eventId}
+      />
     </Sheet>
   );
 }

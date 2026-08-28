@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, differenceInSeconds } from "date-fns";
@@ -26,6 +26,7 @@ interface HrCorrectionDialogProps {
   date: string;
   defaultAction?: "add_event" | "edit_event" | "remove_event";
   defaultType?: "clock_in" | "clock_out" | "break_start" | "break_end";
+  defaultEventId?: string;
 }
 
 export function HrCorrectionDialog({ 
@@ -35,15 +36,26 @@ export function HrCorrectionDialog({
   userId, 
   date,
   defaultAction = "add_event",
-  defaultType = "clock_out"
+  defaultType = "clock_out",
+  defaultEventId = ""
 }: HrCorrectionDialogProps) {
   const queryClient = useQueryClient();
   
   const [action, setAction] = useState(defaultAction);
-  const [eventId, setEventId] = useState("");
+  const [eventId, setEventId] = useState(defaultEventId);
   const [type, setType] = useState(defaultType);
   const [timestamp, setTimestamp] = useState(format(new Date(), "HH:mm"));
   const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      setAction(defaultAction);
+      setEventId(defaultEventId);
+      setType(defaultType);
+      setTimestamp(format(new Date(), "HH:mm"));
+      setReason("");
+    }
+  }, [isOpen, defaultAction, defaultEventId, defaultType]);
 
   const { data: dayData, isLoading } = useQuery({
     queryKey: queryKeys.memberAttendanceDay(userId, date),
