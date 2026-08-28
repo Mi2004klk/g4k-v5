@@ -343,7 +343,7 @@ export function AdminAttendanceTable() {
       header: "",
       cell: ({ row }: { row: Row<AttendanceRecord> }) => {
         return (
-          <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-end pr-2 gap-1" onClick={(e) => e.stopPropagation()}>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -356,6 +356,24 @@ export function AdminAttendanceTable() {
             >
               <AppIcon name="trendingUp" className=" mr-1" />
               Trends
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 text-xs text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCorrectionData({
+                  dayId: row.original.id,
+                  userId: row.original.user_id,
+                  date: row.original.date,
+                  action: "edit_event",
+                  type: "clock_in"
+                });
+              }}
+            >
+              <AppIcon name="edit" className=" mr-1" />
+              Correct
             </Button>
           </div>
         );

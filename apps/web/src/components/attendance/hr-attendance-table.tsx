@@ -295,7 +295,7 @@ export function HrAttendanceTable() {
         size: 100,
         cell: ({ row }: { row: Row<HrAttendanceRecord> }) => {
           return (
-            <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-end pr-2 gap-1" onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="outline"
                 size="sm"
@@ -307,6 +307,23 @@ export function HrAttendanceTable() {
                 }}
               >
                 Summary
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs font-semibold px-3 rounded-full hover:bg-primary-50 dark:hover:bg-primary-900/20 text-primary-600 dark:text-primary-400"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCorrectionData({
+                    dayId: row.original.id,
+                    userId: row.original.user_id,
+                    date: (row.original.date as string) || "",
+                    action: "edit_event",
+                    type: "clock_in"
+                  });
+                }}
+              >
+                Correct
               </Button>
             </div>
           );
