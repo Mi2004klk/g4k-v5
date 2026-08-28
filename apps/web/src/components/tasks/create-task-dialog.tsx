@@ -263,6 +263,7 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5 flex flex-col">
             <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wide">Due Date</label>
+            <p className="text-[10px] text-purple-600/70 dark:text-purple-400/70 mb-1.5 leading-tight">When does this need to be finished?</p>
             <DatePicker 
               value={dueDate} 
               onChange={setDueDate as any} 
@@ -272,6 +273,7 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
           </div>
           <div className="space-y-1.5 flex flex-col">
             <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wide">Priority</label>
+            <p className="text-[10px] text-purple-600/70 dark:text-purple-400/70 mb-1.5 leading-tight">Higher priority tasks appear first in queue</p>
             <Select value={priority} onValueChange={setPriority}>
               <SelectTrigger className="h-11 w-full bg-white dark:bg-neutral-900 border-purple-200 dark:border-purple-800 rounded-xl">
                 <SelectValue placeholder="Priority" />

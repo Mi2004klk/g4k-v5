@@ -192,6 +192,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="user-employee-id" className="block mb-1 font-semibold">Employee ID</label>
+            <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Unique identifier for payroll and records</p>
             <Input id="user-employee-id" {...register("employee_id")} placeholder="Auto-generated if blank" />
           </div>
           <div>
@@ -246,6 +247,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block mb-1 font-semibold">Work Schedule</label>
+            <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Determines clock-in/out expectations and leave calculations</p>
             <Controller
               name="work_schedule_id"
               control={control}
@@ -278,7 +280,8 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
           </div>
         </div>
         <div className="pt-4 mt-2 border-t">
-          <label className="block mb-2 font-semibold">Roles</label>
+          <label className="block mb-1 font-semibold">Roles</label>
+          <p className="text-[10px] text-neutral-500 mb-2 leading-tight">Controls which features and data this user can access</p>
           <Controller
             name="roles"
             control={control}

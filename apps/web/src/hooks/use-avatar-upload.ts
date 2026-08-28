@@ -29,15 +29,20 @@ export function useAvatarUpload(options?: UseAvatarUploadOptions) {
       // Both essentially perform the same action for the current user.
       const endpoint = options?.userId ? `/users/${options.userId}/avatar` : "/profile/avatar";
 
-      return apiFetch(endpoint, {
+      const promise = apiFetch(endpoint, {
         method: "POST",
         body: formData,
       });
+
+      toast.promise(promise, {
+        loading: "Uploading profile photo...",
+        success: (data) => isQueued(data) ? "Upload queued while offline" : "Profile photo updated successfully",
+        error: (err) => err instanceof Error ? err.message : "Failed to upload photo",
+      });
+
+      return promise;
     },
     onSuccess: (data) => {
-      if (isQueued(data)) return;
-      toast.success("Profile photo updated successfully");
-      
       // Update local auth store so layout avatar refreshes instantly
       if (data?.avatar_url) {
         useAuthStore.getState().updateUser({ avatar_url: data.avatar_url });

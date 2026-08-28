@@ -201,6 +201,7 @@ export function SettingsTabs() {
                 <h3 className="text-sm font-semibold text-neutral-900 dark:text-white border-b pb-2">Preferences</h3>
                 <div>
                   <label className="text-xs font-medium">Timezone <span className="text-red-500">*</span></label>
+                  <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Controls the default time display for all users</p>
                   <Select
                     value={profileForm.watch("timezone")}
                     onValueChange={(val) => profileForm.setValue("timezone", val, { shouldDirty: true, shouldValidate: true })}
@@ -222,7 +223,7 @@ export function SettingsTabs() {
 
               <Button type="submit" disabled={updateProfileMutation.isPending || !profileForm.formState.isValid}>
                 {updateProfileMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="save" className=" mr-2" />}
-                {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
+                {updateProfileMutation.isPending ? "Saving..." : "Save"}
               </Button>
               </DisabledWhileSubmitting>
             </form>

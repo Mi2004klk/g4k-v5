@@ -6,13 +6,16 @@ import { AppIcon, ExportButton,
 } from "@g4k/ui/components";
 import { useRouter } from "next/navigation";
 import { apiFetch, isQueued } from "@/lib/api-client";
+} from "@g4k/ui/components";
+import { useRouter } from "next/navigation";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_PROJECTS } from "@/lib/query-keys";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
 import { ProjectCard } from "@/components/projects/project-card";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
-import { Button, Toolbar } from "@g4k/ui/components";
+import { Button, Toolbar, Pagination } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -277,24 +280,19 @@ export function ProjectsTab() {
           })()}
           
           {(data?.last_page || data?.meta?.last_page) > 1 && (
-            <div className="flex justify-center items-center gap-2 pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === "1"}
-                onClick={() => setPage((Number(page) - 1).toString())}
-              >
-                Previous
-              </Button>
-              <span className="text-xs text-neutral-500">Page {page} of {data?.last_page || data?.meta?.last_page || 1}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === (data?.last_page || data?.meta?.last_page || 1).toString()}
-                onClick={() => setPage((Number(page) + 1).toString())}
-              >
-                Next
-              </Button>
+            <div className="pt-4 px-2">
+              <Pagination
+                variant="standard"
+                currentPage={Number(page)}
+                totalPages={data?.last_page || data?.meta?.last_page || 1}
+                hasNextPage={Number(page) < (data?.last_page || data?.meta?.last_page || 1)}
+                hasPreviousPage={Number(page) > 1}
+                onNextPage={() => setPage((Number(page) + 1).toString())}
+                onPreviousPage={() => setPage((Number(page) - 1).toString())}
+                pageSize={24}
+                pageSizeOptions={[24, 48, 96]}
+                onPageSizeChange={() => {}} 
+              />
             </div>
           )}
         </div>

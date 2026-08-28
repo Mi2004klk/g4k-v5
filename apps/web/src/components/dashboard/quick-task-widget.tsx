@@ -108,6 +108,7 @@ export function QuickTaskWidget() {
           </div>
 
           <div className="flex flex-col gap-1.5">
+            <label className="sr-only">Assignee</label>
             <UserPicker 
               mode="single"
               value={assigneeId ? parseInt(assigneeId) : undefined}
@@ -120,6 +121,7 @@ export function QuickTaskWidget() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
+              <label className="sr-only">Priority</label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger className="h-10 text-[13px] w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none">
                   <SelectValue placeholder="Priority" />

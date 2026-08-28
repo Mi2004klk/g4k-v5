@@ -137,24 +137,26 @@ export function MailSmtpConfig() {
               {form.formState.errors.from_name && <p className="text-xs text-red-500 mt-1">{form.formState.errors.from_name.message}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium mb-1 block">From Address</label>
+              <label className="text-xs font-medium mb-1 block">From Address <span className="text-red-500">*</span></label>
               <Input type="email" {...form.register("from_address")} className="h-9 text-xs" />
               {form.formState.errors.from_address && <p className="text-xs text-red-500 mt-1">{form.formState.errors.from_address.message}</p>}
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium mb-1 block">Host</label>
+            <label className="text-xs font-medium mb-1 block">Host <span className="text-red-500">*</span></label>
             <Input type="text" {...form.register("host")} className="h-9 text-xs" />
             {form.formState.errors.host && <p className="text-xs text-red-500 mt-1">{form.formState.errors.host.message}</p>}
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-medium mb-1 block">Port</label>
+              <label className="text-xs font-medium block">Port</label>
+              <p className="text-[10px] text-neutral-500 mb-1 leading-tight">Usually 587 or 465</p>
               <Input type="number" {...form.register("port")} className="h-9 text-xs" />
               {form.formState.errors.port && <p className="text-xs text-red-500 mt-1">{form.formState.errors.port.message}</p>}
             </div>
             <div>
-              <label className="text-xs font-medium mb-1 block">Encryption</label>
+              <label className="text-xs font-medium block">Encryption</label>
+              <p className="text-[10px] text-neutral-500 mb-1 leading-tight">TLS is recommended</p>
               <Controller
                 name="encryption"
                 control={form.control}

@@ -607,7 +607,10 @@ export function EmployeeManagementTab() {
           perPage,
           totalPages,
           onPageChange: setPage,
-          onPerPageChange: setPerPage,
+          onPerPageChange: (val) => {
+            setPerPage(val);
+            setPage(1);
+          },
         }}
         bulkActions={
           <>

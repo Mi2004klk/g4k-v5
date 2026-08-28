@@ -99,7 +99,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             const status = err?.status;
             if (status && status >= 500) {
               import("sonner").then(({ toast }) => 
-                toast.error("Server error. Please try again later.", {
+                toast.error("Something unexpected happened. Please try again or contact support if the issue continues.", {
                   action: {
                     label: "Retry",
                     onClick: () => mut.execute(variables),

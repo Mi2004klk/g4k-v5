@@ -268,6 +268,7 @@ export function CreateProjectDialog({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-1.5 flex flex-col">
             <label htmlFor="project-priority" className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Priority</label>
+            <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Higher priority projects are highlighted in the dashboard</p>
             <Select value={draftData.priority} onValueChange={(val) => setDraftData({ ...draftData, priority: val })}>
               <SelectTrigger id="project-priority" className="h-11 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
                 <SelectValue placeholder="Select Priority" />
@@ -283,6 +284,7 @@ export function CreateProjectDialog({
           
           <div className="space-y-1.5 flex flex-col">
             <label htmlFor="project-department" className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Department</label>
+            <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Select a department for ownership, or 'Company-Wide'</p>
             <Select value={draftData.departmentId} onValueChange={(val) => setDraftData({ ...draftData, departmentId: val })}>
               <SelectTrigger id="project-department" className="h-11 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
                 <SelectValue placeholder="Select Department" />
@@ -301,6 +303,7 @@ export function CreateProjectDialog({
 
         <div className="space-y-1.5 flex flex-col">
           <label htmlFor="project-qa" className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">QA Form (Optional)</label>
+          <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Enforce a Quality Assurance checklist for tasks in this project</p>
           <Select value={draftData.qaFormId} onValueChange={(val) => setDraftData({ ...draftData, qaFormId: val })}>
             <SelectTrigger id="project-qa" className="h-11 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
               <SelectValue placeholder="None" />

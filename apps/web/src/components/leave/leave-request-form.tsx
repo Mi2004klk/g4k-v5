@@ -198,6 +198,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
       <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
         <div className="space-y-1.5">
           <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Duration *</label>
+          <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Same-day leave counts as 1 day.</p>
           <DatePicker
             mode="range"
             value={{ from: draftData.start_date, to: draftData.end_date }}
@@ -221,6 +222,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
         
         <div className="space-y-1.5 flex-1 flex flex-col">
           <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Type *</label>
+          <p className="text-[10px] text-neutral-500 mb-1.5 leading-tight">Check your remaining balance in the sidebar.</p>
           <RadioGroup value={draftData.type} onValueChange={(val) => setDraftData({ ...draftData, type: val })} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {LEAVE_TYPES.map((item) => {
               const bal = balanceData ? balanceData[item.value] : null;

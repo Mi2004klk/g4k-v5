@@ -63,6 +63,8 @@ export class ErrorBoundary extends Component<Props, State> {
           </h4>
           <p className="mt-1 max-w-xs text-xs text-destructive/80">
             {this.state.error?.message || "An unexpected error occurred."}
+            <br />
+            If this keeps happening, please contact support.
           </p>
           <Button
             variant="outline"

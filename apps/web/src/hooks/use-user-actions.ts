@@ -11,55 +11,75 @@ export function useUserActions() {
   const [editingUser, setEditingUser] = useState<unknown>(null);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: unknown }) => apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+    mutationFn: ({ id, payload }: { id: number; payload: unknown }) => {
+      const promise = apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+      toast.promise(promise, {
+        loading: 'Updating user...',
+        success: (data) => isQueued(data) ? 'Update queued while offline' : 'User updated successfully!',
+        error: (err) => err instanceof Error ? err.message : "Failed to update user."
+      });
+      return promise;
+    },
     onSuccess: (_, variables) => {
-      if (isQueued(_)) return;
-      toast.success("User updated successfully!");
       setIsEditOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: queryKeys.user(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to update user."),
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number, status: unknown }) => apiFetch(`/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    mutationFn: ({ id, status }: { id: number, status: unknown }) => {
+      const promise = apiFetch(`/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+      toast.promise(promise, {
+        loading: 'Updating status...',
+        success: (data) => isQueued(data) ? 'Update queued while offline' : 'User status updated.',
+        error: (err) => err instanceof Error ? err.message : "Failed to update status."
+      });
+      return promise;
+    },
     onSuccess: (_, variables) => {
-      if (isQueued(_)) return;
-      toast.success("User status updated.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: queryKeys.user(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to update status."),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiFetch(`/users/${id}`, { method: "DELETE" }),
+    mutationFn: (id: number) => {
+      const promise = apiFetch(`/users/${id}`, { method: "DELETE" });
+      toast.promise(promise, {
+        loading: 'Deleting user...',
+        success: (data) => isQueued(data) ? 'Delete queued while offline' : 'User deleted.',
+        error: (err) => err instanceof Error ? err.message : "Failed to delete user."
+      });
+      return promise;
+    },
     onSuccess: (_, variables) => {
-      if (isQueued(_)) return;
-      toast.success("User deleted.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: queryKeys.user(variables) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to delete user."),
   });
 
   const restoreMutation = useMutation({
-    mutationFn: (id: number) => apiFetch(`/users/${id}/restore`, { method: "POST" }),
+    mutationFn: (id: number) => {
+      const promise = apiFetch(`/users/${id}/restore`, { method: "POST" });
+      toast.promise(promise, {
+        loading: 'Restoring user...',
+        success: (data) => isQueued(data) ? 'Restore queued while offline' : 'User restored successfully.',
+        error: (err) => err instanceof Error ? err.message : "Failed to restore user."
+      });
+      return promise;
+    },
     onSuccess: (_, variables) => {
-      if (isQueued(_)) return;
-      toast.success("User restored successfully.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       queryClient.invalidateQueries({ queryKey: queryKeys.user(variables) });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
-    onError: (err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to restore user."),
   });
 
   const resetPasswordMutation = useMutation({
