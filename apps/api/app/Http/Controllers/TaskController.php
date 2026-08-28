@@ -888,17 +888,25 @@ class TaskController extends Controller
 
         $validated = $request->validate(['reason' => 'required|string']);
         
-        ApprovalService::redo($approval, $request->user()->id, $validated['reason']);
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($approval, $request, $validated, $task) {
+                ApprovalService::redo($approval, $request->user()->id, $validated['reason']);
 
-        TaskService::updateStatus($task, 'in_progress', $request->user()->id);
-        \App\Services\AuditLogger::log($request, 'redo', \App\Models\Task::class, $task->id, null, ['decision' => 'redo', 'reason' => $validated['reason']]);
+                TaskService::updateStatus($task, 'in_progress', $request->user()->id);
+                \App\Services\AuditLogger::log($request, 'redo', \App\Models\Task::class, $task->id, null, ['decision' => 'redo', 'reason' => $validated['reason']]);
 
-        TaskActivity::create([
-            'task_id' => $task->id,
-            'user_id' => $request->user()->id,
-            'event' => 'redo',
-            'metadata' => ['reason' => $validated['reason']],
-        ]);
+                TaskActivity::create([
+                    'task_id' => $task->id,
+                    'user_id' => $request->user()->id,
+                    'event' => 'redo',
+                    'metadata' => ['reason' => $validated['reason']],
+                ]);
+            });
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         \App\Services\DashboardCacheService::invalidateGlobal();
 
