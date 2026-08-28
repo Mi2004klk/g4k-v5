@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner } from "@g4k/ui/components";
 import Link from "next/link";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore, UserProfile } from "@/lib/auth-store";

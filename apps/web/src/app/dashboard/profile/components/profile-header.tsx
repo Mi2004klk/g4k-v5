@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { useAvatarUpload } from "@/hooks/use-avatar-upload";

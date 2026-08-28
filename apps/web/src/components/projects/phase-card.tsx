@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { AppIcon, Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@g4k/ui/components";
+import { AppIcon, Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, IconButton,
+} from "@g4k/ui/components";
 import { PhaseTaskRow } from "./phase-task-row";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { safeFormat } from "@/lib/format";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner,
+} from "@g4k/ui/components";
 import Link from "next/link";
 import {
   Sheet,
@@ -113,7 +114,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
               <EmptyState
                 title="No Attendance Data"
                 description="There are no punch records for this employee on this date."
-                icon={<AppIcon name="teamAttendance" size="2xl" className=" text-neutral-300" />}
+                icon={<AppIcon name="teamAttendance" size="xl" className=" text-neutral-300" />}
               />
             ) : (
               <div className="space-y-8">
@@ -231,7 +232,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
           <TabsContent value="history" className="mt-0 h-[400px]">
             {isLoadingHistory ? (
               <div className="flex items-center justify-center h-full">
-                <Spinner size="2xl" className="text-neutral-400" />
+                <Spinner size="xl" className="text-neutral-400" />
               </div>
             ) : (
               <AttendanceHistoryCalendar 

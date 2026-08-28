@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tansta
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch, unwrapList, isQueued } from "@/lib/api-client";
 import { asArray } from "@/lib/utils";
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Avatar, AvatarFallback, MeaningfulEmpty } from "@g4k/ui/components";
+import { Button, IconButton, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Avatar, AvatarFallback, MeaningfulEmpty } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { usePusher } from "@/hooks/use-pusher";
 import { ConversationList } from "@/components/chat/conversation-list";
@@ -682,7 +682,7 @@ export function ChatTab() {
                   {selectedConv?.scope !== 'global' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <IconButton variant="ghost" className="h-8 w-8 text-neutral-400 hover:text-neutral-600" aria-label="Chat options" icon="more" iconSize="sm" />
+                        <IconButton variant="ghost" className="h-8 w-8 text-neutral-400 hover:text-neutral-600" aria-label="Chat options" icon="more" size="sm" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => {

@@ -5,7 +5,8 @@ import Gantt from "frappe-gantt";
 import { format, isSameDay } from "date-fns";
 import "../../frappe-gantt.css";
 import { TaskModel } from "./task-detail-sheet";
-import { Tabs, TabsList, TabsTrigger } from "@g4k/ui/components";
+import { Tabs, TabsList, TabsTrigger, Spinner,
+} from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components/icon/AppIcon";
 
 export interface GanttTask extends TaskModel {

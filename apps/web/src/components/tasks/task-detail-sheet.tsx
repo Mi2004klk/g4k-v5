@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner,
+  IconButton,
+} from "@g4k/ui/components";
 import { apiFetch } from "@/lib/api-client";
 import { SheetDescription, Sheet, SheetContent, SheetHeader, SheetTitle } from "@g4k/ui/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@g4k/ui/components";
@@ -227,7 +229,7 @@ export function TaskDetailSheet({
                   {isLoadingDetail && <Spinner size="xs" className="text-neutral-400" />}
                 </div>
                 <div className="flex items-center gap-1">
-                  <IconButton variant="ghost" className={`h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isPinned ? "text-amber-500" : "text-neutral-300 dark:text-neutral-600"}`} onClick={handlePinClick} disabled={isPinning || isUnpinning} icon="star" />
+                  <IconButton aria-label="Button" variant="ghost" className={`h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isPinned ? "text-amber-500" : "text-neutral-300 dark:text-neutral-600"}`} onClick={handlePinClick} disabled={isPinning || isUnpinning} icon="star" />
                 </div>
               </div>
 

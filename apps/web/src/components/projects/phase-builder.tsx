@@ -5,6 +5,7 @@ import { AppIcon, Button, Input, Select, SelectTrigger, SelectValue, SelectConte
 import { format } from "date-fns";
 import { resolveAvatarUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@g4k/ui/components";
+import { AppUserPicker as UserPicker } from "@/components/app-user-picker";
 
 export interface BuilderTask {
   id: string;
@@ -30,11 +31,10 @@ export interface BuilderPhase {
 export interface PhaseBuilderProps {
   phases: BuilderPhase[];
   onChange: (phases: BuilderPhase[]) => void;
-  users: { id: number; name: string; avatar_url?: string }[];
   qaForms?: { id: number; title: string; }[];
 }
 
-export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBuilderProps) {
+export function PhaseBuilder({ phases, onChange, qaForms = [] }: PhaseBuilderProps) {
   const [expandedPhases, setExpandedPhases] = useState<Record<string, boolean>>(
     phases.reduce((acc, p) => ({ ...acc, [p.id]: true }), {})
   );
@@ -160,17 +160,13 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1.5 flex flex-col">
                             <label className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Phase Assignee / Owner</label>
-                            <Select value={phase.assigneeId || "none"} onValueChange={(v) => updatePhase(phase.id, { assigneeId: v })}>
-                              <SelectTrigger className="w-full h-10 bg-neutral-50 dark:bg-neutral-950 text-sm rounded-lg border-emerald-100 dark:border-emerald-900/30">
-                                <SelectValue placeholder="Select Assignee" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">Unassigned</SelectItem>
-                                {users.map(u => (
-                                  <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <UserPicker 
+                              mode="single"
+                              value={phase.assigneeId && phase.assigneeId !== "none" ? parseInt(phase.assigneeId) : undefined}
+                              onChange={(val) => updatePhase(phase.id, { assigneeId: val ? val.toString() : "none" })}
+                              placeholder="Select Assignee"
+                              className="w-full h-10 bg-neutral-50 dark:bg-neutral-950 text-sm rounded-lg border-emerald-100 dark:border-emerald-900/30"
+                            />
                           </div>
 
                           <div className="space-y-1.5 flex flex-col">
@@ -235,24 +231,13 @@ export function PhaseBuilder({ phases, onChange, users, qaForms = [] }: PhaseBui
 
                           {/* Task Meta (Assignee & Date) */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <Select value={task.assigneeId} onValueChange={(v) => updateTask(phase.id, task.id, { assigneeId: v })}>
-                              <SelectTrigger className="w-full h-9 bg-neutral-50 dark:bg-neutral-950 text-xs rounded-lg">
-                                <SelectValue placeholder="Assign To" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">Unassigned</SelectItem>
-                                {users.map(u => (
-                                  <SelectItem key={u.id} value={u.id.toString()}>
-                                    <div className="flex items-center gap-2">
-                                      <Avatar className="w-4 h-4">
-                                        <AvatarFallback className="text-xs">{u.name.charAt(0)}</AvatarFallback>
-                                      </Avatar>
-                                      <span className="truncate">{u.name}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <UserPicker 
+                              mode="single"
+                              value={task.assigneeId && task.assigneeId !== "none" ? parseInt(task.assigneeId) : undefined}
+                              onChange={(val) => updateTask(phase.id, task.id, { assigneeId: val ? val.toString() : "none" })}
+                              placeholder="Assign To"
+                              className="w-full h-9 bg-neutral-50 dark:bg-neutral-950 text-xs rounded-lg"
+                            />
 
                             <DatePicker
                               value={task.dueDate ? new Date(task.dueDate) : undefined}

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
-import { AppIcon, IconName } from "@g4k/ui/components";
+import { AppIcon, IconName, Spinner,
+} from "@g4k/ui/components";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { Card, Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";

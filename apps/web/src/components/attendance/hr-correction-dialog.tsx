@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, differenceInSeconds } from "date-fns";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import {
   Dialog,
@@ -196,7 +196,7 @@ export function HrCorrectionDialog({
 
           {isLoading ? (
             <div className="py-12 flex justify-center">
-              <Spinner size="2xl" className="text-neutral-400" />
+              <Spinner size="xl" className="text-neutral-400" />
             </div>
           ) : (
             <div className="space-y-4 py-4">

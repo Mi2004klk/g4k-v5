@@ -16,6 +16,7 @@ import { PhaseTimeline } from "@/components/projects/phase-timeline";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 import { usePusher } from "@/hooks/use-pusher";
+import { AppUserPicker as UserPicker } from "@/components/app-user-picker";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -84,11 +85,6 @@ export default function ProjectDetailPage() {
     queryFn: () => apiFetch("/departments"),
     enabled: canManageProjects
   });
-  const { data: usersData } = useQuery({ 
-    queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch("/directory?per_page=1000"),
-    enabled: hasCapability(caps, "directory.view") || canManageProjects
-  });
   const { data: qaFormsData } = useQuery({ 
     queryKey: queryKeys.qaForms, 
     queryFn: () => apiFetch("/qa-forms"),
@@ -96,7 +92,6 @@ export default function ProjectDetailPage() {
   });
 
   const departments = unwrapList(deptsData);
-  const users = unwrapList(usersData);
   const qaForms = unwrapList(qaFormsData);
   const project = unwrapOne(projectResponse);
   const phases = unwrapList(phasesResponse) || [];
@@ -471,18 +466,12 @@ export default function ProjectDetailPage() {
             <div className="space-y-1.5 flex flex-col">
               <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Assign Team Members</label>
               <div className="max-h-[200px] overflow-y-auto border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 rounded-xl p-2 space-y-1">
-                {users?.map((u: any) => (
-                  <label key={u.id} className="flex items-center gap-3 text-sm cursor-pointer hover:bg-white dark:hover:bg-neutral-800 p-2 rounded-lg transition-colors">
-                    <input type="checkbox" checked={editForm.member_ids?.includes(u.id)} onChange={(e) => {
-                      const nextIds = e.target.checked ? [...(editForm.member_ids || []), u.id] : (editForm.member_ids || []).filter((id: number) => id !== u.id);
-                      setEditForm({ ...editForm, member_ids: nextIds });
-                    }} className="rounded border-neutral-300 text-primary-600 focus:ring-primary-600" />
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-6 h-6"><AvatarFallback name={u.name} className="text-[10px]" />{u.avatar_url && <img src={resolveAvatarUrl(u.avatar_url)} alt={u.name} />}</Avatar>
-                      <span className="font-medium">{u.name}</span>
-                    </div>
-                  </label>
-                ))}
+                <UserPicker 
+                  mode="multi"
+                  value={editForm.member_ids || []}
+                  onChange={(ids) => setEditForm({ ...editForm, member_ids: ids as number[] })}
+                  placeholder="Select team members..."
+                />
               </div>
             </div>
 

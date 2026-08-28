@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Skeleton, EmptyState } from "@g4k/ui/components";
+import { Skeleton, EmptyState, Spinner,
+} from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -210,15 +211,15 @@ export function AttendanceGraph({ endpoint, queryKeyBase, groupByOptions = [], d
 
       <div className="w-full bg-card rounded-xl p-6 border border-border relative min-h-[450px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm z-10 rounded-xl">
-            <Spinner size="2xl" className="text-emerald-500" />
+          <div className="absolute inset-0 flex items-center justify-center bg-surface/50 rounded-lg z-10">
+            <Spinner size="xl" className="text-emerald-500" />
           </div>
         ) : !data?.stats || data.stats.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm z-10 rounded-xl">
             <EmptyState
               title="No Data Available"
               description="There is no attendance data for this period."
-              icon={<AppIcon name="chart" size="2xl" />}
+              icon={<AppIcon name="chart" size="xl" />}
             />
           </div>
         ) : null}

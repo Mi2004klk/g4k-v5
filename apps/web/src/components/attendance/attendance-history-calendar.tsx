@@ -15,7 +15,8 @@ import {
   subWeeks,
   eachWeekOfInterval,
 } from "date-fns";
-import { AppIcon, SemanticCalendar } from "@g4k/ui/components";
+import { AppIcon, SemanticCalendar, IconButton,
+} from "@g4k/ui/components";
 import { getAttendanceStatusColor } from "@g4k/ui/theme";
 import {
   Button,
@@ -368,8 +369,8 @@ export function AttendanceHistoryCalendar({
         
         {/* Navigation available on both desktop and mobile now */}
         <div className="flex items-center gap-1.5">
-          <IconButton variant="outline" className="h-7 w-7" onClick={prevMonth} aria-label="Previous month" icon="chevronLeft" iconSize="sm" />
-          <IconButton variant="outline" className="h-7 w-7" onClick={nextMonth} aria-label="Next month" icon="chevronRight" iconSize="sm" />
+          <IconButton variant="outline" className="h-7 w-7" onClick={prevMonth} aria-label="Previous month" icon="chevronLeft" size="sm" />
+          <IconButton variant="outline" className="h-7 w-7" onClick={nextMonth} aria-label="Next month" icon="chevronRight" size="sm" />
         </div>
       </div>
 
@@ -469,7 +470,7 @@ function DayDetailContent({
         <EmptyState
           title="No Record"
           description="No attendance record for this day."
-          icon={<AppIcon name="calendar" size="2xl" />}
+          icon={<AppIcon name="calendar" size="xl" />}
           className="my-10"
         />
       );

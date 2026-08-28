@@ -2,7 +2,8 @@
 
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner,
+} from "@g4k/ui/components";
 import Link from "next/link";
 
 import { Card, Skeleton, Button, StatusBadge, Avatar, AvatarFallback } from "@g4k/ui/components";

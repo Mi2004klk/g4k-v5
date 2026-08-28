@@ -7,7 +7,7 @@ import { AppIcon, IconName, SemanticCalendar } from "@g4k/ui/components";
 import { heatmapIntensity, HeatmapLevel } from "@g4k/ui/theme";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { Button } from "@g4k/ui/components";
+import { Button, IconButton, Spinner } from "@g4k/ui/components";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 
@@ -58,9 +58,11 @@ export function AdminAttendanceCalendar() {
             <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.critical.bg}`} /><span className="text-xs font-medium text-neutral-500">&lt; 50%</span></div>
           </div>
           <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded-lg border border-neutral-100 dark:border-neutral-800">
-            <IconButton variant="ghost" onClick={prevMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm" aria-label="Previous month" icon="chevronLeft" iconSize="sm" />
-            <div className="px-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300">{format(currentDate, "MMM")}</div>
-            <IconButton variant="ghost" onClick={nextMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm" aria-label="Next month" icon="chevronRight" iconSize="sm" />
+            <IconButton variant="ghost" onClick={prevMonth} className="h-7 w-7 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm" aria-label="Previous month" icon="chevronLeft" size="sm" />
+            <div className="px-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 w-32 text-center">
+              {format(currentDate, 'MMMM yyyy')}
+            </div>
+            <IconButton variant="ghost" onClick={nextMonth} className="h-7 w-7 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm" aria-label="Next month" icon="chevronRight" size="sm" />
           </div>
         </div>
       </div>

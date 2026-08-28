@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner,
+} from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { Card, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate, Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";

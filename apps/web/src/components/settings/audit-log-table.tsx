@@ -13,6 +13,7 @@ import { ListScaffold } from "@g4k/ui/components";
 import { useUrlState } from "@/hooks/use-url-state";
 import { queryKeys } from "@/lib/query-keys";
 import { useExport } from "@/hooks/use-export";
+import { AppUserPicker } from "@/components/app-user-picker";
 
 export interface AuditLogUser {
   id: number;
@@ -39,15 +40,6 @@ export function AuditLogTable() {
   
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
-
-  const { data: usersResponse } = useQuery({
-    queryKey: queryKeys.usersList,
-    queryFn: () => apiFetch("/directory?per_page=100"),
-  });
-  const users = usersResponse?.data || [];
-  const userOptions = [{ label: "All Users", value: "" }, { label: "System", value: "system" }].concat(
-    users.map((u: AuditLogUser) => ({ label: u.name, value: String(u.id) }))
-  );
   
   const { data: logsData, isLoading, isError } = useQuery({
     queryKey: [...queryKeys.auditLogs(filters), page, perPage],
@@ -150,10 +142,18 @@ export function AuditLogTable() {
           {
             key: "user_id",
             label: "User",
-            type: "select",
-            options: userOptions,
+            type: "custom",
             value: filters.user_id,
-            onChange: (v) => setUserId(v as string)
+            onChange: (v) => setUserId(v as string),
+            component: (
+              <AppUserPicker
+                mode="single"
+                value={filters.user_id ? Number(filters.user_id) : undefined}
+                onChange={(id) => setUserId(id ? String(id) : "")}
+                placeholder="All Users"
+                className="w-full h-9 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800"
+              />
+            )
           },
           {
             key: "date_range",

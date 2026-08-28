@@ -131,12 +131,6 @@ export function DepartmentsTab() {
     enabled: !!selectedDeptMembers,
   });
 
-  const { data: allUsersRes } = useQuery({
-    queryKey: ["all-users"],
-    queryFn: () => apiFetch(`/users?per_page=1000`),
-  });
-  const allUsers = allUsersRes?.data || [];
-
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: [...queryKeys.departmentsPaginated(debouncedSearch, statusFilter), page, perPage],
     queryFn: async () => {

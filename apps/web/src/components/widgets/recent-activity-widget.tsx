@@ -3,7 +3,8 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { formatDistanceToNow } from "date-fns";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner,
+} from "@g4k/ui/components";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
 import Link from "next/link";
 import { STALE_TIME_METRICS } from "@/lib/query-keys";

@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiFetch, isQueued } from "@/lib/api-client";
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Input, Card, CardHeader, CardTitle, CardContent, AppIcon, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Checkbox, Switch, Badge, Alert, AlertTitle, AlertDescription } from "@g4k/ui/components";
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Input, Card, CardHeader, CardTitle, CardContent, AppIcon, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Checkbox, Switch, Badge, Alert, AlertTitle, AlertDescription, Spinner,
+  IconButton,
+} from "@g4k/ui/components";
 import { Dialog, DialogContent, ConfirmDialog } from "@g4k/ui/components";
 import { QAFormPreview } from "./qa-form-preview";
 import { queryKeys } from "@/lib/query-keys";
@@ -378,7 +380,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
             {field.field_type !== 'section' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <IconButton variant="ghost" className="h-8 w-8 text-neutral-400" aria-label="Field options" icon="more" iconSize="xs" />
+                  <IconButton variant="ghost" className="h-8 w-8 text-neutral-400" aria-label="Field options" icon="more" size="sm" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => updateField(field.id, "description", field.description ? undefined : "")}>
@@ -655,7 +657,7 @@ export function QAFormBuilder() {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <IconButton variant="ghost" className="h-8 w-8 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 shrink-0 shadow-none opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Form options" icon="moreH" iconSize="xs" />
+                          <IconButton variant="ghost" className="h-8 w-8 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 shrink-0 shadow-none opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Form options" icon="moreH" size="sm" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(form); }}>

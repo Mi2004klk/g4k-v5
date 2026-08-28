@@ -54,12 +54,6 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
       setCurrentStep(0);
     }
   }, [open, defaultPhaseId, user?.id, initialProjectId]);
-
-  const { data: usersData } = useQuery({ 
-    queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch<{ data?: { id: number, name: string, avatar_url?: string }[] }>("/directory?per_page=1000"),
-    enabled: open && canManageTasks
-  });
   
   const { data: projectsData } = useQuery({ 
     queryKey: queryKeys.projects(), 
@@ -346,7 +340,6 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
       <PhaseBuilder 
         phases={phasesState}
         onChange={setPhasesState}
-        users={usersData?.data || []}
       />
     </div>
   );

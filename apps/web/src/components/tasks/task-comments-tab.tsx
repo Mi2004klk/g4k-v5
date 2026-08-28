@@ -4,7 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { AppIcon } from "@g4k/ui/components";
+import { AppIcon, Spinner,
+  IconButton,
+} from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button, Textarea, Avatar, AvatarFallback, ConfirmDialog } from "@g4k/ui/components";
 import { resolveAvatarUrl } from "@/lib/utils";
@@ -110,7 +112,7 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
                   description="Are you sure you want to delete this comment?"
                   onConfirm={() => deleteCommentMutation.mutate(c.id)}
                   trigger={
-                    <IconButton variant="ghost" className="absolute -right-2 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30" icon="trash" />
+                    <IconButton aria-label="Button" variant="ghost" className="absolute -right-2 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30" icon="trash" />
                   }
                 />
               </div>

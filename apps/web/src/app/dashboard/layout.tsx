@@ -308,7 +308,7 @@ export default function DashboardLayout({
               <div className="flex items-center gap-2 md:gap-4">
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
-                    <IconButton variant="ghost" className="md:hidden shrink-0" aria-label="Toggle Menu" icon="menu" iconSize="lg" />
+                    <IconButton variant="ghost" className="md:hidden shrink-0" aria-label="Toggle Menu" icon="menu" size="lg" />
                   </SheetTrigger>
                     <SheetContent side="left" className="w-full sm:max-w-full h-full max-h-full p-0 flex flex-col bg-surface border-none transition-transform duration-[280ms] cubic-bezier(0.4,0,0.2,1)">
                       <SheetTitle className="sr-only">Navigation Menu</SheetTitle>

@@ -5,7 +5,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, Input, Checkbox, Combobox, FileUploadPopup, Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
+import { Button, Input, Checkbox, Combobox, FileUploadPopup, Avatar, AvatarFallback, AvatarImage, Spinner,
+} from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { FormError } from "@/components/forms/form-error";
 import { apiFetch } from "@/lib/api-client";

@@ -240,7 +240,7 @@ export function MessageComposer({
             </div>
           )}
 
-          <IconButton type="submit" onClick={handleSend} className={cn( "h-10 w-10 shrink-0 rounded-full shadow-sm transition-all", text.trim() || selectedFile ? "bg-primary hover:bg-primary/90 text-white shadow-md scale-100" : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" )} disabled={disabled || (!text.trim() && !selectedFile)} icon="send" />
+          <IconButton aria-label="Send message" type="submit" onClick={handleSend} className={cn( "h-10 w-10 shrink-0 rounded-full shadow-sm transition-all", text.trim() || selectedFile ? "bg-primary hover:bg-primary/90 text-white shadow-md scale-100" : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" )} disabled={disabled || (!text.trim() && !selectedFile)} icon="send" />
         </div>
     </div>
   );

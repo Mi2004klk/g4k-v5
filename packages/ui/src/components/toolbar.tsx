@@ -22,7 +22,8 @@ import { cn } from "../utils/cn"
 export interface FilterOption {
   key: string
   label: string
-  type?: "select" | "combobox" | "checkbox-group" | "date-range" | "date"
+  type?: "select" | "combobox" | "checkbox-group" | "date-range" | "date" | "custom"
+  component?: React.ReactNode
   options?: { label: string; value: string }[]
   value: any
   onChange: (value: any) => void
@@ -149,6 +150,8 @@ export function Toolbar({
             })}
           </div>
         )
+      case "custom":
+        return filter.component;
       case "date-range":
         return (
           <Popover>

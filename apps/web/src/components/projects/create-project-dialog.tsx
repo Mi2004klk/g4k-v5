@@ -410,8 +410,7 @@ export function CreateProjectDialog({
       
       <PhaseBuilder 
         phases={draftData.phases} 
-        onChange={(phases) => setDraftData({ ...draftData, phases })} 
-        users={users} 
+        onChange={(phases) => setDraftData({ ...draftData, phases })}  
         qaForms={qaFormsData?.data || []}
       />
     </div>

@@ -14,6 +14,8 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
 import { usePusher } from "@/hooks/use-pusher";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { AppUserPicker } from "@/components/app-user-picker";
+import { Spinner, ExportButton } from "@g4k/ui/components";
 import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const TaskGantt = dynamic(() => import("@/components/tasks/task-gantt").then(mod => mod.TaskGantt), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
@@ -165,11 +167,6 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   const canViewQA = hasCapability(caps, "qa.view") || hasCapability(caps, "qa.manage");
   const canViewUsers = hasCapability(caps, "users.employee.manage") || hasCapability(caps, "users.hr.manage");
   
-  const { data: usersData } = useQuery({ 
-    queryKey: queryKeys.usersList, 
-    queryFn: () => apiFetch<{ data: TaskUser[] }>("/users?per_page=1000"),
-    enabled: canViewUsers
-  });
   const { data: projectsData } = useQuery({ 
     queryKey: queryKeys.projects(), 
     queryFn: () => apiFetch<{ data: TaskProject[] }>("/projects?per_page=1000") 
@@ -184,8 +181,6 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   const [assigneeFilter, setAssigneeFilter] = useState(userId ? userId : isMe ? "me" : "all");
   const user = useAuthStore(s => s.user);
 
-  const usersList = Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []);
-  const availableUsers = canViewUsers ? usersList : (user ? [user] : []);
   const projectsList = Array.isArray(projectsData?.data) ? projectsData.data : (Array.isArray(projectsData) ? projectsData : []);
   const availableProjects = canManageTasks ? projectsList : projectsList.filter((p: TaskProject) => p.allow_employee_tasks);
 
@@ -802,23 +797,11 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                       {canManageTasks ? (
                         <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Assignees</label>
-                          <div className="border border-neutral-200 dark:border-neutral-800 rounded-md max-h-32 overflow-y-auto p-1.5 space-y-0.5 bg-background shadow-inner">
-                            {availableUsers?.map((u: TaskUser) => (
-                              <label key={u.id} className="flex items-center gap-2.5 cursor-pointer px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded text-sm transition-colors">
-                                <Checkbox 
-                                  checked={assigneeIds.includes(u.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setAssigneeIds([...assigneeIds, u.id]);
-                                    } else {
-                                      setAssigneeIds(assigneeIds.filter(id => id !== u.id));
-                                    }
-                                  }}
-                                />
-                                <span className="flex-1 truncate">{u.name}</span>
-                              </label>
-                            ))}
-                          </div>
+                          <AppUserPicker
+                            mode="multi"
+                            value={assigneeIds}
+                            onChange={(ids) => setAssigneeIds(ids as number[])}
+                          />
                         </div>
                       ) : (
                         <div className="space-y-1.5 flex flex-col justify-end">
@@ -1049,8 +1032,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                   value: assigneeFilter,
                   onChange: setAssigneeFilter,
                   options: [
-                    ...(hasCapability(caps, "tasks.create-own") ? [{ label: "My Tasks", value: "me" }] : []),
-                    ...(canManageTasks && usersList.length ? usersList.map((u: TaskUser) => ({ label: u.name, value: u.id.toString() })) : [])
+                    ...(hasCapability(caps, "tasks.create-own") ? [{ label: "My Tasks", value: "me" }] : [])
                   ]
                 },
                 {

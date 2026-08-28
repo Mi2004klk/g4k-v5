@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useState, useMemo } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Card, CardContent, CardHeader, CardTitle, AppIcon } from "@g4k/ui/components";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Card, CardContent, CardHeader, CardTitle, AppIcon, Spinner,
+} from "@g4k/ui/components";
 
 export function HrAttendanceHeatmap() {
   const [year, setYear] = useState(new Date().getFullYear().toString());

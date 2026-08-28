@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { Card, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea } from "@g4k/ui/components";
+import { Card, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, Spinner,
+} from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
 
 import { WidgetInfo } from "../widgets/widget-info";
 import { FormError } from "@/components/forms/form-error";
+import { AppUserPicker as UserPicker } from "@/components/app-user-picker";
 
 interface QuickTaskUser {
   id: string | number;
@@ -26,13 +28,6 @@ export function QuickTaskWidget() {
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-
-  const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: queryKeys.usersSelectList,
-    queryFn: () => apiFetch("/directory?per_page=1000"),
-  });
-
-  const users = Array.isArray(usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData) ? (usersData && typeof usersData === 'object' && 'data' in usersData ? (usersData as { data: QuickTaskUser[] }).data : usersData as QuickTaskUser[]) : [];
 
   const createTaskMutation = useMutation({
     mutationFn: (payload: { title: string; assignees: string[]; priority: string; start_date?: string; due_date?: string; notify_global_chat: boolean }) =>
@@ -88,7 +83,6 @@ export function QuickTaskWidget() {
               <WidgetInfo summary="Instantly dispatch a work item to any employee" />
             </span>
           </div>
-          {usersLoading && <Spinner size="xs" className="text-neutral-400" />}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -112,19 +106,14 @@ export function QuickTaskWidget() {
             <FormError errors={fieldErrors.description} />
           </div>
 
-          <div>
-            <Select value={assigneeId} onValueChange={setAssigneeId}>
-              <SelectTrigger className={`h-10 text-[13px] w-full bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.assignees ? "border-red-500" : ""}`}>
-                <SelectValue placeholder="Select Assignee" />
-              </SelectTrigger>
-              <SelectContent className="max-h-[200px]">
-                {users.map((u: QuickTaskUser) => (
-                  <SelectItem key={u.id} value={u.id.toString()} className="text-[13px] py-2">
-                    {u.name} <span className="text-neutral-400 hidden sm:inline-block ml-1">({u.email})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-1.5">
+            <UserPicker 
+              mode="single"
+              value={assigneeId ? parseInt(assigneeId) : undefined}
+              onChange={(val) => setAssigneeId(val ? val.toString() : "")}
+              placeholder="Select Assignee"
+              className={`w-full h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 rounded-md border-neutral-200 dark:border-neutral-800 shadow-none ${fieldErrors.assignees ? "border-red-500" : ""}`}
+            />
             <FormError errors={fieldErrors.assignees} />
           </div>
 

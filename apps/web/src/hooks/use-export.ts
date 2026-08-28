@@ -31,8 +31,23 @@ export function useExport() {
       const job = e.exportJob;
       if (job && job.status === "completed" && job.file_path) {
         toast.success(`Export ${job.report_key} is ready.`, {
-          description: "Click to view your exports.",
-          action: { label: "View Exports", onClick: () => window.location.href = "/dashboard/reports?tab=general" },
+          description: "Click to download.",
+          action: { label: "Download", onClick: async () => {
+            try {
+              const url = `/reports/exports/${job.id}/download`;
+              const blob = await apiFetch(url, { method: "GET" }) as Blob;
+              const objectUrl = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = objectUrl;
+              a.download = `export-${job.report_key}-${job.id}.${job.format}`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(objectUrl);
+            } catch (e) {
+              toast.error("Failed to download export file.");
+            }
+          } },
           duration: 10000,
         });
       } else if (job && job.status === "failed") {
