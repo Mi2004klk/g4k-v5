@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Card, Button, Skeleton, ConfirmDialog, Input, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
@@ -43,7 +43,8 @@ export function PendingApprovalsWidget() {
         body: JSON.stringify({ decision, reason }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Action recorded successfully!");
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },

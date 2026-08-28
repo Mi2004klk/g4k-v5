@@ -8,7 +8,7 @@ import { safeFormat } from "@/lib/format";
 import { AppIcon } from "@g4k/ui/components";
 import { QAFormViewer } from "@/components/projects/qa-form-viewer";
 import { toast } from "sonner";
-import { apiFetch, unwrapOne, unwrapList } from "@/lib/api-client";
+import { apiFetch, unwrapOne, unwrapList, isQueued } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { Button, Textarea, Skeleton, Avatar, AvatarFallback } from "@g4k/ui/components";
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@g4k/ui/components";
@@ -65,7 +65,8 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
         }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Project submitted for review.");
       queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
       setSubmissionNote("");
@@ -83,6 +84,7 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
       });
     },
     onSuccess: (_, decision) => {
+      if (isQueued(_)) return;
       toast.success(`Project ${decision === 'approved' ? 'approved' : 'sent back for rework'}.`);
       queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });

@@ -6,7 +6,7 @@ import { AppIcon } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { useAuthStore } from "@/lib/auth-store";
 import { useFormDraft } from "@/hooks/use-form-draft";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_TASKS } from "@/lib/query-keys";
 import { TaskDetailSheet } from "@/components/tasks/task-detail-sheet";
 import { useSearchParams } from "next/navigation";
@@ -406,7 +406,8 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     mutationFn: async (taskId: number) => {
       return apiFetch(`/tasks/${taskId}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Task deleted successfully.");
       // T-46.2: invalidate without exact so parameterized keys are included
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
@@ -420,7 +421,8 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
         body: JSON.stringify({ ids: taskIds, action: "delete" }) 
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Tasks deleted successfully.");
       setRowSelection({});
       setIsBulkDeleteOpen(false);
@@ -437,7 +439,8 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
         body: JSON.stringify({ ids: taskIds, action: "complete" }) 
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Tasks status updated.");
       setRowSelection({});
       // T-46.2: invalidate without exact
@@ -499,7 +502,8 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
         }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       setIsCreateOpen(false);
       setTitle("");
       setDescription("");

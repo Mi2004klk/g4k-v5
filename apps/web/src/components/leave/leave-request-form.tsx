@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, FormDraftAlert } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
@@ -79,7 +79,8 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Leave request submitted successfully.");
       setDraftData({
         start_date: undefined,

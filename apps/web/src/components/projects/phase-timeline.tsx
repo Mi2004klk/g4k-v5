@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PhaseCard } from "./phase-card";
 import { PhaseManageDialog } from "./phase-manage-dialog";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -50,7 +50,8 @@ export function PhaseTimeline({ projectId, phases: initialPhases, canManage, onT
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: [...queryKeys.project(projectId), "phases"] });
     },
     onError: () => {
@@ -80,6 +81,7 @@ export function PhaseTimeline({ projectId, phases: initialPhases, canManage, onT
       return apiFetch(`/projects/${projectId}/phases/${phaseId}/${action}`, { method: "POST" });
     },
     onSuccess: (_, vars) => {
+      if (isQueued(_)) return;
       if (vars.action === 'delete') toast.success("Phase deleted");
       else if (vars.action === 'complete') toast.success("Phase marked completed");
       else toast.success("Phase reopened");

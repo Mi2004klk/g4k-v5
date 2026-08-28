@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, ConfirmDialog } from "@g4k/ui/components";
@@ -71,7 +71,8 @@ export function WorkSchedulesConfig() {
         return apiFetch(`/work-schedules`, { method: "POST", body: JSON.stringify(data) });
       }
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success(editingId ? "Work schedule updated" : "Work schedule created");
       queryClient.invalidateQueries({ queryKey: queryKeys.workSchedules });
       setIsDialogOpen(false);
@@ -89,7 +90,8 @@ export function WorkSchedulesConfig() {
 
   const setDefaultMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/work-schedules/${id}/default`, { method: "POST" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Default schedule updated");
       queryClient.invalidateQueries({ queryKey: queryKeys.workSchedules });
     }
@@ -97,7 +99,8 @@ export function WorkSchedulesConfig() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/work-schedules/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Schedule deleted");
       queryClient.invalidateQueries({ queryKey: queryKeys.workSchedules });
     },

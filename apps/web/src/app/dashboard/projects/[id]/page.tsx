@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AppIcon, Badge, Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox, Avatar, AvatarFallback, FileUploadPopup, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, ConfirmDialog, Sheet, SheetContent, SheetHeader, SheetTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch, unwrapOne, unwrapList } from "@/lib/api-client";
+import { apiFetch, unwrapOne, unwrapList, isQueued } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { queryKeys } from "@/lib/query-keys";
 import { resolveAvatarUrl } from "@/lib/utils";
@@ -124,7 +124,8 @@ export default function ProjectDetailPage() {
         }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Project updated.");
       setIsEditOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
@@ -134,7 +135,8 @@ export default function ProjectDetailPage() {
 
   const deleteProjectMutation = useMutation({
     mutationFn: async () => apiFetch(`/projects/${projectId}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Project deleted.");
       router.push("/dashboard/projects");
     },

@@ -11,7 +11,7 @@ import * as z from "zod";
 import { AppIcon } from "@g4k/ui/components";
 import { Card, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Button, Input } from "@g4k/ui/components";
 import { DisabledWhileSubmitting } from "@g4k/ui/components/state-helpers";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { useUIStore } from "@/lib/ui-store";
 import { useTheme } from "next-themes";
@@ -44,6 +44,7 @@ function FeedbackForm() {
       });
     },
     onSuccess: (res: { conversation_id?: string }) => {
+      if (isQueued(res)) return;
       toast.success("Feedback submitted successfully. HR will contact you via direct message.");
       form.reset();
       if (res.conversation_id) {
@@ -156,6 +157,7 @@ export function ProfileAccountSection() {
       });
     },
     onSuccess: (res: any) => {
+      if (isQueued(res)) return;
       toast.success("Preferences updated successfully");
       if (authUser) {
         setAuth(

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -151,7 +151,8 @@ export function DepartmentsTab() {
 
   const createDeptMutation = useMutation({
     mutationFn: (payload: DeptFormValues) => apiFetch("/departments", { method: "POST", body: JSON.stringify(payload) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Department created!");
       setIsDeptModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -162,7 +163,8 @@ export function DepartmentsTab() {
   
   const updateDeptNameMutation = useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) => apiFetch(`/departments/${id}`, { method: "PUT", body: JSON.stringify({ name }) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Department name updated!");
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
@@ -171,7 +173,8 @@ export function DepartmentsTab() {
 
   const updateDeptMutation = useMutation({
     mutationFn: (payload: DeptFormValues) => apiFetch(`/departments/${editingDept?.id}`, { method: "PUT", body: JSON.stringify(payload) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Department updated!");
       setIsDeptModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -181,7 +184,8 @@ export function DepartmentsTab() {
 
   const archiveMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/departments/${id}/archive`, { method: "PATCH" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Department archived.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -191,7 +195,8 @@ export function DepartmentsTab() {
 
   const restoreMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/departments/${id}/restore`, { method: "PATCH" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Department restored.");
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
@@ -200,7 +205,8 @@ export function DepartmentsTab() {
 
   const reactivateMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/departments/${id}`, { method: "PUT", body: JSON.stringify({ is_active: true }) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Department reactivated.");
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
@@ -210,6 +216,7 @@ export function DepartmentsTab() {
   const toggleActiveMutation = useMutation({
     mutationFn: ({ id, is_active }: { id: number, is_active: boolean }) => apiFetch(`/departments/${id}`, { method: "PUT", body: JSON.stringify({ is_active }) }),
     onSuccess: (_, variables) => {
+      if (isQueued(_)) return;
       toast.success(`Department ${variables.is_active ? "activated" : "deactivated"}.`);
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
     },
@@ -218,7 +225,8 @@ export function DepartmentsTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/departments/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Department deleted.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -231,7 +239,8 @@ export function DepartmentsTab() {
 
   const addHrMutation = useMutation({
     mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/hrs/${userId}`, { method: "POST" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("HR assigned successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
     },
@@ -240,7 +249,8 @@ export function DepartmentsTab() {
 
   const removeHrMutation = useMutation({
     mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/hrs/${userId}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("HR removed successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
     },
@@ -249,7 +259,8 @@ export function DepartmentsTab() {
 
   const assignEmployeeMutation = useMutation({
     mutationFn: ({ deptId, userIds }: { deptId: number, userIds: number[] }) => apiFetch(`/departments/${deptId}/employees`, { method: "PUT", body: JSON.stringify({ user_ids: userIds }) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Employees assigned successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -259,7 +270,8 @@ export function DepartmentsTab() {
 
   const removeEmployeeMutation = useMutation({
     mutationFn: ({ deptId, userId }: { deptId: number, userId: number }) => apiFetch(`/departments/${deptId}/employees/${userId}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Employee removed successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -269,7 +281,8 @@ export function DepartmentsTab() {
 
   const addTeamMutation = useMutation({
     mutationFn: ({ deptId, name }: { deptId: number, name: string }) => apiFetch(`/departments/${deptId}/teams`, { method: "POST", body: JSON.stringify({ name }) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Team added successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -279,7 +292,8 @@ export function DepartmentsTab() {
 
   const updateTeamMutation = useMutation({
     mutationFn: ({ deptId, teamId, name }: { deptId: number, teamId: number, name: string }) => apiFetch(`/departments/${deptId}/teams/${teamId}`, { method: "PUT", body: JSON.stringify({ name }) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Team updated successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });
@@ -289,7 +303,8 @@ export function DepartmentsTab() {
 
   const removeTeamMutation = useMutation({
     mutationFn: ({ deptId, teamId }: { deptId: number, teamId: number }) => apiFetch(`/departments/${deptId}/teams/${teamId}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Team removed successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.department(selectedDeptMembers?.id as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.departments });

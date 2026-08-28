@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button, Input, Textarea, DatePicker, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@g4k/ui/components";
@@ -60,7 +60,8 @@ export function PhaseManageDialog({ isOpen, onOpenChange, projectId, initialData
         body: JSON.stringify(formData),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success(`Phase ${isEditing ? 'updated' : 'created'} successfully`);
       queryClient.invalidateQueries({ queryKey: [...queryKeys.project(projectId), "phases"] });
       onOpenChange(false);

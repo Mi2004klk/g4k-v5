@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 
@@ -47,7 +47,8 @@ export function usePins() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pins });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Pinned to sidebar");
     },
   });
@@ -75,7 +76,8 @@ export function usePins() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.pins });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Removed from pins");
     },
   });

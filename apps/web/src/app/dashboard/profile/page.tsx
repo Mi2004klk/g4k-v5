@@ -12,10 +12,7 @@ import { ProfileNotificationSection } from "./components/profile-notification";
 import { ProfileAccountSection } from "./components/profile-account";
 
 // New Components
-import { ProfileWorkAddressSection } from "./components/profile-work-address";
 import { ProfileEmergencyContactSection } from "./components/profile-emergency-contact";
-import { ProfilePrivacySection } from "./components/profile-privacy";
-import { ProfileConnectedAccountsSection } from "./components/profile-connected-accounts";
 import { ProfileWorkspaceSection } from "./components/profile-workspace-section";
 
 const SECTIONS = [
@@ -24,8 +21,6 @@ const SECTIONS = [
   { id: "security", label: "Security & Devices", icon: "shield" as const, color: "blue" },
   { id: "preferences", label: "Preferences & Support", icon: "settings" as const, color: "slate" },
   { id: "notifications", label: "Notification Preferences", icon: "bell" as const, color: "indigo" },
-  { id: "connected", label: "Connected Accounts", icon: "externalLink" as const, color: "emerald" },
-  { id: "privacy", label: "Privacy Settings", icon: "shield" as const, color: "rose" },
 ];
 
 const COLOR_VARIANTS: Record<string, { active: string, icon: string }> = {
@@ -167,20 +162,10 @@ export default function ProfilePage() {
 
           <div id="security" className="scroll-mt-24 flex flex-col gap-6">
             <ProfileSecuritySection />
-            <ProfileWorkAddressSection />
             <ProfileEmergencyContactSection />
           </div>
-          
-          <div id="privacy" className="scroll-mt-24">
-            <ProfilePrivacySection />
-          </div>
-
           <div id="notifications" className="scroll-mt-24">
             <ProfileNotificationSection />
-          </div>
-
-          <div id="connected" className="scroll-mt-24">
-            <ProfileConnectedAccountsSection />
           </div>
           
           <div id="preferences" className="scroll-mt-24">

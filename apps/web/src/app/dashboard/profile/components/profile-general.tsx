@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore, UserProfile } from "@/lib/auth-store";
 import { useAvatarUpload } from "@/hooks/use-avatar-upload";
 import { queryKeys } from "@/lib/query-keys";
@@ -96,6 +96,7 @@ export function ProfileGeneralSection() {
       });
     },
     onSuccess: (res: Record<string, unknown>) => {
+      if (isQueued(res)) return;
       toast.success("Profile updated successfully");
       if (authUser) {
         setAuth(useAuthStore.getState().token!, res as unknown as UserProfile, authUser.active_role);

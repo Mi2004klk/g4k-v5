@@ -7,7 +7,7 @@ import { usePusher } from "@/hooks/use-pusher";
 import { AppIcon } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
@@ -71,7 +71,8 @@ export function AnnouncementBoard() {
         body: JSON.stringify({ emoji }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
@@ -83,7 +84,8 @@ export function AnnouncementBoard() {
         body: JSON.stringify({ pinned }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
@@ -92,7 +94,8 @@ export function AnnouncementBoard() {
     mutationFn: async (id: number) => {
       return apiFetch(`/announcements/${id}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       toast.success("Announcement deleted");
       setConfirmState({ isOpen: false, id: null });
@@ -103,7 +106,8 @@ export function AnnouncementBoard() {
     mutationFn: async (id: number) => {
       return apiFetch(`/announcements/${id}/dismiss`, { method: "POST" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });

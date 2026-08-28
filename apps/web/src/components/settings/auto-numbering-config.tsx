@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
@@ -40,7 +40,8 @@ export function AutoNumberingConfig() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: AutoNumberingData }) =>
       apiFetch(`/auto-numberings/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Settings saved");
       queryClient.invalidateQueries({ queryKey: queryKeys.autoNumberings });
     },

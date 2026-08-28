@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,6 +73,7 @@ export function ProfileEmergencyContactSection() {
       });
     },
     onSuccess: (res: Record<string, unknown>) => {
+      if (isQueued(res)) return;
       toast.success("Emergency contact updated successfully");
       setIsEditing(false);
       if (authUser) {

@@ -54,6 +54,7 @@ export function CreateGroupDialog({
       }
     },
     onSuccess: (data) => {
+      if (isQueued(data)) return;
       if (isQueued(data)) {
         onOpenChange(false);
         setDraftData({ name: "", selectedUsers: [], tab: "dm" }); 

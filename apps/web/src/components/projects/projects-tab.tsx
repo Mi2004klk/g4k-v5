@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_PROJECTS } from "@/lib/query-keys";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUrlState } from "@/hooks/use-url-state";
@@ -96,7 +96,8 @@ export function ProjectsTab() {
         body: JSON.stringify({ name }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       toast.success("Project updated.");
     },

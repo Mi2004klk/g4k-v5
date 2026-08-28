@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, FormDra
 import { Button, AppIcon, FileUploadPopup } from "@g4k/ui/components";
 import { useFormDraft } from "@/hooks/use-form-draft";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
@@ -113,7 +113,8 @@ export function AnnouncementComposer({
         body: JSON.stringify(data),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       if (!editingId) clearDraft();
       onOpenChange(false);

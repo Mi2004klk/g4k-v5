@@ -9,7 +9,7 @@ import { StatusBadge } from "@g4k/ui/components/badge";
 import { getPriorityColor } from "@g4k/ui/theme";
 import { toast } from "sonner";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 
 import { Skeleton, ErrorBoundary, MeaningfulEmpty } from "@g4k/ui/components";
 import { Toolbar } from "@g4k/ui/components";
@@ -97,7 +97,8 @@ export function NotificationsTab() {
     mutationFn: async (id: number) => {
       return apiFetch(`/notifications/${id}/mark-read`, { method: "POST" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     }
@@ -107,7 +108,8 @@ export function NotificationsTab() {
     mutationFn: async (id: number) => {
       return apiFetch(`/notifications/${id}/mark-unread`, { method: "POST" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
     }
@@ -117,7 +119,8 @@ export function NotificationsTab() {
     mutationFn: async () => {
       return apiFetch(`/notifications/mark-all-read`, { method: "POST" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications() });
       queryClient.invalidateQueries({ queryKey: queryKeys.notificationsUnreadCount });
       toast.success("All notifications marked as read");

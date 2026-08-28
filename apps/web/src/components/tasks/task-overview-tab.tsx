@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent, Avatar, AvatarFallback, Slider, ConfirmDialog } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { QAFormViewer } from "@/components/projects/qa-form-viewer";
@@ -58,7 +58,8 @@ export function TaskOverviewTab({
         }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Reminder set");
       queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
       setCustomReminderDate("");
@@ -70,7 +71,8 @@ export function TaskOverviewTab({
     mutationFn: async (reminderId: number | string) => {
       return apiFetch(`/tasks/reminders/${reminderId}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Reminder removed");
       queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
     },
@@ -94,7 +96,8 @@ export function TaskOverviewTab({
         }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Task submitted for review");
       queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
@@ -112,7 +115,8 @@ export function TaskOverviewTab({
         body: JSON.stringify({ decision: "approved", optional_message: approveMessage }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Task approved");
       queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
@@ -130,7 +134,8 @@ export function TaskOverviewTab({
         body: JSON.stringify({ decision: "redo", reason: redoReason }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Task sent back for redo");
       queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(task.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });

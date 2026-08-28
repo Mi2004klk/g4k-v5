@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { AppIcon } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { SettingItem } from "./notifications-config";
@@ -37,7 +37,8 @@ export function RemindersConfig() {
         method: "POST",
         body: JSON.stringify({ settings: updates }),
       }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Reminder settings updated");
       queryClient.invalidateQueries({ queryKey: queryKeys.settings });
     },

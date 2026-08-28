@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { 
   Card, 
   CardHeader, 
@@ -43,7 +43,8 @@ export function ReportBuilder() {
         body: JSON.stringify({ key: reportKey, format, filters: { search } }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success(`Export job started. You will be notified when ready.`);
       queryClient.invalidateQueries({ queryKey: queryKeys.exportHistory });
     },

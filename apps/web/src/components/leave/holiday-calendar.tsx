@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isSameMonth, isSameDay, addMonths, subMonths, getDay } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, Button, Popover, PopoverTrigger, PopoverContent, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Input, Label, Checkbox, Textarea, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger as TooltipTriggerComponent, DatePicker, SemanticCalendar } from "@g4k/ui/components";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -59,7 +59,8 @@ export function HolidayCalendar() {
 
   const addHoliday = useMutation({
     mutationFn: (data: z.infer<typeof holidaySchema>) => apiFetch("/holidays", { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.holidays(currentYear) });
       setIsAddOpen(false);
       toast.success("Saved successfully");
@@ -69,7 +70,8 @@ export function HolidayCalendar() {
 
   const editHoliday = useMutation({
     mutationFn: ({ id, data }: { id: number, data: z.infer<typeof holidaySchema> }) => apiFetch(`/holidays/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.holidays(currentYear) });
       setIsEditOpen(false);
       toast.success("Updated successfully");
@@ -79,7 +81,8 @@ export function HolidayCalendar() {
 
   const deleteHoliday = useMutation({
     mutationFn: (id: number) => apiFetch(`/holidays/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.holidays(currentYear) });
       toast.success("Deleted successfully");
     },

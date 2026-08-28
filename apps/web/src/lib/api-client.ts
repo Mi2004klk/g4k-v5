@@ -83,6 +83,7 @@ export async function apiFetch<T = any>(
     endpoint.includes("/auth/login") ||
     endpoint.includes("/auth/forgot-password") ||
     endpoint.includes("/auth/reset-password") ||
+    endpoint.includes("/auth/logout") ||
     endpoint.includes("/auth/refresh");
 
   if (!isAuthEndpoint && !isGet && !bypassQueue && typeof navigator !== 'undefined' && !navigator.onLine) {

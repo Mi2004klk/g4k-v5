@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useExport } from "@/hooks/use-export";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -115,7 +115,8 @@ export function DesignationsTab() {
 
   const createMutation = useMutation({
     mutationFn: (payload: DesigFormValues) => apiFetch("/designations", { method: "POST", body: JSON.stringify(payload) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Designation created!");
       setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
@@ -125,7 +126,8 @@ export function DesignationsTab() {
 
   const updateMutation = useMutation({
     mutationFn: (payload: DesigFormValues) => apiFetch(`/designations/${editingDesig?.id}`, { method: "PUT", body: JSON.stringify(payload) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Designation updated!");
       setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });
@@ -148,7 +150,8 @@ export function DesignationsTab() {
       });
       return { previousData };
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Designation status updated.");
       setConfirmState({ isOpen: false, type: "" });
     },
@@ -167,7 +170,8 @@ export function DesignationsTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/designations/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Designation deleted.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.designationsPaginated() });

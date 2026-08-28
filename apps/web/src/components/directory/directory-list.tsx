@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 
 import {
   queryKeys,
@@ -226,6 +226,7 @@ export function EmployeeManagementTab() {
   const createMutation = useMutation({
     mutationFn: (payload: UserFormValues) => apiFetch("/users", { method: "POST", body: JSON.stringify(payload) }),
     onSuccess: (res: any) => {
+      if (isQueued(res)) return;
       const tempPassword = res?._temp_password;
       if (tempPassword) {
         toast.success(`User created! Temp password: ${tempPassword}`, { duration: 10000 });
@@ -243,7 +244,8 @@ export function EmployeeManagementTab() {
 
   const bulkMutation = useMutation({
     mutationFn: (payload: { ids: number[], action: string }) => apiFetch('/users/bulk', { method: 'POST', body: JSON.stringify(payload) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
       toast.success("Bulk action completed.");
       setRowSelection({});

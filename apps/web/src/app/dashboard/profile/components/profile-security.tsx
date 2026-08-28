@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { parseUserAgent } from "@/lib/utils";
 import { queryKeys } from "@/lib/query-keys";
@@ -94,7 +94,8 @@ export function ProfileSecuritySection() {
         }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Password updated successfully");
       form.reset();
       setIsPasswordOpen(false);
@@ -109,6 +110,7 @@ export function ProfileSecuritySection() {
       return apiFetch(`/auth/sessions/${sessionId}`, { method: "DELETE" });
     },
     onSuccess: (_, sessionId) => {
+      if (isQueued(_)) return;
       toast.success("Session revoked successfully");
       
       const revokedSession = uniqueSessions.find((s) => String(s.id) === String(sessionId));

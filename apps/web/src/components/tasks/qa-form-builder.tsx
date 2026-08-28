@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Input, Card, CardHeader, CardTitle, CardContent, AppIcon, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Checkbox, Switch, Badge, Alert, AlertTitle, AlertDescription } from "@g4k/ui/components";
 import { Dialog, DialogContent, ConfirmDialog } from "@g4k/ui/components";
 import { QAFormPreview } from "./qa-form-preview";
@@ -440,7 +440,8 @@ export function QAFormBuilder() {
         body: JSON.stringify({ title, description, is_template: true, fields: apiFields }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("QA Form Template updated successfully.");
       setEditingId(null);
       setTitle("");
@@ -460,7 +461,8 @@ export function QAFormBuilder() {
     mutationFn: async (id: number) => {
       return apiFetch(`/qa-forms/${id}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("QA Form deleted.");
       queryClient.invalidateQueries({ queryKey: queryKeys.qaForms });
       setIsDeleteOpen(false);
@@ -574,7 +576,8 @@ export function QAFormBuilder() {
         body: JSON.stringify({ title, description, is_template: true, fields: apiFields }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("QA Form Template created successfully.");
       setTitle("");
       setDescription("");

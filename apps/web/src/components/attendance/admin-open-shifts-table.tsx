@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { usePusher } from "@/hooks/use-pusher";
 
 import { useUrlState } from "@/hooks/use-url-state";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys, STALE_TIME_DEPARTMENTS, STALE_TIME_ATTENDANCE } from "@/lib/query-keys";
 import { usePaginatedList } from "@/lib/pagination";
 import { Button, Checkbox, DatePicker, ListScaffold } from "@g4k/ui/components";
@@ -125,7 +125,8 @@ export function AdminOpenShiftsTable() {
 
   const notifyMutation = useMutation({
     mutationFn: (ids: string[]) => apiFetch('/attendance/admin/notify-open-shifts', { method: 'POST', body: JSON.stringify({ ids }) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Notified HR about open shifts.");
       setRowSelection({});
     },

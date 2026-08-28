@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { ConfirmDialog } from "@g4k/ui/components";
@@ -68,6 +68,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
       return { previousLeaves };
     },
     onSuccess: (data, variables) => {
+      if (isQueued(data)) return;
       toast.success(`Leave request ${variables.decision}.`);
       setIsRejectOpen(false);
       setRejectReason("");

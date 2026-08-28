@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Card, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate, Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@g4k/ui/components";
@@ -44,7 +44,8 @@ export function QuickNotes() {
         body: JSON.stringify({ body }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
@@ -53,7 +54,8 @@ export function QuickNotes() {
     mutationFn: async (id: number) => {
       return apiFetch(`/quick-notes/${id}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
@@ -65,7 +67,8 @@ export function QuickNotes() {
         body: JSON.stringify({ pinned }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
     },
   });
@@ -77,7 +80,8 @@ export function QuickNotes() {
         body: JSON.stringify({ body }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardInit });
       setEditingNoteId(null);
       setEditBody("");

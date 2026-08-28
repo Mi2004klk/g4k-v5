@@ -29,6 +29,26 @@ import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { LeaveTab } from "@/components/attendance/leave-tab";
 import { dayStatusColor, formatDuration } from "@/lib/attendance";
 
+const STATUS_COLORS: Record<string, string> = {
+  success: "bg-success-500",
+  warning: "bg-warning-500",
+  danger: "bg-danger-500",
+  neutral: "bg-neutral-500",
+  purple: "bg-purple-500",
+  "light-blue": "bg-light-blue-500",
+  blue: "bg-blue-500",
+};
+
+const STATUS_LETTERS: Record<string, string> = {
+  present: "P",
+  late: "L",
+  absent: "A",
+  on_leave: "V",
+  leave: "V",
+  holiday: "H",
+  overtime: "O",
+};
+
 interface AttendanceDay {
   date: string;
   status: string;
@@ -161,7 +181,12 @@ export default function PersonalAttendancePage() {
                           <DialogTrigger asChild>
                             <div className="flex items-center justify-between p-3 rounded-[var(--radius)] hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors border border-transparent hover:border-neutral-100 dark:hover:border-neutral-800 cursor-pointer">
                               <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full shrink-0 bg-${dayStatusColor(day.status, day.overtime_seconds)}-500`} />
+                                <div 
+                                  className={`w-5 h-5 flex items-center justify-center rounded-full shrink-0 text-[10px] font-bold text-white ${STATUS_COLORS[dayStatusColor(day.status, day.overtime_seconds)] || 'bg-neutral-500'}`}
+                                  title={day.overtime_seconds && day.overtime_seconds > 0 ? "Overtime" : day.status}
+                                >
+                                  {day.overtime_seconds && day.overtime_seconds > 0 ? STATUS_LETTERS['overtime'] : (STATUS_LETTERS[day.status] || '-')}
+                                </div>
                                 <div>
                                   <p className="text-sm font-semibold text-neutral-900 dark:text-white">
                                     {format(new Date(day.date), "EEE, MMM d")}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -75,7 +75,8 @@ export function SettingsTabs() {
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) =>
       apiFetch("/company-profile", { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Company profile updated");
       queryClient.invalidateQueries({ queryKey: queryKeys.companyProfile });
     },
@@ -98,7 +99,8 @@ export function SettingsTabs() {
         body: formData,
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Logo uploaded successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.companyProfile });
       setLogoUploadOpen(false);

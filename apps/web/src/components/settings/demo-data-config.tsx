@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { Card, CardHeader, CardTitle, CardContent, Button } from "@g4k/ui/components";
 import { toast } from "sonner";
@@ -24,7 +24,8 @@ export function DemoDataConfig() {
     mutationFn: async () => {
       await apiFetch("/demo-data/purge", { method: "DELETE", body: JSON.stringify({ confirmation: confirmText }) });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Demo purge job dispatched. Data will be removed shortly.");
       setConfirmText("");
       setTimeout(() => queryClient.invalidateQueries({ queryKey: queryKeys.demoDataStatus }), 3000);
@@ -38,7 +39,8 @@ export function DemoDataConfig() {
     mutationFn: async () => {
       await apiFetch("/demo-data/seed", { method: "POST" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Demo seed job dispatched. Data will be seeded shortly.");
       setTimeout(() => queryClient.invalidateQueries({ queryKey: queryKeys.demoDataStatus }), 3000);
     },

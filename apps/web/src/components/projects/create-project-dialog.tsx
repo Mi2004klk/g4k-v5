@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, FormDraftAlert, Wizard, WizardStep, AppIcon } from "@g4k/ui/components";
 import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, FileUploadPopup, DatePicker } from "@g4k/ui/components";
 import { format } from "date-fns";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { FormError } from "@/components/forms/form-error";
 import { useFormDraft } from "@/hooks/use-form-draft";
@@ -115,7 +115,8 @@ export function CreateProjectDialog({
         throw err;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Project, phases, and tasks created successfully.");
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });

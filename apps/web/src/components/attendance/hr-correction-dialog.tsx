@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from "@g4k/ui/components";
 import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 interface HrCorrectionDialogProps {
@@ -127,7 +127,8 @@ export function HrCorrectionDialog({
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Attendance record corrected and audited.");
       queryClient.invalidateQueries({ queryKey: [queryKeys.hrAttendance(date, "all")[0]] });
       queryClient.invalidateQueries({ queryKey: [queryKeys.adminAttendance(date, "all")[0]] });

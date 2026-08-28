@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Card, Button, DataTable, Tabs, TabsList, TabsTrigger, TabsContent, EmptyState } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { Toolbar } from "@g4k/ui/components";
@@ -86,7 +86,8 @@ export function AdminLeaveHolidaysView() {
     mutationFn: async (id: number) => {
       return apiFetch(`/leave-requests/${id}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Leave request deleted successfully");
       queryClient.invalidateQueries({ queryKey: ['admin_leave_history'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.orgLeaveRequestsPaginated(statusFilter, search) });

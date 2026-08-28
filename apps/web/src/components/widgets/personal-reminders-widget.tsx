@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent, Button, AppIcon, Skeleton, ErrorBoundary, MeaningfulEmpty, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, ConfirmDialog } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { toast } from "sonner";
 import { safeFromNow } from "@/lib/format";
 
@@ -23,7 +23,8 @@ export function PersonalRemindersWidget() {
 
   const createMutation = useMutation({
     mutationFn: (data: any) => apiFetch("/personal-reminders", { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: ["personal-reminders"] });
       setOpen(false);
       setTitle("");
@@ -36,7 +37,8 @@ export function PersonalRemindersWidget() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/personal-reminders/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: ["personal-reminders"] });
       toast.success("Reminder deleted");
     }

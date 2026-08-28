@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { useAvatarUpload } from "@/hooks/use-avatar-upload";
 import { queryKeys } from "@/lib/query-keys";

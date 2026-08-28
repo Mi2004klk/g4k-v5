@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button, Input, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useIsMobile } from "@g4k/ui/hooks";
@@ -38,7 +38,8 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
       method: "POST",
       body: JSON.stringify({ module, name, filters: currentFilters })
     }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
       toast.success("View saved successfully");
       setSaveName("");
@@ -50,7 +51,8 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
     mutationFn: (id: number) => apiFetch(`/saved-views/${id}`, {
       method: "DELETE",
     }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: queryKeys.savedViews(module) });
       toast.success("View deleted successfully");
     }

@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AppIcon, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Wizard, WizardStep, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -139,7 +139,8 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
         return { success: true };
       }
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success(mode === "single" ? "Task created successfully" : "Tasks created successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       if (projectId && projectId !== "none") {

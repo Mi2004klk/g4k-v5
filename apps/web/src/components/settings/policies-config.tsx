@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Skeleton } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { AppIcon } from "@g4k/ui/components";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -118,7 +118,8 @@ export function PoliciesConfig() {
         method: "POST",
         body: JSON.stringify({ settings: updates }),
       }),
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Policy updated successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.settings });
     },

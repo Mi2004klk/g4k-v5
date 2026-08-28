@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -35,6 +35,7 @@ export function useAvatarUpload(options?: UseAvatarUploadOptions) {
       });
     },
     onSuccess: (data) => {
+      if (isQueued(data)) return;
       toast.success("Profile photo updated successfully");
       
       // Update local auth store so layout avatar refreshes instantly

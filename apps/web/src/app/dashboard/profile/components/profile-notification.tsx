@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { useAuthStore } from "@/lib/auth-store";
 
 import {
@@ -36,6 +36,7 @@ export function ProfileNotificationSection() {
       });
     },
     onSuccess: (res: { preferences: Record<string, unknown> }) => {
+      if (isQueued(res)) return;
       toast.success("Notification preferences updated");
       if (authUser) {
         setAuth(useAuthStore.getState().token!, { ...authUser, preferences: res.preferences }, authUser.active_role);

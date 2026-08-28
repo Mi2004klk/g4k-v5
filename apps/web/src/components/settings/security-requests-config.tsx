@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@g4k/ui/components";
@@ -45,6 +45,7 @@ export function SecurityRequestsConfig() {
       return apiFetch(`/admin/password-resets/${id}/approve`, { method: "POST" });
     },
     onSuccess: (data) => {
+      if (isQueued(data)) return;
       toast.success("Password reset request approved.");
       if (data.reset_link) {
         setResetLink(data.reset_link);
@@ -60,7 +61,8 @@ export function SecurityRequestsConfig() {
     mutationFn: async (id: number | string) => {
       return apiFetch(`/admin/password-resets/${id}/reject`, { method: "POST" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Password reset request rejected.");
       queryClient.invalidateQueries({ queryKey: queryKeys.passwordResets("pending") });
     },

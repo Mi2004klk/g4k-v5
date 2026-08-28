@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { LeaveRequestForm } from "@/components/leave/leave-request-form";
 import { LeaveHistoryTable } from "@/components/leave/leave-history-table";
@@ -56,7 +56,8 @@ export function LeaveTab({ userId }: { userId?: string }) {
     mutationFn: async (id: number) => {
       return apiFetch(`/leave-requests/${id}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Leave request cancelled successfully");
       queryClient.invalidateQueries({ queryKey: queryKeys.myLeaveHistory(typeFilter, statusFilter, debouncedSearch, page) });
     },

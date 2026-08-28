@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button, Textarea, Avatar, AvatarFallback, ConfirmDialog } from "@g4k/ui/components";
 import { resolveAvatarUrl } from "@/lib/utils";
 
@@ -28,7 +28,8 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
         body: JSON.stringify({ body: comment, parent_id: replyTo }),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
       setComment("");
       setReplyTo(null);
@@ -43,7 +44,8 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
     mutationFn: async (commentId: number | string) => {
       return apiFetch(`/tasks/comments/${commentId}`, { method: "DELETE" });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
       toast.success("Comment deleted");
       queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
     },

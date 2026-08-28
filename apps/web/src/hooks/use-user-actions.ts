@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -13,6 +13,7 @@ export function useUserActions() {
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }: { id: number; payload: unknown }) => apiFetch(`/users/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
     onSuccess: (_, variables) => {
+      if (isQueued(_)) return;
       toast.success("User updated successfully!");
       setIsEditOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
@@ -25,6 +26,7 @@ export function useUserActions() {
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number, status: unknown }) => apiFetch(`/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
     onSuccess: (_, variables) => {
+      if (isQueued(_)) return;
       toast.success("User status updated.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
@@ -37,6 +39,7 @@ export function useUserActions() {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/users/${id}`, { method: "DELETE" }),
     onSuccess: (_, variables) => {
+      if (isQueued(_)) return;
       toast.success("User deleted.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
@@ -49,6 +52,7 @@ export function useUserActions() {
   const restoreMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/users/${id}/restore`, { method: "POST" }),
     onSuccess: (_, variables) => {
+      if (isQueued(_)) return;
       toast.success("User restored successfully.");
       setConfirmState({ isOpen: false, type: "" });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });
@@ -61,6 +65,7 @@ export function useUserActions() {
   const resetPasswordMutation = useMutation({
     mutationFn: (id: number) => apiFetch(`/users/${id}/reset-password`, { method: "POST" }),
     onSuccess: (res: any) => {
+      if (isQueued(res)) return;
       const msg = res?.message || "Password reset to default.";
       const tempPassword = res?._temp_password;
       if (tempPassword) {

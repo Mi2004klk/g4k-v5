@@ -115,12 +115,15 @@ function CalendarLegend({ compact = false }: { compact?: boolean }) {
     >
       {items.map((statusKey) => {
         const color = getAttendanceStatusColor(statusKey);
+        const letter = statusKey === 'present' ? 'P' : statusKey === 'late' ? 'L' : statusKey === 'absent' ? 'A' : statusKey === 'on_leave' ? 'V' : statusKey === 'holiday' ? 'H' : statusKey === 'overtime' ? 'O' : '-';
         return (
           <div key={statusKey} className="flex items-center gap-1.5">
             <span
-              className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} rounded-sm ${color.bg}`}
-              aria-hidden
-            />
+              className={`${compact ? "w-3 h-3 text-[8px]" : "w-4 h-4 text-[10px]"} flex items-center justify-center font-bold text-white rounded-sm ${color.bg}`}
+              aria-label={color.label}
+            >
+              {statusKey !== 'nodata' ? letter : ''}
+            </span>
             <span className={`${compact ? "text-xs" : "text-xs"} text-neutral-500 dark:text-neutral-400`}>
               {color.label}
             </span>
@@ -144,11 +147,13 @@ function DayTooltipContent({ date, record, holiday }: { date: Date; record?: Att
           {holiday.name} {holiday.type === 'event' ? '(Event)' : ''}
         </p>
       )}
-      <p className="text-xs capitalize">
+      <p className="text-xs capitalize flex items-center">
         <span
-          className={`inline-block w-2 h-2 rounded-sm mr-1 ${getAttendanceStatusColor(status).bg}`}
-          aria-hidden
-        />
+          className={`inline-flex items-center justify-center w-3 h-3 text-[8px] font-bold text-white rounded-sm mr-1.5 ${getAttendanceStatusColor(status).bg}`}
+          aria-label={getAttendanceStatusColor(status).label}
+        >
+          {status === 'present' ? 'P' : status === 'late' ? 'L' : status === 'absent' ? 'A' : status === 'on_leave' ? 'V' : status === 'holiday' ? 'H' : status === 'overtime' ? 'O' : ''}
+        </span>
         {getAttendanceStatusColor(status).label}
       </p>
       {record && record.total_seconds > 0 && (
@@ -222,8 +227,11 @@ function MonthCalendarGrid({
                       </span>
                       {status !== "nodata" && (
                         <div
-                          className={`w-1.5 h-1.5 rounded-sm ${getAttendanceStatusColor(status).bg}`}
-                        />
+                          className={`w-3.5 h-3.5 flex items-center justify-center text-[8px] font-bold text-white rounded-sm ${getAttendanceStatusColor(status).bg}`}
+                          aria-label={getAttendanceStatusColor(status).label}
+                        >
+                          {status === 'present' ? 'P' : status === 'late' ? 'L' : status === 'absent' ? 'A' : status === 'on_leave' ? 'V' : status === 'holiday' ? 'H' : status === 'overtime' ? 'O' : ''}
+                        </div>
                       )}
                     </div>
                     {/* Compact timeline bar for desktop */}
