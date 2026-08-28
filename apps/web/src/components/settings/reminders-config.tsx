@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
-import { Skeleton } from "@g4k/ui/components";
+import { Skeleton, TimeInput } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { AppIcon } from "@g4k/ui/components";
@@ -91,9 +91,8 @@ export function RemindersConfig() {
 
           <div>
             <label className="text-xs font-medium">Open Shift Flag Time</label>
-            <input
-              type="time"
-              className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1"
+            <TimeInput
+              className="w-full mt-1"
               value={formData["reminders.open_shift_flag_time"] || "20:00"}
               onChange={(e) => setFormData({ ...formData, "reminders.open_shift_flag_time": e.target.value })}
             />

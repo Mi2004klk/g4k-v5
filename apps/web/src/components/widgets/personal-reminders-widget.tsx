@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Card, CardHeader, CardTitle, CardContent, Button, AppIcon, Skeleton, ErrorBoundary, MeaningfulEmpty, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, ConfirmDialog } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, Button, AppIcon, Skeleton, ErrorBoundary, MeaningfulEmpty, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, ConfirmDialog, DatePicker, TimeInput } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { toast } from "sonner";
 import { safeFromNow } from "@/lib/format";
@@ -13,7 +13,7 @@ export function PersonalRemindersWidget() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState("");
 
   const { data: reminders, isLoading } = useQuery({
@@ -29,7 +29,7 @@ export function PersonalRemindersWidget() {
       setOpen(false);
       setTitle("");
       setBody("");
-      setDate("");
+      setDate(undefined);
       setTime("");
       toast.success("Reminder created successfully");
     }
@@ -49,7 +49,7 @@ export function PersonalRemindersWidget() {
     if (!title || !date || !time) return toast.error("Please fill all required fields");
     
     // Combine date and time (assuming local timezone)
-    const remindAt = new Date(`${date}T${time}`).toISOString();
+    const remindAt = new Date(`${format(date, 'yyyy-MM-dd')}T${time}`).toISOString();
     
     createMutation.mutate({ title, body, remind_at: remindAt });
   };
@@ -148,21 +148,17 @@ export function PersonalRemindersWidget() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5 block">Date *</label>
-                <input
-                  type="date"
-                  required
-                  min={format(new Date(), 'yyyy-MM-dd')}
-                  className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-surface px-3 py-2 outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
+                <DatePicker
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={setDate}
+                  minDate={new Date()}
+                  className="w-full h-10"
                 />
               </div>
               <div>
                 <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5 block">Time *</label>
-                <input
-                  type="time"
+                <TimeInput
                   required
-                  className="w-full text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-surface px-3 py-2 outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                 />

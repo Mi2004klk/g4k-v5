@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@g4k/ui/components";
-import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea } from "@g4k/ui/components";
+import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, TimeInput } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -262,8 +262,7 @@ export function HrCorrectionDialog({
                   </div>
                   <div className="grid gap-2">
                     <label className="text-sm font-medium">Time</label>
-                    <Input 
-                      type="time" 
+                    <TimeInput 
                       value={timestamp}
                       onChange={(e) => setTimestamp(e.target.value)}
                       required

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import { Card, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, Spinner,
+import { Card, Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, Spinner, DatePicker
 } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { toast } from "sonner";
@@ -134,19 +135,17 @@ export function QuickTaskWidget() {
             </div>
             
             <div className="flex gap-2">
-              <Input
-                type="date"
-                title="Start Date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className={`h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none px-2 ${fieldErrors.start_date ? "border-red-500" : ""}`}
+              <DatePicker
+                placeholder="Start Date"
+                value={startDate ? new Date(startDate) : undefined}
+                onChange={(d) => setStartDate(d ? format(d, 'yyyy-MM-dd') : "")}
+                className={`w-full h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none px-2 ${fieldErrors.start_date ? "border-red-500" : ""}`}
               />
-              <Input
-                type="date"
-                title="Due Date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className={`h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none px-2 ${fieldErrors.due_date ? "border-red-500" : ""}`}
+              <DatePicker
+                placeholder="Due Date"
+                value={dueDate ? new Date(dueDate) : undefined}
+                onChange={(d) => setDueDate(d ? format(d, 'yyyy-MM-dd') : "")}
+                className={`w-full h-10 text-[13px] bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-none px-2 ${fieldErrors.due_date ? "border-red-500" : ""}`}
               />
             </div>
           </div>

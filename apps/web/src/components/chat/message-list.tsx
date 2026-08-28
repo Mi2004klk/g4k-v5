@@ -18,7 +18,7 @@ interface ListMessage {
   sender?: { name?: string };
   reads?: { user_id: number }[];
 }
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button, Dialog, DialogContent, DialogTrigger } from "@g4k/ui/components";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Button, Dialog, DialogContent, DialogTrigger, ConfirmDialog } from "@g4k/ui/components";
 
 const MessageItem = memo(function MessageItem({
   msg,
@@ -233,13 +233,16 @@ const MessageItem = memo(function MessageItem({
                 </DropdownMenuItem>
               ))}
               {isMe && (
-                <DropdownMenuItem onClick={() => {
-                  if (window.confirm("Are you sure you want to delete this message? This action cannot be undone.")) {
-                    onDeleteMessage?.(msg.id);
+                <ConfirmDialog
+                  title="Delete Message"
+                  description="Are you sure you want to delete this message? This action cannot be undone."
+                  onConfirm={() => onDeleteMessage?.(msg.id)}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500 hover:text-red-600 focus:text-red-600 cursor-pointer">
+                      <AppIcon name="trash" className="mr-2" /> Delete Message
+                    </DropdownMenuItem>
                   }
-                }} className="text-red-500 hover:text-red-600 focus:text-red-600">
-                  <AppIcon name="trash" className="mr-2" /> Delete Message
-                </DropdownMenuItem>
+                />
               )}
             </DropdownMenuContent>
           </DropdownMenu>

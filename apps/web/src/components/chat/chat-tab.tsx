@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tansta
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch, unwrapList, isQueued } from "@/lib/api-client";
 import { asArray } from "@/lib/utils";
-import { Button, IconButton, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Avatar, AvatarFallback, MeaningfulEmpty } from "@g4k/ui/components";
+import { Button, IconButton, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, Avatar, AvatarFallback, MeaningfulEmpty, ConfirmDialog } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { usePusher } from "@/hooks/use-pusher";
 import { ConversationList } from "@/components/chat/conversation-list";
@@ -701,13 +701,16 @@ export function ChatTab() {
                           {isChatPinned(selectedConv, user?.id) ? "Unpin chat" : "Pin chat"}
                         </DropdownMenuItem>
                         
-                        <DropdownMenuItem onClick={() => {
-                          if (window.confirm("Are you sure you want to clear this chat? This will only remove the messages for you.")) {
-                            clearChatMutation.mutate();
+                        <ConfirmDialog
+                          title="Clear Chat"
+                          description="Are you sure you want to clear this chat? This will only remove the messages for you."
+                          onConfirm={() => clearChatMutation.mutate()}
+                          trigger={
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} disabled={clearChatMutation.isPending} className="text-red-500 hover:text-red-600 focus:text-red-600 w-full cursor-pointer">
+                              <AppIcon name="trash" className="mr-2" /> Clear Chat
+                            </DropdownMenuItem>
                           }
-                        }} disabled={clearChatMutation.isPending} className="text-red-500 hover:text-red-600 focus:text-red-600">
-                          <AppIcon name="trash" className="mr-2" /> Clear Chat
-                        </DropdownMenuItem>
+                        />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}

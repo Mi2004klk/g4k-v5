@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { AppIcon, Spinner,
 } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
-import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent, Avatar, AvatarFallback, Slider, ConfirmDialog } from "@g4k/ui/components";
+import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Textarea, InlineEdit, Popover, PopoverTrigger, PopoverContent, Avatar, AvatarFallback, Slider, ConfirmDialog, DatePicker } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 import { QAFormViewer } from "@/components/projects/qa-form-viewer";
 import { cn } from "@/lib/utils";
@@ -259,14 +259,11 @@ export function TaskOverviewTab({
           </div>
           <div className="flex-1 px-3 py-2">
             {canManage ? (
-              <InlineEdit
-                type="date"
-                value={task.due_date ? String(task.due_date).split('T')[0] : ""}
-                displayValue={task.due_date ? format(new Date(task.due_date), "MMM d, yyyy") : "None"}
-                onSave={(val) => inlineUpdateMutation.mutateAsync({ due_date: val || null })}
+              <DatePicker
                 placeholder="None"
-                className="w-auto h-7 -ml-2 -mt-1 px-2"
-                textClassName="text-xs font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded px-2 py-1"
+                value={task.due_date ? new Date(task.due_date) : undefined}
+                onChange={(d) => inlineUpdateMutation.mutateAsync({ due_date: d ? format(d, 'yyyy-MM-dd') : null })}
+                className="w-auto h-7 -ml-2 -mt-1 px-2 border-0 bg-transparent shadow-none text-xs font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
               />
             ) : (
               <span className="text-xs font-semibold">{task.due_date ? format(new Date(task.due_date), "MMM d, yyyy") : "None"}</span>

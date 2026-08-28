@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { cva, type VariantProps } from "class-variance-authority"
 import { AppIcon } from "./icon/AppIcon";
 
 import { cn } from "../utils/cn"
@@ -26,18 +27,34 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+const dialogContentVariants = cva(
+  "fixed z-50 grid w-full bg-background shadow-e4 duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 " +
+  "max-sm:inset-0 max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-none max-sm:border-none max-sm:flex max-sm:flex-col max-sm:p-0 max-sm:overflow-y-auto max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=open]:slide-in-from-bottom " +
+  "sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[var(--radius)] sm:border sm:p-6 sm:h-auto sm:max-h-[85vh] sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%] sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]",
+  {
+    variants: {
+      size: {
+        sm: "sm:max-w-[425px]",
+        md: "sm:max-w-[500px]",
+        lg: "sm:max-w-[800px]",
+        xl: "sm:max-w-[1140px]",
+      },
+    },
+    defaultVariants: {
+      size: "md",
+    },
+  }
+)
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & VariantProps<typeof dialogContentVariants>
+>(({ className, size, children, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      className={cn(
-        "fixed left-[50%] z-50 grid w-full translate-x-[-50%] gap-4 border bg-background p-6 shadow-e4 duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 max-sm:bottom-0 max-sm:top-auto max-sm:translate-y-0 max-sm:h-auto max-sm:max-h-[92dvh] max-sm:rounded-t-[24px] max-sm:border-b-0 max-sm:pb-10 max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=open]:slide-in-from-bottom sm:top-[50%] sm:h-auto sm:max-w-lg sm:translate-y-[-50%] sm:rounded-[var(--radius)] sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%] sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]",
-        className
-      )}
+      className={cn(dialogContentVariants({ size }), className)}
       aria-describedby={props["aria-describedby"] ?? undefined}
       {...props}
     >
@@ -57,7 +74,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "flex flex-col space-y-1.5 text-center sm:text-left max-sm:p-4 max-sm:pb-2 max-sm:sticky max-sm:top-0 max-sm:bg-background max-sm:z-10",
       className
     )}
     {...props}
@@ -71,7 +88,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 max-sm:p-4 max-sm:pt-2 max-sm:sticky max-sm:bottom-0 max-sm:bg-background max-sm:z-10 max-sm:mt-auto max-sm:border-t max-sm:border-border",
       className
     )}
     {...props}

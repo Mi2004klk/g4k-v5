@@ -60,3 +60,4 @@ export * from "./icon-button";
 export * from "./search-input";
 export * from "./spinner";
 export * from "./export-button";
+export * from "./time-input";

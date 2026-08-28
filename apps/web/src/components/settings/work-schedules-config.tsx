@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton } from "@g4k/ui/components";
+import { Card, CardHeader, CardTitle, CardContent, Button, Skeleton, TimeInput } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -210,12 +210,12 @@ export function WorkSchedulesConfig() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="ws-start" className="text-xs font-medium">Start Time</label>
-                <input id="ws-start" type="time" {...form.register("start_time")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+                <TimeInput id="ws-start" {...form.register("start_time")} className="w-full mt-1" />
                 <FormError errors={form.formState.errors.start_time?.message} />
               </div>
               <div>
                 <label htmlFor="ws-end" className="text-xs font-medium">End Time</label>
-                <input id="ws-end" type="time" {...form.register("end_time")} className="w-full text-sm rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-700 bg-transparent px-3 py-2 mt-1" />
+                <TimeInput id="ws-end" {...form.register("end_time")} className="w-full mt-1" />
                 <FormError errors={form.formState.errors.end_time?.message} />
               </div>
               <div>
