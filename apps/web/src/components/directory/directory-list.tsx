@@ -670,7 +670,7 @@ export function EmployeeManagementTab() {
 
       {isEditOpen && !!editingUser && (
         <UserEditDialog
-          isOpen={isEditOpen}
+          open={isEditOpen}
           onOpenChange={setIsEditOpen}
           user={editingUser as any}
           departments={departments as any}
@@ -685,7 +685,8 @@ export function EmployeeManagementTab() {
         <EraseUserDialog
           open={!!erasingUser}
           onOpenChange={(open) => !open && setErasingUser(null)}
-          user={erasingUser}
+          userId={erasingUser.id}
+          userName={erasingUser.name}
           onSuccess={() => { setErasingUser(null); refetch(); }}
         />
       )}

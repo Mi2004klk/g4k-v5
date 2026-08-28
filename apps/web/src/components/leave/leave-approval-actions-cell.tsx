@@ -92,10 +92,6 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
   };
 
   const handleReject = () => {
-    if (!rejectReason) {
-      toast.error("Reason is required for rejection.");
-      return;
-    }
     decisionMutation.mutate({ decision: "rejected", reason: rejectReason });
   };
 
@@ -150,7 +146,6 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
         confirmText="Confirm Rejection"
         isDestructive={true}
         isLoading={decisionMutation.isPending}
-        confirmDisabled={!rejectReason.trim()}
       >
         <div className="py-2">
           <Input

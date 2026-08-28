@@ -486,7 +486,7 @@ export function TaskOverviewTab({
               size="sm"
               className="flex-1 text-xs h-8 text-rose-600 border-rose-200 hover:bg-rose-50"
               onClick={() => redoMutation.mutate()}
-              disabled={redoMutation.isPending || !redoReason.trim()}
+              disabled={redoMutation.isPending}
             >
               {redoMutation.isPending ? <Spinner size="sm" /> : "Request Redo"}
             </Button>

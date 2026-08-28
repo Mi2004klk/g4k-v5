@@ -900,20 +900,21 @@ class TaskController extends Controller
             return response()->json(['message' => 'Task has no pending approval.'], 422);
         }
 
-        $validated = $request->validate(['reason' => 'required|string']);
+        $validated = $request->validate(['reason' => 'nullable|string']);
         
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($approval, $request, $validated, $task) {
-                ApprovalService::redo($approval, $request->user()->id, $validated['reason']);
+                $reason = $validated['reason'] ?? null;
+                ApprovalService::redo($approval, $request->user()->id, $reason);
 
                 TaskService::updateStatus($task, 'in_progress', $request->user()->id);
-                \App\Services\AuditLogger::log($request, 'redo', \App\Models\Task::class, $task->id, null, ['decision' => 'redo', 'reason' => $validated['reason']]);
+                \App\Services\AuditLogger::log($request, 'redo', \App\Models\Task::class, $task->id, null, ['decision' => 'redo', 'reason' => $reason]);
 
                 TaskActivity::create([
                     'task_id' => $task->id,
                     'user_id' => $request->user()->id,
                     'event' => 'redo',
-                    'metadata' => ['reason' => $validated['reason']],
+                    'metadata' => ['reason' => $reason],
                 ]);
             });
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
@@ -924,6 +925,7 @@ class TaskController extends Controller
 
         \App\Services\DashboardCacheService::invalidateGlobal();
 
+        $reasonStr = $validated['reason'] ?? 'No reason provided';
         foreach ($task->assignees as $assignee) {
             if ($approval && $assignee->id === $approval->submitted_by) {
                 continue; // ProcessApprovalDecision already notified this user
@@ -932,7 +934,7 @@ class TaskController extends Controller
                 (int) $assignee->id,
                 'task_assigned',
                 'Task Needs Redo',
-                "Your task '{$task->title}' needs redo. Reason: {$validated['reason']}",
+                "Your task '{$task->title}' needs redo. Reason: {$reasonStr}",
                 ['task_id' => $task->id],
                 "/dashboard/tasks/{$task->id}"
             );

@@ -187,12 +187,11 @@ export function PendingApprovalsWidget() {
         description="Please provide a reason for rejecting this request."
         confirmText="Reject"
         isLoading={decisionMutation.isPending}
-        confirmDisabled={!rejectReason.trim()}
       >
         <Input 
           value={rejectReason} 
           onChange={(e) => setRejectReason(e.target.value)} 
-          placeholder="Reason for rejection (required)" 
+          placeholder="Reason for rejection (optional)" 
           className="mt-2"
         />
       </ConfirmDialog>

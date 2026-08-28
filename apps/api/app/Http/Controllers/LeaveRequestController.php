@@ -261,7 +261,7 @@ class LeaveRequestController extends Controller
     {
         $validated = $request->validate([
             'decision' => 'required|in:approved,rejected',
-            'reason' => 'required_if:decision,rejected|string|max:1000',
+            'reason' => 'nullable|string|max:1000',
         ]);
 
         $leaveRequest = LeaveRequest::with('approval')->findOrFail($id);
