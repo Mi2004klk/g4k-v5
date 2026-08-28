@@ -228,11 +228,15 @@ export function EmployeeManagementTab() {
     onSuccess: (res: any) => {
       if (isQueued(res)) return;
       const tempPassword = res?._temp_password;
-      if (tempPassword) {
-        toast.success(`User created! Temp password: ${tempPassword}`, { duration: 10000 });
-      } else {
-        toast.success("User created successfully!");
-      }
+      const newUserId = res?.id || res?.data?.id;
+      
+      toast.success(tempPassword ? `User created! Temp password: ${tempPassword}` : "User created successfully!", { 
+        duration: 10000,
+        action: newUserId ? {
+          label: "View Profile",
+          onClick: () => router.push(`/dashboard/directory/${newUserId}`)
+        } : undefined
+      });
       setIsCreateOpen(false);
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });

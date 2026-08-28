@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, FormDraftAlert, Wizard, WizardStep, AppIcon } from "@g4k/ui/components";
 import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, FileUploadPopup, DatePicker } from "@g4k/ui/components";
@@ -26,6 +27,7 @@ export function CreateProjectDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [coverImagePath, setCoverImagePath] = useState<string | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
@@ -117,7 +119,16 @@ export function CreateProjectDialog({
     },
     onSuccess: (data: any) => {
       if (isQueued(data)) return;
-      toast.success("Project, phases, and tasks created successfully.");
+      
+      const projectId = data?.id || data?.data?.id;
+      
+      toast.success("Project, phases, and tasks created successfully.", {
+        duration: 10000,
+        action: projectId ? {
+          label: "Open Project",
+          onClick: () => router.push(`/dashboard/projects/${projectId}`)
+        } : undefined
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       

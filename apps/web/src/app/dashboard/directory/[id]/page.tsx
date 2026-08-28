@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { AppIcon } from "@g4k/ui/components";
-import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Skeleton, EmptyState, Avatar, AvatarFallback, AvatarImage, StatusBadge } from "@g4k/ui/components";
+import { Button, Tabs, TabsList, TabsTrigger, TabsContent, Skeleton, EmptyState, Avatar, AvatarFallback, AvatarImage, StatusBadge, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, ConfirmDialog } from "@g4k/ui/components";
 import { resolveAvatarUrl } from "@/lib/utils";
 import { TasksTab } from "@/components/projects/tasks-tab";
 import { LeaveTab } from "@/components/attendance/leave-tab";
@@ -13,6 +13,9 @@ import { AttendanceHistoryCalendar } from "@/components/attendance/attendance-hi
 import { useChatWithUser } from "@/hooks/use-chat-with-user";
 import { useAuthStore } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
+import { useUserActions } from "@/hooks/use-user-actions";
+import { UserEditDialog } from "@/components/users/user-edit-dialog";
+import { STALE_TIME_DEPARTMENTS, STALE_TIME_DESIGNATIONS } from "@/lib/query-keys";
 
 export default function Employee360Page() {
   const params = useParams();
@@ -40,6 +43,38 @@ export default function Employee360Page() {
     queryFn: () => apiFetch(`/users/${id}/activity`),
     enabled: !!id && canViewFull,
   });
+
+  const { data: departments = [] } = useQuery({
+    queryKey: queryKeys.departments,
+    queryFn: () => apiFetch("/departments?per_page=100").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    staleTime: STALE_TIME_DEPARTMENTS,
+    enabled: canManageUsers,
+  });
+
+  const { data: designations = [] } = useQuery({
+    queryKey: queryKeys.designations,
+    queryFn: () => apiFetch("/designations?per_page=100").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []))),
+    staleTime: STALE_TIME_DESIGNATIONS,
+    enabled: canManageUsers,
+  });
+
+  const { data: work_schedules = [] } = useQuery({
+    queryKey: queryKeys.workSchedules,
+    queryFn: () => apiFetch("/work-schedules").then((res: any) => (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []))),
+    enabled: hasCapability(capabilities, "settings.manage") || hasCapability(capabilities, "users.hr.manage"),
+  });
+
+  const {
+    confirmState, setConfirmState,
+    isEditOpen, setIsEditOpen,
+    editingUser, setEditingUser,
+    updateMutation, statusMutation, deleteMutation, resetPasswordMutation, restoreMutation
+  } = useUserActions();
+
+  // If deleted, we redirect away since we can't view deleted users properly right now or we just show a toast
+  if (deleteMutation.isSuccess && !deleteMutation.isPending) {
+    router.push("/dashboard/directory");
+  }
 
   if (isLoading) {
     return (
@@ -103,6 +138,45 @@ export default function Employee360Page() {
               <AppIcon name="chat" size="sm" />
               Send Message
             </Button>
+            {canManageUsers && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="px-2" aria-label="More actions">
+                    <AppIcon name="more" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 font-sans">
+                  {user.deleted_at ? (
+                    <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "restore", payload: user })} className="gap-2 text-emerald-600 font-medium">
+                      <AppIcon name="history" /> Restore User
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "reset-password", payload: user })} className="gap-2 text-amber-600">
+                        <AppIcon name="key" /> Reset Password
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => {
+                        if (user.status === "inactive") {
+                          statusMutation.mutate({ id: user.id, status: 'active' });
+                        } else {
+                          setConfirmState({ isOpen: true, type: "deactivate", payload: user });
+                        }
+                      }} className={`gap-2 ${user.status === "inactive" ? "text-emerald-600" : "text-amber-600"}`}>
+                        {user.status === "inactive" ? <AppIcon name="userCheck" /> : <AppIcon name="userX" />}
+                        {user.status === "inactive" ? "Activate" : "Deactivate"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setConfirmState({ isOpen: true, type: "delete", payload: user })} className="gap-2 text-rose-600">
+                        <AppIcon name="trash" /> Delete
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setEditingUser(user); setIsEditOpen(true); }} className="gap-2">
+                        <AppIcon name="edit" /> Edit
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
@@ -190,6 +264,56 @@ export default function Employee360Page() {
           )}
         </div>
       </Tabs>
+
+      {isEditOpen && !!editingUser && (
+        <UserEditDialog
+          isOpen={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          user={editingUser as any}
+          departments={departments as any}
+          designations={designations as any}
+          work_schedules={work_schedules as any}
+          onSubmit={(data) => updateMutation.mutate({ id: (editingUser as any).id, payload: data })}
+          isPending={updateMutation.isPending}
+        />
+      )}
+
+      <ConfirmDialog
+        open={confirmState.isOpen}
+        onOpenChange={(open) => !open && setConfirmState({ isOpen: false, type: "" })}
+        title={
+          confirmState.type === "delete" ? "Delete User" :
+          confirmState.type === "restore" ? "Restore User" :
+          confirmState.type === "deactivate" ? "Deactivate User" :
+          "Reset Password"
+        }
+        description={
+          confirmState.type === "delete" ? `Are you sure you want to delete ${(confirmState.payload as any)?.name}? This will archive their record but preserve historical data.` :
+          confirmState.type === "restore" ? `Are you sure you want to restore ${(confirmState.payload as any)?.name}? Their account will reactivate.` :
+          confirmState.type === "deactivate" ? `Deactivating ${(confirmState.payload as any)?.name} will prevent them from logging in.` :
+          "Are you sure you want to reset this user's password? A new random 16-character password will be generated and shown to you."
+        }
+        confirmText={
+          confirmState.type === "delete" ? "Delete" :
+          confirmState.type === "restore" ? "Restore" :
+          confirmState.type === "deactivate" ? "Deactivate" :
+          "Reset Password"
+        }
+        isDestructive={confirmState.type !== "restore"}
+        onConfirm={() => {
+          const payload = confirmState.payload as any;
+          if (confirmState.type === "delete") {
+            deleteMutation.mutate(payload.id);
+          } else if (confirmState.type === "restore") {
+            restoreMutation.mutate(payload.id);
+          } else if (confirmState.type === "deactivate") {
+            statusMutation.mutate({ id: payload.id, status: 'inactive' });
+          } else if (confirmState.type === "reset-password") {
+            resetPasswordMutation.mutate(payload.id);
+          }
+        }}
+        isLoading={deleteMutation.isPending || statusMutation.isPending || resetPasswordMutation.isPending || restoreMutation.isPending}
+      />
     </div>
   );
 }

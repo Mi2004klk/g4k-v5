@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 import { AppIcon, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Wizard, WizardStep, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch, isQueued } from "@/lib/api-client";
@@ -20,6 +21,7 @@ export interface CreateTaskDialogProps {
 
 export function CreateTaskDialog({ open, onOpenChange, projectId: initialProjectId, defaultPhaseId }: CreateTaskDialogProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const user = useAuthStore(s => s.user);
   const { data: caps = [] } = useCapabilities();
   const canManageTasks = hasCapability(caps, "tasks.manage");
@@ -141,7 +143,13 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
     },
     onSuccess: (data: any) => {
       if (isQueued(data)) return;
-      toast.success(mode === "single" ? "Task created successfully" : "Tasks created successfully");
+      toast.success(mode === "single" ? "Task created successfully" : "Tasks created successfully", {
+        duration: 10000,
+        action: (projectId && projectId !== "none") ? {
+          label: "View Project",
+          onClick: () => router.push(`/dashboard/projects/${projectId}`)
+        } : undefined
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
       if (projectId && projectId !== "none") {
         queryClient.invalidateQueries({ queryKey: [...queryKeys.project(projectId), "phases"] });
