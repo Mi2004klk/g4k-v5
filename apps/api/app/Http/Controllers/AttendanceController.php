@@ -103,13 +103,13 @@ class AttendanceController extends Controller
     public function meToday(Request $request)
     {
         $user = $request->user();
-        $date = now()->toDateString();
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $date = now($tz)->toDateString();
 
         $day = AttendanceDay::where('user_id', $user->id)
             ->where('date', $date)
             ->first();
 
-        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
         $startWindow = \Carbon\Carbon::parse($date, $tz)->startOfDay()->utc();
         $endWindow = \Carbon\Carbon::parse($date, $tz)->addHours(48)->utc();
 
@@ -236,6 +236,15 @@ class AttendanceController extends Controller
 
     public function meDay(Request $request, string $date)
     {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return response()->json(['message' => 'Invalid date format'], 400);
+        }
+        try {
+            \Carbon\Carbon::parse($date);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Invalid date'], 400);
+        }
+
         $user = $request->user();
         $day = AttendanceDay::where('user_id', $user->id)
             ->where('date', $date)
@@ -329,7 +338,8 @@ class AttendanceController extends Controller
 
     public function teamToday(Request $request)
     {
-        $date = $request->query('date', \Carbon\Carbon::today()->toDateString());
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $date = $request->query('date', now($tz)->toDateString());
         $user = $request->user();
         
         $activeRole = $user->resolveActiveRole();
@@ -432,7 +442,8 @@ class AttendanceController extends Controller
         $activeRole = $user->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
         
-        $today = \Carbon\Carbon::today()->toDateString();
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $today = now($tz)->toDateString();
         
         $usersQuery = \App\Models\User::select('id', 'name as user_name', 'avatar_url', 'department_id')
             ->where('status', 'active');
@@ -443,7 +454,7 @@ class AttendanceController extends Controller
         $userIds = $usersQuery->pluck('id');
         
         // Unclosed shifts from past 7 days (not including today)
-        $pastWeek = \Carbon\Carbon::today()->subDays(7)->toDateString();
+        $pastWeek = now($tz)->subDays(7)->toDateString();
         $unclosedShifts = DB::table('attendance_days')
             ->whereIn('user_id', $userIds)
             ->where('date', '>=', $pastWeek)
@@ -520,10 +531,13 @@ class AttendanceController extends Controller
         $activeRole = $user->resolveActiveRole();
         $isAdmin = $activeRole === 'super_admin';
 
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $today = now($tz)->toDateString();
+
         $query = DB::table('users')
-            ->join('attendance_days', function ($join) {
+            ->join('attendance_days', function ($join) use ($today) {
                 $join->on('users.id', '=', 'attendance_days.user_id')
-                     ->where('attendance_days.date', '=', now()->toDateString())
+                     ->where('attendance_days.date', '=', $today)
                      ->whereNotNull('attendance_days.clock_in')
                      ->whereNull('attendance_days.clock_out');
             })

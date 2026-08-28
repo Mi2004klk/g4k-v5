@@ -114,8 +114,8 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
       return;
     }
 
-    if (draftData.start_date <= todayDate) {
-      toast.error("Start date must be tomorrow or later.");
+    if (draftData.start_date < todayDate) {
+      toast.error("Start date must be today or later.");
       return;
     }
 

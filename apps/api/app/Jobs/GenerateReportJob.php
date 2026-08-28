@@ -261,7 +261,8 @@ class GenerateReportJob implements ShouldQueue
                     ->join('users', 'users.id', '=', 'attendance_days.user_id')
                     ->select('attendance_days.*', 'users.name as user_name', 'users.email as user_email', 'users.department_id')
                     ->whereBetween('date', [$start, $end])
-                    ->orderBy('date', 'asc');
+                    ->orderBy('date', 'asc')
+                    ->orderBy('attendance_days.id', 'asc');
                     
                 if (!empty($filters['ids'])) {
                     $query->whereIn('attendance_days.id', explode(',', $filters['ids']));
@@ -354,7 +355,7 @@ class GenerateReportJob implements ShouldQueue
 
                 $query = User::with('department')
                     ->withCount([
-                        'attendanceDays as present_days' => fn($q) => $q->whereIn('status', ['present', 'late'])->whereBetween('date', [$start, $end]),
+                        'attendanceDays as present_days' => fn($q) => $q->where('status', 'present')->whereBetween('date', [$start, $end]),
                         'attendanceDays as late_days' => fn($q) => $q->where('status', 'late')->whereBetween('date', [$start, $end]),
                         'attendanceDays as leave_days' => fn($q) => $q->where('status', 'on_leave')->whereBetween('date', [$start, $end]),
                     ])
@@ -376,7 +377,7 @@ class GenerateReportJob implements ShouldQueue
                         'Department' => $u->department?->name ?? 'N/A',
                         'Present Days' => $u->present_days,
                         'Late Days' => $u->late_days,
-                        'Absent Days' => max(0, $workingDays - ($u->present_days + $u->leave_days)),
+                        'Absent Days' => max(0, $workingDays - ($u->present_days + $u->late_days + $u->leave_days)),
                         'Leave Days' => $u->leave_days,
                         'Total Hours' => round(($u->total_seconds ?? 0) / 3600, 2),
                     ])->toArray());
@@ -390,10 +391,10 @@ class GenerateReportJob implements ShouldQueue
 
                 $query = User::with('department')
                     ->withCount([
-                        'leaveRequests as total_requests' => fn($q) => $q->whereBetween('start_date', [$start, $end]),
-                        'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->whereBetween('start_date', [$start, $end]),
-                        'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->whereBetween('start_date', [$start, $end]),
-                        'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->whereBetween('start_date', [$start, $end]),
+                        'leaveRequests as total_requests' => fn($q) => $q->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                        'leaveRequests as approved_requests' => fn($q) => $q->where('status', 'approved')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                        'leaveRequests as pending_requests' => fn($q) => $q->where('status', 'pending')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
+                        'leaveRequests as rejected_requests' => fn($q) => $q->where('status', 'rejected')->where('start_date', '<=', $end)->where('end_date', '>=', $start),
                     ]);
 
                 if (!$hasManage) {

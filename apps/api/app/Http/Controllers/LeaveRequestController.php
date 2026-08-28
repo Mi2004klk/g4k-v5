@@ -100,22 +100,7 @@ class LeaveRequestController extends Controller
 
         $userId = $request->user()->id;
 
-        // Check for pending overlaps
-        $overlap = LeaveRequest::where('user_id', $userId)
-            ->where(function ($q) use ($validated) {
-                $q->whereBetween('start_date', [$validated['start_date'], $validated['end_date']])
-                  ->orWhereBetween('end_date', [$validated['start_date'], $validated['end_date']])
-                  ->orWhere(function ($q2) use ($validated) {
-                      $q2->where('start_date', '<=', $validated['start_date'])
-                         ->where('end_date', '>=', $validated['end_date']);
-                  });
-            })
-            ->whereIn('status', ['pending', 'approved'])
-            ->exists();
-
-        if ($overlap) {
-            return response()->json(['message' => 'You already have a pending or approved leave request overlapping these dates.'], 422);
-        }
+        // Overlap check moved inside the transaction to prevent race conditions.
 
         // Leave Balance check
         $startDate = \Carbon\Carbon::parse($validated['start_date']);
@@ -128,7 +113,7 @@ class LeaveRequestController extends Controller
 
         $balance = \App\Models\LeaveBalance::getOrCreate($userId, $validated['type'], (int) $startDate->format('Y'));
         
-        if (($balance->allowed - $balance->used) < $requestedDays) {
+        if ($validated['type'] !== 'unpaid' && ($balance->allowed - $balance->used) < $requestedDays) {
             $available = max(0, $balance->allowed - $balance->used);
             return response()->json([
                 'message' => "Insufficient leave balance for requested {$validated['type']} leave. Available: {$available} day(s), Requested: {$requestedDays} day(s)."
@@ -137,6 +122,26 @@ class LeaveRequestController extends Controller
 
         try {
             $leave = DB::transaction(function() use ($userId, $validated) {
+                // Lock user to prevent race conditions for overlapping leave requests
+                \App\Models\User::where('id', $userId)->lockForUpdate()->first();
+
+                // Check for pending overlaps inside the lock
+                $overlap = LeaveRequest::where('user_id', $userId)
+                    ->where(function ($q) use ($validated) {
+                        $q->whereBetween('start_date', [$validated['start_date'], $validated['end_date']])
+                          ->orWhereBetween('end_date', [$validated['start_date'], $validated['end_date']])
+                          ->orWhere(function ($q2) use ($validated) {
+                              $q2->where('start_date', '<=', $validated['start_date'])
+                                 ->where('end_date', '>=', $validated['end_date']);
+                          });
+                    })
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->exists();
+        
+                if ($overlap) {
+                    throw new \Exception('OVERLAP_ERROR');
+                }
+
                 $leave = LeaveRequest::create([
                     'user_id' => $userId,
                     'start_date' => $validated['start_date'],
@@ -151,9 +156,11 @@ class LeaveRequestController extends Controller
 
                 return $leave;
             });
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Error code 23505 for unique violation in Postgres or 23000/1062 in MySQL
-            if (in_array($e->getCode(), ['23505', '23000', '1062'])) {
+        } catch (\Exception $e) {
+            if ($e->getMessage() === 'OVERLAP_ERROR') {
+                return response()->json(['message' => 'You already have a pending or approved leave request overlapping these dates.'], 422);
+            }
+            if ($e instanceof \Illuminate\Database\QueryException && in_array($e->getCode(), ['23505', '23000', '1062'])) {
                 return response()->json(['message' => 'You already have a pending or approved leave request overlapping these dates.'], 422);
             }
             throw $e;

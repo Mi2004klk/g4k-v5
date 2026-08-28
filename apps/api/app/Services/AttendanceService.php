@@ -404,7 +404,8 @@ class AttendanceService
 
         // Caches are cleared by AttendanceDayObserver
 
-        $today = now()->toDateString();
+        $tz = \App\Models\CompanyProfile::first()?->timezone ?? config('app.timezone', 'Asia/Kolkata');
+        $today = now($tz)->toDateString();
         if (in_array($today, $invalidatedDates)) {
             try {
                 broadcast(new \App\Events\AttendanceUpdated($userId, 'leave_approved'));
