@@ -258,7 +258,7 @@ function MonthCalendarGrid({
                     )}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="p-3 shadow-xl">
+                <TooltipContent side="top" className="p-3">
                   <DayTooltipContent date={date} record={record} holiday={holiday} />
                 </TooltipContent>
               </Tooltip>

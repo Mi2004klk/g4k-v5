@@ -37,7 +37,7 @@ export function RecentActivityWidget() {
   }
 
   return (
-    <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-150">
+    <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 overflow-hidden transition-shadow duration-150">
       <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-primary-100 dark:bg-primary-950/60 flex items-center justify-center">

@@ -152,7 +152,7 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
           }}
         />
         <Button 
-          className="shrink-0 h-11 w-11 rounded-xl bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
+          className="shrink-0 h-11 w-11 rounded-xl bg-primary-600 hover:bg-primary-700 text-white"
           disabled={!comment.trim() || addCommentMutation.isPending}
           onClick={() => addCommentMutation.mutate()}
         >

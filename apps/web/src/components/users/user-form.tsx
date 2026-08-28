@@ -139,7 +139,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
         {userId && (
           <div className="flex flex-col items-center justify-center mb-6">
             <div className="relative group cursor-pointer" onClick={() => setShowUploadPopup(true)}>
-              <Avatar className="w-20 h-20 shadow-sm border border-neutral-200 dark:border-neutral-800 transition-opacity group-hover:opacity-80">
+              <Avatar className="w-20 h-20 border border-neutral-200 dark:border-neutral-800 transition-opacity group-hover:opacity-80">
                 <AvatarImage src={resolveAvatarUrl(localAvatarUrl)} alt={watch("name") || "User avatar"} />
                 <AvatarFallback name={watch("name") || "UN"} className="text-xl" />
               </Avatar>

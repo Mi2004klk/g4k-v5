@@ -145,7 +145,7 @@ export function MessageComposer({
     <div className="relative p-3 border-t border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 flex items-center gap-2">
       {/* Mentions Dropdown */}
       {showMentions && filteredUsers.length > 0 && (
-        <div className="absolute bottom-full left-12 mb-2 w-64 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[var(--radius)] shadow-lg z-50 overflow-hidden">
+        <div className="absolute bottom-full left-12 mb-2 w-64 bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[var(--radius)] z-50 overflow-hidden">
           <div className="px-3 py-2 bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-700">
             <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Mentions</span>
           </div>
@@ -240,7 +240,7 @@ export function MessageComposer({
             </div>
           )}
 
-          <IconButton aria-label="Send message" type="submit" onClick={handleSend} className={cn( "h-10 w-10 shrink-0 rounded-full shadow-sm transition-all", text.trim() || selectedFile ? "bg-primary hover:bg-primary/90 text-white shadow-md scale-100" : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" )} disabled={disabled || (!text.trim() && !selectedFile)} icon="send" />
+          <IconButton aria-label="Send message" type="submit" onClick={handleSend} className={cn( "h-10 w-10 shrink-0 rounded-full transition-all", text.trim() || selectedFile ? "bg-primary hover:bg-primary/90 text-white scale-100" : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" )} disabled={disabled || (!text.trim() && !selectedFile)} icon="send" />
         </div>
     </div>
   );

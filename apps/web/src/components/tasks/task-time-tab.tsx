@@ -113,7 +113,7 @@ export function TaskTimeTab({ task, timeLogs }: TaskTimeTabProps) {
 
   return (
     <div className="space-y-4 py-4 text-xs">
-      <div className="p-4 bg-primary-50 dark:bg-primary-950/20 rounded-xl border border-primary-100 dark:border-primary-900/50 flex flex-col items-center justify-center space-y-4 shadow-sm">
+      <div className="p-4 bg-primary-50 dark:bg-primary-950/20 rounded-xl border border-primary-100 dark:border-primary-900/50 flex flex-col items-center justify-center space-y-4">
         <div className="text-4xl font-mono font-bold text-primary-600 dark:text-primary-400 tabular-nums">
           {formatElapsed(elapsedSeconds)}
         </div>

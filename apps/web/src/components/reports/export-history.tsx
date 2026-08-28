@@ -103,7 +103,7 @@ export function ExportHistory() {
             {exports.slice(0, showAll ? undefined : 4).map((item: ExportJob) => (
               <div
                 key={item.id}
-                className="p-3.5 rounded-xl bg-white dark:bg-neutral-800 shadow-sm border border-neutral-200/60 dark:border-neutral-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-primary-200 dark:hover:border-primary-800 transition-colors group"
+                className="p-3.5 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-primary-200 dark:hover:border-primary-800 transition-colors group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">

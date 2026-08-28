@@ -160,7 +160,7 @@ export function TaskOverviewTab({
         </p>
       </div>
 
-      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden my-4 bg-card shadow-sm">
+      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden my-4 bg-card">
         
         {/* Status */}
         <div className="flex items-center min-h-[40px] border-b border-neutral-100 dark:border-neutral-800">
@@ -521,7 +521,7 @@ export function TaskOverviewTab({
               }).length || 0;
               return completedFields < totalFields;
             })())}
-            className="w-full h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 shadow-sm"
+            className="w-full h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900"
           >
             {submitReviewMutation.isPending ? <Spinner size="sm" className="mr-2" /> : <AppIcon name="check" size="sm" className="mr-2" />}
             Submit for Review

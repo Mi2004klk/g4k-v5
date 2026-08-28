@@ -131,8 +131,8 @@ export function AnnouncementBoard() {
         key={item.id}
         className={`p-4 rounded-xl space-y-3 border transition-all ${
           isPinned 
-            ? 'bg-amber-50/30 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50 shadow-sm' 
-            : 'bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-sm'
+            ? 'bg-amber-50/30 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50' 
+            : 'bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800'
         }`}
       >
         <div className="flex items-start justify-between gap-4">
@@ -252,7 +252,7 @@ export function AnnouncementBoard() {
                   onClick={() => reactMutation.mutate({ id: item.id, emoji: key })}
                   className={`px-2 py-1 rounded-full text-xs flex items-center gap-1.5 transition-all ${
                     hasReacted
-                      ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 font-bold border border-primary-200 dark:border-primary-800 shadow-sm"
+                      ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 font-bold border border-primary-200 dark:border-primary-800"
                       : "bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 dark:text-neutral-400 font-medium border border-neutral-200 dark:border-neutral-800"
                   }`}
                 >
@@ -268,7 +268,7 @@ export function AnnouncementBoard() {
   };
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm hover:shadow-md rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group overflow-hidden">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group overflow-hidden">
       <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-[4px] bg-orange-100 dark:bg-orange-950/50 flex items-center justify-center">
@@ -285,7 +285,7 @@ export function AnnouncementBoard() {
               <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-xs px-2.5">
                 Refresh
               </Button>
-              <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setInitialData(undefined); setShowCreate(true); }} className="h-7 text-xs px-2.5 shadow-sm">
+              <Button variant="primary" size="sm" onClick={() => { setEditingId(null); setInitialData(undefined); setShowCreate(true); }} className="h-7 text-xs px-2.5">
                 <AppIcon name="plus" size="xs" className="mr-1" /> Post
               </Button>
             </>

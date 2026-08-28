@@ -40,7 +40,7 @@ export function UpcomingHolidaysWidget() {
     : [];
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col shadow-sm hover:shadow-md transition-shadow duration-150 group">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group">
       <CardHeader className="border-b border-neutral-100 dark:border-neutral-800/50 pb-3 mb-3 p-0 flex flex-row items-center justify-between shrink-0">
         <CardTitle className="text-xs font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-2">
           <div className="w-6 h-6 rounded-[4px] bg-sky-100 dark:bg-sky-950/50 flex items-center justify-center">

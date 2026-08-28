@@ -149,7 +149,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
   if (isCollapsed) {
     return (
       <div className={cn(
-        "flex flex-col items-center py-4 w-12 md:min-w-[48px] md:max-w-[48px] flex-shrink-0 snap-center transition-all bg-neutral-50/50 dark:bg-neutral-900/30 border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 border-t-[3px] shadow-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-t-md",
+        "flex flex-col items-center py-4 w-12 md:min-w-[48px] md:max-w-[48px] flex-shrink-0 snap-center transition-all bg-neutral-50/50 dark:bg-neutral-900/30 border-r border-neutral-200 dark:border-neutral-800 last:border-r-0 border-t-[3px] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-t-md",
         col.border
       )} onClick={() => setIsCollapsed(false)}>
         <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 bg-neutral-200/50 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm min-w-[20px] text-center mb-4">
@@ -173,7 +173,7 @@ function DroppableColumn({ col, tasks, onTaskSelect, onDeleteTask, onTaskMove, i
       }`}
     >
       <div className={cn(
-        "flex items-center justify-between px-3 py-2.5 bg-neutral-50 dark:bg-neutral-900/50 border-t-[3px] sticky top-0 z-10 mb-2 rounded-t-md shadow-sm border-b border-b-neutral-200 dark:border-b-neutral-800 group", 
+        "flex items-center justify-between px-3 py-2.5 bg-neutral-50 dark:bg-neutral-900/50 border-t-[3px] sticky top-0 z-10 mb-2 rounded-t-md border-b border-b-neutral-200 dark:border-b-neutral-800 group", 
         col.border
       )}>
         <div className="flex items-center gap-2">

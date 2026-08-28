@@ -27,7 +27,7 @@ export interface User {
 }
 
 interface UserEditDialogProps {
-  open: boolean;
+  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
   departments: OptionType[];
@@ -37,9 +37,9 @@ interface UserEditDialogProps {
   isPending: boolean;
 }
 
-export function UserEditDialog({ open, onOpenChange, user, departments, designations, work_schedules, onSubmit, isPending }: UserEditDialogProps) {
+export function UserEditDialog({ isOpen, onOpenChange, user, departments, designations, work_schedules, onSubmit, isPending }: UserEditDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Employee</DialogTitle>

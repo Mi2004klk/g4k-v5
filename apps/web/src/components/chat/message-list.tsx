@@ -89,7 +89,7 @@ const MessageItem = memo(function MessageItem({
         )}
 
       <div
-        className={`max-w-[85%] px-3 py-2 rounded-lg text-xs space-y-1 shadow-sm ${
+        className={`max-w-[85%] px-3 py-2 rounded-lg text-xs space-y-1 ${
           isMe
             ? "bg-primary-600 text-white rounded-tr-none"
             : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none"
@@ -432,7 +432,7 @@ export function MessageList({
     {showScrollFab && (
       <button
         onClick={scrollToBottom}
-        className="absolute bottom-4 right-4 z-20 h-8 w-8 rounded-full bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg flex items-center justify-center text-neutral-500 hover:text-primary-600 hover:border-primary-300 transition-all"
+        className="absolute bottom-4 right-4 z-40 h-8 w-8 rounded-full bg-card dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-e3 flex items-center justify-center text-neutral-500 hover:text-primary-600 hover:border-primary-300 transition-all"
         aria-label="Scroll to bottom"
       >
         <AppIcon name="chevronDown" size="sm" />

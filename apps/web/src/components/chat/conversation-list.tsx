@@ -84,7 +84,7 @@ export function ConversationList({
           description="You don't have any chats yet."
           icon={<AppIcon name="chat" size="2xl" />}
           action={
-            <Button size="sm" className="gap-2 rounded-full font-semibold shadow-sm px-6" onClick={() => document.dispatchEvent(new CustomEvent("open-new-chat-dialog"))}>
+            <Button size="sm" className="gap-2 rounded-full font-semibold px-6" onClick={() => document.dispatchEvent(new CustomEvent("open-new-chat-dialog"))}>
               <AppIcon name="plus" size="sm" /> Start New Chat
             </Button>
           }
@@ -197,7 +197,7 @@ export function ConversationList({
                       {conv.latest_message && (
                         <div className="flex items-center gap-1.5 shrink-0 pl-2">
                           {isUnread && (
-                            <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-xs h-4 min-w-[16px] px-1 rounded-full shadow-sm shadow-primary-500/30">
+                            <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-xs h-4 min-w-[16px] px-1 rounded-full shadow-primary-500/30">
                               {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                           )}

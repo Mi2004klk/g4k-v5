@@ -459,7 +459,7 @@ export function AdminAttendanceTable() {
         }}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap" aria-label="Export company report for selected date">
+            <Button variant="outline" size="sm" onClick={() => handleExport(true)} className="gap-2 text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap" aria-label="Export company report for selected date">
               <AppIcon name="download" className="mr-1" aria-hidden="true" />
               Export Filtered
             </Button>
@@ -476,7 +476,7 @@ export function AdminAttendanceTable() {
                } catch (e: any) {
                  toast.error(e.message || "Failed to export");
                }
-            }} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
+            }} className="gap-2 text-neutral-600 dark:text-neutral-300 h-10 w-full xl:w-auto whitespace-nowrap">
               <AppIcon name="download" className="mr-1" aria-hidden="true" />
               Global Export
             </Button>
@@ -484,7 +484,7 @@ export function AdminAttendanceTable() {
         }
         bulkActions={
           Object.keys(rowSelection).length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300 h-8" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
+            <Button variant="outline" size="sm" onClick={() => handleExport(false)} className="gap-2 text-neutral-600 dark:text-neutral-300 h-8" aria-label={`Export ${Object.keys(rowSelection).length} selected records`}>
               <AppIcon name="download" className="mr-1" aria-hidden="true" />
               Export Selected
             </Button>

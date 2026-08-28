@@ -209,6 +209,14 @@
 
 @layer base {
   :root {
+    /* Z-Index Scale (F-086)
+       z-10: Contextual elevation (active tabs, sticky table columns/headers)
+       z-20: Sticky headers and sidebars
+       z-30: Mobile bottom navigation & Bulk action bars
+       z-40: Floating Action Buttons (FABs)
+       z-50: Modals, dialogs, overlays, popovers, tooltips
+    */
+
     /* Motion Variables (Task 1.2.1) */
     --duration-tap: 120ms;
     --duration-hover: 100ms;

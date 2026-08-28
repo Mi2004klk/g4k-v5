@@ -12,7 +12,7 @@ import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { useMutation } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
 
 interface EmployeeImportDialogProps {
@@ -35,9 +35,9 @@ export function EmployeeImportDialog({ open, onOpenChange, onSuccess }: Employee
         // Let the browser set Content-Type for FormData
       }, {
         raw: true // Prevents apiFetch from overriding Content-Type to JSON
-      }).then((res: Response) => {
-          if (!res.ok) throw res;
-          return res.json();
+      }).then(res => {
+        if (!res.ok) throw res;
+        return res.json();
       });
     },
     onSuccess: (data) => {
@@ -87,8 +87,8 @@ export function EmployeeImportDialog({ open, onOpenChange, onSuccess }: Employee
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Input 
-              type="file" 
+            <Input
+              type="file"
               accept=".csv,.txt"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               disabled={importMutation.isPending}

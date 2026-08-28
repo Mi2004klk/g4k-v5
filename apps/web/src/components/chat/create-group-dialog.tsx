@@ -108,14 +108,14 @@ export function CreateGroupDialog({
           <button 
             type="button" 
             onClick={() => setDraftData({ ...draftData, tab: "dm", selectedUsers: [] })}
-            className={`flex-1 py-1 text-xs font-medium rounded ${draftData.tab === "dm" ? "bg-white dark:bg-neutral-700 shadow-sm" : "text-neutral-500"}`}
+            className={`flex-1 py-1 text-xs font-medium rounded ${draftData.tab === "dm" ? "bg-white dark:bg-neutral-700" : "text-neutral-500"}`}
           >
             Direct Message
           </button>
           <button 
             type="button" 
             onClick={() => setDraftData({ ...draftData, tab: "group", selectedUsers: [] })}
-            className={`flex-1 py-1 text-xs font-medium rounded ${draftData.tab === "group" ? "bg-white dark:bg-neutral-700 shadow-sm" : "text-neutral-500"}`}
+            className={`flex-1 py-1 text-xs font-medium rounded ${draftData.tab === "group" ? "bg-white dark:bg-neutral-700" : "text-neutral-500"}`}
           >
             Group
           </button>

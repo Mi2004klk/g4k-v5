@@ -149,7 +149,7 @@ export function ProjectTimerWidget() {
                 <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
                   <SelectValue placeholder="Select Project" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800 shadow-xl">
+                <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800">
                   {projectsData?.data?.map((p: any) => (
                     <SelectItem key={p.id} value={String(p.id)} className="text-[13px] py-2 cursor-pointer">{p.name}</SelectItem>
                   ))}
@@ -164,7 +164,7 @@ export function ProjectTimerWidget() {
                   <SelectTrigger className="h-10 text-[13px] bg-slate-50 border-slate-100 dark:bg-neutral-900 dark:border-neutral-800 rounded-xl px-3 text-slate-600 dark:text-slate-300">
                     <SelectValue placeholder="No specific task" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800 shadow-xl">
+                  <SelectContent className="rounded-xl border-slate-100 dark:border-neutral-800">
                     <SelectItem value="none" className="text-[13px] py-2 cursor-pointer">No specific task</SelectItem>
                     {tasksData?.data?.map((t: any) => (
                       <SelectItem key={t.id} value={String(t.id)} className="text-[13px] py-2 cursor-pointer">{t.title}</SelectItem>

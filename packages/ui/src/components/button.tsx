@@ -44,7 +44,7 @@ const RainbowBorder = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
       <div
         ref={ref}
         className={cn(
-          "group relative inline-flex rounded-full p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(20,20,28,0.18)]",
+          "group relative inline-flex rounded-full p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-e4",
           className
         )}
         {...props}

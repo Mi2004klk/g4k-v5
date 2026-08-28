@@ -118,25 +118,25 @@ export function ProjectsTab() {
     <div className="space-y-6 h-full flex flex-col">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-2 mb-4 w-full justify-between">
         <div className="flex items-center gap-2 w-full flex-1">
-          <div className="w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm">
+          <div className="w-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5">
             <Toolbar
               prependFilters={
                 <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-md shrink-0 mr-2">
                   <button 
                     onClick={() => setStatus("all")} 
-                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "all" ? "bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "all" ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
                   >
                     All Projects
                   </button>
                   <button 
                     onClick={() => setStatus("active")} 
-                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "active" ? "bg-white dark:bg-neutral-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "active" ? "bg-white dark:bg-neutral-700 text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
                   >
                     Active
                   </button>
                   <button 
                     onClick={() => setStatus("completed")} 
-                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "completed" ? "bg-white dark:bg-neutral-700 shadow-sm text-success-600 dark:text-success-500" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "completed" ? "bg-white dark:bg-neutral-700 text-success-600 dark:text-success-500" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
                   >
                     Completed
                   </button>
@@ -187,14 +187,14 @@ export function ProjectsTab() {
             <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900/50 p-1 rounded-lg shrink-0 h-[36px]">
               <button 
                 onClick={() => setViewMode("grid")}
-                className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-neutral-800 shadow-sm text-primary-600" : "text-neutral-400 hover:text-neutral-600"}`}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-white dark:bg-neutral-800 text-primary-600" : "text-neutral-400 hover:text-neutral-600"}`}
                 title="Grid View"
               >
                 <AppIcon name="grid" size="sm" />
               </button>
               <button 
                 onClick={() => setViewMode("list")}
-                className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-neutral-800 shadow-sm text-primary-600" : "text-neutral-400 hover:text-neutral-600"}`}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-neutral-800 text-primary-600" : "text-neutral-400 hover:text-neutral-600"}`}
                 title="List View"
               >
                 <AppIcon name="menu" size="sm" />
@@ -202,12 +202,12 @@ export function ProjectsTab() {
             </div>
 
             {canManageProjects && (
-              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-2 shadow-sm h-[36px] shrink-0 bg-primary-600 hover:bg-primary-700 text-white rounded-lg">
+              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-2 h-[36px] shrink-0 bg-primary-600 hover:bg-primary-700 text-white rounded-lg">
                 <AppIcon name="plus" size="sm" /> Create Project
               </Button>
             )}
 
-            <ExportButton onExport={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900" />
+            <ExportButton onExport={handleExport} className="gap-2 h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900" />
           </div>
         </div>
 

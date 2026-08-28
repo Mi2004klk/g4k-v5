@@ -227,7 +227,7 @@ export function NotificationsTab() {
               placeholder="Search notifications..."
               value={search || ""}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-48 md:w-64 h-9 pl-8 pr-3 text-xs bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full outline-none focus:border-primary-500 transition-colors shadow-sm"
+              className="w-48 md:w-64 h-9 pl-8 pr-3 text-xs bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full outline-none focus:border-primary-500 transition-colors"
             />
           </div>
           <Button 
@@ -235,7 +235,7 @@ export function NotificationsTab() {
             size="sm" 
             onClick={() => markAllReadMutation.mutate()}
             disabled={markAllReadMutation.isPending || notificationsData.every((n: any) => n.read_at)}
-            className="h-9 rounded-full shadow-sm whitespace-nowrap"
+            className="h-9 rounded-full whitespace-nowrap"
           >
             <AppIcon name="success" size="sm" className="mr-2 text-emerald-500" />
             Mark all read
@@ -276,7 +276,7 @@ export function NotificationsTab() {
                     key={item.id} 
                     className={`group flex items-start gap-4 p-4 rounded-2xl border transition-all ${
                       !item.read_at 
-                        ? 'bg-primary-50/40 dark:bg-primary-950/20 border-primary-100 dark:border-primary-900/50 shadow-sm' 
+                        ? 'bg-primary-50/40 dark:bg-primary-950/20 border-primary-100 dark:border-primary-900/50' 
                         : 'bg-card dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
                     }`}
                   >
@@ -319,7 +319,7 @@ export function NotificationsTab() {
                                 size="sm"
                                 onClick={() => markReadMutation.mutate((item as any).id)}
                                 disabled={markReadMutation.isPending}
-                                className="h-7 px-2 text-xs bg-white dark:bg-neutral-800 hover:bg-neutral-100 shadow-sm border border-neutral-200 dark:border-neutral-700"
+                                className="h-7 px-2 text-xs bg-white dark:bg-neutral-800 hover:bg-neutral-100 border border-neutral-200 dark:border-neutral-700"
                               >
                                 <AppIcon name="check" size="xs" className="mr-1.5 text-emerald-500" />
                                 Mark Read

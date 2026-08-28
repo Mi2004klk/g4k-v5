@@ -395,11 +395,11 @@ export function HrAttendanceTable() {
                 if (f.search !== undefined) setSearch(f.search);
               }}
             />
-            <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
+            <Button variant="outline" onClick={() => handleExport(false)} disabled={isExporting || Object.keys(rowSelection).length === 0} className="gap-2 text-neutral-600 dark:text-neutral-300">
               <AppIcon name="download" className="mr-1" />
               {isExporting ? "Exporting..." : "Export Selected"}
             </Button>
-            <Button variant="outline" onClick={() => handleExport(true)} disabled={isExporting} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
+            <Button variant="outline" onClick={() => handleExport(true)} disabled={isExporting} className="gap-2 text-neutral-600 dark:text-neutral-300">
               <AppIcon name="download" className="mr-1" />
               {isExporting ? "Exporting All..." : "Export All"}
             </Button>

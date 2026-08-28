@@ -35,13 +35,13 @@ export function ShellPolish() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center justify-center pointer-events-none">
       {isOffline && (
-        <div className="w-full bg-rose-500 text-white text-xs font-semibold py-1.5 px-4 flex items-center justify-center gap-2 shadow-md pointer-events-auto">
+        <div className="w-full bg-rose-500 text-white text-xs font-semibold py-1.5 px-4 flex items-center justify-center gap-2 pointer-events-auto">
           <AppIcon name="error" size="xs" />
           You are currently offline. Some features may be unavailable.
         </div>
       )}
       {pusherMissing && (
-        <div className="w-full bg-amber-500 text-white text-xs font-semibold py-1.5 px-4 flex items-center justify-center gap-2 shadow-md pointer-events-auto">
+        <div className="w-full bg-amber-500 text-white text-xs font-semibold py-1.5 px-4 flex items-center justify-center gap-2 pointer-events-auto">
           <AppIcon name="warning" size="xs" />
           WebSocket configuration is missing. Real-time updates are disabled.
         </div>

@@ -170,7 +170,7 @@ export function AuditLogTable() {
           }
         ]}
         toolbarActions={
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap shadow-sm text-neutral-600 dark:text-neutral-300">
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} className="h-9 whitespace-nowrap text-neutral-600 dark:text-neutral-300">
             <AppIcon name="download" />
             {isExporting ? "Queuing..." : "Export CSV"}
           </Button>

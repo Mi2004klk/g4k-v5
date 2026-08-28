@@ -58,11 +58,11 @@ export function AdminAttendanceCalendar() {
             <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.critical.bg}`} /><span className="text-xs font-medium text-neutral-500">&lt; 50%</span></div>
           </div>
           <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded-lg border border-neutral-100 dark:border-neutral-800">
-            <IconButton variant="ghost" onClick={prevMonth} className="h-7 w-7 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm" aria-label="Previous month" icon="chevronLeft" size="sm" />
+            <IconButton variant="ghost" onClick={prevMonth} className="h-7 w-7 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800" aria-label="Previous month" icon="chevronLeft" size="sm" />
             <div className="px-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 w-32 text-center">
               {format(currentDate, 'MMMM yyyy')}
             </div>
-            <IconButton variant="ghost" onClick={nextMonth} className="h-7 w-7 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm" aria-label="Next month" icon="chevronRight" size="sm" />
+            <IconButton variant="ghost" onClick={nextMonth} className="h-7 w-7 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800" aria-label="Next month" icon="chevronRight" size="sm" />
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@ export function AdminAttendanceCalendar() {
                       </button>
                     </TooltipTrigger>
                     {stat && stat.total > 0 && isCurrentMonth && (
-                      <TooltipContent side="top" className="flex flex-col gap-1 p-2 bg-neutral-900 border-neutral-800 text-white rounded-lg shadow-xl">
+                      <TooltipContent side="top" className="flex flex-col gap-1 p-2 bg-neutral-900 border-neutral-800 text-white rounded-lg">
                         <p className="font-semibold text-xs border-b border-neutral-800 pb-1 mb-1">{format(date, "EEEE, MMMM d")}</p>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs mt-1">
                           <span className="text-neutral-400">Total</span>

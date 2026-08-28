@@ -46,7 +46,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
     return (
       <Card
         onClick={onClick}
-        className="hover:shadow-md transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-primary-300 dark:hover:border-primary-700/50 duration-150 rounded-xl overflow-hidden flex flex-row items-center p-3 gap-4"
+        className=" transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 hover:border-primary-300 dark:hover:border-primary-700/50 duration-150 rounded-xl overflow-hidden flex flex-row items-center p-3 gap-4"
       >
         {/* Cover Image Thumbnail */}
         {project.cover_image ? (
@@ -139,7 +139,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
   return (
     <Card
       onClick={onClick}
-      className="hover:shadow-md transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-primary-300 dark:hover:border-primary-700/50 hover:-translate-y-0.5 duration-150 rounded-xl overflow-hidden h-full flex flex-col"
+      className=" transition-all cursor-pointer bg-card dark:bg-neutral-900 group border border-neutral-200 dark:border-neutral-800 hover:border-primary-300 dark:hover:border-primary-700/50 hover:-translate-y-0.5 duration-150 rounded-xl overflow-hidden h-full flex flex-col"
     >
       {/* Cover Image Block (separated from content) */}
       {project.cover_image && (
@@ -192,7 +192,7 @@ export function ProjectCard({ project, viewMode = "grid", onClick, onUpdateName 
             
             {project.current_phase && (
               <div className="flex items-center gap-1.5 mt-1 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800/50 p-1.5 rounded-lg border border-neutral-100 dark:border-neutral-800">
-                <div className="flex items-center justify-center w-4 h-4 rounded bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                <div className="flex items-center justify-center w-4 h-4 rounded bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
                   <AppIcon name="clock" className="w-2.5 h-2.5 text-neutral-400" />
                 </div>
                 <span className="font-semibold text-neutral-700 dark:text-neutral-300 truncate max-w-[100px]">{project.current_phase.name}</span>

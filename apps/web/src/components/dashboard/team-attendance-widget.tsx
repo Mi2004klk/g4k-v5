@@ -30,7 +30,7 @@ export function TeamAttendanceWidget() {
 
   if (isError) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150 shadow-sm">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150">
         <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
           <div className="flex items-center gap-2">
             <AppIcon name="directory" size="sm" className=" text-primary-600" />
@@ -53,14 +53,14 @@ export function TeamAttendanceWidget() {
 
   if (!isLoading && employees.length === 0) {
     return (
-      <Card className="h-full flex flex-col items-center justify-center border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card shadow-sm p-6 text-center">
+      <Card className="h-full flex flex-col items-center justify-center border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card p-6 text-center">
         <div className="text-xs font-semibold text-neutral-500">No team members scheduled today</div>
       </Card>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-150">
+    <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-xl bg-card overflow-hidden transition-shadow duration-150">
       <CardHeader className="p-3 border-b border-neutral-100 dark:border-neutral-800/50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <CardTitle className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">

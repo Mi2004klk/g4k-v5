@@ -24,7 +24,7 @@ export function ProjectSummaryBar({ project, phases }: ProjectSummaryBarProps) {
   const totalHours = Math.round((totalTimeSeconds / 3600) * 10) / 10;
 
   return (
-    <Card className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-neutral-100 dark:divide-neutral-800/50 shadow-sm border-neutral-200/60 dark:border-neutral-800/60 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl">
+    <Card className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-neutral-100 dark:divide-neutral-800/50 border-neutral-200/60 dark:border-neutral-800/60 overflow-hidden bg-white dark:bg-neutral-900 rounded-xl">
       
       {/* Progress */}
       <div className="flex-1 p-4 flex items-center gap-4 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30 transition-colors">

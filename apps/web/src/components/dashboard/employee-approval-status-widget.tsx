@@ -26,7 +26,7 @@ export function EmployeeApprovalStatusWidget() {
 
   if (isLoading) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 transition-shadow duration-150 shadow-sm">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 transition-shadow duration-150">
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-2">
             <Skeleton className="w-6 h-6 rounded" />
@@ -41,7 +41,7 @@ export function EmployeeApprovalStatusWidget() {
 
   if (isError) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150 shadow-sm">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex flex-col transition-shadow duration-150">
         <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold">Approval Status</span>
@@ -61,7 +61,7 @@ export function EmployeeApprovalStatusWidget() {
   const tasks = (Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : [])).slice(0, 3);
 
   return (
-    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150 shadow-sm hover:shadow-md">
+    <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150">
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800/50 mb-2">
           <div className="flex items-center gap-2">

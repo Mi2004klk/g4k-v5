@@ -181,7 +181,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex flex-col bg-card dark:bg-neutral-900 border border-border/80 rounded-xl shadow-sm overflow-hidden p-4">
+      <div className="w-full h-full flex flex-col bg-card dark:bg-neutral-900 border border-border/80 rounded-xl overflow-hidden p-4">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-24 h-6 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
           <div className="w-32 h-6 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse ml-auto" />
@@ -200,7 +200,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[400px] bg-card dark:bg-neutral-900 border border-border/80 rounded-xl shadow-sm text-neutral-500">
+      <div className="flex flex-col items-center justify-center h-[400px] bg-card dark:bg-neutral-900 border border-border/80 rounded-xl text-neutral-500">
         <AppIcon name="calendarX" size="2xl" className="text-neutral-300 dark:text-neutral-700 mb-4" />
         <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">No timeline data available</p>
         <p className="text-xs text-neutral-500 mt-1">Tasks must have due dates to appear in this view.</p>
@@ -209,7 +209,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-card dark:bg-neutral-900 border border-border/80 rounded-xl shadow-sm overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-card dark:bg-neutral-900 border border-border/80 rounded-xl overflow-hidden">
       <style>{`
         /* Core Styling */
         .gantt-container { overflow: auto !important; padding-bottom: 20px; }
@@ -314,7 +314,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
                 container.scrollTo({ left: Math.max(0, x - (container.clientWidth / 2)), behavior: 'smooth' });
               }
             }}
-            className="ml-2 px-2 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors shadow-sm"
+            className="ml-2 px-2 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
           >
             Today
           </button>

@@ -48,7 +48,7 @@ export function TodaySummaryCard() {
 
   if (isPending) {
     return (
-      <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl overflow-hidden">
+      <Card className="h-full border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
         <CardHeader>
           <Skeleton className="h-6 w-32" />
         </CardHeader>
@@ -105,7 +105,7 @@ export function TodaySummaryCard() {
   }
 
   return (
-    <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl overflow-hidden">
+    <Card className="h-full flex flex-col border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
       <CardHeader className="pb-3 border-b border-neutral-100 dark:border-neutral-800 flex flex-row items-center justify-between">
         <CardTitle className="text-base font-bold flex items-center gap-2">
           <AppIcon name="info" className=" text-emerald-600" />

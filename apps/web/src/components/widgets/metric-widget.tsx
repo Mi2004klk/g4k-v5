@@ -132,7 +132,7 @@ export function MetricWidget({
 
   if (isError) {
     return (
-      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-5 py-5 flex flex-col justify-between shadow-sm">
+      <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-5 py-5 flex flex-col justify-between">
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl ${colorStyles[color].icon} flex items-center justify-center`}>
@@ -157,12 +157,12 @@ export function MetricWidget({
   return (
     <Card 
       onClick={() => href && router.push(href)}
-      className={`relative overflow-hidden h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-5 py-5 flex flex-col justify-between transition-all duration-300 shadow-sm hover:-translate-y-1 group ${href ? 'cursor-pointer' : ''} ${colorStyles[color].bg} ${colorStyles[color].border}`}
+      className={`relative overflow-hidden h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl px-5 py-5 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 group ${href ? 'cursor-pointer' : ''} ${colorStyles[color].bg} ${colorStyles[color].border}`}
     >
       <div className="relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl ${colorStyles[color].icon} flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm`}>
+            <div className={`w-10 h-10 rounded-xl ${colorStyles[color].icon} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
               <AppIcon name={icon} size="md" />
             </div>
             <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
@@ -176,7 +176,7 @@ export function MetricWidget({
         </div>
 
         <div className="mt-4">
-          <div className="text-4xl sm:text-5xl font-black font-display tracking-tight text-neutral-900 dark:text-white drop-shadow-sm">
+          <div className="text-4xl sm:text-5xl font-black font-display tracking-tight text-neutral-900 dark:text-white drop-">
             {displayValue.toLocaleString()}
           </div>
           

@@ -151,7 +151,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
 
 
   return (
-    <div className={cn("relative w-full h-full p-4 sm:p-5 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm rounded-xl flex flex-col justify-between overflow-hidden group transition-shadow hover:shadow-md", className)}>
+    <div className={cn("relative w-full h-full p-4 sm:p-5 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl flex flex-col justify-between overflow-hidden group transition-shadow", className)}>
       {isPending && !todayData && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface/95 dark:bg-neutral-950/95 backdrop-blur-md rounded-xl p-6 gap-6">
           <div className="flex justify-between w-full">
@@ -234,7 +234,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
           <Button
             disabled={isPunching}
             onClick={() => handlePunch("clock_in")}
-            className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm rounded-lg"
+            className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 rounded-lg"
           >
             <AppIcon name="play" className="w-4 h-4" />
             <span className="text-[13px]">Start Shift</span>
@@ -250,7 +250,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
                     disabled={isPunching}
                     onClick={() => handlePunch("start_break")}
                     variant="outline"
-                    className="flex-1 h-10 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-900/50 dark:text-amber-500 dark:hover:bg-amber-950/30 gap-1.5 rounded-lg shadow-sm"
+                    className="flex-1 h-10 border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-900/50 dark:text-amber-500 dark:hover:bg-amber-950/30 gap-1.5 rounded-lg"
                     aria-label="Pause Work Session"
                   >
                     <AppIcon name="break" className="w-3.5 h-3.5" />
@@ -265,7 +265,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
               disabled={isPunching}
               onClick={() => setShowConfirmOut(true)}
               variant="destructive"
-              className="flex-1 h-10 gap-1.5 rounded-lg shadow-sm"
+              className="flex-1 h-10 gap-1.5 rounded-lg"
             >
               <AppIcon name="stop" className="w-3.5 h-3.5" />
               <span className="text-[12px] font-bold">End Shift</span>
@@ -280,7 +280,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
                 <Button
                   disabled={isPunching}
                   onClick={() => handlePunch("end_break")}
-                  className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm rounded-lg"
+                  className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 rounded-lg"
                   aria-label="Resume Work Session"
                 >
                   <AppIcon name="play" className="w-4 h-4" />

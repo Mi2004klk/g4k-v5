@@ -216,9 +216,9 @@ export function AdminLeaveHolidaysView() {
 
       <Tabs value={subTab} onValueChange={setSubTab} className="w-full space-y-6">
         <TabsList className="bg-neutral-100/80 dark:bg-neutral-800/80 p-1 rounded-lg">
-          <TabsTrigger value="approvals" className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">Pending Approvals</TabsTrigger>
-          <TabsTrigger value="history" className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">All Leave History</TabsTrigger>
-          <TabsTrigger value="holidays" className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:shadow-sm">Holidays</TabsTrigger>
+          <TabsTrigger value="approvals" className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:">Pending Approvals</TabsTrigger>
+          <TabsTrigger value="history" className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:">All Leave History</TabsTrigger>
+          <TabsTrigger value="holidays" className="rounded-md px-4 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:">Holidays</TabsTrigger>
         </TabsList>
 
         <TabsContent value="approvals" className="mt-0">
@@ -251,7 +251,7 @@ export function AdminLeaveHolidaysView() {
             <div className="flex-1 min-h-[300px] flex flex-col">
               {records.length === 0 && !isLoading ? (
                 <div className="flex-1 flex items-center justify-center p-8">
-                  <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 shadow-sm p-8 text-center">
+                  <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 p-8 text-center">
                     <EmptyState
                       title="No records found"
                       description="Try adjusting your filters or search query."

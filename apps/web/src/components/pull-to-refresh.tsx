@@ -103,7 +103,7 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
         style={{ opacity: isRefreshing ? 1 : opacity }}
       >
         <div 
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-neutral-800 shadow-md border border-neutral-200 dark:border-neutral-700 text-primary-600 transition-transform"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-primary-600 transition-transform"
           style={{ 
             transform: isRefreshing ? 'none' : `rotate(${rotateDeg}deg)`,
             transition: isPulling ? 'none' : 'transform 0.3s ease-out'

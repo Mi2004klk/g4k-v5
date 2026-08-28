@@ -54,7 +54,7 @@ export function TaskActivityTab({ activities = [], comments = [], timeLogs = [] 
 
               return (
                 <div key={`${item.type}-${item.id}`} className="relative pl-6">
-                  <div className="absolute -left-[13px] top-1 h-6 w-6 rounded-full bg-background border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shadow-sm">
+                  <div className="absolute -left-[13px] top-1 h-6 w-6 rounded-full bg-background border border-neutral-200 dark:border-neutral-700 flex items-center justify-center">
                     <AppIcon name={iconName as any} size="xs" className="text-neutral-500" />
                   </div>
                   <div className="flex flex-col gap-0.5">

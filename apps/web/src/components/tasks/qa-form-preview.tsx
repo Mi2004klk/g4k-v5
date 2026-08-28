@@ -142,7 +142,7 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
       {/* Top Banner */}
       <div className="h-4 bg-primary-600 shrink-0 w-full" />
       
-      <div className="h-14 shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 shadow-sm z-10">
+      <div className="h-14 shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-3">
           <AppIcon name="eye" className="text-primary-600" />
           <h2 className="font-bold text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-xs">{title || "Untitled Form"}</h2>
@@ -159,7 +159,7 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
         <div className="w-full max-w-3xl flex flex-col gap-4 relative">
           
           {currentSectionIndex === 0 && (
-            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden p-8 flex flex-col gap-2">
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden p-8 flex flex-col gap-2">
               <h1 className="text-3xl font-normal" style={{ fontFamily: "'Google Sans', Roboto, Arial, sans-serif" }}>{title || "Untitled Form"}</h1>
               {description && <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">{description}</p>}
               <div className="text-xs text-rose-500 font-medium mt-4">* Indicates required question</div>
@@ -167,7 +167,7 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
           )}
 
           {currentSection?.label && currentSectionIndex > 0 && (
-             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm p-6 relative overflow-hidden">
+             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 relative overflow-hidden">
                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-500" />
                <h2 className="text-xl font-normal ml-2">{currentSection.label}</h2>
              </div>
@@ -210,23 +210,23 @@ export function QAFormPreview({ title, description, fields, onClose }: QAFormPre
       </div>
       
       {/* Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 shadow-lg z-20 flex justify-center">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 p-4 z-20 flex justify-center">
         <div className="w-full max-w-3xl flex items-center justify-between">
           <div className="flex items-center gap-3">
              <Button 
                 variant="outline" 
                 onClick={handlePrev} 
                 disabled={currentSectionIndex === 0}
-                className="font-semibold shadow-sm"
+                className="font-semibold"
               >
                 Back
               </Button>
               {currentSectionIndex < sections.length - 1 ? (
-                <Button onClick={handleNext} className="bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-sm px-6">
+                <Button onClick={handleNext} className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6">
                   Next
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} className="bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-sm px-6">
+                <Button onClick={handleSubmit} className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6">
                   Submit
                 </Button>
               )}

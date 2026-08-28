@@ -118,13 +118,13 @@ export function PhaseBuilder({ phases, onChange, qaForms = [] }: PhaseBuilderPro
                 
                 {/* Timeline node */}
                 <div className="flex flex-col items-center shrink-0 w-12 pt-2">
-                  <div className="w-12 h-6 rounded-full bg-white dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs font-bold text-emerald-700 dark:text-emerald-500 shadow-sm z-10">
+                  <div className="w-12 h-6 rounded-full bg-white dark:bg-neutral-900 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs font-bold text-emerald-700 dark:text-emerald-500 z-10">
                     {String(index + 1).padStart(2, '0')}
                   </div>
                 </div>
 
                 {/* Phase Box */}
-                <div className="flex-1 flex flex-col bg-white dark:bg-neutral-900/50 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 overflow-hidden shadow-sm">
+                <div className="flex-1 flex flex-col bg-white dark:bg-neutral-900/50 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 overflow-hidden">
                   
                   {/* Phase Header */}
                   <div className="flex items-center justify-between p-4 bg-emerald-50/30 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900/30">
@@ -154,7 +154,7 @@ export function PhaseBuilder({ phases, onChange, qaForms = [] }: PhaseBuilderPro
                     <div className="flex flex-col p-4 gap-6 bg-emerald-50/10 dark:bg-emerald-950/10">
                       
                       {/* Phase Settings Block */}
-                      <div className="p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-neutral-900 shadow-sm space-y-4">
+                      <div className="p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-neutral-900 space-y-4">
                         <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide border-b border-emerald-100 dark:border-emerald-900/30 pb-2">Phase Settings</h4>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -214,7 +214,7 @@ export function PhaseBuilder({ phases, onChange, qaForms = [] }: PhaseBuilderPro
                       <div className="space-y-4">
                         <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide border-b border-emerald-100 dark:border-emerald-900/30 pb-2">Phase Tasks</h4>
                         {phase.tasks.map((task) => (
-                        <div key={task.id} className="flex flex-col gap-3 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm relative group">
+                        <div key={task.id} className="flex flex-col gap-3 p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl relative group">
                           
                           <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-red-500 transition-opacity" onClick={() => removeTask(phase.id, task.id)} aria-label="Remove task">
                             <AppIcon name="close" className="w-4 h-4" />
@@ -259,11 +259,11 @@ export function PhaseBuilder({ phases, onChange, qaForms = [] }: PhaseBuilderPro
                           <div className="flex flex-col gap-2 p-3 border border-neutral-200 dark:border-neutral-800 rounded-lg mt-1">
                             <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-400">Source attachment</span>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm" className="h-8 text-xs font-bold text-emerald-700 bg-white border-neutral-200 shadow-sm" disabled>
+                              <Button variant="outline" size="sm" className="h-8 text-xs font-bold text-emerald-700 bg-white border-neutral-200" disabled>
                                 <AppIcon name="clipboard" className="w-3.5 h-3.5 mr-1.5 text-orange-400" />
                                 Read Text
                               </Button>
-                              <Button variant="outline" size="sm" className="h-8 text-xs font-bold text-emerald-700 bg-white border-neutral-200 shadow-sm" disabled>
+                              <Button variant="outline" size="sm" className="h-8 text-xs font-bold text-emerald-700 bg-white border-neutral-200" disabled>
                                 <AppIcon name="download" className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />
                                 Print Text
                               </Button>
@@ -287,7 +287,7 @@ export function PhaseBuilder({ phases, onChange, qaForms = [] }: PhaseBuilderPro
         </div>
       </div>
       
-      <Button variant="outline" onClick={addPhase} className="mx-auto mt-4 w-[250px] border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm rounded-full">
+      <Button variant="outline" onClick={addPhase} className="mx-auto mt-4 w-[250px] border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-full">
         <AppIcon name="plus" className="w-4 h-4 mr-2" />
         Add New Phase
       </Button>

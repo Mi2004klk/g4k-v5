@@ -72,7 +72,7 @@ export function QuickTaskWidget() {
   };
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-shadow duration-150 overflow-hidden shadow-sm hover:shadow-md group">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-shadow duration-150 overflow-hidden group">
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-4">
           <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export function QuickTaskWidget() {
           <Button 
             type="submit" 
             disabled={createTaskMutation.isPending}
-            className="w-full h-10 mt-2 text-[13px] font-bold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm rounded-lg"
+            className="w-full h-10 mt-2 text-[13px] font-bold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
           >
             {createTaskMutation.isPending ? (
               <Spinner size="sm" />

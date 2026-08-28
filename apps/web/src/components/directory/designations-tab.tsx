@@ -347,10 +347,10 @@ export function DesignationsTab() {
         actions={
           <>
             {isAdmin && (
-              <ExportButton onExport={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300" />
+              <ExportButton onExport={bulkExport} className="gap-2 text-neutral-600 dark:text-neutral-300" />
             )}
             {isAdmin && (
-              <Button size="sm" onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow-sm">
+              <Button size="sm" onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2">
                 <AppIcon name="plus" /> Add Designation
               </Button>
             )}

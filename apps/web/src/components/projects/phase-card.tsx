@@ -85,8 +85,8 @@ export function PhaseCard({
       {/* Phase Card Content */}
       <div className={`flex-1 flex flex-col bg-white dark:bg-neutral-900 rounded-xl border transition-all duration-200 ${
         phase.status === 'active' 
-          ? 'border-blue-200 dark:border-blue-900/50 shadow-md ring-1 ring-blue-500/10' 
-          : 'border-neutral-200/60 dark:border-neutral-800/60 shadow-sm'
+          ? 'border-blue-200 dark:border-blue-900/50 ring-1 ring-blue-500/10' 
+          : 'border-neutral-200/60 dark:border-neutral-800/60'
       }`}>
         
         {/* Header */}

@@ -51,7 +51,7 @@ export function PendingApprovalsWidget() {
   });
 
   return (
-    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 shadow-sm hover:shadow-md group overflow-hidden">
+    <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group overflow-hidden">
       <div className="flex items-center justify-between pb-3 shrink-0 border-b border-neutral-100 dark:border-neutral-800/50 mb-3">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-[4px] bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center">

@@ -513,10 +513,10 @@ export function DepartmentsTab() {
         actions={
           <>
             {isAdmin && (
-              <ExportButton onExport={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300" />
+              <ExportButton onExport={bulkExport} className="gap-2 text-neutral-600 dark:text-neutral-300" />
             )}
             {isAdmin && (
-              <Button size="sm" onClick={() => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow-sm">
+              <Button size="sm" onClick={() => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2">
                 <AppIcon name="plus" /> Add Department
               </Button>
             )}

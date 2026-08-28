@@ -197,7 +197,7 @@ export function CreateProjectDialog({
             id="project-description"
             value={draftData.description}
             onChange={(e) => setDraftData({ ...draftData, description: e.target.value })}
-            className={`flex w-full rounded-xl border bg-white dark:bg-neutral-900 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${fieldErrors.description ? "border-red-500" : "border-neutral-200 dark:border-neutral-800"}`}
+            className={`flex w-full rounded-xl border bg-white dark:bg-neutral-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${fieldErrors.description ? "border-red-500" : "border-neutral-200 dark:border-neutral-800"}`}
             rows={4}
             placeholder="Briefly describe the project goals..."
           />
@@ -352,7 +352,7 @@ export function CreateProjectDialog({
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             {coverImagePreview ? (
               <div className="relative h-24 w-40 shrink-0">
-                <Image src={coverImagePreview} alt="Cover Preview" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm" />
+                <Image src={coverImagePreview} alt="Cover Preview" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover rounded-xl border border-neutral-200 dark:border-neutral-800" />
               </div>
             ) : (
               <div className="h-24 w-40 shrink-0 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-400">
@@ -469,7 +469,7 @@ export function CreateProjectDialog({
       if (!val) setCurrentStep(0);
       onOpenChange(val);
     }}>
-      <DialogContent className="sm:max-w-4xl p-0 h-[90vh] sm:h-[80vh] flex flex-col border-none shadow-2xl bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+      <DialogContent className="sm:max-w-4xl p-0 h-[90vh] sm:h-[80vh] flex flex-col border-none bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
         <Wizard
           steps={steps}
           currentStep={currentStep}

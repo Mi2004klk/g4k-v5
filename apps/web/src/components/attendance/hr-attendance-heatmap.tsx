@@ -83,7 +83,7 @@ export function HrAttendanceHeatmap() {
   };
 
   return (
-    <Card className="border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl overflow-hidden mt-6">
+    <Card className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden mt-6">
       <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 py-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-bold flex items-center gap-2">
           <AppIcon name="chart" className="text-primary" size="sm" />

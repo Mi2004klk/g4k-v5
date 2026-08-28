@@ -554,7 +554,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`capitalize text-xs px-2 py-0.5 rounded-sm font-bold tracking-wide shadow-sm ${sConfig.bg} ${sConfig.text}`}>
+            <span className={`capitalize text-xs px-2 py-0.5 rounded-sm font-bold tracking-wide ${sConfig.bg} ${sConfig.text}`}>
               {sConfig.label}
             </span>
             {task.scope && (
@@ -583,7 +583,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             {assignees.slice(0, 3).map((u, i) => (
               <div 
                 key={u.id} 
-                className="h-6 w-6 rounded-full bg-primary-100 dark:bg-primary-900/50 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-xs font-bold text-primary-700 dark:text-primary-300 shadow-sm" 
+                className="h-6 w-6 rounded-full bg-primary-100 dark:bg-primary-900/50 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-xs font-bold text-primary-700 dark:text-primary-300" 
                 style={{ zIndex: 10 - i }} 
                 title={u.name}
               >
@@ -591,7 +591,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
               </div>
             ))}
             {assignees.length > 3 && (
-              <div className="h-6 w-6 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400 z-0 shadow-sm">
+              <div className="h-6 w-6 rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400 z-0">
                 +{assignees.length - 3}
               </div>
             )}
@@ -662,7 +662,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
       <div className="flex flex-col gap-3 mb-3 shrink-0">
         {/* Row 1: Views and Actions */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div role="tablist" className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50 overflow-x-auto no-scrollbar">
+          <div role="tablist" className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 border border-neutral-200/50 dark:border-neutral-700/50 overflow-x-auto no-scrollbar">
             {(["kanban", "list", ...(canManageTasks ? ["gantt" as const] : []), ...(canViewQA ? ["qa" as const] : [])] as const).map(mode => (
               <button
                 key={mode}
@@ -672,7 +672,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 className={cn(
                   "flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap",
                   viewMode === mode 
-                    ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800"
+                    ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white ring-1 ring-neutral-200 dark:ring-neutral-800"
                     : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
                 )}
               >
@@ -684,7 +684,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {viewMode !== "qa" && (
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm">
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700">
                 <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400">
                   {filteredTasks.length} task{filteredTasks.length === 1 ? '' : 's'}
                 </span>
@@ -700,7 +700,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 if (!canCreateInProjectContext) {
                   return (
                     <div title="This project does not allow employees to create tasks. Only HR or the Project Manager can add tasks here.">
-                      <Button disabled className="h-9 bg-neutral-300 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed font-semibold gap-1.5 shadow-sm shrink-0">
+                      <Button disabled className="h-9 bg-neutral-300 dark:bg-neutral-800 text-neutral-500 cursor-not-allowed font-semibold gap-1.5 shrink-0">
                         <AppIcon name="plus" size="sm" /> Create Task
                       </Button>
                     </div>
@@ -710,7 +710,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 return (
                   <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <DialogTrigger asChild>
-                      <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shadow-sm shrink-0">
+                      <Button className="h-9 bg-primary-600 hover:bg-primary-700 text-white font-semibold gap-1.5 shrink-0">
                         <AppIcon name="plus" size="sm" /> Create Task
                       </Button>
                     </DialogTrigger>
@@ -821,7 +821,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
                   <Collapsible>
                     <CollapsibleTrigger asChild>
-                      <Button variant="outline" size="sm" className="w-full justify-between h-9 shadow-sm">
+                      <Button variant="outline" size="sm" className="w-full justify-between h-9">
                         <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">Advanced Options</span>
                         <AppIcon name="chevronDown" size="xs" />
                       </Button>
@@ -950,7 +950,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                       createMutation.mutate();
                     }}
                     disabled={createMutation.isPending || !title}
-                    className="h-9 px-6 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold shadow-sm"
+                    className="h-9 px-6 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold"
                   >
                     {createMutation.isPending ? <Spinner size="xs" className="mr-2" /> : null}
                     Create Task
@@ -962,14 +962,14 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 })()
             )}
 
-            <ExportButton onExport={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900" />
+            <ExportButton onExport={handleExport} className="gap-2 h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900" />
           </div>
         </div>
       </div>
       
       {/* Row 2: Filters */}
       {viewMode !== "qa" && (
-        <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 shadow-sm w-full">
+        <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 w-full">
           <Toolbar
             prependFilters={
               <div className="flex items-center gap-2 pr-2 border-r border-neutral-200 dark:border-neutral-800 shrink-0">
@@ -1125,7 +1125,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             <div className="flex-1 flex flex-col min-h-0">
               
               {viewMode === "list" && (
-                <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden flex flex-col">
                   <DataTable
                     columns={columns}
                     data={filteredTasks}
@@ -1185,7 +1185,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                   Showing first 100 tasks. Use List view for full pagination.
                 </div>
               )}
-              <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden">
+              <div className="flex-1 min-h-0 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
                 <TaskGantt tasks={filteredTasks as any} onTaskSelect={handleTaskSelect as any} onTaskUpdate={(task, dates) => updateTaskDatesMutation.mutate({ taskId: Number(task.id), start: dates.start, end: dates.end })} isLoading={isLoading} />
               </div>
             </div>
@@ -1217,7 +1217,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
       {/* Floating Bulk Actions Footer */}
       {selectedTaskIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-e3 animate-in slide-in-from-bottom-5">
           <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 border-r border-neutral-200 dark:border-neutral-800">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 text-xs font-bold">
               {selectedTaskIds.length}
@@ -1227,10 +1227,10 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             </span>
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5 pr-1">
-            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-xs sm:text-xs px-2 sm:px-3 shadow-sm rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
+            <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-xs sm:text-xs px-2 sm:px-3 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
               <AppIcon name="success" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Mark Done</span>
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-xs sm:text-xs px-2 sm:px-3 shadow-sm rounded-full">
+            <Button size="sm" variant="destructive" onClick={() => setIsBulkDeleteOpen(true)} className="h-7 text-xs sm:text-xs px-2 sm:px-3 rounded-full">
               <AppIcon name="trash" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Delete</span>
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setRowSelection({})} className="h-7 w-7 p-0 rounded-full text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 ml-1 shrink-0">

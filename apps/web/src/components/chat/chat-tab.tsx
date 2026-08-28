@@ -571,7 +571,7 @@ export function ChatTab() {
 
   return (
     <>
-      <div className="mt-4 flex flex-col flex-1 min-h-[500px] max-md:min-h-0 max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-[100] max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
+      <div className="mt-4 flex flex-col flex-1 min-h-[500px] max-md:min-h-0 max-md:fixed max-md:inset-0 max-md:mt-0 max-md:z-50 max-md:bg-background max-md:h-[100dvh] max-md:rounded-none">
         {/* We keep dynamic height on mobile keyboard opening, but use flex-1 on desktop */}
         <div 
           className="flex flex-1 overflow-hidden relative shadow-e2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl max-md:rounded-none transition-all duration-300"
@@ -585,7 +585,7 @@ export function ChatTab() {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-xs text-neutral-800 dark:text-neutral-200">Chats</span>
                 {totalUnreadCount > 0 && (
-                  <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-xs h-4 min-w-[16px] px-1.5 rounded-full shadow-sm">
+                  <span className="flex items-center justify-center bg-primary-600 text-white font-bold text-xs h-4 min-w-[16px] px-1.5 rounded-full">
                     {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
                   </span>
                 )}

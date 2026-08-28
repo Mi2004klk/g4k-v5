@@ -68,12 +68,12 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
       style={style} 
       onClick={() => setActiveId?.(field.id)}
       className={cn(
-        "rounded-xl border flex flex-col relative transition-all shadow-sm overflow-hidden", 
+        "rounded-xl border flex flex-col relative transition-all overflow-hidden", 
         isSection 
           ? "border-primary-200 dark:border-primary-800 bg-primary-50/30 dark:bg-primary-900/10 mt-6" 
           : "border-neutral-200 dark:border-neutral-800 bg-card dark:bg-neutral-900",
-        isActive && !isSection && "border-primary-400 dark:border-primary-600 shadow-md ring-1 ring-primary-500/20",
-        isActive && isSection && "border-primary-500 ring-1 ring-primary-500/20 shadow-md"
+        isActive && !isSection && "border-primary-400 dark:border-primary-600 ring-1 ring-primary-500/20",
+        isActive && isSection && "border-primary-500 ring-1 ring-primary-500/20"
       )}
     >
       {/* Left Active Accent */}
@@ -101,7 +101,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
               value={field.label}
               onChange={(e) => updateField(field.id, "label", e.target.value)}
               className={cn(
-                "h-12 flex-1 shadow-sm px-4", 
+                "h-12 flex-1 px-4", 
                 isSection ? "font-bold text-lg bg-transparent border-primary-200 focus:bg-white dark:focus:bg-neutral-950" : "text-base font-medium",
                 !isActive && "border-transparent hover:border-neutral-200 bg-neutral-50/50 dark:bg-neutral-900/50"
               )}
@@ -122,7 +122,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
           
           {isActive && !isSection && (
             <Select value={field.field_type} onValueChange={(val) => updateField(field.id, "field_type", val)}>
-              <SelectTrigger className="w-56 h-12 shadow-sm bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 font-medium">
+              <SelectTrigger className="w-56 h-12 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 font-medium">
                 <SelectValue placeholder="Type..." />
               </SelectTrigger>
               <SelectContent className="max-h-80">
@@ -166,7 +166,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                   className="text-neutral-400 w-4" 
                 />
                 <Input 
-                  className="h-8 text-sm shadow-sm border-transparent hover:border-neutral-200 focus:border-primary-500 bg-transparent hover:bg-white dark:hover:bg-neutral-950 flex-1 max-w-md"
+                  className="h-8 text-sm border-transparent hover:border-neutral-200 focus:border-primary-500 bg-transparent hover:bg-white dark:hover:bg-neutral-950 flex-1 max-w-md"
                   value={opt}
                   placeholder={`Option ${idx + 1}`}
                   onChange={(e) => {
@@ -218,7 +218,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 <label className="text-xs text-neutral-600">Min Value</label>
                 <Input 
                   type="number" 
-                  className="h-8 w-24 text-xs shadow-sm" 
+                  className="h-8 w-24 text-xs" 
                   value={field.config?.scale_min ?? (field.field_type === 'rating' ? 1 : 0)} 
                   onChange={(e) => updateField(field.id, "config", { ...field.config, scale_min: Number(e.target.value) })}
                 />
@@ -227,7 +227,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 <label className="text-xs text-neutral-600">Max Value</label>
                 <Input 
                   type="number" 
-                  className="h-8 w-24 text-xs shadow-sm" 
+                  className="h-8 w-24 text-xs" 
                   value={field.config?.scale_max ?? (field.field_type === 'rating' ? 5 : 10)} 
                   onChange={(e) => updateField(field.id, "config", { ...field.config, scale_max: Number(e.target.value) })}
                 />
@@ -237,7 +237,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                   <div className="flex flex-col gap-1.5 flex-1">
                     <label className="text-xs text-neutral-600">Min Label (Optional)</label>
                     <Input 
-                      className="h-8 text-xs shadow-sm" 
+                      className="h-8 text-xs" 
                       placeholder="e.g. Strongly Disagree"
                       value={field.config?.scale_min_label || ""} 
                       onChange={(e) => updateField(field.id, "config", { ...field.config, scale_min_label: e.target.value })}
@@ -246,7 +246,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                   <div className="flex flex-col gap-1.5 flex-1">
                     <label className="text-xs text-neutral-600">Max Label (Optional)</label>
                     <Input 
-                      className="h-8 text-xs shadow-sm" 
+                      className="h-8 text-xs" 
                       placeholder="e.g. Strongly Agree"
                       value={field.config?.scale_max_label || ""} 
                       onChange={(e) => updateField(field.id, "config", { ...field.config, scale_max_label: e.target.value })}
@@ -267,7 +267,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 <label className="text-xs text-neutral-600">{field.field_type === 'number' ? 'Min Value' : 'Min Length'}</label>
                 <Input 
                   type="number" 
-                  className="h-8 text-xs shadow-sm bg-white dark:bg-neutral-950" 
+                  className="h-8 text-xs bg-white dark:bg-neutral-950" 
                   placeholder="e.g. 0"
                   value={field.validation?.min ?? ""} 
                   onChange={(e) => updateField(field.id, "validation", { ...field.validation, min: e.target.value ? Number(e.target.value) : undefined })}
@@ -277,7 +277,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 <label className="text-xs text-neutral-600">{field.field_type === 'number' ? 'Max Value' : 'Max Length'}</label>
                 <Input 
                   type="number" 
-                  className="h-8 text-xs shadow-sm bg-white dark:bg-neutral-950" 
+                  className="h-8 text-xs bg-white dark:bg-neutral-950" 
                   placeholder={field.field_type === 'number' ? "e.g. 100" : "e.g. 255"}
                   value={field.validation?.max ?? ""} 
                   onChange={(e) => updateField(field.id, "validation", { ...field.validation, max: e.target.value ? Number(e.target.value) : undefined })}
@@ -286,7 +286,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
               <div className="flex flex-col gap-1.5 flex-[2]">
                 <label className="text-xs text-neutral-600">Custom Error Message</label>
                 <Input 
-                  className="h-8 text-xs shadow-sm bg-white dark:bg-neutral-950" 
+                  className="h-8 text-xs bg-white dark:bg-neutral-950" 
                   placeholder="e.g. Please enter a valid value."
                   value={field.validation?.custom_error || ""} 
                   onChange={(e) => updateField(field.id, "validation", { ...field.validation, custom_error: e.target.value })}
@@ -305,7 +305,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 <label className="text-xs text-neutral-600">Max File Size (MB)</label>
                 <Input 
                   type="number" 
-                  className="h-8 text-xs shadow-sm bg-white dark:bg-neutral-950" 
+                  className="h-8 text-xs bg-white dark:bg-neutral-950" 
                   placeholder="e.g. 10"
                   value={field.validation?.max_file_size_mb ?? 10} 
                   onChange={(e) => updateField(field.id, "validation", { ...field.validation, max_file_size_mb: e.target.value ? Number(e.target.value) : undefined })}
@@ -314,7 +314,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
               <div className="flex flex-col gap-1.5 flex-[2]">
                 <label className="text-xs text-neutral-600">Allowed Types (comma separated, e.g. .pdf, .jpg)</label>
                 <Input 
-                  className="h-8 text-xs shadow-sm bg-white dark:bg-neutral-950" 
+                  className="h-8 text-xs bg-white dark:bg-neutral-950" 
                   placeholder="Leave empty for all types"
                   value={(field.validation?.allowed_file_types || []).join(", ")} 
                   onChange={(e) => updateField(field.id, "validation", { ...field.validation, allowed_file_types: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })}
@@ -331,7 +331,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
             <div className="flex items-center gap-2">
               <span className="text-xs text-neutral-600">If answer matches</span>
               <Input 
-                className="h-8 text-xs w-48 bg-white dark:bg-neutral-950 shadow-sm" 
+                className="h-8 text-xs w-48 bg-white dark:bg-neutral-950" 
                 placeholder={field.field_type === "boolean" ? "'true' or 'false'" : "Exact option text"}
                 value={field.branching_logic?.condition || ""}
                 onChange={(e) => updateField(field.id, "branching_logic", { ...field.branching_logic, condition: e.target.value })}
@@ -341,7 +341,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
                 value={field.branching_logic?.target_section_id || ""} 
                 onValueChange={(val) => updateField(field.id, "branching_logic", { ...field.branching_logic, target_section_id: val })}
               >
-                <SelectTrigger className="w-56 h-8 text-xs bg-white dark:bg-neutral-950 shadow-sm">
+                <SelectTrigger className="w-56 h-8 text-xs bg-white dark:bg-neutral-950">
                   <SelectValue placeholder="Select Section" />
                 </SelectTrigger>
                 <SelectContent>
@@ -620,18 +620,18 @@ export function QAFormBuilder() {
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <AppIcon name="archive" className="text-primary-500" /> Form Library
               </CardTitle>
-              <Badge variant="secondary" className="text-xs bg-white dark:bg-neutral-950 shadow-sm border border-neutral-200 dark:border-neutral-800">
+              <Badge variant="secondary" className="text-xs bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800">
                 {forms.length} templates
               </Badge>
             </div>
-            <Button className="w-full text-xs shadow-sm bg-primary-600 hover:bg-primary-700 h-9" onClick={() => { setEditingId(null); setTitle(""); setDescription(""); setFields([]); setActiveId(null); }}>
+            <Button className="w-full text-xs bg-primary-600 hover:bg-primary-700 h-9" onClick={() => { setEditingId(null); setTitle(""); setDescription(""); setFields([]); setActiveId(null); }}>
               <AppIcon name="plus" size="xs" className="mr-2" /> Create New Form
             </Button>
             <div className="mt-3 relative">
               <AppIcon name="search" size="xs" className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <Input 
                 placeholder="Search templates..." 
-                className="h-9 pl-9 text-xs bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 shadow-sm rounded-lg"
+                className="h-9 pl-9 text-xs bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 rounded-lg"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -641,7 +641,7 @@ export function QAFormBuilder() {
             {isLoadingForms ? (
               <div className="flex flex-col p-4 gap-3">
                 {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className="p-4 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-lg flex flex-col gap-1.5 shadow-sm">
+                  <div key={i} className="p-4 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-lg flex flex-col gap-1.5">
                     <div className="h-4 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded-sm w-3/4"></div>
                     <div className="h-3 bg-neutral-100 dark:bg-neutral-800/50 animate-pulse rounded-sm w-1/2 mt-1"></div>
                   </div>
@@ -660,7 +660,7 @@ export function QAFormBuilder() {
                 {filteredForms.map((form: any) => {
                   const fieldCount = Array.isArray(form.fields) ? form.fields.length : 0;
                   return (
-                    <div key={form.id} className={cn("p-4 rounded-xl flex items-start justify-between gap-3 border transition-all cursor-pointer group", editingId === form.id ? "bg-primary-50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-800/50 shadow-sm" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-sm")} onClick={() => handleEdit(form)}>
+                    <div key={form.id} className={cn("p-4 rounded-xl flex items-start justify-between gap-3 border transition-all cursor-pointer group", editingId === form.id ? "bg-primary-50 dark:bg-primary-900/10 border-primary-200 dark:border-primary-800/50" : "bg-white dark:bg-neutral-900 border-neutral-100 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700")} onClick={() => handleEdit(form)}>
                       <div className="flex-1 min-w-0">
                         <h4 className={cn("text-sm font-semibold truncate", editingId === form.id ? "text-primary-700 dark:text-primary-400" : "text-neutral-800 dark:text-neutral-200")}>{form.title || "Untitled Form"}</h4>
                         <div className="flex items-center gap-2 mt-1.5 text-xs text-neutral-500">
@@ -696,7 +696,7 @@ export function QAFormBuilder() {
         <div className="flex-1 flex flex-col h-full bg-[#f0f4f9] dark:bg-neutral-950 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-inner form-builder-canvas relative">
           
           {/* Sticky Toolbar */}
-          <div className="min-h-[56px] shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 gap-3 z-20 shadow-sm">
+          <div className="min-h-[56px] shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 gap-3 z-20">
             <div className="flex flex-wrap items-center gap-3">
               <AppIcon name="tasks" className="text-primary-600 shrink-0" />
               <h2 className="font-bold text-sm text-neutral-800 dark:text-neutral-200 truncate max-w-[200px] sm:max-w-xs">{title || "Untitled Form"}</h2>
@@ -713,7 +713,7 @@ export function QAFormBuilder() {
                 size="sm"
                 onClick={() => editingId ? updateFormMutation.mutate() : createFormMutation.mutate()}
                 disabled={createFormMutation.isPending || updateFormMutation.isPending || !title || fields.length === 0}
-                className="h-8 text-xs font-bold px-6 shadow-sm bg-primary-600 hover:bg-primary-700"
+                className="h-8 text-xs font-bold px-6 bg-primary-600 hover:bg-primary-700"
               >
                 {createFormMutation.isPending || updateFormMutation.isPending ? <Spinner size="xs" className="mr-2" /> : <AppIcon name="save" size="xs" className="mr-2" />}
                 {editingId ? "Update" : "Save"}
@@ -727,8 +727,8 @@ export function QAFormBuilder() {
               {/* Form Metadata Header Card */}
               <div 
                 className={cn(
-                  "bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm relative overflow-hidden transition-all",
-                  activeId === 'header' ? "ring-1 ring-primary-500/20 shadow-md border-primary-400 dark:border-primary-600" : ""
+                  "bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 relative overflow-hidden transition-all",
+                  activeId === 'header' ? "ring-1 ring-primary-500/20 border-primary-400 dark:border-primary-600" : ""
                 )}
                 onClick={() => setActiveId('header')}
               >
@@ -789,7 +789,7 @@ export function QAFormBuilder() {
             </div>
 
             {/* Desktop Floating Action Palette (Sticky) */}
-            <div className="hidden md:flex flex-col gap-1 sticky top-4 ml-6 h-fit bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm rounded-xl p-2 z-30 transition-all hover:shadow-md shrink-0">
+            <div className="hidden md:flex flex-col gap-1 sticky top-4 ml-6 h-fit bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2 z-30 transition-all shrink-0">
               <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg" onClick={() => insertField("text")} title="Add text field">
                 <AppIcon name="plus" size="sm" />
               </Button>
@@ -810,7 +810,7 @@ export function QAFormBuilder() {
             </div>
 
             {/* Mobile Floating Action Palette (Bottom Fixed) */}
-            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl rounded-full px-4 py-2 z-50">
+            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e3 rounded-full px-4 py-2 z-40">
               <Button size="icon" variant="ghost" className="h-10 w-10 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-full" onClick={() => insertField("text")} title="Add text field">
                 <AppIcon name="plus" size="sm" />
               </Button>

@@ -28,7 +28,7 @@ export function AdminTodayAttendanceWidget() {
   const totalCount = Object.values(data?.counts || {}).reduce((a: any, b: any) => a + b, 0) as number;
 
   return (
-    <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 overflow-hidden relative transition-shadow duration-150 shadow-sm hover:shadow-md group">
+    <Card className="h-full flex flex-col bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 overflow-hidden relative transition-shadow duration-150 group">
       <Link href="/dashboard/org/attendance" className="absolute inset-0 z-10">
         <span className="sr-only">View Full Company Attendance</span>
       </Link>

@@ -237,7 +237,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
                 />
                 <Label
                   htmlFor={`type-${formId}-${item.value}`}
-                  className={cn("flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-xs font-medium cursor-pointer text-center transition-all shadow-sm peer-data-[state=checked]:shadow-none", isExhausted ? "opacity-60 grayscale" : "")}
+                  className={cn("flex flex-col items-center justify-center gap-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 py-3 px-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 peer-data-[state=checked]:border-primary-600 peer-data-[state=checked]:bg-primary-50 dark:peer-data-[state=checked]:border-primary-500 dark:peer-data-[state=checked]:bg-primary-900/20 [&:has([data-state=checked])]:border-primary text-xs font-medium cursor-pointer text-center transition-all peer-data-[state=checked]:shadow-none", isExhausted ? "opacity-60 grayscale" : "")}
                 >
                   <AppIcon 
                     name={getLeaveIcon(item.value) as any} 
@@ -275,7 +275,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
           <Button
             type="submit"
             disabled={submitMutation.isPending || !draftData.start_date || !draftData.end_date || !draftData.reason}
-            className="w-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 font-medium h-10 shadow-sm transition-colors"
+            className="w-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 font-medium h-10 transition-colors"
           >
             {submitMutation.isPending ? <Spinner /> : "Submit Request"}
           </Button>
@@ -289,7 +289,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
   }
 
   return (
-    <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-none hover:shadow-sm transition-shadow duration-150 rounded-xl flex flex-col bg-card">
+    <Card className="h-full border border-neutral-200 dark:border-neutral-800 shadow-none transition-shadow duration-150 rounded-xl flex flex-col bg-card">
       <CardHeader className="pb-4 border-b border-neutral-100 dark:border-neutral-800/50">
         <CardTitle className="text-base font-bold flex justify-between items-center">
           Request Time Off

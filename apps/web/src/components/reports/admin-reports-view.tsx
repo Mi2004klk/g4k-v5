@@ -153,7 +153,7 @@ export function AdminReportsView() {
 
   return (
     <div className="flex-1 max-w-7xl mx-auto w-full space-y-6">
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5 border border-neutral-200/60 dark:border-neutral-800/60 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5 border border-neutral-200/60 dark:border-neutral-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Export HR Data</h2>
           <p className="text-sm text-neutral-500">Generate, save, and export company reports in standard Excel format.</p>
@@ -231,15 +231,15 @@ export function AdminReportsView() {
             const total = p + l + a;
             return (
               <>
-                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900">
+                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   <div className="text-sm text-neutral-500 font-medium">Present Rate</div>
                   <div className="text-2xl font-bold mt-1">{total > 0 ? Math.round((p / total) * 100) : 0}%</div>
                 </Card>
-                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900">
+                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   <div className="text-sm text-neutral-500 font-medium">Late Rate</div>
                   <div className="text-2xl font-bold mt-1 text-orange-500">{total > 0 ? Math.round((l / total) * 100) : 0}%</div>
                 </Card>
-                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900">
+                <Card className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                   <div className="text-sm text-neutral-500 font-medium">Absent Rate</div>
                   <div className="text-2xl font-bold mt-1 text-red-500">{total > 0 ? Math.round((a / total) * 100) : 0}%</div>
                 </Card>

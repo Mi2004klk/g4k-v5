@@ -369,7 +369,7 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
       if (!val) setCurrentStep(0);
       onOpenChange(val);
     }}>
-      <DialogContent className="sm:max-w-4xl p-0 h-[85vh] flex flex-col border-none shadow-2xl bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
+      <DialogContent className="sm:max-w-4xl p-0 h-[85vh] flex flex-col border-none bg-white dark:bg-neutral-900 rounded-xl overflow-hidden">
         <Wizard
           steps={steps}
           currentStep={currentStep}

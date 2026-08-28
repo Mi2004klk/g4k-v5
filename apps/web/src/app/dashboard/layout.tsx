@@ -467,7 +467,7 @@ export default function DashboardLayout({
             </main>
 
             {/* Mobile Bottom Navigation (Visible on <= 768px screens) */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-md border-t border-border flex items-center justify-around z-40 px-2 pb-safe">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-md border-t border-border flex items-center justify-around z-30 px-2 pb-safe">
               <Link
                 href="/dashboard"
                 prefetch={false}

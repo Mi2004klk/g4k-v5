@@ -44,8 +44,8 @@ export function TaskCard({
       className={cn(
         "relative overflow-hidden border-neutral-200 dark:border-neutral-800 transition-all duration-200 bg-card dark:bg-neutral-900 rounded-lg group",
         isOverlay 
-          ? "scale-[1.02] rotate-2 shadow-2xl ring-1 ring-primary-500/50" 
-          : "shadow-none hover:shadow-md hover:border-primary-300 dark:hover:border-primary-700 border"
+          ? "scale-[1.02] rotate-2 ring-1 ring-primary-500/50" 
+          : "shadow-none hover:border-primary-300 dark:hover:border-primary-700 border"
       )}
     >
       <CardContent className="p-3 space-y-2.5">
@@ -134,12 +134,12 @@ export function TaskCard({
           <div className="flex -space-x-1.5 z-0">
             {task.assignees && task.assignees.length > 0 ? (
               task.assignees.slice(0, 3).map((a: { id: number, name: string }, i) => (
-                <Avatar key={a.id} className="w-[22px] h-[22px] border-2 border-card relative shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800" style={{ zIndex: 10 - i }}>
+                <Avatar key={a.id} className="w-[22px] h-[22px] border-2 border-card relative ring-1 ring-neutral-200 dark:ring-neutral-800" style={{ zIndex: 10 - i }}>
                   <AvatarFallback name={a.name} className="text-xs font-bold" />
                 </Avatar>
               ))
             ) : task.assignee ? (
-              <Avatar className="w-[22px] h-[22px] border-2 border-card relative shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800">
+              <Avatar className="w-[22px] h-[22px] border-2 border-card relative ring-1 ring-neutral-200 dark:ring-neutral-800">
                 <AvatarFallback name={task.assignee.name} className="text-xs font-bold" />
               </Avatar>
             ) : (
@@ -148,7 +148,7 @@ export function TaskCard({
               </div>
             )}
             {task.assignees && task.assignees.length > 3 && (
-              <div className="w-[22px] h-[22px] rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-card flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400 z-0 shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800">
+              <div className="w-[22px] h-[22px] rounded-full bg-neutral-100 dark:bg-neutral-800 border-2 border-card flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400 z-0 ring-1 ring-neutral-200 dark:ring-neutral-800">
                 +{task.assignees.length - 3}
               </div>
             )}

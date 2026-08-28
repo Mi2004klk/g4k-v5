@@ -19,23 +19,23 @@ export function AdminAttendanceView() {
     <div className="space-y-6 w-full">
       <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
         <TabsList className="bg-neutral-100/80 dark:bg-neutral-800/80 p-1 rounded-lg flex items-center w-full sm:w-auto h-10 overflow-x-auto thin-scrollbar">
-          <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all whitespace-nowrap">
+          <TabsTrigger value="calendar" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]: transition-all whitespace-nowrap">
             <AppIcon name="calendar" size="xs" />
             Calendar Heatmap
           </TabsTrigger>
-          <TabsTrigger value="today" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all whitespace-nowrap">
+          <TabsTrigger value="today" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]: transition-all whitespace-nowrap">
             <AppIcon name="directory" size="xs" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all whitespace-nowrap">
+          <TabsTrigger value="analytics" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]: transition-all whitespace-nowrap">
             <AppIcon name="chart" size="xs" />
             Analytics & Trends
           </TabsTrigger>
-          <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all whitespace-nowrap">
+          <TabsTrigger value="shifts" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]: transition-all whitespace-nowrap">
             <AppIcon name="clock" size="xs" />
             Live Shifts
           </TabsTrigger>
-          <TabsTrigger value="leave" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm transition-all whitespace-nowrap">
+          <TabsTrigger value="leave" className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-900 data-[state=active]:text-neutral-900 dark:data-[state=active]:text-white data-[state=active]: transition-all whitespace-nowrap">
             <AppIcon name="calendar" size="xs" />
             Leave & Holidays
           </TabsTrigger>

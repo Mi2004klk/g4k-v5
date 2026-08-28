@@ -171,13 +171,13 @@ export function CorporateDirectoryTab() {
                 placeholder="Search by name..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-10 pl-9 pr-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-48 shadow-sm"
+                className="h-10 pl-9 pr-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 w-48"
               />
             </div>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-10 gap-2 shadow-sm text-neutral-700 dark:text-neutral-300">
+                <Button variant="outline" className="h-10 gap-2 text-neutral-700 dark:text-neutral-300">
                   <AppIcon name="filter" size="sm" />
                   Filter
                 </Button>
@@ -204,13 +204,13 @@ export function CorporateDirectoryTab() {
             <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-0.5 rounded-lg border border-neutral-200/50 dark:border-neutral-800 shadow-inner">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${viewMode === "grid" ? "bg-white dark:bg-neutral-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${viewMode === "grid" ? "bg-white dark:bg-neutral-700 text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
               >
                 <AppIcon name="grid" size="sm" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${viewMode === "list" ? "bg-white dark:bg-neutral-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${viewMode === "list" ? "bg-white dark:bg-neutral-700 text-primary-600 dark:text-primary-400" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
               >
                 <AppIcon name="list" size="sm" />
               </button>
