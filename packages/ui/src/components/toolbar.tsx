@@ -16,7 +16,8 @@ import { Checkbox } from "./checkbox"
 import { Combobox } from "./combobox"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Calendar } from "./calendar"
-import { format, isValid } from "date-fns"
+import { DatePicker } from "./date-picker"
+import { format, isValid, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { cn } from "../utils/cn"
 
 export interface FilterOption {
@@ -153,76 +154,43 @@ export function Toolbar({
       case "custom":
         return filter.component;
       case "date-range":
+        const today = new Date();
+        const dateRangePresets = [
+          { label: "Today", value: { from: today, to: today } },
+          { label: "Last 7 Days", value: { from: subDays(today, 6), to: today } },
+          { label: "Last 30 Days", value: { from: subDays(today, 29), to: today } },
+          { label: "This Month", value: { from: startOfMonth(today), to: today } },
+          { label: "Last Month", value: { from: startOfMonth(subMonths(today, 1)), to: endOfMonth(subMonths(today, 1)) } },
+        ];
         return (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal h-9 bg-white dark:bg-neutral-900",
-                  !filter.value?.from && "text-muted-foreground"
-                )}
-              >
-                <AppIcon name="calendar" className="mr-2" size="sm" />
-                {isValid(filter.value?.from) ? (
-                  filter.value.to && isValid(filter.value.to) ? (
-                    <>
-                      {format(filter.value.from, "LLL dd, y")} -{" "}
-                      {format(filter.value.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(filter.value.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date range</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={filter.value?.from}
-                selected={filter.value}
-                onSelect={(range: { from?: Date, to?: Date } | undefined) => {
-                  if (!range) return;
-                  filter.onChange({ from: range.from, to: range.to });
-                }}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            mode="range"
+            value={filter.value}
+            onChange={(range: any) => {
+              filter.onChange({ from: range?.from, to: range?.to });
+            }}
+            placeholder="Pick a date range"
+            className="w-full h-9 bg-white dark:bg-neutral-900 border-dashed"
+            presets={dateRangePresets}
+            numberOfMonths={2}
+          />
         )
       case "date":
         const singleDateVal = filter.value ? new Date(filter.value) : undefined;
         return (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal h-9 bg-white dark:bg-neutral-900",
-                  !filter.value && "text-muted-foreground"
-                )}
-              >
-                <AppIcon name="calendar" size="sm" className="mr-2 shrink-0" />
-                {singleDateVal && isValid(singleDateVal) ? format(singleDateVal, "MMM d, yyyy") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={singleDateVal && isValid(singleDateVal) ? singleDateVal : undefined}
-                onSelect={(d: Date | undefined) => {
-                  if (d && isValid(d)) {
-                    filter.onChange(format(d, "yyyy-MM-dd"));
-                  } else {
-                    filter.onChange("");
-                  }
-                }}
-              />
-            </PopoverContent>
-          </Popover>
+          <DatePicker
+            mode="single"
+            value={singleDateVal}
+            onChange={(d: any) => {
+              if (d && isValid(d)) {
+                filter.onChange(format(d, "yyyy-MM-dd"));
+              } else {
+                filter.onChange("");
+              }
+            }}
+            placeholder="Pick a date"
+            className="w-full h-9 bg-white dark:bg-neutral-900 border-dashed"
+          />
         )
       default:
         return null

@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
 import { Label } from "@g4k/ui/components";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
-import { Calendar } from "@g4k/ui/components";
+import { Calendar, DatePicker } from "@g4k/ui/components";
 import { format, startOfDay, differenceInDays, addDays } from "date-fns";
 import { FormError } from "@/components/forms/form-error";
 import { queryKeys } from "@/lib/query-keys";
@@ -196,63 +196,27 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Start Date *</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button type="button"
-                  className={cn(
-                    "flex h-10 w-full items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-800 bg-background px-3 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900",
-                    !draftData.start_date && "text-neutral-400 dark:text-neutral-500"
-                  )}>
-                  {draftData.start_date ? format(draftData.start_date, "MMM d, yyyy") : <span>Select date</span>}
-                  <AppIcon name="calendar" className="text-neutral-400 dark:text-neutral-500" size="sm" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar 
-                  mode="single" 
-                  selected={draftData.start_date} 
-                  onSelect={(date) => { 
-                    setDraftData({ ...draftData, start_date: date }); 
-                    // Automatically clear end date if it's before the new start date
-                    if (date && draftData.end_date && draftData.end_date < date) {
-                      setDraftData({ ...draftData, start_date: date, end_date: undefined });
-                    }
-                  }}
-                  disabled={{ before: addDays(todayDate, 1) }}
-                  initialFocus 
-                />
-              </PopoverContent>
-            </Popover>
-            <FormError errors={fieldErrors.start_date} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">End Date *</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button type="button"
-                  className={cn(
-                    "flex h-10 w-full items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-800 bg-background px-3 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-900",
-                    !draftData.end_date && "text-neutral-400 dark:text-neutral-500"
-                  )}>
-                  {draftData.end_date ? format(draftData.end_date, "MMM d, yyyy") : <span>Select date</span>}
-                  <AppIcon name="calendar" className="text-neutral-400 dark:text-neutral-500" size="sm" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar 
-                  mode="single" 
-                  selected={draftData.end_date} 
-                  onSelect={(date) => { setDraftData({ ...draftData, end_date: date }); }}
-                  disabled={{ before: draftData.start_date ?? todayDate }}
-                  initialFocus 
-                />
-              </PopoverContent>
-            </Popover>
-            <FormError errors={fieldErrors.end_date} />
-          </div>
+        <div className="space-y-1.5">
+          <label className="text-xs uppercase tracking-wider font-semibold text-neutral-500 dark:text-neutral-400">Leave Duration *</label>
+          <DatePicker
+            mode="range"
+            value={{ from: draftData.start_date, to: draftData.end_date }}
+            onChange={(range: any) => {
+              setDraftData({
+                ...draftData,
+                start_date: range?.from,
+                end_date: range?.to
+              });
+            }}
+            placeholder="Select leave start and end dates"
+            className="w-full h-10 border-neutral-200 dark:border-neutral-800"
+            disabled={(date: Date) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              return date < today;
+            }}
+          />
+          <FormError errors={fieldErrors.start_date || fieldErrors.end_date} />
         </div>
         
         <div className="space-y-1.5 flex-1 flex flex-col">

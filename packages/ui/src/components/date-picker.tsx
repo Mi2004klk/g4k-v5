@@ -13,6 +13,11 @@ import {
 } from "./popover"
 import { useIsMobile } from "../hooks/use-mobile"
 
+export interface DatePickerPreset {
+  label: string
+  value: any
+}
+
 export interface DatePickerProps {
   value?: any
   onChange?: (date: any) => void
@@ -22,6 +27,8 @@ export interface DatePickerProps {
   minDate?: Date
   maxDate?: Date
   mode?: "single" | "range"
+  numberOfMonths?: number
+  presets?: DatePickerPreset[]
 }
 
 export function DatePicker({
@@ -33,9 +40,14 @@ export function DatePicker({
   minDate,
   maxDate,
   mode = "single",
+  numberOfMonths,
+  presets,
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false)
   const isMobile = useIsMobile()
+
+  // On mobile, forcefully restrict numberOfMonths to 1 to avoid overflow.
+  const displayMonths = isMobile ? 1 : (numberOfMonths ?? (mode === "range" ? 2 : 1))
 
   const handleToday = () => {
     if (mode === "single") {
@@ -109,45 +121,72 @@ export function DatePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 font-sans max-w-[95vw] overflow-x-auto" align="start">
-        <Calendar
-          mode={mode as any}
-          selected={value}
-          onSelect={(date: any) => {
-            onChange?.(date)
-            if (mode === "single") {
-              setOpen(false)
-            }
-          }}
-          initialFocus
-          disabled={(date: Date) => {
-            if (typeof disabled === 'function') return disabled(date)
-            if (Array.isArray(disabled)) return disabled.some(d => d.getTime() === date.getTime())
-            if (disabled === true) return true
-            if (minDate && date < minDate) return true
-            if (maxDate && date > maxDate) return true
-            return false
-          }}
-          classNames={{
-            day: cn(
-              "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-neutral-100 dark:[&:has([aria-selected])]:bg-neutral-800",
-              mode === "range"
-                ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
-                : "[&:has([aria-selected])]:rounded-md"
-            ),
-            day_button: cn(
-              "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-50",
-              "h-8 w-8 sm:h-9 sm:w-9 p-0 font-normal aria-selected:opacity-100"
-            ),
-            weekday: "text-neutral-500 rounded-md w-8 sm:w-9 font-normal text-[0.8rem] dark:text-neutral-400",
-          }}
-        />
-        <div className="flex items-center justify-between p-3 border-t">
-          <Button variant="ghost" size="sm" onClick={handleToday} className="h-8 px-2 text-xs">
-            Today
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleClear} className="h-8 px-2 text-xs">
-            Clear
-          </Button>
+        <div className="flex flex-col sm:flex-row">
+          {/* Presets Sidebar */}
+          {presets && presets.length > 0 && (
+            <div className="flex flex-row sm:flex-col gap-1 p-3 border-b sm:border-b-0 sm:border-r overflow-x-auto sm:overflow-visible sm:w-[150px] shrink-0">
+              {presets.map((preset, idx) => (
+                <Button
+                  key={idx}
+                  variant="ghost"
+                  className="justify-start font-normal text-sm shrink-0"
+                  onClick={() => {
+                    onChange?.(preset.value)
+                    if (mode === "single" || (mode === "range" && preset.value?.from && preset.value?.to)) {
+                      setOpen(false)
+                    }
+                  }}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+          )}
+          
+          <div className="flex flex-col">
+            <Calendar
+              mode={mode as any}
+              selected={value}
+              numberOfMonths={displayMonths}
+              defaultMonth={mode === "range" && value?.from ? value.from : undefined}
+              onSelect={(date: any) => {
+                onChange?.(date)
+                if (mode === "single") {
+                  setOpen(false)
+                }
+              }}
+              initialFocus
+              disabled={(date: Date) => {
+                if (typeof disabled === 'function') return disabled(date)
+                if (Array.isArray(disabled)) return disabled.some(d => d.getTime() === date.getTime())
+                if (disabled === true) return true
+                if (minDate && date < minDate) return true
+                if (maxDate && date > maxDate) return true
+                return false
+              }}
+              classNames={{
+                day: cn(
+                  "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-neutral-100 dark:[&:has([aria-selected])]:bg-neutral-800",
+                  mode === "range"
+                    ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
+                    : "[&:has([aria-selected])]:rounded-md"
+                ),
+                day_button: cn(
+                  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-50",
+                  "h-8 w-8 sm:h-9 sm:w-9 p-0 font-normal aria-selected:opacity-100"
+                ),
+                weekday: "text-neutral-500 rounded-md w-8 sm:w-9 font-normal text-[0.8rem] dark:text-neutral-400",
+              }}
+            />
+            <div className="flex items-center justify-between p-3 border-t mt-auto">
+              <Button variant="ghost" size="sm" onClick={handleToday} className="h-8 px-2 text-xs">
+                Today
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleClear} className="h-8 px-2 text-xs">
+                Clear
+              </Button>
+            </div>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
