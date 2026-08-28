@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppIcon, Spinner } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button, Input, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, Popover, PopoverTrigger, PopoverContent } from "@g4k/ui/components";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { useIsMobile } from "@g4k/ui/hooks";
 import { queryKeys } from "@/lib/query-keys";
@@ -107,33 +107,46 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                   >
                     {v.name}
                   </DropdownMenuItem>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-neutral-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setRenamingView(v);
-                      setRenameName(v.name);
-                    }}
-                  >
-                    <AppIcon name="edit" className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-neutral-400 hover:text-red-500 opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 mr-1"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (confirm(`Delete saved view "${v.name}"?`)) {
-                        deleteMutation.mutate(v.id);
-                      }
-                    }}
-                  >
-                    <AppIcon name="trash" className="h-4 w-4" />
-                  </Button>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-neutral-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setRenamingView(v);
+                            setRenameName(v.name);
+                          }}
+                        >
+                          <AppIcon name="edit" className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs">Rename view</TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-neutral-400 hover:text-red-500 opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 mr-1"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (confirm(`Delete saved view "${v.name}"?`)) {
+                              deleteMutation.mutate(v.id);
+                            }
+                          }}
+                        >
+                          <AppIcon name="trash" className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs">Delete view</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               ))
             )}

@@ -169,18 +169,6 @@ export function FileUploadPopup({
             </div>
           ) : (
             <div className="relative overflow-hidden rounded-[var(--radius)] border bg-muted/20">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-2 z-10 h-6 w-6 rounded-full bg-background/80 hover:bg-background"
-                onClick={() => {
-                  setFile(null)
-                  setPreviewUrl(null)
-                }}
-              >
-                <AppIcon name="close" />
-              </Button>
-
               {previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -190,13 +178,35 @@ export function FileUploadPopup({
                 />
               ) : (
                 <div className="flex aspect-video w-full flex-col items-center justify-center gap-2">
-                  <AppIcon name="file" className=" text-muted-foreground" />
+                  <AppIcon name="file" className=" text-muted-foreground w-12 h-12 mb-2" />
                   <p className="text-sm font-medium">{file.name}</p>
                   <p className="text-xs text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               )}
+              
+              <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-3 rounded-[var(--radius)]">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-8 gap-1.5"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <AppIcon name="upload" className="w-4 h-4" /> Replace
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-8 gap-1.5"
+                  onClick={() => {
+                    setFile(null)
+                    setPreviewUrl(null)
+                  }}
+                >
+                  <AppIcon name="trash" className="w-4 h-4" /> Remove
+                </Button>
+              </div>
             </div>
           )}
 

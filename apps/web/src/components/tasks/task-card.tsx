@@ -51,7 +51,7 @@ export function TaskCard({
       <CardContent className="p-3 space-y-2.5">
         <div className="flex items-start justify-between gap-2 relative">
           <div className="flex flex-col gap-1.5 w-full">
-            <h4 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
+            <h4 className="text-[13px] font-bold text-neutral-900 dark:text-neutral-100 leading-snug line-clamp-2">
               {task.title}
             </h4>
             <div className="flex flex-wrap gap-1.5">

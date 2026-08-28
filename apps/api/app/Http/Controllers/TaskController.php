@@ -777,13 +777,25 @@ class TaskController extends Controller
         $validated = $request->validate([
             'body' => 'required|string',
             'parent_id' => 'nullable|exists:task_comments,id',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xls,xlsx,csv,txt,zip,rar|max:10240',
         ]);
+
+        $attachmentUrls = [];
+        if ($request->hasFile('attachments')) {
+            $disk = config('filesystems.default');
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store("task_attachments/{$task->id}", $disk);
+                $attachmentUrls[] = \Illuminate\Support\Facades\Storage::disk($disk)->url($path);
+            }
+        }
 
         $comment = TaskComment::create([
             'task_id' => $task->id,
             'user_id' => $request->user()->id,
             'body' => $validated['body'],
             'parent_id' => $validated['parent_id'] ?? null,
+            'attachments' => empty($attachmentUrls) ? null : $attachmentUrls,
         ]);
 
         return response()->json($comment->load('user'));

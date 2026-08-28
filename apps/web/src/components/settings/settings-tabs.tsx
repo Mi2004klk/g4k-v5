@@ -129,29 +129,35 @@ export function SettingsTabs() {
   };
 
   return (
-    <Tabs value={tab} onValueChange={setTab} className="w-full">
-      <TabsList className="mb-4">
+    <Tabs value={tab} onValueChange={setTab} className="w-full flex flex-col md:flex-row gap-6 items-start">
+      <div className="w-full md:w-56 shrink-0 md:sticky md:top-4">
+        {canManageSettings && (
+          <TabsList className="flex flex-col h-auto items-stretch justify-start bg-transparent p-0 space-y-1 w-full sm:justify-start">
+            <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2 px-3">General</div>
+            <TabsTrigger value="company" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Company Profile</TabsTrigger>
+            <TabsTrigger value="schedule" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Work Schedules</TabsTrigger>
+            <TabsTrigger value="policies" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Policies</TabsTrigger>
+            <TabsTrigger value="holidays" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Holidays</TabsTrigger>
+            <TabsTrigger value="autonumber" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Auto-Numbering</TabsTrigger>
+
+            <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2 px-3 mt-6">System & Operations</div>
+            <TabsTrigger value="mail" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Mail / SMTP</TabsTrigger>
+            <TabsTrigger value="notifications" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Notifications</TabsTrigger>
+            <TabsTrigger value="reminders" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Reminders</TabsTrigger>
+            <TabsTrigger value="qa-forms" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">QA Forms</TabsTrigger>
+            <TabsTrigger value="jobs" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">System Jobs</TabsTrigger>
+
+            <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2 px-3 mt-6">Data & Security</div>
+            <TabsTrigger value="security" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Security Requests</TabsTrigger>
+            <TabsTrigger value="demo" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm text-amber-600 dark:text-amber-500 hover:text-amber-700">Demo Data</TabsTrigger>
+          </TabsList>
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
         {canManageSettings && (
           <>
-            <TabsTrigger value="company">Company Profile</TabsTrigger>
-            <TabsTrigger value="schedule">Work Schedules</TabsTrigger>
-            <TabsTrigger value="policies">Policies</TabsTrigger>
-            <TabsTrigger value="holidays">Holidays</TabsTrigger>
-            <TabsTrigger value="mail">Mail / SMTP</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="autonumber">Auto-Numbering</TabsTrigger>
-            <TabsTrigger value="reminders">Reminders</TabsTrigger>
-            <TabsTrigger value="security">Security Requests</TabsTrigger>
-            <TabsTrigger value="qa-forms">QA Forms</TabsTrigger>
-
-            <TabsTrigger value="demo">Demo Data</TabsTrigger>
-            <TabsTrigger value="jobs">System Jobs</TabsTrigger>
-          </>
-        )}
-      </TabsList>
-
-      {canManageSettings && (
-        <TabsContent value="company">
+            <TabsContent value="company" className="mt-0">
           <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
           <CardHeader>
             <CardTitle className="text-base">Company Information</CardTitle>
@@ -245,52 +251,53 @@ export function SettingsTabs() {
 
       {canManageSettings && (
         <>
-          <TabsContent value="schedule">
+          <TabsContent className="mt-0" value="schedule">
             <WorkSchedulesConfig />
           </TabsContent>
 
-          <TabsContent value="policies">
+          <TabsContent className="mt-0" value="policies">
             <PoliciesConfig />
           </TabsContent>
 
-          <TabsContent value="holidays">
+          <TabsContent className="mt-0" value="holidays">
             <div className="bg-card dark:bg-neutral-900 rounded-xl overflow-hidden shadow-e1 hover:shadow-e2 transition-shadow duration-150 flex-1 min-h-[60vh]">
               <HolidayCalendar />
             </div>
           </TabsContent>
-          <TabsContent value="mail">
+          <TabsContent className="mt-0" value="mail">
             <MailSmtpConfig />
           </TabsContent>
 
-          <TabsContent value="notifications">
+          <TabsContent className="mt-0" value="notifications">
             <NotificationsConfig />
           </TabsContent>
 
-          <TabsContent value="autonumber">
+          <TabsContent className="mt-0" value="autonumber">
             <AutoNumberingConfig />
           </TabsContent>
 
-          <TabsContent value="reminders">
+          <TabsContent className="mt-0" value="reminders">
             <RemindersConfig />
           </TabsContent>
 
-          <TabsContent value="security">
+          <TabsContent className="mt-0" value="security">
             <SecurityRequestsConfig />
           </TabsContent>
 
-          <TabsContent value="qa-forms">
+          <TabsContent className="mt-0" value="qa-forms">
             <QaFormsManagement />
           </TabsContent>
 
-          <TabsContent value="demo">
+          <TabsContent className="mt-0" value="demo">
             <DemoDataConfig />
           </TabsContent>
 
-          <TabsContent value="jobs">
+          <TabsContent className="mt-0" value="jobs">
             <SystemJobsConfig />
           </TabsContent>
         </>
       )}
+      </div>
     </Tabs>
   );
 }

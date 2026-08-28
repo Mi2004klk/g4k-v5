@@ -14,6 +14,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { hasCapability, useCapabilities } from "@/lib/capabilities";
 import { useUIStore } from "@/lib/ui-store";
 import { AnnouncementComposer } from "./announcement-composer";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export interface Announcement {
   id: number;
@@ -39,6 +40,18 @@ export function AnnouncementBoard() {
   const [initialData, setInitialData] = useState<{title: string, body: string, scope: string, priority: string, pinned: boolean} | undefined>();
 
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get("newAnnouncement") === "1" && canManage) {
+      setShowCreate(true);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("newAnnouncement");
+      window.history.replaceState({}, "", url);
+    }
+  }, [searchParams, canManage]);
 
   const { data: dashboardData, isPending: isInitPending, isFetching: isInitFetching, refetch: refetchInit } = useDashboardInit({
     staleTime: 60_000,

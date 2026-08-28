@@ -20,14 +20,24 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
   const queryClient = useQueryClient();
   const [comment, setComment] = useState("");
   const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   const addCommentMutation = useMutation({
     mutationFn: async () => {
+      const formData = new FormData();
+      formData.append("body", comment);
+      if (replyTo) formData.append("parent_id", replyTo.toString());
+      
+      attachments.forEach((file) => {
+        formData.append("attachments[]", file);
+      });
+
       return apiFetch(`/tasks/${taskId}/comments`, {
         method: "POST",
-        body: JSON.stringify({ body: comment, parent_id: replyTo }),
+        body: formData,
       });
     },
     onSuccess: (data: any) => {
@@ -35,6 +45,7 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
       queryClient.invalidateQueries({ queryKey: ["task-detail", taskId] });
       setComment("");
       setReplyTo(null);
+      setAttachments([]);
       setTimeout(() => {
         commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100);
@@ -88,6 +99,16 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
                       </span>
                     </div>
                     <p className="text-[13px] text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">{c.body}</p>
+                    {c.attachments && c.attachments.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {c.attachments.map((url: string, idx: number) => (
+                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-md text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
+                            <AppIcon name="paperclip" className="w-3.5 h-3.5" />
+                            <span className="truncate max-w-[150px]">Attachment {idx + 1}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-3 mt-1.5 ml-1">
@@ -137,26 +158,56 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
             </button>
           </div>
         )}
-        <div className="flex gap-2 items-end">
-        <Textarea 
-          ref={commentInputRef}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Write a comment..." 
-          className="min-h-[44px] max-h-32 text-[13px] resize-none py-3 rounded-xl border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus-visible:ring-primary-500"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              if (comment.trim()) addCommentMutation.mutate();
-            }
-          }}
-        />
-        <Button 
-          className="shrink-0 h-11 w-11 rounded-xl bg-primary-600 hover:bg-primary-700 text-white"
-          disabled={!comment.trim() || addCommentMutation.isPending}
-          onClick={() => addCommentMutation.mutate()}
-        >
-          {addCommentMutation.isPending ? <Spinner className="w-4 h-4" /> : <AppIcon name="send" className="w-4 h-4" />}
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2 px-1">
+            {attachments.map((file, idx) => (
+              <div key={idx} className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800 px-2.5 py-1 rounded-md text-xs">
+                <span className="truncate max-w-[150px] font-medium">{file.name}</span>
+                <button onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))} className="text-neutral-400 hover:text-rose-500">
+                  <AppIcon name="close" size="xs" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2 items-end relative">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={(e) => {
+              if (e.target.files) {
+                setAttachments(prev => [...prev, ...Array.from(e.target.files!)]);
+              }
+            }} 
+            className="hidden" 
+            multiple 
+          />
+          <Button
+            variant="ghost"
+            className="shrink-0 h-11 w-11 rounded-xl text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <AppIcon name="paperclip" className="w-5 h-5" />
+          </Button>
+          <Textarea 
+            ref={commentInputRef}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Write a comment..." 
+            className="min-h-[44px] max-h-32 text-[13px] resize-none py-3 rounded-xl border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus-visible:ring-primary-500"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (comment.trim() || attachments.length > 0) addCommentMutation.mutate();
+              }
+            }}
+          />
+          <Button 
+            className="shrink-0 h-11 w-11 rounded-xl bg-primary-600 hover:bg-primary-700 text-white"
+            disabled={(!comment.trim() && attachments.length === 0) || addCommentMutation.isPending}
+            onClick={() => addCommentMutation.mutate()}
+          >
+            {addCommentMutation.isPending ? <Spinner className="w-4 h-4" /> : <AppIcon name="send" className="w-4 h-4" />}
           </Button>
         </div>
       </div>
