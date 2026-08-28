@@ -227,6 +227,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::post('/tasks/reorder', [TaskController::class, 'reorder']);
         Route::post('/tasks', [TaskController::class, 'store']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
+        Route::post('/tasks/{id}/move-phase', [TaskController::class, 'movePhase']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
         Route::post('/tasks/{id}/duplicate', [TaskController::class, 'duplicate']);
         Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);

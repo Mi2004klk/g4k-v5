@@ -45,11 +45,21 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         <Input
           ref={ref}
           type="search"
-          className={cn("pl-9", className)}
+          className={cn("pl-9", localValue ? "pr-9" : "", className)}
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           {...props}
         />
+        {localValue && (
+          <button
+            type="button"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground opacity-70 hover:opacity-100 transition-opacity"
+            onClick={() => setLocalValue("")}
+            aria-label="Clear search"
+          >
+            <AppIcon name="close" size="sm" />
+          </button>
+        )}
       </div>
     );
   }

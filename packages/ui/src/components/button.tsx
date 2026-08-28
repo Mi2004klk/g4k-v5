@@ -16,10 +16,12 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         success: "bg-success text-white hover:bg-success/90",
         link: "text-primary underline-offset-4 hover:underline",
+        brand: "bg-primary text-primary-foreground hover:bg-primary/90",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-full px-3",
+        sm: "h-8 rounded-full px-3",
+        xs: "h-7 rounded-full px-2 text-xs",
         lg: "h-11 rounded-full px-8",
         icon: "h-10 w-10",
       },
@@ -87,7 +89,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       </button>
     );
 
-    if (variant === "primary" && size === "lg" && !asChild) {
+    if ((variant === "brand" || (variant === "primary" && size === "lg")) && !asChild) {
       return (
         <RainbowBorder>
           {content}

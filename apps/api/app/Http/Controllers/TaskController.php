@@ -359,7 +359,7 @@ class TaskController extends Controller
             }
         }
 
-        $scope = $validated['scope'] ?? 'global';
+        $scope = $validated['scope'] ?? 'project';
         $scopeId = $validated['scope_id'] ?? null;
         
         if ($this->userHasManage($request)) {
@@ -849,6 +849,7 @@ class TaskController extends Controller
             return response()->json(['message' => 'Task has no pending approval.'], 422);
         }
 
+
         ApprovalService::approve($approval, $request->user()->id);
 
         TaskService::updateStatus($task, 'done', $request->user()->id);
@@ -914,6 +915,36 @@ class TaskController extends Controller
             $responseTask->next_task_created = true;
         }
         return response()->json($responseTask);
+    }
+
+    public function movePhase(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+        
+        if (!$this->canManageTask($request, $task) && $task->reporter_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized to move this task.'], 403);
+        }
+        
+        $validated = $request->validate([
+            'phase_id' => 'required|exists:project_phases,id'
+        ]);
+        
+        if (!$task->project_id) {
+            return response()->json(['message' => 'Only project tasks can be moved to a phase.'], 422);
+        }
+        
+        $phase = \App\Models\ProjectPhase::where('project_id', $task->project_id)
+            ->where('id', $validated['phase_id'])
+            ->first();
+            
+        if (!$phase) {
+            return response()->json(['message' => 'Phase does not belong to this project.'], 422);
+        }
+        
+        $task->phase_id = $phase->id;
+        $task->save();
+        
+        return response()->json(['message' => 'Task moved to phase successfully', 'task' => $task]);
     }
 
     public function redo(Request $request, $id)

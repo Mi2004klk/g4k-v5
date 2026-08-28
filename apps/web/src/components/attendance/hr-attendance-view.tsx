@@ -31,7 +31,7 @@ export function HrAttendanceView() {
             Trends & Graphs
           </TabsTrigger>
           {canApprove && (
-            <TabsTrigger value="leave" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 whitespace-nowrap">
+            <TabsTrigger value="approvals" className="rounded-[var(--radius)] data-[state=active]:bg-emerald-50 dark:data-[state=active]:bg-emerald-900/30 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 whitespace-nowrap">
               <AppIcon name="calendar" className=" mr-2" />
               Leave Approvals
             </TabsTrigger>
@@ -57,7 +57,7 @@ export function HrAttendanceView() {
         </TabsContent>
 
         {canApprove && (
-          <TabsContent value="leave" className="outline-none m-0">
+          <TabsContent value="approvals" className="outline-none m-0">
             <ApprovalsTab />
           </TabsContent>
         )}
