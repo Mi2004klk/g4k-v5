@@ -269,52 +269,55 @@ export function DesignationsTab() {
           const desig = row.original;
           const isInactive = !desig.is_active;
           return (
-            <div className="flex items-center justify-end gap-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-neutral-500 hover:text-primary-600"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingDesig(desig);
-                  reset({ name: desig.name, description: desig.description || "" });
-                  setIsModalOpen(true);
-                }}
-                title="Edit"
-              >
-                <AppIcon name="edit" size="sm" />
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`h-8 w-8 ${isInactive ? "text-emerald-500 hover:text-emerald-600" : "text-amber-500 hover:text-amber-600"}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isInactive) {
-                    statusMutation.mutate({ id: desig.id, status: 'active' });
-                  } else {
-                    setConfirmState({ isOpen: true, type: "deactivate", payload: desig });
-                  }
-                }}
-                title={isInactive ? "Activate" : "Deactivate"}
-              >
-                {isInactive ? <AppIcon name="userCheck" size="sm" /> : <AppIcon name="userX" size="sm" />}
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 text-neutral-400 hover:text-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={(desig.users_count || 0) > 0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirmState({ isOpen: true, type: "delete", payload: desig });
-                }}
-                title={(desig.users_count || 0) > 0 ? "Cannot delete designation with assigned employees" : "Delete"}
-              >
-                <AppIcon name="trash" size="sm" />
-              </Button>
+            <div className="flex items-center justify-end pr-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                    <span className="sr-only">Open menu</span>
+                    <AppIcon name="moreVertical" size="sm" className="text-neutral-500" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingDesig(desig);
+                      reset({ name: desig.name, description: desig.description || "" });
+                      setIsModalOpen(true);
+                    }}
+                    className="cursor-pointer text-primary-700 focus:text-primary-700"
+                  >
+                    <AppIcon name="edit" className="mr-2" size="sm" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isInactive) {
+                        statusMutation.mutate({ id: desig.id, status: 'active' });
+                      } else {
+                        setConfirmState({ isOpen: true, type: "deactivate", payload: desig });
+                      }
+                    }}
+                    className={`cursor-pointer ${isInactive ? "text-emerald-700 focus:text-emerald-700" : "text-amber-700 focus:text-amber-700"}`}
+                  >
+                    {isInactive ? <AppIcon name="userCheck" className="mr-2" size="sm" /> : <AppIcon name="userX" className="mr-2" size="sm" />}
+                    {isInactive ? "Activate" : "Deactivate"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmState({ isOpen: true, type: "delete", payload: desig });
+                    }}
+                    disabled={(desig.users_count || 0) > 0}
+                    className="cursor-pointer text-rose-700 focus:text-rose-700"
+                    title={(desig.users_count || 0) > 0 ? "Cannot delete designation with assigned employees" : ""}
+                  >
+                    <AppIcon name="trash" className="mr-2" size="sm" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           );
         },

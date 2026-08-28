@@ -577,9 +577,7 @@ class UserController extends Controller
 
         // We fetch logs WHERE user_id = $id (actions performed by this user) OR where target = user and target_id = $id (actions affecting this user)
         // Usually, activity logs for a user means what they did.
-        $logs = \Illuminate\Support\Facades\DB::table('audit_logs')
-            ->select('audit_logs.*', 'audit_logs.ip as ip_address')
-            ->where('user_id', $user->id)
+        $logs = \App\Models\AuditLog::where('user_id', $user->id)
             ->orderBy('at', 'desc')
             ->cursorPaginate(30);
 
@@ -598,13 +596,25 @@ class UserController extends Controller
                             $data['emergency_contact_phone'],
                             $data['emergency_contact_relation']
                         );
-                        return json_encode($data);
+                        return $data; // Model cast will handle array to json if needed, but since it's already array, we return array
                     }
                     return $payload;
                 };
-                $log->before = $hideSensitiveJson($log->before);
-                $log->after = $hideSensitiveJson($log->after);
-                return $log;
+
+                $logArray = $log->toArray();
+                $logArray['before'] = $hideSensitiveJson($log->before);
+                $logArray['after'] = $hideSensitiveJson($log->after);
+                
+                // Keep backward compatibility for frontend
+                $logArray['ip_address'] = $log->ip;
+
+                return $logArray;
+            });
+        } else {
+            $logs->getCollection()->transform(function ($log) {
+                $logArray = $log->toArray();
+                $logArray['ip_address'] = $log->ip;
+                return $logArray;
             });
         }
 

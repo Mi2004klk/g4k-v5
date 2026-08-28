@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
 import { AppIcon } from "@g4k/ui/components";
-import { ListScaffold, EmptyState, StatusBadge, ConfirmDialog } from "@g4k/ui/components";
+import { ListScaffold, EmptyState, StatusBadge, ConfirmDialog, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@g4k/ui/components";
 import { getLeaveStatusColor } from "@g4k/ui/theme";
 
 interface LeaveRecord {
@@ -164,29 +164,45 @@ export function LeaveHistoryTable({
           }
 
           return (
-            <div className="flex justify-end gap-2 items-center">
-              {onEditAction && isPending && (
-                <button
-                  onClick={() => onEditAction(row.original)}
-                  className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline px-2 py-1 rounded transition-colors"
-                >
-                  Edit
-                </button>
-              )}
-              {onDeleteAction && canDelete && (
-                <ConfirmDialog
-                  title={`Confirm ${btnText}`}
-                  description={`Are you sure you want to ${btnText.toLowerCase()} this leave request?`}
-                  onConfirm={() => onDeleteAction(row.original.id)}
-                  trigger={
-                    <button 
-                      className="text-xs font-medium text-rose-600 hover:text-rose-700 hover:underline px-2 py-1 rounded transition-colors"
+            <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="h-8 w-8 p-0 flex items-center justify-center text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors">
+                    <span className="sr-only">Open menu</span>
+                    <AppIcon name="moreVertical" size="sm" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onEditAction && isPending && (
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditAction(row.original);
+                      }}
+                      className="text-brand-700 focus:text-brand-700 cursor-pointer"
                     >
-                      {btnText}
-                    </button>
-                  }
-                />
-              )}
+                      <AppIcon name="edit" className="mr-2" size="sm" />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {onDeleteAction && canDelete && (
+                    <ConfirmDialog
+                      title={`Confirm ${btnText}`}
+                      description={`Are you sure you want to ${btnText.toLowerCase()} this leave request?`}
+                      onConfirm={() => onDeleteAction(row.original.id)}
+                      trigger={
+                        <DropdownMenuItem
+                          onSelect={(e) => e.preventDefault()}
+                          className="text-rose-700 focus:text-rose-700 cursor-pointer"
+                        >
+                          <AppIcon name="trash" className="mr-2" size="sm" />
+                          {btnText}
+                        </DropdownMenuItem>
+                      }
+                    />
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           );
         },

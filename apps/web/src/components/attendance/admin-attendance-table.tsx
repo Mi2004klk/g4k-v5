@@ -16,7 +16,7 @@ import { usePaginatedList } from "@/lib/pagination";
 import { usePusher } from "@/hooks/use-pusher";
 import { useExport } from "@/hooks/use-export";
 import { keepPreviousData } from "@tanstack/react-query";
-import { Button, Checkbox, DataTable, StatusBadge, Toolbar, ListScaffold } from "@g4k/ui/components";
+import { Button, Checkbox, DataTable, StatusBadge, Toolbar, ListScaffold, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@g4k/ui/components";
 import { Row, Table } from "@tanstack/react-table";
 import { HrCorrectionDialog } from "./hr-correction-dialog";
 import { TeamMemberAttendanceSheet } from "./team-member-attendance-sheet";
@@ -337,44 +337,48 @@ export function AdminAttendanceTable() {
         );
       },
     },
-
     {
       id: "actions",
       header: "",
       cell: ({ row }: { row: Row<AttendanceRecord> }) => {
         return (
-          <div className="flex justify-end pr-2 gap-1" onClick={(e) => e.stopPropagation()}>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 ml-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedUser(row.original.user_id);
-                setSheetTab("trends");
-              }}
-            >
-              <AppIcon name="trendingUp" className=" mr-1" />
-              Trends
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 text-xs text-primary-600 hover:text-primary-700 hover:bg-primary-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCorrectionData({
-                  dayId: row.original.id,
-                  userId: row.original.user_id,
-                  date: row.original.date,
-                  action: "edit_event",
-                  type: "clock_in"
-                });
-              }}
-            >
-              <AppIcon name="edit" className=" mr-1" />
-              Correct
-            </Button>
+          <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <AppIcon name="moreVertical" size="sm" className="text-neutral-500" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedUser(row.original.user_id);
+                    setSheetTab("trends");
+                  }}
+                  className="text-emerald-700 focus:text-emerald-700"
+                >
+                  <AppIcon name="trendingUp" className="mr-2" size="sm" />
+                  Trends
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCorrectionData({
+                      dayId: row.original.id,
+                      userId: row.original.user_id,
+                      date: row.original.date,
+                      action: "edit_event",
+                    });
+                  }}
+                  className="text-primary-700 focus:text-primary-700"
+                >
+                  <AppIcon name="edit" className="mr-2" size="sm" />
+                  Correct
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         );
       },

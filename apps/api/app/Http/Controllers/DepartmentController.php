@@ -212,7 +212,13 @@ class DepartmentController extends Controller
     {
         $team = Team::where('department_id', $departmentId)->findOrFail($teamId);
         $before = $team->toArray();
-        \App\Models\User::where('team_id', $team->id)->update(['team_id' => null]);
+        
+        $usersToUpdate = \App\Models\User::where('team_id', $team->id)->get();
+        foreach ($usersToUpdate as $user) {
+            $user->team_id = null;
+            $user->save();
+        }
+        
         $team->delete();
         
         AuditLogger::log($request, 'delete', 'team', $team->id, $before, null);
@@ -277,7 +283,13 @@ class DepartmentController extends Controller
         ]);
 
         $beforeUsers = \App\Models\User::where('department_id', $department->id)->select('id', 'name')->get()->toArray();
-        \App\Models\User::whereIn('id', $validated['user_ids'])->update(['department_id' => $department->id]);
+        
+        $usersToUpdate = \App\Models\User::whereIn('id', $validated['user_ids'])->get();
+        foreach ($usersToUpdate as $user) {
+            $user->department_id = $department->id;
+            $user->save();
+        }
+        
         $users = \App\Models\User::where('department_id', $department->id)->select('id', 'name')->get()->toArray();
         AuditLogger::log($request, 'update', 'department_employees', $department->id, ['users' => $beforeUsers], ['users' => $users]);
 

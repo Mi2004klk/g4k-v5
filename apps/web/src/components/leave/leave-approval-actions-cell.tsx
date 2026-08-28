@@ -3,12 +3,9 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AppIcon, Spinner,
-} from "@g4k/ui/components";
+import { AppIcon, Spinner, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
-import { Button } from "@g4k/ui/components";
-import { Input } from "@g4k/ui/components";
-import { ConfirmDialog } from "@g4k/ui/components";
+import { Button, Input, ConfirmDialog } from "@g4k/ui/components";
 import { queryKeys } from "@/lib/query-keys";
 
 import { useAuthStore } from "@/lib/auth-store";
@@ -105,31 +102,31 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 gap-1 text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-900 dark:hover:bg-emerald-950/30"
-          onClick={handleApprove}
-          disabled={decisionMutation.isPending}
-        >
-          {decisionMutation.isPending && decisionMutation.variables?.decision === "approved" ? (
-            <Spinner size="sm" />
-          ) : (
-            <AppIcon name="check" size="sm" />
-          )}
-          Approve
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 gap-1 text-rose-600 hover:text-rose-700 border-rose-200 hover:bg-rose-50 dark:border-rose-900 dark:hover:bg-rose-950/30"
-          onClick={() => setIsRejectOpen(true)}
-          disabled={decisionMutation.isPending}
-        >
-          <AppIcon name="close" size="sm" />
-          Reject
-        </Button>
+      <div className="flex items-center justify-end pr-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" disabled={decisionMutation.isPending}>
+              <span className="sr-only">Open menu</span>
+              {decisionMutation.isPending ? <Spinner size="sm" /> : <AppIcon name="moreVertical" size="sm" className="text-neutral-500" />}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={handleApprove}
+              className="text-emerald-700 focus:text-emerald-700 cursor-pointer"
+            >
+              <AppIcon name="check" className="mr-2" size="sm" />
+              Approve
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setIsRejectOpen(true)}
+              className="text-rose-700 focus:text-rose-700 cursor-pointer"
+            >
+              <AppIcon name="close" className="mr-2" size="sm" />
+              Reject
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <ConfirmDialog

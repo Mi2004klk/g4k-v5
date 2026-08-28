@@ -25,7 +25,6 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
-            'preferences' => 'nullable|array',
             'emergency_contact' => 'nullable|array',
             'emergency_contact.name' => 'required_with:emergency_contact|string|max:255',
             'emergency_contact.phone' => 'required_with:emergency_contact|string|max:20',
@@ -84,7 +83,7 @@ class ProfileController extends Controller
                 'url' => $avatarUrl,
                 'path' => $path,
                 'avatar_url' => $avatarUrl,
-                'user' => $user->only(['id', 'first_name', 'last_name', 'avatar_url'])
+                'user' => $user->only(['id', 'name', 'avatar_url'])
             ]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Avatar upload failed: ' . $e->getMessage());

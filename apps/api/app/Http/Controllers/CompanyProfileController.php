@@ -46,9 +46,11 @@ class CompanyProfileController extends Controller
         return response()->json($response);
     }
 
-    public function show()
+    public function show(Request $request)
     {
-        $profile = CompanyProfile::first();
+        $companyId = $request->user()?->company_id;
+        $profile = $companyId ? CompanyProfile::find($companyId) : CompanyProfile::first();
+        
         if (!$profile) {
             $profile = CompanyProfile::create([
                 'name' => 'My Company',
@@ -67,7 +69,8 @@ class CompanyProfileController extends Controller
             'branding' => 'nullable|array',
         ]);
 
-        $profile = CompanyProfile::first();
+        $companyId = $request->user()?->company_id;
+        $profile = $companyId ? CompanyProfile::find($companyId) : CompanyProfile::first();
         if (!$profile) {
             $profile = new CompanyProfile();
         }
@@ -97,7 +100,8 @@ class CompanyProfileController extends Controller
                 throw new \Exception('Failed to store file');
             }
 
-            $profile = CompanyProfile::first();
+            $companyId = $request->user()?->company_id;
+            $profile = $companyId ? CompanyProfile::find($companyId) : CompanyProfile::first();
             $oldLogoUrl = $profile ? $profile->logo_url : null;
 
             $logoUrl = Storage::disk($disk)->url($path);

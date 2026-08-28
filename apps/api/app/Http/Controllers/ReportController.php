@@ -193,9 +193,7 @@ class ReportController extends Controller
             if (!$disk->exists($exportJob->file_path)) {
                 abort(404, 'Export file not found on disk');
             }
-            return response()->streamDownload(function () use ($disk, $exportJob) {
-                echo $disk->get($exportJob->file_path);
-            }, $filename, ['Content-Type' => $contentType]);
+            return $disk->download($exportJob->file_path, $filename, ['Content-Type' => $contentType]);
         } else {
             $decoded = base64_decode($exportJob->file_data);
             return response($decoded, 200, [
