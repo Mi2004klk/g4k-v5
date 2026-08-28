@@ -15,12 +15,26 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const [isHydrated, setIsHydrated] = useState(() => useAuthStore.persist.hasHydrated());
   const [isInitializing, setIsInitializing] = useState(() => {
+    if (!useAuthStore.persist.hasHydrated()) return true;
     return !(useAuthStore.getState().token && useAuthStore.getState().user);
   });
 
+  useEffect(() => {
+    const unsub = useAuthStore.persist.onFinishHydration(() => {
+      setIsHydrated(true);
+      const { token: currentToken, user: currentUser } = useAuthStore.getState();
+      if (currentToken && currentUser) {
+        setIsInitializing(false);
+      }
+    });
+    return unsub;
+  }, []);
+
   // Initial auth refresh check on mount if session is missing
   useEffect(() => {
+    if (!isHydrated) return; // Wait for hydration
     let isMounted = true;
 
     async function initAuth() {
@@ -53,7 +67,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [isInitializing, setAuth, clearAuth]);
+  }, [isInitializing, isHydrated, setAuth, clearAuth]);
 
   // Route protection & redirects effect
   let shouldRedirect = false;

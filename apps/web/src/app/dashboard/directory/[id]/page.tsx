@@ -253,7 +253,7 @@ export default function Employee360Page() {
                 <div className="space-y-4">
                   {isLoadingActivity ? (
                     <div className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
-                  ) : activityData?.data?.length === 0 ? (
+                  ) : (!activityData?.data || activityData.data.length === 0) ? (
                     <EmptyState title="No activity" description="No recent actions recorded." icon={<AppIcon name="history" className="w-8 h-8 text-neutral-400" />} />
                   ) : (
                     activityData?.data?.map((log: any) => (

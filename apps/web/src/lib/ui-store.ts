@@ -56,13 +56,13 @@ export const useUIStore = create<UIState>()(
 
       dismissNotification: (id: number) => {
         set((state) => ({
-          dismissedNotificationIds: [...state.dismissedNotificationIds, id],
+          dismissedNotificationIds: [...state.dismissedNotificationIds, id].slice(-100),
         }));
       },
 
       clearPopupNotifications: (ids: number[]) => {
         set((state) => ({
-          dismissedNotificationIds: Array.from(new Set([...state.dismissedNotificationIds, ...ids])),
+          dismissedNotificationIds: Array.from(new Set([...state.dismissedNotificationIds, ...ids])).slice(-100),
         }));
       },
 

@@ -39,7 +39,7 @@ export function NotificationsBell() {
       return apiFetch(`/notifications${qs}`);
     },
     enabled: !!user,
-    refetchInterval: isConnected ? false : 30_000,
+    refetchInterval: isConnected ? false : (open ? 30_000 : false),
   });
 
   const markReadMutation = useMutation({
