@@ -333,7 +333,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     Route::get('/auth/login-attempts', [\App\Http\Controllers\LoginAttemptController::class, 'index'])->middleware('capability:audit.view');
 
     // Admin & Master Data APIs
-    Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage');
+    Route::get('/users/export', [UserController::class, 'export'])->middleware('capability:users.hr.manage|users.employee.manage');
     Route::middleware('capability:users.hr.manage|users.employee.manage')->group(function () {
         Route::post('/users/{id}/avatar', [UserController::class, 'uploadAvatar']);
         Route::post('/users/bulk', [UserController::class, 'bulk']);

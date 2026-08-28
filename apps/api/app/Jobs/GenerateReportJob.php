@@ -430,6 +430,21 @@ class GenerateReportJob implements ShouldQueue
                     $jobUser = \App\Models\User::find($userId);
                     if ($jobUser) \App\Support\HrScope::apply($query, $jobUser, 'users.department_id');
                 }
+                if (!empty($filters['only_trashed'])) {
+                    $query->onlyTrashed();
+                }
+                if (!empty($filters['department_id'])) {
+                    $query->where('department_id', $filters['department_id']);
+                }
+                if (!empty($filters['status'])) {
+                    $query->where('status', $filters['status']);
+                }
+                if (!empty($filters['role'])) {
+                    $role = $filters['role'];
+                    $query->whereHas('roleAssignments', function ($q) use ($role) {
+                        $q->where('role', $role);
+                    });
+                }
                 if (!empty($filters['ids'])) {
                     $query->whereIn('id', is_array($filters['ids']) ? $filters['ids'] : explode(',', $filters['ids']));
                 }

@@ -337,7 +337,9 @@ class TaskController extends Controller
         
         if ($this->userHasManage($request)) {
             if ($scope === 'global') {
-                $validated['assignees'] = \App\Models\User::where('active_role', '!=', 'super_admin')->pluck('id')->toArray();
+                $validated['assignees'] = \App\Models\User::where(function($q) {
+                    $q->where('active_role', '!=', 'super_admin')->orWhereNull('active_role');
+                })->pluck('id')->toArray();
             } elseif ($scope === 'department' && $scopeId) {
                 $validated['assignees'] = \App\Models\User::where('department_id', $scopeId)->pluck('id')->toArray();
             } elseif ($scope === 'role' && $scopeId) {
@@ -368,7 +370,7 @@ class TaskController extends Controller
             'metadata' => ['title' => $task->title],
         ]);
 
-        if (!empty($validated['assignees'])) {
+        if (!empty($validated['assignees']) && $scope !== 'global') {
             foreach ($validated['assignees'] as $uid) {
                 \App\Services\NotificationService::send(
                     (int) $uid,
@@ -529,7 +531,9 @@ class TaskController extends Controller
         if ($isManage) {
             if (array_key_exists('scope', $validated) || array_key_exists('scope_id', $validated)) {
                 if ($scope === 'global') {
-                    $validated['assignees'] = \App\Models\User::where('active_role', '!=', 'super_admin')->pluck('id')->toArray();
+                    $validated['assignees'] = \App\Models\User::where(function($q) {
+                        $q->where('active_role', '!=', 'super_admin')->orWhereNull('active_role');
+                    })->pluck('id')->toArray();
                 } elseif ($scope === 'department' && $scopeId) {
                     $validated['assignees'] = \App\Models\User::where('department_id', $scopeId)->pluck('id')->toArray();
                 } elseif ($scope === 'role' && $scopeId) {
@@ -554,15 +558,17 @@ class TaskController extends Controller
             $validated['assignee_id'] = $assigneeId;
 
             $newAssignees = array_diff($validated['assignees'], $existingAssignees);
-            foreach ($newAssignees as $uid) {
-                \App\Services\NotificationService::send(
-                    (int) $uid,
-                    'task_assigned',
-                    'Task Assigned to You',
-                    "You have been assigned the task: {$task->title}",
-                    ['task_id' => $task->id],
-                    "/dashboard/tasks/{$task->id}"
-                );
+            if ($scope !== 'global') {
+                foreach ($newAssignees as $uid) {
+                    \App\Services\NotificationService::send(
+                        (int) $uid,
+                        'task_assigned',
+                        'Task Assigned to You',
+                        "You have been assigned the task: {$task->title}",
+                        ['task_id' => $task->id],
+                        "/dashboard/tasks/{$task->id}"
+                    );
+                }
             }
         }
 

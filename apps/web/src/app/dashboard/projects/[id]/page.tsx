@@ -91,9 +91,15 @@ export default function ProjectDetailPage() {
     queryFn: () => apiFetch("/directory?per_page=1000"),
     enabled: hasCapability(caps, "directory.view") || canManageProjects
   });
+  const { data: qaFormsData } = useQuery({ 
+    queryKey: queryKeys.qaForms, 
+    queryFn: () => apiFetch("/qa-forms"),
+    enabled: canManageProjects
+  });
 
   const departments = unwrapList(deptsData);
   const users = unwrapList(usersData);
+  const qaForms = unwrapList(qaFormsData);
   const project = unwrapOne(projectResponse);
   const phases = unwrapList(phasesResponse) || [];
   const projectHistory = unwrapList(historyResponse) || [];
@@ -407,16 +413,118 @@ export default function ProjectDetailPage() {
 
       {/* Edit Project Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        {/* Same as before, keeping it simple for the artifact */}
-        <DialogContent className="sm:max-w-[500px]">
-          <SheetHeader><SheetTitle>Edit Project</SheetTitle></SheetHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} placeholder="Project Name" />
-            <Textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} placeholder="Description" />
-            <Button onClick={() => updateProjectMutation.mutate()}>Save Changes</Button>
+        <DialogContent className="sm:max-w-[700px] h-[85vh] flex flex-col p-0 overflow-hidden">
+          <div className="px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/20">
+            <DialogTitle className="text-lg font-bold">Edit Project</DialogTitle>
+          </div>
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Project Name</label>
+                <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} placeholder="Project Name" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Description</label>
+                <Textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} placeholder="Description" rows={3} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Priority</label>
+                <Select value={editForm.priority} onValueChange={(val) => setEditForm({ ...editForm, priority: val })}>
+                  <SelectTrigger><SelectValue placeholder="Select Priority" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Deadline</label>
+                <DatePicker value={editForm.deadline ? new Date(editForm.deadline) : undefined} onChange={(d) => setEditForm({ ...editForm, deadline: d ? format(d, "yyyy-MM-dd") : "" })} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Department</label>
+                <Select value={editForm.department_id} onValueChange={(val) => setEditForm({ ...editForm, department_id: val })}>
+                  <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Company-Wide</SelectItem>
+                    {departments?.map((d: any) => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">QA Form (Optional)</label>
+                <Select value={editForm.qa_form_id} onValueChange={(val) => setEditForm({ ...editForm, qa_form_id: val })}>
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {qaForms?.map((q: any) => <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 flex flex-col">
+              <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Assign Team Members</label>
+              <div className="max-h-[200px] overflow-y-auto border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 rounded-xl p-2 space-y-1">
+                {users?.map((u: any) => (
+                  <label key={u.id} className="flex items-center gap-3 text-sm cursor-pointer hover:bg-white dark:hover:bg-neutral-800 p-2 rounded-lg transition-colors">
+                    <input type="checkbox" checked={editForm.member_ids?.includes(u.id)} onChange={(e) => {
+                      const nextIds = e.target.checked ? [...(editForm.member_ids || []), u.id] : (editForm.member_ids || []).filter((id: number) => id !== u.id);
+                      setEditForm({ ...editForm, member_ids: nextIds });
+                    }} className="rounded border-neutral-300 text-primary-600 focus:ring-primary-600" />
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6"><AvatarFallback name={u.name} className="text-[10px]" />{u.avatar_url && <img src={resolveAvatarUrl(u.avatar_url)} alt={u.name} />}</Avatar>
+                      <span className="font-medium">{u.name}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Project Cover</label>
+              <div className="flex items-center gap-4">
+                <Button type="button" variant="outline" onClick={() => setShowUploadPopup(true)}><AppIcon name="upload" className="w-4 h-4 mr-2" /> Change Cover</Button>
+                {editForm.cover_image && <Button type="button" variant="ghost" onClick={() => setEditForm({ ...editForm, cover_image: null })} className="text-rose-500">Remove</Button>}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex items-start gap-3">
+              <input type="checkbox" id="edit-allow-employee" checked={editForm.allow_employee_tasks} onChange={(e) => setEditForm({ ...editForm, allow_employee_tasks: e.target.checked })} className="rounded border-neutral-300 text-primary-600 focus:ring-primary-600 mt-1" />
+              <div className="flex flex-col">
+                <label htmlFor="edit-allow-employee" className="text-sm font-bold cursor-pointer">Allow employees to create sub-tasks freely</label>
+                <p className="text-xs text-neutral-500 mt-1">If enabled, team members can add their own tasks without manager approval.</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-end gap-3 bg-neutral-50/50 dark:bg-neutral-900/20">
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+            <Button onClick={() => updateProjectMutation.mutate()} disabled={updateProjectMutation.isPending}>{updateProjectMutation.isPending ? "Saving..." : "Save Changes"}</Button>
           </div>
         </DialogContent>
       </Dialog>
+      
+      <FileUploadPopup
+        open={showUploadPopup}
+        onOpenChange={setShowUploadPopup}
+        title="Upload Project Cover"
+        maxSizeMB={2}
+        onUpload={async (file) => {
+          const formData = new FormData();
+          formData.append("cover_image", file);
+          const res = await apiFetch("/projects/cover", {
+            method: "POST",
+            body: formData,
+          });
+          setEditForm({ ...editForm, cover_image: res.path || res.url });
+          toast.success("Cover image uploaded");
+        }}
+      />
       
       <ConfirmDialog
         open={isDeleteConfirmOpen}
