@@ -42,7 +42,7 @@ export interface UserPickerProps {
   isLoading?: boolean;
   search?: string;
   onSearchChange?: (search: string) => void;
-  resolveAvatar?: (url?: string) => string;
+  resolveAvatar?: (url?: string | null) => string | undefined;
 }
 
 export function UserPicker({
@@ -56,7 +56,7 @@ export function UserPicker({
   isLoading = false,
   search = "",
   onSearchChange,
-  resolveAvatar = (url) => url || "",
+  resolveAvatar = (url) => (url ? url : undefined),
 }: UserPickerProps) {
   const [open, setOpen] = React.useState(false);
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { AppIcon, Avatar, AvatarFallback, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@g4k/ui/components";
-import { cn } from "@/lib/utils";
+import { AppIcon, Avatar, AvatarFallback, AvatarImage, IconButton, DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@g4k/ui/components";
+import { cn, resolveAvatarUrl } from "@/lib/utils";
 import { Button } from "@g4k/ui/components";
 import { FileUploadPopup } from "@g4k/ui/components";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +10,9 @@ import { apiFetch, unwrapList } from "@/lib/api-client";
 interface ComposerUser {
   id: number;
   name?: string;
+  avatar_url?: string;
+  department?: { name?: string };
+  active_role?: string;
 }
 interface ComposerConversation {
   users?: ComposerUser[];
@@ -155,9 +158,13 @@ export function MessageComposer({
                 className={`w-full text-left px-3 py-2 flex items-center gap-2.5 transition-colors ${mentionNavIndex === idx ? "bg-neutral-100 dark:bg-neutral-700" : "hover:bg-neutral-50 dark:hover:bg-neutral-700/50"}`}
               >
                 <Avatar className="h-6 w-6 shrink-0">
-                  <AvatarFallback name={u.name || 'U'} className="text-xs" />
+                  <AvatarImage src={resolveAvatarUrl(u.avatar_url) || ""} />
+                  <AvatarFallback name={u.name || 'U'} className="text-[10px]" />
                 </Avatar>
-                <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100 truncate">{u.name}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100 truncate">{u.name}</span>
+                  <span className="text-[10px] text-neutral-500 truncate">{u.department?.name || u.active_role?.replace('_', ' ') || "Employee"}</span>
+                </div>
               </button>
             ))}
           </div>

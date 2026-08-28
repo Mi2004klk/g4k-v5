@@ -7,7 +7,7 @@ import { apiFetch } from "@/lib/api-client";
 import { resolveAvatarUrl } from "@/lib/utils";
 import { useDebouncedValidation } from "@g4k/ui/hooks";
 
-export type AppUserPickerProps = Omit<UserPickerProps, "users" | "isLoading" | "search" | "onSearchChange" | "resolveAvatar">;
+export type AppUserPickerProps = Omit<UserPickerProps, "users" | "isLoading" | "search" | "onSearchChange">;
 
 export function AppUserPicker(props: AppUserPickerProps) {
   const [search, setSearch] = useState("");

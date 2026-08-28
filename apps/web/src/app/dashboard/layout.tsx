@@ -9,7 +9,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AppIcon } from "@g4k/ui/components";
-import { SheetDescription, Button, Spinner } from "@g4k/ui/components";
+import { SheetDescription, Button, Spinner, IconButton } from "@g4k/ui/components";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { useAttendanceToday } from "@/hooks/use-attendance-today";

@@ -34,7 +34,7 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   )
 }
 
-export type StatusType = "neutral" | "info" | "warning" | "success" | "danger";
+export type StatusType = "neutral" | "info" | "warning" | "success" | "danger" | "error";
 
 const statusColorMap: Record<StatusType, { bg: string, text: string, dot: string }> = {
   neutral: { bg: "bg-neutral-status/10", text: "text-neutral-status", dot: "bg-neutral-status" },
@@ -42,6 +42,7 @@ const statusColorMap: Record<StatusType, { bg: string, text: string, dot: string
   warning: { bg: "bg-warning/10", text: "text-warning", dot: "bg-warning" },
   success: { bg: "bg-success/10", text: "text-success", dot: "bg-success" },
   danger: { bg: "bg-danger/10", text: "text-danger", dot: "bg-danger" },
+  error: { bg: "bg-danger/10", text: "text-danger", dot: "bg-danger" },
 };
 
 export interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
