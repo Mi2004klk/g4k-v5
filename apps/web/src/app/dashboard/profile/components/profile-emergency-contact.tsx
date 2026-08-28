@@ -225,7 +225,7 @@ export function ProfileEmergencyContactSection() {
                     className="bg-rose-500 hover:bg-rose-600 text-white shadow-sm px-6 h-10 rounded-xl text-xs font-bold transition-all"
                   >
                     {updateProfileMutation.isPending ? (
-                      <><AppIcon name="loading" size="xs" className="animate-spin mr-2" /> Saving...</>
+                      <><Spinner size="xs" className="mr-2" /> Saving...</>
                     ) : (
                       "Save Emergency Contact"
                     )}

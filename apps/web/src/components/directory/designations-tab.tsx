@@ -345,9 +345,7 @@ export function DesignationsTab() {
         actions={
           <>
             {isAdmin && (
-              <Button variant="outline" size="sm" onClick={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
-                <AppIcon name="download" /> Export
-              </Button>
+              <ExportButton onExport={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300" />
             )}
             {isAdmin && (
               <Button size="sm" onClick={() => { setEditingDesig(null); reset({ name: "", description: "" }); setIsModalOpen(true); }} className="gap-2 shadow-sm">
@@ -407,7 +405,7 @@ export function DesignationsTab() {
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {(createMutation.isPending || updateMutation.isPending) ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
+                {(createMutation.isPending || updateMutation.isPending) ? <Spinner className="mr-2" /> : null}
                 {editingDesig ? "Update" : "Create"}
               </Button>
             </DialogFooter>

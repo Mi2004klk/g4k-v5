@@ -208,9 +208,7 @@ export function ProjectsTab() {
               </Button>
             )}
 
-            <Button size="sm" variant="outline" onClick={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
-              <AppIcon name="download" size="sm" /> Export
-            </Button>
+            <ExportButton onExport={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900" />
           </div>
         </div>
 

@@ -189,12 +189,8 @@ export function HolidayCalendar() {
               </DialogContent>
             </Dialog>
           )}
-          <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-7 w-7" aria-label="Previous month">
-            <AppIcon name="chevronLeft" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-7 w-7" aria-label="Next month">
-            <AppIcon name="chevronRight" />
-          </Button>
+          <IconButton variant="ghost" onClick={handlePrevMonth} className="h-7 w-7" aria-label="Previous month" icon="chevronLeft" />
+          <IconButton variant="ghost" onClick={handleNextMonth} className="h-7 w-7" aria-label="Next month" icon="chevronRight" />
         </div>
       </CardHeader>
       <CardContent className="flex-1 p-4">

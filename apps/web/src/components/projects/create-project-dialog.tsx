@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Dialog, DialogContent, FormDraftAlert, Wizard, WizardStep, AppIcon } from "@g4k/ui/components";
-import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, FileUploadPopup, DatePicker } from "@g4k/ui/components";
+import { Button, Input, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, FileUploadPopup, DatePicker, UserPicker } from "@g4k/ui/components";
 import { format } from "date-fns";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -317,35 +317,14 @@ export function CreateProjectDialog({
         <p className="text-sm text-neutral-500">Select members to work on this project.</p>
       </div>
 
-      <div className="space-y-1.5 flex flex-col">
+      <div className="space-y-1.5 flex flex-col h-[40vh]">
         <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Assign Team Members</label>
-        <div className="max-h-[40vh] overflow-y-auto border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 rounded-xl p-3 space-y-1 shadow-inner">
-          {users.map((u: User) => (
-            <label key={u.id} className="flex items-center gap-3 text-sm cursor-pointer hover:bg-white dark:hover:bg-neutral-800 p-2.5 rounded-lg transition-colors border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 hover:shadow-sm">
-              <input 
-                type="checkbox" 
-                checked={draftData.memberIds.includes(String(u.id))}
-                onChange={(e) => {
-                  let nextIds;
-                  if (e.target.checked) nextIds = [...draftData.memberIds, String(u.id)];
-                  else nextIds = draftData.memberIds.filter(id => id !== String(u.id));
-                  setDraftData({ ...draftData, memberIds: nextIds });
-                }}
-                className="rounded border-neutral-300 text-primary-600 focus:ring-primary-600 w-4.5 h-4.5"
-              />
-              <div className="flex items-center gap-2">
-                {u.avatar_url ? (
-                  <img src={u.avatar_url} alt={u.name} className="w-6 h-6 rounded-full object-cover border border-neutral-200 dark:border-neutral-700" />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-500">
-                    {u.name.substring(0, 2).toUpperCase()}
-                  </div>
-                )}
-                <span className="font-medium">{u.name}</span>
-              </div>
-            </label>
-          ))}
-        </div>
+        <UserPicker
+          mode="multi"
+          value={draftData.memberIds.map((id: string) => parseInt(id))}
+          onChange={(ids: number[]) => setDraftData({ ...draftData, memberIds: ids.map(String) })}
+          placeholder="Search and assign members..."
+        />
       </div>
     </div>
   );

@@ -966,7 +966,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                     disabled={createMutation.isPending || !title}
                     className="h-9 px-6 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold shadow-sm"
                   >
-                    {createMutation.isPending ? <AppIcon name="loading" className="animate-spin mr-2" size="xs" /> : null}
+                    {createMutation.isPending ? <Spinner size="xs" className="mr-2" /> : null}
                     Create Task
                   </Button>
                 </div>
@@ -976,9 +976,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 })()
             )}
 
-            <Button size="sm" variant="outline" onClick={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900">
-              <AppIcon name="download" size="sm" /> Export
-            </Button>
+            <ExportButton onExport={handleExport} className="gap-2 shadow-sm h-[36px] shrink-0 rounded-lg bg-white dark:bg-neutral-900" />
           </div>
         </div>
       </div>

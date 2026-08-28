@@ -276,7 +276,7 @@ export function AnnouncementBoard() {
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
             Company Announcements
           </span>
-          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+          {isFetching && <Spinner size="xs" className="text-neutral-400" />}
         </div>
         <div className="flex items-center gap-2">
           {canManage && (

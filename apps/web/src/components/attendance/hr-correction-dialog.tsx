@@ -196,7 +196,7 @@ export function HrCorrectionDialog({
 
           {isLoading ? (
             <div className="py-12 flex justify-center">
-              <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
+              <Spinner size="2xl" className="text-neutral-400" />
             </div>
           ) : (
             <div className="space-y-4 py-4">
@@ -297,7 +297,7 @@ export function HrCorrectionDialog({
               disabled={correctMutation.isPending || isLoading || (!reason.trim())}
               className="bg-primary-600 hover:bg-primary-700 text-white"
             >
-              {correctMutation.isPending && <AppIcon name="loading" className=" mr-2 animate-spin" />}
+              {correctMutation.isPending && <Spinner className="mr-2" />}
               <AppIcon name="save" className=" mr-2" />
               Save Correction
             </Button>

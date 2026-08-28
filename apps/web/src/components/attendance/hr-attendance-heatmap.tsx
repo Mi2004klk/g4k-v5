@@ -104,7 +104,7 @@ export function HrAttendanceHeatmap() {
       <CardContent className="p-6 overflow-x-auto">
         {isLoading ? (
           <div className="h-40 flex items-center justify-center">
-            <AppIcon name="loading" size="lg" className="animate-spin text-primary" />
+            <Spinner size="lg" className="text-primary" />
           </div>
         ) : (
           <div className="min-w-[800px]">

@@ -55,3 +55,8 @@ export * from "./inline-edit";
 export * from './form-draft-alert';
 export * from "./toolbar";
 export * from './wizard';
+export * from "./user-picker";
+export * from "./icon-button";
+export * from "./search-input";
+export * from "./spinner";
+export * from "./export-button";

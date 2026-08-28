@@ -140,7 +140,7 @@ export function ProfileGeneralSection() {
                 </div>
                 {avatarUploadMutation.isPending && (
                   <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-                    <AppIcon name="loading" className="w-6 h-6 text-white animate-spin" />
+                    <Spinner className="w-6 h-6 text-white" />
                   </div>
                 )}
               </div>
@@ -278,7 +278,7 @@ export function ProfileGeneralSection() {
                 className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm px-6 h-11 rounded-xl text-sm font-bold transition-all"
               >
                 {updateProfileMutation.isPending ? (
-                  <><AppIcon name="loading" size="xs" className="animate-spin mr-2" /> Saving...</>
+                  <><Spinner size="xs" className="mr-2" /> Saving...</>
                 ) : (
                   "Save Changes"
                 )}

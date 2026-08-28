@@ -42,7 +42,7 @@ export function SystemJobsConfig() {
           onClick={() => retryMutation.mutate("all")} 
           disabled={failed_count === 0 || retryMutation.isPending}
         >
-          {retryMutation.isPending ? <AppIcon name="loading" className="animate-spin mr-2" /> : <AppIcon name="refresh" className="mr-2" />}
+          {retryMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="refresh" className="mr-2" />}
           Retry All Failed
         </Button>
       </CardHeader>

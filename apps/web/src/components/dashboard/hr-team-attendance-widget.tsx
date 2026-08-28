@@ -40,7 +40,7 @@ export function HrTeamAttendanceWidget() {
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
             Team Attendance
           </span>
-          {isFetching && !isPending && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
+          {isFetching && !isPending && <Spinner size="xs" className="text-neutral-400" />}
         </div>
         
         <div className="flex items-center gap-2">

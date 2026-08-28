@@ -88,7 +88,7 @@ export function QuickTaskWidget() {
               <WidgetInfo summary="Instantly dispatch a work item to any employee" />
             </span>
           </div>
-          {usersLoading && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+          {usersLoading && <Spinner size="xs" className="text-neutral-400" />}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -168,7 +168,7 @@ export function QuickTaskWidget() {
             className="w-full h-10 mt-2 text-[13px] font-bold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm rounded-lg"
           >
             {createTaskMutation.isPending ? (
-              <AppIcon name="loading" size="sm" className=" animate-spin" />
+              <Spinner size="sm" />
             ) : (
               <AppIcon name="send" size="xs" />
             )}

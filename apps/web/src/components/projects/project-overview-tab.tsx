@@ -262,7 +262,7 @@ export function ProjectOverviewTab({ projectId }: ProjectOverviewTabProps) {
                   onClick={() => submitProjectMutation.mutate()}
                   disabled={submitProjectMutation.isPending || !submissionNote}
                 >
-                  {submitProjectMutation.isPending ? <AppIcon name="loading" className="animate-spin mr-2" /> : <AppIcon name="check" className="mr-2 h-4 w-4" />}
+                  {submitProjectMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="check" className="mr-2 h-4 w-4" />}
                   Submit for Review
                 </Button>
               </div>

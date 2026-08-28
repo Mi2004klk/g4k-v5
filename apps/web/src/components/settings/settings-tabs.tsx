@@ -220,7 +220,7 @@ export function SettingsTabs() {
               </div>
 
               <Button type="submit" disabled={updateProfileMutation.isPending || !profileForm.formState.isValid}>
-                {updateProfileMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
+                {updateProfileMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="save" className=" mr-2" />}
                 {updateProfileMutation.isPending ? "Saving..." : "Save Profile"}
               </Button>
               </DisabledWhileSubmitting>

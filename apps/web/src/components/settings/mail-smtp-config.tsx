@@ -120,7 +120,7 @@ export function MailSmtpConfig() {
           <CardDescription className="text-xs mt-1">Configure email delivery for the system.</CardDescription>
         </div>
         <Button type="button" variant="outline" size="sm" onClick={handleTestEmail} disabled={isTesting}>
-          {isTesting ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="send" className=" mr-2" />}
+          {isTesting ? <Spinner className="mr-2" /> : <AppIcon name="send" className=" mr-2" />}
           Send Test Email
         </Button>
       </CardHeader>
@@ -189,7 +189,7 @@ export function MailSmtpConfig() {
           </div>
           
           <Button type="submit" disabled={updateMutation.isPending} size="sm" className="gap-2 mt-4">
-            {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" />}
+            {updateMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="save" />}
             {updateMutation.isPending ? "Saving..." : "Save Settings"}
           </Button>
           </div>

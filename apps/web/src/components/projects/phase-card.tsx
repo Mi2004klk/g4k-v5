@@ -140,9 +140,7 @@ export function PhaseCard({
             {canManage && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Phase options">
-                    <AppIcon name="moreH" className="w-4 h-4" />
-                  </Button>
+                  <IconButton variant="ghost" className="h-8 w-8 shrink-0" aria-label="Phase options" icon="moreH" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={onEdit}>

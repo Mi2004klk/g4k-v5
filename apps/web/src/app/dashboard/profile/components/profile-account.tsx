@@ -113,7 +113,7 @@ function FeedbackForm() {
             className="w-full bg-primary-600 hover:bg-primary-700 text-white shadow-sm h-9"
           >
             {feedbackMutation.isPending ? (
-              <><AppIcon name="loading" size="xs" className="animate-spin mr-2" /> Sending...</>
+              <><Spinner size="xs" className="mr-2" /> Sending...</>
             ) : (
               "Submit to HR"
             )}

@@ -202,7 +202,7 @@ export function QuickNotes() {
               <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
                 Quick Scratchpad
               </span>
-              {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+              {isFetching && <Spinner size="xs" className="text-neutral-400" />}
             </div>
             
             <div className="flex items-center gap-1">

@@ -321,7 +321,7 @@ export function TaskGantt({ tasks, onTaskSelect, onTaskUpdate, isLoading }: {
         
         <div className="flex items-center gap-3">
           <div className="sm:hidden flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200 text-xs font-bold">
-            <AppIcon name="loading" size="xs" className="animate-spin" /> Rotate to landscape
+            <Spinner size="xs" /> Rotate to landscape
           </div>
           <Tabs value={ganttViewMode} onValueChange={(v) => setGanttViewMode(v as any)}>
             <TabsList className="h-8">

@@ -147,7 +147,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
               </div>
               {isUploading && (
                 <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-                  <AppIcon name="loading" className="w-6 h-6 text-white animate-spin" />
+                  <Spinner className="w-6 h-6 text-white" />
                 </div>
               )}
             </div>
@@ -311,7 +311,7 @@ export function UserForm({ defaultValues, departments, designations, work_schedu
         )}
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         <Button type="submit" disabled={isPending || !isValid}>
-          {isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
+          {isPending ? <Spinner className="mr-2" /> : null}
           {isPending ? "Saving..." : submitLabel}
         </Button>
       </div>

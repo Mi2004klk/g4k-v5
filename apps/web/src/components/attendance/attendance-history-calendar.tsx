@@ -368,24 +368,8 @@ export function AttendanceHistoryCalendar({
         
         {/* Navigation available on both desktop and mobile now */}
         <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
-            onClick={prevMonth}
-            aria-label="Previous month"
-          >
-            <AppIcon name="chevronLeft" size="sm" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7"
-            onClick={nextMonth}
-            aria-label="Next month"
-          >
-            <AppIcon name="chevronRight" size="sm" />
-          </Button>
+          <IconButton variant="outline" className="h-7 w-7" onClick={prevMonth} aria-label="Previous month" icon="chevronLeft" iconSize="sm" />
+          <IconButton variant="outline" className="h-7 w-7" onClick={nextMonth} aria-label="Next month" icon="chevronRight" iconSize="sm" />
         </div>
       </div>
 

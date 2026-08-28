@@ -682,9 +682,7 @@ export function ChatTab() {
                   {selectedConv?.scope !== 'global' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-neutral-600" aria-label="Chat options">
-                          <AppIcon name="more" size="sm" />
-                        </Button>
+                        <IconButton variant="ghost" className="h-8 w-8 text-neutral-400 hover:text-neutral-600" aria-label="Chat options" icon="more" iconSize="sm" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => {

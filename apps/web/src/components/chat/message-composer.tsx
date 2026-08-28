@@ -233,20 +233,7 @@ export function MessageComposer({
             </div>
           )}
 
-          <Button
-            type="submit"
-            size="icon"
-            onClick={handleSend}
-            className={cn(
-              "h-10 w-10 shrink-0 rounded-full shadow-sm transition-all",
-              text.trim() || selectedFile
-                ? "bg-primary hover:bg-primary/90 text-white shadow-md scale-100"
-                : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500"
-            )}
-            disabled={disabled || (!text.trim() && !selectedFile)}
-          >
-            <AppIcon name="send" className="h-4 w-4 ml-0.5" />
-          </Button>
+          <IconButton type="submit" onClick={handleSend} className={cn( "h-10 w-10 shrink-0 rounded-full shadow-sm transition-all", text.trim() || selectedFile ? "bg-primary hover:bg-primary/90 text-white shadow-md scale-100" : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" )} disabled={disabled || (!text.trim() && !selectedFile)} icon="send" />
         </div>
     </div>
   );

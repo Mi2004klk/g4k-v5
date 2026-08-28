@@ -46,7 +46,7 @@ export function AdminTodayAttendanceWidget() {
             ) : null}
             <WidgetInfo summary={`${presentCount + lateCount} clocked in out of ${totalCount}`} />
           </span>
-          {isFetching && !isPending && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+          {isFetching && !isPending && <Spinner size="xs" className="text-neutral-400" />}
         </div>
         
         <AppIcon name="arrowRight" size="sm" className=" text-neutral-400 group-hover:text-emerald-500 transition-colors relative z-20 group-hover:translate-x-1" />

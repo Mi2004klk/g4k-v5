@@ -241,7 +241,7 @@ export function AnnouncementComposer({
               disabled={createMutation.isPending || !createData.title.trim() || !createData.body.trim()}
               className="bg-primary-600 hover:bg-primary-700 text-white"
             >
-              {createMutation.isPending && <AppIcon name="loading" className="mr-2 animate-spin" />}
+              {createMutation.isPending && <Spinner className="mr-2" />}
               {editingId ? "Save Changes" : "Post Announcement"}
             </Button>
           </DialogFooter>

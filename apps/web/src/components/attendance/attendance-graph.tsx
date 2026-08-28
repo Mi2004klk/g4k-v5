@@ -211,7 +211,7 @@ export function AttendanceGraph({ endpoint, queryKeyBase, groupByOptions = [], d
       <div className="w-full bg-card rounded-xl p-6 border border-border relative min-h-[450px] shadow-e1 hover:shadow-e2 transition-shadow duration-150">
         {isLoading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-surface/50 dark:bg-neutral-900/50 backdrop-blur-sm z-10 rounded-xl">
-            <AppIcon name="loading" size="2xl" className=" animate-spin text-emerald-500" />
+            <Spinner size="2xl" className="text-emerald-500" />
           </div>
         ) : !data?.stats || data.stats.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm z-10 rounded-xl">

@@ -49,7 +49,7 @@ import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/compone
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
-import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox, Switch } from "@g4k/ui/components";
+import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox, Switch, UserPicker } from "@g4k/ui/components";
 import { ColumnDef } from "@tanstack/react-table";
 import { resolveAvatarUrl } from "@/lib/utils";
 
@@ -518,9 +518,7 @@ export function DepartmentsTab() {
         actions={
           <>
             {isAdmin && (
-              <Button variant="outline" size="sm" onClick={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300">
-                <AppIcon name="download" /> Export
-              </Button>
+              <ExportButton onExport={bulkExport} className="gap-2 shadow-sm text-neutral-600 dark:text-neutral-300" />
             )}
             {isAdmin && (
               <Button size="sm" onClick={() => { setEditingDept(null); reset({ name: "", description: "" }); setIsDeptModalOpen(true); }} className="gap-2 shadow-sm">
@@ -593,7 +591,7 @@ export function DepartmentsTab() {
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsDeptModalOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={createDeptMutation.isPending || updateDeptMutation.isPending}>
-                {(createDeptMutation.isPending || updateDeptMutation.isPending) ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : null}
+                {(createDeptMutation.isPending || updateDeptMutation.isPending) ? <Spinner className="mr-2" /> : null}
                 {editingDept ? "Update" : "Create"}
               </Button>
             </DialogFooter>
@@ -635,10 +633,10 @@ export function DepartmentsTab() {
                 <TabsContent value="employees" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
                   {isAdmin && (
                     <div className="flex items-center gap-2 mb-4 p-3 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
-                      <Combobox
-                        options={allUsers.map((u: UserRef) => ({ label: u.name, value: u.id.toString() }))}
-                        value={selectedNewEmployee}
-                        onChange={setSelectedNewEmployee}
+                      <UserPicker
+                        mode="single"
+                        value={selectedNewEmployee ? parseInt(selectedNewEmployee) : undefined}
+                        onChange={(val) => setSelectedNewEmployee(val ? val.toString() : "")}
                         placeholder="Select an employee..."
                       />
                       <Button
@@ -651,7 +649,7 @@ export function DepartmentsTab() {
                           }
                         }}
                       >
-                        {assignEmployeeMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Assign"}
+                        {assignEmployeeMutation.isPending ? <Spinner /> : "Assign"}
                       </Button>
                     </div>
                   )}
@@ -680,7 +678,7 @@ export function DepartmentsTab() {
                               onClick={() => removeEmployeeMutation.mutate({ deptId: selectedDeptMembers!.id, userId: user.id })}
                               disabled={removeEmployeeMutation.isPending}
                             >
-                              {removeEmployeeMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
+                              {removeEmployeeMutation.isPending ? <Spinner /> : <AppIcon name="trash" />}
                             </Button>
                           )}
                         </div>
@@ -692,10 +690,10 @@ export function DepartmentsTab() {
                 <TabsContent value="hrs" className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2">
                   {isAdmin && (
                     <div className="flex items-center gap-2 mb-4 p-3 border rounded-[var(--radius)] bg-neutral-50 dark:bg-neutral-900/50">
-                      <Combobox
-                        options={allUsers.filter((u: UserRef) => u.roles?.includes('hr') || u.roles?.includes('super_admin')).map((u: UserRef) => ({ label: u.name, value: u.id.toString() }))}
-                        value={selectedNewHr}
-                        onChange={setSelectedNewHr}
+                      <UserPicker
+                        mode="single"
+                        value={selectedNewHr ? parseInt(selectedNewHr) : undefined}
+                        onChange={(val) => setSelectedNewHr(val ? val.toString() : "")}
                         placeholder="Select an HR..."
                       />
                       <Button
@@ -708,7 +706,7 @@ export function DepartmentsTab() {
                           }
                         }}
                       >
-                        {addHrMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Add HR"}
+                        {addHrMutation.isPending ? <Spinner /> : "Add HR"}
                       </Button>
                     </div>
                   )}
@@ -737,7 +735,7 @@ export function DepartmentsTab() {
                               onClick={() => removeHrMutation.mutate({ deptId: selectedDeptMembers!.id, userId: hr.id })}
                               disabled={removeHrMutation.isPending}
                             >
-                              {removeHrMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
+                              {removeHrMutation.isPending ? <Spinner /> : <AppIcon name="trash" />}
                             </Button>
                           )}
                         </div>
@@ -773,7 +771,7 @@ export function DepartmentsTab() {
                           }
                         }}
                       >
-                        {addTeamMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Add Team"}
+                        {addTeamMutation.isPending ? <Spinner /> : "Add Team"}
                       </Button>
                     </div>
                   )}
@@ -813,7 +811,7 @@ export function DepartmentsTab() {
                               onClick={() => removeTeamMutation.mutate({ deptId: selectedDeptMembers!.id, teamId: team.id })}
                               disabled={removeTeamMutation.isPending}
                             >
-                              {removeTeamMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : <AppIcon name="trash" />}
+                              {removeTeamMutation.isPending ? <Spinner /> : <AppIcon name="trash" />}
                             </Button>
                           )}
                         </div>

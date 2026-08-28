@@ -378,9 +378,7 @@ function SortableFieldItem({ field, index, updateField, removeField, cloneField,
             {field.field_type !== 'section' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-neutral-400" aria-label="Field options">
-                    <AppIcon name="more" size="xs" />
-                  </Button>
+                  <IconButton variant="ghost" className="h-8 w-8 text-neutral-400" aria-label="Field options" icon="more" iconSize="xs" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => updateField(field.id, "description", field.description ? undefined : "")}>
@@ -657,9 +655,7 @@ export function QAFormBuilder() {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 shrink-0 shadow-none opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Form options">
-                            <AppIcon name="moreH" size="xs" />
-                          </Button>
+                          <IconButton variant="ghost" className="h-8 w-8 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 shrink-0 shadow-none opacity-0 group-hover:opacity-100 transition-opacity" aria-label="Form options" icon="moreH" iconSize="xs" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(form); }}>
@@ -701,7 +697,7 @@ export function QAFormBuilder() {
                 disabled={createFormMutation.isPending || updateFormMutation.isPending || !title || fields.length === 0}
                 className="h-8 text-xs font-bold px-6 shadow-sm bg-primary-600 hover:bg-primary-700"
               >
-                {createFormMutation.isPending || updateFormMutation.isPending ? <AppIcon name="loading" size="xs" className="animate-spin mr-2" /> : <AppIcon name="save" size="xs" className="mr-2" />}
+                {createFormMutation.isPending || updateFormMutation.isPending ? <Spinner size="xs" className="mr-2" /> : <AppIcon name="save" size="xs" className="mr-2" />}
                 {editingId ? "Update" : "Save"}
               </Button>
             </div>

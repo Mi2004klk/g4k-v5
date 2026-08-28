@@ -396,9 +396,7 @@ export function EmployeeManagementTab() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="User actions">
-                        <AppIcon name="more" />
-                      </Button>
+                      <IconButton variant="ghost" className="h-8 w-8" aria-label="User actions" icon="more" />
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent className="text-xs">

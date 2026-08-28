@@ -170,7 +170,7 @@ export function MetricWidget({
             </span>
           </div>
           <div className="flex items-center">
-            {isFetching && <AppIcon name="loading" size="sm" className=" animate-spin text-neutral-400" />}
+            {isFetching && <Spinner size="sm" className="text-neutral-400" />}
           </div>
         </div>
 

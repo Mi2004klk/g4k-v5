@@ -85,7 +85,7 @@ export function ExportHistory() {
       <CardContent className="p-4 flex-1 flex flex-col">
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-10 text-neutral-400 space-y-3">
-            <AppIcon name="loading" size="lg" className="animate-spin text-primary-500" /> 
+            <Spinner size="lg" className="text-primary-500" /> 
             <span className="text-sm">Loading queue...</span>
           </div>
         ) : exports.length === 0 ? (
@@ -122,7 +122,7 @@ export function ExportHistory() {
                     )}
                     {item.status === "processing" && (
                       <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">
-                        <AppIcon name="loading" size="xs" className="animate-spin" /> Processing
+                        <Spinner size="xs" /> Processing
                       </span>
                     )}
                     {item.status === "failed" && (

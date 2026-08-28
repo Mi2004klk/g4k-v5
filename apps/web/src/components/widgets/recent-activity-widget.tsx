@@ -46,7 +46,7 @@ export function RecentActivityWidget() {
             Recent Activity Feed
             <WidgetInfo summary="Relevant user activity across the system" />
           </span>
-          {isFetching && <AppIcon name="loading" size="xs" className=" animate-spin text-neutral-400" />}
+          {isFetching && <Spinner size="xs" className="text-neutral-400" />}
         </div>
       </div>
       <div className="flex-1 overflow-y-auto thin-scrollbar mt-2">

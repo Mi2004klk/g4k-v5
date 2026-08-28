@@ -215,7 +215,7 @@ export function ProfileHeader() {
               className="bg-primary-600 hover:bg-primary-700 text-white shadow-sm"
             >
               {uploadAvatarMutation.isPending ? (
-                <><AppIcon name="loading" size="xs" className="mr-2 animate-spin" /> Saving...</>
+                <><Spinner size="xs" className="mr-2" /> Saving...</>
               ) : (
                 "Save Photo"
               )}

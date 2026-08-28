@@ -117,7 +117,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
           disabled={decisionMutation.isPending}
         >
           {decisionMutation.isPending && decisionMutation.variables?.decision === "approved" ? (
-            <AppIcon name="loading" size="sm" className=" animate-spin" />
+            <Spinner size="sm" />
           ) : (
             <AppIcon name="check" size="sm" />
           )}

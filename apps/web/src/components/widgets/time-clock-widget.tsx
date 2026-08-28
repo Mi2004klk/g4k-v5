@@ -177,7 +177,7 @@ export function TimeClockWidget({ className }: { className?: string }) {
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
             Time Clock
           </span>
-          {isFetching && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
+          {isFetching && <Spinner size="xs" className="text-neutral-400" />}
           {isOffline ? (
             <span className="flex items-center gap-1 text-xs font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
               <AppIcon name="error" size="xs" /> Offline

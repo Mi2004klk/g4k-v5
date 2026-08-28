@@ -131,7 +131,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                   className="flex-1"
                 />
                 <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
-                  {saveMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Save"}
+                  {saveMutation.isPending ? <Spinner /> : "Save"}
                 </Button>
               </div>
             </SheetContent>
@@ -154,7 +154,7 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                   className="flex-1"
                 />
                 <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
-                  {saveMutation.isPending ? <AppIcon name="loading" className=" animate-spin" /> : "Save"}
+                  {saveMutation.isPending ? <Spinner /> : "Save"}
                 </Button>
               </div>
             </PopoverContent>

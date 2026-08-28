@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { AppIcon, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Wizard, WizardStep, Tabs, TabsList, TabsTrigger, TabsContent } from "@g4k/ui/components";
+import { AppIcon, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Wizard, WizardStep, Tabs, TabsList, TabsTrigger, TabsContent, UserPicker } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -305,17 +305,13 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
           {canManageTasks ? (
             <div className="space-y-1.5 flex flex-col">
               <label className="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase tracking-wide">Assignee</label>
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
-                <SelectTrigger className="h-11 w-full bg-white dark:bg-neutral-900 border-orange-200 dark:border-orange-800 rounded-xl">
-                  <SelectValue placeholder="Select Assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Assign to me ({user?.name})</SelectItem>
-                  {Array.isArray(usersData?.data) && usersData.data.map((u: any) => (
-                    <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <UserPicker 
+                mode="single"
+                value={assigneeId === "none" ? undefined : parseInt(assigneeId)} 
+                onChange={(val) => setAssigneeId(val ? val.toString() : "none")}
+                placeholder="Select Assignee"
+                className="h-11 w-full bg-white dark:bg-neutral-900 border-orange-200 dark:border-orange-800 rounded-xl"
+              />
             </div>
           ) : (
              <div className="space-y-1.5 flex flex-col">

@@ -110,13 +110,7 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
                   description="Are you sure you want to delete this comment?"
                   onConfirm={() => deleteCommentMutation.mutate(c.id)}
                   trigger={
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute -right-2 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                    >
-                      <AppIcon name="trash" className="w-3.5 h-3.5" />
-                    </Button>
+                    <IconButton variant="ghost" className="absolute -right-2 top-0 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30" icon="trash" />
                   }
                 />
               </div>
@@ -160,7 +154,7 @@ export function TaskCommentsTab({ taskId, comments }: TaskCommentsTabProps) {
           disabled={!comment.trim() || addCommentMutation.isPending}
           onClick={() => addCommentMutation.mutate()}
         >
-          {addCommentMutation.isPending ? <AppIcon name="loading" className="animate-spin w-4 h-4" /> : <AppIcon name="send" className="w-4 h-4" />}
+          {addCommentMutation.isPending ? <Spinner className="w-4 h-4" /> : <AppIcon name="send" className="w-4 h-4" />}
           </Button>
         </div>
       </div>

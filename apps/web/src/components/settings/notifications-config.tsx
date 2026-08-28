@@ -149,7 +149,7 @@ export function NotificationsConfig() {
           </div>
 
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
+            {updateMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="save" className=" mr-2" />}
             {updateMutation.isPending ? "Saving..." : "Save Preferences"}
           </Button>
         </div>

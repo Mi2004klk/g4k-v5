@@ -231,7 +231,7 @@ export function TeamMemberAttendanceSheet({ userId, date, initialTab = "day", on
           <TabsContent value="history" className="mt-0 h-[400px]">
             {isLoadingHistory ? (
               <div className="flex items-center justify-center h-full">
-                <AppIcon name="loading" size="2xl" className=" animate-spin text-neutral-400" />
+                <Spinner size="2xl" className="text-neutral-400" />
               </div>
             ) : (
               <AttendanceHistoryCalendar 

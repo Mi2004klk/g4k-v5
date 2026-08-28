@@ -52,7 +52,7 @@ export function OneFieldForm({
           disabled={!value.trim() || isPending}
           className="h-8 shrink-0"
         >
-          {isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : <AppIcon name={icon} size="sm" />}
+          {isPending ? <Spinner size="sm" /> : <AppIcon name={icon} size="sm" />}
         </Button>
       </form>
     );
@@ -86,7 +86,7 @@ export function OneFieldForm({
             disabled={!value.trim() || isPending}
             className="w-full h-12 text-base font-bold rounded-xl shadow-e1"
           >
-            {isPending ? <AppIcon name="loading" size="sm" className="mr-2 animate-spin" /> : null}
+            {isPending ? <Spinner size="sm" className="mr-2" /> : null}
             {buttonLabel}
           </Button>
         </form>

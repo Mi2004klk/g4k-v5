@@ -477,7 +477,7 @@ export function TaskOverviewTab({
               onClick={() => approveMutation.mutate()}
               disabled={approveMutation.isPending}
             >
-              {approveMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : "Approve Task"}
+              {approveMutation.isPending ? <Spinner size="sm" /> : "Approve Task"}
             </Button>
             <Button
               variant="outline"
@@ -486,7 +486,7 @@ export function TaskOverviewTab({
               onClick={() => redoMutation.mutate()}
               disabled={redoMutation.isPending || !redoReason.trim()}
             >
-              {redoMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : "Request Redo"}
+              {redoMutation.isPending ? <Spinner size="sm" /> : "Request Redo"}
             </Button>
           </div>
         </div>
@@ -521,7 +521,7 @@ export function TaskOverviewTab({
             })())}
             className="w-full h-9 bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 shadow-sm"
           >
-            {submitReviewMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin mr-2" /> : <AppIcon name="check" size="sm" className="mr-2" />}
+            {submitReviewMutation.isPending ? <Spinner size="sm" className="mr-2" /> : <AppIcon name="check" size="sm" className="mr-2" />}
             Submit for Review
           </Button>
         </div>

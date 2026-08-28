@@ -224,18 +224,10 @@ export function TaskDetailSheet({
                     {getTaskStatusColor(effectiveStatus).label}
                   </StatusBadge>
                   <span className="text-xs font-semibold text-neutral-400">Task #{task.id}</span>
-                  {isLoadingDetail && <AppIcon name="loading" size="xs" className="animate-spin text-neutral-400" />}
+                  {isLoadingDetail && <Spinner size="xs" className="text-neutral-400" />}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isPinned ? "text-amber-500" : "text-neutral-300 dark:text-neutral-600"}`}
-                    onClick={handlePinClick}
-                    disabled={isPinning || isUnpinning}
-                  >
-                    <AppIcon name="star" className="h-4 w-4 shrink-0" />
-                  </Button>
+                  <IconButton variant="ghost" className={`h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isPinned ? "text-amber-500" : "text-neutral-300 dark:text-neutral-600"}`} onClick={handlePinClick} disabled={isPinning || isUnpinning} icon="star" />
                 </div>
               </div>
 

@@ -55,7 +55,7 @@ export function FeedbackForm() {
           disabled={submitMutation.isPending || !body.trim()}
           className="w-full h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5"
         >
-          {submitMutation.isPending ? <AppIcon name="loading" size="sm" className=" animate-spin" /> : <AppIcon name="send" size="sm" />}
+          {submitMutation.isPending ? <Spinner size="sm" /> : <AppIcon name="send" size="sm" />}
           Submit Privately
         </Button>
       </CardContent>

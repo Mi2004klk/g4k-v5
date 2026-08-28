@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, EmptyState, FormDraftAlert } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, EmptyState, FormDraftAlert, UserPicker } from "@g4k/ui/components";
 import { Button, Input, Label, ScrollArea, Checkbox } from "@g4k/ui/components";
 import { apiFetch, unwrapList, isQueued } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -136,36 +136,18 @@ export function CreateGroupDialog({
           
           <div className="space-y-2">
             <Label>Select {draftData.tab === "dm" ? "User" : "Members"}</Label>
-            <Input 
-              placeholder="Search users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 text-xs"
+            <UserPicker
+              mode={draftData.tab === "dm" ? "single" : "multi"}
+              value={draftData.tab === "dm" ? draftData.selectedUsers[0] : draftData.selectedUsers}
+              onChange={(val) => {
+                if (draftData.tab === "dm") {
+                  setDraftData({ ...draftData, selectedUsers: val ? [val] : [] });
+                } else {
+                  setDraftData({ ...draftData, selectedUsers: val || [] });
+                }
+              }}
+              placeholder={`Search ${draftData.tab === "dm" ? "user" : "members"}...`}
             />
-            <ScrollArea className="h-48 border rounded-[var(--radius)] p-2 border-neutral-200 dark:border-neutral-800">
-              {isLoading ? (
-                <div className="p-4 text-center text-xs text-neutral-500">Loading users...</div>
-              ) : (
-                <div className="space-y-2">
-                  {otherUsers.map((u: DialogUser) => (
-                    <label key={u.id} className="flex items-center gap-2 text-sm p-1 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded cursor-pointer transition-colors">
-                      <Checkbox 
-                        checked={draftData.selectedUsers.includes(u.id)}
-                        onCheckedChange={() => toggleUser(u.id)}
-                      />
-                      <span>{u.name}</span>
-                      <span className="text-xs text-neutral-400 ml-auto capitalize">{(u as any).active_role?.replace('_', ' ')}</span>
-                    </label>
-                  ))}
-                  {otherUsers.length === 0 && (
-                     <EmptyState 
-                       title="No users found" 
-                       className="min-h-[100px] border-none shadow-none mt-4" 
-                     />
-                  )}
-                </div>
-              )}
-            </ScrollArea>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

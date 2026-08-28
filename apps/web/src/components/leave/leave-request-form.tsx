@@ -310,7 +310,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
             disabled={submitMutation.isPending || !draftData.start_date || !draftData.end_date || !draftData.reason}
             className="w-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 font-medium h-10 shadow-sm transition-colors"
           >
-            {submitMutation.isPending ? <AppIcon name="loading" className="animate-spin" /> : "Submit Request"}
+            {submitMutation.isPending ? <Spinner /> : "Submit Request"}
           </Button>
         </div>
       </form>

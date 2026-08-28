@@ -229,7 +229,7 @@ export function PoliciesConfig() {
           </div>
 
           <Button type="submit" disabled={updateMutation.isPending || !passwordForm.formState.isValid} className="mt-4">
-            {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
+            {updateMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="save" className=" mr-2" />}
             {updateMutation.isPending ? "Saving..." : "Save Policy"}
           </Button>
         </form>
@@ -276,7 +276,7 @@ export function PoliciesConfig() {
             </div>
 
             <Button type="submit" disabled={updateMutation.isPending || !sessionForm.formState.isValid} className="mt-4">
-              {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
+              {updateMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="save" className=" mr-2" />}
               {updateMutation.isPending ? "Saving..." : "Save Rules"}
             </Button>
           </form>
@@ -335,7 +335,7 @@ export function PoliciesConfig() {
             </div>
 
             <Button type="submit" disabled={updateMutation.isPending || !suspiciousLoginForm.formState.isValid} className="mt-4">
-              {updateMutation.isPending ? <AppIcon name="loading" className=" mr-2 animate-spin" /> : <AppIcon name="save" className=" mr-2" />}
+              {updateMutation.isPending ? <Spinner className="mr-2" /> : <AppIcon name="save" className=" mr-2" />}
               {updateMutation.isPending ? "Saving..." : "Save Policy"}
             </Button>
           </form>

@@ -58,20 +58,16 @@ export function AdminAttendanceCalendar() {
             <div className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${heatmapIntensity.critical.bg}`} /><span className="text-xs font-medium text-neutral-500">&lt; 50%</span></div>
           </div>
           <div className="flex items-center gap-1 bg-neutral-50 dark:bg-neutral-800/50 p-1 rounded-lg border border-neutral-100 dark:border-neutral-800">
-            <Button variant="ghost" size="icon" onClick={prevMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm" aria-label="Previous month">
-              <AppIcon name="chevronLeft" size="sm" />
-            </Button>
+            <IconButton variant="ghost" onClick={prevMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm" aria-label="Previous month" icon="chevronLeft" iconSize="sm" />
             <div className="px-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300">{format(currentDate, "MMM")}</div>
-            <Button variant="ghost" size="icon" onClick={nextMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm" aria-label="Next month">
-              <AppIcon name="chevronRight" size="sm" />
-            </Button>
+            <IconButton variant="ghost" onClick={nextMonth} className="h-7 w-7 rounded-md hover:bg-white dark:hover:bg-neutral-700 shadow-sm" aria-label="Next month" icon="chevronRight" iconSize="sm" />
           </div>
         </div>
       </div>
 
       {isLoading ? (
         <div className="h-48 flex items-center justify-center">
-          <AppIcon name="loading" size="xl" className="animate-spin text-primary-500" />
+          <Spinner size="xl" className="text-primary-500" />
         </div>
       ) : (
         <TooltipProvider delayDuration={100}>

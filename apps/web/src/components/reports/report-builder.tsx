@@ -165,7 +165,7 @@ export function ReportBuilder() {
                     disabled={exportMutation.isPending || items.length === 0}
                     onClick={() => exportMutation.mutate("xlsx")}
                   >
-                    {exportMutation.isPending ? <AppIcon name="loading" size="sm" className="animate-spin" /> : <AppIcon name="download" size="sm" />}
+                    {exportMutation.isPending ? <Spinner size="sm" /> : <AppIcon name="download" size="sm" />}
                     Export to Excel (.xlsx)
                   </Button>
                 </>
@@ -191,7 +191,7 @@ export function ReportBuilder() {
           </div>
         ) : isLoading ? (
            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-             <AppIcon name="loading" size="xl" className="animate-spin text-primary-500 mb-4" />
+             <Spinner size="xl" className="text-primary-500 mb-4" />
              <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">Loading report data...</p>
            </div>
         ) : items.length === 0 ? (
