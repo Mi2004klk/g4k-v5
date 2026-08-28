@@ -171,15 +171,14 @@ class LeaveRequestController extends Controller
             'reason' => 'required_if:decision,rejected|string|nullable',
         ]);
 
-        $approval = Approval::where('approvable_type', LeaveRequest::class)
-            ->where(function ($query) use ($id) {
-                $query->where('id', $id)->orWhere('approvable_id', $id);
-            })
-            ->orderBy('id', 'desc')
-            ->firstOrFail();
+        $leaveRequest = LeaveRequest::with('approval')->findOrFail($id);
+        $approval = $leaveRequest->approval;
+        
+        if (!$approval) {
+             return response()->json(['message' => 'No pending approval found for this leave request.'], 404);
+        }
 
         $user = $request->user();
-        $leaveRequest = LeaveRequest::findOrFail($approval->approvable_id);
 
         if ($leaveRequest->user_id === $user->id) {
             return response()->json(['message' => 'You cannot approve or reject your own leave request.'], 403);

@@ -38,7 +38,7 @@ export function PendingApprovalsWidget() {
 
   const decisionMutation = useMutation({
     mutationFn: async ({ id, decision, reason }: { id: number; decision: "approved" | "rejected"; reason?: string }) => {
-      return apiFetch(`/approvals/${id}/decision`, {
+      return apiFetch(`/leave-requests/${id}/decision`, {
         method: "POST",
         body: JSON.stringify({ decision, reason }),
       });

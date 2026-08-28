@@ -13,6 +13,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { useAuthStore } from "@/lib/auth-store";
 
 interface LeaveRecord {
+  id: number;
   user_id: number;
   approval?: {
     id: number;
@@ -36,7 +37,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
 
   const decisionMutation = useMutation({
     mutationFn: async ({ decision, reason }: { decision: string; reason?: string }) => {
-      return apiFetch(`/approvals/${approvalId}/decision`, {
+      return apiFetch(`/leave-requests/${record.id}/decision`, {
         method: "POST",
         body: JSON.stringify({ decision, reason }),
       });
@@ -52,7 +53,7 @@ export function LeaveApprovalActionsCell({ record }: { record: LeaveRecord }) {
         
         const targetArray = Array.isArray(old) ? old : (old.data ?? []);
         const newData = targetArray.map((item: LeaveRecord) => {
-          if (item.approval?.id === approvalId) {
+          if (item.id === record.id) {
             return {
               ...item,
               approval: { ...item.approval, status: decision },

@@ -15,29 +15,39 @@ class WorkScheduleController extends Controller
 
     public function update(Request $request, int $id)
     {
+        $schedule = DB::table('work_schedules')->where('id', $id)->first();
+        if (!$schedule) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string',
-            'start_time' => 'required|string',
-            'end_time' => 'required|string',
-            'break_minutes' => 'required|integer',
-            'standard_seconds' => 'required|integer',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
+            'break_minutes' => 'required|integer|min:0',
+            'standard_seconds' => 'required|integer|min:0',
             'grace_minutes' => 'required|integer|min:0|max:120',
             'working_days' => 'required|array',
+            'working_days.*' => 'integer|in:0,1,2,3,4,5,6',
             'is_default' => 'nullable|boolean',
         ]);
 
         $validated['working_days'] = json_encode($validated['working_days']);
-        $isDefault = $validated['is_default'] ?? false;
+        $updateData = array_merge($validated, ['updated_at' => now()]);
         
         DB::beginTransaction();
         try {
-            if ($isDefault) {
-                DB::table('work_schedules')->update(['is_default' => false]);
+            if ($request->has('is_default')) {
+                $isDefault = $validated['is_default'] ?? false;
+                if ($isDefault) {
+                    DB::table('work_schedules')->update(['is_default' => false]);
+                }
+                $updateData['is_default'] = $isDefault;
             }
             
             DB::table('work_schedules')
                 ->where('id', $id)
-                ->update(array_merge($validated, ['updated_at' => now(), 'is_default' => $isDefault]));
+                ->update($updateData);
                 
             DB::commit();
         } catch (\Exception $e) {
@@ -55,12 +65,13 @@ class WorkScheduleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
-            'start_time' => 'required|string',
-            'end_time' => 'required|string',
-            'break_minutes' => 'required|integer',
-            'standard_seconds' => 'required|integer',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
+            'break_minutes' => 'required|integer|min:0',
+            'standard_seconds' => 'required|integer|min:0',
             'grace_minutes' => 'required|integer|min:0|max:120',
             'working_days' => 'required|array',
+            'working_days.*' => 'integer|in:0,1,2,3,4,5,6',
             'is_default' => 'nullable|boolean',
         ]);
 
@@ -94,6 +105,11 @@ class WorkScheduleController extends Controller
 
     public function setDefault(int $id)
     {
+        $schedule = DB::table('work_schedules')->where('id', $id)->first();
+        if (!$schedule) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
         DB::beginTransaction();
         try {
             DB::table('work_schedules')->update(['is_default' => false]);

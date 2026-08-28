@@ -158,7 +158,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::delete('/leave-requests/{id}', [LeaveRequestController::class, 'destroy']);
     });
     
-    Route::post('/approvals/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware(['capability:leave.approve-employee', 'throttle:15,1']);
+    Route::post('/leave-requests/{id}/decision', [LeaveRequestController::class, 'decision'])->middleware(['capability:leave.approve-employee', 'throttle:15,1']);
     Route::get('/approvals/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/pending', [LeaveRequestController::class, 'pending'])->middleware('capability:leave.approve-employee');
     Route::get('/leave-requests/admin/history', [LeaveRequestController::class, 'adminHistory'])->middleware('capability:leave.approve-employee');

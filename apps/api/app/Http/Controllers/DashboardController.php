@@ -73,7 +73,7 @@ class DashboardController extends Controller
                         }
                         
                         $approvals[] = [
-                            'id' => $l->approval_id ?? $l->leave_request_id,
+                            'id' => $l->leave_request_id,
                             'leave_request_id' => $l->leave_request_id,
                             'type' => 'on_leave',
                             'title' => $l->title ?? 'Leave Request',

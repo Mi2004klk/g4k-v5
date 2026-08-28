@@ -70,7 +70,7 @@ class ApprovalService
                 $requiredCap = 'tasks.manage';
                 break;
             case \App\Models\LeaveRequest::class:
-                $requiredCap = ($approval->current_approver_role === 'super_admin') ? 'leave.approve-hr' : 'leave.approve-employee';
+                $requiredCap = 'leave.approve-employee';
                 break;
         }
         
@@ -94,7 +94,36 @@ class ApprovalService
 
         self::checkRoleGating($approval, $decidedBy);
 
-        DB::transaction(function () use ($approval, $decidedBy, $reason) {
+        DB::transaction(function () use (&$approval, $decidedBy, $reason) {
+            $approval = Approval::where('id', $approval->id)->lockForUpdate()->first();
+            
+            if ($approval->status !== 'pending') {
+                abort(400, "Approval is not in a pending state.");
+            }
+
+            if ($approval->approvable_type === \App\Models\LeaveRequest::class) {
+                $leave = \App\Models\LeaveRequest::where('id', $approval->approvable_id)->lockForUpdate()->first();
+                if ($leave) {
+                    $days = $leave->getWorkingDays();
+                    $year = (int) \Carbon\Carbon::parse($leave->start_date)->format('Y');
+                    
+                    \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, $year);
+                    $balance = \App\Models\LeaveBalance::where('user_id', $leave->user_id)
+                        ->where('leave_type', $leave->type)
+                        ->where('year', $year)
+                        ->lockForUpdate()
+                        ->first();
+                        
+                    if (($balance->allowed - $balance->used) < $days) {
+                        abort(422, "Insufficient leave balance for this request.");
+                    }
+                    
+                    $leave->update(['status' => 'approved']);
+                    $balance->increment('used', $days);
+                    \App\Services\AttendanceService::markLeaveDays($leave->user_id, $leave->start_date, $leave->end_date);
+                }
+            }
+
             $approval->update([
                 'status' => 'approved',
                 'decision' => 'approved',
@@ -102,17 +131,6 @@ class ApprovalService
                 'decided_at' => now(),
                 'decision_reason' => $reason,
             ]);
-
-            if ($approval->approvable_type === \App\Models\LeaveRequest::class) {
-                $leave = \App\Models\LeaveRequest::find($approval->approvable_id);
-                if ($leave) {
-                    $leave->update(['status' => 'approved']);
-                    $days = $leave->getWorkingDays();
-                    $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
-                    $balance->increment('used', $days);
-                    \App\Services\AttendanceService::markLeaveDays($leave->user_id, $leave->start_date, $leave->end_date);
-                }
-            }
         });
 
         DB::afterCommit(function () use ($approval) {
@@ -138,23 +156,29 @@ class ApprovalService
 
         self::checkRoleGating($approval, $decidedBy);
 
-        DB::transaction(function () use ($approval, $decidedBy, $reason) {
-            $approval->update([
-                'status' => 'rejected',
-                'decision' => 'rejected',
-                'decided_by' => $decidedBy,
-                'decided_at' => now(),
-                'decision_reason' => $reason,
-            ]);
+        DB::transaction(function () use (&$approval, $decidedBy, $reason) {
+            $approval = Approval::where('id', $approval->id)->lockForUpdate()->first();
+            
+            if ($approval->status !== 'pending') {
+                abort(400, "Approval is not in a pending state.");
+            }
 
             if ($approval->approvable_type === \App\Models\LeaveRequest::class) {
-                $leave = \App\Models\LeaveRequest::find($approval->approvable_id);
+                $leave = \App\Models\LeaveRequest::where('id', $approval->approvable_id)->lockForUpdate()->first();
                 if ($leave) {
                     $wasApproved = $leave->status === 'approved';
                     $leave->update(['status' => 'rejected']);
                     if ($wasApproved) {
                         $days = $leave->getWorkingDays();
-                        $balance = \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, (int) \Carbon\Carbon::parse($leave->start_date)->format('Y'));
+                        $year = (int) \Carbon\Carbon::parse($leave->start_date)->format('Y');
+                        
+                        \App\Models\LeaveBalance::getOrCreate($leave->user_id, $leave->type, $year);
+                        $balance = \App\Models\LeaveBalance::where('user_id', $leave->user_id)
+                            ->where('leave_type', $leave->type)
+                            ->where('year', $year)
+                            ->lockForUpdate()
+                            ->first();
+                            
                         $balance->decrement('used', min($days, $balance->used));
                         
                         $startDate = \Carbon\Carbon::parse($leave->start_date);
@@ -167,6 +191,14 @@ class ApprovalService
                     }
                 }
             }
+
+            $approval->update([
+                'status' => 'rejected',
+                'decision' => 'rejected',
+                'decided_by' => $decidedBy,
+                'decided_at' => now(),
+                'decision_reason' => $reason,
+            ]);
         });
 
         DB::afterCommit(function () use ($approval) {
@@ -195,7 +227,13 @@ class ApprovalService
 
         self::checkRoleGating($approval, $decidedBy);
 
-        DB::transaction(function () use ($approval, $decidedBy, $reason) {
+        DB::transaction(function () use (&$approval, $decidedBy, $reason) {
+            $approval = Approval::where('id', $approval->id)->lockForUpdate()->first();
+            
+            if ($approval->status !== 'pending') {
+                abort(400, "Approval is not in a pending state.");
+            }
+
             $approval->update([
                 'status' => 'rejected', // Conceptually a rejection of the current submission
                 'decision' => 'redo',
