@@ -206,8 +206,44 @@ class AuthController extends Controller
         }
 
         // 2. Suspicious Login Detection (Whitelist / History)
-        // Suspicious-login detection is currently inactive to avoid aggressive flagging of normal logins.
         $isSuspicious = false;
+        
+        $suspiciousEnabled = filter_var($settings['suspicious_login.enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        
+        if ($suspiciousEnabled) {
+            $whitelistIps = $settings['suspicious_login.whitelist_ips'] ?? '';
+            $whitelistLocations = $settings['suspicious_login.whitelist_locations'] ?? '';
+            
+            $hasWhitelist = !empty(trim($whitelistIps)) || !empty(trim($whitelistLocations));
+            
+            if ($hasWhitelist) {
+                $matchedIp = empty(trim($whitelistIps)) ? false : $this->isIpOrLocationMatched($ip, null, $whitelistIps);
+                $matchedLoc = empty(trim($whitelistLocations)) ? false : $this->isIpOrLocationMatched(null, $location, $whitelistLocations);
+                
+                // If either matches its respective whitelist, it is NOT suspicious.
+                // If a whitelist is empty, we consider it matched for that criteria (e.g. if only IPs are whitelisted, location doesn't matter).
+                $ipOk = empty(trim($whitelistIps)) || $matchedIp;
+                $locOk = empty(trim($whitelistLocations)) || $matchedLoc;
+                
+                if (!$ipOk || !$locOk) {
+                    $isSuspicious = true;
+                }
+            } else {
+                $historyCount = LoginAttempt::where('user_id', $user->id)
+                    ->where('success', true)
+                    ->where(function($q) use ($ip, $location) {
+                        $q->where('ip_address', $ip);
+                        if ($location) {
+                            $q->orWhere('location', $location);
+                        }
+                    })
+                    ->count();
+                    
+                if ($historyCount === 0) {
+                    $isSuspicious = true;
+                }
+            }
+        }
 
         // Defer non-critical DB inserts to after response
         defer(function () use ($user, $request, $isSuspicious, $ip, $location) {
