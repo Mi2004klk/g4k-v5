@@ -58,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
             \App\Models\User::class => \App\Observers\CacheInvalidationObserver::class,
             \App\Models\Notification::class => \App\Observers\NotificationObserver::class,
             \App\Models\AttendanceEvent::class => \App\Observers\AttendanceEventObserver::class,
+            \App\Models\Approval::class => \App\Observers\CacheInvalidationObserver::class,
         ];
 
         foreach ($observers as $model => $observerClasses) {

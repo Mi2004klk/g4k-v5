@@ -28,13 +28,8 @@ class AttendanceDayObserver
         $today = Carbon::now()->toDateString();
 
         // Clear user-specific caches
-        Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$date}");
-        Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
-        Cache::forget("dashboard_metrics_{$user->id}_{$activeRole}_{$today}");
-        Cache::forget("user_metrics_{$user->id}_{$activeRole}");
         Cache::forget("attendanceSummary_{$user->id}");
         Cache::forget("attendance_day_{$user->id}_{$date}");
-        Cache::forget("dashboard_global");
 
         // Clear caches for HR and Admins who manage this user
         $managers = \App\Models\RoleAssignment::whereIn('role', ['hr', 'super_admin'])->pluck('user_id')->unique();

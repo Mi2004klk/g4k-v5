@@ -29,10 +29,6 @@ class PinController extends Controller
         );
 
         $user = $request->user();
-        $activeRole = $user->resolveActiveRole();
-        $today = \Carbon\Carbon::now()->toDateString();
-        \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
-        \Illuminate\Support\Facades\Cache::forget("user_pins_{$user->id}");
 
         return response()->json(['data' => $pin], 201);
     }
@@ -43,10 +39,6 @@ class PinController extends Controller
         $pin->delete();
 
         $user = $request->user();
-        $activeRole = $user->resolveActiveRole();
-        $today = \Carbon\Carbon::now()->toDateString();
-        \Illuminate\Support\Facades\Cache::forget("dashboard_init_{$user->id}_{$activeRole}_{$today}");
-        \Illuminate\Support\Facades\Cache::forget("user_pins_{$user->id}");
 
         return response()->json(null, 204);
     }

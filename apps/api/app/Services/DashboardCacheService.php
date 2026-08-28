@@ -30,4 +30,25 @@ class DashboardCacheService
         }
         Cache::increment(self::CACHE_VERSION_KEY);
     }
+
+    public static function getUserMetricsKey(int $userId, string $role): string
+    {
+        return "user_metrics_v" . self::getVersion() . "_{$userId}_{$role}";
+    }
+
+    public static function getPendingApprovalsKey(int $userId, string $role): string
+    {
+        return "pending_approvals_v" . self::getVersion() . "_{$userId}_{$role}";
+    }
+
+    public static function getQuickNotesKey(int $userId): string
+    {
+        return "quick_notes_v" . self::getVersion() . "_{$userId}";
+    }
+
+    public static function getDashboardGlobalKey(): string
+    {
+        return "dashboard_global_v" . self::getVersion();
+    }
+
 }

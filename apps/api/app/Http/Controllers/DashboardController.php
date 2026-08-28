@@ -29,13 +29,10 @@ class DashboardController extends Controller
             }
         };
 
-        $version = \App\Services\DashboardCacheService::getVersion();
-        $cacheKey = "dashboard_init_v{$version}_{$user->id}_{$activeRole}_{$today}";
-        
         $data = [
-            'metrics' => Cache::remember("user_metrics_v{$version}_{$user->id}_{$activeRole}", 3600, fn() => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null),
+            'metrics' => $safeCall(DashboardController::class, 'metrics')['metrics'] ?? null,
             'preferences' => Cache::remember("user_prefs_{$user->id}", 3600, fn() => $safeCall(UserPreferenceController::class, 'show')),
-            'pending_approvals' => Cache::remember("pending_approvals_v{$version}_{$user->id}_{$activeRole}", 3600, function() use ($activeRole, $user) {
+            'pending_approvals' => Cache::remember(\App\Services\DashboardCacheService::getPendingApprovalsKey($user->id, $activeRole), 3600, function() use ($activeRole, $user) {
                 $approvals = [];
                 try {
                     // Leaves
@@ -191,7 +188,7 @@ class DashboardController extends Controller
                 }
             }),
             'announcements' => $safeCall(\App\Http\Controllers\AnnouncementController::class, 'index', []),
-            'quick_notes' => Cache::remember("quick_notes_v{$version}_{$user->id}", 3600, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
+            'quick_notes' => Cache::remember(\App\Services\DashboardCacheService::getQuickNotesKey($user->id), 3600, fn() => $safeCall(\App\Http\Controllers\QuickNoteController::class, 'index', [])),
             'role' => $activeRole
         ];
 
@@ -213,10 +210,8 @@ class DashboardController extends Controller
         $activeRole = $user->resolveActiveRole();
 
         $today = Carbon::now()->toDateString();
-        $version = \App\Services\DashboardCacheService::getVersion();
-        $cacheKey = "dashboard_metrics_v{$version}_{$user->id}_{$activeRole}_{$today}";
-
-        $metrics = Cache::remember($cacheKey, 3600, function () use ($user, $activeRole, $today, $version) {
+        
+        $metrics = Cache::remember(\App\Services\DashboardCacheService::getUserMetricsKey($user->id, $activeRole), 3600, function () use ($user, $activeRole, $today) {
             $data = [];
 
             // Modules are confirmed to exist in production
@@ -230,7 +225,7 @@ class DashboardController extends Controller
 
             if ($activeRole === 'super_admin') {
                 // Shared role-agnostic global stats
-                $globalStats = Cache::remember("dashboard_global_v{$version}", 3600, function () {
+                $globalStats = Cache::remember(\App\Services\DashboardCacheService::getDashboardGlobalKey(), 3600, function () {
                     return [
                         'total_employees' => User::count(),
                         'active_employees' => User::where('status', 'active')->count(),

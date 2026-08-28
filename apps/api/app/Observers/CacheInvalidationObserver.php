@@ -23,6 +23,14 @@ class CacheInvalidationObserver
 
     public function updated(Model $model)
     {
+        if ($model instanceof \App\Models\User) {
+            $dirty = $model->getDirty();
+            $ignored = ['last_login_at', 'last_active_at', 'remember_token', 'updated_at', 'current_sign_in_at', 'last_sign_in_at'];
+            $importantChanges = array_diff(array_keys($dirty), $ignored);
+            if (empty($importantChanges)) {
+                return;
+            }
+        }
         $this->clearDashboardCaches($model);
     }
 
