@@ -247,6 +247,38 @@ class ChatController extends Controller
         return response()->json($message->load(['sender', 'replyTo']));
     }
 
+    public function editMessage(Request $request, $id, $msgId)
+    {
+        $conversation = Conversation::findOrFail($id);
+        $this->checkAccess($conversation, $request->user());
+
+        $message = Message::where('conversation_id', $id)->findOrFail($msgId);
+
+        if ($message->sender_id !== $request->user()->id) {
+            abort(403, 'You can only edit your own messages');
+        }
+
+        if ($message->type !== 'text') {
+            abort(400, 'Only text messages can be edited');
+        }
+
+        $validated = $request->validate([
+            'body' => 'required|string',
+        ]);
+
+        $message->update([
+            'body' => $validated['body'],
+            'edited_at' => now(),
+        ]);
+
+        try {
+            broadcast(new \App\Events\MessageEdited($message->load(['sender', 'replyTo'])))->toOthers();
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return response()->json($message);
+    }
     
     public function markRead(Request $request, $id)
     {
@@ -289,6 +321,51 @@ class ChatController extends Controller
             } catch (\Throwable $e) {
             report($e);
         }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function markAllRead(Request $request)
+    {
+        $user = $request->user();
+        
+        $conversations = Conversation::where(function ($query) use ($user) {
+            $query->whereHas('users', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })->orWhere('scope', 'global');
+        })->get();
+
+        foreach ($conversations as $conversation) {
+            Message::where('conversation_id', $conversation->id)
+                ->where('sender_id', '!=', $user->id)
+                ->whereDoesntHave('reads', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->chunkById(200, function ($messages) use ($user) {
+                    $upserts = [];
+                    $now = now();
+                    foreach ($messages as $msg) {
+                        $upserts[] = [
+                            'message_id' => $msg->id,
+                            'user_id' => $user->id,
+                            'read_at' => $now,
+                            'updated_at' => $now,
+                            'created_at' => $now,
+                        ];
+                    }
+                    if (!empty($upserts)) {
+                        \Illuminate\Support\Facades\DB::table('conversation_message_reads')->upsert(
+                            $upserts,
+                            ['message_id', 'user_id'],
+                            ['read_at', 'updated_at']
+                        );
+                    }
+                });
+
+            if ($conversation->scope !== 'global') {
+                $conversation->users()->updateExistingPivot($user->id, ['last_read_at' => now()]);
+            }
         }
 
         return response()->json(['success' => true]);

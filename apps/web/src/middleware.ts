@@ -75,8 +75,9 @@ export function middleware(req: NextRequest) {
   response.headers.set('Content-Security-Policy', cspHeader);
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
 
+  // Trade-off: g4k_token is stored in a JS-readable cookie to support client-side 
+  // API requests. This widens the XSS blast radius but is required for current architecture.
   return response;
 }
 

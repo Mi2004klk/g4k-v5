@@ -38,8 +38,18 @@ export function MessageComposer({
   conversation?: ComposerConversation;
   replyTo?: ReplyMessage | null;
   onCancelReply?: () => void;
+  editingMessage?: ReplyMessage | null;
+  onEdit?: (body: string) => void;
+  onCancelEdit?: () => void;
 }) {
   const [text, setText] = useState("");
+  
+  useEffect(() => {
+    if (editingMessage) {
+      setText(editingMessage.body || "");
+    }
+  }, [editingMessage]);
+
   const [isOffline, setIsOffline] = useState(typeof window !== "undefined" ? !navigator.onLine : false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
@@ -97,6 +107,16 @@ export function MessageComposer({
   };
 
   const handleSend = () => {
+    if (editingMessage && onEdit) {
+      if (text.trim()) {
+        onEdit(text.trim());
+        setText("");
+        if (onCancelEdit) onCancelEdit();
+        if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      }
+      return;
+    }
+
     if (text.trim() || selectedFile) {
       onSend(text.trim(), selectedMentions, selectedFile);
       setText("");
@@ -202,6 +222,19 @@ export function MessageComposer({
             )}
           </div>
         )}
+        {editingMessage && (
+          <div className="px-3 py-1.5 border-b border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 rounded-t-xl flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs min-w-0">
+              <AppIcon name="edit" size="xs" className="text-amber-500" />
+              <span className="font-bold text-amber-700 dark:text-amber-500 shrink-0">Editing message</span>
+            </div>
+            {onCancelEdit && (
+              <button onClick={() => { onCancelEdit(); setText(""); }} className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 ml-2 shrink-0">
+                <AppIcon name="close" size="xs" />
+              </button>
+            )}
+          </div>
+        )}
         <textarea
           ref={textareaRef}
           value={text}
@@ -240,7 +273,13 @@ export function MessageComposer({
             </div>
           )}
 
-          <IconButton aria-label="Send message" type="submit" onClick={handleSend} className={cn( "h-10 w-10 shrink-0 rounded-full transition-all", text.trim() || selectedFile ? "bg-primary hover:bg-primary/90 text-white scale-100" : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" )} disabled={disabled || (!text.trim() && !selectedFile)} icon="send" />
+          {editingMessage ? (
+            <Button size="sm" onClick={handleSend} disabled={disabled || !text.trim()} className="h-10 rounded-full px-4 text-xs font-semibold shrink-0 transition-all">
+              Save
+            </Button>
+          ) : (
+            <IconButton aria-label="Send message" type="submit" onClick={handleSend} className={cn( "h-10 w-10 shrink-0 rounded-full transition-all", text.trim() || selectedFile ? "bg-primary hover:bg-primary/90 text-white scale-100" : "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500" )} disabled={disabled || (!text.trim() && !selectedFile)} icon="send" />
+          )}
         </div>
     </div>
   );

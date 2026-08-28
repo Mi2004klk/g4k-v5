@@ -266,10 +266,12 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::delete('/conversations/{id}/messages/{msgId}', [\App\Http\Controllers\ChatController::class, 'deleteMessage']);
         Route::delete('/conversations/{id}/clear', [\App\Http\Controllers\ChatController::class, 'clearChat']);
         Route::post('/conversations/{id}/read', [\App\Http\Controllers\ChatController::class, 'markRead']);
+        Route::post('/chat/mark-all-read', [\App\Http\Controllers\ChatController::class, 'markAllRead']);
         Route::post('/conversations/{id}/pin', [\App\Http\Controllers\ChatController::class, 'pinChat']);
         Route::post('/conversations/{id}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinChat']);
         Route::post('/conversations/{id}/messages/{msgId}/pin', [\App\Http\Controllers\ChatController::class, 'pinMessage']);
         Route::post('/conversations/{id}/messages/{msgId}/unpin', [\App\Http\Controllers\ChatController::class, 'unpinMessage']);
+        Route::put('/conversations/{id}/messages/{msgId}', [\App\Http\Controllers\ChatController::class, 'editMessage']);
     });
     Route::middleware('capability:chat.manage')->group(function () {
         Route::post('/conversations/group', [\App\Http\Controllers\ChatController::class, 'createGroup']);

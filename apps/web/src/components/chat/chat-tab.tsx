@@ -43,6 +43,9 @@ export function ChatTab() {
   
   // Track which message we are replying to
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  
+  // Track which message we are editing
+  const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
 
   const [prevInitialConvId, setPrevInitialConvId] = useState(initialConvId);
   if (initialConvId !== prevInitialConvId) {
@@ -388,10 +391,28 @@ export function ChatTab() {
 
       channel.listen(".message-deleted", deleteHandler);
 
+      const editHandler = (e: { message: ChatMessage }) => {
+        queryClient.setQueryData(queryKeys.messages(selectedId as number), (old: InfiniteQueryData<ChatMessage> | undefined) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: PaginatedResponse<ChatMessage>) => ({
+              ...page,
+              data: (Array.isArray(page.data) ? page.data : []).map((msg: ChatMessage) => 
+                msg.id === e.message.id ? e.message : msg
+              )
+            }))
+          };
+        });
+      };
+
+      channel.listen(".message-edited", editHandler);
+
       return () => {
         channel.stopListening(".message-sent");
         channel.stopListening(".message-read");
         channel.stopListening(".message-deleted");
+        channel.stopListening(".message-edited");
         leaveChannel(channelName);
       };
     }
@@ -406,6 +427,18 @@ export function ChatTab() {
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
       queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
       queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
+    },
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: async () => {
+      return apiFetch(`/chat/mark-all-read`, { method: "POST" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      if (selectedId) queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chatUnreadCount });
+      toast.success("All chats marked as read");
     },
   });
 
@@ -538,6 +571,20 @@ export function ChatTab() {
     }
   });
 
+  const editMessageMutation = useMutation({
+    mutationFn: async ({ msgId, body }: { msgId: number; body: string }) => {
+      return apiFetch(`/conversations/${selectedId}/messages/${msgId}`, {
+        method: "PUT",
+        body: JSON.stringify({ body })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages(selectedId as number) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations });
+      toast.success("Message updated");
+    }
+  });
+
   const clearChatMutation = useMutation({
     mutationFn: async () => {
       return apiFetch(`/conversations/${selectedId}/clear`, { method: "DELETE" });
@@ -590,18 +637,33 @@ export function ChatTab() {
                   </span>
                 )}
               </div>
-              {canManageChat && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
-                  aria-label="New group chat"
-                  title="New Group"
-                  onClick={() => setGroupDialogOpen(true)}
-                >
-                  <AppIcon name="plus" size="sm" />
-                </Button>
-              )}
+              <div className="flex items-center gap-1">
+                {totalUnreadCount > 0 && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
+                    aria-label="Mark all read"
+                    title="Mark all read"
+                    onClick={() => markAllReadMutation.mutate()}
+                    disabled={markAllReadMutation.isPending}
+                  >
+                    <AppIcon name="read" size="sm" />
+                  </Button>
+                )}
+                {canManageChat && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 shrink-0"
+                    aria-label="New group chat"
+                    title="New Group"
+                    onClick={() => setGroupDialogOpen(true)}
+                  >
+                    <AppIcon name="plus" size="sm" />
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Search */}
@@ -731,6 +793,7 @@ export function ChatTab() {
                 canManage={canPinMessages(selectedConv)}
                 onMarkRead={() => markReadMutation.mutate()}
                 onDeleteMessage={(msgId) => deleteMessageMutation.mutate(msgId)}
+                onEditMessage={(msg) => setEditingMessage(msg as ChatMessage)}
                 onReply={(msg) => setReplyingTo(msg as ChatMessage)}
                 conversationType={selectedConv?.scope}
               />
@@ -740,10 +803,18 @@ export function ChatTab() {
                   sendMessageMutation.mutate({ body, mentions, attachment, replyToId: replyingTo?.id });
                   setReplyingTo(null);
                 }}
-                disabled={sendMessageMutation.isPending}
+                disabled={sendMessageMutation.isPending || editMessageMutation.isPending}
                 conversation={selectedConv}
                 replyTo={replyingTo}
                 onCancelReply={() => setReplyingTo(null)}
+                editingMessage={editingMessage}
+                onEdit={(body) => {
+                  if (editingMessage) {
+                    editMessageMutation.mutate({ msgId: editingMessage.id, body });
+                    setEditingMessage(null);
+                  }
+                }}
+                onCancelEdit={() => setEditingMessage(null)}
               />
             </>
           ) : (

@@ -11,7 +11,9 @@ interface ListMessage {
   id: number;
   sender_id: number;
   created_at: string;
+  edited_at?: string;
   body?: string;
+  type?: string;
   attachment_url?: string;
   is_pinned?: boolean;
   pending?: boolean;
@@ -40,6 +42,7 @@ const MessageItem = memo(function MessageItem({
   canManage?: boolean;
   onMarkRead?: () => void;
   onDeleteMessage?: (msgId: number) => void;
+  onEditMessage?: (msg: ListMessage) => void;
   onReply?: (msg: ListMessage) => void;
   conversationType?: string;
 }) {
@@ -85,6 +88,9 @@ const MessageItem = memo(function MessageItem({
             </span>
             <span>•</span>
             <span className="tabular-nums">{format(new Date(msg.created_at), "h:mm a")}</span>
+            {msg.edited_at && (
+              <span className="text-[10px] text-neutral-400 italic">(edited)</span>
+            )}
           </div>
         )}
 
@@ -232,6 +238,11 @@ const MessageItem = memo(function MessageItem({
                   <AppIcon name="pin" className=" mr-2 text-amber-500" /> Pin Message
                 </DropdownMenuItem>
               ))}
+              {isMe && msg.type === 'text' && (
+                <DropdownMenuItem onClick={() => onEditMessage?.(msg)}>
+                  <AppIcon name="edit" className="mr-2" /> Edit Message
+                </DropdownMenuItem>
+              )}
               {isMe && (
                 <ConfirmDialog
                   title="Delete Message"
@@ -276,6 +287,7 @@ export function MessageList({
   canManage?: boolean;
   onMarkRead?: () => void;
   onDeleteMessage?: (msgId: number) => void;
+  onEditMessage?: (msg: ListMessage) => void;
   onReply?: (msg: ListMessage) => void;
   conversationType?: string;
 }) {
@@ -419,6 +431,7 @@ export function MessageList({
                 canManage={canManage}
                 onMarkRead={onMarkRead}
                 onDeleteMessage={onDeleteMessage}
+                onEditMessage={onEditMessage}
                 onReply={onReply}
                 conversationType={conversationType}
               />
