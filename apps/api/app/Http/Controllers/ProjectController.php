@@ -274,7 +274,7 @@ class ProjectController extends Controller
         if (array_key_exists('cover_image', $validated) && $oldCoverImage && $oldCoverImage !== $project->cover_image) {
             try {
                 $basename = basename(parse_url($oldCoverImage, PHP_URL_PATH));
-                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete('projects/covers/' . $basename);
+                \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->delete("projects/{$id}/covers/" . $basename);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning('Failed to delete old project cover image on update: ' . $e->getMessage());
             }
@@ -439,9 +439,11 @@ class ProjectController extends Controller
 
         return response()->json($project->fresh()->load(['approval']));
     }
-    public function uploadCover(Request $request)
+    public function uploadCover(Request $request, $id)
     {
-        if (!$this->userHasManage($request)) {
+        $project = Project::findOrFail($id);
+
+        if (!$this->canManageProject($request, $project)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -457,8 +459,22 @@ class ProjectController extends Controller
                 throw new \Exception('Failed to store file');
             }
 
+            $url = \Illuminate\Support\Facades\Storage::disk($disk)->url($path);
+            
+            $oldCoverImage = $project->cover_image;
+            $project->update(['cover_image' => $url]);
+
+            if ($oldCoverImage && $oldCoverImage !== $url) {
+                try {
+                    $basename = basename(parse_url($oldCoverImage, PHP_URL_PATH));
+                    \Illuminate\Support\Facades\Storage::disk($disk)->delete("projects/{$id}/covers/" . $basename);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to delete old project cover image on upload: ' . $e->getMessage());
+                }
+            }
+
             return response()->json([
-                'url' => \Illuminate\Support\Facades\Storage::disk($disk)->url($path),
+                'url' => $url,
                 'path' => $path
             ]);
         } catch (\Exception $e) {

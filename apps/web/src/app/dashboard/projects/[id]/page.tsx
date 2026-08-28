@@ -31,6 +31,78 @@ export default function ProjectDetailPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [editForm, setEditForm] = useState<any>({ name: "", description: "", priority: "", department_id: "none", qa_form_id: "none", deadline: "", member_ids: [], allow_employee_tasks: false, cover_image: null });
   const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(highlightTaskId ? parseInt(highlightTaskId) : null);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [createTaskPhaseId, setCreateTaskPhaseId] = useState<number | undefined>();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // For mobile
+
+  const canManageProjects = hasCapability(caps, "projects.manage");
+  
+  const { data: projectResponse, isLoading } = useQuery({
+    queryKey: queryKeys.project(projectId),
+    queryFn: () => apiFetch(`/projects/${projectId}`),
+  });
+  
+  const { data: phasesResponse } = useQuery({
+    queryKey: [...queryKeys.project(projectId), "phases"],
+    queryFn: () => apiFetch(`/projects/${projectId}/phases`),
+  });
+
+  const { data: historyResponse } = useQuery({
+    queryKey: [...queryKeys.project(projectId), "history"],
+    queryFn: () => apiFetch(`/projects/${projectId}/history`),
+  });
+
+  const { subscribe } = usePusher();
+  useEffect(() => {
+    const channel = subscribe(`private-project.${projectId}`);
+    if (!channel) return;
+
+    let debounceTimer: NodeJS.Timeout;
+    const listener = (event: any) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
+      }, 500);
+    };
+
+    channel.listen(".task-created", listener);
+    channel.listen(".task-updated", listener);
+    channel.listen(".task-completed", listener);
+    channel.listen(".member-updated", listener);
+
+    return () => {
+      channel.stopListening(".task-created", listener);
+      channel.stopListening(".task-updated", listener);
+      channel.stopListening(".task-completed", listener);
+      channel.stopListening(".member-updated", listener);
+      clearTimeout(debounceTimer);
+    };
+  }, [projectId, subscribe, queryClient]);
+
+  const { data: deptsData } = useQuery({ 
+    queryKey: ["departments"], 
+    queryFn: () => apiFetch("/departments"),
+    enabled: canManageProjects
+  });
+  const { data: qaFormsData } = useQuery({ 
+    queryKey: queryKeys.qaForms, 
+    queryFn: () => apiFetch("/qa-forms"),
+    enabled: canManageProjects
+  });
+
+  const departments = unwrapList(deptsData);
+  const qaForms = unwrapList(qaFormsData);
+  const project = unwrapOne(projectResponse);
+  const phases = unwrapList(phasesResponse) || [];
+  const projectHistory = unwrapList(historyResponse) || [];
+
+  const historyParentRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const rowVirtualizer = useVirtualizer({
+    count: projectHistory.length,
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(highlightTaskId ? parseInt(highlightTaskId) : null);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [createTaskPhaseId, setCreateTaskPhaseId] = useState<number | undefined>();
@@ -108,18 +180,33 @@ export default function ProjectDetailPage() {
 
   const updateProjectMutation = useMutation({
     mutationFn: async () => {
+      if (coverImageFile) {
+        const formData = new FormData();
+        formData.append("cover_image", coverImageFile);
+        await apiFetch(`/projects/${projectId}/cover`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      const payload = { ...editForm };
+      if (coverImageFile) {
+        delete payload.cover_image;
+      }
+
       return apiFetch(`/projects/${projectId}`, {
         method: "PUT",
         body: JSON.stringify({
-          ...editForm,
-          department_id: editForm.department_id === "none" ? null : editForm.department_id,
-          qa_form_id: editForm.qa_form_id === "none" ? null : editForm.qa_form_id,
+          ...payload,
+          department_id: payload.department_id === "none" ? null : payload.department_id,
+          qa_form_id: payload.qa_form_id === "none" ? null : payload.qa_form_id,
         }),
       });
     },
     onSuccess: (data: any) => {
       if (isQueued(data)) return;
       toast.success("Project updated.");
+      setCoverImageFile(null);
       setIsEditOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
     },
@@ -479,7 +566,7 @@ export default function ProjectDetailPage() {
               <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Project Cover</label>
               <div className="flex items-center gap-4">
                 <Button type="button" variant="outline" onClick={() => setShowUploadPopup(true)}><AppIcon name="upload" className="w-4 h-4 mr-2" /> Change Cover</Button>
-                {editForm.cover_image && <Button type="button" variant="ghost" onClick={() => setEditForm({ ...editForm, cover_image: null })} className="text-rose-500">Remove</Button>}
+                {editForm.cover_image && <Button type="button" variant="ghost" onClick={() => { setCoverImageFile(null); setEditForm({ ...editForm, cover_image: null }); }} className="text-rose-500">Remove</Button>}
               </div>
             </div>
 
@@ -504,14 +591,8 @@ export default function ProjectDetailPage() {
         title="Upload Project Cover"
         maxSizeMB={2}
         onUpload={async (file) => {
-          const formData = new FormData();
-          formData.append("cover_image", file);
-          const res = await apiFetch("/projects/cover", {
-            method: "POST",
-            body: formData,
-          });
-          setEditForm({ ...editForm, cover_image: res.path || res.url });
-          toast.success("Cover image uploaded");
+          setCoverImageFile(file);
+          setEditForm({ ...editForm, cover_image: URL.createObjectURL(file) });
         }}
       />
       

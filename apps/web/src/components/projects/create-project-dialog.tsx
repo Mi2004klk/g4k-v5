@@ -29,7 +29,7 @@ export function CreateProjectDialog({
 }) {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const [coverImagePath, setCoverImagePath] = useState<string | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -68,13 +68,21 @@ export function CreateProjectDialog({
             end_date: draftData.endDate || null,
             deadline: draftData.deadline || null,
             member_ids: draftData.memberIds,
-            cover_image: coverImagePath,
             allow_employee_tasks: draftData.allowEmployeeTasks,
           }),
         });
 
         const projectId = res.id || res.data?.id;
         if (!projectId) throw new Error("Project creation failed. No ID returned.");
+
+        if (coverImageFile) {
+          const fd = new FormData();
+          fd.append('cover_image', coverImageFile);
+          await apiFetch(`/projects/${projectId}/cover`, {
+            method: "POST",
+            body: fd
+          });
+        }
 
         // 2. Create Phases and Tasks sequentially
         for (let i = 0; i < draftData.phases.length; i++) {
@@ -133,7 +141,7 @@ export function CreateProjectDialog({
       
       onOpenChange(false);
       setCurrentStep(0);
-      setCoverImagePath(null);
+      setCoverImageFile(null);
       setCoverImagePreview(null);
       setDraftData({
         name: "",
@@ -354,7 +362,7 @@ export function CreateProjectDialog({
                 {coverImagePreview ? "Change Cover" : "Upload Cover"}
               </Button>
               {coverImagePreview && (
-                <Button type="button" variant="ghost" onClick={() => { setCoverImagePath(null); setCoverImagePreview(null); }} className="h-10 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl" aria-label="Remove cover image">
+                <Button type="button" variant="ghost" onClick={() => { setCoverImageFile(null); setCoverImagePreview(null); }} className="h-10 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl" aria-label="Remove cover image">
                   Remove Cover
                 </Button>
               )}
@@ -365,14 +373,8 @@ export function CreateProjectDialog({
               title="Upload Project Cover"
               maxSizeMB={2}
               onUpload={async (file) => {
-                const formData = new FormData();
-                formData.append("cover_image", file);
-                const res = await apiFetch("/projects/cover", {
-                  method: "POST",
-                  body: formData,
-                });
-                setCoverImagePath(res.path || res.url);
-                setCoverImagePreview(res.url);
+                setCoverImageFile(file);
+                setCoverImagePreview(URL.createObjectURL(file));
               }}
             />
           </div>

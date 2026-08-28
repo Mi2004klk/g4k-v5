@@ -183,7 +183,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::get('/projects/{id}/phases', [PhaseController::class, 'index']);
     });
     Route::middleware('capability:projects.manage')->group(function () {
-        Route::post('/projects/cover', [ProjectController::class, 'uploadCover']);
+        Route::post('/projects/{id}/cover', [ProjectController::class, 'uploadCover']);
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
