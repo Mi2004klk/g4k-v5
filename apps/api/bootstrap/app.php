@@ -14,8 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Scoped proxy trust via Laravel's defaults instead of trusting all ('*')
-        
+        // Scoped proxy trust configuration
+        $trustedProxies = env('TRUSTED_PROXIES');
+        if ($trustedProxies) {
+            $middleware->trustProxies(at: $trustedProxies === '*' ? '*' : explode(',', $trustedProxies));
+        }
+
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->append(\App\Http\Middleware\WrapBareArrays::class);
