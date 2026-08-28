@@ -373,7 +373,18 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     Route::apiResource('auto-numberings', AutoNumberingController::class)->only(['index', 'update'])->middleware('capability:settings.manage');
     
     // Leave Module
+    Route::get('/leave-type-configs', [\App\Http\Controllers\LeaveTypeConfigController::class, 'index']);
+    
     Route::middleware('capability:settings.manage')->group(function () {
+        Route::post('/leave-type-configs', [\App\Http\Controllers\LeaveTypeConfigController::class, 'store']);
+        Route::put('/leave-type-configs/{id}', [\App\Http\Controllers\LeaveTypeConfigController::class, 'update']);
+        Route::post('/leave-type-configs/reorder', [\App\Http\Controllers\LeaveTypeConfigController::class, 'reorder']);
+        
+        Route::get('/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'index']);
+        Route::post('/scheduled-reports', [\App\Http\Controllers\ScheduledReportController::class, 'store']);
+        Route::put('/scheduled-reports/{id}', [\App\Http\Controllers\ScheduledReportController::class, 'update']);
+        Route::delete('/scheduled-reports/{id}', [\App\Http\Controllers\ScheduledReportController::class, 'destroy']);
+        
         Route::post('/holidays', [\App\Http\Controllers\HolidayController::class, 'store']);
         Route::put('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'update']);
         Route::delete('/holidays/{id}', [\App\Http\Controllers\HolidayController::class, 'destroy']);

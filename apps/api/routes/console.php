@@ -26,3 +26,4 @@ Schedule::command('notifications:cleanup')->daily()->withoutOverlapping()->onOne
 Schedule::command('tasks:reminders')->everyMinute()->withoutOverlapping()->onOneServer()->timezone($tz);
 Schedule::command('reminders:personal')->everyMinute()->withoutOverlapping()->onOneServer()->timezone($tz);
 Schedule::command('reports:cleanup-exports')->daily()->withoutOverlapping()->onOneServer()->timezone($tz);
+Schedule::command('reports:run')->everyMinute()->withoutOverlapping()->onOneServer()->timezone($tz);

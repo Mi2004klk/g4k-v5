@@ -868,10 +868,14 @@ class UserController extends Controller
                     continue;
                 }
 
+                $forceChange = \App\Models\Setting::where('category', 'security')->where('key', 'force_password_change')->value('value');
+                $mustChange = filter_var($forceChange, FILTER_VALIDATE_BOOLEAN);
+
                 $user = User::create([
                     'name' => $data['name'],
                     'email' => $data['email'],
-                    'password' => \Illuminate\Support\Facades\Hash::make('password123'), // Default password
+                    'password' => \Illuminate\Support\Facades\Hash::make($data['password'] ?? 'password123'),
+                    'must_change_password' => $mustChange,
                     'phone' => $data['phone'] ?? null,
                     'designation_id' => null, // Can be mapped if ID is provided
                     'department_id' => null,

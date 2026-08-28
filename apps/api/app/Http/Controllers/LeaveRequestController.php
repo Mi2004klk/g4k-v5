@@ -18,12 +18,17 @@ class LeaveRequestController extends Controller
         $userId = $request->user()->id;
         $year = (int) date('Y');
         
-        $types = ['casual', 'sick', 'earned', 'unpaid'];
-        $balances = [];
+        $activeConfigs = \Illuminate\Support\Facades\Cache::remember('leave_type_configs_active', 3600, function () {
+            return \App\Models\LeaveTypeConfig::where('is_active', true)->orderBy('sort_order')->get();
+        });
+
+        $types = $activeConfigs->pluck('key');
         
         foreach ($types as $type) {
+            $config = clone $activeConfigs->firstWhere('key', $type);
             $balance = \App\Models\LeaveBalance::getOrCreate($userId, $type, $year);
             $balances[$type] = [
+                'label' => $config ? $config->label : ucfirst($type),
                 'allowed' => $balance->allowed,
                 'used' => $balance->used,
                 'available' => max(0, $balance->allowed - $balance->used)
@@ -97,6 +102,10 @@ class LeaveRequestController extends Controller
     public function store(StoreLeaveRequestRequest $request)
     {
         $validated = $request->validated();
+        
+        if (!empty($validated['is_half_day'])) {
+            $validated['end_date'] = $validated['start_date'];
+        }
 
         $userId = $request->user()->id;
 
@@ -148,6 +157,7 @@ class LeaveRequestController extends Controller
                     'end_date' => $validated['end_date'],
                     'reason' => $validated['reason'],
                     'type' => $validated['type'],
+                    'is_half_day' => !empty($validated['is_half_day']),
                     'status' => 'pending',
                 ]);
 
@@ -178,7 +188,12 @@ class LeaveRequestController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'nullable|string',
             'type' => 'required|in:casual,sick,earned,unpaid',
+            'is_half_day' => 'sometimes|boolean',
         ]);
+
+        if (!empty($validated['is_half_day'])) {
+            $validated['end_date'] = $validated['start_date'];
+        }
 
         $leave = LeaveRequest::findOrFail($id);
 
@@ -243,6 +258,7 @@ class LeaveRequestController extends Controller
                     'end_date' => $validated['end_date'],
                     'reason' => $validated['reason'],
                     'type' => $validated['type'],
+                    'is_half_day' => !empty($validated['is_half_day']),
                 ]);
             });
         } catch (\Exception $e) {

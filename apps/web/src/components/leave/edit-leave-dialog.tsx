@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppIcon } from "@g4k/ui/components";
 import { apiFetch, isQueued } from "@/lib/api-client";
 import { Button } from "@g4k/ui/components";
 import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
+import { Checkbox } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
 import { Label } from "@g4k/ui/components";
 import { DatePicker } from "@g4k/ui/components";
@@ -24,6 +25,7 @@ interface LeaveRecord {
   end_date: string;
   reason?: string;
   status: string;
+  is_half_day?: boolean;
 }
 
 interface EditLeaveDialogProps {
@@ -42,6 +44,15 @@ export function EditLeaveDialog({ open, onOpenChange, leaveRequest, onSuccess }:
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [type, setType] = useState<string>("casual");
   const [reason, setReason] = useState<string>("");
+  const [isHalfDay, setIsHalfDay] = useState<boolean>(false);
+
+  const { data: balanceData } = useQuery({
+    queryKey: queryKeys.leaveBalance,
+    queryFn: async () => {
+      return apiFetch("/leave-requests/balance");
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     if (leaveRequest && open) {
@@ -49,12 +60,13 @@ export function EditLeaveDialog({ open, onOpenChange, leaveRequest, onSuccess }:
       setEndDate(new Date(leaveRequest.end_date));
       setType(leaveRequest.type);
       setReason(leaveRequest.reason || "");
+      setIsHalfDay(!!leaveRequest.is_half_day);
       setFieldErrors({});
     }
   }, [leaveRequest, open]);
 
   const submitMutation = useMutation({
-    mutationFn: async (payload: { start_date: string; end_date: string; type: string; reason: string }) => {
+    mutationFn: async (payload: { start_date: string; end_date: string; type: string; reason: string; is_half_day?: boolean }) => {
       if (!leaveRequest) throw new Error("No leave request selected");
       return apiFetch(`/leave-requests/${leaveRequest.id}`, {
         method: "PUT",
@@ -92,16 +104,17 @@ export function EditLeaveDialog({ open, onOpenChange, leaveRequest, onSuccess }:
       return;
     }
 
-    if (endDate < startDate) {
+    if (endDate < startDate && !isHalfDay) {
       setFieldErrors(prev => ({ ...prev, end_date: ["End date cannot be before start date"] }));
       return;
     }
     
     submitMutation.mutate({
       start_date: format(startDate, "yyyy-MM-dd"),
-      end_date: format(endDate, "yyyy-MM-dd"),
+      end_date: format(isHalfDay ? startDate : endDate, "yyyy-MM-dd"),
       type: type,
-      reason: reason
+      reason: reason,
+      is_half_day: isHalfDay
     });
   };
 
@@ -131,16 +144,36 @@ export function EditLeaveDialog({ open, onOpenChange, leaveRequest, onSuccess }:
             <div className="space-y-2">
               <Label htmlFor={`${formId}-end`} className="font-semibold text-neutral-700 dark:text-neutral-300">End Date</Label>
               <DatePicker 
-                value={endDate}
+                value={isHalfDay ? startDate : endDate}
                 onChange={(d: Date | undefined) => {
                   setEndDate(d);
                   if (d && startDate && d < startDate) setStartDate(d);
                 }}
                 placeholder="Select end date"
-                disabled={submitMutation.isPending}
+                disabled={submitMutation.isPending || isHalfDay}
               />
               <FormError errors={fieldErrors.end_date} />
             </div>
+          </div>
+          
+          <div className="flex items-center space-x-2 -mt-2">
+            <Checkbox 
+              id={`edit-half-day-${formId}`} 
+              checked={isHalfDay}
+              onCheckedChange={(checked) => {
+                setIsHalfDay(!!checked);
+                if (checked && startDate) {
+                  setEndDate(startDate);
+                }
+              }}
+              disabled={submitMutation.isPending}
+            />
+            <label
+              htmlFor={`edit-half-day-${formId}`}
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-neutral-700 dark:text-neutral-300 cursor-pointer"
+            >
+              Half Day
+            </label>
           </div>
 
           <div className="space-y-3">
@@ -151,7 +184,7 @@ export function EditLeaveDialog({ open, onOpenChange, leaveRequest, onSuccess }:
               className="grid grid-cols-2 gap-3"
               disabled={submitMutation.isPending}
             >
-              {LEAVE_TYPES.filter(t => t.value !== 'all').map((t) => (
+              {(balanceData ? Object.keys(balanceData).map(k => ({ value: k, label: balanceData[k].label || k })) : LEAVE_TYPES).filter(t => t.value !== 'all').map((t) => (
                 <div key={t.value}>
                   <RadioGroupItem value={t.value} id={`${formId}-type-${t.value}`} className="peer sr-only" />
                   <Label

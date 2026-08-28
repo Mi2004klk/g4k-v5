@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class LeaveRequest extends Model
 {
     use \App\Traits\HasDemoTag;
-    protected $fillable = ['user_id', 'start_date', 'end_date', 'reason', 'type', 'approval_id', 'status', 'demo_tag'];
+    protected $fillable = ['user_id', 'start_date', 'end_date', 'reason', 'type', 'approval_id', 'status', 'demo_tag', 'is_half_day'];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'is_half_day' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -32,8 +33,11 @@ class LeaveRequest extends Model
         return \App\Support\WorkingDayCalculator::calculate($user, $startDate, $endDate);
     }
 
-    public function getWorkingDays(): int
+    public function getWorkingDays(): float
     {
+        if ($this->is_half_day) {
+            return 0.5;
+        }
         return self::calculateWorkingDays($this->user, $this->start_date, $this->end_date);
     }
 }

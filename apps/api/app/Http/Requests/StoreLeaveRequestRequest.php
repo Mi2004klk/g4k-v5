@@ -27,6 +27,7 @@ class StoreLeaveRequestRequest extends FormRequest
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string|max:1000',
             'type' => 'required|in:casual,sick,earned,unpaid',
+            'is_half_day' => 'sometimes|boolean',
         ];
     }
 

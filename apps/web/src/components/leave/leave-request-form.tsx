@@ -9,6 +9,7 @@ import { apiFetch, isQueued } from "@/lib/api-client";
 import { Card, CardHeader, CardTitle, CardContent, FormDraftAlert } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { RadioGroup, RadioGroupItem } from "@g4k/ui/components";
+import { Checkbox } from "@g4k/ui/components";
 import { Textarea } from "@g4k/ui/components";
 import { Label } from "@g4k/ui/components";
 import { Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
@@ -51,15 +52,17 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
     end_date?: Date;
     type: string;
     reason: string;
+    is_half_day: boolean;
   }>("leave_request", {
     type: "casual",
     reason: "",
+    is_half_day: false,
   });
 
   // Calculate days requested
-  const daysRequested = (draftData.start_date && draftData.end_date) 
+  const daysRequested = draftData.is_half_day ? 0.5 : ((draftData.start_date && draftData.end_date) 
     ? differenceInDays(draftData.end_date, draftData.start_date) + 1 
-    : (draftData.start_date ? 1 : 0);
+    : (draftData.start_date ? 1 : 0));
 
   const { data: balanceData } = useQuery({
     queryKey: queryKeys.leaveBalance,
@@ -74,7 +77,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
   }
 
   const submitMutation = useMutation({
-    mutationFn: async (payload: { start_date: string; end_date: string; type: string; reason: string }) => {
+    mutationFn: async (payload: { start_date: string; end_date: string; type: string; reason: string; is_half_day?: boolean }) => {
       return apiFetch("/leave-requests", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -87,7 +90,8 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
         start_date: undefined,
         end_date: undefined,
         reason: "",
-        type: "casual"
+        type: "casual",
+        is_half_day: false
       });
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.myLeaveHistory() });
@@ -109,7 +113,7 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
     setFieldErrors({});
     if (!draftData.start_date || !draftData.end_date) return;
 
-    if (draftData.end_date < draftData.start_date) {
+    if (draftData.end_date < draftData.start_date && !draftData.is_half_day) {
       toast.error("End date must be on or after start date.");
       return;
     }
@@ -150,9 +154,10 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
 
     submitMutation.mutate({ 
       start_date: format(draftData.start_date, "yyyy-MM-dd"), 
-      end_date: format(draftData.end_date, "yyyy-MM-dd"), 
+      end_date: format(draftData.is_half_day ? draftData.start_date : draftData.end_date, "yyyy-MM-dd"), 
       type: draftData.type, 
-      reason: draftData.reason 
+      reason: draftData.reason,
+      is_half_day: draftData.is_half_day
     });
   };
 
@@ -201,30 +206,49 @@ export function LeaveRequestForm({ inDialog = false, onSuccess }: LeaveRequestFo
           <p className="text-[10px] text-neutral-600 dark:text-neutral-400 mb-1.5 leading-tight">Same-day leave counts as 1 day.</p>
           <DatePicker
             mode="range"
-            value={{ from: draftData.start_date, to: draftData.end_date }}
+            value={draftData.is_half_day ? { from: draftData.start_date, to: draftData.start_date } : { from: draftData.start_date, to: draftData.end_date }}
             onChange={(range: any) => {
               setDraftData({
                 ...draftData,
                 start_date: range?.from,
-                end_date: range?.to
+                end_date: draftData.is_half_day ? range?.from : range?.to
               });
             }}
             placeholder="Select leave start and end dates"
-            className="w-full h-10 border-neutral-200 dark:border-neutral-800"
+            className={cn("w-full h-10 border-neutral-200 dark:border-neutral-800", draftData.is_half_day && "opacity-80")}
             disabled={(date: Date) => {
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               return date < today;
             }}
           />
-          <FormError errors={fieldErrors.start_date || fieldErrors.end_date} />
+          <div className="flex items-center space-x-2 pt-2 pb-1">
+            <Checkbox 
+              id={`half-day-${formId}`} 
+              checked={draftData.is_half_day}
+              onCheckedChange={(checked) => {
+                setDraftData({
+                  ...draftData,
+                  is_half_day: !!checked,
+                  end_date: checked ? draftData.start_date : draftData.end_date
+                });
+              }}
+            />
+            <label
+              htmlFor={`half-day-${formId}`}
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-neutral-700 dark:text-neutral-300 cursor-pointer"
+            >
+              Half Day
+            </label>
+          </div>
+          <FormError errors={fieldErrors.start_date || fieldErrors.end_date || fieldErrors.is_half_day} />
         </div>
         
         <div className="space-y-1.5 flex-1 flex flex-col">
           <label className="text-xs uppercase tracking-wider font-semibold text-neutral-600 dark:text-neutral-400 dark:text-neutral-400">Leave Type *</label>
           <p className="text-[10px] text-neutral-600 dark:text-neutral-400 mb-1.5 leading-tight">Check your remaining balance in the sidebar.</p>
           <RadioGroup value={draftData.type} onValueChange={(val) => setDraftData({ ...draftData, type: val })} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-            {LEAVE_TYPES.map((item) => {
+            {(balanceData ? Object.keys(balanceData).map(k => ({ value: k, label: balanceData[k].label || k })) : LEAVE_TYPES).map((item) => {
               const bal = balanceData ? balanceData[item.value] : null;
               const isExhausted = bal ? bal.available <= 0 : false;
               

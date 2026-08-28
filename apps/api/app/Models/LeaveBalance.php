@@ -18,8 +18,8 @@ class LeaveBalance extends Model
 
     protected $casts = [
         'year' => 'integer',
-        'allowed' => 'integer',
-        'used' => 'integer',
+        'allowed' => 'float',
+        'used' => 'float',
     ];
 
     public function user()
@@ -33,15 +33,13 @@ class LeaveBalance extends Model
     public static function getOrCreate(int $userId, string $type, ?int $year = null): self
     {
         $year = $year ?? (int) date('Y');
-        $defaults = [
-            'casual' => 12,
-            'sick' => 12,
-            'annual' => 12,
-            'earned' => 12,
-            'unpaid' => 12,
-        ];
+        
+        $configs = \Illuminate\Support\Facades\Cache::remember('leave_type_configs', 3600, function () {
+            return \App\Models\LeaveTypeConfig::all()->keyBy('key');
+        });
 
-        $allowed = $defaults[strtolower($type)] ?? 12;
+        $config = $configs->get(strtolower($type));
+        $allowed = $config ? $config->default_allowed : 12;
 
         return static::firstOrCreate(
             ['user_id' => $userId, 'leave_type' => strtolower($type), 'year' => $year],

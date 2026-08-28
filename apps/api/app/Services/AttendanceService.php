@@ -302,7 +302,7 @@ class AttendanceService
      * Mark days as on_leave based on an approved leave request.
      * Respects user work schedules, holidays, and actual punches.
      */
-    public static function markLeaveDays(int $userId, string $startDate, string $endDate): void
+    public static function markLeaveDays(int $userId, string $startDate, string $endDate, bool $isHalfDay = false): void
     {
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
@@ -316,7 +316,7 @@ class AttendanceService
         $activeRole = $user->resolveActiveRole();
         $invalidatedDates = [];
 
-        DB::transaction(function () use ($start, $end, $user, $userId, &$invalidatedDates) {
+        DB::transaction(function () use ($start, $end, $user, $userId, &$invalidatedDates, $isHalfDay) {
             $currentDate = $start->copy();
             
             while ($currentDate->lte($end)) {
@@ -339,7 +339,7 @@ class AttendanceService
                             \Illuminate\Support\Facades\Log::info("Leave approval skipping active attendance day for user {$userId} on {$dateStr} because they actually worked.");
                         } else {
                             $existing->update([
-                                'status' => 'on_leave',
+                                'status' => $isHalfDay ? 'half_day' : 'on_leave',
                                 'source' => 'server',
                                 'updated_at' => now(),
                                 'version' => DB::raw('version + 1')
@@ -350,7 +350,7 @@ class AttendanceService
                         AttendanceDay::create([
                             'user_id' => $userId,
                             'date' => $dateStr,
-                            'status' => 'on_leave',
+                            'status' => $isHalfDay ? 'half_day' : 'on_leave',
                             'source' => 'server',
                             'version' => 1
                         ]);

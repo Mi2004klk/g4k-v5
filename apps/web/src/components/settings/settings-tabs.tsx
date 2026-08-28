@@ -16,6 +16,7 @@ import { Button, Input, Skeleton } from "@g4k/ui/components";
 import { MailSmtpConfig } from "./mail-smtp-config";
 import { PoliciesConfig } from "./policies-config";
 import { HolidayCalendar } from "@/components/leave/holiday-calendar";
+import { LeaveTypesConfig } from "./leave-types-config";
 import { WorkSchedulesConfig } from "./work-schedules-config";
 
 import { NotificationsConfig } from "./notifications-config";
@@ -24,7 +25,9 @@ import { RemindersConfig } from "./reminders-config";
 import { SecurityRequestsConfig } from "./security-requests-config";
 import { DemoDataConfig } from "./demo-data-config";
 import { SystemJobsConfig } from "./system-jobs-config";
+import { ScheduledReportsConfig } from "./scheduled-reports-config";
 import { QaFormsManagement } from "./qa-forms-management";
+import { EmployeeImportConfig } from "./employee-import-config";
 import { useAuthStore, getAuthToken } from "@/lib/auth-store";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
 import { DisabledWhileSubmitting, ValidationSummary } from "@g4k/ui/components/state-helpers";
@@ -138,16 +141,19 @@ export function SettingsTabs() {
             <TabsTrigger value="schedule" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Work Schedules</TabsTrigger>
             <TabsTrigger value="policies" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Policies</TabsTrigger>
             <TabsTrigger value="holidays" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Holidays</TabsTrigger>
+            <TabsTrigger value="leave-types" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Leave Types</TabsTrigger>
             <TabsTrigger value="autonumber" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Auto-Numbering</TabsTrigger>
 
             <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2 px-3 mt-6">System & Operations</div>
             <TabsTrigger value="mail" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Mail / SMTP</TabsTrigger>
             <TabsTrigger value="notifications" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Notifications</TabsTrigger>
             <TabsTrigger value="reminders" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Reminders</TabsTrigger>
+            <TabsTrigger value="scheduled-reports" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Scheduled Reports</TabsTrigger>
             <TabsTrigger value="qa-forms" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">QA Forms</TabsTrigger>
             <TabsTrigger value="jobs" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">System Jobs</TabsTrigger>
 
             <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2 px-3 mt-6">Data & Security</div>
+            <TabsTrigger value="employee-import" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Employee Import</TabsTrigger>
             <TabsTrigger value="security" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">Security Requests</TabsTrigger>
             <TabsTrigger value="demo" className="justify-start px-3 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm text-amber-600 dark:text-amber-500 hover:text-amber-700">Demo Data</TabsTrigger>
           </TabsList>
@@ -263,6 +269,11 @@ export function SettingsTabs() {
               <HolidayCalendar />
             </div>
           </TabsContent>
+
+          <TabsContent className="mt-0" value="leave-types">
+            <LeaveTypesConfig />
+          </TabsContent>
+          
           <TabsContent className="mt-0" value="mail">
             <MailSmtpConfig />
           </TabsContent>
@@ -277,6 +288,14 @@ export function SettingsTabs() {
 
           <TabsContent className="mt-0" value="reminders">
             <RemindersConfig />
+          </TabsContent>
+
+          <TabsContent className="mt-0" value="scheduled-reports">
+            <ScheduledReportsConfig />
+          </TabsContent>
+          
+          <TabsContent className="mt-0" value="employee-import">
+            <EmployeeImportConfig />
           </TabsContent>
 
           <TabsContent className="mt-0" value="security">

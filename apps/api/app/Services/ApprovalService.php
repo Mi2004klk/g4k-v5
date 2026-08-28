@@ -114,13 +114,13 @@ class ApprovalService
                         ->lockForUpdate()
                         ->first();
                         
-                    if (($balance->allowed - $balance->used) < $days) {
+                    if (($balance->allowed - $balance->used) < $leave->getWorkingDays()) {
                         abort(422, "Insufficient leave balance for this request.");
                     }
                     
                     $leave->update(['status' => 'approved']);
-                    $balance->increment('used', $days);
-                    \App\Services\AttendanceService::markLeaveDays($leave->user_id, $leave->start_date, $leave->end_date);
+                    $balance->increment('used', $leave->getWorkingDays());
+                    \App\Services\AttendanceService::markLeaveDays($leave->user_id, $leave->start_date, $leave->end_date, $leave->is_half_day);
                 }
             }
 
