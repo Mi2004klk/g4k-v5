@@ -32,6 +32,9 @@ export function MessageComposer({
   conversation,
   replyTo,
   onCancelReply,
+  editingMessage,
+  onEdit,
+  onCancelEdit,
 }: {
   onSend: (body: string, mentions?: number[], attachment?: File | null) => void;
   disabled?: boolean;

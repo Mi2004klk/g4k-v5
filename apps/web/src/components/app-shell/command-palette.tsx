@@ -98,7 +98,7 @@ export function CommandPalette() {
               <CommandGroup heading="Projects">
                 {searchResults.projects.map((p: any) => (
                   <CommandItem key={`project-${p.id}`} onSelect={() => runCommand(() => router.push(`/dashboard/projects?project=${p.id}`))}>
-                    <AppIcon name="folder" className="mr-2" />
+                    <AppIcon name="projects" className="mr-2" />
                     <span>{p.name}</span>
                   </CommandItem>
                 ))}
@@ -176,7 +176,7 @@ export function CommandPalette() {
         {canManageAnnouncements && (
           <CommandGroup heading="Announcements">
             <CommandItem onSelect={() => runCommand(() => router.push("/dashboard?newAnnouncement=1"))}>
-              <AppIcon name="megaphone" className=" mr-2 text-indigo-500" />
+              <AppIcon name="announcement" className=" mr-2 text-indigo-500" />
               <span>New Announcement</span>
             </CommandItem>
           </CommandGroup>

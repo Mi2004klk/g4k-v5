@@ -156,8 +156,7 @@ export function SettingsTabs() {
 
       <div className="flex-1 min-w-0">
         {canManageSettings && (
-          <>
-            <TabsContent value="company" className="mt-0">
+          <TabsContent value="company" className="mt-0">
           <Card className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-e1 hover:shadow-e2 transition-shadow duration-150 rounded-xl overflow-hidden h-full">
           <CardHeader>
             <CardTitle className="text-base">Company Information</CardTitle>

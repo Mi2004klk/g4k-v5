@@ -33,6 +33,7 @@ const MessageItem = memo(function MessageItem({
   onDeleteMessage,
   onReply,
   conversationType,
+  onEditMessage,
 }: {
   msg: ListMessage;
   isMe: boolean;
@@ -276,6 +277,7 @@ export function MessageList({
   onDeleteMessage,
   onReply,
   conversationType,
+  onEditMessage,
 }: {
   messages: ListMessage[];
   currentUserId: number;
