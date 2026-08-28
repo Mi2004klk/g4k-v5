@@ -143,7 +143,7 @@ class UserController extends Controller
         $forceChange = \App\Models\Setting::where('category', 'security')->where('key', 'force_password_change')->value('value');
         $mustChange = filter_var($forceChange, FILTER_VALIDATE_BOOLEAN);
 
-        $password = \Illuminate\Support\Str::random(12);
+        $password = $this->generatePolicyConformantPassword();
 
         $user = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $employeeCode, $mustChange, $roles, $password) {
             $user = User::forceCreate([
@@ -157,7 +157,6 @@ class UserController extends Controller
                 'designation_id' => $validated['designation_id'] ?? null,
                 'password' => Hash::make($password),
                 'must_change_password' => $mustChange,
-                'password_changed_at' => now(),
                 'status' => 'active',
                 'emergency_contact' => json_encode([
                     'name' => $validated['emergency_contact_name'] ?? null,
@@ -190,8 +189,13 @@ class UserController extends Controller
 
         $responseData = $user->toArray();
         if (!$emailSent) {
-            $responseData['_temp_password'] = $password;
-            $responseData['_warning'] = 'SMTP is not configured or failed to send email. Please securely share this temporary password with the user.';
+            $returnTemp = filter_var(\App\Models\Setting::where('category', 'security')->where('key', 'password.return_temp')->value('value'), FILTER_VALIDATE_BOOLEAN);
+            if ($returnTemp) {
+                $responseData['_temp_password'] = $password;
+                $responseData['_warning'] = 'SMTP is not configured or failed to send email. Please securely share this temporary password with the user.';
+            } else {
+                $responseData['_warning'] = 'SMTP is not configured or failed to send email. The password was not sent and is not displayed per security policy. Please configure SMTP or enable displaying temp passwords in settings.';
+            }
         }
 
         return response()->json($responseData, 201);
@@ -603,12 +607,12 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthorized to manage Employee users.'], 403);
         }
 
-        $tempPassword = \Illuminate\Support\Str::random(16);
+        $tempPassword = $this->generatePolicyConformantPassword();
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($user, $tempPassword) {
             $user->password = Hash::make($tempPassword);
             $user->must_change_password = true;
-            $user->password_changed_at = now();
+            $user->password_changed_at = null;
             $user->save();
             $user->tokens()->delete();
 
@@ -631,8 +635,13 @@ class UserController extends Controller
 
         $responseData = ['message' => 'Password reset successfully.'];
         if (!$emailSent) {
-            $responseData['_temp_password'] = $tempPassword;
-            $responseData['_warning'] = 'SMTP is not configured or failed to send email. Please securely share this temporary password with the user.';
+            $returnTemp = filter_var(\App\Models\Setting::where('category', 'security')->where('key', 'password.return_temp')->value('value'), FILTER_VALIDATE_BOOLEAN);
+            if ($returnTemp) {
+                $responseData['_temp_password'] = $tempPassword;
+                $responseData['_warning'] = 'SMTP is not configured or failed to send email. Please securely share this temporary password with the user.';
+            } else {
+                $responseData['_warning'] = 'SMTP is not configured or failed to send email. The password was not sent and is not displayed per security policy. Please configure SMTP or enable displaying temp passwords in settings.';
+            }
         } else {
             $responseData['message'] = 'Password reset and temporary password emailed to user.';
         }

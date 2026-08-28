@@ -231,13 +231,30 @@ export function EmployeeManagementTab() {
       const tempPassword = res?._temp_password;
       const newUserId = res?.id || res?.data?.id;
       
-      toast.success(tempPassword ? `User created! Temp password: ${tempPassword}` : "User created successfully!", { 
-        duration: 10000,
-        action: newUserId ? {
-          label: "View Profile",
-          onClick: () => router.push(`/dashboard/directory/${newUserId}`)
-        } : undefined
-      });
+      if (tempPassword) {
+        toast.success("User created successfully!", { 
+          description: `Temp password: ${tempPassword}`,
+          duration: 15000,
+          action: {
+            label: "Copy to Share Securely",
+            onClick: () => {
+              navigator.clipboard.writeText(tempPassword);
+              toast.success("Password copied to clipboard!");
+              if (newUserId) {
+                router.push(`/dashboard/directory/${newUserId}`);
+              }
+            }
+          }
+        });
+      } else {
+        toast.success("User created successfully!", {
+          duration: 10000,
+          action: newUserId ? {
+            label: "View Profile",
+            onClick: () => router.push(`/dashboard/directory/${newUserId}`)
+          } : undefined
+        });
+      }
       setIsCreateOpen(false);
       clearDraft();
       queryClient.invalidateQueries({ queryKey: queryKeys.usersPaginated() });

@@ -69,7 +69,17 @@ export function useUserActions() {
       const msg = res?.message || "Password reset to default.";
       const tempPassword = res?._temp_password;
       if (tempPassword) {
-        toast.success(`Password reset. Temp password: ${tempPassword}`, { duration: 10000 });
+        toast.success(`Password reset successfully.`, { 
+          description: `Temp password: ${tempPassword}`,
+          duration: 15000,
+          action: {
+            label: "Copy to Share Securely",
+            onClick: () => {
+              navigator.clipboard.writeText(tempPassword);
+              toast.success("Password copied to clipboard!");
+            }
+          }
+        });
       } else {
         toast.success(msg);
       }

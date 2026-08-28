@@ -22,6 +22,7 @@ const passwordSchema = z.object({
   require_number: z.boolean(),
   require_symbol: z.boolean(),
   force_password_change: z.boolean(),
+  return_temp: z.boolean(),
 });
 
 const sessionSchema = z.object({
@@ -59,6 +60,7 @@ export function PoliciesConfig() {
       require_number: true,
       require_symbol: true,
       force_password_change: false,
+      return_temp: false,
     },
     mode: "onTouched",
     delayError: 400,
@@ -97,6 +99,7 @@ export function PoliciesConfig() {
         require_number: groupedData.security.find((s: SettingItem) => s.key === "password.require_number")?.value === "true",
         require_symbol: groupedData.security.find((s: SettingItem) => s.key === "password.require_symbol")?.value === "true",
         force_password_change: groupedData.security.find((s: SettingItem) => s.key === "force_password_change")?.value === "true",
+        return_temp: groupedData.security.find((s: SettingItem) => s.key === "password.return_temp")?.value === "true",
       });
       sessionForm.reset({
         access_token_ttl: parseInt(groupedData.security.find((s: SettingItem) => s.key === "session.access_token_ttl")?.value || "15"),
@@ -134,6 +137,7 @@ export function PoliciesConfig() {
       { category: "security", key: "password.require_number", value: data.require_number.toString() },
       { category: "security", key: "password.require_symbol", value: data.require_symbol.toString() },
       { category: "security", key: "force_password_change", value: data.force_password_change.toString() },
+      { category: "security", key: "password.return_temp", value: data.return_temp.toString() },
     ];
     updateMutation.mutate(updates);
   };
@@ -225,6 +229,18 @@ export function PoliciesConfig() {
             <input
               type="checkbox"
               {...passwordForm.register("force_password_change")}
+              className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-[var(--radius)] border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/20 mt-4">
+            <div>
+              <h4 className="text-sm font-medium">Display temporary passwords in UI</h4>
+              <p className="text-xs text-neutral-500">Allow generated temporary passwords to be displayed in the UI when email sending is unconfigured or fails.</p>
+            </div>
+            <input
+              type="checkbox"
+              {...passwordForm.register("return_temp")}
               className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
             />
           </div>

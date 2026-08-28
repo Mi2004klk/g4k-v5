@@ -295,6 +295,7 @@ class DatabaseSeeder extends Seeder
         // 8. Settings
         $settings = [
             ['key' => 'password.min_length', 'value' => json_encode(8), 'category' => 'security'],
+            ['key' => 'password.return_temp', 'value' => json_encode(false), 'category' => 'security'],
             ['key' => 'password.require_mixed', 'value' => json_encode(true), 'category' => 'security'],
             ['key' => 'password.require_number', 'value' => json_encode(false), 'category' => 'security'],
             ['key' => 'password.require_symbol', 'value' => json_encode(false), 'category' => 'security'],
