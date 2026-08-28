@@ -251,6 +251,9 @@ export function ProfileSecuritySection() {
                         </FormItem>
                       )}
                     />
+                    <div className="text-xs text-amber-700 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400 p-3 rounded-lg border border-amber-200 dark:border-amber-500/20 font-medium mt-4">
+                      <strong>Note:</strong> Changing your password will sign you out of all other devices.
+                    </div>
                     <div className="flex justify-end pt-4">
                       <DisabledWhileSubmitting isSubmitting={changePasswordMutation.isPending}>
                         <Button type="submit" variant="primary" className="bg-orange-500 hover:bg-orange-600 text-white border-none">

@@ -226,6 +226,15 @@ export default function DashboardPage() {
 
   const greetingData = useMemo(() => getGreeting(new Date(), user?.id || 0), [user?.id]);
   const firstName = user?.name?.split(" ")[0] || "Team Member";
+  
+  // F-089: Make greeting compact after first week
+  const isNewUser = useMemo(() => {
+    if (!user?.created_at) return true;
+    const createdDate = new Date(user.created_at);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  }, [user?.created_at]);
 
   if (!mounted || isLoading || (!activeRole && !isError)) {
     return (
@@ -280,10 +289,10 @@ export default function DashboardPage() {
         availableWidgets={availableWidgets} 
         headerContent={
           <div>
-            <h1 className="text-2xl font-bold font-display text-neutral-900 dark:text-white leading-tight">
+            <h1 className={`font-bold font-display text-neutral-900 dark:text-white leading-tight ${isNewUser ? 'text-2xl' : 'text-xl'}`}>
               {greetingData.title}, {firstName}
             </h1>
-            <p className="text-sm text-neutral-500 mt-1">
+            <p className={`text-neutral-500 mt-1 ${isNewUser ? 'text-sm' : 'text-xs'}`}>
               {greetingData.subtitle}
             </p>
           </div>

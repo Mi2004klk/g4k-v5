@@ -24,6 +24,7 @@ export interface UserProfile {
   department?: unknown;
   designation?: unknown;
   company?: unknown;
+  created_at?: string;
 }
 
 interface AuthState {

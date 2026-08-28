@@ -21,6 +21,9 @@ const SEGMENT_LABELS: Record<string, string> = {
   reports: "Reports",
   chat: "Team Chat",
   profile: "My Profile",
+  announcements: "Announcements",
+  notifications: "Notifications",
+  audit: "Audit Logs",
 };
 
 function BreadcrumbSegment({

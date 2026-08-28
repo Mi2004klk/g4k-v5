@@ -351,7 +351,7 @@ export function TaskOverviewTab({
                 {task.personal_reminder && (
                   <ConfirmDialog
                     title="Clear Reminder"
-                    description="Are you sure you want to remove this personal reminder?"
+                    description="Are you sure you want to delete this personal reminder?"
                     onConfirm={() => deleteReminderMutation.mutate(task.personal_reminder.id)}
                     trigger={
                       <Button 

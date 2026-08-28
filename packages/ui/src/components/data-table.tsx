@@ -128,8 +128,7 @@ const MemoizedCell = React.memo(
     return (
       <td
         className={cn(
-          "align-middle transition-colors group-hover:bg-muted/50 data-[state=selected]:bg-muted flex-1",
-          density === "compact" ? "p-2" : "p-4",
+          "align-middle transition-colors group-hover:bg-muted/50 data-[state=selected]:bg-muted flex-1 p-[var(--density-padding)]",
           stickyFirstCol && isFirstCol ? "sticky left-0 z-10 bg-background" : "",
           editable ? "group/cell relative" : ""
         )}

@@ -12,7 +12,7 @@ import { Button } from "@g4k/ui/components";
 import { Input } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import { useMutation } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/lib/api-client";
 import { toast } from "sonner";
 
 interface EmployeeImportDialogProps {
@@ -33,9 +33,7 @@ export function EmployeeImportDialog({ open, onOpenChange, onSuccess }: Employee
         method: "POST",
         body: formData,
         // Let the browser set Content-Type for FormData
-      }, {
-        raw: true // Prevents apiFetch from overriding Content-Type to JSON
-      }).then(res => {
+      }, true).then(res => {
         if (!res.ok) throw res;
         return res.json();
       });

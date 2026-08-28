@@ -33,7 +33,7 @@ interface TimerState {
   _broadcastState: () => void;
 }
 
-export const DEFAULT_STANDARD_SECONDS = 31500;
+export const DEFAULT_STANDARD_SECONDS = 28800;
 
 export const useTimerStore = create<TimerState>()(
   persist(
@@ -44,7 +44,7 @@ export const useTimerStore = create<TimerState>()(
   currentBreakStart: null,
   baseSeconds: 0,
   lastActiveTimestamp: null,
-  standardSeconds: 31500, // Default to 8 hours
+  standardSeconds: 28800, // Default to 8 hours
 
   setStandardSeconds: (seconds: number) => set({ standardSeconds: seconds }),
 
