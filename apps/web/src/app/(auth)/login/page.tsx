@@ -87,7 +87,7 @@ export default function LoginPage() {
 
       const targetRoute = result.user?.must_change_password
         ? "/change-password"
-        : !result.onboarded
+        : !result.user?.onboarded_at
         ? "/onboarding"
         : (result.user?.roles?.length > 1 || result.user?.role_assignments?.length > 1)
         ? (returnTo ? `/role-select?returnTo=${encodeURIComponent(returnTo)}` : "/role-select")

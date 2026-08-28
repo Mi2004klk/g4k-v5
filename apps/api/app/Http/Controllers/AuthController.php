@@ -341,7 +341,6 @@ class AuthController extends Controller
             'capabilities' => $capabilities,
             'must_change_password' => (bool)$user->must_change_password,
             'password_expired' => $passwordExpired,
-            'onboarded' => !is_null($user->onboarded_at),
         ])->withCookie($cookie);
     }
 
@@ -466,7 +465,6 @@ class AuthController extends Controller
             'capabilities' => $capabilities,
             'must_change_password' => (bool)$user->must_change_password,
             'password_expired' => $passwordExpired,
-            'onboarded' => !is_null($user->onboarded_at),
         ])->withCookie($cookie);
     }
 

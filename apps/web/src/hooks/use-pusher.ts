@@ -146,6 +146,20 @@ export function PusherProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]); // Note: Excluded 'token' to prevent full Echo reconnects every 15 minutes
 
+  // Dynamically update token for new private channel subscriptions without full reconnects
+  useEffect(() => {
+    if (echoInstance && token) {
+      try {
+        const pusherConfig = echoInstance.connector?.pusher?.config;
+        if (pusherConfig?.auth?.headers) {
+          pusherConfig.auth.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (err) {
+        // Ignore structure errors silently
+      }
+    }
+  }, [echoInstance, token]);
+
   const subscribe = useCallback((channelName: string, isPrivate: boolean = false) => {
     if (!echoInstance) return null;
     

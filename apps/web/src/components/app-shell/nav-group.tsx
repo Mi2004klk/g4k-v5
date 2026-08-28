@@ -42,9 +42,9 @@ export const NavItem = memo(function NavItem({
     } else if (item.href === "/dashboard/directory") {
       queryClient.prefetchQuery({ queryKey: queryKeys.directory(), queryFn: () => apiFetch("/directory") });
     } else if (item.href === "/dashboard/projects") {
-      queryClient.prefetchQuery({ queryKey: queryKeys.projects(), queryFn: () => apiFetch("/projects") });
+      queryClient.prefetchQuery({ queryKey: ["projects", "count"], queryFn: () => apiFetch("/projects?per_page=1") });
     } else if (item.href === "/dashboard/tasks") {
-      queryClient.prefetchQuery({ queryKey: queryKeys.tasks(), queryFn: () => apiFetch("/tasks") });
+      queryClient.prefetchQuery({ queryKey: ["tasks", "count"], queryFn: () => apiFetch("/tasks?per_page=1") });
     } else if (item.href === "/dashboard/announcements") {
       queryClient.prefetchQuery({ queryKey: queryKeys.dashboardInit, queryFn: () => apiFetch("/dashboard/init") });
     } else if (item.href === "/dashboard/org/attendance?tab=leave&sub=approvals") {

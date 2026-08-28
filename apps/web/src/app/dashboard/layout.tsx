@@ -99,10 +99,7 @@ export default function DashboardLayout({
   const setDensity = useAuthStore((s) => s.setDensity);
   const { theme, setTheme } = useTheme();
   
-  const [isHydrated, setIsHydrated] = useState(false);
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+  // Hydration handled by AuthGuard
 
   const { data: chatUnreadData } = useQuery({
     queryKey: queryKeys.chatUnreadCount,
@@ -190,9 +187,7 @@ export default function DashboardLayout({
 
   const isCollapsed = sidebarState === "collapsed";
 
-  if (!isHydrated) {
-    return null; // Hydration gate to prevent Zustand persist mismatch
-  }
+  // Hydration state check removed. AuthGuard will render a skeleton if not initialized.
 
   if (isErrorCapabilities) {
     if (!showError) {

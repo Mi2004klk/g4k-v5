@@ -20,6 +20,7 @@ export default function RoleSelectPage() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const token = useAuthStore((s) => s.token);
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   const autoSelectedRef = useRef(false);
 
@@ -37,6 +38,7 @@ export default function RoleSelectPage() {
       const returnTo = new URLSearchParams(window.location.search).get('returnTo');
       router.push(returnTo || "/dashboard");
     } catch (error) {
+      setHasError(true);
       const e = error as { status?: number; message?: string };
       if (e.status === 429) {
         toast.error("Too many requests. Please try again later.");
@@ -73,7 +75,7 @@ export default function RoleSelectPage() {
     }
   };
 
-  if (!user || (user.roles && user.roles.length === 1)) {
+  if (!user || (user.roles && user.roles.length === 1 && !hasError)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
         <div className="flex space-x-1.5 items-center justify-center">

@@ -17,7 +17,6 @@ export default function ChatModulePage() {
   const { data: notificationsCountData } = useQuery({
     queryKey: queryKeys.notificationsUnreadCount,
     queryFn: () => apiFetch("/notifications/unread-count"),
-    refetchInterval: 30000,
   });
   const unreadNotifications = notificationsCountData?.count || 0;
 
