@@ -60,7 +60,7 @@ Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->m
 Route::post('/broadcasting/auth', [\Illuminate\Broadcasting\BroadcastController::class, 'authenticate'])
     ->middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class]);
 
-Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class, 'throttle:api', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh::class, 'throttle:api_read', \App\Http\Middleware\ForcePasswordChange::class, \App\Http\Middleware\ForceOnboarding::class])->group(function () {
     Route::get('/me/capabilities', [AuthController::class, 'capabilities']);
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);

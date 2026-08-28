@@ -262,6 +262,10 @@ class ChatController extends Controller
             abort(400, 'Only text messages can be edited');
         }
 
+        if ($message->created_at->diffInMinutes(now()) > 15) {
+            abort(403, 'Messages can only be edited within 15 minutes of sending');
+        }
+
         $validated = $request->validate([
             'body' => 'required|string',
         ]);
@@ -585,6 +589,38 @@ class ChatController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function markAllRead(Request $request)
+    {
+        $userId = $request->user()->id;
+        $now = now();
+        
+        // Find all unread messages for the user
+        $unreadMessages = Message::where('sender_id', '!=', $userId)
+            ->whereDoesntHave('reads', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->get();
+
+        if ($unreadMessages->isEmpty()) {
+            return response()->json(['success' => true, 'count' => 0]);
+        }
+
+        $upserts = [];
+        foreach ($unreadMessages as $msg) {
+            $upserts[] = [
+                'message_id' => $msg->id,
+                'user_id' => $userId,
+                'read_at' => $now,
+            ];
+        }
+
+        \App\Models\MessageRead::upsert($upserts, ['message_id', 'user_id'], ['read_at']);
+
+        // Broadcast a generic all-read event if necessary, 
+        // though typically clients just refetch or optimistically update
+        return response()->json(['success' => true, 'count' => count($upserts)]);
     }
 }
 

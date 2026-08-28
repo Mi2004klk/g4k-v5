@@ -205,6 +205,21 @@ class AuthController extends Controller
             $user->update(['failed_attempts' => 0]);
         }
 
+        // Load settings efficiently
+        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
+            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
+                ->where('category', 'security')
+                ->pluck('value', 'key')
+                ->toArray();
+                
+            $decoded = [];
+            foreach ($rawSettings as $k => $v) {
+                $dec = json_decode($v, true);
+                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
+            }
+            return $decoded;
+        });
+
         // 2. Suspicious Login Detection (Whitelist / History)
         $isSuspicious = false;
         
@@ -265,20 +280,6 @@ class AuthController extends Controller
         $primaryRole = $user->resolveActiveRole();
 
         $deviceName = $request->device_name ?? 'Unknown Device';
-
-        $settings = \Illuminate\Support\Facades\Cache::remember('settings:security', 60 * 60, function () {
-            $rawSettings = \Illuminate\Support\Facades\DB::table('settings')
-                ->where('category', 'security')
-                ->pluck('value', 'key')
-                ->toArray();
-                
-            $decoded = [];
-            foreach ($rawSettings as $k => $v) {
-                $dec = json_decode($v, true);
-                $decoded[$k] = (json_last_error() === JSON_ERROR_NONE) ? $dec : $v;
-            }
-            return $decoded;
-        });
             
         $accessTtl = (int) ($settings['session.access_token_ttl'] ?? 15);
         $refreshTtl = (int) ($settings['session.refresh_token_ttl'] ?? 7);

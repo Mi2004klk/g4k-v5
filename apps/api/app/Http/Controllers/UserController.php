@@ -16,6 +16,8 @@ use App\Presenters\UserPresenter;
 
 class UserController extends Controller
 {
+    use \App\Traits\ValidatesPasswordPolicy;
+
     private function hasCapability(Request $request, string $capability): bool
     {
         return $request->user()->hasCapability($capability);

@@ -242,9 +242,18 @@ class DatabaseSeeder extends Seeder
         $scheduleId = DB::table('work_schedules')->where('name', 'Standard G4K Schedule')->value('id');
 
         foreach ($employees as $emp) {
-            $isProd = false; // app()->environment('production'); // Disabled so demo passwords work on live
+            $isProd = app()->environment('production');
+            
+            // Only mutate if not prod, OR if it's explicitly a demo user
+            // In production, we should ideally not seed demo users at all, but if we do, generate a random password
             $password = $isProd ? \Illuminate\Support\Str::random(16) : $emp["password"];
             
+            // To prevent resetting real users, only run updateOrCreate if user has is_demo=true or doesn't exist
+            $existingUser = User::where('username', $emp["username"])->first();
+            if ($isProd && $existingUser && !$existingUser->is_demo) {
+                continue; // Skip touching real non-demo users in production
+            }
+
             $user = User::updateOrCreate(
                 ["username" => $emp["username"]],
                 [
