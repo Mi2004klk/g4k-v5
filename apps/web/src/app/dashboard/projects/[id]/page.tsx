@@ -1,13 +1,11 @@
-"use client";
-
-
+"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { AppIcon, Badge, Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox, Avatar, AvatarFallback, FileUploadPopup, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, ConfirmDialog, Sheet, SheetContent, SheetHeader, SheetTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@g4k/ui/components";
+import { AppIcon, Badge, Button, Input, Textarea, Skeleton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Checkbox, Avatar, AvatarFallback, FileUploadPopup, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, ConfirmDialog, Sheet, SheetContent, SheetHeader, SheetTitle, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, IconButton } from "@g4k/ui/components";
 import { toast } from "sonner";
 import { apiFetch, unwrapOne, unwrapList, isQueued } from "@/lib/api-client";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -321,7 +319,7 @@ export default function ProjectDetailPage() {
           <div className={`lg:w-80 shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 p-5 overflow-y-auto ${isSidebarOpen ? 'fixed inset-0 z-50 bg-white/95 backdrop-blur block' : 'hidden lg:block'}`}>
             {isSidebarOpen && (
               <div className="flex justify-end mb-4 lg:hidden">
-                <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}><AppIcon name="close" className="w-5 h-5" /></Button>
+                <IconButton variant="ghost" icon="close" onClick={() => setIsSidebarOpen(false)} aria-label="Close" />
               </div>
             )}
             

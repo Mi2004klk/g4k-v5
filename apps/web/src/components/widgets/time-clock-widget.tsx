@@ -179,16 +179,16 @@ export function TimeClockWidget({ className }: { className?: string }) {
           </span>
           {isFetching && <Spinner size="xs" className="text-neutral-400" />}
           {isOffline ? (
-            <span className="flex items-center gap-1 text-xs font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
+            <StatusBadge status="error" className="ml-1 items-center gap-1">
               <AppIcon name="error" size="xs" /> Offline
-            </span>
+            </StatusBadge>
           ) : isError && !todayData ? (
-            <span className="flex items-center gap-1 text-xs font-bold text-rose-600 uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded ml-1">
+            <StatusBadge status="error" className="ml-1 items-center gap-1">
               <AppIcon name="error" size="xs" /> Error
               <Button variant="link" onClick={() => refetch()} className="h-auto p-0 text-xs font-bold text-rose-600 hover:text-rose-700 ml-1">
                 Retry
               </Button>
-            </span>
+            </StatusBadge>
           ) : null}
         </div>
         <StatusBadge

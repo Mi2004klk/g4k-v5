@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api-client";
 import { cn } from "../utils/cn";
 import { AppIcon } from "./icon/AppIcon";
 import { Button } from "./button";
@@ -22,7 +20,6 @@ import {
   PopoverTrigger,
 } from "./popover";
 import { useDebouncedValidation } from "../hooks/use-debounced-validation";
-import { resolveAvatarUrl } from "@/lib/utils";
 
 export interface UserPickerUser {
   id: number;
@@ -41,6 +38,11 @@ export interface UserPickerProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  users?: UserPickerUser[];
+  isLoading?: boolean;
+  search?: string;
+  onSearchChange?: (search: string) => void;
+  resolveAvatar?: (url?: string) => string;
 }
 
 export function UserPicker({
@@ -50,20 +52,13 @@ export function UserPicker({
   placeholder = "Select user...",
   className,
   disabled = false,
+  users = [],
+  isLoading = false,
+  search = "",
+  onSearchChange,
+  resolveAvatar = (url) => url || "",
 }: UserPickerProps) {
   const [open, setOpen] = React.useState(false);
-  const [search, setSearch] = React.useState("");
-  const debouncedSearch = useDebouncedValidation(search, (v) => v, 300) || "";
-
-  const { data: usersData, isLoading } = useQuery({
-    queryKey: ["users-search", debouncedSearch],
-    queryFn: () => apiFetch(`/chat/users?search=${encodeURIComponent(debouncedSearch)}`),
-    enabled: open,
-  });
-
-  const users: UserPickerUser[] = React.useMemo(() => {
-    return Array.isArray(usersData?.data) ? usersData.data : (Array.isArray(usersData) ? usersData : []);
-  }, [usersData]);
 
   // Keep track of selected user objects for rendering chips/display
   const [selectedUsers, setSelectedUsers] = React.useState<UserPickerUser[]>([]);
@@ -143,7 +138,7 @@ export function UserPicker({
               {mode === "single" ? (
                 <div className="flex items-center gap-2 truncate">
                   <Avatar className="h-5 w-5 shrink-0">
-                    <AvatarImage src={resolveAvatarUrl(selectedUsers[0].avatar_url) || ""} />
+                    <AvatarImage src={resolveAvatar(selectedUsers[0].avatar_url) || ""} />
                     <AvatarFallback name={selectedUsers[0].name} className="text-[10px]" />
                   </Avatar>
                   <span className="truncate">{selectedUsers[0].name}</span>
@@ -152,7 +147,7 @@ export function UserPicker({
                 selectedUsers.map((u) => (
                   <Badge key={u.id} variant="secondary" className="flex items-center gap-1 pl-1 pr-1.5 py-0.5 max-w-full">
                     <Avatar className="h-4 w-4 shrink-0">
-                      <AvatarImage src={resolveAvatarUrl(u.avatar_url) || ""} />
+                      <AvatarImage src={resolveAvatar(u.avatar_url) || ""} />
                       <AvatarFallback name={u.name} className="text-[9px]" />
                     </Avatar>
                     <span className="truncate max-w-[100px] text-xs">{u.name}</span>
@@ -185,7 +180,7 @@ export function UserPicker({
           <CommandInput 
             placeholder="Search users..." 
             value={search}
-            onValueChange={setSearch}
+            onValueChange={onSearchChange}
           />
           <CommandList>
             {isLoading ? (
@@ -215,7 +210,7 @@ export function UserPicker({
                           <AppIcon name="check" size="xs" className="h-3 w-3" />
                         </div>
                         <Avatar className="h-6 w-6 shrink-0">
-                          <AvatarImage src={resolveAvatarUrl(user.avatar_url) || ""} />
+                          <AvatarImage src={resolveAvatar(user.avatar_url) || ""} />
                           <AvatarFallback name={user.name} className="text-[10px]" />
                         </Avatar>
                         <div className="flex flex-col overflow-hidden">

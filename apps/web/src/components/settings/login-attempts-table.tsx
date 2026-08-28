@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { apiFetch } from "@/lib/api-client";
 import { ListScaffold } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
+import { StatusBadge } from "@g4k/ui/components/badge";
 
 import { useUrlState } from "@/hooks/use-url-state";
 
@@ -96,22 +97,22 @@ export function LoginAttemptsTable() {
       cell: ({ row }: { row: { original: LoginAttemptRow } }) => {
         if (row.original.is_suspicious) {
           return (
-            <span className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/30 px-2 py-0.5 rounded text-xs font-medium inline-flex items-center gap-1">
+            <StatusBadge status="error" className="inline-flex items-center gap-1">
               <AppIcon name="warning" size="sm" /> Suspicious
-            </span>
+            </StatusBadge>
           );
         }
         if (row.original.success) {
           return (
-            <span className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/30 px-2 py-0.5 rounded text-xs font-medium">
+            <StatusBadge status="success">
               Success
-            </span>
+            </StatusBadge>
           );
         }
         return (
-          <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 rounded text-xs font-medium">
+          <StatusBadge status="neutral">
             Failed
-          </span>
+          </StatusBadge>
         );
       }
     }
@@ -164,17 +165,17 @@ export function LoginAttemptsTable() {
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 {attempt.is_suspicious ? (
-                  <span className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded text-xs font-medium">
+                  <StatusBadge status="error">
                     Suspicious
-                  </span>
+                  </StatusBadge>
                 ) : attempt.success ? (
-                  <span className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-0.5 rounded text-xs font-medium">
+                  <StatusBadge status="success">
                     Success
-                  </span>
+                  </StatusBadge>
                 ) : (
-                  <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded text-xs font-medium">
+                  <StatusBadge status="neutral">
                     Failed
-                  </span>
+                  </StatusBadge>
                 )}
                 <span className="text-sm font-medium">{attempt.user ? attempt.user.name : attempt.identifier}</span>
               </div>

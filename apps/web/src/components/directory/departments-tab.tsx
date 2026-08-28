@@ -49,7 +49,8 @@ import { ContentSkeleton, IsolatedError, MeaningfulEmpty } from "@g4k/ui/compone
 import { ConfirmDialog } from "@g4k/ui/components";
 import { Avatar, AvatarFallback, AvatarImage } from "@g4k/ui/components";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@g4k/ui/components";
-import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox, Switch, UserPicker } from "@g4k/ui/components";
+import { Tabs, TabsContent, TabsList, TabsTrigger, Combobox, Switch, Spinner, ExportButton } from "@g4k/ui/components";
+import { AppUserPicker as UserPicker } from "@/components/app-user-picker";
 import { ColumnDef } from "@tanstack/react-table";
 import { resolveAvatarUrl } from "@/lib/utils";
 

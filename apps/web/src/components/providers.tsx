@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { QueryClient, MutationCache, QueryClientProvider } from "@tanstack/react-query";
-import { ErrorBoundary, OfflineBanner, Toaster } from "@g4k/ui/components";
+import { ErrorBoundary, OfflineBanner, Toaster, Spinner } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 
 // Architectural Decision:
@@ -45,7 +45,7 @@ function HydrationGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-app">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <Spinner className="h-10 w-10 text-primary" />
           <p className="text-sm text-muted-foreground animate-pulse">Loading workspace...</p>
         </div>
       </div>

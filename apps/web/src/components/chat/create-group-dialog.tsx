@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, EmptyState, FormDraftAlert, UserPicker } from "@g4k/ui/components";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, EmptyState, FormDraftAlert } from "@g4k/ui/components";
+import { AppUserPicker as UserPicker } from "@/components/app-user-picker";
 import { Button, Input, Label, ScrollArea, Checkbox } from "@g4k/ui/components";
 import { apiFetch, unwrapList, isQueued } from "@/lib/api-client";
 import { toast } from "sonner";

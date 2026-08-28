@@ -9,7 +9,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AppIcon } from "@g4k/ui/components";
-import { SheetDescription, Button } from "@g4k/ui/components";
+import { SheetDescription, Button, Spinner } from "@g4k/ui/components";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { useAttendanceToday } from "@/hooks/use-attendance-today";
@@ -199,7 +199,7 @@ export default function DashboardLayout({
       return (
         <AuthGuard>
           <div className="flex h-screen w-full flex-col items-center justify-center bg-app gap-4">
-            <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-600 rounded-full animate-spin"></div>
+            <Spinner className="w-12 h-12 text-primary" />
             <div className="text-center space-y-1">
               <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Verifying session...</h2>
             </div>
