@@ -151,6 +151,28 @@ export default function ProjectDetailPage() {
     },
   });
 
+  const duplicateProjectMutation = useMutation({
+    mutationFn: async () => apiFetch(`/projects/${projectId}/duplicate`, { method: "POST" }),
+    onSuccess: (data: any) => {
+      toast.success("Project duplicated successfully.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
+      if (data?.data?.id) {
+        router.push(`/dashboard/projects/${data.data.id}`);
+      }
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to duplicate project."),
+  });
+
+  const archiveProjectMutation = useMutation({
+    mutationFn: async () => apiFetch(`/projects/${projectId}/archive`, { method: "POST" }),
+    onSuccess: (data: any) => {
+      toast.success("Project archived.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.project(projectId) });
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to archive project."),
+  });
+
   if (isLoading) {
     return (
       <div className="flex flex-col flex-1 min-h-0 bg-neutral-50/50 dark:bg-background p-8 space-y-8 animate-pulse">
@@ -240,6 +262,14 @@ export default function ProjectDetailPage() {
                     }}>
                       <AppIcon name="edit" className="mr-2 w-4 h-4" /> Edit Project
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => duplicateProjectMutation.mutate()} disabled={duplicateProjectMutation.isPending}>
+                      <AppIcon name="copy" className="mr-2 w-4 h-4" /> Duplicate Project
+                    </DropdownMenuItem>
+                    {project?.status !== 'archived' && (
+                      <DropdownMenuItem onClick={() => archiveProjectMutation.mutate()} disabled={archiveProjectMutation.isPending}>
+                        <AppIcon name="archive" className="mr-2 w-4 h-4" /> Archive Project
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-rose-600 focus:text-rose-700 cursor-pointer" onClick={() => setIsDeleteConfirmOpen(true)}>
                       <AppIcon name="trash" className="mr-2 h-4 w-4" /> Delete Project

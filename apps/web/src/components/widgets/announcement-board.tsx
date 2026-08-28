@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { usePusher } from "@/hooks/use-pusher";
-import { AppIcon, Spinner,
-} from "@g4k/ui/components";
+import { AppIcon, Spinner, Checkbox } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
 import { apiFetch, isQueued } from "@/lib/api-client";
-import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/ui/components";
+import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Badge } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
 import { hasCapability, useCapabilities } from "@/lib/capabilities";
@@ -35,16 +34,30 @@ export function AnnouncementBoard() {
   const canManage = hasCapability(caps.data, "announcements.manage");
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showDismissed, setShowDismissed] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [initialData, setInitialData] = useState<{title: string, body: string, scope: string, priority: string, pinned: boolean} | undefined>();
 
   const [confirmState, setConfirmState] = useState<{ isOpen: boolean; id: number | null }>({ isOpen: false, id: null });
 
-  const { data: announcements = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => (Array.isArray(data?.announcements?.data) ? data.announcements.data : (Array.isArray(data?.announcements) ? data.announcements : [])),
+  const { data: dashboardData, isPending: isInitPending, isFetching: isInitFetching, refetch: refetchInit } = useDashboardInit({
     staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
+
+  const { data: historyData, isPending: isHistoryPending, isFetching: isHistoryFetching, refetch: refetchHistory } = useQuery({
+    queryKey: ["announcements", "history"],
+    queryFn: () => apiFetch("/announcements/history"),
+    enabled: showDismissed,
+  });
+
+  const announcements = showDismissed 
+    ? (Array.isArray(historyData?.data) ? historyData.data : []) 
+    : (Array.isArray(dashboardData?.announcements?.data) ? dashboardData.announcements.data : (Array.isArray(dashboardData?.announcements) ? dashboardData.announcements : []));
+
+  const isPending = showDismissed ? isHistoryPending : isInitPending;
+  const isFetching = showDismissed ? isHistoryFetching : isInitFetching;
+  const refetch = showDismissed ? refetchHistory : refetchInit;
 
   const { subscribe, leaveChannel } = usePusher();
 
@@ -279,7 +292,18 @@ export function AnnouncementBoard() {
           </span>
           {isFetching && <Spinner size="xs" className="text-neutral-400" />}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center space-x-1.5 mr-2">
+            <Checkbox 
+              id="show-dismissed" 
+              checked={showDismissed} 
+              onCheckedChange={(c) => setShowDismissed(c as boolean)} 
+              className="h-3.5 w-3.5 rounded-[3px]"
+            />
+            <label htmlFor="show-dismissed" className="text-[11px] font-medium text-neutral-500 cursor-pointer select-none">
+              History
+            </label>
+          </div>
           {canManage && (
             <>
               <Button variant="outline" size="sm" onClick={() => refetch()} className="h-7 text-xs px-2.5">

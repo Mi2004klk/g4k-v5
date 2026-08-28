@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { AppIcon, IconName } from "@g4k/ui/components";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { useTimerStore } from "@/stores/timer-store";
 import { offlineEngine } from "@/lib/offline-engine";
 import { useCapabilities, hasCapability } from "@/lib/capabilities";
@@ -35,6 +36,9 @@ export function CommandPalette() {
   const isHrOrAdmin = hasCapability(capabilities, "hr.view-team-attendance") || hasCapability(capabilities, "admin.view-all-attendance");
   const canCorrect = hasCapability(capabilities, "admin.correct-attendance") || hasCapability(capabilities, "attendance.correct-team") || isHrOrAdmin;
   const canClockSelf = hasCapability(capabilities, "attendance.clock-self");
+  const canManageTasks = hasCapability(capabilities, "tasks.manage");
+  const canCreateTasks = hasCapability(capabilities, "tasks.create-own");
+  const canManageAnnouncements = hasCapability(capabilities, "announcements.manage");
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -46,6 +50,13 @@ export function CommandPalette() {
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
+
+  const { data: searchResults, isLoading: isSearching } = useQuery({
+    queryKey: ["global-search", search],
+    queryFn: () => apiFetch(`/search?q=${encodeURIComponent(search)}`),
+    enabled: search.length >= 2,
+    staleTime: 1000 * 60,
+  });
 
   const runCommand = (command: () => void) => {
     setOpen(false);
@@ -69,8 +80,43 @@ export function CommandPalette() {
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput placeholder="Type a command or navigate..." value={search} onValueChange={setSearch} />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>{isSearching ? "Searching..." : "No results found."}</CommandEmpty>
         
+        {search.length >= 2 && searchResults && (
+          <>
+            {searchResults.users?.length > 0 && (
+              <CommandGroup heading="People">
+                {searchResults.users.map((u: any) => (
+                  <CommandItem key={`user-${u.id}`} onSelect={() => runCommand(() => router.push(`/dashboard/directory/${u.id}`))}>
+                    <AppIcon name="profile" className="mr-2" />
+                    <span>{u.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {searchResults.projects?.length > 0 && (
+              <CommandGroup heading="Projects">
+                {searchResults.projects.map((p: any) => (
+                  <CommandItem key={`project-${p.id}`} onSelect={() => runCommand(() => router.push(`/dashboard/projects?project=${p.id}`))}>
+                    <AppIcon name="folder" className="mr-2" />
+                    <span>{p.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {searchResults.tasks?.length > 0 && (
+              <CommandGroup heading="Tasks">
+                {searchResults.tasks.map((t: any) => (
+                  <CommandItem key={`task-${t.id}`} onSelect={() => runCommand(() => router.push(`/dashboard/projects?tab=tasks&highlight=${t.id}`))}>
+                    <AppIcon name="tasks" className="mr-2" />
+                    <span>{t.title}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </>
+        )}
+
         {!search && recentItems.length > 0 && (
           <CommandGroup heading="Recently Viewed">
             {recentItems.map((item) => (
@@ -105,6 +151,33 @@ export function CommandPalette() {
             <CommandItem onSelect={() => runCommand(handleExport)}>
               <AppIcon name="download" className=" mr-2" />
               <span>Export Team Report</span>
+            </CommandItem>
+          </CommandGroup>
+        )}
+
+        {(canManageTasks || canCreateTasks) && (
+          <CommandGroup heading="Task Actions">
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/projects?tab=tasks&me=1"))}>
+              <AppIcon name="tasks" className=" mr-2 text-primary-500" />
+              <span>My Tasks</span>
+            </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/projects?tab=tasks&review=1"))}>
+              <AppIcon name="eye" className=" mr-2 text-amber-500" />
+              <span>Tasks in Review</span>
+            </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/projects?tab=tasks&create=1"))}>
+              <AppIcon name="plus" className=" mr-2 text-emerald-500" />
+              <span>Create Task</span>
+              <CommandShortcut>⌘T</CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+        )}
+        
+        {canManageAnnouncements && (
+          <CommandGroup heading="Announcements">
+            <CommandItem onSelect={() => runCommand(() => router.push("/dashboard?newAnnouncement=1"))}>
+              <AppIcon name="megaphone" className=" mr-2 text-indigo-500" />
+              <span>New Announcement</span>
             </CommandItem>
           </CommandGroup>
         )}

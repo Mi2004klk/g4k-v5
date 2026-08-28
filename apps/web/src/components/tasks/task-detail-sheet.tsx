@@ -219,6 +219,21 @@ export function TaskDetailSheet({
     onError: (err: Error) => toast.error(err.message || "Failed to update task."),
   });
 
+  const duplicateMutation = useMutation({
+    mutationFn: async () => {
+      return apiFetch(`/tasks/${task?.id}/duplicate`, { method: "POST" });
+    },
+    onSuccess: (data: any) => {
+      toast.success("Task duplicated successfully.");
+      invalidateTasks();
+      if (data?.data) {
+        // Optional: close current sheet or open the new task
+        onOpenChange(false);
+      }
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to duplicate task."),
+  });
+
 
 
   return (
@@ -258,25 +273,37 @@ export function TaskDetailSheet({
               {/* Row 3: Edit Button */}
               {canManage && (
                 <div className="flex justify-end w-full">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-7 text-xs px-2"
-                    onClick={() => {
-                      setEditForm({
-                        title: task.title || "",
-                        description: task.description || "",
-                        due_date: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd") : "",
-                        blocked_by: task.blocked_by ? String(task.blocked_by) : "none",
-                        phase_id: task.phase_id ? String(task.phase_id) : "none",
-                        assignee_ids: task.assignees?.map((a: { id: number }) => a.id) || (task.assignee_id ? [task.assignee_id] : [])
-                      });
-                      setIsEditing(!isEditing);
-                    }}
-                  >
-                    <AppIcon name={isEditing ? "close" : "edit"} size="xs" className="mr-1.5" />
-                    {isEditing ? "Cancel Editing" : "Edit Details"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs px-2"
+                      onClick={() => duplicateMutation.mutate()}
+                      disabled={duplicateMutation.isPending}
+                    >
+                      {duplicateMutation.isPending ? <Spinner size="xs" className="mr-1.5" /> : <AppIcon name="copy" size="xs" className="mr-1.5" />}
+                      Duplicate
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-xs px-2"
+                      onClick={() => {
+                        setEditForm({
+                          title: task.title || "",
+                          description: task.description || "",
+                          due_date: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd") : "",
+                          blocked_by: task.blocked_by ? String(task.blocked_by) : "none",
+                          phase_id: task.phase_id ? String(task.phase_id) : "none",
+                          assignee_ids: task.assignees?.map((a: { id: number }) => a.id) || (task.assignee_id ? [task.assignee_id] : [])
+                        });
+                        setIsEditing(!isEditing);
+                      }}
+                    >
+                      <AppIcon name={isEditing ? "close" : "edit"} size="xs" className="mr-1.5" />
+                      {isEditing ? "Cancel Editing" : "Edit Details"}
+                    </Button>
+                  </div>
                 </div>
               )}
               <SheetDescription className="sr-only">Detailed view and management of the selected task.</SheetDescription>

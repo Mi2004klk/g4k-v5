@@ -140,6 +140,12 @@ export function ProjectsTab() {
                   >
                     Completed
                   </button>
+                  <button 
+                    onClick={() => setStatus("archived")} 
+                    className={`px-3 py-1 h-7 text-xs font-bold rounded-md transition-all ${status === "archived" ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white" : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"}`}
+                  >
+                    Archived
+                  </button>
                 </div>
               }
               searchQuery={search}

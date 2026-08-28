@@ -107,7 +107,9 @@ class TaskController extends Controller
         $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'integer|exists:tasks,id',
-            'action' => 'required|string|in:delete,complete'
+            'action' => 'required|string|in:delete,complete,reassign',
+            'assignees' => 'nullable|array',
+            'assignees.*' => 'integer|exists:users,id',
         ]);
 
         $hasManage = $this->userHasManage($request);
@@ -141,6 +143,9 @@ class TaskController extends Controller
                 \App\Services\TaskService::updateStatus($task, 'done', $userId);
                 \App\Services\RecurrenceService::handleCompletion($task);
                 $updatedCount++;
+            } elseif ($validated['action'] === 'reassign') {
+                $task->assignees()->sync($validated['assignees'] ?? []);
+                $updatedCount++;
             }
         }
 
@@ -149,6 +154,28 @@ class TaskController extends Controller
         }
 
         return response()->json(['message' => "Bulk action {$validated['action']} applied to {$updatedCount} tasks."]);
+    }
+
+    public function duplicate(Request $request, $id)
+    {
+        $task = Task::findOrFail($id);
+
+        $canEdit = $this->canManageTask($request, $task) || $task->reporter_id === $request->user()->id;
+        if (!$canEdit) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $newTask = $task->replicate(['status', 'created_at', 'updated_at']);
+        $newTask->title = $task->title . ' (Copy)';
+        $newTask->status = 'todo';
+        $newTask->reporter_id = $request->user()->id;
+        $newTask->save();
+
+        if ($task->assignees) {
+            $newTask->assignees()->sync($task->assignees->pluck('id'));
+        }
+
+        return response()->json(['data' => $newTask]);
     }
 
     /**

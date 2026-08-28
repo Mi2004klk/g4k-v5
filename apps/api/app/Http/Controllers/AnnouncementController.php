@@ -8,6 +8,42 @@ use Illuminate\Http\Request;
 
 class AnnouncementController extends Controller
 {
+    public function history(Request $request)
+    {
+        $user = $request->user();
+        $activeRole = $user->resolveActiveRole();
+
+        $query = Announcement::with(['creator', 'team', 'reactionsList'])
+            ->orderBy('pinned_at', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->limit(100);
+
+        if (!in_array($activeRole, ['super_admin'])) {
+            $query->where(function($q) use ($user) {
+                $q->where('scope', 'company')
+                  ->orWhere('priority', 'urgent')
+                  ->orWhere(function($sub) use ($user) {
+                      $sub->where('scope', 'team');
+                      $sub->where(function($teamQ) use ($user) {
+                          if ($user->team_id) {
+                              $teamQ->where('team_id', $user->team_id);
+                          }
+                          $teamQ->orWhere(function($hrQ) use ($user) {
+                              if ($user->resolveActiveRole() === 'hr') {
+                                  \App\Support\HrScope::apply($hrQ, $user, 'team_id');
+                              } else {
+                                  $hrQ->whereRaw('1 = 0');
+                              }
+                          });
+                      });
+                  });
+            });
+        }
+
+        $announcements = $query->get();
+        return response()->json(['data' => $announcements]);
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();

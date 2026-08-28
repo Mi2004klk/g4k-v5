@@ -31,6 +31,7 @@ export interface WorkSchedule {
   grace_minutes: number;
   working_days: number[] | string;
   is_default?: boolean;
+  users_count?: number;
 }
 
 interface ApiError extends Error {
@@ -170,7 +171,7 @@ export function WorkSchedulesConfig() {
                   {schedule.is_default && <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs px-2 py-0.5 rounded-full">Default</span>}
                 </h4>
                 <p className="text-xs text-neutral-500 mt-1">
-                  {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)} | Break: {schedule.break_minutes}m
+                  {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)} | Break: {schedule.break_minutes}m | {schedule.users_count || 0} people
                 </p>
               </div>
               <div className="flex items-center gap-2">

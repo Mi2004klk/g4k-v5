@@ -21,7 +21,7 @@ import dynamic from "next/dynamic";
 const TaskKanbanBoard = dynamic(() => import("@/components/tasks/task-kanban-board").then(mod => mod.TaskKanbanBoard), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading board...</div> });
 const TaskGantt = dynamic(() => import("@/components/tasks/task-gantt").then(mod => mod.TaskGantt), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading timeline...</div> });
 const QAFormBuilder = dynamic(() => import("@/components/tasks/qa-form-builder").then(mod => mod.QAFormBuilder), { ssr: false, loading: () => <div className="p-4 text-center text-xs text-neutral-400 font-medium animate-pulse">Loading builder...</div> });
-import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, Toolbar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent, FormDraftAlert } from "@g4k/ui/components";
+import { Button, Input, Checkbox, Badge, StatusBadge, ConfirmDialog, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DataTable, Toolbar, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, DatePicker, Tabs, TabsList, TabsTrigger, Collapsible, CollapsibleTrigger, CollapsibleContent, FormDraftAlert, Popover, PopoverContent, PopoverTrigger } from "@g4k/ui/components";
 import { priority as priorityConfig, taskStatus } from "@g4k/ui/theme/semantic";
 import { FormError } from "@/components/forms/form-error";
 import { MeaningfulEmpty } from "@g4k/ui/components/state-helpers";
@@ -194,6 +194,8 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
   const [sortOrder, setSortOrder] = useState("desc");
   const [rowSelection, setRowSelection] = useState({});
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkReassignOpen, setIsBulkReassignOpen] = useState(false);
+  const [bulkAssigneeIds, setBulkAssigneeIds] = useState<number[]>([]);
 
   const [page, setPage] = useUrlState("page", "1");
   const [perPage, setPerPage] = useState(20);
@@ -410,6 +412,21 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
     }
   });
 
+  const updateTaskFieldMutation = useMutation({
+    mutationFn: async ({ taskId, field, value }: { taskId: number; field: string; value: string }) => {
+      return apiFetch(`/tasks/${taskId}`, {
+        method: "PUT",
+        body: JSON.stringify({ [field]: value }),
+      });
+    },
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
+      toast.success("Task updated.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to update task."),
+  });
+
   const bulkDeleteMutation = useMutation({
     mutationFn: async (taskIds: number[]) => {
       return apiFetch("/tasks/bulk", { 
@@ -442,6 +459,22 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
       // T-46.2: invalidate without exact
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
     }
+  });
+
+  const bulkReassignMutation = useMutation({
+    mutationFn: async ({ taskIds, assignees }: { taskIds: number[], assignees: number[] }) => {
+      return apiFetch("/tasks/bulk", { 
+        method: "POST", 
+        body: JSON.stringify({ ids: taskIds, action: "reassign", assignees }) 
+      });
+    },
+    onSuccess: (data: any) => {
+      if (isQueued(data)) return;
+      toast.success("Tasks reassigned successfully.");
+      setRowSelection({});
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks() });
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to reassign tasks.")
   });
 
   const handleTaskSelect = useCallback((task: Task) => {
@@ -554,9 +587,27 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
         return (
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`capitalize text-xs px-2 py-0.5 rounded-sm font-bold tracking-wide ${sConfig.bg} ${sConfig.text}`}>
-              {sConfig.label}
-            </span>
+            <Select 
+              value={s} 
+              onValueChange={(val) => {
+                if (val === "review" || val === "done") {
+                  toast.info(`Please use the 'Submit for Review' workflow to move a task to ${val}.`);
+                  handleTaskSelect(task);
+                  return;
+                }
+                moveTaskMutation.mutate({ taskId: task.id, status: val });
+              }}
+            >
+              <SelectTrigger className={`h-6 text-xs px-2 py-0 border-0 rounded-sm font-bold tracking-wide focus:ring-1 focus:ring-primary-500 w-auto ${sConfig.bg} ${sConfig.text}`}>
+                <div className="capitalize">{sConfig.label}</div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todo">To Do</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="review">In Review</SelectItem>
+                <SelectItem value="done">Done</SelectItem>
+              </SelectContent>
+            </Select>
             {task.scope && (
               <span className="capitalize text-xs font-medium text-neutral-500 border border-neutral-200 dark:border-neutral-800 px-1.5 py-0.5 rounded-sm">
                 {task.scope}
@@ -608,10 +659,31 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
         // Text color for label: extract from bar class if possible, or fallback
         const colorClass = pConfig.bar.replace('bg-', 'text-').replace('-500', '-600');
         return (
-          <span className={`flex items-center capitalize text-xs font-bold ${colorClass}`}>
-            {pConfig.icon && <AppIcon name={pConfig.icon as any} size="xs" className="mr-1.5" />}
-            {pConfig.label}
-          </span>
+          <Select 
+            value={p} 
+            onValueChange={(val) => updateTaskFieldMutation.mutate({ taskId: row.original.id, field: "priority", value: val })}
+          >
+            <SelectTrigger className={`h-7 px-2 border-0 bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:ring-1 focus:ring-primary-500 w-auto rounded-md flex items-center capitalize text-xs font-bold ${colorClass}`}>
+              <div className="flex items-center">
+                {pConfig.icon && <AppIcon name={pConfig.icon as any} size="xs" className="mr-1.5" />}
+                {pConfig.label}
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">
+                <div className="flex items-center text-emerald-600 dark:text-emerald-400"><AppIcon name="arrowDown" size="xs" className="mr-1.5" />Low</div>
+              </SelectItem>
+              <SelectItem value="medium">
+                <div className="flex items-center text-blue-600 dark:text-blue-400"><AppIcon name="minus" size="xs" className="mr-1.5" />Medium</div>
+              </SelectItem>
+              <SelectItem value="high">
+                <div className="flex items-center text-amber-600 dark:text-amber-400"><AppIcon name="arrowUp" size="xs" className="mr-1.5" />High</div>
+              </SelectItem>
+              <SelectItem value="urgent">
+                <div className="flex items-center text-rose-600 dark:text-rose-400"><AppIcon name="warning" size="xs" className="mr-1.5" />Urgent</div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         );
       }
     },
@@ -1227,6 +1299,30 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
             </span>
           </div>
           <div className="flex items-center gap-1 sm:gap-1.5 pr-1">
+            <Popover open={isBulkReassignOpen} onOpenChange={setIsBulkReassignOpen}>
+              <PopoverTrigger asChild>
+                <Button size="sm" variant="outline" className="h-7 text-xs sm:text-xs px-2 sm:px-3 rounded-full bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:text-blue-800 dark:hover:text-blue-300 text-blue-700 dark:text-blue-400">
+                  <AppIcon name="profile" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Reassign</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-3" align="center" side="top" sideOffset={10}>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-neutral-700 dark:text-neutral-300">Reassign {selectedTaskIds.length} Tasks</h4>
+                  <AppUserPicker 
+                    mode="multi" 
+                    value={bulkAssigneeIds} 
+                    onChange={(ids) => setBulkAssigneeIds(ids as number[])} 
+                  />
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setIsBulkReassignOpen(false)}>Cancel</Button>
+                    <Button size="sm" variant="primary" className="h-7 text-xs" disabled={bulkReassignMutation.isPending} onClick={() => {
+                      bulkReassignMutation.mutate({ taskIds: selectedTaskIds, assignees: bulkAssigneeIds });
+                      setIsBulkReassignOpen(false);
+                    }}>Apply</Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button size="sm" variant="outline" onClick={() => bulkStatusMutation.mutate({ taskIds: selectedTaskIds, status: "done" })} className="h-7 text-xs sm:text-xs px-2 sm:px-3 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-800 dark:hover:text-emerald-300 text-emerald-700 dark:text-emerald-400">
               <AppIcon name="success" className="sm:mr-1.5" size="xs" /> <span className="hidden sm:inline">Mark Done</span>
             </Button>

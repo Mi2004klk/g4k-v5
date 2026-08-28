@@ -26,6 +26,7 @@ use App\Http\Controllers\TimerController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\PinController;
 use App\Http\Controllers\AutoNumberingController;
+use App\Http\Controllers\SearchController;
 
 // NOTE: Laravel auto-prefixes every route in this file with "/api" (via bootstrap/app.php
 // `withRouting(api: ...)`). So `Route::post('/auth/login')` is served at `/api/auth/login`.
@@ -97,6 +98,9 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     // Dashboard API
     Route::get('/dashboard/init', [DashboardController::class, 'init']);
 
+    // Search API
+    Route::get('/search', [SearchController::class, 'search']);
+
     // Profile API
     Route::middleware('capability:profile.edit')->group(function () {
         Route::get('/profile', [ProfileController::class, 'show']);
@@ -143,6 +147,15 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
     Route::post('/attendance/correct', [AttendanceController::class, 'correct'])->middleware(['capability:admin.correct-attendance|attendance.correct-team']);
     Route::get('/attendance/export', [AttendanceController::class, 'export'])->middleware(['capability:admin.view-all-attendance|hr.view-team-attendance']);
 
+    // Announcements API
+    Route::get('/announcements/history', [App\Http\Controllers\AnnouncementController::class, 'history']);
+    Route::get('/announcements', [App\Http\Controllers\AnnouncementController::class, 'index']);
+    Route::post('/announcements', [App\Http\Controllers\AnnouncementController::class, 'store']);
+    Route::post('/announcements/{id}/reactions', [App\Http\Controllers\AnnouncementController::class, 'react']);
+    Route::delete('/announcements/{id}/reactions', [App\Http\Controllers\AnnouncementController::class, 'unreact']);
+    Route::post('/announcements/{id}/dismiss', [App\Http\Controllers\AnnouncementController::class, 'dismiss']);
+    Route::delete('/announcements/{id}', [App\Http\Controllers\AnnouncementController::class, 'destroy']);
+
     // Phase 6 API
     Route::middleware('capability:leave.request-self|leave.approve-employee')->group(function () {
         Route::get('/leave-requests', [LeaveRequestController::class, 'index']);
@@ -188,6 +201,8 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::put('/projects/{id}', [ProjectController::class, 'update']);
         Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+        Route::post('/projects/{id}/duplicate', [ProjectController::class, 'duplicate']);
+        Route::post('/projects/{id}/archive', [ProjectController::class, 'archive']);
         Route::post('/projects/{id}/review', [ProjectController::class, 'review']);
         
         // Project Phases
@@ -213,6 +228,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureTokenIsNotRefresh:
         Route::post('/tasks', [TaskController::class, 'store']);
         Route::put('/tasks/{id}', [TaskController::class, 'update']);
         Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+        Route::post('/tasks/{id}/duplicate', [TaskController::class, 'duplicate']);
         Route::post('/tasks/{id}/submit-review', [TaskController::class, 'submitForReview']);
         Route::post('/tasks/{id}/comments', [TaskController::class, 'addComment']);
         Route::delete('/tasks/comments/{id}', [TaskController::class, 'deleteComment']);

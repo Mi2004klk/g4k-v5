@@ -482,5 +482,39 @@ class ProjectController extends Controller
             return response()->json(['message' => 'Failed to upload image. Please check server storage permissions.'], 500);
         }
     }
+
+    public function duplicate(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+
+        if (!$this->canManageProject($request, $project)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $newProject = $project->replicate(['status', 'completed_at', 'created_at', 'updated_at']);
+        $newProject->name = $project->name . ' (Copy)';
+        $newProject->status = 'active';
+        $newProject->created_by = $request->user()->id;
+        $newProject->save();
+
+        if ($project->members) {
+            $newProject->members()->sync($project->members->pluck('id'));
+        }
+
+        return response()->json(['data' => $newProject]);
+    }
+
+    public function archive(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+
+        if (!$this->canManageProject($request, $project)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $project->update(['status' => 'archived']);
+
+        return response()->json(['message' => 'Project archived successfully', 'data' => $project]);
+    }
 }
 

@@ -9,7 +9,9 @@ class WorkScheduleController extends Controller
 {
     public function index()
     {
-        $schedules = DB::table('work_schedules')->get();
+        $schedules = DB::table('work_schedules')
+            ->select('work_schedules.*', DB::raw('(SELECT COUNT(*) FROM users WHERE users.work_schedule_id = work_schedules.id) as users_count'))
+            ->get();
         return response()->json(['data' => $schedules]);
     }
 
