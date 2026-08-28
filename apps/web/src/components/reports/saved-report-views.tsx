@@ -188,7 +188,8 @@ export function SavedReportViews({ module, currentFilters, onApplyFilters }: Sav
                 />
                 <Button onClick={handleSave} disabled={saveMutation.isPending || !saveName.trim()}>
                   {saveMutation.isPending ? <Spinner /> : "Save"}
- কঠ              </div>
+                </Button>
+              </div>
             </SheetContent>
           </Sheet>
         ) : (
