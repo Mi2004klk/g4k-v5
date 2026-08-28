@@ -200,7 +200,7 @@ export function QuickNotes() {
               <div className="w-7 h-7 rounded-[var(--radius)] bg-amber-100 dark:bg-amber-950 flex items-center justify-center">
                 <AppIcon name="fileText" />
               </div>
-              <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+              <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
                 Quick Scratchpad
               </span>
               {isFetching && <Spinner size="xs" className="text-neutral-400" />}

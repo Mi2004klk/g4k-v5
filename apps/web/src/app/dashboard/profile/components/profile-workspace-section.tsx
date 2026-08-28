@@ -100,7 +100,7 @@ export function ProfileWorkspaceSection() {
                 </div>
                 
                 <div className="flex-1 pr-6">
-                  <h3 className={`font-semibold text-sm ${isActive ? "text-violet-900 dark:text-violet-100" : "text-neutral-900 dark:text-white"}`}>
+                  <h3 className={`font-semibold text-sm ${isActive ? "text-violet-800 dark:text-violet-200" : "text-neutral-900 dark:text-white"}`}>
                     {info.title}
                   </h3>
                   <p className={`text-xs ${isActive ? "text-violet-600/80 dark:text-violet-300/70" : "text-neutral-500 dark:text-neutral-400"}`}>
@@ -110,9 +110,9 @@ export function ProfileWorkspaceSection() {
                 
                 {isLoading === role ? (
                   <div className="absolute right-4 flex space-x-1 shrink-0">
-                    <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-1.5 h-1.5 bg-violet-500 rounded-full motion-safe:animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-violet-500 rounded-full motion-safe:animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-violet-500 rounded-full motion-safe:animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 ) : isActive ? (
                   <div className="absolute right-4 flex items-center gap-1.5">

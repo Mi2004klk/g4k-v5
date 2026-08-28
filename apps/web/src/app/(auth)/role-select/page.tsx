@@ -79,9 +79,9 @@ export default function RoleSelectPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-transparent">
         <div className="flex space-x-1.5 items-center justify-center">
-           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full motion-safe:animate-bounce" style={{ animationDelay: '0ms' }} />
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full motion-safe:animate-bounce" style={{ animationDelay: '150ms' }} />
+           <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full motion-safe:animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
       </div>
     );
@@ -153,9 +153,9 @@ export default function RoleSelectPage() {
                 </div>
                 {isLoading === role ? (
                   <div className="flex space-x-1 shrink-0 ml-2">
-                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full motion-safe:animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full motion-safe:animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1.5 h-1.5 bg-brand-violet rounded-full motion-safe:animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 ) : (
                   <AppIcon name="chevronRight" size="lg" className=" text-neutral-300 dark:text-neutral-600 group-hover:text-brand-violet transition-colors shrink-0 ml-2" />

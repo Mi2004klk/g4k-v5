@@ -123,7 +123,7 @@ export function DisabledWhileSubmitting({ isSubmitting, children }: { isSubmitti
       {isSubmitting && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-[1px] rounded-inherit">
           <div className="flex flex-col items-center gap-2 px-4 py-3 bg-card border shadow-e3 rounded-xl">
-            <AppIcon name="loading" size="lg" className="animate-spin text-primary" />
+            <AppIcon name="loading" size="lg" className="motion-safe:animate-spin text-primary" />
             <span className="text-xs font-medium text-foreground">Processing...</span>
           </div>
         </div>

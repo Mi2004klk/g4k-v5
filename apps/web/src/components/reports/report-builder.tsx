@@ -158,7 +158,7 @@ export function ReportBuilder() {
                     className="h-9 w-9 shrink-0 bg-neutral-50 dark:bg-neutral-900 border-dashed"
                     title="Refresh Data"
                   >
-                    <AppIcon name="refresh" size="sm" className={isRefetching ? "animate-spin" : ""} />
+                    <AppIcon name="refresh" size="sm" className={isRefetching ? "motion-safe:animate-spin" : ""} />
                   </Button>
 
                   <Button 

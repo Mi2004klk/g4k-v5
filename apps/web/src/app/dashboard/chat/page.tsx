@@ -32,7 +32,7 @@ export default function ChatModulePage() {
               <AppIcon name="chat" size="xs" /> Chat
             </TabsTrigger>
             <TabsTrigger value="announcements" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
-              <AppIcon name="bell" size="xs" /> Announcements & Reminders
+              <AppIcon name="bell" size="xs" /> Announcements
             </TabsTrigger>
             <TabsTrigger value="notifications" className="shrink-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-1 py-2.5 text-xs font-semibold text-neutral-500 data-[state=active]:text-primary-600 hover:text-neutral-700 transition-colors flex items-center gap-2">
               <AppIcon name="bell" size="xs" />

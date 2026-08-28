@@ -253,7 +253,7 @@ export function AnnouncementBoard() {
                   className={`px-2 py-1 rounded-full text-xs flex items-center gap-1.5 transition-all ${
                     hasReacted
                       ? "bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 font-bold border border-primary-200 dark:border-primary-800 shadow-sm"
-                      : "bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-medium border border-neutral-200 dark:border-neutral-800"
+                      : "bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 dark:text-neutral-400 font-medium border border-neutral-200 dark:border-neutral-800"
                   }`}
                 >
                   <span className="text-sm leading-none">{label}</span>
@@ -274,7 +274,7 @@ export function AnnouncementBoard() {
           <div className="w-6 h-6 rounded-[4px] bg-orange-100 dark:bg-orange-950/50 flex items-center justify-center">
             <AppIcon name="announcement" className="text-orange-600 dark:text-orange-400 w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">
+          <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-widest">
             Company Announcements
           </span>
           {isFetching && <Spinner size="xs" className="text-neutral-400" />}
@@ -318,7 +318,7 @@ export function AnnouncementBoard() {
         ) : announcements.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50 h-full min-h-[150px]">
             <AppIcon name="announcement" size="lg" className="text-neutral-300 dark:text-neutral-700 mb-2" />
-            <p className="text-xs font-bold text-neutral-500">No announcements yet</p>
+            <p className="text-xs font-bold text-neutral-600 dark:text-neutral-400">No announcements yet</p>
             <p className="text-xs text-neutral-400 mt-1 mb-3">Check back later for updates</p>
             {canManage && (
               <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setInitialData(undefined); setEditingId(null); setShowCreate(true); }}>

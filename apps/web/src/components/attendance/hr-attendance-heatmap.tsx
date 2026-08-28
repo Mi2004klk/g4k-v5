@@ -108,15 +108,15 @@ export function HrAttendanceHeatmap() {
             <Spinner size="lg" className="text-primary" />
           </div>
         ) : (
-          <div className="min-w-[800px]">
-            <div className="flex text-xs text-neutral-500 dark:text-neutral-400 mb-2 pl-8">
+          <div className="w-full">
+            <div className="hidden sm:flex text-xs text-neutral-500 dark:text-neutral-400 mb-2 pl-6 sm:pl-8">
               {months.map((m, i) => (
                 <div key={m} className="flex-1" style={{ width: 'calc(100% / 12)' }}>{m}</div>
               ))}
             </div>
             
-            <div className="flex gap-1">
-              <div className="flex flex-col gap-1 pr-2 text-xs text-neutral-400 dark:text-neutral-500 justify-between py-1">
+            <div className="flex gap-0.5 sm:gap-1">
+              <div className="hidden sm:flex flex-col gap-0.5 sm:gap-1 pr-1 sm:pr-2 text-[10px] sm:text-xs text-neutral-400 dark:text-neutral-500 justify-between py-1">
                 <span>Sun</span>
                 <span>Mon</span>
                 <span>Tue</span>
@@ -127,11 +127,11 @@ export function HrAttendanceHeatmap() {
               </div>
               
               {grid.map((week, wIndex) => (
-                <div key={wIndex} className="flex flex-col gap-1">
+                <div key={wIndex} className="flex flex-col gap-0.5 sm:gap-1">
                   {week.map((day, dIndex) => (
                     <div 
                       key={`${wIndex}-${dIndex}`}
-                      className={`w-3 h-3 rounded-sm ${!day.inCurrentYear ? 'opacity-0' : getColor(day.data)}`}
+                      className={`w-2 h-2 sm:w-3 sm:h-3 rounded-[1px] sm:rounded-sm ${!day.inCurrentYear ? 'opacity-0' : getColor(day.data)}`}
                       title={day.inCurrentYear ? `${day.date}: ${day.data ? parseInt(day.data.present) + parseInt(day.data.late) : 0} active / ${day.data ? day.data.total : 0} total` : ''}
                     />
                   ))}

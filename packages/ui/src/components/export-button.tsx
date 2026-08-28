@@ -45,7 +45,7 @@ export function ExportButton({
       {...props}
     >
       {loading ? (
-        <AppIcon name="loading" className="mr-2 animate-spin" />
+        <AppIcon name="loading" className="mr-2 motion-safe:animate-spin" />
       ) : (
         <AppIcon name="download" className="mr-2" />
       )}

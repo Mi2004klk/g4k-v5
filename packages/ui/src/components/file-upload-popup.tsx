@@ -208,7 +208,7 @@ export function FileUploadPopup({
             Cancel
           </Button>
           <Button onClick={handleConfirm} disabled={!file || isLoading}>
-            {isLoading && <AppIcon name="loading" className="mr-2 animate-spin" />}
+            {isLoading && <AppIcon name="loading" className="mr-2 motion-safe:animate-spin" />}
             {isLoading ? "Uploading..." : "Upload"}
           </Button>
         </DialogFooter>

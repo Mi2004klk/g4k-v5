@@ -661,10 +661,12 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
       <div className="flex flex-col gap-3 mb-3 shrink-0">
         {/* Row 1: Views and Actions */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          <div className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50 overflow-x-auto no-scrollbar">
+          <div role="tablist" className="flex bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg w-full lg:w-auto shrink-0 shadow-sm border border-neutral-200/50 dark:border-neutral-700/50 overflow-x-auto no-scrollbar">
             {(["kanban", "list", ...(canManageTasks ? ["gantt" as const] : []), ...(canViewQA ? ["qa" as const] : [])] as const).map(mode => (
               <button
                 key={mode}
+                role="tab"
+                aria-pressed={viewMode === mode}
                 onClick={() => setViewMode(mode)}
                 className={cn(
                   "flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap",

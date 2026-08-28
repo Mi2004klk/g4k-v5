@@ -113,7 +113,7 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
             name="loading" 
             size="sm" 
             className={cn(
-              isRefreshing && "animate-spin text-primary-500",
+              isRefreshing && "motion-safe:animate-spin text-primary-500",
               !isRefreshing && "text-neutral-400 dark:text-neutral-500"
             )} 
           />

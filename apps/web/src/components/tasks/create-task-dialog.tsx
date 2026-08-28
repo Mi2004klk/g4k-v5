@@ -161,7 +161,7 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
     <div className="flex flex-col gap-6">
       <div className="text-center space-y-1">
         <h3 className="text-lg font-bold text-neutral-900 dark:text-white">How do you want to create tasks?</h3>
-        <p className="text-sm text-neutral-500">Choose between creating a single task or adding multiple tasks phase-by-phase.</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">Choose between creating a single task or adding multiple tasks phase-by-phase.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto w-full">
@@ -173,11 +173,11 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
               : 'border-neutral-200 dark:border-neutral-800 hover:border-primary-300'
           }`}
         >
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${mode === "single" ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/50' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800'}`}>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${mode === "single" ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/50' : 'bg-neutral-100 text-neutral-600 dark:text-neutral-400 dark:bg-neutral-800'}`}>
             <AppIcon name="check" className="w-6 h-6" />
           </div>
           <h4 className="font-bold text-neutral-900 dark:text-white mb-1">Single Task</h4>
-          <p className="text-xs text-center text-neutral-500">Create one specific task quickly.</p>
+          <p className="text-xs text-center text-neutral-600 dark:text-neutral-400">Create one specific task quickly.</p>
         </div>
 
         <div 
@@ -188,17 +188,17 @@ export function CreateTaskDialog({ open, onOpenChange, projectId: initialProject
               : 'border-neutral-200 dark:border-neutral-800 hover:border-emerald-300'
           }`}
         >
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${mode === "bulk" ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50' : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800'}`}>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${mode === "bulk" ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50' : 'bg-neutral-100 text-neutral-600 dark:text-neutral-400 dark:bg-neutral-800'}`}>
             <AppIcon name="list" className="w-6 h-6" />
           </div>
           <h4 className="font-bold text-neutral-900 dark:text-white mb-1">Phase by Phase</h4>
-          <p className="text-xs text-center text-neutral-500">Add multiple tasks to project phases at once.</p>
+          <p className="text-xs text-center text-neutral-600 dark:text-neutral-400">Add multiple tasks to project phases at once.</p>
         </div>
       </div>
 
       {!initialProjectId && (
         <div className="space-y-1.5 max-w-lg mx-auto w-full mt-4">
-          <label className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Target Project (Optional)</label>
+          <label className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wide">Target Project (Optional)</label>
           <Select value={projectId} onValueChange={setProjectId}>
             <SelectTrigger className="w-full h-11 rounded-xl">
               <SelectValue placeholder="Select Project" />

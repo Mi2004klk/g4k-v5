@@ -142,12 +142,12 @@ export function MailSmtpConfig() {
               {form.formState.errors.from_address && <p className="text-xs text-red-500 mt-1">{form.formState.errors.from_address.message}</p>}
             </div>
           </div>
-          <div>
-            <label className="text-xs font-medium mb-1 block">Host <span className="text-red-500">*</span></label>
-            <Input type="text" {...form.register("host")} className="h-9 text-xs" />
-            {form.formState.errors.host && <p className="text-xs text-red-500 mt-1">{form.formState.errors.host.message}</p>}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <label className="text-xs font-medium mb-1 block">Host <span className="text-red-500">*</span></label>
+              <Input type="text" {...form.register("host")} className="h-9 text-xs" />
+              {form.formState.errors.host && <p className="text-xs text-red-500 mt-1">{form.formState.errors.host.message}</p>}
+            </div>
             <div>
               <label className="text-xs font-medium block">Port</label>
               <p className="text-[10px] text-neutral-500 mb-1 leading-tight">Usually 587 or 465</p>

@@ -239,7 +239,7 @@ export function NotificationsBell() {
                   <button
                     onClick={() => markAllReadMutation.mutate()}
                     title="Mark as Read"
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius)] text-xs font-semibold text-neutral-500 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius)] text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors"
                   >
                     <AppIcon name="read" size="sm" />
                     <span className="hidden sm:inline">Mark read</span>
@@ -247,7 +247,7 @@ export function NotificationsBell() {
                   <button
                     onClick={() => handleClearPopup()}
                     title="Clear All"
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius)] text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-[var(--radius)] text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
                   >
                     <AppIcon name="trash" size="sm" />
                     <span className="hidden sm:inline">Clear</span>

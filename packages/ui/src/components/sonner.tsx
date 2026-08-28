@@ -21,7 +21,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         info: <AppIcon name="info" />,
         warning: <AppIcon name="warning" />,
         error: <AppIcon name="error" />,
-        loading: <AppIcon name="loading" className=" animate-spin" />,
+        loading: <AppIcon name="loading" className=" motion-safe:animate-spin" />,
       }}
       toastOptions={{
         classNames: {

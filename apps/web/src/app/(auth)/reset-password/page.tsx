@@ -260,9 +260,9 @@ function ResetPasswordForm() {
 <span className="relative z-10 flex items-center justify-center">
                   {isLoading ? (
                     <div className="flex space-x-1.5 items-center justify-center h-full">
-                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 bg-card rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full motion-safe:animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full motion-safe:animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-card rounded-full motion-safe:animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   ) : (
                     "Reset Password"

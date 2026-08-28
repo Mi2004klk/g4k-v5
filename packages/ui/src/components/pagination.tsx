@@ -60,7 +60,7 @@ export function Pagination({
           disabled={isLoading}
           className="w-full sm:w-auto"
         >
-          {isLoading && <AppIcon name="loading" className="mr-2 animate-spin" />}
+          {isLoading && <AppIcon name="loading" className="mr-2 motion-safe:animate-spin" />}
           {isLoading ? "Loading..." : "Load more"}
         </Button>
       </div>

@@ -49,14 +49,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@g4k/u
 export const navGroups = [
   { label: "Overview", items: [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
-    { name: "Attendance & Time", href: "/dashboard/attendance", icon: "attendance", hideForAdmin: true },
+    { name: "My Attendance", href: "/dashboard/attendance", icon: "attendance", hideForAdmin: true },
     { name: "Projects & Tasks", href: "/dashboard/projects", icon: "projects", capability: "projects.view" },
     { name: "Communications", href: "/dashboard/chat", icon: "chat", capability: "chat.access" },
   ]},
   { label: "Organization", items: [
     { name: "Directory", href: "/dashboard/directory", icon: "directory", capability: "directory.view" },
-    { name: "Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
-    { name: "Reports & Analytics", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },
+    { name: "Team Attendance", href: "/dashboard/org/attendance", icon: "teamAttendance", capability: "hr.view-team-attendance" },
+    { name: "Reports", href: "/dashboard/reports", icon: "spreadsheet", capability: "reports.view" },
   ]},
   { label: "Account", items: [
     { name: "My Profile", href: "/dashboard/profile", icon: "userCircle" },
@@ -375,7 +375,7 @@ export default function DashboardLayout({
                     
                     <div className="p-1.5">
                       <DropdownMenuItem asChild className="h-9 px-3 gap-3 rounded-lg cursor-pointer">
-                        <Link href="/dashboard/profile" prefetch={false}>
+                        <Link href="/dashboard/profile" prefetch={false} aria-current={pathname === "/dashboard/profile" ? "page" : undefined}>
                           <AppIcon name="profile" className="text-neutral-500" size="sm" />
                           <span className="font-medium text-neutral-700 dark:text-neutral-300">My Profile</span>
                         </Link>

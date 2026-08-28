@@ -131,7 +131,7 @@ export function Wizard({
             >
               {isSubmitting ? (
                 <>
-                  <AppIcon name="loading" className="w-4 h-4 mr-2 animate-spin" />
+                  <AppIcon name="loading" className="w-4 h-4 mr-2 motion-safe:animate-spin" />
                   Submitting...
                 </>
               ) : submitLabel}

@@ -18,7 +18,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   settings: "Settings",
   projects: "Projects",
   tasks: "Task Management",
-  reports: "Reports & Analytics",
+  reports: "Reports",
   chat: "Team Chat",
   profile: "My Profile",
 };

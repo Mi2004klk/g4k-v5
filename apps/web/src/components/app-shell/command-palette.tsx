@@ -195,7 +195,7 @@ export function CommandPalette() {
             {hasCapability(capabilities, "reports.view") && (
               <CommandItem onSelect={() => runCommand(() => router.push("/dashboard/reports"))}>
                 <AppIcon name="spreadsheet" className=" mr-2 text-primary-500" />
-                <span>Reports & Analytics</span>
+                <span>Reports</span>
               </CommandItem>
             )}
           </CommandGroup>
