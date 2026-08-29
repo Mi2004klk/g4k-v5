@@ -7,7 +7,7 @@ import { usePusher } from "@/hooks/use-pusher";
 import { AppIcon, Spinner, Checkbox } from "@g4k/ui/components";
 import { safeFormat } from "@/lib/format";
 import { toast } from "sonner";
-import { apiFetch, isQueued } from "@/lib/api-client";
+import { apiFetch, isQueued, unwrapList } from "@/lib/api-client";
 import { Card, Button, Skeleton, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Badge } from "@g4k/ui/components";
 import { useAuthStore } from "@/lib/auth-store";
 import { queryKeys } from "@/lib/query-keys";
@@ -65,8 +65,8 @@ export function AnnouncementBoard() {
   });
 
   const announcements = showDismissed 
-    ? (Array.isArray(historyData?.data) ? historyData.data : []) 
-    : (Array.isArray(dashboardData?.announcements?.data) ? dashboardData.announcements.data : (Array.isArray(dashboardData?.announcements) ? dashboardData.announcements : []));
+    ? unwrapList(historyData) 
+    : unwrapList(dashboardData?.announcements);
 
   const isPending = showDismissed ? isHistoryPending : isInitPending;
   const isFetching = showDismissed ? isHistoryFetching : isInitFetching;
@@ -268,7 +268,7 @@ export function AnnouncementBoard() {
 
           <div className="flex items-center gap-1.5">
             {emojis.map(({ key, label }) => {
-              const uids: number[] = Array.isArray(reactions[key]) ? reactions[key] : [];
+              const uids: number[] = unwrapList(reactions[key]);
               const count = uids.length;
               const hasReacted = user?.id ? uids.includes(user.id) : false;
 

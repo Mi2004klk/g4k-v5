@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { AppIcon } from "@g4k/ui/components";
 import { Card, Button, Skeleton, Avatar, AvatarFallback } from "@g4k/ui/components";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapList } from "@/lib/api-client";
 import { safeFromNow } from "@/lib/format";
 import Link from "next/link";
 
@@ -23,7 +23,7 @@ interface Exception {
 export function HrActivityFeedWidget() {
   const { data: exceptions = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["attendance", "exceptions"],
-    queryFn: () => apiFetch("/attendance/exceptions"),
+    queryFn: () => apiFetch("/attendance/exceptions").then(unwrapList),
     staleTime: 60_000,
   });
 

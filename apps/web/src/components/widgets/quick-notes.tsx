@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tansta
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
 import { AppIcon, Spinner,
 } from "@g4k/ui/components";
-import { apiFetch, isQueued } from "@/lib/api-client";
+import { apiFetch, isQueued, unwrapList } from "@/lib/api-client";
 import { Card, Skeleton, Collapsible, CollapsibleTrigger, CollapsibleContent, ConfirmDialog, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Truncate, Input } from "@g4k/ui/components";
 import { Button } from "@g4k/ui/components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@g4k/ui/components";
@@ -34,7 +34,7 @@ export function QuickNotes() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: notes = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: any) => (Array.isArray(data?.quick_notes?.data) ? data.quick_notes.data : (Array.isArray(data?.quick_notes) ? data.quick_notes : [])),
+    select: (data: any) => unwrapList(data?.quick_notes),
     placeholderData: keepPreviousData,
   });
 

@@ -8,7 +8,7 @@ import Link from "next/link";
 
 import { Card, Skeleton, Button, StatusBadge, Avatar, AvatarFallback } from "@g4k/ui/components";
 
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapList } from "@/lib/api-client";
 import { STALE_TIME_ATTENDANCE, queryKeys } from "@/lib/query-keys";
 
 interface HrAttendanceRecord {
@@ -29,7 +29,7 @@ export function HrTeamAttendanceWidget() {
   const counts = data?.counts || {};
   const presentCount = (counts.present || 0) + (counts.late || 0);
   const totalCount = Object.values(counts).reduce((a: any, b: any) => a + b, 0) as number;
-  const topRecords = (Array.isArray(data?.employees) ? data.employees : []).slice(0, 3);
+  const topRecords = unwrapList(data?.employees).slice(0, 3);
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group overflow-hidden">

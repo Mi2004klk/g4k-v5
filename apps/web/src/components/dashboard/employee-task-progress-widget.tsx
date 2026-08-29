@@ -2,6 +2,7 @@
 
 import { keepPreviousData } from "@tanstack/react-query";
 import { useDashboardInit } from "@/hooks/use-dashboard-init";
+import { unwrapList } from "@/lib/api-client";
 import { Card, Skeleton, Button } from "@g4k/ui/components";
 import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
@@ -22,7 +23,7 @@ interface DashboardMetrics {
 
 export function EmployeeTaskProgressWidget() {
   const { data, isLoading, isError, refetch } = useDashboardInit({
-    select: (data: DashboardMetrics) => Array.isArray(data.metrics?.recent_task_progress) ? data.metrics.recent_task_progress : [],
+    select: (data: any) => unwrapList(data?.metrics?.recent_task_progress),
     placeholderData: keepPreviousData,
   });
 
@@ -57,7 +58,7 @@ export function EmployeeTaskProgressWidget() {
     );
   }
 
-  const tasks = Array.isArray(data) ? data : [];
+  const tasks = unwrapList(data);
 
   return (
     <Card className="h-full bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-3 flex flex-col justify-between transition-shadow duration-150">

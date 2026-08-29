@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { isAfter, startOfDay } from "date-fns";
 import { AppIcon } from "@g4k/ui/components";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapList } from "@/lib/api-client";
 import { STALE_TIME_CONFIG, queryKeys } from "@/lib/query-keys";
 import { safeFormat } from "@/lib/format";
 import { Card, CardHeader, CardTitle, CardContent, Skeleton, Button } from "@g4k/ui/components";
@@ -28,16 +28,14 @@ export function UpcomingHolidaysWidget() {
 
   const today = startOfDay(new Date());
 
-  const upcomingList = Array.isArray(holidays) || Array.isArray(holidays?.data) 
-    ? (holidays?.data || holidays)
+  const upcomingList = unwrapList(holidays)
       .filter((h: Holiday) => {
         if (!h?.date) return false;
         const d = new Date(h.date);
         if (isNaN(d.getTime())) return false;
         return !isAfter(today, d);
       })
-      .slice(0, 3)
-    : [];
+      .slice(0, 3);
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group">

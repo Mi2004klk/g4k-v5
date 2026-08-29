@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, unwrapList } from "@/lib/api-client";
 import { Card, CardContent, CardHeader, CardTitle, Skeleton, Avatar, AvatarFallback, AvatarImage, Button } from "@g4k/ui/components";
 import { StatusBadge } from "@g4k/ui/components/badge";
 import { AppIcon } from "@g4k/ui/components";
@@ -49,7 +49,7 @@ export function TeamAttendanceWidget() {
   }
 
   const counts = data?.counts || { present: 0, late: 0, leave: 0, absent: 0, leave_pending: 0 };
-  const employees = Array.isArray(data?.employees) ? data.employees : (Array.isArray(data) ? data : []);
+  const employees = unwrapList(data?.employees);
 
   if (!isLoading && employees.length === 0) {
     return (
