@@ -243,12 +243,12 @@ export function Toolbar({
 
         {/* Right Side: Filters, Sort, Actions */}
         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-          {filters.length > 0 && (
+          {(filters.length > 0 || sortOptions.length > 0 || actions) && (
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-9 gap-2 border-dashed border-border/80 shadow-2xs bg-neutral-50 dark:bg-neutral-900">
-                  <AppIcon name="sliders" size="sm" className="text-muted-foreground" />
-                  <span className="hidden sm:inline">Filters</span>
+                  <AppIcon name="settings" size="sm" className="text-muted-foreground" />
+                  <span className="hidden sm:inline">Options</span>
                   {activeFiltersCount > 0 && (
                     <Badge variant="secondary" className="px-1.5 h-5 rounded-full text-[10px]">
                       {activeFiltersCount}
@@ -257,88 +257,77 @@ export function Toolbar({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[320px] max-w-[calc(100vw-32px)] overflow-y-auto max-h-[85vh] p-4 shadow-e2 rounded-xl" align="end" sideOffset={8}>
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Filters</h4>
-                  {activeFiltersCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={handleClearAll} className="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30">
-                      Clear all
-                    </Button>
+                <div className="space-y-6">
+                  {actions && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Actions</h4>
+                      <div className="flex flex-col gap-2">
+                        {actions}
+                      </div>
+                    </div>
                   )}
-                </div>
-                <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1 thin-scrollbar">
-                  {filters.map((filter) => (
-                    <div key={filter.key} className="space-y-1.5">
-                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">{filter.label}</label>
-                      {renderFilterControl(filter)}
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
-          
-          {sortOptions.length > 0 && onSortChange && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9 gap-2 border-dashed border-border/80 shadow-2xs bg-neutral-50 dark:bg-neutral-900">
-                  <AppIcon name="arrowDown" size="sm" className="text-muted-foreground" />
-                  <span className="hidden sm:inline">Sort</span>
-                  {sortBy && (
-                    <Badge variant="secondary" className="px-1.5 h-5 rounded-full text-[10px]">
-                      {sortOptions.find(o => o.value === sortBy)?.label}
-                    </Badge>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 max-w-[calc(100vw-32px)] p-3 shadow-e2 rounded-xl" align="end" sideOffset={8}>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-[10px] font-bold text-neutral-500 mb-2 px-1 uppercase tracking-wider">Sort By</h4>
-                    <div className="space-y-1">
-                      {sortOptions.map(opt => (
-                        <label key={opt.value} className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md cursor-pointer transition-colors">
-                          <input 
-                            type="radio" 
-                            name="sortBy" 
-                            checked={sortBy === opt.value} 
-                            onChange={() => onSortChange(opt.value, sortDirection)}
-                            className="accent-primary-600 w-3.5 h-3.5"
-                          />
-                          {opt.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                    <h4 className="text-[10px] font-bold text-neutral-500 mb-2 px-1 uppercase tracking-wider">Order</h4>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant={sortDirection === "asc" ? "primary" : "outline"} 
-                        size="sm" 
-                        className={cn("flex-1 h-8 text-xs", sortDirection === "asc" ? "bg-primary-600 text-white" : "")}
-                        onClick={() => sortBy && onSortChange(sortBy, "asc")}
-                      >
-                        <AppIcon name="arrowUp" size="xs" className="mr-1" /> Asc
-                      </Button>
-                      <Button 
-                        variant={sortDirection === "desc" ? "primary" : "outline"} 
-                        size="sm" 
-                        className={cn("flex-1 h-8 text-xs", sortDirection === "desc" ? "bg-primary-600 text-white" : "")}
-                        onClick={() => sortBy && onSortChange(sortBy, "desc")}
-                      >
-                        <AppIcon name="arrowDown" size="xs" className="mr-1" /> Desc
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
 
-          {actions && (
-            <div className="flex items-center gap-2 border-l border-neutral-200 dark:border-neutral-700 pl-2 ml-1">
-              {actions}
-            </div>
+                  {sortOptions.length > 0 && onSortChange && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Sort By</h4>
+                      <div className="space-y-1">
+                        {sortOptions.map(opt => (
+                          <label key={opt.value} className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md cursor-pointer transition-colors">
+                            <input 
+                              type="radio" 
+                              name="sortBy" 
+                              checked={sortBy === opt.value} 
+                              onChange={() => onSortChange(opt.value, sortDirection)}
+                              className="accent-primary-600 w-3.5 h-3.5"
+                            />
+                            {opt.label}
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <Button 
+                          variant={sortDirection === "asc" ? "primary" : "outline"} 
+                          size="sm" 
+                          className={cn("flex-1 h-8 text-xs", sortDirection === "asc" ? "bg-primary-600 text-white" : "")}
+                          onClick={() => sortBy && onSortChange(sortBy, "asc")}
+                        >
+                          <AppIcon name="arrowUp" size="xs" className="mr-1" /> Asc
+                        </Button>
+                        <Button 
+                          variant={sortDirection === "desc" ? "primary" : "outline"} 
+                          size="sm" 
+                          className={cn("flex-1 h-8 text-xs", sortDirection === "desc" ? "bg-primary-600 text-white" : "")}
+                          onClick={() => sortBy && onSortChange(sortBy, "desc")}
+                        >
+                          <AppIcon name="arrowDown" size="xs" className="mr-1" /> Desc
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {filters.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Filters</h4>
+                        {activeFiltersCount > 0 && (
+                          <Button variant="ghost" size="sm" onClick={handleClearAll} className="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30">
+                            Clear all
+                          </Button>
+                        )}
+                      </div>
+                      <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 thin-scrollbar">
+                        {filters.map((filter) => (
+                          <div key={filter.key} className="space-y-1.5">
+                            <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">{filter.label}</label>
+                            {renderFilterControl(filter)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>

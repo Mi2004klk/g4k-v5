@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils/cn";
 
 const buttonVariants = cva(
-  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-all duration-120 active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -16,13 +16,13 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         success: "bg-success text-white hover:bg-success/90",
         link: "text-primary underline-offset-4 hover:underline",
-        brand: "bg-primary text-primary-foreground hover:bg-primary/90",
+        brand: "bg-neutral-950 dark:bg-black text-white hover:bg-neutral-900 dark:hover:bg-neutral-900",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-full px-3",
-        xs: "h-7 rounded-full px-2 text-xs",
-        lg: "h-11 rounded-full px-8",
+        sm: "h-8 rounded-lg px-3",
+        xs: "h-7 rounded-md px-2 text-xs",
+        lg: "h-11 rounded-xl px-8",
         icon: "h-10 w-10",
       },
     },
@@ -46,14 +46,15 @@ const RainbowBorder = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
       <div
         ref={ref}
         className={cn(
-          "group relative inline-flex rounded-full p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-e4",
+          "group relative inline-flex rounded-xl p-[1px] overflow-hidden transition-shadow duration-300 hover:shadow-e4",
+          className?.includes("w-full") ? "w-full" : "",
           className
         )}
         {...props}
       >
         <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#3B82F6_0%,#14B8A6_25%,#F97316_50%,#EF4444_75%,#3B82F6_100%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:hidden" />
         <span className="absolute inset-0 rounded-[var(--radius)] ring-1 ring-inset ring-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 motion-reduce:opacity-100 hidden motion-reduce:block" />
-        <div className="relative inline-flex h-full w-full rounded-[var(--radius)] bg-primary">
+        <div className="relative inline-flex h-full w-full rounded-[var(--radius)] bg-neutral-950 dark:bg-black">
           {children}
         </div>
       </div>
@@ -89,9 +90,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       </button>
     );
 
-    if ((variant === "brand" || (variant === "primary" && size === "lg")) && !asChild) {
+    if (variant === "brand" && !asChild) {
       return (
-        <RainbowBorder>
+        <RainbowBorder className={className}>
           {content}
         </RainbowBorder>
       );

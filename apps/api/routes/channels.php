@@ -42,7 +42,7 @@ Broadcast::channel('conversation.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('approvals.{role}', function ($user, $role) {
-    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    $roles = $user->getCachedRoles();
     return in_array($role, $roles) || in_array('super_admin', $roles);
 });
 
@@ -50,7 +50,7 @@ Broadcast::channel('project.{id}', function ($user, $id) {
     $project = \App\Models\Project::find($id);
     if (!$project) return false;
     
-    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    $roles = $user->getCachedRoles();
     if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
     if (in_array('hr', $roles)) {
         $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
@@ -61,7 +61,7 @@ Broadcast::channel('project.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('department.{id}', function ($user, $id) {
-    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    $roles = $user->getCachedRoles();
     if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
     if (in_array('hr', $roles)) {
         $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
@@ -72,7 +72,7 @@ Broadcast::channel('department.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('attendance.{id}', function ($user, $id) {
-    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    $roles = $user->getCachedRoles();
     if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
     if (in_array('hr', $roles)) {
         $deptIds = \App\Support\HrScope::managedDepartmentIds($user);
@@ -83,7 +83,7 @@ Broadcast::channel('attendance.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('team.{id}', function ($user, $id) {
-    $roles = \App\Models\RoleAssignment::getRolesForUser($user->id);
+    $roles = $user->getCachedRoles();
     if (in_array('super_admin', $roles) || in_array('admin', $roles)) return true;
     if (in_array('hr', $roles)) {
         $team = \App\Models\Team::find($id);

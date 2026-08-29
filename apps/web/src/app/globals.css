@@ -316,10 +316,7 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }
-  *:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
-  }
+  /* Default focus outlines removed due to conflicting strokes. Replaced by tailwind focus-visible:ring rings */
   /* inputs: a thin neutral ring + soft offset, no violet */
   input:focus-visible, textarea:focus-visible, select:focus-visible {
     outline: none;

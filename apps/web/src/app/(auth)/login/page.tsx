@@ -194,7 +194,7 @@ function LoginForm() {
 
               <Button
                 type="submit"
-                variant="primary"
+                variant="brand"
                 size="lg"
                 className="w-full mt-2"
                 isLoading={isLoading}

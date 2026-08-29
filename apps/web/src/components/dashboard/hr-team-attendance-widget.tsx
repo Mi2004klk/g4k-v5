@@ -29,7 +29,7 @@ export function HrTeamAttendanceWidget() {
   const counts = data?.counts || {};
   const presentCount = (counts.present || 0) + (counts.late || 0);
   const totalCount = Object.values(counts).reduce((a: any, b: any) => a + b, 0) as number;
-  const topRecords = (data?.employees || []).slice(0, 3);
+  const topRecords = (Array.isArray(data?.employees) ? data.employees : []).slice(0, 3);
 
   return (
     <Card className="h-full bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-xl p-4 sm:p-5 flex flex-col transition-shadow duration-150 group overflow-hidden">

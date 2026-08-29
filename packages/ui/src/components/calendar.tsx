@@ -55,14 +55,12 @@ function Calendar({
           month_caption: "flex justify-center pt-1 relative items-center",
           caption_label: "text-sm font-medium",
           nav: "flex items-center justify-between absolute w-full z-10 px-1 pt-1",
-          button_previous: cn(
+          nav_button: cn(
             buttonVariants({ variant: "outline" }),
             "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
           ),
-          button_next: cn(
-            buttonVariants({ variant: "outline" }),
-            "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
-          ),
+          nav_button_previous: "absolute left-1",
+          nav_button_next: "absolute right-1",
           month_grid: "w-full border-collapse space-y-1",
           weekdays: "flex",
           weekday:
