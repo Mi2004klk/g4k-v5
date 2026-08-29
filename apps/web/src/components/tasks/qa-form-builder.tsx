@@ -608,13 +608,13 @@ export function QAFormBuilder() {
 
   return (
     <>
-      <div className="flex gap-4 h-full relative" onClick={(e) => {
+      <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-full relative" onClick={(e) => {
         // If clicking outside the builder area (e.g. empty background), deselect field
         if ((e.target as HTMLElement).closest('.form-builder-canvas')) return;
         setActiveId(null);
       }}>
         {/* Sidebar */}
-        <Card className="w-80 shrink-0 border border-neutral-200 dark:border-neutral-800 shadow-none rounded-xl overflow-hidden h-full flex flex-col bg-background">
+        <Card className="w-full lg:w-80 shrink-0 border border-neutral-200 dark:border-neutral-800 shadow-none rounded-xl overflow-hidden h-auto lg:h-full max-h-[500px] lg:max-h-none flex flex-col bg-background">
           <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 py-4 px-5">
             <div className="flex items-center justify-between mb-3">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
@@ -693,7 +693,7 @@ export function QAFormBuilder() {
         </Card>
 
         {/* Main Builder Canvas */}
-        <div className="flex-1 flex flex-col h-full bg-[#f0f4f9] dark:bg-neutral-950 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-inner form-builder-canvas relative">
+        <div className="flex-1 flex flex-col min-h-[600px] lg:h-full bg-[#f0f4f9] dark:bg-neutral-950 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-inner form-builder-canvas relative">
           
           {/* Sticky Toolbar */}
           <div className="min-h-[56px] shrink-0 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 gap-3 z-20">

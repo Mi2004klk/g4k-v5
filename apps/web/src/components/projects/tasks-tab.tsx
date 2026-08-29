@@ -742,7 +742,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
                 aria-pressed={viewMode === mode}
                 onClick={() => setViewMode(mode)}
                 className={cn(
-                  "flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap",
+                  "shrink-0 flex-1 lg:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap",
                   viewMode === mode 
                     ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white ring-1 ring-neutral-200 dark:ring-neutral-800"
                     : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
@@ -1044,7 +1044,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
         <div className="bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-2 py-1.5 w-full">
           <Toolbar
             prependFilters={
-              <div className="flex items-center gap-2 pr-2 border-r border-neutral-200 dark:border-neutral-800 shrink-0">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 pr-0 sm:pr-2 border-b sm:border-b-0 sm:border-r border-neutral-200 dark:border-neutral-800 shrink-0 pb-2 sm:pb-0 mb-2 sm:mb-0 w-full sm:w-auto">
                 <SavedReportViews 
                   module="tasks"
                   currentFilters={{
@@ -1289,7 +1289,7 @@ export function TasksTab({ defaultProjectId, userId }: { defaultProjectId?: stri
 
       {/* Floating Bulk Actions Footer */}
       {selectedTaskIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-e3 animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 bg-card dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full shadow-e3 animate-in slide-in-from-bottom-5 max-w-[calc(100%-2rem)] overflow-x-auto no-scrollbar shrink-0">
           <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 border-r border-neutral-200 dark:border-neutral-800">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 text-xs font-bold">
               {selectedTaskIds.length}
