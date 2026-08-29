@@ -23,7 +23,7 @@ export function RecentActivityWidget() {
   const { data: activities = [], isPending, isFetching, isError, refetch } = useDashboardInit({
     select: (data: any) => {
       const list = data?.metrics?.recent_activity || data?.recent_activity;
-      return Array.isArray(list) ? list : [];
+      return Array.isArray(list?.data) ? list.data : (Array.isArray(list) ? list : []);
     },
     staleTime: STALE_TIME_METRICS,
     placeholderData: keepPreviousData,

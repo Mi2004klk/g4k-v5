@@ -29,7 +29,10 @@ export function PendingApprovalsWidget() {
   const router = useRouter();
 
   const { data: requests = [], isPending, isFetching, isError, refetch } = useDashboardInit({
-    select: (data: { pending_approvals?: PendingRequest[] } & Record<string, unknown>) => Array.isArray(data.pending_approvals) ? data.pending_approvals : [],
+    select: (data: any) => {
+      const list = data?.pending_approvals;
+      return Array.isArray(list?.data) ? list.data : (Array.isArray(list) ? list : []);
+    },
     placeholderData: keepPreviousData,
   });
 

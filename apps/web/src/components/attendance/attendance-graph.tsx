@@ -96,7 +96,7 @@ export function AttendanceGraph({ endpoint, queryKeyBase, groupByOptions = [], d
         type: 'category',
         data: chartData.labels,
         axisLabel: {
-          interval: 0,
+          interval: 'auto',
           rotate: groupBy === "employee" ? 45 : 0,
           color: '#6b7280'
         }

@@ -94,7 +94,7 @@ export default function ProjectDetailPage() {
 
   const departments = unwrapList(deptsData);
   const qaForms = unwrapList(qaFormsData);
-  const project = unwrapOne(projectResponse);
+  const project = projectResponse?.project || unwrapOne(projectResponse);
   const phases = unwrapList(phasesResponse) || [];
   const projectHistory = unwrapList(historyResponse) || [];
 

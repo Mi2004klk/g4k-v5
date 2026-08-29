@@ -50,7 +50,7 @@ export default function Employee360Page() {
 
   const { data: departments = [] } = useQuery({
     queryKey: queryKeys.departments,
-    queryFn: () => apiFetch("/departments?per_page=100").then((res: any) => Array.isArray(res?.data) ? res.data : []),
+    queryFn: () => apiFetch("/departments?per_page=100").then((res: any) => Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])),
     staleTime: STALE_TIME_DEPARTMENTS,
     enabled: canManageUsers,
   });
