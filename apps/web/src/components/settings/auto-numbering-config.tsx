@@ -61,7 +61,7 @@ export function AutoNumberingConfig() {
 
   return (
     <div className="space-y-6">
-      {records.map((record: AutoNumberingRecord) => (
+      {(Array.isArray(records) ? records : (records as any)?.data || []).map((record: any) => (
         <NumberingRow key={record.id} record={record} onSave={(data) => updateMutation.mutate({ id: record.id, data })} isPending={updateMutation.isPending} />
       ))}
     </div>

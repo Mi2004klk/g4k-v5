@@ -163,7 +163,7 @@ export function WorkSchedulesConfig() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {schedules.map((schedule: WorkSchedule) => (
+          {(Array.isArray(schedules) ? schedules : (schedules as any)?.data || []).map((schedule: any) => (
             <div key={schedule.id} className="border border-neutral-200 dark:border-neutral-800 rounded-[var(--radius)] p-4 flex items-center justify-between">
               <div>
                 <h4 className="font-semibold text-sm flex items-center gap-2">

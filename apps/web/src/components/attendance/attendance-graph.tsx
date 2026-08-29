@@ -61,7 +61,7 @@ export function AttendanceGraph({ endpoint, queryKeyBase, groupByOptions = [], d
   const chartData = useMemo(() => {
     if (!data?.stats) return { labels: [], present: [], absent: [], late: [], hours: [], overtime: [] };
     
-    const stats = data.stats;
+    const stats = Array.isArray(data.stats) ? data.stats : [];
     const labels = stats.map((d: TrendStat) => groupBy === "date" ? safeFormat(d.date, "MMM d") : d.name);
     const present = stats.map((d: TrendStat) => d.present || 0);
     const absent = stats.map((d: TrendStat) => d.absent || 0);

@@ -67,7 +67,7 @@ export function SystemJobsConfig() {
             </div>
           ) : (
             <div className="space-y-2 max-h-[400px] overflow-y-auto thin-scrollbar pr-2">
-              {failed_jobs.map((job: any) => (
+              {(Array.isArray(failed_jobs) ? failed_jobs : (failed_jobs as any)?.data || []).map((job: any) => (
                 <div key={job.id} className="p-3 border border-neutral-200 dark:border-neutral-800 rounded-[var(--radius)] text-xs space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="font-semibold text-rose-600 break-all pr-4">{job.queue}</span>

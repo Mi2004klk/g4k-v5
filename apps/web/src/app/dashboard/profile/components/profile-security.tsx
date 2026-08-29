@@ -219,7 +219,7 @@ export function ProfileSecuritySection() {
                         <FormItem>
                           <FormLabel className="text-xs font-bold text-neutral-700 dark:text-neutral-300">Current Password</FormLabel>
                           <FormControl>
-                            <PasswordInput placeholder="••••••••" {...field} />
+                            <PasswordInput placeholder="••••••••" autoComplete="current-password" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -232,7 +232,7 @@ export function ProfileSecuritySection() {
                         <FormItem>
                           <FormLabel className="text-xs font-bold text-neutral-700 dark:text-neutral-300">New Password</FormLabel>
                           <FormControl>
-                            <PasswordInput placeholder="••••••••" {...field} />
+                            <PasswordInput placeholder="••••••••" autoComplete="new-password" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -245,7 +245,7 @@ export function ProfileSecuritySection() {
                         <FormItem>
                           <FormLabel className="text-xs font-bold text-neutral-700 dark:text-neutral-300">Confirm New Password</FormLabel>
                           <FormControl>
-                            <PasswordInput placeholder="••••••••" {...field} />
+                            <PasswordInput placeholder="••••••••" autoComplete="new-password" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

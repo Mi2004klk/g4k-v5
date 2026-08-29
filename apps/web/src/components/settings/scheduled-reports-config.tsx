@@ -140,7 +140,7 @@ export function ScheduledReportsConfig() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reports?.map((report) => (
+              {(Array.isArray(reports) ? reports : (reports as any)?.data || []).map((report: any) => (
                 <div key={report.id} className={`flex flex-col p-4 rounded-xl border transition-all duration-200 ${report.is_active ? 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm' : 'bg-neutral-50 dark:bg-neutral-900/40 border-neutral-100 dark:border-neutral-800/50 opacity-70 grayscale'}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">

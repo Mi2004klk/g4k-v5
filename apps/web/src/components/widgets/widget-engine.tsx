@@ -63,7 +63,7 @@ export function WidgetEngine({ headerContent, availableWidgets }: WidgetEnginePr
     const result: Record<string, unknown[]> = {};
     Object.keys(layouts).forEach((bp) => {
       const items = layouts[bp] || [];
-      result[bp] = items.map((item: any) => {
+      result[bp] = (Array.isArray(items) ? items : []).map((item: any) => {
         const isCollapsed = widgetStates[item.i]?.collapsed ?? false;
         if (isCollapsed) {
           return { ...item, h: 1, minH: 1, maxH: 1, isResizable: false };
@@ -180,7 +180,7 @@ export function WidgetEngine({ headerContent, availableWidgets }: WidgetEnginePr
     // Restore the 'h' for any collapsed widget before saving so we don't overwrite its custom height
     const modifiedLayouts = { ...allLayouts };
     Object.keys(modifiedLayouts).forEach((bp) => {
-      modifiedLayouts[bp] = modifiedLayouts[bp].map((item: any) => {
+      modifiedLayouts[bp] = (Array.isArray(modifiedLayouts[bp]) ? modifiedLayouts[bp] : []).map((item: any) => {
         const isCollapsed = widgetStates[item.i]?.collapsed ?? false;
         if (isCollapsed) {
           const orig = layouts[bp]?.find((o: any) => o.i === item.i) as any;

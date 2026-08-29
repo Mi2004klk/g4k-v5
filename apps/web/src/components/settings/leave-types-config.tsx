@@ -98,7 +98,7 @@ export function LeaveTypesConfig() {
             <div className="flex justify-center p-8"><Spinner /></div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {configs?.map((config) => (
+              {(Array.isArray(configs) ? configs : (configs as any)?.data || []).map((config: any) => (
                 <div key={config.id} className={`flex flex-col p-4 rounded-xl border transition-all duration-200 ${config.is_active ? 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-primary-300 dark:hover:border-primary-700/50' : 'bg-neutral-50 dark:bg-neutral-900/40 border-neutral-100 dark:border-neutral-800/50 opacity-70 grayscale'}`}>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
